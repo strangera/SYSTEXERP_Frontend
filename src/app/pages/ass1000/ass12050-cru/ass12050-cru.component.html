@@ -1,0 +1,140 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="驗收單號" controlName="purchaseNumber" [control]="dataForm.controls.purchaseNumber" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="驗收單狀態" controlName="paperStatus" [options]="paperStatusOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.paperStatus" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="申請人編號" controlName="applicantCode" [options]="applicantCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.applicantCode" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="部門代號" controlName="organizationNumber" [options]="organizationNumberOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.organizationNumber" [submitted]="submitted"></app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-date-one label="申請日期" controlName="applicationDate" [control]="dataForm.controls.applicationDate" [submitted]="submitted">
+                    </app-date-one>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="供應商編號" controlName="supplierCode" [options]="supplierCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.supplierCode" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="未稅總金額" controlName="noTaxAmount" [control]="dataForm.controls.noTaxAmount" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="稅額" controlName="taxAmount" [control]="dataForm.controls.taxAmount" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="含稅總金額" controlName="totalTaxAmount" [control]="dataForm.controls.totalTaxAmount" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="調整總金額" controlName="adjust_totalTaxAmount" [control]="dataForm.controls.adjust_totalTaxAmount" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <hr>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="品項編號" controlName="itemCode" [options]="itemCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.itemCode" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="單位" controlName="unit" [control]="dataForm.controls.unit" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number label="申請數量" controlName="requestNumber" [control]="dataForm.controls.requestNumber" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number label="應驗數量" controlName="should_checktNumber" [control]="dataForm.controls.should_checktNumber" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number label="驗收數量" controlName="checktNumber" [control]="dataForm.controls.checktNumber" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number label="單價(未稅)" controlName="singlePrice" [control]="dataForm.controls.singlePrice" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number label="調整單價(未稅)" controlName="adjustPrice" [control]="dataForm.controls.adjustPrice" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number label="總金額" controlName="totalPrice" [control]="dataForm.controls.totalPrice" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="分店" controlName="branch" [control]="dataForm.controls.branch" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="倉別" controlName="storage" [options]="storageOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.storage" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="委託部門" controlName="department" [control]="dataForm.controls.department" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <!---->
+            <!-- <ng-container formArrayName="items">
+                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+                    <div class="grid align-items-center">
+                        <div class="col" style="flex: 1">
+                            <p>服務項目 {{ i + 1 }}</p>
+                        </div>
+                        <div>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="服務項目" controlName="services" [control]="getFormControl(i, 'services')" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <hr/>
+                </ng-container>
+            </ng-container>
+            <div class="pt-1">
+                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+            </div> -->
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

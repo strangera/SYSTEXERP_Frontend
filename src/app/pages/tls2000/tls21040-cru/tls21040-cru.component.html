@@ -1,0 +1,81 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="cruForm" id="cruForm" (ngSubmit)="onSubmit(cruForm)">
+      <hr />
+      <ng-container formArrayName="items">
+        <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+          <div class="grid p-fluid">
+            <!-- 銀行代碼 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown-item
+                label="銀行代碼"
+                controlName="bankcode"
+                [options]="bankcode"
+                optionLabel="label"
+                optionValue="value"
+                [control]="getFormControl(i, 'bankcode')"
+                [submitted]="submitted"
+                (change)="onBankCodeChange($event, i)"
+              ></app-dropdown-item>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="銀行名稱"
+                controlName="bankname"
+                [control]="getFormControl(i, 'bankname')"
+                [submitted]="submitted"
+                
+              ></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4"></div>
+            <!-- 卡種 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown-item
+                label="卡種"
+                controlName="cardTypeOptions"
+                [options]="cardTypeOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="getFormControl(i, 'cardTypeOptions')"
+                [submitted]="submitted"
+              ></app-dropdown-item>
+            </div>
+
+            <!-- 卡別 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown-item
+                label="卡別"
+                controlName="cardCategoryOptions"
+                [options]="cardCategoryOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="getFormControl(i, 'cardCategoryOptions')"
+                [submitted]="submitted"
+              ></app-dropdown-item>
+            </div>
+
+            <!-- 卡種識別碼 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-number
+                label="卡種識別碼"
+                controlName="cardIDcode"
+                [control]="getFormControl(i, 'cardIDcode')"
+                [submitted]="submitted"
+              ></app-input-number>
+            </div>
+          </div>
+          <hr />
+        </ng-container>
+      </ng-container>
+      <div class="pt-1">
+        <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+      </div>
+    </form>
+  </p-panel>
+</div>

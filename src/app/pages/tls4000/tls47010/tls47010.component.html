@@ -1,0 +1,54 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card">
+            <div class="grid align-items-center">
+                <div class="col" style="flex: 1">
+                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
+                </div>
+                <div *appHasPermission="addPermission">
+                    <app-button-demo label="確定下傳" (click)="onCreate()" class="col"></app-button-demo>
+                </div>
+            </div>
+            <p-accordion>
+                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+                    <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="收銀機代號" controlName="registerID" [options]="registerIDOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.registerID" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="專櫃編號/名稱" controlName="counterID" [options]="counterIDOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.counterID" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-multi-select label="資料類別" controlName="dataType" [options]="dataTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.dataType" [submitted]="submitted">
+                                </app-multi-select>
+                            </div>
+                        </div>
+                        <div *appHasPermission="queryPermission" class="col">
+                            <div class="grid justify-content-end">
+                                <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                                <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                            </div>
+                        </div>
+                        <hr>
+
+                        <p>備註：</p>
+                        <ul>
+                            <li>若下傳至單台POS機，則以POS機號為主，不參考專櫃櫃號欄位!</li>
+                            <li>若下傳至專櫃，則會下傳至該專櫃的所有POS機!</li>
+                            <li>若未選專櫃及POS，則會將所選的資料下傳至全館的所有POS機!</li>
+                        </ul>
+                    </form>
+                </p-accordionTab>
+            </p-accordion>
+        </div>
+        <div class="card">
+            <div class="col-13">
+                <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+                </app-data-table>
+            </div>
+        </div>
+    </div>
+</div>

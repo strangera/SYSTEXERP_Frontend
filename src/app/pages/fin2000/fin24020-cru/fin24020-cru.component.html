@@ -1,0 +1,86 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1;">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="應付ID" controlName="shouldPayID" [control]="dataForm.controls.shouldPayID" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-date-one label="立帳日期" controlName="establishDate" [control]="dataForm.controls.establishDate" [submitted]="submitted">
+                    </app-date-one>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="廠客代號" controlName="factoryID" [control]="dataForm.controls.factoryID" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="廠客名稱" controlName="vendorName" [control]="dataForm.controls.vendorName" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="應付金額" controlName="shouldPay" [control]="dataForm.controls.shouldPay" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="保留款金額" controlName="RetinerAmount" [control]="dataForm.controls.RetinerAmount" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="應付帳款餘額" controlName="shouldPayRemain" [control]="dataForm.controls.shouldPayRemain" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="已產生保留款" controlName="generatedRetinerAmount" [control]="dataForm.controls.generatedRetinerAmount" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <hr/>
+            <ng-container formArrayName="items">
+                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+                    <div class="grid align-items-center">
+                        <div class="col" style="flex: 1;">
+                            <h5>保留款 {{i+1}}</h5>
+                        </div>
+                        <div>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-date-one label="保留款退款日期" controlName="refundDate" [control]="getFormControl(i, 'refundDate')" [submitted]="submitted">
+                            </app-date-one>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-serial-number label="保留款退款金額" controlName="refundAmount" [control]="getFormControl(i, 'refundAmount')" [submitted]="submitted">
+                            </app-input-serial-number>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="備註" controlName="remark" [control]="getFormControl(i, 'remark')" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <hr/>
+                </ng-container>
+            </ng-container>
+            <div class="pt-1">
+                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+            </div>
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

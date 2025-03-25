@@ -1,0 +1,81 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-accordion>
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-datemm-two label="發票年月" [control]="queryForm.controls.twodatemm" [submitted]="submitted">
+                        </app-datemm-two>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-datemm-one label="申報年月" [control]="queryForm.controls.onedatemm" [submitted]="submitted">
+                        </app-datemm-one>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="發票類別" controlName="invoiceType" [options]="invoiceTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.invoiceType" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-text label="字軌" controlName="wordTrack" [control]="queryForm.controls.wordTrack" [submitted]="submitted">
+                        </app-input-text>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-serial-number label="發票號碼" controlName="money" [control]="queryForm.controls.serialInvoice" [submitted]="submitted">
+                        </app-input-serial-number>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-serial-number-range label="發票號碼起迄" [startControl]="queryForm.controls.startserialInvoice" [endControl]="queryForm.controls.endserialInvoice" [submitted]="submitted">
+                        </app-input-serial-number-range>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="收銀機代號" controlName="registerID" [options]="registerIDOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.registerID" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-text label="領用單位" controlName="recruitingUnit" [control]="queryForm.controls.recruitingUnit" [submitted]="submitted">
+                        </app-input-text>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-date-range label="領用日期" [startControl]="queryForm.controls.startReceiveDate" [endControl]="queryForm.controls.endReceiveDate" [submitted]="submitted">
+                        </app-date-range>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-date-range label="繳回日期" [startControl]="queryForm.controls.startReturnDate" [endControl]="queryForm.controls.endReturnDate" [submitted]="submitted">
+                        </app-date-range>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-multi-select label="發票狀態" controlName="usageStatus" [options]="usageStatusOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.usageStatus" [submitted]="submitted">
+                        </app-multi-select>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="繳回機台" controlName="returnRegister" [options]="registerIDOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.returnRegister" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                </div>
+                <div *appHasPermission="queryPermission" class="col">
+                    <div class="grid justify-content-end">
+                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                    </div>
+                </div>
+            </form>
+        </p-accordionTab>
+    </p-accordion>
+</div>
+<div class="card">
+    <div class="col-13">
+        <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+        </app-data-table>
+    </div>
+</div>

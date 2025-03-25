@@ -1,0 +1,176 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <!-- 繳回日期 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-date-one
+            label="繳回日期"
+            controlName="returnDate"
+            [control]="dataForm.controls.returnDate"
+            [submitted]="submitted"
+          ></app-date-one>
+        </div>
+        <!-- 繳回單號 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="繳回單號"
+            controlName="returnNumber"
+            [control]="dataForm.controls.returnNumber"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <!-- 行銷檔期代號 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="行銷檔期代號"
+            controlName="marketingCampaignCode"
+            [options]="marketingCampaignOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.marketingCampaignCode"
+            [submitted]="submitted"
+          ></app-dropdown-item>
+        </div>
+        <!-- 檔期名稱 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="檔期名稱"
+            controlName="campaignName"
+            [control]="dataForm.controls.campaignName"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <!-- 繳回人員 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="繳回人員"
+            controlName="returnPersonnel"
+            [options]="returnPersonnelOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.returnPersonnel"
+            [submitted]="submitted"
+          ></app-dropdown-item>
+        </div>
+        <!-- 備註 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="備註"
+            controlName="remarks"
+            [control]="dataForm.controls.remarks"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+      <hr />
+      <ng-container formArrayName="items">
+        <ng-container
+          *ngFor="let item of items.controls; let i = index"
+          [formGroupName]="i"
+        >
+          <div class="grid align-items-center">
+            <div class="col" style="flex: 1">
+              <p>{{ i + 1 }}</p>
+            </div>
+            <div>
+              <app-button-dynamicallydelete
+                (click)="onRemoveItem(i)"
+                
+                class="col"
+              ></app-button-dynamicallydelete>
+            </div>
+          </div>
+          <div class="grid p-fluid">
+            <!-- 活動用品代號 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown-item
+                label="活動用品代號"
+                controlName="activityItemCode"
+                [options]="activityItemOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="getFormControl(i, 'activityItemCode')"
+                [submitted]="submitted"
+              ></app-dropdown-item>
+            </div>
+            <!-- 活動用品名稱 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="活動用品名稱"
+                controlName="activityItemName"
+                [control]="getFormControl(i, 'activityItemName')"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+            <!-- 用品性質 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="用品性質"
+                controlName="itemNature"
+                [control]="getFormControl(i, 'itemNature')"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+            <!-- 目前庫存量 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="目前庫存量"
+                controlName="currentStock"
+                [control]="getFormControl(i, 'currentStock')"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+            <!-- 可繳回數量 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="可繳回數量"
+                controlName="returnableQuantity"
+                [control]="getFormControl(i, 'returnableQuantity')"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+            <!-- 本次繳回數量 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="本次繳回數量"
+                controlName="returnedQuantity"
+                [control]="getFormControl(i, 'returnedQuantity')"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+            <!-- 剩餘數量 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="剩餘數量"
+                controlName="remainingQuantity"
+                [control]="getFormControl(i, 'remainingQuantity')"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+          </div>
+          <hr />
+        </ng-container>
+      </ng-container>
+      <div class="pt-1">
+        <app-button-dynamicallyadd
+          (click)="onAddItem()"
+        ></app-button-dynamicallyadd>
+      </div>
+    </form>
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button-cancel (click)="onCancel()"></app-button-cancel>
+        <app-button-submit
+          (click)="submitForm(dataForm)"
+          
+        ></app-button-submit>
+      </div>
+    </div>
+  </p-panel>
+</div>

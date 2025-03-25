@@ -1,0 +1,5 @@
+<label [for]="control">{{ label }}
+  <span *ngIf="isRequired" class="required">*</span>
+</label>
+<p-calendar [formControl]="control" [placeholder]="placeholder" [timeOnly]="true" [showTime]="true" hourFormat="24" [ngClass]="{'is-invalid': submitted && control.errors}"></p-calendar>
+<app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>

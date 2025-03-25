@@ -1,0 +1,95 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <!-- 行銷活動類別代號 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="行銷活動類別代號"
+            controlName="marketingActivityCategoryCode"
+            [options]="marketingActivityCategoryOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.marketingActivityCategoryCode"
+            [submitted]="submitted"
+          ></app-dropdown-item>
+        </div>
+        <!-- 行銷活動類別名稱 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="行銷活動類別名稱"
+            controlName="marketingActivityCategoryName"
+            [control]="dataForm.controls.marketingActivityCategoryName"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+      <hr />
+      <!-- 動態項目 -->
+      <ng-container formArrayName="items">
+        <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+          <div class="grid align-items-center">
+            <div class="col" style="flex: 1">
+              <p> {{ i + 1 }}</p>
+            </div>
+            <div>
+              <app-button-dynamicallydelete
+                (click)="onRemoveItem(i)"
+                [crudstatus]="crudstatus"
+                class="col"
+              ></app-button-dynamicallydelete>
+            </div>
+          </div>
+          <div class="grid p-fluid">
+            <!-- 任務代號 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="任務代號"
+                controlName="taskCode"
+                [control]="getFormControl(i, 'taskCode')"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+            <!-- 任務名稱 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="任務名稱"
+                controlName="taskName"
+                [control]="getFormControl(i, 'taskName')"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+            <!-- 任務說明 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="任務說明"
+                controlName="taskDescription"
+                [control]="getFormControl(i, 'taskDescription')"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+          </div>
+          <hr />
+        </ng-container>
+      </ng-container>
+      <!-- 動態新增按鈕 -->
+      <div class="pt-1">
+        <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+      </div>
+    </form>
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button-cancel (click)="onCancel()"></app-button-cancel>
+        <app-button-submit
+          (click)="submitForm(dataForm)"
+          *ngIf="isFormEditable"
+        ></app-button-submit>
+      </div>
+    </div>
+  </p-panel>
+</div>

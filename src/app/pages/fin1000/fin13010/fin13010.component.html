@@ -1,0 +1,35 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+        <div *appHasPermission="addPermission">
+            <app-button-demo label="發票區段轉檔" (click)="onCreate()" class="col"></app-button-demo>
+        </div>
+    </div>
+    <p-accordion>
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-datemm-one label="申報年月" [control]="queryForm.controls.onedatemm" [submitted]="submitted">
+                        </app-datemm-one>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-date-range label="銷售日期" [startControl]="queryForm.controls.startSalesDate" [endControl]="queryForm.controls.endSalesDate" [submitted]="submitted">
+                        </app-date-range>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="稅籍編號" controlName="taxNumber" [options]="taxNumberOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.taxNumber" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                </div>
+                <ul>
+                    <li>請注意 :</li>
+                    <li>1、最後專櫃發票匯總日期 : 2020/2/6 。</li>
+                    <li>2、最後轉檔日期 : 2024/8/20 。</li>
+                </ul>
+            </form>
+        </p-accordionTab>
+    </p-accordion>
+</div>

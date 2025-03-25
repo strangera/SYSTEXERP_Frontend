@@ -1,0 +1,5 @@
+<p-tabView>
+    <p-tabPanel *ngFor="let tab of tabs; let i = index" [header]="tab.title" [closable]="true" (close)="removeTab(i)">
+        <ng-container *ngComponentOutlet="tab.component"></ng-container>
+    </p-tabPanel>
+</p-tabView>

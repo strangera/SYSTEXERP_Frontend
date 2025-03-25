@@ -1,0 +1,77 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+        <div *appHasPermission="addPermission">
+            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+        </div>
+    </div>
+    <p-accordion>
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="品項編號" controlName="itemCode" [options]="itemCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.itemCode" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="供應商編號" controlName="supplierCode" [options]="supplierCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.supplierCode" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-number-range label="品項進價(報價金額)" [startControl]="queryForm.controls.purchaseFrom" [endControl]="queryForm.controls.purchaseTo" [submitted]="submitted">
+                        </app-input-number-range>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-number-range label="品項單價" [startControl]="queryForm.controls.singlePriceFrom" [endControl]="queryForm.controls.singlePriceTo" [submitted]="submitted">
+                        </app-input-number-range>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="品項單位" controlName="itemUnit" [options]="itemUnitOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.itemUnit" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-date-range label="報價期限" [startControl]="queryForm.controls.reportFrom" [endControl]="queryForm.controls.reportTo" [submitted]="submitted">
+                        </app-date-range>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-serial-number label="登錄批號" controlName="loginBatches" [control]="queryForm.controls.loginBatches" [submitted]="submitted">
+                        </app-input-serial-number>
+                    </div>
+                </div>
+                <hr>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-serial-number label="新增筆數" controlName="addNumber" [control]="queryForm.controls.addNumber" [submitted]="submitted">
+                        </app-input-serial-number>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-serial-number label="修改筆數" controlName="modifyNumber" [control]="queryForm.controls.modifyNumber" [submitted]="submitted">
+                        </app-input-serial-number>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-serial-number label="項次列印筆數" controlName="printNumber" [control]="queryForm.controls.printNumber" [submitted]="submitted">
+                        </app-input-serial-number>
+                    </div>
+                </div>
+                <div *appHasPermission="queryPermission" class="col">
+                    <div class="grid justify-content-end">
+                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                    </div>
+                </div>
+            </form>
+        </p-accordionTab>
+    </p-accordion>
+</div>
+<div class="card">
+    <div class="col-13">
+        <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+        </app-data-table>
+    </div>
+</div>

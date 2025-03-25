@@ -1,0 +1,26 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+        <div *appHasPermission="addPermission">
+            <app-button-demo label="轉檔" (click)="onCreate()" class="col"></app-button-demo>
+        </div>
+    </div>
+    <p-accordion>
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-datemm-one label="申報年月" [control]="queryForm.controls.onedatemm" [submitted]="submitted">
+                        </app-datemm-one>
+                    </div>
+                </div>
+            </form>
+            <ul>
+                <li>請注意 :</li>
+                <li>1、申報年月需小於系統日申報期間 。</li>
+            </ul>
+        </p-accordionTab>
+    </p-accordion>
+</div>

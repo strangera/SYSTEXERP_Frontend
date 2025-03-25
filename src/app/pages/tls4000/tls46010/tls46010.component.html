@@ -1,0 +1,101 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card">
+            <div class="grid align-items-center">
+                <div class="col" style="flex: 1;">
+                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
+                </div>
+                <div *appHasPermission="addPermission">
+                    <app-button-create (click)="onCreate()" class="col"></app-button-create>
+                </div>
+            </div>
+            <p-accordion>
+                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+                    <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                        <div class="grid p-fluid">
+                            <!-- <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="門市店號" controlName="SYS_StoreNo" [control]="queryForm.controls.SYS_StoreNo" [submitted]="submitted">
+                                </app-input-text>
+                            </div> -->
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number label="主機編號" controlName="SYS_SrvNo" [control]="queryForm.controls.SYS_SrvNo" [submitted]="submitted">
+                                </app-input-serial-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="主機狀態" controlName="SYS_SrvStatus" [options]="SYS_SrvStatus_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.SYS_SrvStatus" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number label="主機IP" controlName="SYS_SrvIP" [control]="queryForm.controls.SYS_SrvIP" [submitted]="submitted">
+                                </app-input-serial-number>
+                            </div>
+                        </div>
+                        <!-- <div class="grid p-fluid"> -->
+                            <!-- <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number label="主機連接埠" controlName="SYS_SrvPort" [control]="queryForm.controls.SYS_SrvPort" [submitted]="submitted">
+                                </app-input-serial-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="主機名稱" controlName="SYS_SrvName" [control]="queryForm.controls.SYS_SrvName" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div> -->
+                        <!-- <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="主機登入帳號" controlName="SYS_SrvUsrID" [control]="queryForm.controls.SYS_SrvUsrID" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="主機登入密碼" controlName="SYS_SrvUsrPwd" [control]="queryForm.controls.SYS_SrvUsrPwd" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="後台系統下載目錄" controlName="SYS_SRVDDir" [control]="queryForm.controls.SYS_SRVDDir" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="後台系統上傳目錄" controlName="SYS_SRVUDir" [control]="queryForm.controls.SYS_SRVUDir" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="傳輸程式下載目錄" controlName="SYS_MyPOSDDir" [control]="queryForm.controls.SYS_MyPOSDDir" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="傳輸程式上傳目錄" controlName="SYS_MyPOSUDir" [control]="queryForm.controls.SYS_MyPOSUDir" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="前台系統下載目錄" controlName="SYS_SRVDDirClt" [control]="queryForm.controls.SYS_SRVDDirClt" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="前台系統下載目錄" controlName="SYS_SRVUDirClt" [control]="queryForm.controls.SYS_SRVUDirClt" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div> -->
+                        <div *appHasPermission="queryPermission" class="col">
+                            <div class="grid justify-content-end">
+                                <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                                <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                            </div>
+                        </div>
+                    </form>
+                </p-accordionTab>
+            </p-accordion>
+        </div>
+        <div class="card">
+            <div class="col-13">
+                <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+                </app-data-table>
+            </div>
+        </div>
+    </div>
+</div>

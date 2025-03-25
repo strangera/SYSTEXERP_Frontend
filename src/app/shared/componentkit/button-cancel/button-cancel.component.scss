@@ -1,0 +1,14 @@
+p-button.button-cancel>.p-ripple.p-element.p-button.p-component {
+    color: black;
+    background: white;
+    border-radius: 5px;
+    border: 1px solid rgb(209, 209, 209);
+    padding: 12px;
+}
+
+p-button.button-cancel>.p-ripple.p-element.p-button.p-component:hover {
+    color: black;
+    background: rgb(230, 230, 230);
+    border-radius: 5px;
+    border: 1px solid rgb(209, 209, 209);
+}

@@ -1,0 +1,49 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1;">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+        <div *appHasPermission="addPermission">
+            <app-button-demo label="產生電匯付款" class="col"></app-button-demo>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-date-one label="收/付款日" controlName="settlementDate" [control]="dataForm.controls.settlementDate" [submitted]="submitted">
+                    </app-date-one>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number-range label="廠客代號" [startControl]="dataForm.controls.startFactoryID" [endControl]="dataForm.controls.endFactoryID" [submitted]="submitted">
+                    </app-input-serial-number-range>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="應付帳款ID" controlName="shouldPayId" [control]="dataForm.controls.shouldPayId" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="傳票型態" controlName="Subpoenastatus" [options]="Subpoenastatus" optionLabel="label" optionValue="value" [control]="dataForm.controls.Subpoenastatus" [submitted]="submitted"></app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="付款方式" controlName="payoutMethod" [options]="payoutMethodOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.payoutMethod" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <ul>
+                <li>挑選應付帳款維護中付款方式為電匯,預計付款日<=收/付款日且尚未付款完畢資料</li>
+                <li>挑選保留款沖款維護中付款方式為電匯,保留款沖款日<=收/付款日且尚未付款完畢資料</li>
+                <li>挑選帳款貼現沖款維護中付款方式為電匯,貼現日<=收/付款日且尚未付款完畢資料</li>
+                <li>挑選應收維護尚未收款完畢資料</li>
+            </ul>
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

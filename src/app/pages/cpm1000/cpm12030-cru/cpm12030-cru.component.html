@@ -1,0 +1,63 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="子類別編號" controlName="subCategoryCode" [control]="dataForm.controls.subCategoryCode" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="子類別名稱" controlName="subCategoryName" [control]="dataForm.controls.subCategoryName" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="客戶意見主類別" controlName="opinionCategory" [options]="opinionCategoryOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.opinionCategory" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <hr/>
+                <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark" [style]="{ height: '100px' }" [submitted]="submitted">
+                </app-editor-text>
+            <hr/>
+            <!---->
+            <!-- <hr />
+            <ng-container formArrayName="items">
+                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+                    <div class="grid align-items-center">
+                        <div class="col" style="flex: 1">
+                            <p>服務台 {{ i + 1 }}</p>
+                        </div>
+                        <div>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-dropdown-item label="所屬服務台位置" controlName="counterPosition" [options]="counterOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'counterPosition')" [submitted]="submitted">
+                            </app-dropdown-item>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-number label="分配設備數量" controlName="allocateNumber" [control]="getFormControl(i, 'allocateNumber')" [submitted]="submitted">
+                            </app-input-number>
+                        </div>
+                    </div>
+                    <hr/>
+                </ng-container>
+            </ng-container>
+            <div class="pt-1">
+                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+            </div> -->
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

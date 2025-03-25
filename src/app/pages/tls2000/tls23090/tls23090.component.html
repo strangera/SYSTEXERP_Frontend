@@ -1,0 +1,107 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-date-range
+              label="銷售日期"
+              [startControl]="queryForm.controls.saleStartDate"
+              [endControl]="queryForm.controls.saleEndDate"
+              [submitted]="submitted"
+            >
+            </app-date-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-serial-number
+              label="收銀機代號"
+              controlName="cashRegisterCode"
+              [control]="queryForm.controls.cashRegisterCode"
+              [submitted]="submitted"
+            >
+            </app-input-serial-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-serial-number
+              label="專櫃編號"
+              controlName="counterCode"
+              [control]="queryForm.controls.counterCode"
+              [submitted]="submitted"
+            >
+            </app-input-serial-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="信用卡別"
+              controlName="creditCardType"
+              [options]="creditCardTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.creditCardType"
+              [submitted]="submitted"
+            >
+            </app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-serial-number
+              label="信用卡號"
+              controlName="creditCardNumber"
+              [control]="queryForm.controls.creditCardNumber"
+              [submitted]="submitted"
+            >
+            </app-input-serial-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="金額"
+              controlName="amount"
+              [control]="queryForm.controls.amount"
+              [submitted]="submitted"
+            >
+            </app-input-text>
+          </div>
+        </div>
+      </form>
+      <div *appHasPermission="queryPermission" class="col">
+        <div class="grid justify-content-end">
+          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+          <app-button-query
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button-query>
+          <app-button-action
+            (onClick)="onShowReport()"
+            label="專櫃卡別分析報表"
+            icon=""
+          ></app-button-action>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <div class="col-12">
+    <app-data-table
+      [data]="filteredData"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    >
+    </app-data-table>
+  </div>
+</div>

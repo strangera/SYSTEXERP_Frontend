@@ -1,0 +1,114 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-serial-number-range
+              label="傳票號碼"
+              [startControl]="queryForm.controls.startserialticket"
+              [endControl]="queryForm.controls.endserialticket"
+              [submitted]="submitted"
+            >
+            </app-input-serial-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="傳票種類"
+              controlName="Subpoenatype"
+              [options]="Subpoenatype"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Subpoenatype"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-date-range
+              label="傳票日期"
+              controlName="accountsummary"
+              [startControl]="queryForm.controls.SSubpoenadate"
+              [endControl]="queryForm.controls.ESubpoenadate"
+              [submitted]="submitted"
+            ></app-date-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="傳票狀態"
+              controlName="Subpoenatype2"
+              [options]="Subpoenatype2"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Subpoenatype2"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="傳票摘要"
+              controlName="Subpoenasummary"
+              [control]="queryForm.controls.Subpoenasummary"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="傳票型態"
+              controlName="Subpoenastatus"
+              [options]="Subpoenastatus"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Subpoenastatus"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="建立者"
+              controlName="builder"
+              [options]="usercode"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.builder"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+        </div>
+      </form>
+      <div *appHasPermission="queryPermission" class="col">
+        <div class="grid justify-content-end">
+          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+          <app-button-query
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button-query>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <div class="col-12">
+    <app-data-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-data-table>
+  </div>
+</div>

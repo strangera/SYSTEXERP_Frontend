@@ -1,0 +1,10 @@
+.selection-container {
+    display: flex;
+    align-items: flex-start; /* 頂部對齊 */
+    gap: 20px; /* 父子類別之間的間距 */
+}
+
+.selection-item {
+    display: flex;
+    flex-direction: column; /* 保證標題和選擇區垂直排列 */
+}

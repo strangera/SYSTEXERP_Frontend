@@ -1,0 +1,182 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+
+  <!-- 第一個查詢條件區塊 -->
+  <p-accordion>
+    <p-accordionTab header="銷售查詢條件" [selected]="true" class="line-height-3 m-0"  [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <!-- Radio + 銷售日期區間 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <div class="grid align-items-center">
+              <div class="col-2">
+                <input
+                  type="radio"
+                  formControlName="dateRadio"
+                  [value]="'saleDate'"
+                />
+              </div>
+              <div class="col-10">
+                <app-date-range
+                  label="銷售日期區間"
+                  [startControl]="queryForm.controls.saleDateStart"
+                  [endControl]="queryForm.controls.saleDateEnd"
+                  [submitted]="submitted"
+                ></app-date-range>
+              </div>
+            </div>
+          </div>
+
+          <!-- Radio + 銷售年/月 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <div class="grid align-items-center">
+              <div class="col-2">
+                <input
+                  type="radio"
+                  formControlName="dateRadio"
+                  [value]="'saleMonthYear'"
+                />
+              </div>
+              <div class="col-10">
+                <app-datemm-one
+                  label="銷售年/月"
+                  [control]="queryForm.controls.saleMonthYear"
+                  [submitted]="submitted"
+                ></app-datemm-one>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="商品抽成類別"
+              controlName="productCategory"
+              [options]="DeductionbigCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.productCategory"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="類型"
+              controlName="type"
+              [options]="TypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.type"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+
+  <!-- 第二個查詢條件區塊 -->
+  <p-accordion>
+    <p-accordionTab header="專櫃挑選" [selected]="true" class="line-height-3 m-0"  [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <!-- Radio + 類別 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <div class="grid align-items-center">
+              <div class="col-2">
+                <input
+                  type="radio"
+                  formControlName="categoryRadio"
+                  [value]="'category'"
+                />
+              </div>
+              <div class="col-10">
+                <app-dropdown-item
+                  label="類別"
+                  controlName="category"
+                  [options]="CategoryOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.category"
+                  [submitted]="submitted"
+                ></app-dropdown-item>
+              </div>
+            </div>
+          </div>
+
+          <!-- Radio + 專櫃 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <div class="grid align-items-center">
+              <div class="col-2">
+                <input
+                  type="radio"
+                  formControlName="categoryRadio"
+                  [value]="'counterCode'"
+                />
+              </div>
+              <div class="col-10">
+                <app-dropdown-item
+                  label="專櫃"
+                  controlName="counterCode"
+                  [options]="CounterCodeOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.counterCode"
+                  [submitted]="submitted"
+                ></app-dropdown-item>
+              </div>
+            </div>
+          </div>
+
+          <!-- Radio + 組織 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <div class="grid align-items-center">
+              <div class="col-2">
+                <input
+                  type="radio"
+                  formControlName="categoryRadio"
+                  [value]="'organizationCode'"
+                />
+              </div>
+              <div class="col-10">
+                <app-dropdown-item
+                  label="組織"
+                  controlName="organizationCode"
+                  [options]="OrganizationNumberOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.organizationCode"
+                  [submitted]="submitted"
+                ></app-dropdown-item>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <div *appHasPermission="queryPermission" class="col">
+        <div class="grid justify-content-end">
+          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+          <app-button-query
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button-query>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+
+  <div class="col-12">
+    <div class="card">
+      <app-data-table
+        [data]="filteredData"
+        [columns]="columns"
+        (edit)="onEdit($event)"
+        (detail)="onDetail($event)"
+      ></app-data-table>
+    </div>
+  </div>
+</div>

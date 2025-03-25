@@ -1,0 +1,29 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-accordion>
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="匯款單號" controlName="transferSource" [options]="transferSourceOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.transferSource" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-date-one label="傳票日期" [control]="queryForm.controls.summonsDate" [submitted]="submitted">
+                        </app-date-one>
+                    </div>
+                </div>
+                <div *appHasPermission="queryPermission" class="col">
+                    <div class="grid justify-content-end">
+                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                    </div>
+                </div>
+            </form>
+        </p-accordionTab>
+    </p-accordion>
+</div>

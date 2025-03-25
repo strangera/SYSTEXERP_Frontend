@@ -1,0 +1,59 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1;">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="公司銀行科目代號" controlName="companyBankCode" [options]="bankCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.companyBankCode" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="公司銀行科目名稱" controlName="companyBankName" [control]="dataForm.controls.companyBankName" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="全省銀行代號" controlName="bankCode" [options]="bankCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.bankCode" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="帳號" controlName="account" [control]="dataForm.controls.account" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="帳戶名稱" controlName="accountName" [control]="dataForm.controls.accountName" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="EDI用戶代號(統一編號)" controlName="edi" [control]="dataForm.controls.edi" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="存款代號" controlName="depositCode" [options]="depositCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.depositCode" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="應付票據" controlName="needPayTicket" [options]="needPayTicketOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.needPayTicket" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="應收票據" controlName="needReceiveTicket" [options]="needPayTicketOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.needReceiveTicket" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

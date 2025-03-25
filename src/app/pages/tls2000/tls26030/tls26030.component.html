@@ -1,0 +1,117 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <!-- <div *appHasPermission="addPermission">
+                    <app-button-create (click)="onCreate()" class="col"></app-button-create>
+                </div> -->
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-date-range
+              label="銷售日期"
+              [startControl]="queryForm.controls.saleDateStart"
+              [endControl]="queryForm.controls.saleDateEnd"
+              [submitted]="submitted"
+            >
+            </app-date-range>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="收銀機號"
+              controlName="cashierCode"
+              [control]="queryForm.controls.cashierCode"
+              [submitted]="submitted"
+            >
+            </app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="專櫃編號"
+              controlName="counterCode"
+              [control]="queryForm.controls.counterCode"
+              [submitted]="submitted"
+            >
+            </app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="業種"
+              controlName="businessTypeCode"
+              [options]="businessTypeCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.businessTypeCode"
+              [submitted]="submitted"
+            >
+            </app-dropdown-item>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="依機台統計"
+              controlName="machineStats"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.machineStats"
+              [submitted]="submitted"
+            >
+            </app-dropdown-item>
+          </div>
+        </div>
+      </form>
+      <div *appHasPermission="queryPermission" class="col">
+        <div class="grid justify-content-end">
+          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+          <app-button-query
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button-query>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<!-- <app-excel-export
+  [data]="filteredData"
+  [columns]="columns"
+  fileName="銷售報表"
+  [startRow]="5"  
+  [startColumn]="2" 
+  [extraHeaders]="[
+    { label: '報表名稱', value: '銷售資料報表' },
+    { label: '生成日期', value: '2024/11/05' },
+    { label: '作者', value: '使用者名稱' },
+   
+  ]"
+></app-excel-export> -->
+
+<div class="card">
+  <div class="col-12">
+    <app-data-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    >
+    </app-data-table>
+  </div>
+</div>

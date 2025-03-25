@@ -1,0 +1,148 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="大分類代碼" controlName="bigCategoryCode" [options]="bigCategoryCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.bigCategoryCode" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="大分類名稱" controlName="bigCategoryName" [control]="dataForm.controls.bigCategoryName" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="中分類代碼" controlName="midCategoryCode" [options]="midCategoryCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.midCategoryCode" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="中分類名稱" controlName="midCategoryName" [control]="dataForm.controls.midCategoryName" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <hr>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="所屬會計科目(借)" controlName="accounting_Borrow" [options]="accounting_Borrow_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.accounting_Borrow" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="會計科目名稱" controlName="accountName_accBorrow" [control]="dataForm.controls.accountName_accBorrow" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="所屬會計科目(貸)" controlName="accounting_Credit" [options]="accounting_Credit_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.accounting_Credit" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="會計科目名稱" controlName="accountName_accCredit" [control]="dataForm.controls.accountName_accCredit" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="進項稅額科目(借)" controlName="tax_Borrow" [options]="tax_Borrow_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.tax_Borrow" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="會計科目名稱" controlName="accountName_taxBorrow" [control]="dataForm.controls.accountName_taxBorrow" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <hr>
+            <h5>費用結轉科目</h5>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="費用科目" controlName="cost" [options]="costOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.cost" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="會計科目名稱" controlName="accountName_cost" [control]="dataForm.controls.accountName_cost" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <h5>折舊攤提科目</h5>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="折舊科目(借)" controlName="depreciation" [control]="dataForm.controls.depreciation" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="會計科目名稱" controlName="accountName_depreciation" [control]="dataForm.controls.accountName_depreciation" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="累計折舊科目(貸)" controlName="totalDepreciation" [control]="dataForm.controls.totalDepreciation" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="會計科目名稱" controlName="accountName_totalDepreciation" [control]="dataForm.controls.accountName_totalDepreciation" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="折舊年限" controlName="depreciationLife" [control]="dataForm.controls.depreciationLife" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <hr/>
+            <app-editor-text label="說明" controlName="remark" [control]="dataForm.controls.remark" [style]="{ height: '100px' }" [submitted]="submitted">
+            </app-editor-text>
+            <hr/>
+            <ng-container formArrayName="items">
+                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+                    <div class="grid align-items-center">
+                        <div class="col" style="flex: 1">
+                            <h5>科目 {{ i + 1 }}</h5>
+                        </div>
+                        <div>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-dropdown-item label="會計科目(借)" controlName="accountingName" [options]="accounting_Borrow_Options" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'accountingName')" [submitted]="submitted">
+                            </app-dropdown-item>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="科目名稱" controlName="subjectName" [control]="getFormControl(i, 'subjectName')" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-dropdown-item label="組織代號" controlName="organizationCode" [options]="organizationOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'organizationCode')" [submitted]="submitted">
+                            </app-dropdown-item>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="組織名稱" controlName="organizationName" [control]="getFormControl(i, 'organizationName')" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <hr/>
+                </ng-container>
+            </ng-container>
+            <div class="pt-1">
+                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+            </div>
+            <h6>依本公司會計原則，會計科目之設定以中分類為基準</h6>
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

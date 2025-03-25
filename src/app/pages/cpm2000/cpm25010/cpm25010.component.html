@@ -1,0 +1,55 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <!-- 行銷檔期代號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="行銷檔期代號"
+              controlName="marketingCampaignCode"
+              [options]="marketingCampaignOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.marketingCampaignCode"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+
+          <!-- 檔期名稱 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="檔期名稱"
+              controlName="campaignName"
+              [control]="queryForm.controls.campaignName"
+              [submitted]="submitted"
+            >
+            </app-input-text>
+          </div>
+
+         
+        </div>
+      </form>
+
+      <div *appHasPermission="queryPermission" class="col">
+        <div class="grid justify-content-end">
+          <app-button-clear (click)="onClearForm()"></app-button-clear>
+          <app-button-query
+            (click)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button-query>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>

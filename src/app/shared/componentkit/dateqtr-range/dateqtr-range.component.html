@@ -1,0 +1,16 @@
+<div class="datetime-range">
+    <label [for]="endControl">{{ label }}
+    <span *ngIf="isRequired" class="required">*</span>
+  </label>
+    <div class="datetime-inputs">
+        <div class="input-group">
+            <p-dropdown [formControl]="startControl" [options]="seasons" optionLabel="label" optionValue="value" [placeholder]="placeholder" [ngClass]="{'is-invalid': submitted && endControl.errors}"></p-dropdown>
+            <app-control-messages [onerror]="submitted" [control]="startControl"></app-control-messages>
+        </div>
+        ~
+        <div class="input-group">
+            <p-dropdown [formControl]="endControl" [options]="seasons" optionLabel="label" optionValue="value" [placeholder]="placeholder" [ngClass]="{'is-invalid': submitted && endControl.errors}"></p-dropdown>
+            <app-control-messages [onerror]="submitted" [control]="endControl"></app-control-messages>
+        </div>
+    </div>
+</div>

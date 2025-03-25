@@ -1,0 +1,23 @@
+.scroll-container {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 1em;
+  }
+  
+  p-table {
+    font-size: 0.8rem; // 調整表格字體大小
+  }
+  
+  .small-input {
+    width: 50px; // 調整輸入框的寬度
+    padding: 0.2em;
+  }
+  
+  .small-dropdown .p-dropdown-label {
+    font-size: 0.8rem; // 調整下拉選單的字體大小
+  }
+  
+  .small-dropdown .p-dropdown {
+    width: 60px; // 調整下拉選單的寬度
+  }
+  

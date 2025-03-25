@@ -1,0 +1,61 @@
+<form [formGroup]="stepForm">
+    <div class="grid p-fluid">
+        <div class="col-12 md:col-3 lg:col-3">
+            <span>交易類別</span>
+            <p-dropdown [options]="eventtypeOptions" optionLabel="name" optionValue="value" formControlName="eventtype"></p-dropdown>
+        </div>
+        <div class="col-12 md:col-3 lg:col-3">
+            <span>活動類型</span>
+            <p-dropdown [options]="coupontypeOptions" optionLabel="name" optionValue="value" formControlName="coupontype"></p-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-6">
+            <span>日期限制</span>
+            <div class="flex">
+                <p-calendar [showTime]="true" formControlName="limitstarttime"></p-calendar> ~
+                <p-calendar [showTime]="true" formControlName="limitendtime"></p-calendar>
+            </div>
+        </div>
+
+    </div>
+    <hr/>
+    <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-3">
+            <span>滿額門檻</span>
+            <div class="flex">
+                <input pInputText id="thresholdvalue" type="number" formControlName="thresholdvalue" />
+                <p-dropdown [options]="eventthresholdvalueunitOptions" optionLabel="name" optionValue="value" formControlName="thresholdvalueunit"></p-dropdown>
+            </div>
+        </div>
+        <div class="col-3 md:col-3 lg:col-3">
+            <span>次數限制 (0 不限制)</span>
+            <input pInputText id="usagecount" type="number" formControlName="usagecount" />
+        </div>
+        <div class="col-3 md:col-3 lg:col-3">
+            <span>取得贈品數</span>
+            <input pInputText id="getgiftcount" type="number" formControlName="getgiftcount" />
+        </div>
+    </div>
+    <hr/>
+    <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-3">
+            <span>會員等級</span>
+            <div formArrayName="memberships">
+                <label *ngFor="let membership of memberships.controls; let i = index">
+                <input type="checkbox" [formControlName]="i">
+                {{ membershipLevels[i].name }}
+              </label>
+            </div>
+        </div>
+        <div class="col-12 md:col-6 lg:col-6">
+            <span>活動區域限制</span>
+            <p-pickList [source]="sourceOptions" [target]="targetProducts" sourceHeader="可選區域" targetHeader="已選區域" [dragdrop]="true" filterBy="name" [showSourceControls]="false" [showTargetControls]="false">
+                <ng-template let-product pTemplate="item">
+
+                    <span class="font-bold">
+                    {{ product.name }}
+                </span>
+                </ng-template>
+            </p-pickList>
+        </div>
+    </div>
+</form>

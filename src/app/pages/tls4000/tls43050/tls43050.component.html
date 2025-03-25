@@ -1,0 +1,71 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card">
+            <div class="grid align-items-center">
+                <div class="col" style="flex: 1;">
+                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
+                </div>
+            </div>
+            <p-accordion>
+                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+                    <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number label="訊息案號代碼" controlName="messageCode" [control]="queryForm.controls.messageCode" [submitted]="submitted">
+                                </app-input-serial-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number label="收銀機代碼" controlName="registerCode" [control]="queryForm.controls.registerCode" [submitted]="submitted">
+                                </app-input-serial-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number label="群組代碼" controlName="groupCode" [control]="queryForm.controls.groupCode" [submitted]="submitted">
+                                </app-input-serial-number>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="狀態" controlName="status" [options]="statusOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.status" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number label="登錄人ID" controlName="loginID" [control]="queryForm.controls.loginID" [submitted]="submitted">
+                                </app-input-serial-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number label="審核人ID" controlName="approverID" [control]="queryForm.controls.approverID" [submitted]="submitted">
+                                </app-input-serial-number>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="顯示文字(M)" controlName="mMessage" [control]="queryForm.controls.mMessage" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="顯示文字(D)" controlName="dMessage" [control]="queryForm.controls.dMessage" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-date-range label="登錄時間" [startControl]="queryForm.controls.startdate" [endControl]="queryForm.controls.enddate" [submitted]="submitted">
+                                </app-date-range>
+                            </div>
+                        </div>
+                        <div *appHasPermission="queryPermission" class="col">
+                            <div class="grid justify-content-end">
+                                <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                                <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                            </div>
+                        </div>
+                    </form>
+                </p-accordionTab>
+            </p-accordion>
+        </div>
+        <div class="card">
+            <div class="col-13">
+                <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+                </app-data-table>
+            </div>
+        </div>
+    </div>
+</div>

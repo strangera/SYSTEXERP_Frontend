@@ -1,0 +1,87 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <div *appHasPermission="addPermission">
+        <app-button-create (click)="onCreate()" class="col"></app-button-create>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="保管人代碼"
+              controlName="usercode"
+              [options]="usercode"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.usercode"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+          <!-- <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="應付費用"
+              controlName="Feespayable"
+              [options]="Feespayable"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Feespayable"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div> -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              label="零用金額度"
+              [startControl]="queryForm.controls.SPettyamount"
+              [endControl]="queryForm.controls.EPettyamount"
+              [submitted]="submitted"
+            >
+            </app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-editor-text
+              label="說明"
+              controlName="description"
+              [control]="queryForm.controls.description"
+              [style]="{ height: '100px' }"
+              [submitted]="submitted"
+            >
+            </app-editor-text>
+          </div>
+        </div>
+      </form>
+      <div *appHasPermission="queryPermission" class="col">
+        <div class="grid justify-content-end">
+          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+          <app-button-query
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button-query>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<!-- <div class="card">
+    <div class="col-12">
+      <app-data-table
+        [data]="data"
+        [columns]="columns"
+        (edit)="onEdit($event)"
+        (detail)="onDetail($event)"
+      ></app-data-table>
+    </div>
+  </div> -->

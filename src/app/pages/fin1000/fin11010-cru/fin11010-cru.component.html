@@ -1,0 +1,83 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1;">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="公司代號(統一編號)" controlName="bId" [control]="dataForm.controls.bId" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="營業人名稱" controlName="bName" [control]="dataForm.controls.bName" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="稅籍編號" controlName="taxNumber" [control]="dataForm.controls.taxNumber" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="負責人姓名" controlName="chargePerson" [control]="dataForm.controls.chargePerson" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="營業地址" controlName="bAddress" [control]="dataForm.controls.bAddress" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="總繳代號" controlName="allPayCode" [options]="payMethodOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.allPayCode" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="是否採直接扣扺法" controlName="directDeduction" [options]="whetherOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.directDeduction" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="總公司統編" controlName="ubId" [control]="dataForm.controls.ubId" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="自行或委託辦理申報註記" controlName="apply" [options]="applyOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.apply" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="(代理)申報人姓名" controlName="notifierName" [control]="dataForm.controls.notifierName" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="(代理)申報人電話" controlName="notifierPhone" [control]="dataForm.controls.notifierPhone" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="代理申報人證書(登錄)字號" controlName="notifierCertificate" [control]="dataForm.controls.notifierCertificate" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-datemm-one label="申報年月起" [control]="dataForm.controls.startdate" [submitted]="submitted">
+                    </app-datemm-one>
+                </div>
+            </div>
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+    <ul>
+        <li>請注意 :</li>
+        <li>1、代理申報人證書(登錄)字號 : 自行申報者免填，請填列完整年度及字號（例：097台財稅證字第0000001號） 。</li>
+    </ul>
+</div>

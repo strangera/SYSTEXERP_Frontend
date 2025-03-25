@@ -1,0 +1,61 @@
+<h3><B>POS即時連線監看</B></h3>
+<div class="grid">
+	<div class="col-12">
+            <p-dataView #dv [value]="products" layout="list"  [rows]="50" [paginator]="true">
+                <ng-template pTemplate="header" >
+                    <div class="container m-1" >
+
+                            <div class="m-0 container row justify-content-start" style="width:40%" >
+                                <div class="mt-2" ><B>樓層列表</B></div>
+                                <div><p-button label="過濾" [text]="true" icon="pi pi-eye" severity="secondary" /></div>
+                            </div>
+
+                            <div class="m-0 container row justify-content-end" style="width:60%">
+
+                                <p-inputGroupAddon><i class="pi pi-search mr-1"></i>搜尋樓層</p-inputGroupAddon><input type="text" class="mr-2" pInputText
+                                    style="width:20rem" /><p-dropdown [options]="dropdown3" class="mr-2" ></p-dropdown><p-dataViewLayoutOptions />
+
+                            </div>
+
+                        </div>
+
+                </ng-template>
+                <ng-template pTemplate="list" let-poslist>
+                        <p-table [value]="poslist" [tableStyle]="{ 'min-width': '50rem' }" selectionMode="single" styleClass="p-datatable-gridlines"  [rows]="20"  (onRowSelect)="onRowSelect($event)">
+                            <ng-template pTemplate="header">
+                                <tr>
+                                    <th style="width:100px;background-color: #E0F2F1;">Cover</th>
+                                    <th style="width:200px;background-color: #E0F2F1;">樓層<p-sortIcon field="name" /></th>
+                                    <th style="background-color: #E0F2F1;">收銀機台數<p-sortIcon field="code" /></th>
+                                </tr>
+                            </ng-template>
+                            <ng-template pTemplate="body" let-poslist>
+                                <tr [pSelectableRow]="poslist" >
+                                    <td ><img [src]="'assets/layout/images/' + poslist.image" class="w-9 shadow-0 ml-2"/></td>
+                                    <td >{{poslist.name}}</td>
+                                    <td >{{poslist.code}}</td>
+
+
+                                </tr>
+                            </ng-template>
+                        </p-table>
+
+                </ng-template>
+                <ng-template  pTemplate="grid" let-poslist>
+                    <div class="grid grid-nogutter">
+                        <div class="col-12 md:col-2" *ngFor="let floor of poslist" >
+                            <div class="card m-0 border-1 surface-border hover-effect" (click)="goToNextPage()">
+                              <div ><img [src]="'assets/layout/images/' + floor.image" class="w-10 shadow-0 ml-2"/>
+                            </div>
+                              <div class="m-3"></div>
+                              <div ><span class="align-items-center text-center mb-0 text-l ">{{floor.name}} -       ({{floor.code}} 台)</span></div>
+                            </div>
+                        </div>
+                        </div>
+                </ng-template>
+            </p-dataView>
+		</div>
+
+
+
+</div>

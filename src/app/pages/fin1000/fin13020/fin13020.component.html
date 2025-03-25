@@ -1,0 +1,48 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+        <div *appHasPermission="addPermission">
+            <app-button-demo label="發票報表" (click)="onCreate()" class="col"></app-button-demo>
+        </div>
+        <div *appHasPermission="addPermission">
+            <app-button-demo label="轉檔報表" (click)="onCreate()" class="col"></app-button-demo>
+        </div>
+        <div *appHasPermission="addPermission">
+            <app-button-demo label="轉檔錯誤紀錄" (click)="onCreate()" class="col"></app-button-demo>
+        </div>
+        <div *appHasPermission="addPermission">
+            <app-button-demo label="退貨報表" (click)="onCreate()" class="col"></app-button-demo>
+        </div>
+        <div *appHasPermission="addPermission">
+            <app-button-demo label="跨日作廢" (click)="onCreate()" class="col"></app-button-demo>
+        </div>
+    </div>
+    <p-accordion>
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-date-range label="銷售日期" [startControl]="queryForm.controls.startSalesDate" [endControl]="queryForm.controls.endSalesDate" [submitted]="submitted">
+                        </app-date-range>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-serial-number-range label="字軌/發票號碼" [startControl]="queryForm.controls.startserialinvoice" [endControl]="queryForm.controls.endserialinvoice" [submitted]="submitted">
+                        </app-input-serial-number-range>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="發票類別" controlName="invoiceType" [options]="invoiceTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.invoiceType" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                </div>
+                <ul>
+                    <li>請注意 :</li>
+                    <li>1、最近關帳日期 : 2020/2/10 。</li>
+                    <li>2、起迄日期只有使用在退貨報表及跨日作廢查詢 。</li>
+                    <li>3、發票類別只有使用在跨日作廢查詢 (僅適用2015年起) 。</li>
+                </ul>
+            </form>
+        </p-accordionTab>
+    </p-accordion>
+</div>

@@ -1,0 +1,96 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="版本"
+            controlName="version"
+            [control]="dataForm.controls.version"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="年"
+            controlName="year"
+            [control]="dataForm.controls.year"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="審核狀態"
+            controlName=" status"
+            [control]="dataForm.controls.status"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+      <!---->
+      <!-- <hr />
+      <ng-container formArrayName="items">
+        <ng-container
+          *ngFor="let item of items.controls; let i = index"
+          [formGroupName]="i"
+        >
+          <div class="grid align-items-center">
+            <div class="col" style="flex: 1">
+              <p>名稱 {{ i + 1 }}</p>
+            </div>
+            <div>
+              <app-button-dynamicallydelete
+                (click)="onRemoveItem(i)"
+                [crudstatus]="crudstatus"
+                class="col"
+              ></app-button-dynamicallydelete>
+            </div>
+          </div>
+          <div class="grid p-fluid">
+            <div class="col-6 md:col-4 lg:col-2">
+              <app-dropdown-default
+                label="系統別初始"
+                controlName="CashRegisterType"
+                [options]="CashRegisterTypeItems"
+                optionLabel="label"
+                optionValue="value"
+                [control]="getFormControl(i, 'CashRegisterType')"
+                [submitted]="submitted"
+              >
+              </app-dropdown-default>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="名字"
+                controlName="name"
+                [control]="getFormControl(i, 'name')"
+                [submitted]="submitted"
+              >
+              </app-input-text>
+            </div>
+          </div>
+          <hr />
+        </ng-container>
+      </ng-container>
+      <div class="pt-1">
+        <app-button-dynamicallyadd
+          (click)="onAddItem()"
+        ></app-button-dynamicallyadd>
+      </div> -->
+    </form>
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button-cancel (click)="onCancel()"></app-button-cancel>
+        <app-button-submit
+          (click)="submitForm(dataForm)"
+          *ngIf="isFormEditable"
+        ></app-button-submit>
+      </div>
+    </div>
+  </p-panel>
+</div>

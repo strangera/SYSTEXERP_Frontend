@@ -1,0 +1,68 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1;">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="系統別" controlName="systemType" [options]="systemTypeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.systemType" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="作業代碼" controlName="jobCode" [options]="jobTypeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.jobCode" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <h6>此作業只限定使用在報表類作業</h6>
+            <!---->
+            <hr>
+            <ng-container formArrayName="items">
+                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+                    <div class="grid align-items-center">
+                        <div class="col" style="flex: 1;">
+                            <h5>簽核欄 {{i+1}}</h5>
+                        </div>
+                        <div>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="簽核欄名稱" controlName="signName" [control]="getFormControl(i, 'signName')" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-2">
+                            <app-input-serial-number label="排序序號" controlName="orderNumber" [control]="getFormControl(i, 'orderNumber')" [submitted]="submitted">
+                            </app-input-serial-number>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-1">
+                            <app-input-serial-number label="行別" controlName="columnNumber" [control]="getFormControl(i, 'columnNumber')" [submitted]="submitted">
+                            </app-input-serial-number>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-2">
+                            <app-dropdown-item label="狀態" controlName="status" [options]="statusOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'status')" [submitted]="submitted">
+                            </app-dropdown-item>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-3">
+                            <app-dropdown-item label="是否預設顯示 登入者姓名" controlName="showName" [options]="whetherOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'showName')" [submitted]="submitted">
+                            </app-dropdown-item>
+                        </div>
+                    </div>
+                    <hr/>
+                </ng-container>
+            </ng-container>
+            <div class="pt-1">
+                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+            </div>
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

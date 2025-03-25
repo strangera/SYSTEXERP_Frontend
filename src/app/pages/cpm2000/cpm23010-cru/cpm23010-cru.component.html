@@ -1,0 +1,109 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <div *appHasPermission="addPermission">
+      <app-button-action label="調出預約用品資料" icon="pi pi-book" (click)="trsData()" class="col"></app-button-action>
+  </div>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <!-- 申請日期 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-date-one
+            label="申請日期"
+            controlName="applicationDate"
+            [control]="dataForm.controls.applicationDate"
+            [submitted]="submitted"
+          ></app-date-one>
+        </div>
+        <!-- 用品管理單號 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="用品管理單號"
+            controlName="supplyManagementNumber"
+            [control]="dataForm.controls.supplyManagementNumber"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <!-- 用品狀況 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="用品狀況"
+            controlName="supplyCondition"
+            [options]="supplyConditionOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.supplyCondition"
+            [submitted]="submitted"
+          ></app-dropdown-item>
+        </div>
+        <!-- 行銷檔期代號 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="行銷檔期代號"
+            controlName="marketingCampaignCode"
+            [options]="marketingCampaignOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.marketingCampaignCode"
+            [submitted]="submitted"
+          ></app-dropdown-item>
+        </div>
+        <!-- 檔期名稱 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="檔期名稱"
+            controlName="campaignName"
+            [control]="dataForm.controls.campaignName"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <!-- 廠商編號 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="廠商編號"
+            controlName="vendorCode"
+            [options]="vendorOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.vendorCode"
+            [submitted]="submitted"
+          ></app-dropdown-item>
+        </div>
+        <!-- 申請人 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="申請人"
+            controlName="applicant"
+            [options]="applicantOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.applicant"
+            [submitted]="submitted"
+          ></app-dropdown-item>
+        </div>
+        <!-- 備註 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="備註"
+            controlName="remarks"
+            [control]="dataForm.controls.remarks"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+    </form>
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button-cancel (click)="onCancel()"></app-button-cancel>
+        <app-button-submit
+          (click)="submitForm(dataForm)"
+          *ngIf="isFormEditable"
+        ></app-button-submit>
+      </div>
+    </div>
+  </p-panel>
+</div>

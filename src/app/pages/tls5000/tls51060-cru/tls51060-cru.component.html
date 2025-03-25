@@ -1,0 +1,50 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card">
+            <div class="grid p-fluid ">
+                <div class="col-20 md:col-10 lg:col-12">
+                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
+                </div>
+            </div>
+            <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+                <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-serial-number label="品牌編號" controlName="brandCode" [control]="dataForm.controls.brandCode" [submitted]="submitted">
+                            </app-input-serial-number>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="品牌名稱(中文)" controlName="brandCName" [control]="dataForm.controls.brandCName" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="品牌名稱(英文)" controlName="brandEName" [control]="dataForm.controls.brandEName" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-serial-number label="品牌標準進貨折數" controlName="brandRestock" [control]="dataForm.controls.brandRestock" [submitted]="submitted">
+                            </app-input-serial-number>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-dropdown-item label="建議倉別" controlName="storage" [options]="storageOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.storage" [submitted]="submitted">
+                            </app-dropdown-item>
+                        </div>
+
+                    </div>
+                    <hr>
+                    <app-editor-text label="備註" controlName="editortext" [control]="dataForm.controls.editortext" [style]="{ height: '100px' }" [submitted]="submitted">
+                    </app-editor-text>
+                    <hr>
+                </form>
+                <div class="col pt-4">
+                    <div class="grid justify-content-end">
+                        <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                        <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                    </div>
+                </div>
+            </p-panel>
+        </div>
+    </div>
+</div>

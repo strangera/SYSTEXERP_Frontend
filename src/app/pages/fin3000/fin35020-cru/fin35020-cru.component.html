@@ -1,0 +1,210 @@
+<div class="card">
+    <div class="grid align-items-center">
+      <div class="col" style="flex: 1">
+        <app-menubar [ProgNo]="ProgNo"></app-menubar>
+      </div>
+    </div>
+  
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+      <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+        <div class="grid p-fluid">
+          <!-- 傳票編號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="傳票編號"
+              controlName="voucherNumber"
+              [control]="dataForm.controls.voucherNumber"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+  
+          <!-- 傳票種類 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="傳票種類"
+              controlName="voucherType"
+              [control]="dataForm.controls.voucherType"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+  
+          <!-- 傳票型態 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="傳票型態"
+              controlName="voucherCategory"
+              [control]="dataForm.controls.voucherCategory"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+  
+          <!-- 傳票日期 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-date-one
+              label="傳票日期"
+              controlName="voucherDate"
+              [control]="dataForm.controls.voucherDate"
+              [submitted]="submitted"
+            ></app-date-one>
+          </div>
+  
+          <!-- 傳票摘要 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-date-one
+              label="傳票摘要"
+              controlName="voucherSummary"
+              [control]="dataForm.controls.voucherSummary"
+              [submitted]="submitted"
+            ></app-date-one>
+          </div>
+  
+          <!-- 建立者 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="建立者"
+              controlName="creator"
+              [control]="dataForm.controls.creator"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+  
+          <!-- 建立日 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-date-one
+              label="建立日"
+              controlName="creationDate"
+              [control]="dataForm.controls.creationDate"
+              [submitted]="submitted"
+            ></app-date-one>
+          </div>
+        </div>
+  
+        <hr />
+        <ng-container formArrayName="items">
+          <ng-container
+            *ngFor="let item of items.controls; let i = index"
+            [formGroupName]="i"
+          >
+            <div class="grid align-items-center">
+              <div class="col" style="flex: 1">
+                <p>明細 {{ i + 1 }}</p>
+              </div>
+              <div>
+                <app-button-dynamicallydelete
+                  (click)="onRemoveItem(i)"
+                  class="col"
+                ></app-button-dynamicallydelete>
+              </div>
+            </div>
+            <div class="grid p-fluid">
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="科目代號"
+                  controlName="accountCode"
+                  [control]="getFormControl(i, 'accountCode')"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+  
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="廠商編號"
+                  controlName="vendorCode"
+                  [control]="getFormControl(i, 'vendorCode')"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+  
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="摘要"
+                  controlName="summary"
+                  [control]="getFormControl(i, 'summary')"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+  
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="借方金額"
+                  controlName="debitAmount"
+                  [control]="getFormControl(i, 'debitAmount')"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+  
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="貸方金額"
+                  controlName="creditAmount"
+                  [control]="getFormControl(i, 'creditAmount')"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+  
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="組織代號"
+                  controlName="organizationCode"
+                  [control]="getFormControl(i, 'organizationCode')"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+  
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="立沖代號"
+                  controlName="settleCode"
+                  [control]="getFormControl(i, 'settleCode')"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+  
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="活動代號"
+                  controlName="activityCode"
+                  [control]="getFormControl(i, 'activityCode')"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+  
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="對象別編號"
+                  controlName="targetCode"
+                  [control]="getFormControl(i, 'targetCode')"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+  
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="對帳KEY值"
+                  controlName="reconciliationKey"
+                  [control]="getFormControl(i, 'reconciliationKey')"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+            </div>
+            <hr />
+          </ng-container>
+        </ng-container>
+  
+        <div class="pt-1">
+          <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+        </div>
+      </form>
+  
+      <div class="col pt-4">
+        <div class="grid justify-content-end">
+          <app-button-cancel (click)="onCancel()"></app-button-cancel>
+          <app-button-submit
+            (click)="submitForm(dataForm)"
+            *ngIf="isFormEditable"
+          ></app-button-submit>
+        </div>
+      </div>
+    </p-panel>
+  </div>
+  

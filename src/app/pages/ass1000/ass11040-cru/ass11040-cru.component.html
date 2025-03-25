@@ -1,0 +1,67 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1;">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="品項代碼" controlName="itemCode" [control]="dataForm.controls.itemCode" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="品項名稱" controlName="itemName" [control]="dataForm.controls.itemName" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="大分類代碼" controlName="bigCategoryCode" [options]="bigCategoryCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.bigCategoryCode" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="中分類代碼" controlName="midCategoryCode" [options]="midCategoryCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.midCategoryCode" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="小分類代碼" controlName="smlCategoryCode" [options]="midCategoryCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.smlCategoryCode" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="品項類別區分" controlName="itemCategory" [options]="itemCategoryOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.itemCategory" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="基本單位" controlName="itemUnit" [options]="itemUnitOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.itemUnit" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="包裝單位" controlName="packageUnit" [options]="packageUnitOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.packageUnit" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="保固方式" controlName="warrantyMethod" [options]="warrantyMethodOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.warrantyMethod" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="保養方式" controlName="maintenanceMethod" [options]="warrantyMethodOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.maintenanceMethod" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <app-editor-text label="說明" controlName="illustrate" [control]="dataForm.controls.illustrate" [style]="{ height: '100px' }" [submitted]="submitted">
+            </app-editor-text>
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

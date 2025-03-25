@@ -1,0 +1,37 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1;">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-datemm-two label="發票年月" [control]="dataForm.controls.twodatemm" [submitted]="submitted">
+                    </app-datemm-two>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="字軌" controlName="wordTrack" [control]="dataForm.controls.wordTrack" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number-range label="發票號碼" [startControl]="dataForm.controls.startserialInvoice" [endControl]="dataForm.controls.endserialInvoice" [submitted]="submitted">
+                    </app-input-serial-number-range>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="使用別" controlName="usageType" [options]="usageTypeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.usageType" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

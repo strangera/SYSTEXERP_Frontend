@@ -1,0 +1,45 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-accordion>
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-date-range label="匯款/開票/調撥日期" [startControl]="queryForm.controls.startdate" [endControl]="queryForm.controls.enddate" [submitted]="submitted">
+                        </app-date-range>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="銀行代號" controlName="bankCode" [options]="bankCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.bankCode" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-serial-number-range label="匯款/開票/調撥單號" [startControl]="queryForm.controls.startserialticket" [endControl]="queryForm.controls.endserialticket" [submitted]="submitted">
+                        </app-input-serial-number-range>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-multi-select label="型態" controlName="type" [options]="typeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.type" [submitted]="submitted">
+                        </app-multi-select>
+                    </div>
+                </div>
+                <div *appHasPermission="queryPermission" class="col">
+                    <div class="grid justify-content-end">
+                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                    </div>
+                </div>
+            </form>
+        </p-accordionTab>
+    </p-accordion>
+</div>
+<div class="card">
+    <div class="col-13">
+        <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+        </app-data-table>
+    </div>
+</div>

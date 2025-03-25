@@ -1,0 +1,56 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+        <div *appHasPermission="addPermission">
+            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+        </div>
+    </div>
+    <p-accordion>
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="公司銀行科目代號" controlName="companyBankCode" [options]="bankCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.companyBankCode" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-number-range label="金額上限" [startControl]="queryForm.controls.startMaxCash" [endControl]="queryForm.controls.endMaxCash" [submitted]="submitted">
+                        </app-input-number-range>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-number-range label="金額下限" [startControl]="queryForm.controls.startMinCash" [endControl]="queryForm.controls.endMinCash" [submitted]="submitted">
+                        </app-input-number-range>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-number-range label="廠商負擔電匯手續費" [startControl]="queryForm.controls.startVendorFee" [endControl]="queryForm.controls.endVendorFee" [submitted]="submitted">
+                        </app-input-number-range>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-number-range label="公司負擔電匯手續費" [startControl]="queryForm.controls.startCompanyFee" [endControl]="queryForm.controls.endCompanyFee" [submitted]="submitted">
+                        </app-input-number-range>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-number-range label="廠商負擔電匯手續費回饋收入" [startControl]="queryForm.controls.startVendorRevenue" [endControl]="queryForm.controls.endVendorRevenue" [submitted]="submitted">
+                        </app-input-number-range>
+                    </div>
+                </div>
+                <div *appHasPermission="queryPermission" class="col">
+                    <div class="grid justify-content-end">
+                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                    </div>
+                </div>
+            </form>
+        </p-accordionTab>
+    </p-accordion>
+</div>
+<div class="card">
+    <div class="col-13">
+        <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+        </app-data-table>
+    </div>
+</div>

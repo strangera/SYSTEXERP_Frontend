@@ -1,0 +1,131 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <h5>基本資料</h5>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="廠商編號" controlName="vendorId" [control]="dataForm.controls.vendorId" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="廠商統一編號" controlName="vendorUid" [control]="dataForm.controls.vendorUid" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="廠商名稱(中文)" controlName="vendorCName" [control]="dataForm.controls.vendorCName" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <!-- <div class="col-12 md:col-6 lg:col-6">
+                    <app-input-text label="發票地址" controlName="vendorSName" [control]="dataForm.controls.invoiceAddress" [submitted]="submitted">
+                    </app-input-text>
+                </div> -->
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="廠商名稱(英文)" controlName="vendorEName" [control]="dataForm.controls.vendorEName" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="廠商簡稱" controlName="vendorSName" [control]="dataForm.controls.vendorSName" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <hr>
+            <h5>負責人資料</h5>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="負責人" controlName="principal" [control]="dataForm.controls.principal" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="負責人職稱" controlName="principalTitle" [control]="dataForm.controls.principalTitle" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="負責人身份証字號" controlName="principalUid" [control]="dataForm.controls.principalUid" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-3">
+                    <app-input-serial-number label="負責人電話" controlName="principalPhone" [control]="dataForm.controls.principalPhone" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-3">
+                    <app-input-text label="負責人電子郵件" controlName="principalEmail" [control]="dataForm.controls.principalEmail" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-6">
+                    <app-input-text label="負責人聯絡地址" controlName="principalAddress" [control]="dataForm.controls.principalAddress" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <hr>
+            <h5>公司資料</h5>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-3">
+                    <app-input-serial-number label="公司登記電話" controlName="companyPhone" [control]="dataForm.controls.companyPhone" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-3">
+                    <app-input-serial-number label="公司傳真" controlName="companyFax" [control]="dataForm.controls.companyFax" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-6">
+                    <app-input-text label="公司登記地址(中文)" controlName="companyAddress" [control]="dataForm.controls.companyAddress" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-6">
+                    <app-input-text label="通訊地址" controlName="contactAddress" [control]="dataForm.controls.contactAddress" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <hr>
+            <h5>廠商資料</h5>
+            <app-editor-text label="附註" controlName="remark" [control]="dataForm.controls.remark" [style]="{ height: '100px' }" [submitted]="submitted">
+            </app-editor-text>
+            <hr/>
+            <!---->
+            <!-- <hr />
+            <ng-container formArrayName="items">
+                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+                    <div class="grid align-items-center">
+                        <div class="col" style="flex: 1">
+                            <p>服務台 {{ i + 1 }}</p>
+                        </div>
+                        <div>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-dropdown-item label="所屬服務台位置" controlName="counterPosition" [options]="counterOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'counterPosition')" [submitted]="submitted">
+                            </app-dropdown-item>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-number label="分配設備數量" controlName="allocateNumber" [control]="getFormControl(i, 'allocateNumber')" [submitted]="submitted">
+                            </app-input-number>
+                        </div>
+                    </div>
+                    <hr/>
+                </ng-container>
+            </ng-container>
+            <div class="pt-1">
+                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+            </div> -->
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

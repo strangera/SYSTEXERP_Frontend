@@ -1,0 +1,32 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card">
+            <div class="grid p-fluid ">
+                <div class="col-20 md:col-10 lg:col-12">
+                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
+                </div>
+            </div>
+            <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+                <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+                    <hr>
+                    <div class="grid p-fluid">
+                        <div class="grid p-fluid">
+                            <app-radiobutton label="單位屬性" groupname="unitProperty" [control]="dataForm.controls.unitProperty" [options]="unitPropertyOptions" [submitted]="submitted">
+                            </app-radiobutton>
+                        </div>
+                    </div>
+                    <hr>
+                    <app-editor-text label="備註" controlName="editortext" [control]="dataForm.controls.editortext" [style]="{ height: '100px' }" [submitted]="submitted">
+                    </app-editor-text>
+                    <hr>
+                </form>
+                <div class="col pt-4">
+                    <div class="grid justify-content-end">
+                        <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                        <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                    </div>
+                </div>
+            </p-panel>
+        </div>
+    </div>
+</div>

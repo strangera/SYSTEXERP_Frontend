@@ -1,0 +1,113 @@
+<div class="card">
+  <div class="col-13">
+    <div class="grid p-fluid">
+      <div class="col-12 md:col-6 lg:col-1">
+        <button pButton type="button" icon="pi pi-pencil" severity="success" label="新增一行" (click)="addNewRow()"></button>
+      </div>
+      <div class="col-12 md:col-6 lg:col-1">
+        <button pButton type="button" icon="pi pi-trash" severity="danger" label="刪除該行" (click)="deleteSelectedRows()"></button>
+      </div>
+    </div>
+  </div>
+  <hr>
+  <p-table [value]="deductions" class="no-wrap-header" appendTo="body" [editable]="true" dataKey="serialNumber" editMode="row" [tableStyle]="{'min-width': '50rem'}">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>
+          <p-checkbox
+            [binary]="true"
+            [(ngModel)]="allSelected"
+            (ngModelChange)="allSelected ? selectAllDeductions() : deselectAllDeductions()"
+            (click)="!allSelected ? selectAllDeductions() : deselectAllDeductions()"
+            label="全選">
+          </p-checkbox>
+        </th>
+        <!-- <th>序號</th> -->
+        <th>扣款代號</th>
+        <th>扣款名稱</th>
+        <!-- 月份可以使用 YYYY-MM 或 發票月 -->
+        <!-- <th>發票月</th>  -->
+        <th>扣款起始年月</th> 
+        <th>單位</th>
+        <th>單價</th>
+        <th>數量</th>
+        <th>扣款金額(未稅)</th>
+        <th>組織</th>
+        <th>是否開立發票</th>
+        <th>操作</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-deduction let-ri="rowIndex">
+      <tr [pEditableRow]="deduction">
+        <td>
+          <p-checkbox 
+            [binary]="true" 
+            [ngModel]="isSelected(deduction)" 
+            (onChange)="toggleSelection(deduction)"
+          ></p-checkbox>
+        </td>
+        <!-- 序號不顯示 -->
+        <!-- <td>
+          <input *ngIf="deduction.editing" type="text" pInputText [(ngModel)]="deduction.serialNumber" />
+          <span *ngIf="!deduction.editing">{{ deduction.serialNumber }}</span>
+        </td> -->
+        <td>
+          <input *ngIf="deduction.editing" type="text" pInputText [(ngModel)]="deduction.deductionCode" />
+          <span *ngIf="!deduction.editing">{{ deduction.deductionCode }}</span>
+        </td>
+        <td>
+          <input *ngIf="deduction.editing" type="text" pInputText [(ngModel)]="deduction.deductionName" />
+          <span *ngIf="!deduction.editing">{{ deduction.deductionName }}</span>
+        </td>
+        <!-- 發票月(可直接使用) -->
+        <!-- <td>
+          <p-calendar *ngIf="deduction.editing" [(ngModel)]="deduction.YearMonth" view="month" dateFormat="yy/MM" [readonlyInput]="true">
+          </p-calendar>
+          <span *ngIf="!deduction.editing">
+            {{ deduction.YearMonth | date:'yyyy/MM' }} （{{ getInvoicePeriod(deduction.YearMonth) }}）
+          </span>
+        </td> -->
+
+        <!-- 扣款起始年月 -->
+        <td>
+          <p-calendar *ngIf="deduction.editing" [(ngModel)]="deduction.YearMonth" view="month" dateFormat="yy/MM" [readonlyInput]="true">
+          </p-calendar>
+          <span *ngIf="!deduction.editing">
+            {{ deduction.YearMonth | date:'yyyy/MM' }}
+          </span>
+        </td>
+        <td>
+          <p-dropdown appendTo="body" *ngIf="deduction.editing" [options]="units" [(ngModel)]="deduction.unit"></p-dropdown>
+          <span *ngIf="!deduction.editing">{{ deduction.unit }}</span>
+        </td>
+        <td>
+          <input *ngIf="deduction.editing" type="text" pInputText [(ngModel)]="deduction.unitPrice" />
+          <span *ngIf="!deduction.editing">{{ deduction.unitPrice }}</span>
+        </td>
+        <td>
+          <input *ngIf="deduction.editing" type="text" pInputText [(ngModel)]="deduction.quantity" />
+          <span *ngIf="!(deduction.editing)">{{ deduction.quantity }}</span>
+        </td>
+        <td>
+          <input *ngIf="deduction.editing" type="text" pInputText [(ngModel)]="deduction.amount" />
+          <span *ngIf="!deduction.editing">{{ deduction.amount }}</span>
+        </td>
+        <td>
+          <p-dropdown appendTo="body" *ngIf="deduction.editing" [options]="organizations" [(ngModel)]="deduction.organization"></p-dropdown>
+          <span *ngIf="!deduction.editing">{{ deduction.organization }}</span>
+        </td>
+        <td>
+          <p-dropdown appendTo="body" *ngIf="deduction.editing" [options]="invoiceStatuses" [(ngModel)]="deduction.invoiceStatus"></p-dropdown>
+          <span *ngIf="!deduction.editing">{{ deduction.invoiceStatus }}</span>
+        </td>
+        <td>
+          <button *ngIf="!deduction.editing" pButton icon="pi pi-pencil" (click)="onRowEditInit(deduction)" class="p-button-rounded p-button-text"></button>
+          <button *ngIf="deduction.editing" pButton icon="pi pi-check" (click)="onRowEditSave(deduction)" class="p-button-rounded p-button-text p-button-success"></button>
+          <button *ngIf="deduction.editing" pButton icon="pi pi-times" (click)="onRowEditCancel(deduction, ri)" class="p-button-rounded p-button-text p-button-danger"></button>
+          <button *ngIf="!deduction.editing" pButton icon="pi pi-trash" (click)="onRowDelete(deduction)" class="p-button-rounded p-button-text p-button-danger"></button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

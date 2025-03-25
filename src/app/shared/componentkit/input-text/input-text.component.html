@@ -1,0 +1,5 @@
+<label [for]="controlName">{{ label }}
+  <span *ngIf="isRequired" class="required">*</span>
+</label>
+<input [id]="controlName" type="text" [formControl]="control" [placeholder]="placeholder" [min]=minLength [maxlength]=intLength [ngClass]="{'is-invalid': submitted && control.errors}" pInputText />
+<app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>

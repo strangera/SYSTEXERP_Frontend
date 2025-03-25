@@ -1,0 +1,128 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <div *appHasPermission="addPermission">
+      <app-button-create (click)="onCreate()" class="col"></app-button-create>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="專櫃編號"
+              controlName="counterCode"
+              [control]="queryForm.controls.counterCode"
+              [submitted]="submitted"
+            >
+            </app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="專櫃位置編號"
+              controlName="counterLocationCode"
+              [control]="queryForm.controls.counterLocationCode"
+              [submitted]="submitted"
+            >
+            </app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="商品類別"
+              controlName="productCategory"
+              [options]="productCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.productCategory"
+              [submitted]="submitted"
+            >
+            </app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="折扣別"
+              controlName="discount"
+              [options]="discountOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.discount"
+              [submitted]="submitted"
+            >
+            </app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-date-range
+              label="開放起始日"
+              [startControl]="queryForm.controls.startDate"
+              [endControl]="queryForm.controls.endDate"
+              [submitted]="submitted"
+            >
+            </app-date-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="是否使用中"
+              controlName="isActive"
+              [options]="isActiveOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.isActive"
+              [submitted]="submitted"
+            >
+            </app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="建立者"
+              controlName="createdBy"
+              [control]="queryForm.controls.createdBy"
+              [submitted]="submitted"
+            >
+            </app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-date-one
+              label="維護日"
+              [control]="queryForm.controls.lastModifiedDate"
+              [submitted]="submitted"
+            >
+            </app-date-one>
+          </div>
+        </div>
+      </form>
+      <div *appHasPermission="queryPermission" class="col">
+        <div class="grid justify-content-end">
+          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+          <app-button-query
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button-query>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <div class="col-12">
+    <app-data-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    >
+    </app-data-table>
+  </div>
+</div>

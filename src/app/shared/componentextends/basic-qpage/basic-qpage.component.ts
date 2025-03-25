@@ -1,0 +1,48 @@
+import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { HasPermissionsValue } from '../../directive/has-permission.directive';
+import { NavigationExtras, Router } from '@angular/router';
+import { CRUDStatus } from '../../enum/CRUDstatus';
+import { ReportHead } from '../../models/ReportHead';
+import { UserInfo } from '../../../models/system/userInfo';
+
+export class BasicQpageComponent {
+  // Page No
+  // ----------------------------------------------------------------
+  ProgNo: string = '900001';
+  cruPage: string = '';
+  user?: UserInfo | null;
+  // 權限
+  // ----------------------------------------------------------------
+  funInfo: FunsrightInfo = {};
+  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
+  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
+  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+  // 查詢
+  // ----------------------------------------------------------------
+  loading: boolean = false;
+  submitted: boolean = false;
+  reportHead: ReportHead = { outputvisible: true };   //報表表頭(預設匯出顯示資料)
+  // 權限
+  // ----------------------------------------------------------------
+  canQuery(): boolean {
+    return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
+  }
+  canAdd(): boolean {
+    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
+  }
+  canEdit(): boolean {
+    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
+  }
+  // 傳送的資料
+  // ----------------------------------------------------------------
+  navigateWithState(router: Router, crudstatus: CRUDStatus, rowdata?: any, pageroute?: string) {
+    let extras: NavigationExtras = {
+      state: {
+        crudstatus: crudstatus,
+        rowdata: rowdata,
+      },
+    };
+
+    router.navigate([pageroute], extras);
+  }
+}

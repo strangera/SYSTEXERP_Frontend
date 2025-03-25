@@ -1,0 +1,52 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+        <div *appHasPermission="addPermission">
+            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+        </div>
+    </div>
+    <p-accordion>
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="匯款來源單號" controlName="transferSource" [options]="transferSourceOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.transferSource" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-datetime-range label="建立日期" [startControl]="queryForm.controls.buildDateFrom" [endControl]="queryForm.controls.buildDateTo" [submitted]="submitted">
+                        </app-datetime-range>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-datetime-range label="收/付款日" [startControl]="queryForm.controls.settlementDateFrom" [endControl]="queryForm.controls.settlementDateTo" [submitted]="submitted">
+                        </app-datetime-range>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-multi-select label="是否形成電匯" controlName="electricTransfer" [options]="whetherOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.electricTransfer" [submitted]="submitted">
+                        </app-multi-select>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-serial-number label="匯款單號" controlName="transferNumber" [control]="queryForm.controls.transferNumber" [submitted]="submitted">
+                        </app-input-serial-number>
+                    </div>
+                </div>
+                <div *appHasPermission="queryPermission" class="col">
+                    <div class="grid justify-content-end">
+                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                    </div>
+                </div>
+            </form>
+        </p-accordionTab>
+    </p-accordion>
+</div>
+<div class="card">
+    <div class="col-13">
+        <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+        </app-data-table>
+    </div>
+</div>

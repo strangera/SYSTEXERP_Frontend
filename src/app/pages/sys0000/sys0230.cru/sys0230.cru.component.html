@@ -1,0 +1,45 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+        <div>
+            <app-button-action label="重新設定" (click)="onReset()" icon="pi pi-undo" class="col"></app-button-action>
+            <app-button-action label="回上一頁" (click)="onBack()" class="col"></app-button-action>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <h5 style="display: flex; align-items: center; gap: 8px;">
+            <span>角色名稱:</span>
+            <p style="color: red; margin: 0;">人資-1</p>
+            <span>，角色代碼:</span>
+            <p style="color: red; margin: 0;">105201</p>
+        </h5>
+        <p-treeTable [value]="files" [columns]="cols" selectionMode="checkbox" [(selectionKeys)]="selectionKeys" dataKey="key" [scrollable]="true" [tableStyle]="{ 'min-width': '50rem' }">
+            <ng-template pTemplate="header" let-columns>
+                <tr>
+                    <th colspan="3">符合條件者共82筆</th>
+                </tr>
+                <tr>
+                    <th *ngFor="let col of columns">
+                        {{ col.header }}
+                    </th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-rowNode let-rowData="rowData" let-columns="columns">
+                <tr [ttRow]="rowNode" [ttSelectableRow]="rowNode">
+                    <td *ngFor="let col of columns; let i = index">
+                        <p-treeTableToggler [rowNode]="rowNode" *ngIf="i === 0" />
+                        <p-treeTableCheckbox [value]="rowNode" *ngIf="i === 0" /> {{ rowData[col.field] }}
+                    </td>
+                </tr>
+            </ng-template>
+        </p-treeTable>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

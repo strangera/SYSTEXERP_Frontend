@@ -1,0 +1,455 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card">
+            <div class="grid align-items-center">
+                <div class="col" style="flex: 1;">
+                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
+                </div>
+                <div *appHasPermission="addPermission">
+                    <app-button-action label="複製機台" class="col"></app-button-action>
+                </div>
+                <div *appHasPermission="addPermission">
+                    <app-button-create (click)="onCreate()" class="col"></app-button-create>
+                </div>
+            </div>
+            <p-accordion>
+                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+                    <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                        <div class="grid p-fluid">
+                            <!-- <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number label="收銀機所屬門市店號" controlName="SYS_StoreNo" [control]="queryForm.controls.SYS_StoreNo" [submitted]="submitted">
+                                </app-input-serial-number>
+                            </div> -->
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number label="收銀機號" controlName="ECR_No" [control]="queryForm.controls.ECR_No" [submitted]="submitted">
+                                </app-input-serial-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="收銀機名稱" controlName="ECR_Name" [control]="queryForm.controls.ECR_Name" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number label="機台所屬專櫃編號" controlName="ECR_TLT_No" [control]="queryForm.controls.ECR_TLT_No" [submitted]="submitted">
+                                </app-input-serial-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="機台所屬專櫃名稱" controlName="ECR_TLT_Name" [control]="queryForm.controls.ECR_TLT_Name" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-date-range label="啟用日期" [startControl]="queryForm.controls.ECR_ActiveDate_From" [endControl]="queryForm.controls.ECR_ActiveDate_To" [submitted]="submitted">
+                                </app-date-range>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-date-range label="停用日期" [startControl]="queryForm.controls.ECR_CloseDate_From" [endControl]="queryForm.controls.ECR_CloseDate_To" [submitted]="submitted">
+                                </app-date-range>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="收銀機狀態" controlName="ECR_Status" [options]="ECR_Status_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_Status" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <!-- 
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="次樓別" controlName="ECR_SubGroup" [options]="floorOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_SubGroup" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div> -->
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="區域" controlName=" ECR_AreaNo" [options]="regionOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_AreaNo" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="樓層" controlName="ECR_Group" [options]="floorOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_Group" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="位置" controlName="ECR_LocNo" [options]="locatioIDOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_LocNo" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <!-- <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number label="倉庫編號" controlName="HOS_No" [control]="queryForm.controls.HOS_No" [submitted]="submitted">
+                                </app-input-serial-number>
+                            </div> -->
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="機台類型" controlName="ECR_Type" [options]="ECR_Type_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_Type" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="機台用途別" controlName="ECR_UseType" [options]="ECR_UseType_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_UseType" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="發票使用類別" controlName="ECR_GUI_Type" [options]="ECR_GUI_Type_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_GUI_Type" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number label="機台所屬收銀員" controlName="ECR_USR_No" [control]="queryForm.controls.ECR_USR_No" [submitted]="submitted">
+                                </app-input-serial-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="機台所屬收銀員姓名" controlName="ECR_USR_Name" [control]="queryForm.controls.ECR_USR_Name" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            
+                        </div>
+                        
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="機台電腦名稱" controlName="ECR_ComName" [control]="queryForm.controls.ECR_ComName" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number label="機台網路IP" controlName="ECR_IP" [control]="queryForm.controls.ECR_IP" [submitted]="submitted">
+                                </app-input-serial-number>
+                            </div>
+                            <!-- 可以從10015知道獲取 主機、主機後台ip，不使用原網頁的Server欄位-->
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="收銀機後台主機IP" controlName="ECR_SrvIP" [options]="ECR_SrvIP_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_SrvIP" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="環境變數編號" controlName="ECR_TmplNo" [options]="ECR_TmplNo_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_TmplNo" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                        </div>
+                        <!-- <hr>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="交易序號模式" controlName="ECR_SernoType" [options]="ECR_SernoType_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_SernoType" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-number label="系統對時間隔(秒)" controlName="ECR_TimeTickInvl" [control]="queryForm.controls.ECR_TimeTickInvl" [submitted]="submitted">
+                                </app-input-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-number label="上下傳異動檔間隔(秒)" controlName="ECR_Interval" [control]="queryForm.controls.ECR_Interval" [submitted]="submitted">
+                                </app-input-number>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-number label="單筆交易數量上限" controlName="ECR_MaxQty" [control]="queryForm.controls.ECR_MaxQty" [submitted]="submitted">
+                                </app-input-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-number label="單筆交易金額上限" controlName="ECR_MaxAmt" [control]="queryForm.controls.ECR_MaxAmt" [submitted]="submitted">
+                                </app-input-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-number label="單筆交易最大金額限制" controlName="ECR_MaxItemAmt" [control]="queryForm.controls.ECR_MaxItemAmt" [submitted]="submitted">
+                                </app-input-number>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-number label="單筆交易最大折扣比率限制" controlName="ECR_MaxDisc" [control]="queryForm.controls.ECR_MaxDisc" [submitted]="submitted">
+                                </app-input-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-number label="信用卡刷卡機連線時限(秒)" controlName="ECR_EdcTimeout" [control]="queryForm.controls.ECR_EdcTimeout" [submitted]="submitted">
+                                </app-input-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="信用卡刷卡機連動日結" controlName="ECR_EdcSettle" [options]="YN_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_EdcSettle" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                        </div> -->
+                        <!-- <hr>
+                        <h5>報表列印設定</h5>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="是否執行自我報帳" controlName="ECR_SelfReport" [options]="YN_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_SelfReport" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="是否列印收銀員交班表" controlName="ECR_SaleRpt1" [options]="YN_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_SaleRpt1" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="是否列印收銀機財務報表" controlName="ECR_SaleRpt2" [options]="YN_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_SaleRpt2" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="是否列印時段銷售報表" controlName="ECR_SaleRpt3" [options]="YN_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_SaleRpt3" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="是否列印部門銷售報表" controlName="ECR_SaleRpt4" [options]="YN_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_SaleRpt4" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="是否列印單品銷售報表" controlName="ECR_SaleRpt5" [options]="YN_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_SaleRpt5" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="是否列印銷貨明細表" controlName="ECR_SaleRpt6" [options]="YN_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_SaleRpt6" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="是否列印作廢明細表" controlName="ECR_SaleRpt7" [options]="YN_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_SaleRpt7" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="是否列印自我報帳(現額報告)帳條" controlName="ECR_SaleRpt8" [options]="YN_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_SaleRpt8" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="是否列印保全現金帳條(現金明細表)" controlName="ECR_SaleRpt9" [options]="YN_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_SaleRpt9" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="保留" controlName="ECR_SaleRpt10" [options]="YN_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_SaleRpt10" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="是否列印商標" controlName="ECR_PrnLogo" [options]="YN_Option" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_PrnLogo" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="商標1 (店名)" controlName="ECR_Logo1" [control]="queryForm.controls.ECR_Logo1" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="商標2 (地址)" controlName="ECR_Logo2" [control]="queryForm.controls.ECR_Logo2" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="商標3 (電話)" controlName="ECR_Logo3" [control]="queryForm.controls.ECR_Logo3" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="商標4 (統一編號)" controlName="ECR_Logo4" [control]="queryForm.controls.ECR_Logo4" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="商標5" controlName="ECR_Logo5" [control]="queryForm.controls.ECR_Logo5" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="商標6" controlName="ECR_Logo6" [control]="queryForm.controls.ECR_Logo6" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-number label="機台每期電子發票預設配號數量" controlName="ECR_GUI_PeriodQty" [control]="queryForm.controls.ECR_GUI_PeriodQty" [submitted]="submitted">
+                                </app-input-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-number label="機台電子發票最小安全存量" controlName="ECR_GUI_MinQty" [control]="queryForm.controls.ECR_GUI_MinQty" [submitted]="submitted">
+                                </app-input-number>
+                            </div>
+                        </div>
+                        <hr> -->
+                        <!-- <h5>周邊設定</h5>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-number label="機台鍵盤等級" controlName="ECR_KBLevel" [control]="queryForm.controls.ECR_KBLevel" [submitted]="submitted">
+                                </app-input-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-number label="鍵盤型態" controlName="ECR_KBType" [control]="queryForm.controls.ECR_KBType" [submitted]="submitted">
+                                </app-input-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="收銀畫面樣式" controlName="ECR_ScrType" [control]="queryForm.controls.ECR_ScrType" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="發票印表機型態" controlName="ECR_GUIPrn" [control]="queryForm.controls.ECR_GUIPrn" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="發票印表機型態" controlName="ECR_SlipPrn" [control]="queryForm.controls.ECR_SlipPrn" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="信用卡刷卡機型態" controlName="ECR_EDC" [control]="queryForm.controls.ECR_EDC" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="客戶顯示器型態" controlName="ECR_CD" [control]="queryForm.controls.ECR_CD" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="多媒體客戶顯示器名稱" controlName="ECR_ExtScr" [control]="queryForm.controls.ECR_ExtScr" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="錢櫃型態" controlName="ECR_Drawer" [control]="queryForm.controls.ECR_Drawer" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="掃描器型態" controlName="ECR_Scanner" [control]="queryForm.controls.ECR_Scanner" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="標籤印表機型態" controlName="ECR_LablePrn" [control]="queryForm.controls.ECR_LablePrn" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="第二台收據印表機型態" controlName="ECR_RmtSlipPrn" [control]="queryForm.controls.ECR_RmtSlipPrn" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="第二台信用卡刷卡機型態" controlName="ECR_EDC2" [control]="queryForm.controls.ECR_EDC2" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="第三台信用卡刷卡機型態" controlName="ECR_EDC3" [control]="queryForm.controls.ECR_EDC3" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="悠遊卡" controlName="ECR_ElecSVCrdA" [control]="queryForm.controls.ECR_ElecSVCrdA" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="一卡通" controlName="ECR_ElecSVCrdB" [control]="queryForm.controls.ECR_ElecSVCrdB" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="愛金卡" controlName="ECR_ElecSVCrdC" [control]="queryForm.controls.ECR_ElecSVCrdC" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="電子支付" controlName="ECR_ElecPay" [control]="queryForm.controls.ECR_ElecPay" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="發票印表機連接埠" controlName="ECR_GUICom" [control]="queryForm.controls.ECR_GUICom" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="收據印表機連接埠" controlName="ECR_SlipPrnCom" [control]="queryForm.controls.ECR_SlipPrnCom" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="信用卡刷卡機連接埠" controlName="ECR_EDCCom" [control]="queryForm.controls.ECR_EDCCom" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="客戶顯示器連接埠" controlName="ECR_CDCom" [control]="queryForm.controls.ECR_CDCom" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="多媒體客戶顯示器連接埠" controlName="ECR_ExtScrCom" [control]="queryForm.controls.ECR_ExtScrCom" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="錢櫃連接埠" controlName="ECR_CashD1Com" [control]="queryForm.controls.ECR_CashD1Com" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="掃描器連接埠" controlName="ECR_ScannerCom" [control]="queryForm.controls.ECR_ScannerCom" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="標籤印表機連接埠" controlName="ECR_LablePrnCom" [control]="queryForm.controls.ECR_LablePrnCom" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="第二台收據印表機連接埠" controlName="ECR_RmtSlipPrnCom" [control]="queryForm.controls.ECR_RmtSlipPrnCom" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="第二台信用卡刷卡機連接埠" controlName="ECR_EDC2Com" [control]="queryForm.controls.ECR_EDC2Com" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="第三台信用卡刷卡機連接埠" controlName="ECR_EDC3Com" [control]="queryForm.controls.ECR_EDC3Com" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="悠遊卡連接埠" controlName="ECR_ElecSVCrdACom" [control]="queryForm.controls.ECR_ElecSVCrdACom" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="一卡通連接埠" controlName="ECR_ElecSVCrdBCom" [control]="queryForm.controls.ECR_ElecSVCrdBCom" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="愛金卡連接埠" controlName="ECR_ElecSVCrdCCom" [control]="queryForm.controls.ECR_ElecSVCrdCCom" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="電子支付連接埠" controlName="ECR_ElecPayCom" [control]="queryForm.controls.ECR_ElecPayCom" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div> -->
+
+                        <!-- device1 以後欄位先不用新增-->
+                        <!-- 可以從10015知道獲取 主機、主機後台ip，這樣就夠用了 -->
+
+                        <!-- <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="POS SERVER" controlName="server" [options]="posServerOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.server" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                        </div> -->
+                        <div *appHasPermission="queryPermission" class="col">
+                            <div class="grid justify-content-end">
+                                <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                                <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                            </div>
+                        </div>
+                    </form>
+                </p-accordionTab>
+            </p-accordion>
+        </div>
+        <div class="card">
+            <div class="col-13">
+                <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+                </app-data-table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,37 @@
+<!-- Block UI -->
+<p-blockUI [blocked]="blockedDocument">
+    <p-progressSpinner></p-progressSpinner>
+</p-blockUI>
+
+<!-- Confirmation Service -->
+<p-confirmDialog [transitionOptions]="'0ms'">
+    <!-- 禁用過度動畫 -->
+</p-confirmDialog>
+
+<!-- Message Box -->
+<p-dialog [header]="msgBoxHeader" [(visible)]="msgBoxDisplay" [modal]="true" [closeOnEscape]="true" [dismissableMask]="true" (onHide)="hideAndCleanMsgBox();">
+    <div style="min-width: 20em;">
+        <pre>{{ msgBoxMessage }}</pre>
+    </div>
+    <ng-template pTemplate="footer">
+        <button type="button" pButton icon="pi pi-check" iconPos="left" label="OK" (click)="hideAndCleanMsgBox();" autofocus></button>
+    </ng-template>
+</p-dialog>
+
+<!-- Message Bubble -->
+<p-toast position="top-right"></p-toast>
+
+<!-- Inputbox
+(onHide)="hideAndCleanCommentBox();"
+-->
+<p-dialog [header]="inputBoxHeader" [(visible)]="inputBoxDisplay" [modal]="true" [closeOnEscape]="false" [dismissableMask]="false">
+    <div style="min-width: 40em;">
+        {{ inputBoxMessage }}
+        <textarea #txtInputBoxInputText pInputTextarea [(ngModel)]="inputBoxInputText" style="width: 100%" (keydown.enter)="onClickInputBoxOK()" autofocus></textarea>
+        <small>Use shift + enter to break line or enter to submit.</small>
+    </div>
+    <ng-template pTemplate="footer">
+        <button #btnInputBoxCancel type="button" pButton icon="pi pi-times" iconPos="left" label="Cancel" (click)="onClickInputBoxCancel()"></button>
+        <button #btnInputBoxOK type="button" pButton icon="pi pi-check" iconPos="left" label="OK" (click)="onClickInputBoxOK()"></button>
+    </ng-template>
+</p-dialog>

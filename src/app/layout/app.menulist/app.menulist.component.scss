@@ -1,0 +1,21 @@
+.layout-sidebar {
+  background-color: #1E293B;
+  
+  ul a {
+    color: white;
+  }
+
+  ul a:hover {
+    color: #00B4D2;
+    background-color: #1E293B;
+  }
+
+  .selected > a {
+    color: #FFA500 !important; // 橘色
+  }
+
+  .active-menuitem > a {
+    background-color: #283e59;
+    color: #00B4D2;
+  }
+}

@@ -1,0 +1,28 @@
+<p-table [value]="data" [scrollable]="true" [sortMode]="'multiple'" [scrollable]="IsScrollable" [scrollHeight]="IsScrollHeight" [styleClass]="tableSize" [(selection)]="selectedRows">
+    <ng-template pTemplate="header">
+        <tr>
+            <th>
+                序號
+            </th>
+            <th style="width: 4rem" *ngIf="IsPaginator">
+                <p-tableHeaderCheckbox />
+            </th>
+            <th *ngFor="let col of getVisibleColumns()" [pSortableColumn]="col.field">
+                {{col.header}}
+                <p-sortIcon [field]="col.field"></p-sortIcon>
+            </th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
+        <tr>
+            <td>{{ rowIndex + 1 }}</td>
+            <td *ngIf="IsPaginator">
+                <p-tableCheckbox [value]="rowData" />
+            </td>
+            <!-- 這裡顯示行索引，從 1 開始 -->
+            <td *ngFor="let col of getVisibleColumns()">
+                {{rowData[col.field]}}
+            </td>
+        </tr>
+    </ng-template>
+</p-table>

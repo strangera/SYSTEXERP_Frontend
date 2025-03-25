@@ -1,0 +1,97 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-accordion>
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <span><B>日期查詢條件</B></span>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-12">
+                        <app-radiobutton label="" groupname="querydateradio" [control]="queryForm.controls.radiolist" [options]="daterangeOptions" [submitted]="submitted">
+                        </app-radiobutton>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-date-one label="日期" [control]="queryForm.controls.onedatedd" [submitted]="submitted">
+                        </app-date-one>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-12">
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-12">
+                        <span><B>合約查詢條件</B></span>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="樓層" controlName="floor" [options]="floorOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.floor" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="區域" controlName="region" [options]="regionOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.region" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="業種/商品類別" controlName="floor" [options]="businessTypeCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.businessTypeCode" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="櫃別" controlName="operations" [options]="operationsOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.type" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="抽成別" controlName="commissionMethod" [options]="commissionTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.commissionType" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="組織" controlName="organizationCode" [options]="organizationOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.organizationCode" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="專櫃編號" controlName="counterCode" [options]="counterCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.counterCode" [submitted]="submitted"></app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-radiobutton label="銷售金額是否含稅" groupname="querydateradio" [control]="queryForm.controls.tax" [options]="taxOptions" [submitted]="submitted">
+                        </app-radiobutton>
+                    </div>
+                </div>
+            </form>
+            <div *appHasPermission="queryPermission" class="col">
+                <div class="grid justify-content-end">
+                    <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                    <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                </div>
+            </div>
+        </p-accordionTab>
+    </p-accordion>
+</div>
+<div class="card">
+    <p-table [columns]="headerRows" [value]="columns" [tableStyle]="{ 'border-collapse': 'collapse' }">
+        <ng-template pTemplate="header">
+
+            <tr *ngFor="let headerRow of headerRows">
+                <th *ngFor="let Row of headerRow" style="text-align:center;border: 1px solid rgb(243, 243, 243); background: #C7D2FE;" [attr.rowspan]="Row.rowspan" [attr.colspan]="Row.colspan">
+                    {{ Row.header }}
+                </th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-columns>
+
+        </ng-template>
+    </p-table>
+
+</div>

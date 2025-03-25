@@ -1,0 +1,86 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="機台群組編號" controlName="ECR_GrpNo" [control]="dataForm.controls.ECR_GrpNo" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="機台群組名稱" controlName="ECR_GrpName" [control]="dataForm.controls.ECR_GrpName" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="是否限制機台條件" controlName="ECR_DtlLimit" [options]="ECR_DtlLimit_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_DtlLimit" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <hr>
+            <app-editor-text label="機台群組備註" controlName="ECR_GrpDesc" [control]="dataForm.controls.ECR_GrpDesc" [style]="{ height: '100px' }" [submitted]="submitted">   
+            </app-editor-text>
+            <!---->
+            <hr />
+            <ng-container formArrayName="items">
+                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+                    <div class="grid align-items-center">
+                        <div class="col" style="flex: 1">
+                            <h4>收銀機群組明細 {{ i + 1 }}</h4>
+                        </div>
+                        <div>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="機台群組序號" controlName="ECR_GrpSeqNo" [control]="getFormControl(i, 'ECR_GrpSeqNo')" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="收銀機號" controlName="ECR_No" [control]="getFormControl(i, 'ECR_No')" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="機台類型" controlName="ECR_Type" [control]="getFormControl(i, 'ECR_Type')" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="專櫃編號" controlName="TLT_No" [control]="getFormControl(i, 'TLT_No')" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="館別" controlName="BUILDING_No" [control]="getFormControl(i, 'BUILDING_No')" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="樓層代碼" controlName="FLOOR_No" [control]="getFormControl(i, 'FLOOR_No')" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="區域代碼" controlName="AREA_No" [control]="getFormControl(i, 'AREA_No')" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <hr />
+                </ng-container>
+            </ng-container>
+            <div class="pt-1">
+                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+            </div>
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

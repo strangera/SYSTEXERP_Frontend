@@ -1,0 +1,74 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        
+        <!-- 會計科目代號 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="會計科目代號"
+            controlName="accountCode"
+            [options]="accountCodeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.accountCode"
+            [submitted]="submitted"
+          ></app-dropdown-item>
+        </div>
+
+        <!-- 借/貸 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="借/貸"
+            controlName="borrowLoan"
+            [options]="borrowLoanOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.borrowLoan"
+            [submitted]="submitted"
+          ></app-dropdown-item>
+        </div>
+
+        <!-- 備註 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="備註"
+            controlName="remark"
+            [control]="dataForm.controls.remark"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <!-- 類型 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="類型"
+            controlName="type"
+            [options]="typeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.type"
+            [submitted]="submitted"
+          ></app-dropdown-item>
+        </div>
+
+      </div>
+    </form>
+
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button-cancel (click)="onCancel()"></app-button-cancel>
+        <app-button-submit
+          (click)="submitForm(dataForm)"
+          *ngIf="isFormEditable"
+        ></app-button-submit>
+      </div>
+    </div>
+  </p-panel>
+</div>
