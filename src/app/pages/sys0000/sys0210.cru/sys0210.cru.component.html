@@ -1,0 +1,50 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+
+  </div>
+  <p-panel [header]="formTitle" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="角色代碼"
+            controlName="roleCode"
+            [control]="dataForm.controls.roleCode"
+            [submitted]="submitted"
+          >
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="角色名稱"
+            controlName="roleName"
+            [control]="dataForm.controls.roleName"
+            [submitted]="submitted"
+          >
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="角色敘述"
+            controlName="roleDescription"
+            [control]="dataForm.controls.roleDescription"
+            [submitted]="submitted"
+          >
+          </app-input-text>
+        </div>
+      </div>
+    </form>
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button-cancel (click)="onCancel()"></app-button-cancel>
+        <app-button-submit
+          (click)="submitForm(dataForm)"
+         
+        ></app-button-submit>
+      </div>
+    </div>
+  </p-panel>
+</div>

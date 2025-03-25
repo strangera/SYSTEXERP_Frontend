@@ -1,0 +1,104 @@
+<h3><B>POS即時連線監看</B></h3>
+<div class="grid">
+	<div class="col-12">
+
+        <p-dataView #dv [value]="poslist" layout="list"  [rows]="50" [paginator]="true">
+            <ng-template pTemplate="header" >
+                <div class="container m-1" >
+
+                        <div class="m-0 container row justify-content-start" style="width:50%" >
+                            <div class="mt-2" ><B>收銀機列表</B></div>
+                            <div><p-button label="過濾" [text]="true" icon="pi pi-eye" severity="secondary" /></div>
+                        </div>
+
+                        <div class="m-0 container row justify-content-end" style="width:50%">
+
+                            <p-inputGroupAddon><i class="pi pi-search mr-1"></i></p-inputGroupAddon><input type="text" class="mr-2" pInputText placeholder="搜尋專櫃編號名稱，收銀機代號，區域，位置，IP"
+                                style="width:20rem" /><p-dropdown [options]="dropdown3" class="mr-2" ></p-dropdown><p-dataViewLayoutOptions />
+
+                        </div>
+
+                    </div>
+                    <li class="flex align-items-center py-2 border-bottom-1 surface-border" ></li>
+                    <div class="container mt-2" >
+                        <p-button label="全部(257)" [text]="true" [plain]="true" />
+                        <p-button label="連線機台(101)"  [text]="true" [plain]="true"/>
+                        <p-button label="離線機台(92)" [text]="true" [plain]="true"/>
+                        <p-button label="已日結清機關閉機台(32)" [text]="true" [plain]="true"/>
+                    </div>
+                    <li class="flex align-items-center py-1 border-bottom-1 surface-border" ></li>
+                    <div class="container mt-2" >
+                        <span class="mt-3 mr-2">狀態說明:</span>
+                        <div class="outline-button m-2 p-2"><fa-icon [icon]="faDisplay" [ngClass]="'mr-2'"  style="color: #505050;"></fa-icon>關機</div>
+                        <div class="outline-button m-2 p-2"><fa-icon [icon]="faArrowRightFromBracket" [ngClass]="'mr-2'"  style="color: #f43636;"></fa-icon>登出</div>
+                        <div class="outline-button m-2 p-2"><fa-icon [icon]="faCircleCheck" [ngClass]="'mr-2'"  style="color: #08be2a;"></fa-icon>交易中</div>
+                        <div class="outline-button m-2 p-2"><fa-icon [icon]="faUserGroup" [ngClass]="'mr-2'"  style="color: #505050;"></fa-icon>完成交班</div>
+                        <div class="outline-button m-2 p-2"><fa-icon [icon]="faBan" [ngClass]="'mr-2'"  style="color: #ffb01d;"></fa-icon>暫停交易</div>
+                        <div class="outline-button m-2 p-2"><fa-icon [icon]="faMoneyBillWave" [ngClass]="'mr-2'"  style="color: #505050;"></fa-icon>完成清帳</div>
+                      </div>
+            </ng-template>
+            <ng-template pTemplate="list" let-poslist>
+                    <p-table [value]="poslist" [tableStyle]="{ 'min-width': '50rem' }" selectionMode="single" styleClass="p-datatable-gridlines"  [rows]="20" >
+                        <ng-template pTemplate="header">
+                            <tr>
+                                <th style="background-color: #E0F2F1;width:8%;">連線狀態</th>
+                                <th style="background-color: #E0F2F1;width:15%">專櫃編號名稱</th>
+                                <th style="background-color: #E0F2F1;width:15%">收銀機代號</th>
+                                <th style="background-color: #E0F2F1;width:15%">區域</th>
+                                <th style="background-color: #E0F2F1;width:15%">位置編號</th>
+                                <th style="background-color: #E0F2F1;width:15%">IP Address</th>
+                                <th style="background-color: #E0F2F1;width:15%">狀況</th>
+
+                            </tr>
+                        </ng-template>
+                        <ng-template pTemplate="body" let-poslist>
+                            <tr>
+                                <td >
+                                    <fa-icon *ngIf="poslist.line == '3'" [icon]="faDisplay" [ngClass]="'fa-xl mr-1 mt-4'"  style="color: #505050;"></fa-icon>
+                                    <fa-icon *ngIf="poslist.line == '0'" [icon]="faArrowRightFromBracket" [ngClass]="'fa-xl mr-1 mt-4'"  style="color: #f43636;"></fa-icon>
+                                    <fa-icon *ngIf="poslist.line == '1'" [icon]="faCircleCheck" [ngClass]="'fa-xl mr-1 mt-4'"  style="color: #08be2a;"></fa-icon>
+                                    <fa-icon *ngIf="poslist.line == '4'" [icon]="faUserGroup" [ngClass]="'fa-xl mr-1 mt-4'"  style="color: #505050;"></fa-icon>
+                                    <fa-icon *ngIf="poslist.line == '2'" [icon]="faBan" [ngClass]="'fa-xl mr-1 mt-4'"  style="color: #ffb01d;"></fa-icon>
+                                    <fa-icon *ngIf="poslist.line == '5'" [icon]="faMoneyBillWave" [ngClass]="'fa-xl mr-1 mt-4'"  style="color: #505050;"></fa-icon>
+
+                               </td>
+                                <td>{{ poslist.name }}</td>
+                                <td>{{ poslist.pos }}</td>
+                                <td>{{ poslist.area }}</td>
+                                <td>{{ poslist.code }}</td>
+                                <td>{{ poslist.ip }}</td>
+                                <td>{{ poslist.status }}</td>
+
+                            </tr>
+                        </ng-template>
+                    </p-table>
+
+            </ng-template>
+            <ng-template  pTemplate="grid" let-poslist>
+                <div class="grid grid-nogutter">
+                    <div class="col-12 md:col-2" *ngFor="let product of poslist" >
+                        <div class=" card m-0 border-1 surface-border hover-effect" >
+                            <div class="container space-between m-0">
+                                <div class="m-0 mt-3" >  <span class="align-items-left text-left mb-3 mr-3 text-l ">{{product.pos}}</span></div>
+                                <div class="m-0" >
+
+                            <fa-icon *ngIf="product.line == '3'" [icon]="faDisplay" [ngClass]="'fa-xl ml-1 mr-1 mt-4'"  style="color: #505050;"></fa-icon>
+                            <fa-icon *ngIf="product.line == '0'" [icon]="faArrowRightFromBracket" [ngClass]="'fa-xl ml-1 mr-1 mt-4'"  style="color: #f43636;"></fa-icon>
+                            <fa-icon *ngIf="product.line == '1'" [icon]="faCircleCheck" [ngClass]="'fa-xl ml-1 mr-1 mt-4'"  style="color: #08be2a;"></fa-icon>
+                            <fa-icon *ngIf="product.line == '4'" [icon]="faUserGroup" [ngClass]="'fa-xl ml-1 mr-1 mt-4'"  style="color: #505050;"></fa-icon>
+                            <fa-icon *ngIf="product.line == '2'" [icon]="faBan" [ngClass]="'fa-xl ml-1 mr-1 mt-4'"  style="color: #ffb01d;"></fa-icon>
+                            <fa-icon *ngIf="product.line == '5'" [icon]="faMoneyBillWave" [ngClass]="'fa-xl ml-1 mr-1 mt-4'"  style="color: #505050;"></fa-icon>
+
+                                </div>
+                              </div>
+                              <div class="m-2 p-2"></div>
+                          <div class="m-0" style="display: inline-block;">   <span class="align-items-left text-left mb-0 text-l ">{{product.code}}　({{product.name}})</span></div>
+                        </div>
+                    </div>
+                    </div>
+            </ng-template>
+        </p-dataView>
+
+
+
+        </div></div>

@@ -1,0 +1,107 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <div *appHasPermission="addPermission">
+      <app-button-create (click)="onCreate()" class="col"></app-button-create>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="大分類代碼"
+              controlName="bigCategoryCode"
+              [options]="bigCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.bigCategoryCode"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="中分類代碼"
+              controlName="midCategoryCode"
+              [options]="midCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.midCategoryCode"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="小分類代碼"
+              controlName="smallCategoryCode"
+              [options]="smallCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.smallCategoryCode"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="管理編號"
+              controlName="generalCode"
+              [options]="managementIdOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.generalCode"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="品牌編號"
+              controlName="brandCode"
+              [options]="brandCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.brandCode"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <p-checkbox
+              label="只顯示低於安全庫存"
+              formControlName="isSafetyStock"
+            ></p-checkbox>
+          </div>
+        </div>
+      </form>
+      <div *appHasPermission="queryPermission" class="col">
+        <div class="grid justify-content-end">
+          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+          <app-button-query
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button-query>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <div class="col-12">
+    <app-data-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-data-table>
+  </div>
+</div>

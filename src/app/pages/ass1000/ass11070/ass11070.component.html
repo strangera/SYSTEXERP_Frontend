@@ -1,0 +1,114 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+        <div *appHasPermission="addPermission">
+            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+        </div>
+    </div>
+    <p-accordion>
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-date-range label="建檔日期" [startControl]="queryForm.controls.startdate" [endControl]="queryForm.controls.enddate" [submitted]="submitted">
+                        </app-date-range>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="接洽人員" controlName="receptionPerson" [options]="receptionPersonOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.receptionPerson" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="廠商統一編號" controlName="vendorUID" [options]="vendorUIDOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.vendorUID" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-radiobutton label="營運模式" groupname="bussinessModel" [control]="queryForm.controls.bussinessModel" [options]="bussinessOptions" [submitted]="submitted">
+                        </app-radiobutton>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-text label="廠商名稱(中文)" controlName="vendorCName" [control]="queryForm.controls.vendorCName" [submitted]="submitted">>
+                        </app-input-text>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-text label="廠商名稱(英文)" controlName="vendorEName" [control]="queryForm.controls.vendorCName" [submitted]="submitted">>
+                        </app-input-text>
+                    </div>
+                </div>
+                <hr>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-text label="聯絡人" controlName="contactPerson" [control]="queryForm.controls.contactPerson" [submitted]="submitted">
+                        </app-input-text>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-serial-number label="聯絡人電話(O)" controlName="contactPhone" [control]="queryForm.controls.contactPhone" [submitted]="submitted">
+                        </app-input-serial-number>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-text label="聯絡人職稱" controlName="contactTitle" [control]="queryForm.controls.contactTitle" [submitted]="submitted">
+                        </app-input-text>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-serial-number label="聯絡人傳真" controlName="contactFax" [control]="queryForm.controls.contactFax" [submitted]="submitted">
+                        </app-input-serial-number>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-serial-number label="聯絡人行動電話" controlName="contactCellphone" [control]="queryForm.controls.contactCellphone" [submitted]="submitted">
+                        </app-input-serial-number>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-text label="聯絡人電子郵件" controlName="contactEmail" [control]="queryForm.controls.contactEmail" [submitted]="submitted">
+                        </app-input-text>
+                    </div>
+                </div>
+                <hr>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-text label="公司地址" controlName="companyAddress" [control]="queryForm.controls.companyAddress" [submitted]="submitted">
+                        </app-input-text>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-text label="公司負責人" controlName="companyResponsibility" [control]="queryForm.controls.companyResponsibility" [submitted]="submitted">
+                        </app-input-text>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-radiobutton label="付款方式" groupname="paymentMethod" [control]="queryForm.controls.paymentMethod" [options]="paymentMethodOptions" [submitted]="submitted">
+                        </app-radiobutton>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-serial-number-range label="票期" [startControl]="queryForm.controls.startserialticket" [endControl]="queryForm.controls.endserialticket" [submitted]="submitted">
+                        </app-input-serial-number-range>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-text label="服務項目" controlName="services" [control]="queryForm.controls.services" [submitted]="submitted">
+                        </app-input-text>
+                    </div>
+                </div>
+                <hr/>
+                <app-editor-text label="備註" controlName="remark" [control]="queryForm.controls.remark" [style]="{ height: '100px' }" [submitted]="submitted">
+                </app-editor-text>
+                <hr/>
+                <div *appHasPermission="queryPermission" class="col">
+                    <div class="grid justify-content-end">
+                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                    </div>
+                </div>
+            </form>
+        </p-accordionTab>
+    </p-accordion>
+</div>
+<div class="card">
+    <div class="col-13">
+        <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+        </app-data-table>
+    </div>
+</div>

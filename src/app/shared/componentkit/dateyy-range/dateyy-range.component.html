@@ -1,0 +1,16 @@
+<div class="datetime-range">
+    <label [for]="endControl">{{ label }}(起訖)
+  <span *ngIf="isRequired" class="required">*</span>
+</label>
+    <div class="datetime-inputs">
+        <div class="input-group">
+            <p-calendar [formControl]="startControl" [placeholder]="placeholder" view="year" dateFormat="yy" [placeholder]="placeholder" [ngClass]="{'is-invalid': submitted && startControl.errors}"></p-calendar>
+            <app-control-messages [onerror]="submitted" [control]="startControl"></app-control-messages>
+        </div>
+        ~
+        <div class="input-group">
+            <p-calendar [formControl]="endControl" [placeholder]="placeholder" view="year" dateFormat="yy" [placeholder]="placeholder" [ngClass]="{'is-invalid': submitted && endControl.errors}"></p-calendar>
+            <app-control-messages [onerror]="submitted" [control]="endControl"></app-control-messages>
+        </div>
+    </div>
+</div>

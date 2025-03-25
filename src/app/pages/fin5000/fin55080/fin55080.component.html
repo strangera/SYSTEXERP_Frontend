@@ -1,0 +1,106 @@
+<div class="card">
+    <div class="grid align-items-center">
+      <div class="col" style="flex: 1">
+        <app-menubar [ProgNo]="ProgNo"></app-menubar>
+      </div>
+    </div>
+    <p-accordion>
+      <p-accordionTab
+        header="{{ 'query-conditions' | translate }}"
+        [selected]="true"
+        class="line-height-3 m-0"
+        [headerStyleClass]="'query-accordionTab'"
+      >
+        <form
+          [formGroup]="queryForm"
+          id="queryForm"
+          (ngSubmit)="onSubmit(queryForm)"
+        >
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-datemm-range
+                label="日期"
+                controlName="accountsummary"
+                [startControl]="queryForm.controls.SSubpoenadate"
+                [endControl]="queryForm.controls.ESubpoenadate"
+                [submitted]="submitted"
+              ></app-datemm-range>
+            </div>
+ 
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-radiobutton
+                label="類別"
+                [control]="queryForm.controls.category"
+                [options]="category"
+                [submitted]="submitted"
+              >
+              </app-radiobutton>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown-item
+                label="部門"
+                controlName="department"
+                [options]="departmentOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="queryForm.controls.department"
+                [submitted]="submitted"
+              ></app-dropdown-item>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+                <app-dropdown-item
+                  label="活動代碼"
+                  controlName="activity"
+                  [options]="activity"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.activity"
+                  [submitted]="submitted"
+                ></app-dropdown-item>
+              </div>
+
+  
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-radiobutton
+                label="帳款餘額為零是否顯示"
+                [control]="queryForm.controls.display"
+                [options]="display"
+                [submitted]="submitted"
+              >
+              </app-radiobutton>
+            </div>
+  
+            <div class="col-12 md:col-4 lg:col-4">
+              <app-checkbox-one
+                label="列印簽核欄"
+                controlName="Approvalcolumn"
+                [control]="queryForm.controls.Approvalcolumn"
+              >
+              </app-checkbox-one>
+            </div>
+          </div>
+        </form>
+        <div *appHasPermission="queryPermission" class="col">
+          <div class="grid justify-content-end">
+            <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+            <app-button-query
+              (onClick)="onSubmitQuery(queryForm)"
+              [loading]="loading"
+            ></app-button-query>
+          </div>
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+  </div>
+  <div class="card">
+    <div class="col-12">
+      <app-data-table
+        [data]="data"
+        [columns]="columns"
+        (edit)="onEdit($event)"
+        (detail)="onDetail($event)"
+      ></app-data-table>
+    </div>
+  </div>
+  

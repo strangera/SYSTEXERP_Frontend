@@ -1,0 +1,23 @@
+.hover-effect {
+
+  background-color: rgb(255, 255, 255);
+  transition: background-color 0.3s ease;
+}
+
+.hover-effect:hover {
+  background-color: rgb(236, 236, 236);
+}
+
+::ng-deep .p-toolbar {
+  background-color: #ffffff; /* 你想要的背景色 */
+}
+
+.container {
+  display: flex;
+
+}
+
+.row {
+  flex-direction: row;
+  flex-wrap: wrap;
+}

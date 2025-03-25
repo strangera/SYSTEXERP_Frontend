@@ -1,0 +1,31 @@
+<form [formGroup]="stepForm">
+    <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-6">
+            <span>行銷代碼</span>
+            <input pInputText id="serialnumber" type="text" formControlName="serialnumber" maxlength="10" />
+        </div>
+        <div class="col-12 md:col-6 lg:col-6">
+            <span>促銷代碼</span>
+            <input pInputText id="promocode" type="text" formControlName="promocode" />
+        </div>
+    </div>
+    <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-6">
+            <span>行銷標題</span>
+            <input pInputText id="title" type="text" formControlName="title" maxlength="10" />
+        </div>
+        <div class="col-12 md:col-6 lg:col-6">
+            <span>活動期間</span>
+            <div class="flex">
+                <p-calendar [showTime]="true" formControlName="eventstarttime"></p-calendar> ~
+                <p-calendar [showTime]="true" formControlName="eventendtime"></p-calendar>
+            </div>
+        </div>
+    </div>
+    <div class="grid p-fluid">
+        <div class="col-12 md:col-12 lg:col-12">
+            <span>活動說明</span>
+            <input pInputText id="description" type="text" formControlName="description" />
+        </div>
+    </div>
+</form>

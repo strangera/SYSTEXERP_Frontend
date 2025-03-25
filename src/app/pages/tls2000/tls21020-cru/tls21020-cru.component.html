@@ -1,0 +1,144 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+
+    <!-- Panel Header -->
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <!-- Initial Form Controls can be added here -->
+            </div>
+            <hr />
+            <!-- Form Array for Items -->
+            <ng-container formArrayName="items">
+                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+                    <!-- Item Header -->
+                    <div class="grid align-items-center">
+                        <div class="col" style="flex: 1">
+                            <p> {{ i + 1 }}</p>
+                        </div>
+                        <div>
+                            <app-button-dynamicallydelete 
+                                (click)="onRemoveItem(i)" 
+                                [crudstatus]="crudstatus" 
+                                class="col">
+                            </app-button-dynamicallydelete>
+                        </div>
+                    </div>
+
+                    <!-- Item Controls -->
+                    <div class="grid p-fluid">
+                        <!-- 項目名稱 -->
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text 
+                                label="項目名稱" 
+                                controlName="itemName" 
+                                [control]="getFormControl(i, 'itemName')" 
+                                [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                        
+                        <!-- 會計科目 -->
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-dropdown-default 
+                                label="會計科目" 
+                                controlName="accountingSubject" 
+                                [options]="accountingSubjectItems" 
+                                optionLabel="label" 
+                                optionValue="value" 
+                                [control]="getFormControl(i, 'accountingSubject')" 
+                                [submitted]="submitted">
+                            </app-dropdown-default>
+                        </div>
+                        
+                        <!-- 組織代碼 -->
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-dropdown-default 
+                                label="組織代碼" 
+                                controlName="organizationCode" 
+                                [options]="organizationCodeItems" 
+                                optionLabel="label" 
+                                optionValue="value" 
+                                [control]="getFormControl(i, 'organizationCode')" 
+                                [submitted]="submitted">
+                            </app-dropdown-default>
+                        </div>
+                        
+                        <!-- 傳票備註 -->
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text 
+                                label="傳票備註" 
+                                controlName="voucherRemarks" 
+                                [control]="getFormControl(i, 'voucherRemarks')" 
+                                [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+
+                        <!-- 是否依合約拆立組織 -->
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text 
+                                label="是否依合約拆立組織" 
+                                controlName="contractOrganizationSplit" 
+                                [control]="getFormControl(i, 'contractOrganizationSplit')" 
+                                [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+
+                        <!-- 區分關係人會科 -->
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text 
+                                label="區分關係人會科" 
+                                controlName="relatedPartyAccounting" 
+                                [control]="getFormControl(i, 'relatedPartyAccounting')" 
+                                [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                        
+                        <!-- 應收廠商 -->
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-dropdown-default 
+                                label="應收廠商" 
+                                controlName="receivableVendor" 
+                                [options]="receivableVendorItems" 
+                                optionLabel="label" 
+                                optionValue="value" 
+                                [control]="getFormControl(i, 'receivableVendor')" 
+                                [submitted]="submitted">
+                            </app-dropdown-default>
+                        </div>
+
+                        <!-- 付款天數 -->
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text 
+                                label="付款天數" 
+                                controlName="paymentDays" 
+                                [control]="getFormControl(i, 'paymentDays')" 
+                                [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <hr />
+                </ng-container>
+            </ng-container>
+
+            <!-- Add Item Button -->
+            <div class="pt-1">
+                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+            </div>
+        </form>
+
+        <!-- Submit and Cancel Buttons -->
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit 
+                    (click)="submitForm(dataForm)" 
+                    *ngIf="isFormEditable">
+                </app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

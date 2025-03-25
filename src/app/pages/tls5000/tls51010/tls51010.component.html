@@ -1,0 +1,42 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card">
+            <div class="grid align-items-center">
+                <div class="col" style="flex: 1;">
+                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
+                </div>
+                <div *appHasPermission="addPermission">
+                    <app-button-create (click)="onCreate()" class="col"></app-button-create>
+                </div>
+            </div>
+            <p-accordion>
+                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+                    <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number label="大分類代碼" controlName="bCode" [control]="queryForm.controls.bCode" [submitted]="submitted">
+                                </app-input-serial-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="大分類名稱" controlName="bName" [control]="queryForm.controls.bName" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div *appHasPermission="queryPermission" class="col">
+                            <div class="grid justify-content-end">
+                                <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                                <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                            </div>
+                        </div>
+                    </form>
+                </p-accordionTab>
+            </p-accordion>
+        </div>
+        <div class="card">
+            <div class="col-13">
+                <app-data-table-check [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+                </app-data-table-check>
+            </div>
+        </div>
+    </div>
+</div>

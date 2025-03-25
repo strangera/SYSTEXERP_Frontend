@@ -1,0 +1,22 @@
+<div class="layout-wrapper" [ngClass]="containerClass" *ngIf="user">
+    <app-topbar></app-topbar>
+    <div class="layout-sidebar">
+        <app-menulist (menuaddTab)="onAddTab($event)"></app-menulist>
+    </div>
+    <div class="layout-main-container">
+        <div class="layout-main">
+            <!---->
+            <router-outlet></router-outlet>
+            <!--
+            <p-tabView [(activeIndex)]="activeIndex" [scrollable]="true">
+                <p-tabPanel *ngFor="let tab of tabs; let i = index" [header]="tab.title" [closable]="i !== 0" (onClose)="onTabClose($event, i)">
+                    <ng-container *ngComponentOutlet="tab.component"></ng-container>
+                </p-tabPanel>
+            </p-tabView>-->
+        </div>
+        <app-footer></app-footer>
+    </div>
+    <div class="layout-mask"></div>
+</div>
+
+<!-- Main Content -->

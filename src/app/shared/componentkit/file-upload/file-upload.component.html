@@ -1,0 +1,12 @@
+<div class="col">
+    <p-fileUpload url="uploadurl" [chooseLabel]="chooseLab" [uploadLabel]="uploadLab" [cancelLabel]="cancelLab" (onUpload)="onUpload($event)" [multiple]="false" [accept]="fileType" [maxFileSize]="fileszie" [uploadStyleClass]="'upload-style'" [cancelStyleClass]="'cancel-style'"
+        [removeStyleClass]="'remove-style'" [chooseStyleClass]="'choose-style'" [cancelLabel]="'清除'">
+        <ng-template pTemplate="content">
+            <ul *ngIf="uploadedFiles.length">
+                <li *ngFor="let file of uploadedFiles">
+                    {{ file.name }} - {{ file.size }} bytes
+                </li>
+            </ul>
+        </ng-template>
+    </p-fileUpload>
+</div>

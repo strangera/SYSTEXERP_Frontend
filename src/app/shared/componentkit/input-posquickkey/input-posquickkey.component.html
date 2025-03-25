@@ -1,0 +1,19 @@
+<label [for]="controlName">{{ label }}
+  <span *ngIf="isRequired" class="required">*</span>
+</label>
+<input [id]="controlName" type="text" [formControl]="control" [(ngModel)]="selectedValueID" [ngClass]="{'is-invalid': submitted && control.errors}" pInputText (click)="showDialog()" />
+<app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>
+<!---->
+<p-dialog header="快速鍵代碼" [(visible)]="visible" [modal]="true" [style]="{width: '50vw'}">
+    <p-dataView #dv [value]="quickkeyData" layout="grid">
+        <ng-template pTemplate="grid" let-listdata>
+            <div class="grid grid-nogutter">
+                <div class="col-20" *ngFor="let key of listdata">
+                    <div class="card m-0 border-1 surface-border hover-effect" (click)="onRowSelect(key)">
+                        <span class="align-items-center text-center mb-3 mr-3 text-l">{{key.id}}</span>
+                    </div>
+                </div>
+            </div>
+        </ng-template>
+    </p-dataView>
+</p-dialog>

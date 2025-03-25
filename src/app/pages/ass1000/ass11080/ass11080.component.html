@@ -1,0 +1,83 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+        <!-- <div *appHasPermission="addPermission">
+            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+        </div> -->
+    </div>
+    <p-accordion>
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                <h5>挑選條件</h5>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="變賣傳票是否啟用" controlName="active_SellofSummons" [options]="WhetherOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.active_SellofSummons" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="報廢傳票是否啟用" controlName="active_ScrappedSummons" [options]="WhetherOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.active_ScrappedSummons" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                </div>
+                <hr>
+                <h5>資產報廢 會計科目設定</h5>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="處分資產損失" controlName="assetsALoss" [options]="payOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.assetsALoss" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                </div>
+                <hr>
+                <h5>資產變賣 會計科目設定</h5>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="應收帳款" controlName="receiveAccount" [options]="payOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.receiveAccount" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="處分資產損失" controlName="assetsCLoss" [options]="payOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.receiveAccount" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="處分資產收入" controlName="assetsCIncome" [options]="payOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.assetsCIncome" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                </div>
+                <hr>
+                <h5>資產變賣 會計科目設定</h5>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="耗材報廢會科" controlName="consumables_Scrapped" [options]="payOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.consumables_Scrapped" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                </div>
+                <hr>
+                <h5>耗材盤點 會計科目設定</h5>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="耗材盤盈會科" controlName="consumables_Income" [options]="payOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.consumables_Income" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="耗材盤損會科" controlName="consumables_Loss" [options]="payOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.consumables_Loss" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                </div>
+                <div *appHasPermission="queryPermission" class="col">
+                    <div class="grid justify-content-end">
+                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                    </div>
+                </div>
+            </form>
+        </p-accordionTab>
+    </p-accordion>
+</div>
+<!-- <div class="card">
+    <div class="col-13">
+        <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+        </app-data-table>
+    </div>
+</div> -->

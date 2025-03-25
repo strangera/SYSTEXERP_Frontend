@@ -1,0 +1,75 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+        <!-- <div *appHasPermission="addPermission">
+            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+        </div> -->
+        <div *appHasPermission="addPermission">
+            <app-button-demo label="攤提設定" class="col"></app-button-demo>
+        </div>
+    </div>
+    <p-accordion>
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-serial-number label="攤提代號" controlName="shareCode" [control]="queryForm.controls.shareCode" [submitted]="submitted">
+                        </app-input-serial-number>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="品項編號" controlName="itemCode" [options]="itemCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.itemCode" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-date-range label="購入日期" [startControl]="queryForm.controls.purchaseDateFrom" [endControl]="queryForm.controls.purchaseDateTo" [submitted]="submitted">
+                        </app-date-range>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-multi-select label="資產狀態" controlName="assetStatus" [options]="assetsStatusOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.assetStatus" [submitted]="submitted">
+                        </app-multi-select>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-multi-select label="資產類型" controlName="assetType" [options]="assetTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.assetType" [submitted]="submitted">
+                        </app-multi-select>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="會計科目代號" controlName="accountingCode" [options]="accountingCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.accountingCode" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-serial-number-range label="購入金額" [startControl]="queryForm.controls.purchaseAmountFrom" [endControl]="queryForm.controls.purchaseAmountTo" [submitted]="submitted">
+                        </app-input-serial-number-range>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="採購單號" controlName="purchaseNumber" [options]="orderNumberOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.purchaseNumber" [submitted]="submitted">
+                        </app-dropdown-item>
+                    </div>
+                </div>
+                <hr />
+                <div class="grid p-fluid">
+                    <app-radiobutton label="條件篩選" groupname="filter" [control]="queryForm.controls.filter" [options]="filterOptions" [submitted]="submitted">
+                    </app-radiobutton>
+                </div>
+                <hr />
+                <div *appHasPermission="queryPermission" class="col">
+                    <div class="grid justify-content-end">
+                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                    </div>
+                </div>
+            </form>
+        </p-accordionTab>
+    </p-accordion>
+</div>
+<div class="card">
+    <div class="col-13">
+        <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+        </app-data-table>
+    </div>
+</div>

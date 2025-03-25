@@ -1,0 +1,127 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <!-- 建立按鈕，需有新增權限 -->
+    <div *appHasPermission="addPermission">
+      <app-button-create (click)="onCreate()" class="col"></app-button-create>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <!-- 活動開始日期 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-date-one
+              label="活動開始日期"
+              controlName="activityStartDate"
+              [control]="queryForm.controls.activityStartDate"
+              [submitted]="submitted"
+            ></app-date-one>
+          </div>
+          <!-- 活動結束日期 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-date-one
+              label="活動結束日期"
+              controlName="activityEndDate"
+              [control]="queryForm.controls.activityEndDate"
+              [submitted]="submitted"
+            ></app-date-one>
+          </div>
+          <!-- 領用日期 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-date-one
+              label="領用日期"
+              controlName="issueDate"
+              [control]="queryForm.controls.issueDate"
+              [submitted]="submitted"
+            ></app-date-one>
+          </div>
+          <!-- 行銷檔期代號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="行銷檔期代號"
+              controlName="marketingCampaignCode"
+              [options]="marketingCampaignOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.marketingCampaignCode"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+          <!-- 檔期名稱 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="檔期名稱"
+              controlName="campaignName"
+              [control]="queryForm.controls.campaignName"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <!-- 領用單號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="領用單號"
+              controlName="issueNumber"
+              [control]="queryForm.controls.issueNumber"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <!-- 備註 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="備註"
+              controlName="remarks"
+              [control]="queryForm.controls.remarks"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <!-- 領用人員 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="領用人員"
+              controlName="applicant"
+              [options]="applicantOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.applicant"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+        </div>
+      </form>
+      <!-- 查詢與清除按鈕 -->
+      <div *appHasPermission="queryPermission" class="col">
+        <div class="grid justify-content-end">
+          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+          <app-button-query
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button-query>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <div class="col-12">
+    <app-data-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-data-table>
+  </div>
+</div>

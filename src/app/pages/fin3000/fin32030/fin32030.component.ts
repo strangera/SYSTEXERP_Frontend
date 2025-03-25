@@ -1,0 +1,123 @@
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+// Shared
+import { AuthService } from '../../../service/system/auth.service';
+import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { NotificationService } from '../../../shared/service/notification.service';
+import { ValidationService } from '../../../shared/service/validation.service';
+import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+//
+
+//1.3.2.3 收款沖帳維護 
+@Component({
+  selector: 'app-fin32030',
+  templateUrl: './fin32030.component.html',
+  styleUrl: './fin32030.component.scss'
+})
+export class FIN32030Component extends BasicQpageComponent implements OnInit{
+  //
+  queryForm = this.formBuilder.group({
+    receive_ID: [, [Validators.maxLength(12)]], // 收款單號
+    receive_Date_From: [], // 收款日期
+    receive_Date_To: [], // 收款日期
+    salesperson_Code: [], // 業務員代號
+    summons_ID_From: [, [this.validationService.numberValidator, Validators.max(99999999999)]], // 傳票單號
+    summons_ID_To: [, [this.validationService.numberValidator, Validators.max(99999999999)]], // 傳票單號
+    remark: ['', [Validators.maxLength(30)]], // 備註
+  });
+  // 下拉資料多個呈現
+  // ----------------------------------------------------------------
+  roles: any[] = [
+    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
+    { id: 2, roleCode: 'USER', roleName: 'User' },
+    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+  ];
+  // 表格
+  // ----------------------------------------------------------------
+  data: any[] = [
+    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
+    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
+    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
+    // 其他資料
+  ];
+  columns: any[]= [
+    { field: 'col1', header: '收款單號', visible: true },
+    { field: 'col2', header: '收款日期', visible: true },
+    { field: 'col3', header: '業務員代號', visible: true },
+    { field: 'col4', header: '傳票單號', visible: true },
+    { field: 'col5', header: '備註', visible: true },
+    // 其他欄位
+  ];
+  // ----------------------------------------------------------------
+  salesCodeOptions: any[] = [
+    { value: 1, label: '001/阮湘晴' },
+  ];
+
+  constructor(
+    private router: Router,
+    private formBuilder: FormBuilder,
+    private messageService: NotificationService,
+    private authService: AuthService,
+    private validationService: ValidationService,
+    //
+  ) {
+    super(); // 呼叫父類建構子
+  }
+
+  ngOnInit(): void {
+    // 初始化
+    this.ProgNo = '130005';
+    this.cruPage = '/FIN3000/FIN32030CRU';
+    //
+    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // ----------------------------------------------------------------
+    //
+    // ----------------------------------------------------------------
+  }
+
+  // ----------------------------------------------------------------
+  onSubmit(frm: FormGroup) {
+    console.log(frm.value);
+    this.submitted = true;
+    this.loading = true;
+    this.messageService.blockUi();
+
+    if (frm.valid && this.canQuery()) {
+      // 提交邏輯
+      // Service
+      // this.xxxService.queryMachine(frm.value as xxxInterface)
+      //  .subscribe((response: any) => {
+      //    this.rows = response.xxx;
+      // });
+    }
+
+    this.loading = false;
+    this.messageService.unblockUi();
+  }
+
+  onSubmitQuery(frm: FormGroup) {
+    // 查詢邏輯
+    this.onSubmit(frm);
+  }
+
+  onClearForm() {
+    this.queryForm.reset();  // 重置表單
+  }
+  // ----------------------------------------------------------------
+  onCreate() {
+    if (this.canAdd()) {
+      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
+    }
+  }
+
+  onEdit(data: any) {
+    if (this.canEdit()) {
+      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
+    }
+  }
+
+  onDetail(data: any) {
+    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+  }
+}

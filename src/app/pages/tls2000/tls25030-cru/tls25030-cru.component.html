@@ -1,0 +1,125 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="單據編號"
+            controlName="documentNumber"
+            [control]="dataForm.controls.documentNumber"
+            [submitted]="submitted"
+          >
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="專櫃編號"
+            controlName="counterCode"
+            [options]="counterCodeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.counterCode"
+            [submitted]="submitted"
+          >
+          </app-dropdown-item>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="營運截止日"
+            controlName="counterName"
+            [control]="dataForm.controls.counterName"
+            [submitted]="submitted"
+          >
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="扣款項目"
+            controlName="deductionItem"
+            [options]="deductionItemOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.deductionItem"
+            [submitted]="submitted"
+          >
+          </app-dropdown-item>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-serial-number
+            label="金額"
+            [control]="dataForm.controls.amountStart"
+            [submitted]="submitted"
+          >
+          </app-input-serial-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="月結扣款"
+            controlName="whether"
+            [options]="whetherOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.whether"
+            [submitted]="submitted"
+          >
+          </app-dropdown-item>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-date-one
+            label="扣款日期"
+            [control]="dataForm.controls.deductionDateStart"
+          
+            [submitted]="submitted"
+          >
+          </app-date-one>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-date-one
+            label="違規日期"
+            [control]="dataForm.controls.violationDateStart"
+            [submitted]="submitted"
+          >
+          </app-date-one>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="開立人代號 / 名稱"
+            controlName="issuingUnit"
+            [options]="organizationNumberOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.issuingUnit"
+            [submitted]="submitted"
+          >
+          </app-dropdown-item>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-editor-text
+            label="備註"
+            controlName="remark"
+            [control]="dataForm.controls.remark"
+            [submitted]="submitted"
+            [style]="{ height: '100px' }"
+          >
+          </app-editor-text>
+        </div>
+      </div>
+    </form>
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button-cancel (click)="onCancel()"></app-button-cancel>
+        <app-button-submit
+          (click)="submitForm(dataForm)"
+          *ngIf="isFormEditable"
+        ></app-button-submit>
+      </div>
+    </div>
+  </p-panel>
+</div>

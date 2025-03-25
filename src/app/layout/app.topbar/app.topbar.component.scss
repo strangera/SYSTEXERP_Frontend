@@ -1,0 +1,39 @@
+.search-form {
+    margin-left: auto;
+}
+
+.layout-topbar .layout-topbar-logo {
+    width: 270px;
+}
+
+.layout-topbar .topbar-menu {
+    list-style-type: none;
+    padding: 0;
+    flex: 1 1 auto;
+    overflow: auto;
+    button span.p-button-label.ng-star-inserted {
+        font-weight: bold;
+        font-size: 20px;
+        color: black;
+    }
+}
+
+@media (max-width: 991px) {
+    .layout-topbar {
+        height: 9rem;
+        flex-wrap: wrap;
+        padding: 1rem 1rem 0;
+        .layout-topbar-logo {
+            width: auto;
+        }
+    }
+    .layout-topbar .topbar-menu {
+        order: 4;
+        width: 100%;
+        margin: 0;
+        justify-content: space-between;
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+    }
+}

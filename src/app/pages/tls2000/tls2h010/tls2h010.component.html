@@ -1,0 +1,60 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card">
+            <div class="grid align-items-center">
+                <div class="col" style="flex: 1">
+                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
+                </div>
+                <div *appHasPermission="addPermission">
+                    <app-button-demo label="產生發票" class="col"></app-button-demo>
+                </div>
+                <div *appHasPermission="addPermission">
+                    <app-button-demo label="重新列印" class="col"></app-button-demo>
+                </div>
+            </div>
+            <p-accordion>
+                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+                    <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-datemm-one label="帳款年月" [control]="queryForm.controls.onedatemm" [submitted]="submitted">
+                                </app-datemm-one>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number label="專櫃編號" controlName="money" [control]="queryForm.controls.serialnumber" [submitted]="submitted">
+                                </app-input-serial-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-serial-number-range label="發票號碼" [startControl]="queryForm.controls.startInvoiceNumber" [endControl]="queryForm.controls.endInvoiceNumber" [submitted]="submitted">
+                                </app-input-serial-number-range>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-4 lg:col-4">
+                                <app-checkbox-one label="發票封面是否列印" controlName="usagec" [control]="queryForm.controls.print">
+                                </app-checkbox-one>
+                            </div>
+                        </div>
+                        <hr>
+                        <ul>
+                            <li>印表機設定：</li>
+                            <ul>
+                                <li>紙張大小：A4</li>
+                                <li>頁首和頁尾請清空</li>
+                                <li>紙張列印方向：直印</li>
+                                <li>放紙：請將捲軸靠最左邊</li>
+                            </ul>
+                        </ul>
+                        <div *appHasPermission="queryPermission" class="col">
+                            <div class="grid justify-content-end">
+                                <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                                <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                            </div>
+                        </div>
+                    </form>
+                </p-accordionTab>
+            </p-accordion>
+        </div>
+    </div>
+</div>

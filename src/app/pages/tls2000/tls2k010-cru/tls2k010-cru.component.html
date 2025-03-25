@@ -1,0 +1,35 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card">
+            <div class="grid align-items-center">
+                <div class="col" style="flex: 1;">
+                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
+                </div>
+            </div>
+            <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+                <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-dropdown-item label="卡種" controlName="card" [options]="cardOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.card" [submitted]="submitted">
+                            </app-dropdown-item>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-number label="產卡數量" controlName="number" [control]="dataForm.controls.number" [submitted]="submitted">
+                            </app-input-number>
+                        </div>
+                    </div>
+                    <hr>
+                    <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark" [style]="{ height: '100px' }" [submitted]="submitted">
+                    </app-editor-text>
+                    <hr>
+                </form>
+                <div class="col pt-4">
+                    <div class="grid justify-content-end">
+                        <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                        <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                    </div>
+                </div>
+            </p-panel>
+        </div>
+    </div>
+</div>

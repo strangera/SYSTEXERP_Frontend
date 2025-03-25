@@ -1,0 +1,36 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1;">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="階層代碼" controlName="group_no" [control]="dataForm.controls.group_no" [submitted]="submitted">>
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-12 lg:col-4">
+                    <app-input-text label="階層名稱" controlName="group_name" [control]="dataForm.controls.group_name" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="上層組織" controlName="upgroup" [options]="upgroup_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.upgroup" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+        </form>
+        <ul>
+            <li>備註：</li>
+            <li>1.若上層組織階層為空，表示此階層為公司組織階層之最上層。</li>
+            <li>2.代碼大小順序表示階層上下關係(例：全公司為10、本部為20...)</li>
+        </ul>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

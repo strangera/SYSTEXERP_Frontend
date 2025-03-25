@@ -1,0 +1,79 @@
+// tebles styles
+// 過濾 clumes
+// ----------------------------------------------------------------
+.hide-selected-items .p-multiselect-label {
+    display: none;
+    /* Hides the selected items label */
+}
+
+.hide-selected-items .p-multiselect-trigger-icon {
+    font-size: 2em;
+    /* Adjusts the size of the dropdown icon */
+}
+
+.hide-selected-items .ng-trigger-overlayContentAnimation {
+    width: 200px;
+}
+
+//
+// ----------------------------------------------------------------
+.p-datatable .p-datatable-thead>tr>th {
+    background: #C7D2FE;
+}
+
+.p-datatable .p-datatable-tbody>tr:nth-child(even) {
+    background: #EEF2FF;
+}
+
+// ----------------------------------------------------------------
+button.p-element.custom-button {
+    background-color: white;
+    color: gray;
+    border: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    .icon {
+        font-size: 2rem;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+    }
+}
+
+.ng-star-inserted button.p-element.p-ripple.icon-button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    /* 淡藍色背景 */
+    background-color: rgba(239, 246, 255);
+    /* 圓角邊框 */
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(239, 246, 255);
+    border: 1px solid rgba(239, 246, 255);
+    transition: background-color 0.3s ease;
+}
+
+.ng-star-inserted button.p-element.p-ripple.icon-button:hover {
+    /* 當鼠標懸停時，背景顏色變深 */
+    background-color: rgba(0, 123, 255, 0.2);
+}
+
+button.icon-button span.p-button-icon.pi {
+    /* 填充圖標顏色 */
+    color: #007bff;
+}
+
+// ----------------------------------------------------------------
+.p-paginator {
+    display: flex;
+    justify-content: flex-start;
+    // align-items: center;
+}
+
+.p-paginator>.p-paginator-current {
+    flex-grow: 1;
+    flex-basis: 0;
+    padding: 1rem;
+}

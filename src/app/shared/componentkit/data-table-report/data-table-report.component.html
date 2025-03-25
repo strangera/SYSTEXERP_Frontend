@@ -1,0 +1,53 @@
+<div class="grid align-items-center">
+    <div class="col" style="flex: 1; display: flex; gap: 10px;">
+        <p-multiSelect [options]="columns" [(ngModel)]="selectedColumns" optionLabel="header" (onChange)="toggleColumnVisibility($event)" dropdownIcon="pi pi-cog" class="hide-selected-items" pTooltip="過濾欄位" tooltipPosition="top">
+        </p-multiSelect>
+        <button type="button" (click)="togglePaginator()" class="custom-button" pTooltip="報表" tooltipPosition="top" pButton><i class="pi pi-file icon"></i></button>
+        <button type="button" (click)="togglePrint()" class="custom-button" pTooltip="列印" tooltipPosition="top" pButton [disabled]="IsPaginator"><i class="pi pi-print icon"></i></button>
+    </div>
+    <!--<div>
+      查詢時間:
+      <p-calendar inputId="calendar-24h" [showTime]="true" />
+  </div>-->
+    <div *ngIf="IsPaginator">
+        <p-dropdown [options]="pages" [(ngModel)]="selectedPage" optionLabel="label" optionValue="value" (onChange)="goToPage($event.value)" class="col">
+        </p-dropdown>
+    </div>
+</div>
+<div>
+    <p-table [value]="data" [sortMode]="'multiple'" [resizableColumns]="true" [paginator]=IsPaginator [scrollable]="IsScrollable" [scrollHeight]="IsScrollHeight" [rows]="rows" [rowsPerPageOptions]="[10, 25, 50, 75, 100]" [styleClass]="tableSize" [showCurrentPageReport]="true"
+        currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})" [(first)]="first" (onPage)="onPageChange($event)">
+        <!--<ng-template pTemplate="caption">
+          <div class="flex justify-content-between">
+              <p-button [outlined]="true" icon="pi pi-filter-slash" label="Clear" />
+              <p-iconField iconPosition="left">
+                  <p-inputIcon>
+                      <i class="pi pi-search"></i>
+                  </p-inputIcon>
+              </p-iconField>
+          </div>
+      </ng-template>-->
+        <ng-template pTemplate="header">
+            <tr>
+                <th>
+                    序號
+                </th>
+                <th *ngFor="let col of getVisibleColumns()" [pSortableColumn]="col.field">
+                    {{col.header}}
+                    <ng-container *ngIf="IsPaginator">
+                        <p-sortIcon [field]="col.field"></p-sortIcon>
+                    </ng-container>
+                </th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
+            <tr>
+                <td>{{ rowIndex + 1 }}</td>
+                <!-- 這裡顯示行索引，從 1 開始 -->
+                <td *ngFor="let col of getVisibleColumns()">
+                    {{rowData[col.field]}}
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>

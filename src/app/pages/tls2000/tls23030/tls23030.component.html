@@ -1,0 +1,229 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="顯示方式"
+              controlName="displayMode"
+              [options]="displayModeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.displayMode"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-date-range
+              label="銷售日期"
+              [startControl]="queryForm.controls.saleDateStart"
+              [endControl]="queryForm.controls.saleDateEnd"
+              [submitted]="submitted"
+            >
+            </app-date-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-serial-number
+              label="收銀機代號"
+              controlName="cashierCode"
+              [control]="queryForm.controls.cashierCode"
+              [submitted]="submitted"
+            >
+            </app-input-serial-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-serial-number-range
+              label="交易序號(起/迄)"
+              [startControl]="queryForm.controls.transactionSerialStart"
+              [endControl]="queryForm.controls.transactionSerialEnd"
+              [submitted]="submitted"
+            >
+            </app-input-serial-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-serial-number
+              label="專櫃編號"
+              controlName="counterCode"
+              [control]="queryForm.controls.counterCode"
+              [submitted]="submitted"
+            >
+            </app-input-serial-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="付款別"
+              controlName="paymentType"
+              [options]="paymentTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.paymentType"
+              [submitted]="submitted"
+            >
+            </app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-serial-number-range
+              label="金額"
+              [startControl]="queryForm.controls.amountStart"
+              [endControl]="queryForm.controls.amountEnd"
+              [submitted]="submitted"
+            >
+            </app-input-serial-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="交易型態"
+              controlName="transactionType"
+              [options]="transactionTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.transactionType"
+              [submitted]="submitted"
+            >
+            </app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-serial-number
+              label="會員卡號"
+              controlName="membershipNumber"
+              [control]="queryForm.controls.membershipNumber"
+              [submitted]="submitted"
+            >
+            </app-input-serial-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="信用卡別"
+              controlName="creditCardType"
+              [options]="cardTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.creditCardType"
+              [submitted]="submitted"
+            >
+            </app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="信用卡卡號"
+              controlName="creditCardNumber"
+              [control]="queryForm.controls.creditCardNumber"
+              [submitted]="submitted"
+            >
+            </app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="是否分期"
+              controlName="installment"
+              [options]="WhetherOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.installment"
+              [submitted]="submitted"
+            >
+            </app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="券類(己開/未開)"
+              controlName="voucherStatus"
+              [options]="ticketStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.voucherStatus"
+              [submitted]="submitted"
+            >
+            </app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-serial-number
+              label="組織編號"
+              controlName="organizationCode"
+              [control]="queryForm.controls.organizationCode"
+              [submitted]="submitted"
+            >
+            </app-input-serial-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <label>是否查詢券類大批</label>
+            <app-checkbox-one
+              label="是(此條件必需配合付款別選擇[商品券]或[紙張禮券])"
+              controlName="batchVoucherSearch"
+              [control]="queryForm.controls.batchVoucherSearch"
+            >
+            </app-checkbox-one>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="是否開立業主發票"
+              controlName="issueOwnerInvoice"
+              [options]="WhetherOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.issueOwnerInvoice"
+              [submitted]="submitted"
+            >
+            </app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="是否為業主收現"
+              controlName="ownerCollectCash"
+              [options]="WhetherOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ownerCollectCash"
+              [submitted]="submitted"
+            >
+            </app-dropdown-item>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              label="限制筆數"
+              controlName="limitnumber"
+              [control]="queryForm.controls.limitnumber"
+              [submitted]="submitted"
+              >>
+            </app-input-number>
+          </div>
+        </div>
+      </form>
+      <div *appHasPermission="queryPermission" class="col">
+        <div class="grid justify-content-end">
+          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+          <app-button-query
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button-query>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <div class="col-12">
+    <app-data-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    >
+    </app-data-table>
+  </div>
+</div>

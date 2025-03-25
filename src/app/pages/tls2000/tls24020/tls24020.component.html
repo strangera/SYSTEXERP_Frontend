@@ -1,0 +1,67 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-date-one
+              label="銷售日期"
+              [control]="queryForm.controls.saleDateStart"
+              [submitted]="submitted"
+            ></app-date-one>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-serial-number
+              label="收銀機號"
+              controlName="cashierCode"
+              [control]="queryForm.controls.cashierCode"
+              [submitted]="submitted"
+            ></app-input-serial-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="交易序號"
+              controlName="transactionSerial"
+              [control]="queryForm.controls.transactionSerial"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+        </div>
+      </form>
+      <div *appHasPermission="queryPermission" class="col">
+        <div class="grid justify-content-end">
+          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+          <app-button-query
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button-query>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <div class="col-12">
+    <app-data-table-check
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-data-table-check>
+  </div>
+</div>

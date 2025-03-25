@@ -1,0 +1,134 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <!-- <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="門市店號" controlName="STO_No" [control]="dataForm.controls.STO_No" [submitted]="submitted">
+                    </app-input-text>
+                </div> -->
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="收銀機號" controlName="ECR_No" [control]="dataForm.controls.ECR_No" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-date-one label="結束時間" controlName="NOT_BegDateTime" [control]="dataForm.controls.NOT_BegDateTime" [submitted]="submitted">
+                    </app-date-one>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-date-one label="結束時間" controlName="NOT_EndDateTime" [control]="dataForm.controls.NOT_EndDateTime" [submitted]="submitted">
+                    </app-date-one>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-datetime-one label="通告產生時間" [control]="dataForm.controls.NOT_DateTime" [submitted]="submitted">
+                    </app-datetime-one>
+                </div>
+                <!-- <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="通告顯示種類" controlName="NOT_Type" [options]="NOT_Type_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.NOT_Type" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div> -->
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="通告狀態" controlName="NOT_Status" [options]="NOT_Status_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.NOT_Status" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="即時顯示" controlName="NOT_DispRt" [options]="YNoptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.NOT_DispRt" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="暫停時顯示" controlName="NOT_DispSpd" [options]="YNoptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.NOT_DispSpd" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="按下功能鍵顯示" controlName="NOT_DispBtn" [options]="YNoptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.NOT_DispBtn" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="客顯器顯示" controlName="NOT_DispCd" [options]="YNoptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.NOT_DispCd" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="銷貨明細表列印" controlName="NOT_Prn" [options]="YNoptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.NOT_Prn" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-8">
+                    <app-input-text label="通告備註" controlName="NOT_Remark" [control]="dataForm.controls.NOT_Remark" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <hr/>
+                <app-editor-text label="通告內容" controlName="NOT_Desc" [control]="dataForm.controls.NOT_Desc" [style]="{ height: '100px' }" [submitted]="submitted">
+                </app-editor-text>
+            <hr>
+            <ng-container formArrayName="items">
+                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+                    <div class="grid align-items-center">
+                        <div class="col" style="flex: 1">
+                            <h4>通告 {{i+1}}</h4>
+                        </div>
+                        <div>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                        </div>
+                    </div>
+
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-serial-number label="通告序號" controlName="NOT_SeqNo" [control]="getFormControl(i, 'NOT_SeqNo')" [submitted]="submitted">
+                            </app-input-serial-number>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="專櫃編號" controlName="TLT_No" [control]="getFormControl(i, 'TLT_No')" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="機台類型" controlName="ECR_Type" [control]="getFormControl(i, 'ECR_Type')" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="機台群組編號" controlName="ECR_GrpNo" [control]="getFormControl(i, 'ECR_GrpNo')" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="館別" controlName="BUILDING_No" [control]="getFormControl(i, 'BUILDING_No')" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="樓層代碼" controlName="FLOOR_No" [control]="getFormControl(i, 'FLOOR_No')" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="區域代碼" controlName="AREA_No" [control]="getFormControl(i, 'AREA_No')" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <hr/>
+                </ng-container>
+            </ng-container>
+            <div class="pt-1">
+                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+            </div>
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

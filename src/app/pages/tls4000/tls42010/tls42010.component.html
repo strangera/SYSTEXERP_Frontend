@@ -1,0 +1,70 @@
+<div class="grid">
+    <div class="col-12">
+        <div class="card">
+            <div class="grid align-items-center">
+                <div class="col" style="flex: 1;">
+                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
+                </div>
+                <div *appHasPermission="addPermission">
+                    <app-button-action label="EXCEL匯入" class="col"></app-button-action>
+                </div>
+                <div *appHasPermission="addPermission">
+                    <app-button-action label="複製菜單" class="col"></app-button-action>
+                </div>
+                <div *appHasPermission="addPermission">
+                    <app-button-create (click)="onCreate()" class="col"></app-button-create>
+                </div>
+            </div>
+            <p-accordion>
+                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+                    <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                        <div class="grid p-fluid">
+                            <!-- <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="分店編號" controlName="STO_No" [control]="queryForm.controls.STO_No" [submitted]="submitted">
+                                </app-input-text>
+                            </div> -->
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown-item label="菜單類別" controlName="SBM_Type" [options]="SBM_Type_Options" optionLabel="label" optionValue="value" [control]="queryForm.controls.SBM_Type" [submitted]="submitted">
+                                </app-dropdown-item>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="商品條碼" controlName="PLU_No" [control]="queryForm.controls.PLU_No" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="專櫃編號" controlName="TLT_No" [control]="queryForm.controls.TLT_No" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="專櫃名稱" controlName="TLT_Name" [control]="queryForm.controls.TLT_Name" [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-datetime-range label="有效啟始日期" [startControl]="queryForm.controls.SBM_BegDate_From" [endControl]="queryForm.controls.SBM_BegDate_To" [submitted]="submitted">
+                                </app-datetime-range>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-datetime-range label="有效結束日期" [startControl]="queryForm.controls.SBM_EndDate_From" [endControl]="queryForm.controls.SBM_EndDate_To" [submitted]="submitted">
+                                </app-datetime-range>
+                            </div>
+                        </div>
+                        <div *appHasPermission="queryPermission" class="col">
+                            <div class="grid justify-content-end">
+                                <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+                                <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                            </div>
+                        </div>
+                    </form>
+                </p-accordionTab>
+            </p-accordion>
+        </div>
+        <div class="card">
+            <app-data-table-group [data]="data" [columns]="columns" [subColumns]="subColumns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+            </app-data-table-group>
+        </div>
+    </div>
+</div>

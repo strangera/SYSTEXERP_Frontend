@@ -1,0 +1,194 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <!-- <div *appHasPermission="addPermission">
+      <app-button-create (click)="onCreate()" class="col"></app-button-create>
+    </div> -->
+  </div>
+  <p-panel [header]="formTitle" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="收銀機號"
+            controlName="cashRegisterNumber"
+            [control]="dataForm.controls.cashRegisterNumber"
+            [submitted]="submitted"
+          >
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="交易流水號"
+            controlName="transactionSerialNumber"
+            [control]="dataForm.controls.transactionSerialNumber"
+            [submitted]="submitted"
+          >
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="專櫃編號"
+            controlName="counterID"
+            [control]="dataForm.controls.counterID"
+            [submitted]="submitted"
+          >
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="卡別"
+            controlName="cardCategory"
+            [options]="cardCategoryOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.cardCategory"
+            [submitted]="submitted"
+          >
+          </app-dropdown-item>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="銷售狀況"
+            controlName="salesCondition"
+            [options]="salesConditionOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.salesCondition"
+            [submitted]="submitted"
+          >
+          </app-dropdown-item>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-serial-number
+            label="金額"
+            [control]="dataForm.controls.amount"
+            [submitted]="submitted"
+          >
+          </app-input-serial-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-date-one
+            label="入帳日"
+            [control]="dataForm.controls.postingDate"
+            [submitted]="submitted"
+          >
+          </app-date-one>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="卡號"
+            controlName="cardID"
+            [control]="dataForm.controls.cardID"
+            [submitted]="submitted"
+          >
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="EDC號碼"
+            controlName="edcID"
+            [control]="dataForm.controls.edcID"
+            [submitted]="submitted"
+          >
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-date-one
+            label="請款日期"
+            [control]="dataForm.controls.billingDate"
+            [submitted]="submitted"
+          >
+          </app-date-one>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="授權碼"
+            controlName="authorizationCode"
+            [control]="dataForm.controls.authorizationCode"
+            [submitted]="submitted"
+          >
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="輸入狀態"
+            controlName="entryStatus"
+            [options]="entryStatusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.entryStatus"
+            [submitted]="submitted"
+          >
+          </app-dropdown-item>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="交易類別"
+            controlName="transactionCategory"
+            [options]="transactionCategoryOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.transactionCategory"
+            [submitted]="submitted"
+          >
+          </app-dropdown-item>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="分期期數"
+            controlName="installmentPeriodCount"
+            [options]="installmentPeriodCountOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.installmentPeriodCount"
+            [submitted]="submitted"
+          >
+          </app-dropdown-item>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="收單銀行"
+            controlName="acquirerBank"
+            [options]="acquirerBankOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.acquirerBank"
+            [submitted]="submitted"
+          >
+          </app-dropdown-item>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-time-one
+            label="時間"
+            [control]="dataForm.controls.transactionTime"
+            [submitted]="submitted"
+          >
+          </app-time-one>
+        </div>
+      </div>
+    </form>
+    <div class="card">
+      <div class="col-12">
+        <app-data-table
+          [data]="data"
+          [columns]="columns"
+          (edit)="onEdit($event)"
+          (detail)="onDetail($event)"
+        >
+        </app-data-table>
+      </div>
+    </div>
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button-cancel (click)="onCancel()"></app-button-cancel>
+        <app-button-submit
+          (click)="submitForm(dataForm)"
+          *ngIf="isFormEditable"
+        ></app-button-submit>
+      </div>
+    </div>
+  </p-panel>
+</div>

@@ -1,0 +1,203 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="資產代號" controlName="assetsCode" [control]="dataForm.controls.assetsCode" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="品項代碼 / 名稱" controlName="itemCode" [options]="itemCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.itemCode" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="資產狀態" controlName="assetsStatus" [options]="assetsStatusOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.assetsStatus" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="資產類型" controlName="assetsType" [control]="dataForm.controls.assetsType" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="原資產編號" controlName="original_assetsCode" [control]="dataForm.controls.original_assetsCode" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <hr>
+            <h5>採購資訊</h5>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="採購單號" controlName="purchaseNumber" [control]="dataForm.controls.purchaseNumber" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-date-one label="購入日期" controlName="purchaseDate" [control]="dataForm.controls.purchaseDate" [submitted]="submitted">
+                    </app-date-one>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number label="購入金額" controlName="purchasePrice" [control]="dataForm.controls.purchasePrice" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="供應商編號" controlName="supplierCode" [options]="supplierCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.supplierCode" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="會計科目(借)" controlName="accounting_Borrow" [options]="depreciationOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.accounting_Borrow" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="會計科目(貸)" controlName="accounting_Borrow" [options]="depreciationOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.accounting_Borrow" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-date-one label="入帳日期" controlName="entryDate" [control]="dataForm.controls.entryDate" [submitted]="submitted">
+                    </app-date-one>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="設備編號" controlName="deviceCode" [control]="dataForm.controls.deviceCode" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <hr>
+            <h5>折舊資訊</h5>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="折舊會計科目" controlName="depreciation" [options]="depreciationOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.depreciation" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="累計折舊科目" controlName="totalDepreciation" [options]="depreciationOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.totalDepreciation" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="折舊年限(年)" controlName="depreciationLife" [control]="dataForm.controls.depreciationLife" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number label="已攤提金額" controlName="amortizedAmount" [control]="dataForm.controls.amortizedAmount" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number label="已攤提月數" controlName="amortizedMonth" [control]="dataForm.controls.amortizedMonth" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number label="原折舊年限(月)" controlName="depreciationLifeMM" [control]="dataForm.controls.depreciationLifeMM" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number label="預留殘值" controlName="residual" [control]="dataForm.controls.residual" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+            </div>
+            <hr>
+            <h5>保管資訊</h5>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="保管人" controlName="keepingPerson" [options]="applicantCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.keepingPerson" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="保管單位" controlName="keepingUnit" [options]="supplierCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.keepingUnit" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="位置編號" controlName="locationCode" [options]="locationCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.locationCode" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="使用人" controlName="user" [options]="applicantCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.user" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="使用單位" controlName="userUnit" [options]="supplierCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.userUnit" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="維修合約編號" controlName="maintenanceCode" [control]="dataForm.controls.maintenanceCode" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <hr>
+            <h5>處分資訊</h5>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-date-one label="處份日期(變賣或報廢)" controlName="disposalDate" [control]="dataForm.controls.disposalDate" [submitted]="submitted">
+                    </app-date-one>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="處份廠商" controlName="dispose_Manufacturers" [options]="supplierCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.dispose_Manufacturers" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="處份傳票編號" controlName="dispose_Manufacturers_Summons" [control]="dataForm.controls.dispose_Manufacturers_Summons" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="變賣金額" controlName="soldAmount" [control]="dataForm.controls.soldAmount" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <hr/>
+            <h5>其他</h5>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-6">
+                    <app-editor-text label="處份說明(變賣或報廢)" controlName="disposeRemark" [control]="dataForm.controls.disposeRemark" [style]="{ height: '100px' }" [submitted]="submitted">
+                    </app-editor-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-6">
+                    <app-editor-text label="說明" controlName="remark" [control]="dataForm.controls.remark" [style]="{ height: '100px' }" [submitted]="submitted">
+                    </app-editor-text>
+                </div>
+            </div>
+            <hr>
+            <!-- <ng-container formArrayName="items">
+                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+                    <div class="grid align-items-center">
+                        <div class="col" style="flex: 1">
+                            <h5>商品 {{ i + 1 }}</h5>
+                        </div>
+                        <div>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-serial-number label="品項編號" [control]="getFormControl(i, 'itemCode')" [submitted]="submitted">
+                            </app-input-serial-number>
+                        </div>
+                    </div>
+                </ng-container>
+            </ng-container>
+            <div class="pt-1">
+                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+            </div> -->
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

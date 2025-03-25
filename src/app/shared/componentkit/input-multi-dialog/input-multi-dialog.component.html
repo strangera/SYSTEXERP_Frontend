@@ -1,0 +1,72 @@
+<label [for]="controlName">{{ label }}
+  <span *ngIf="control?.hasError('required')" class="required">*</span>
+</label>
+<p-inputGroup>
+  <!-- 隱藏的主控制項 -->
+  <input
+    hidden
+    [id]="controlName"
+    type="text"
+    [formControl]="control"
+    [(ngModel)]="selectedValueMajor"
+    [ngClass]="{ 'is-invalid': submitted && control.errors }"
+    pInputText
+  />
+  <!-- 顯示代號的輸入框 -->
+  <input type="text" [(ngModel)]="selectedValueMajor" pInputText disabled />
+  <!-- 顯示名稱的輸入框 -->
+  <input type="text" [(ngModel)]="selectedValueMinor" pInputText disabled />
+  <!-- 搜尋按鈕 -->
+  <p-button
+    icon="pi pi-search"
+    styleClass="custom-color-button"
+    severity="contrast"
+    (click)="showDialog()"
+  ></p-button>
+</p-inputGroup>
+
+<app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>
+
+<p-dialog [header]="label" [(visible)]="visible" [modal]="true">
+  <p-table
+    #dt1
+    [value]="data"
+    [globalFilterFields]="filterFields"
+    selectionMode="single"
+    [(selection)]="selectedItem"
+    (onRowSelect)="onRowSelect($event)"
+    scrollable="true"
+    scrollHeight="500px"
+    styleClass="p-datatable-striped p-datatable-gridlines"
+  >
+    <ng-template pTemplate="caption">
+      <div class="flex justify-content-between flex-column sm:flex-row">
+        <span class="p-input-icon-left mb-2">
+          <i class="pi pi-search"></i>
+          <input
+            pInputText
+            type="text"
+            #filter
+            (input)="onGlobalFilter(dt1, $event)"
+            placeholder="輸入：代碼, 名稱"
+            class="w-full"
+          />
+        </span>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+      <tr>
+        <th *ngFor="let col of getVisibleColumns()">
+          {{ col.header }}
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData>
+      <tr [pSelectableRow]="rowData">
+        <td *ngFor="let col of getVisibleColumns()">
+          {{ rowData[col.field] }}
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>

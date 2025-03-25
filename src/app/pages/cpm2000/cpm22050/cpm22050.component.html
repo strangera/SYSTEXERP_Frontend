@@ -1,0 +1,111 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <!-- 建立按鈕，需有新增權限 -->
+    <div *appHasPermission="addPermission">
+      <app-button-create (click)="onCreate()" class="col"></app-button-create>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <!-- 開始日期範圍 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-date-range
+              label="開始日期"
+              controlName="startDateRange"
+              [startControl]="queryForm.controls.startDateStart"
+              [endControl]="queryForm.controls.startDateEnd"
+              [submitted]="submitted"
+            ></app-date-range>
+          </div>
+          <!-- 結束日期範圍 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-date-range
+              label="結束日期"
+              controlName="endDateRange"
+              [startControl]="queryForm.controls.endDateStart"
+              [endControl]="queryForm.controls.endDateEnd"
+              [submitted]="submitted"
+            ></app-date-range>
+          </div>
+          <!-- 行銷檔期代號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="行銷檔期代號"
+              controlName="marketingCampaignCode"
+              [options]="marketingCampaignOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.marketingCampaignCode"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+          <!-- 檔期名稱 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="檔期名稱"
+              controlName="campaignName"
+              [control]="queryForm.controls.campaignName"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <!-- 檔期說明 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="檔期說明"
+              controlName="campaignDescription"
+              [control]="queryForm.controls.campaignDescription"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <!-- 活動類別名稱 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-item
+              label="活動類別名稱"
+              controlName="activityCategoryName"
+              [options]="activityCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.activityCategoryName"
+              [submitted]="submitted"
+            ></app-dropdown-item>
+          </div>
+        </div>
+      </form>
+      <!-- 查詢與清除按鈕 -->
+      <div *appHasPermission="queryPermission" class="col">
+        <div class="grid justify-content-end">
+          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+          <app-button-query
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button-query>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <div class="col-12">
+    <app-data-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-data-table>
+  </div>
+</div>

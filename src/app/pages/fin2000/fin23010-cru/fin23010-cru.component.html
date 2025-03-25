@@ -1,0 +1,83 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1;">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="預支單號" controlName="advanceSheetNumber" [control]="dataForm.controls.advanceSheetNumber" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-date-one label="申請日期" controlName="requestDate" [control]="dataForm.controls.requestDate" [submitted]="submitted">
+                    </app-date-one>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="預支金額" controlName="advanceAmount" [control]="dataForm.controls.advanceAmount" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-date-one label="預計核銷日" controlName="writeOffDate" [control]="dataForm.controls.writeOffDate" [submitted]="submitted">
+                    </app-date-one>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="申請廠商/員工" controlName="requsetEmployee" [options]="requsetEmployeeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.requsetEmployee" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="付款方式" controlName="payoutMethod" [options]="payoutMethodOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.payoutMethod" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="匯款銀行代號" controlName="transferAccount" [control]="dataForm.controls.transferAccount" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-serial-number label="銀行帳號" controlName="bankAccount" [control]="dataForm.controls.bankAccount" [submitted]="submitted">
+                    </app-input-serial-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="帳戶名稱" controlName="accountName" [control]="dataForm.controls.accountName" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="票據禁止背書轉讓" controlName="ticketTransfer" [options]="whetherOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.ticketTransfer" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="票據抬頭" controlName="ticketTitle" [control]="dataForm.controls.ticketTitle" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-date-one label="預計付款日" controlName="eExpectPayDate" [control]="dataForm.controls.eExpectPayDate" [submitted]="submitted">
+                    </app-date-one>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="費用組織" controlName="organization" [options]="organizationOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.organization" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="摘要" controlName="summary" [control]="dataForm.controls.summary" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button-cancel (click)="onCancel()"></app-button-cancel>
+                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            </div>
+        </div>
+    </p-panel>
+</div>

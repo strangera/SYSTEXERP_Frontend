@@ -1,0 +1,108 @@
+<div class="card">
+    <div class="grid align-items-center">
+      <div class="col" style="flex: 1">
+        <app-menubar [ProgNo]="ProgNo"></app-menubar>
+      </div>
+      <!-- <div *appHasPermission="addPermission">
+          <app-button-create (click)="onCreate()" class="col"></app-button-create>
+        </div> -->
+    </div>
+    <p-accordion>
+      <p-accordionTab
+        header="{{ 'query-conditions' | translate }}"
+        [selected]="true"
+        class="line-height-3 m-0"
+        [headerStyleClass]="'query-accordionTab'"
+      >
+        <form
+          [formGroup]="queryForm"
+          id="queryForm"
+          (ngSubmit)="onSubmit(queryForm)"
+        >
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+                <app-dropdown-item
+                  label="支出請款單號"
+                  controlName="PettyCashOrderNumber"
+                  [options]="PettyCashOrderNumber"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.PettyCashOrderNumber"
+                  [submitted]="submitted"
+                >
+                </app-dropdown-item>
+              </div>
+              <div class="col-12 md:col-6 lg:col-5">
+                <app-date-range
+                  label="產生日期"
+                  [startControl]="queryForm.controls.startdate"
+                  [endControl]="queryForm.controls.enddate"
+                  [submitted]="submitted"
+                >
+                </app-date-range>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-dropdown-item
+                  label="零用金申請人"
+                  controlName="Pettycashapplicant"
+                  [options]="Pettycashapplicant"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.Pettycashapplicant"
+                  [submitted]="submitted"
+                ></app-dropdown-item>
+              </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown-item
+                label="零用金保管人"
+                controlName="Pettycashcustodian"
+                [options]="usercode"
+                optionLabel="label"
+                optionValue="value"
+                [control]="queryForm.controls.Pettycashcustodian"
+                [submitted]="submitted"
+              ></app-dropdown-item>
+            </div>
+
+
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown-item
+                label="狀態"
+                controlName="status"
+                [options]="statusOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="queryForm.controls.status"
+                [submitted]="submitted"
+              >
+              </app-dropdown-item>
+            </div>
+
+          </div>
+        </form>
+        <div *appHasPermission="queryPermission" class="col">
+          <div class="grid justify-content-end">
+            <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+            <app-button-query
+              (onClick)="onSubmitQuery(queryForm)"
+              [loading]="loading"
+            ></app-button-query>
+          </div>
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+  </div>
+  
+  <div class="card">
+    <div class="col-12">
+      <app-data-table
+        [data]="data"
+        [columns]="columns"
+        (edit)="onEdit($event)"
+        (detail)="onDetail($event)"
+      >
+      </app-data-table>
+    </div>
+  </div>
+  

@@ -1,0 +1,97 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-item
+            label="倉別"
+            controlName="whCategory "
+            [options]="whCategory"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.whCategory"
+            [submitted]="submitted"
+          ></app-dropdown-item>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-radiobutton
+            label="盤點類型"
+            [control]="dataForm.controls.invType"
+            [options]="invType"
+            [submitted]="submitted"
+          >
+          </app-radiobutton>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown-item
+        label="中分類"
+        controlName="categoryOptions "
+        [options]="categoryOptions"
+        optionLabel="label"
+        optionValue="value"
+        [control]="dataForm.controls.categoryOptions"
+        [submitted]="submitted"
+      >
+    </app-dropdown-item>
+    </div>
+      </div>
+
+      <!-- <hr />
+            <ng-container formArrayName="items">
+              <ng-container
+                *ngFor="let item of items.controls; let i = index"
+                [formGroupName]="i"
+              >
+                <div class="grid align-items-center">
+                  <div class="col" style="flex: 1">
+                    <p>{{ i + 1 }}</p>
+                  </div>
+                  <div>
+                    <app-button-dynamicallydelete
+                      (click)="onRemoveItem(i)"
+                      [crudstatus]="crudstatus"
+                      class="col"
+                    ></app-button-dynamicallydelete>
+                  </div>
+                </div>
+                <div class="grid p-fluid">
+
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item
+                          label="保管人"
+                          controlName="Pettycashcustodian"
+                          [options]="usercode"
+                          optionLabel="label"
+                          optionValue="value"
+                          [control]="dateForm.controls.Pettycashcustodian"
+                          [submitted]="submitted"
+                        ></app-dropdown-item>
+                      </div>
+               
+                </div>
+                <hr />
+              </ng-container>
+            </ng-container>
+            <div class="pt-1">
+              <app-button-dynamicallyadd
+                (click)="onAddItem()"
+              ></app-button-dynamicallyadd>
+            </div> -->
+    </form>
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button-cancel (click)="onCancel()"></app-button-cancel>
+        <app-button-submit
+          (click)="submitForm(dataForm)"
+          *ngIf="isFormEditable"
+        ></app-button-submit>
+      </div>
+    </div>
+  </p-panel>
+</div>

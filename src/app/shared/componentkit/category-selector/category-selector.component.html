@@ -1,0 +1,31 @@
+<div class="category-selector">
+    <!-- 大分類 -->
+    <p-cascadeSelect
+      [options]="categories"
+      [(ngModel)]="selectedCategory"
+      [placeholder]="placeholder"
+      optionLabel="label"
+      (onChange)="onCategoryChange()"
+    ></p-cascadeSelect>
+  
+    <!-- 中分類 -->
+    <p-cascadeSelect
+      *ngIf="selectedCategory?.children"
+      [options]="selectedCategory.children"
+      [(ngModel)]="selectedSubCategory"
+      [placeholder]="'請選擇中分類'"
+      optionLabel="label"
+      (onChange)="onSubCategoryChange()"
+    ></p-cascadeSelect>
+  
+    <!-- 小分類 -->
+    <p-cascadeSelect
+      *ngIf="selectedSubCategory?.children"
+      [options]="selectedSubCategory.children"
+      [(ngModel)]="selectedSubSubCategory"
+      [placeholder]="'請選擇小分類'"
+      optionLabel="label"
+      (onChange)="onSubSubCategoryChange()"
+    ></p-cascadeSelect>
+  </div>
+  

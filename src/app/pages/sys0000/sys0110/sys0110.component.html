@@ -1,0 +1,71 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+        <div *appHasPermission="addPermission">
+            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+        </div>
+    </div>
+
+    <p-accordion>
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                <div class="grid p-fluid">
+                    <!-- 使用者編號 -->
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-number label="使用者編號" controlName="userCode" [control]="queryForm.controls.userCode" [submitted]="submitted"></app-input-number>
+                    </div>
+
+                    <!-- 使用者名稱 -->
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-text label="使用者名稱" controlName="userAlias" [control]="queryForm.controls.userAlias" [submitted]="submitted"></app-input-text>
+                    </div>
+
+                    <!-- 使用者等級 -->
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="使用者等級" controlName="userLevel" [options]="userLevelOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.userLevel" [submitted]="submitted"></app-dropdown-item>
+                    </div>
+
+                    <!-- 組織編號 -->
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="組織編號" controlName="organizationNumber" [options]="organizationNumberOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.organizationNumber" [submitted]="submitted"></app-dropdown-item>
+                    </div>
+
+                    <!-- 帳號有效起始日期 -->
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-date-range label="帳號有效起始日期" [startControl]="queryForm.controls.startDate" [endControl]="queryForm.controls.endDate" [submitted]="submitted"></app-date-range>
+                    </div>
+
+                    <!-- 上次登入時間 -->
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-date-range label="上次登入時間" [startControl]="queryForm.controls.lastLoginStartTime" [endControl]="queryForm.controls.lastLoginEndTime" [submitted]="submitted"></app-date-range>
+                    </div>
+
+                    <!-- 使用者狀態 -->
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="使用者狀態" controlName="userStatus" [options]="userStatusOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.userStatus" [submitted]="submitted"></app-dropdown-item>
+                    </div>
+
+                    <!-- 使用者型態 -->
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown-item label="使用者型態" controlName="userType" [options]="userTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.userType" [submitted]="submitted"></app-dropdown-item>
+                    </div>
+                </div>
+
+                <div *appHasPermission="queryPermission" class="col">
+                    <div class="grid justify-content-end">
+                        <app-button-clear (click)="onClearForm()"></app-button-clear>
+                        <app-button-query (click)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                    </div>
+                </div>
+            </form>
+        </p-accordionTab>
+    </p-accordion>
+</div>
+
+<div class="card">
+    <div class="col-12">
+        <app-data-table-check [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"></app-data-table-check>
+    </div>
+</div>

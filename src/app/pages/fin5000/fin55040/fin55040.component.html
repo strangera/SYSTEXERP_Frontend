@@ -1,0 +1,137 @@
+<div class="card">
+    <div class="grid align-items-center">
+      <div class="col" style="flex: 1">
+        <app-menubar [ProgNo]="ProgNo"></app-menubar>
+      </div>
+    </div>
+    <p-accordion>
+      <p-accordionTab
+        header="{{ 'query-conditions' | translate }}"
+        [selected]="true"
+        class="line-height-3 m-0"
+        [headerStyleClass]="'query-accordionTab'"
+      >
+        <form
+          [formGroup]="queryForm"
+          id="queryForm"
+          (ngSubmit)="onSubmit(queryForm)"
+        >
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-date-range
+                label="日期"
+                controlName="accountsummary"
+                [startControl]="queryForm.controls.SSubpoenadate"
+                [endControl]="queryForm.controls.ESubpoenadate"
+                [submitted]="submitted"
+              ></app-date-range>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown-item
+                label="部門"
+                controlName="department"
+                [options]="departmentOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="queryForm.controls.department"
+                [submitted]="submitted"
+              ></app-dropdown-item>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown-item
+                label="科目代號"
+                controlName="Accountcode"
+                [options]="accountingaccountOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="queryForm.controls.Accountcode"
+                [submitted]="submitted"
+              ></app-dropdown-item>
+            </div>
+  
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown-item
+                label="廠商代號"
+                controlName="vander"
+                [options]="vendorOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="queryForm.controls.vander"
+                [submitted]="submitted"
+              ></app-dropdown-item>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-serial-number-range
+                label="立沖代號"
+                [startControl]="queryForm.controls.startserialticket"
+                [endControl]="queryForm.controls.endserialticket"
+                [submitted]="submitted"
+              >
+              </app-input-serial-number-range>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown-item
+                label="對象別編號"
+                controlName="code"
+                [options]="codeOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="queryForm.controls.code"
+                [submitted]="submitted"
+              ></app-dropdown-item>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="對帳KEY值"
+                controlName=" Subpoenacode"
+                [control]="queryForm.controls.Subpoenacode"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown-item
+                label="傳票狀態"
+                controlName="Subpoenatype2"
+                [options]="Subpoenatype2"
+                optionLabel="label"
+                optionValue="value"
+                [control]="queryForm.controls.Subpoenatype2"
+                [submitted]="submitted"
+              ></app-dropdown-item>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown-item
+                label="是否為對象別"
+                controlName="ifOptions"
+                [options]="ifOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="queryForm.controls.ifOptions"
+                [submitted]="submitted"
+              ></app-dropdown-item>
+            </div>
+          </div>
+        </form>
+        <div *appHasPermission="queryPermission" class="col">
+          <div class="grid justify-content-end">
+            <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+            <app-button-query
+              (onClick)="onSubmitQuery(queryForm)"
+              [loading]="loading"
+            ></app-button-query>
+          </div>
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+  </div>
+  <div class="card">
+    <div class="col-12">
+      <app-data-table
+        [data]="data"
+        [columns]="columns"
+        (edit)="onEdit($event)"
+        (detail)="onDetail($event)"
+      ></app-data-table>
+    </div>
+  </div>
+  

@@ -1,0 +1,89 @@
+<div class="card">
+    <div class="grid align-items-center">
+      <div class="col" style="flex: 1">
+        <app-menubar [ProgNo]="ProgNo"></app-menubar>
+      </div>
+
+    </div>
+    <p-accordion>
+      <p-accordionTab
+        header="修改條件"
+        [selected]="true"
+        class="line-height-3 m-0"
+        [headerStyleClass]="'query-accordionTab'"
+      >
+        <form
+          [formGroup]="queryForm"
+          id="queryForm"
+          (ngSubmit)="onSubmit(queryForm)"
+        >
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown-item
+                label="違規類別編號"
+                controlName="violationCategoryId"
+                [options]="violationCategoryOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="queryForm.controls.violationCategoryId"
+                [submitted]="submitted"
+              >
+              </app-dropdown-item>
+            </div>
+  
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-serial-number
+                label="違規編號"
+                controlName="violationNumber"
+                [control]="queryForm.controls.violationNumber"
+                [submitted]="submitted"
+              >
+              </app-input-serial-number>
+            </div>
+  
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="違規內容"
+                controlName="violationContent"
+                [control]="queryForm.controls.violationContent"
+                [submitted]="submitted"
+              >
+              </app-input-text>
+            </div>
+  
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-serial-number
+                label="金額"
+                [control]="queryForm.controls.amount"
+                [submitted]="submitted"
+              >
+              </app-input-serial-number>
+            </div>
+  
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown-item
+                label="金額是否可修改"
+                controlName="amountEditable"
+                [options]="whetherOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="queryForm.controls.amountEditable"
+                [submitted]="submitted"
+              >
+              </app-dropdown-item>
+            </div>
+          </div>
+        </form>
+        <div *appHasPermission="queryPermission" class="col">
+          <div class="grid justify-content-end">
+            <!-- 清除按鈕 -->
+            <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+
+            <!-- 確認按鈕 -->
+            <app-button-action label="確認修改" type="submit"></app-button-action>
+          </div>
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+  </div>
+  

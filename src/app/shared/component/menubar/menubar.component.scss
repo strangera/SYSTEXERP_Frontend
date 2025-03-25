@@ -1,0 +1,11 @@
+.favorite-active {
+    /* 喜愛項目顯示為橙色 */
+    span.p-menuitem-icon.pi.pi-star.ng-star-inserted {
+        font-weight: bold;
+        font-size: larger;
+        color: red;
+    }
+    span.p-menuitem-text.ng-star-inserted {
+        font-weight: bold;
+    }
+}
