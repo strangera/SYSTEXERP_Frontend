@@ -4,7 +4,7 @@
 // 生產環境的 API 路徑
 export const environment = {
   production: false,
-  ApiUrl: 'http://43.207.4.99/TSRDWEB',//'http://localhost:7205',
+  ApiUrl: 'http://localhost:4200',//'http://localhost:7205',
   BaseUrl: 'http://43.207.4.99/TSRDWEB',
   AWSApiUrl: 'http://43.207.4.99/TSRDWEB',
   AWSBaseUrl: 'http://43.207.4.99/TSRDWEB',
