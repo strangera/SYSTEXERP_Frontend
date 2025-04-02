@@ -75,6 +75,13 @@ export class AppTopbarComponent implements OnInit {
         "value": "縣市區域資料維護作業 (4113)"
     }
 ];
+  menuItems = [
+    { label: '人資財會', icon: 'pi pi-sitemap' },
+    { label: '商場管理', icon: 'pi pi-shopping-bag' },
+    { label: '物業管理', icon: 'pi pi-box' },
+    { label: '權限及基本資料', icon: 'pi pi-users' },
+    { label: '行銷管理', icon: 'pi pi-chart-pie' }
+  ];
   // ----------------------------------------------------------------
   @ViewChild('menubutton') menuButton!: ElementRef;
 
