@@ -76,11 +76,11 @@ export class AppTopbarComponent implements OnInit {
     }
 ];
   menuItems = [
-    { label: '人資財會', icon: 'pi pi-sitemap' },
-    { label: '商場管理', icon: 'pi pi-shopping-bag' },
-    { label: '物業管理', icon: 'pi pi-box' },
-    { label: '權限及基本資料', icon: 'pi pi-users' },
-    { label: '行銷管理', icon: 'pi pi-chart-pie' }
+    { label: '人資財會', icon: 'pi pi-sitemap', prog_no: '100000'},
+    { label: '商場管理', icon: 'pi pi-shopping-bag' , prog_no: '200000'},
+    { label: '物業管理', icon: 'pi pi-box' , prog_no: '300000'},
+    { label: '權限及基本資料', icon: 'pi pi-users' , prog_no: '400000'},
+    { label: '行銷管理', icon: 'pi pi-chart-pie' , prog_no: '500000'}
   ];
   // ----------------------------------------------------------------
   @ViewChild('menubutton') menuButton!: ElementRef;
@@ -180,5 +180,10 @@ export class AppTopbarComponent implements OnInit {
   // ----------------------------------------------------------------    showDialog() {
   showDialog() {
       this.visible = true;
+  }
+
+  //----resetMenuList----
+  resetMenuList(value: any){
+    console.log('topBar切換為',value)
   }
 }
