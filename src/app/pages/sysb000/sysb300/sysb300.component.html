@@ -12,15 +12,15 @@
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="階層代碼" controlName="group_no" [control]="queryForm.controls.group_no" [submitted]="submitted">>
+                        <app-input-serial-number label="組織階層代碼" controlName="level_id" [control]="queryForm.controls.level_id" [submitted]="submitted">>
                         </app-input-serial-number>
                     </div>
                     <div class="col-12 md:col-12 lg:col-4">
-                        <app-input-text label="階層名稱" controlName="group_name" [control]="queryForm.controls.group_name" [submitted]="submitted">
+                        <app-input-text label="組織階層名稱" controlName="level_name" [control]="queryForm.controls.level_name" [submitted]="submitted">
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-dropdown-item label="上層組織" controlName="upgroup" [options]="upgroup_Options" optionLabel="label" optionValue="value" [control]="queryForm.controls.upgroup" [submitted]="submitted">
+                        <app-dropdown-item label="上層組織" controlName="p_level_id" [options]="upgroup_Options" optionLabel="label" optionValue="value" [control]="queryForm.controls.p_level_id" [submitted]="submitted">
                         </app-dropdown-item>
                     </div>
                 </div>
