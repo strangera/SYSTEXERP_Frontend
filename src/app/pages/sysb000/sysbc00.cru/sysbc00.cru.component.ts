@@ -22,9 +22,9 @@ export class SYSBC00CRUComponent extends BasicCrupageComponent implements OnInit
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // APS1001 銀行主檔
-    BNK_No: ['', [Validators.maxLength(5)]], // 金資中心銀行代碼
+    BNK_No: ['', [Validators.maxLength(10)]], // 金資中心銀行代碼
     BNK_Name: ['', [Validators.maxLength(60)]], // 銀行名稱
-    BNK_ShortName: ['', [Validators.maxLength(10)]], // 銀行簡稱
+    BNK_ShortName: ['', [Validators.maxLength(30)]], // 銀行簡稱
     Min_Length: [, [this.validationService.numberValidator, Validators.max(99)]], // 該行帳號最小長度
     Max_Length: [, [this.validationService.numberValidator, Validators.max(99)]], // 該行帳號最大長度
     // ----------------------------------------------------------------
@@ -56,6 +56,8 @@ export class SYSBC00CRUComponent extends BasicCrupageComponent implements OnInit
       crudstatus: CRUDStatus,
       rowdata: any,
     };
+
+    this.crudstatus = state.crudstatus;
 
     switch (state.crudstatus) {
       // 創建
@@ -96,8 +98,11 @@ export class SYSBC00CRUComponent extends BasicCrupageComponent implements OnInit
   createItem(): FormGroup {
     return this.formBuilder.group({
       // APS1004 銀行分行代碼檔
-      BNK_BranchNo: ['', [Validators.maxLength(3)]], // 銀行分行代號
+      BNK_BranchNo: ['', [Validators.maxLength(10)]], // 銀行分行代號
       BNK_BranchName: ['', [Validators.maxLength(50)]], // 銀行分行名稱
+
+      ACC_LEN: [, [Validators.maxLength(10)]], // 該行帳號最小長度-沒有使用
+      ACC_LEN_MAX: [, [Validators.maxLength(10)]], // 該行帳號最大長度-沒有使用
 
       // 以下可以不用顯示於查詢頁
       CRT_Date: [], // 建立日期

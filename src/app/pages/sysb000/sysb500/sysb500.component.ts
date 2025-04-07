@@ -5,7 +5,6 @@ import { NavigationExtras, Router } from '@angular/router';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/service/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
 @Component({
@@ -18,9 +17,8 @@ export class SYSB500Component extends BasicQpageComponent implements OnInit {
   // 查詢
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
-    areaNumber: ['', [Validators.maxLength(1)]], // 區域別編號
-    areaName: ['', [Validators.maxLength(30)]], // 區域別名稱
-    usagecount: [0], // 次數限制 (0 不限制)
+    area_no: ['', [Validators.maxLength(2)]], // 區域別編號
+    area_desc: ['', [Validators.maxLength(30)]], // 區域別名稱
   });
   // 表格
   // ----------------------------------------------------------------

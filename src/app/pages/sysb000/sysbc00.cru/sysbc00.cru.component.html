@@ -20,7 +20,7 @@
                     </app-input-text>
                 </div>
             </div>
-            <div class="grid p-fluid">
+            <div class="grid p-fluid" *ngIf="crudstatus !== 'Create'">
                 <div class="col-12 md:col-12 lg:col-4">
                     <app-input-number label="該行帳號最小長度" controlName="Min_Length" [control]="dataForm.controls.Min_Length" [submitted]="submitted">
                     </app-input-number>

@@ -18,8 +18,8 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
 export class SYSB500CRUComponent extends BasicCrupageComponent implements OnInit{
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    areaNumber: ['', [Validators.required, Validators.maxLength(1)]], // 區域別編號
-    areaName: ['', [Validators.required, Validators.maxLength(30)]], // 區域別名稱
+    area_no: ['', [Validators.required, Validators.maxLength(2)]], // 區域別編號
+    area_desc: ['', [Validators.required, Validators.maxLength(30)]], // 區域別名稱
   });
   //
   // upperLevelOrgOptions: any[]=[];
