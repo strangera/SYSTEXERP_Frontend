@@ -84,17 +84,16 @@ export class AppMenulistComponent implements OnInit {
     });
   }
 
-  getFunctinLists(lists: any[], parent_id: string = "0"): any {
+  async getFunctinLists(lists: any[], parent_id: string = "0"): Promise<any> {
     var items: any[] = [];
     if (lists.length > 0) {
       var filterItems = this.filterItemsByParentId(lists, parent_id);
       if (filterItems) {
         if (parent_id == "0") {
-          filterItems.forEach(async (element: any) => {
+          for (const element of filterItems) {
             const progNo = element.prog_no;
         
-            // 比對目前點選的 topMenu
-            if (this.clicsTopMenu && this.clicsTopMenu !== progNo) return;
+            if (this.clicsTopMenu && this.clicsTopMenu !== progNo) continue;
         
             const f_items = await this.getFunctinLists(lists, progNo);
             if (f_items.length > 0) element.items = f_items;
@@ -102,7 +101,7 @@ export class AppMenulistComponent implements OnInit {
             if (!this.checkExists(this.model, element)) {
               this.model.push(element);
             }
-          });
+          }
         } else {
           filterItems.forEach(async (element: any) => {
             var progNo = element.prog_no;
