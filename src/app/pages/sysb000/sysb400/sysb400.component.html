@@ -30,7 +30,14 @@
           <div class="grid p-fluid">
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text 
-                label="組織代碼" 
+                label="組織階層" 
+                controlName="level_id" 
+                [control]="queryForm.controls.level_id">
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text 
+                label="組織碼" 
                 controlName="org_id" 
                 [control]="queryForm.controls.org_id">
               </app-input-text>
@@ -42,26 +49,21 @@
                 [control]="queryForm.controls.org_name">
               </app-input-text>
             </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text 
-                label="階層代碼" 
-                controlName="level_id" 
-                [control]="queryForm.controls.level_id">
-              </app-input-text>
-            </div>
+          </div>
+          <div class="grid p-fluid">
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown-item 
-                label="階層名稱" 
-                controlName="level_name" 
+                label="上層組織代碼" 
+                controlName="p_org_id" 
                 [options]="level_nameOptions" 
                 optionLabel="label" 
                 optionValue="value" 
-                [control]="queryForm.controls.level_name">
+                [control]="queryForm.controls.p_org_id">
               </app-dropdown-item>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text 
-                label="上層組織" 
+                label="上層階層代碼" 
                 controlName="p_level_id" 
                 [control]="queryForm.controls.p_level_id">
               </app-input-text>
@@ -69,7 +71,7 @@
             <div class="col-12 md:col-6 lg:col-4">
               <app-multi-select label="是否停用" controlName="stop_flag" [options]="whetherOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.stop_flag" [submitted]="submitted">
               </app-multi-select>
-          </div>
+            </div>
           </div>
           <div class="grid justify-content-end">
             <app-button-clear (onClick)="onClearForm()"></app-button-clear>

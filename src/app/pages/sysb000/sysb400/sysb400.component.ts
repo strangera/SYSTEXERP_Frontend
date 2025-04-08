@@ -47,9 +47,9 @@ export class SYSB400Component extends BasicQpageComponent implements OnInit {
     org_id: ['', Validators.maxLength(20)], // 組織代碼
     org_name: ['', Validators.maxLength(40)], // 組織名稱
     level_id: ['', Validators.maxLength(2)], // 階層代碼
-    level_name: ['', Validators.maxLength(30)], // 階層名稱
-    p_level_id: ['', Validators.maxLength(10)], // 上層組織階層代碼(空白代表第一層)
-    stop_flag: [['N'] as string[], Validators.maxLength(1)], // 是否停用
+    p_org_id: ['', Validators.maxLength(20)], // 上層組織代碼
+    p_level_id: ['', Validators.maxLength(2)], // 上層組織階層代碼(空白代表第一層)
+    stop_flag: [['N'] as string[], Validators.maxLength(2)], // 是否停用
   });
 
   rowsPerPageOptions = [10, 25, 50, 100];
@@ -152,9 +152,9 @@ export class SYSB400Component extends BasicQpageComponent implements OnInit {
       );
     }
 
-    if (filters.level_name) {
+    if (filters.p_org_id) {
       this.filteredData = this.filteredData.filter(item =>
-        item.level_name.includes(filters.level_name ?? '')
+        item.level_name.includes(filters.p_org_id ?? '')
       );
     }
 

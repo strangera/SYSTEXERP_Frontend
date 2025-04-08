@@ -20,10 +20,10 @@ export class SYSB400CRUComponent extends BasicCrupageComponent implements OnInit
       // SYS3100 + SYS3000
       org_id: ['', [Validators.required, Validators.maxLength(20)]], // 組織代碼
       org_name: ['',[Validators.required,  Validators.maxLength(40)]], // 組織名稱
-      level_id: ['', [Validators.required,  Validators.maxLength(2)]], // 階層代碼
-      level_name: ['', [Validators.maxLength(30)]], // 階層名稱
-      p_level_id: ['', [Validators.required,  Validators.maxLength(10)]], // 上層組織階層代碼(空白代表第一層)
-      stop_flag: [['N'] as string[],[Validators.required,  Validators.maxLength(1)]], // 是否停用
+      p_org_id: ['',[Validators.required,  Validators.maxLength(20)]], // 上層組織代碼
+      level_id: ['', [Validators.required,  Validators.maxLength(2)]], // 組織階層代碼
+      p_level_id: ['', [Validators.required,  Validators.maxLength(2)]], // 上層組織代碼
+      stop_flag: ['N',[Validators.required,  Validators.maxLength(1)]], // 是否停用
   
       // 以下可以不用顯示於查詢頁
       CRT_Date: [], // 建立日期
