@@ -8,28 +8,33 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="階層代碼" controlName="group_no" [options]="upgroup_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.group_no" [submitted]="submitted">
-                    </app-dropdown-item>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="組織代碼" controlName="section_no" [control]="dataForm.controls.section_no" [submitted]="submitted">>
+                    <app-input-text label="組織代碼" controlName="org_id" [control]="dataForm.controls.org_id" [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="組織名稱" controlName="section_name" [control]="dataForm.controls.section_name" [submitted]="submitted">
+                    <app-input-text label="組織名稱" controlName="org_name" [control]="dataForm.controls.org_name" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-12 lg:col-4">
+                    <app-input-text label="組織階層代碼" controlName="level_id" [control]="dataForm.controls.level_id" [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
-            
-            <!-- 上層組織代碼區域：僅當 group_no 不為零時顯示 -->
-            <div class="grid p-fluid" *ngIf="dataForm.get('group_no')?.value != 0">
+            <!-- 上層組織代碼區域：僅當 org_id 不為零時顯示 -->
+            <div class="grid p-fluid" *ngIf="dataForm.get('org_id')?.value !== '0'">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="上層階層代碼" controlName="upperOrgLevel" [options]="upgroup_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.upgroup_no" [submitted]="submitted">
+                    <app-dropdown-item label="上層組織代碼" controlName="p_org_id" [options]="upgroup_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.p_org_id" [submitted]="submitted">
                     </app-dropdown-item>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="上層組織代碼" controlName="upperOrgCode" [control]="dataForm.controls.upsection_no" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-dropdown-item label="上層階層代碼" controlName="p_level_id" [options]="upgroup_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.p_level_id" [submitted]="submitted">
+                    </app-dropdown-item>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown-item label="是否停用" controlName="stop_flag" [options]="whetherOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.stop_flag" [submitted]="submitted">
+                    </app-dropdown-item>
                 </div>
             </div>
         </form>

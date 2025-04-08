@@ -1,11 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/service/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { MessageService } from 'primeng/api';
 
@@ -46,13 +45,13 @@ export class SYSBC00Component extends BasicQpageComponent implements OnInit {
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
     // APS1001 銀行主檔
-    BNK_No: ['', [Validators.maxLength(5)]], // 金資中心銀行代碼
+    BNK_No: ['', [Validators.maxLength(10)]], // 金資中心銀行代碼
     BNK_Name: ['', [Validators.maxLength(60)]], // 銀行名稱
-    BNK_ShortName: ['', [Validators.maxLength(10)]], // 銀行簡稱
-    Min_Length_From: [, [Validators.max(99)]], // 該行帳號最小長度
-    Min_Length_To: [, [Validators.max(99)]], // 該行帳號最小長度
-    Max_Length_From: [, [Validators.max(99)]], // 該行帳號最大長度
-    Max_Length_To: [, [Validators.max(99)]], // 該行帳號最大長度
+    BNK_ShortName: ['', [Validators.maxLength(30)]], // 銀行簡稱
+    Min_Length_From: [, [Validators.max(10)]], // 該行帳號最小長度
+    Min_Length_To: [, [Validators.max(10)]], // 該行帳號最小長度
+    Max_Length_From: [, [Validators.max(10)]], // 該行帳號最大長度
+    Max_Length_To: [, [Validators.max(10)]], // 該行帳號最大長度
 
     // 以下可以不用顯示於查詢頁
     CRT_Date: [], // 建立日期

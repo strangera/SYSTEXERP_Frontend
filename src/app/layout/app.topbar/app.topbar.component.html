@@ -11,18 +11,18 @@
     <button #menubutton class="p-link layout-menu-button layout-topbar-button" (click)="layoutService.onMenuToggle()">
       <i class="pi pi-bars"></i>
   </button>
-    <div class="topbar-menu">
-        <p-button label="人資財會" icon="pi pi-sitemap" [rounded]="true" [text]="true" severity="secondary" class="m-1">
-        </p-button>
-        <p-button label="商場管理" icon="pi pi-shopping-bag" [rounded]="true" [text]="true" severity="secondary" class=" m-1">
-        </p-button>
-        <p-button label="物業管理" icon="pi pi-box" [rounded]="true" [text]="true" severity="secondary" class="m-1">
-        </p-button>
-        <p-button label="權限及基本資料" icon="pi pi-users" [rounded]="true" [text]="true" severity="secondary">
-        </p-button>
-        <p-button label="行銷管理" icon="pi pi-chart-pie" [rounded]="true" [text]="true" severity="secondary">
-        </p-button>
-    </div>
+  <div class="topbar-menu">
+    <p-button 
+        *ngFor="let item of menuItems" 
+        [label]="item.label" 
+        [icon]="item.icon" 
+        [rounded]="true" 
+        [text]="true" 
+        severity="secondary" 
+        class="m-1"
+        (click)="resetMenuList(item.prog_no)">
+    </p-button>
+</div>
 
     <div #topbarmenu class="layout-topbar-menu col justify-content-end" [ngClass]="{'layout-topbar-menu-mobile-active': layoutService.state.profileSidebarVisible}">
         <!---->

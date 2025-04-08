@@ -12,11 +12,11 @@
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="區域別編號" controlName="areaNumber" [control]="queryForm.controls.areaNumber" [submitted]="submitted">>
+                        <app-input-text label="區域別編號" controlName="area_no" [control]="queryForm.controls.area_no" [submitted]="submitted">>
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-12 lg:col-4">
-                        <app-input-text label="區域別名稱" controlName="areaName" [control]="queryForm.controls.areaName" [submitted]="submitted">
+                        <app-input-text label="區域別名稱" controlName="area_desc" [control]="queryForm.controls.area_desc" [submitted]="submitted">
                         </app-input-text>
                     </div>
                 </div>

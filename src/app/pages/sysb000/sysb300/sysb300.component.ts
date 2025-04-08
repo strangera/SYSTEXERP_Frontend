@@ -2,12 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/service/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
 @Component({
@@ -23,16 +21,16 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
     // SYS3000 組織階層設定檔
     // id                  numeric(19,0) identity(1,1) not null,
 
-    group_no: [, [Validators.maxLength(2)]], // 階層代碼
-    group_name: ['', [Validators.maxLength(6)]], // 階層名稱
-    upgroup: [, [Validators.maxLength(40)]], // 上層組織 0=全公司 1=室/部 2=Team 3=樓/組
+    level_id: [, [Validators.maxLength(2)]], // 組織階層代碼
+    level_name: ['', [Validators.maxLength(30)]], // 組織階層名稱
+    p_level_id: [, [Validators.maxLength(2)]], // 上層組織階層代碼
 
     // 以下可以不用顯示於查詢頁
     CRT_Date: [], // 建立日期
-    CRT_USR_No: [, [Validators.maxLength(8)]], // 建立人員
+    CRT_USR_No: [, [Validators.maxLength(10)]], // 建立人員
     CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
     UPD_Date: [], // 變更日期
-    UPD_USR_No: [, [Validators.maxLength(8)]], // 變更人員
+    UPD_USR_No: [, [Validators.maxLength(10)]], // 變更人員
     UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
   });
   // 表格

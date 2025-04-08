@@ -3,6 +3,7 @@ import { ElementRef, EventEmitter, OnInit, Output, ViewEncapsulation } from '@an
 import { Component } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { MenuItem } from 'primeng/api';
+import { ClickTopMenuService } from '../../shared/service/click-top-menu.service';
 
 @Component({
   selector: 'app-menulist',
@@ -27,12 +28,26 @@ export class AppMenulistComponent implements OnInit {
   @Output() menuaddTab: EventEmitter<any> = new EventEmitter<any>();
   model: MenuItem[] = [];
   activeItem: any; // 新增：用於追蹤當前激活的選單項目
+  clicsTopMenu: any;  // 儲存點擊的頂部選單
 
   constructor(
     public el: ElementRef,
+    private clickTopMenuService: ClickTopMenuService,
     private router: Router) { }
 
   ngOnInit() {
+    const storedValue = sessionStorage.getItem('topValue');
+
+    this.clickTopMenuService.menuValue$.subscribe((value: any) => {
+      this.clicsTopMenu = value;
+      console.log('接收到 menuValue：', this.clicsTopMenu);
+
+      const funs = JSON.parse(localStorage.getItem("FunRightsInfo") || "[]");
+
+      this.model = []; // 重要：清空舊資料
+      this.getFunctinLists(funs); // 重新產生 menu
+    });
+
     if (localStorage.getItem("FunRightsInfo")) {
       const funs = JSON.parse(localStorage.getItem("FunRightsInfo") || "");
       this.getFunctinLists(funs);
@@ -69,21 +84,24 @@ export class AppMenulistComponent implements OnInit {
     });
   }
 
-  getFunctinLists(lists: any[], parent_id: string = "0"): any {
+  async getFunctinLists(lists: any[], parent_id: string = "0"): Promise<any> {
     var items: any[] = [];
     if (lists.length > 0) {
       var filterItems = this.filterItemsByParentId(lists, parent_id);
       if (filterItems) {
         if (parent_id == "0") {
-          filterItems.forEach(async (element: any) => {
-            var progNo = element.prog_no;
-            var f_items = (await this.getFunctinLists(lists, progNo));
-            if (f_items.length > 0)
-              element.items = f_items;
+          for (const element of filterItems) {
+            const progNo = element.prog_no;
+        
+            if (this.clicsTopMenu && this.clicsTopMenu !== progNo) continue;
+        
+            const f_items = await this.getFunctinLists(lists, progNo);
+            if (f_items.length > 0) element.items = f_items;
+        
             if (!this.checkExists(this.model, element)) {
               this.model.push(element);
             }
-          });
+          }
         } else {
           filterItems.forEach(async (element: any) => {
             var progNo = element.prog_no;

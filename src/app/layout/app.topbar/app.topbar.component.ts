@@ -6,6 +6,7 @@ import { AuthService } from '../../service/system/auth.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { UserInfo } from '../../models/system/userInfo';
 import { TranslateService } from '@ngx-translate/core';
+import { ClickTopMenuService } from '../../shared/service/click-top-menu.service';
 
 @Component({
     selector: 'app-topbar',
@@ -75,6 +76,13 @@ export class AppTopbarComponent implements OnInit {
         "value": "縣市區域資料維護作業 (4113)"
     }
 ];
+  menuItems = [
+    { label: '人資財會', icon: 'pi pi-sitemap', prog_no: '100000'},
+    { label: '商場管理', icon: 'pi pi-shopping-bag' , prog_no: '200000'},
+    { label: '物業管理', icon: 'pi pi-box' , prog_no: '300000'},
+    { label: '權限及基本資料', icon: 'pi pi-users' , prog_no: '400000'},
+    { label: '行銷管理', icon: 'pi pi-chart-pie' , prog_no: '500000'}
+  ];
   // ----------------------------------------------------------------
   @ViewChild('menubutton') menuButton!: ElementRef;
 
@@ -91,7 +99,8 @@ export class AppTopbarComponent implements OnInit {
     public authService: AuthService,
     private formBuilder: FormBuilder,
     private router: Router,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private clickTopMenuService: ClickTopMenuService,
   ) {
     this.loadTranslatedTitle();
   }
@@ -173,5 +182,11 @@ export class AppTopbarComponent implements OnInit {
   // ----------------------------------------------------------------    showDialog() {
   showDialog() {
       this.visible = true;
+  }
+
+  //----resetMenuList----
+  resetMenuList(value: any){
+    // console.log('topBar切換為',value);
+    this.clickTopMenuService.setMenuValue(value);
   }
 }
