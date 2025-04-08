@@ -6,6 +6,7 @@ import { AuthService } from '../../service/system/auth.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { UserInfo } from '../../models/system/userInfo';
 import { TranslateService } from '@ngx-translate/core';
+import { ClickTopMenuService } from '../../shared/service/click-top-menu.service';
 
 @Component({
     selector: 'app-topbar',
@@ -98,7 +99,8 @@ export class AppTopbarComponent implements OnInit {
     public authService: AuthService,
     private formBuilder: FormBuilder,
     private router: Router,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private clickTopMenuService: ClickTopMenuService,
   ) {
     this.loadTranslatedTitle();
   }
@@ -184,6 +186,7 @@ export class AppTopbarComponent implements OnInit {
 
   //----resetMenuList----
   resetMenuList(value: any){
-    console.log('topBar切換為',value)
+    // console.log('topBar切換為',value);
+    this.clickTopMenuService.setMenuValue(value);
   }
 }
