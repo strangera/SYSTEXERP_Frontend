@@ -39,15 +39,16 @@ export class AuthService {
   login(data: userLogin): Observable<any> {
     const now = this.commService.getNOW();
 
-    let key = data.account_id?.toLowerCase() + now.utc_nowtime + environment.PasswordKey;
+    let key = data.code?.toLowerCase() + now.utc_nowtime + environment.PasswordKey;
     key = key.substring(0, 16);
-    const pass = this.encrypt.encryptTripleDES(data.account_psw as string, key, now.utc_nowtime);
+    const pass = this.encrypt.encryptTripleDES(data.password as string, key, now.utc_nowtime);
 
-    data.account_psw = pass;
+    data.password = pass;
 
+    console.log('receive Data', data);
 
-    return this.http.get<UserInfo>(`${this.apiUrl}/assets/service/User/userLogin.json`).pipe(
-    // return this.http.post<UserInfo>(`${this.apiUrl}/User/userLogin`, data).pipe(
+    // return this.http.get<UserInfo>(`${this.apiUrl}/assets/service/User/userLogin.json`).pipe(
+    return this.http.post<UserInfo>(`${this.apiUrl}/User/userLogin`, data).pipe(
     // return this.http.post<UserInfo>(`${this.apiUrl}/assets/service/User/userLogin.json`, data).pipe(
     //return this.http.get<UserInfo>(`https://liulyndon.github.io/TSRDERP_Frontend/assets/service/User/userLogin.json`).pipe( // github docs pages
       map((response: any) => {
