@@ -1,15 +1,29 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { EncryptionService } from '../../shared/service/encryption.service';
 import { CommonService } from './../../shared/service/common.service';
 import { lastValueFrom } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { userLogin } from '../../models/system/userLogin';
+import { catchError, map, tap } from 'rxjs/operators';
+import { userLogin} from '../../models/system/userLogin';
 import { environment } from '../../../environments/environment';
 import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
 import { UserInfo } from '../../models/system/userInfo';
+
+export interface ApiResponse<T> {
+  Status: string;
+  Data: T;
+  Error: string;
+  Meta: {
+    Timestamp: string;
+    RequestId: string;
+  };
+  Message: string;
+  TotalCount: number;
+  TotalPage: number;
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -36,37 +50,61 @@ export class AuthService {
   }
 
   // 登錄，並將 token 存儲到本地存儲
-  login(data: userLogin): Observable<any> {
+  // login(data: userLogin): Observable<any> {
+  //   const now = this.commService.getNOW();
+
+  //   let key = data.code?.toLowerCase() + now.utc_nowtime + environment.PasswordKey;
+  //   key = key.substring(0, 16);
+  //   const pass = this.encrypt.encryptTripleDES(data.password as string, key, now.utc_nowtime);
+
+  //   data.password = pass;
+
+  //   console.log('receive Data', data);
+
+  //   // return this.http.get<UserInfo>(`${this.apiUrl}/assets/service/User/userLogin.json`).pipe(
+  //   return this.http.post<UserInfo>(`${this.apiUrl}/User/userLogin`, data).pipe(
+  //   // return this.http.post<UserInfo>(`${this.apiUrl}/assets/service/User/userLogin.json`, data).pipe(
+  //   //return this.http.get<UserInfo>(`https://liulyndon.github.io/TSRDERP_Frontend/assets/service/User/userLogin.json`).pipe( // github docs pages
+  //     map((response: any) => {
+  //       localStorage.setItem('UserInfo', JSON.stringify(response.user_info));
+  //       //access_token:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImFkbWluIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6IueuoeeQhuWToSIsImV4cCI6MTcyMDQ5OTQxNCwiaXNzIjoiSW5mb0xpbmsiLCJhdWQiOiJUT00ifQ.l8WnngdF6hqD3fQPoxiZIzJP8de1MNFWlXSk0pmYVtc"
+  //       //login_time:"2024-07-08T12:30:14.422596+08:00"
+  //       //sto_no:"100"
+  //       //sto_sname:"湯姆熊"
+  //       //user_id:"admin"
+  //       //user_name:"管理員"
+  //       localStorage.setItem('FunRightsInfo', JSON.stringify(response.funright_info));
+  //       localStorage.setItem('AuthorizeInfo', JSON.stringify(response.authorize_info));
+  //       //auh_checkpwd: "Y"
+  //       //auh_no: "00001"
+  //       //auh_password: "1234"
+  //       //auh_rights: "Y"
+  //       this.userSubject.next(response.user_info);
+  //       return response;
+  //     }));
+  // }
+
+  login(data: userLogin): Observable<UserInfo> {
     const now = this.commService.getNOW();
+    const key = `${data.code?.toLowerCase()}${now.utc_nowtime}${environment.PasswordKey}`.substring(0, 16);
+    data.password = this.encrypt.encryptTripleDES(data.password as string, key, now.utc_nowtime);
+    // data.password = "W0kPywQIWtw=";
 
-    let key = data.account_id?.toLowerCase() + now.utc_nowtime + environment.PasswordKey;
-    key = key.substring(0, 16);
-    const pass = this.encrypt.encryptTripleDES(data.account_psw as string, key, now.utc_nowtime);
+    const url = `${this.apiUrl}/User/userLogin`;
+    console.log('🔐 Login API URL:', url);
+    console.log('📦 Login data:', data);
 
-    data.account_psw = pass;
-
-
-    return this.http.get<UserInfo>(`${this.apiUrl}/assets/service/User/userLogin.json`).pipe(
-    // return this.http.post<UserInfo>(`${this.apiUrl}/User/userLogin`, data).pipe(
-    // return this.http.post<UserInfo>(`${this.apiUrl}/assets/service/User/userLogin.json`, data).pipe(
-    //return this.http.get<UserInfo>(`https://liulyndon.github.io/TSRDERP_Frontend/assets/service/User/userLogin.json`).pipe( // github docs pages
-      map((response: any) => {
-        localStorage.setItem('UserInfo', JSON.stringify(response.user_info));
-        //access_token:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImFkbWluIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6IueuoeeQhuWToSIsImV4cCI6MTcyMDQ5OTQxNCwiaXNzIjoiSW5mb0xpbmsiLCJhdWQiOiJUT00ifQ.l8WnngdF6hqD3fQPoxiZIzJP8de1MNFWlXSk0pmYVtc"
-        //login_time:"2024-07-08T12:30:14.422596+08:00"
-        //sto_no:"100"
-        //sto_sname:"湯姆熊"
-        //user_id:"admin"
-        //user_name:"管理員"
-        localStorage.setItem('FunRightsInfo', JSON.stringify(response.funright_info));
-        localStorage.setItem('AuthorizeInfo', JSON.stringify(response.authorize_info));
-        //auh_checkpwd: "Y"
-        //auh_no: "00001"
-        //auh_password: "1234"
-        //auh_rights: "Y"
-        this.userSubject.next(response.user_info);
-        return response;
-      }));
+    return this.http.post<ApiResponse<UserInfo>>(url, data).pipe(
+      map((response: ApiResponse<UserInfo>) => {
+        if (response.Status === '0000') {
+          sessionStorage.setItem('UserInfo', JSON.stringify(response.Data));
+          this.userSubject.next(response.Data);
+          return response.Data;
+        } else {
+          throw new Error(response.Message || 'Login failed');
+        }
+      })
+    );
   }
 
   // 移除存儲的 JWT Token

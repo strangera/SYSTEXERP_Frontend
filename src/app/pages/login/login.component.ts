@@ -20,8 +20,8 @@ registerLocaleData(zhHant, 'zh-tw');
 export class LoginComponent implements OnInit {
   logoPath: string = 'assets/layout/images/login_logo.png';
   loginForm = this.formBuilder.group({
-    account_id: ['' as string, Validators.required],
-    account_psw: ['' as string, Validators.required],
+    code: ['' as string, Validators.required],
+    password: ['' as string, Validators.required],
     client_ip: ['' as string]
   });
   submitted: boolean = false;
