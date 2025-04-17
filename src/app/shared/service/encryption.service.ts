@@ -1,37 +1,36 @@
 import { Injectable } from "@angular/core";
 import * as CryptoJS from 'crypto-js';
 import { environment } from "../../../environments/environment";
+import { CommonService } from '../../shared/service/common.service';
 
 @Injectable({
   providedIn: "root"
 })
 export class EncryptionService {
-
-  constructor() { }
-
-  // MD5加密
-  hashMD5(str: string) : string{
-    return CryptoJS.MD5(str).toString();
-  }
-
+  constructor(private commService: CommonService) { }
   // 3DES 加密
-  encryptTripleDES(str: string, key: string = environment.PasswordKey , iv: string = environment.PasswordIV): string {
+  encryptTripleDES(str: string, key: string = environment.PasswordKey, iv: string = environment.PasswordIV): string {
     const keyHex = CryptoJS.enc.Utf8.parse(key);
+    const ivHex = CryptoJS.enc.Utf8.parse(iv);
     const encrypted = CryptoJS.TripleDES.encrypt(str, keyHex, {
-      iv: CryptoJS.enc.Utf8.parse(iv),
+      iv: ivHex,
       mode: CryptoJS.mode.CBC,
       padding: CryptoJS.pad.Pkcs7
     });
 
     return encrypted.toString();
   }
-
-  //3DES解密
+  getPassword(no: string, password: string) {
+    const now = this.commService.getNOW();
+    const key = `${no}${now.utc_nowtime}${environment.PasswordKey}`.substring(0, 16);
+    password = this.encryptTripleDES(password as string, key, now.utc_nowtime);
+    return password;
+  }
+  // 3DES 解密
   decryptTripleDES(encrypted: string, key: string = environment.PasswordKey, iv: string = environment.PasswordIV): string {
-    var keyHex = CryptoJS.enc.Utf8.parse(key);
-    var ivHex = CryptoJS.enc.Utf8.parse(iv);
-    var decrypted = CryptoJS.AES.decrypt(encrypted, key, {
-      keySize: 128 / 4,
+    const keyHex = CryptoJS.enc.Utf8.parse(key);
+    const ivHex = CryptoJS.enc.Utf8.parse(iv);
+    const decrypted = CryptoJS.TripleDES.decrypt(encrypted, keyHex, {
       iv: ivHex,
       mode: CryptoJS.mode.CBC,
       padding: CryptoJS.pad.Pkcs7

@@ -5,9 +5,9 @@
 export const environment = {
   production: false,
   ApiUrl: 'http://10.60.8.66/TSRD_WEBAPI',//'http://localhost:7205',
-  BaseUrl: 'http://10.60.8.66/TSRD_WEBAPIB',
-  AWSApiUrl: 'http://10.60.8.66/TSRD_WEBAPI',
-  AWSBaseUrl: 'http://10.60.8.66/TSRD_WEBAPI',
+  BaseUrl: 'http://10.60.8.66/TSRD_WEBAPI',
+  // AWSApiUrl: 'http://10.60.8.66/TSRD_WEBAPI',
+  // AWSBaseUrl: 'http://10.60.8.66/TSRD_WEBAPI',
   PasswordKey: '8a9zx@a1231sdl!aafohc.u',
   PasswordIV: '12523648',
   APIKey: '7ea82465-9538-458d-8f9b-29244128e09609daeda1-0ac1-43f2-8a19-f765b2d02a2b',
