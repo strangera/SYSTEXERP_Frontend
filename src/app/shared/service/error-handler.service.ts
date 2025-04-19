@@ -61,7 +61,7 @@ export class ErrorHandlerService {
       datetime: new Date().toLocaleString(),
       message: errorMessage
     });
-    localStorage.setItem(this.LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS, JSON.stringify(errors));
+    sessionStorage.setItem(this.LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS, JSON.stringify(errors));
 
     // Return the error message or a user-friendly message
     return throwError(errorMessage);

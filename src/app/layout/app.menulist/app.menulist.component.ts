@@ -1,9 +1,11 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { ElementRef, EventEmitter, OnInit, Output, ViewEncapsulation } from '@angular/core';
+import { ElementRef, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, ViewEncapsulation } from '@angular/core';
 import { Component } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
 import { MenuItem } from 'primeng/api';
-import { ClickTopMenuService } from '../../shared/service/click-top-menu.service';
+import { Subscription } from 'rxjs';
+import { AccessService } from '../../shared/service/access.service';
+import { CurrentPageService } from './current-page.service';
+import { FunsrightInfo } from '../../models/system/funsrightInfo';
 
 @Component({
   selector: 'app-menulist',
@@ -12,167 +14,194 @@ import { ClickTopMenuService } from '../../shared/service/click-top-menu.service
   encapsulation: ViewEncapsulation.None,
   animations: [
     trigger('children', [
-      state('collapsed', style({
-        height: '0',
-        overflow: 'hidden'
-      })),
-      state('expanded', style({
-        height: '*'
-      })),
-      transition('collapsed <=> expanded',
-        animate('400ms cubic-bezier(0.86, 0, 0.07, 1)'))
+      state('collapsed', style({ height: '0' })),
+      state('expanded', style({ height: '*' })),
+      transition('collapsed <=> expanded', animate('400ms cubic-bezier(0.86, 0, 0.07, 1)'))
     ])
   ]
 })
-export class AppMenulistComponent implements OnInit {
-  @Output() menuaddTab: EventEmitter<any> = new EventEmitter<any>();
-  model: MenuItem[] = [];
-  activeItem: any; // 新增：用於追蹤當前激活的選單項目
-  clicsTopMenu: any;  // 儲存點擊的頂部選單
+export class AppMenulistComponent implements OnInit, OnDestroy, OnChanges {
+  @Output() menuaddTab = new EventEmitter<any>();   // 新增選單
+  @Input() activeTopMenuProgNo: string | null = null; // 新增：接收來自頂部菜單的激活 prog_no
+  model: MenuItem[] = [];                     // 選單模型
+  flatMenuList: MenuItem[] = [];               // 扁平化選單
+  activeItem: MenuItem | null = null;           // 用於追蹤當前激活的選單項目
+  private routerLinkMap = new Map<string, MenuItem>(); // 用於快速查找選單項目
+  filteredModel: MenuItem[] = []; // 新增：用於顯示過濾後的菜單
+  private currentPageProgNoSubscription: Subscription | undefined;
 
   constructor(
     public el: ElementRef,
-    private clickTopMenuService: ClickTopMenuService,
-    private router: Router) { }
+    private accessService: AccessService,
+    private currentPageService: CurrentPageService // 注入 Service
+  ) { }
 
-  ngOnInit() {
-    const storedValue = sessionStorage.getItem('topValue');
+  ngOnInit(): void {
+    this.updateMenuModel();
+    this.filterMenuByTopMenu(); // 初始過濾
 
-    this.clickTopMenuService.menuValue$.subscribe((value: any) => {
-      this.clicsTopMenu = value;
-      console.log('接收到 menuValue：', this.clicsTopMenu);
-
-      const funs = JSON.parse(localStorage.getItem("FunRightsInfo") || "[]");
-
-      this.model = []; // 重要：清空舊資料
-      this.getFunctinLists(funs); // 重新產生 menu
-    });
-
-    if (localStorage.getItem("FunRightsInfo")) {
-      const funs = JSON.parse(localStorage.getItem("FunRightsInfo") || "");
-      this.getFunctinLists(funs);
-    }
-
-    // 新增：監聽路由變化並設置選單激活狀態
-    this.router.events.subscribe(event => {
-      if (event instanceof NavigationEnd) {
-        this.setActiveItem(this.model, this.router.url);
+    this.accessService.menuUpdated.subscribe(newData => {
+      this.model = this.buildMenuModel(newData);
+      this.flatMenuList = this.flattenMenu(this.model);
+      this.filterMenuByTopMenu(); // 數據更新後重新過濾
+      // 重新設置激活項，如果當前有 ProgNo
+      if (this.currentPageService.currentPageProgNoSubject.value) {
+        this.setActiveItemByProgNo(this.currentPageService.currentPageProgNoSubject.value);
       }
     });
-  }
-
-  // 新增：設置激活選單項目
-  setActiveItem(items: MenuItem[], url: string) {
-    items.forEach(item => {
-      if (url.includes("CRU") && this.activeItem && this.activeItem.routerLink && this.activeItem.routerLink[0] !== url) {
-        // 如果 URL 包含 "CRU"，且不是直接匹配 activeItem，保持當前展開狀態
-        item.expanded = item.expanded || (item.routerLink && item.routerLink[0] === this.activeItem.routerLink[0]);
+    // 訂閱 currentPageProgNo 的變化
+    this.currentPageProgNoSubscription = this.currentPageService.currentPageProgNo$.subscribe(progNo => {
+      if (progNo) {
+        this.setActiveItemByProgNo(progNo);
       } else {
-        item.expanded = false;
-      }
-  
-      if (item.routerLink && item.routerLink[0] === url) {
-        this.activeItem = item;
-        item.expanded = true;
-      }
-  
-      if (item.items) {
-        this.setActiveItem(item.items, url);
-        // 若子項目展開，則父項目也展開
-        item.expanded = item.expanded || item.items.some(subItem => subItem.expanded);
+        this.clearSelection(); // 如果 ProgNo 為 null，清除選中狀態
       }
     });
   }
 
-  async getFunctinLists(lists: any[], parent_id: string = "0"): Promise<any> {
-    var items: any[] = [];
-    if (lists.length > 0) {
-      var filterItems = this.filterItemsByParentId(lists, parent_id);
-      if (filterItems) {
-        if (parent_id == "0") {
-          for (const element of filterItems) {
-            const progNo = element.prog_no;
-        
-            if (this.clicsTopMenu && this.clicsTopMenu !== progNo) continue;
-        
-            const f_items = await this.getFunctinLists(lists, progNo);
-            if (f_items.length > 0) element.items = f_items;
-        
-            if (!this.checkExists(this.model, element)) {
-              this.model.push(element);
-            }
+  ngOnDestroy(): void {
+    if (this.currentPageProgNoSubscription) {
+      this.currentPageProgNoSubscription.unsubscribe();
+    }
+  }
+
+  ngOnChanges(): void {
+    this.filterMenuByTopMenu(); // 當 activeTopMenuProgNo 改變時重新過濾
+  }
+  // 更新選單模型
+  updateMenuModel() {
+    const funRightsInfo = this.accessService.getSessionData('FunRightsInfo');
+    if (!Array.isArray(funRightsInfo) || funRightsInfo.length === 0) {
+      this.clearMenu();
+      return;
+    }
+    this.model = this.buildMenuModel(funRightsInfo);
+    this.flatMenuList = this.flattenMenu(this.model);
+  }
+  private clearMenu() {
+    this.model = this.flatMenuList = [];
+    this.activeItem = null;
+  }
+  // 建立選單模型
+  buildMenuModel(lists: FunsrightInfo[]): MenuItem[] {
+    const menuLookup = new Map<string, MenuItem>();
+    const menu: MenuItem[] = [];
+
+    lists.forEach(({ prog_name: label, prog_no: id, path, parent_id: parentId }) => {
+      const menuItem: MenuItem = {
+        label: label,
+        routerLink: path ? [path] : undefined,
+        items: undefined,
+        prog_no: id,
+        parent_id: parentId,
+        expanded: false,
+        icon: undefined,
+        hasChildrenOnly: false
+      };
+
+      menuLookup.set(id as string, menuItem); // 先將 menuItem 加入 lookup，方便後續父節點引用
+
+      if (parentId !== '0') {
+        const parentItem = menuLookup.get(parentId as string);
+        if (parentItem) {
+          parentItem.items = parentItem.items || [];
+          parentItem.items.push(menuItem);
+          if (parentItem.items && !parentItem.routerLink) {
+            parentItem['hasChildrenOnly'] = true;
+            parentItem.icon = 'pi pi-home'; // 父節點有子項目，使用房子圖案
           }
-        } else {
-          filterItems.forEach(async (element: any) => {
-            var progNo = element.prog_no;
-            var f_items = (await this.getFunctinLists(lists, progNo));
-            if (f_items.length > 0)
-              element.items = f_items;
-          });
-
-          return filterItems;
         }
-
-        lists.forEach((element, index) => {
-          if (element.parent_id == parent_id) delete lists[index];
-        });
       } else {
-        var item = lists[0];
-        var label = item.prog_name;
-        var parentid = item.parent_id;
-        var group_no = item.group_no;
-        var path = item.path;
-        var progNo = item.prog_no;
-        items.push({ label: label, routerLink: [path] });
-        return items;
-      }
-    }
-  }
-
-  filterItemsByParentId(lists: any[], parent_id: string): any {
-    var tmp = lists.filter(item => item.parent_id == parent_id && item.enable_fg == 1 && item.show_fg == 1);
-    var items: any[] = [];
-    tmp.forEach((element: any) => {
-      var item = element;
-      var label = item.prog_name;
-      var parentid = item.parent_id;
-      var group_no = item.group_no;
-      var progNo = item.prog_no;
-      var path = item.path;
-
-      if (!this.checkExists(items, item)) {
-        if (path) {
-          items.push({
-            label: label,
-            icon: 'pi pi-fw pi-bookmark',
-            routerLink: [path],
-            prog_no: progNo,
-          });
-        } else {
-          items.push({ label: label, icon: 'pi pi-fw pi-home', prog_no: progNo });
-        }
+        menu.push(menuItem);
       }
     });
-    return items;
+
+    // 第二次遍歷 menuLookup 來設定沒有子選單的項目的 icon
+    menuLookup.forEach(item => {
+      if (!item.items) {
+        item.icon = 'pi pi-bookmark'; // 沒有子選單的項目使用書籤圖案
+      }
+    });
+
+    return menu;
   }
 
-  checkExists(arr: any[], element: any): boolean {
-    if (!Array.isArray(arr)) {
-      return false;
+  // 根據 ProgNo 設置激活的選單項目
+  private setActiveItemByProgNo(progNo: string) {
+    this.clearSelection(); // 清除之前的選中狀態
+    const item = this.findItemByProgNo(this.model, progNo);
+    if (item) {
+      item['selected'] = true;
+      this.activeItem = item;
+      this.markParentsActive(item);
     }
-
-    if (arr.find(e => e.prog_no == element.prog_no)) {
-      return true;
-    }
-
-    return false;
   }
 
+  // 清除所有選單項的選中狀態
+  private clearSelection() {
+    const clearSelected = (items: MenuItem[]) => {
+      items.forEach(item => {
+        item['selected'] = false;
+        if (item.items) {
+          clearSelected(item.items);
+        }
+      });
+    };
+    if (this.model && this.model.length > 0) {
+      clearSelected(this.model);
+    }
+    this.activeItem = null;
+  }
+
+  private markParentsActive(item: MenuItem | null) {
+    if (item && item['parent_id'] !== '0') {
+      const parent = this.findItemByProgNo(this.model, item['parent_id']);
+      if (parent) {
+        parent['selected'] = true;
+        parent.expanded = true;
+        this.markParentsActive(parent);
+      }
+    }
+  }
+
+  private findItemByProgNo(items: MenuItem[], progNo: string): MenuItem | null {
+    for (const item of items) {
+      if (item['prog_no'] === progNo) {
+        return item;
+      }
+      if (item.items) {
+        const found = this.findItemByProgNo(item.items, progNo);
+        if (found) {
+          return found;
+        }
+      }
+    }
+    return null;
+  }
+
+  // 查找激活的選單項目 (這個方法現在主要用於建立 routerLinkMap)
+  private flattenMenu(items: MenuItem[], flatList: MenuItem[] = []): MenuItem[] {
+    items.forEach(item => {
+      flatList.push(item);
+      if (item.routerLink && item.routerLink[0]) {
+        this.routerLinkMap.set(item.routerLink[0], item); // 儲存 routerLink 和選單項目的對應關係
+      }
+      if (item.items) { this.flattenMenu(item.items, flatList); }
+    });
+    return flatList;
+  }
   toggleActive(item: MenuItem) {
-    item.expanded = !item.expanded;
+    if (item.items) {
+      item.expanded = !item.expanded;
+    }
   }
 
-  onAddTab(item: any) {
-    this.menuaddTab.emit(item);
+  // 根據頂部菜單的 prog_no 過濾顯示的菜單項
+  private filterMenuByTopMenu() {
+    if (this.activeTopMenuProgNo) {
+      this.filteredModel = this.model.filter(item => item['prog_no'] === this.activeTopMenuProgNo);
+    } else {
+      this.filteredModel = this.model;
+    }
   }
 }

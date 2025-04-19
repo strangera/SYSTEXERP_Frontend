@@ -81,7 +81,7 @@ export class LoginComponent implements OnInit {
     this.sys1000Service.getData().subscribe({
       next: response => {
         // 將轉換後的數據存入 localStorage
-        localStorage.setItem('SYSTEMSetting', JSON.stringify(response));
+        sessionStorage.setItem('SYSTEMSetting', JSON.stringify(response));
         console.log('SYS1000 response data saved successfully');
       },
       error: error => {

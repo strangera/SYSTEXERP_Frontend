@@ -23,7 +23,7 @@ export class NotificationMessageComponent {
     private notificationService: NotificationService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.notificationService.bubbleMsg$.subscribe((message) => {
@@ -61,7 +61,7 @@ export class NotificationMessageComponent {
       this.blockedDocument = blocked;
     });
 
-    this.notificationService.unblockUiMsg$.subscribe(() => {
+    this.notificationService.blockUiMsg$.subscribe(() => {
       this.blockedDocument = false;
     });
 

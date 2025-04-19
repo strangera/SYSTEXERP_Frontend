@@ -19,7 +19,7 @@ export class UserBehaviorService {
      */
 
     // 或者儲存在本地儲存
-    // localStorage.setItem('userBehaviors', JSON.stringify(this.behaviors));
+    // sessionStorage.setItem('userBehaviors', JSON.stringify(this.behaviors));
   }
 
   getBehaviors() {

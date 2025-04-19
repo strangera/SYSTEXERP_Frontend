@@ -1,39 +1,85 @@
-.search-form {
-    margin-left: auto;
-}
+.p-menu {
+  .p-menuitem:not(.p-highlight):not(.p-disabled)>.p-menuitem-content:hover {
+    color: unset;
+    background: unset;
+  }
 
-.layout-topbar .layout-topbar-logo {
-    width: 270px;
-}
+  li {
+    border-radius: 0.75rem !important;
 
-.layout-topbar .topbar-menu {
-    list-style-type: none;
-    padding: 0;
-    flex: 1 1 auto;
-    overflow: auto;
-    button span.p-button-label.ng-star-inserted {
-        font-weight: bold;
-        font-size: 20px;
-        color: black;
+    a {
+      color: #333 !important;
+      /* 修改文字顏色為深灰色 */
+      border-radius: 0.75rem !important;
+
+      &:hover {
+        background-color: #007ad9 !important;
+        border-radius: 0.75rem !important;
+        color: #fff !important;
+        /* Hover 時文字顏色改為白色，與背景形成對比 */
+      }
     }
+  }
+}
+
+.layout-topbar {
+  padding: 0 1rem;
+
+  .layout-topbar-logo {
+    width: 270px;
+  }
+
+  .topbar-menu {
+    button {
+      font-weight: 600;
+      font-size: 1.3rem;
+      color: black;
+    }
+
+    .p-button.active-top-menu-item {
+      background-color: #1E293B;
+
+      .p-button-label {
+        color: white;
+      }
+    }
+
+    .p-button .p-button-label {
+      font-weight: 500;
+      font-size: 20px;
+      color: black;
+    }
+  }
 }
 
 @media (max-width: 991px) {
-    .layout-topbar {
-        height: 9rem;
-        flex-wrap: wrap;
-        padding: 1rem 1rem 0;
-        .layout-topbar-logo {
-            width: auto;
-        }
+  .layout-topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 1rem;
+    padding-bottom: 0;
+
+    .layout-topbar-logo {
+      width: auto;
     }
-    .layout-topbar .topbar-menu {
-        order: 4;
-        width: 100%;
-        margin: 0;
-        justify-content: space-between;
-        display: flex;
-        width: 100%;
-        justify-content: space-between;
+
+    .topbar-menu {
+      order: 4;
+      width: 100%;
+      margin: 0;
+      display: flex;
+      justify-content: space-between;
     }
+
+    .layout-topbar-menu {
+      .layout-topbar-button {
+        border-radius: 3px !important;
+      }
+    }
+
+    .layout-topbar-button i {
+      font-size: 1rem;
+      margin-right: 0;
+    }
+  }
 }

@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, debounceTime, distinctUntilChanged, Subject } from 'rxjs';
-
+import { BehaviorSubject, Subject } from 'rxjs';
 interface Message {
   severity: 'info' | 'success' | 'warn' | 'error';
   summary: string;
@@ -11,6 +10,7 @@ interface ConfirmOptions {
   message?: string;
   accept?: () => void;
   reject?: () => void;
+  type?: 'confirm' | 'update' | 'delete'; // 添加类型
 }
 interface InputBoxOptions {
   header: string;
@@ -18,86 +18,44 @@ interface InputBoxOptions {
   ok?: (value: string) => void;
   cancel?: () => void;
 }
-
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
   private bubbleMsgSource = new BehaviorSubject<Message | null>(null);
   bubbleMsg$ = this.bubbleMsgSource.asObservable();
-
   private boxMsgSource = new Subject<{ header?: string; message: string }>();
   boxMsg$ = this.boxMsgSource.asObservable();
-
   private blockUiSource = new BehaviorSubject<boolean>(false);
-  blockUiMsg$ = this.blockUiSource.pipe(
-    debounceTime(1000),
-    distinctUntilChanged()
-  );
-
-  unblockUiSource = new BehaviorSubject<boolean>(false);
-  unblockUiMsg$ = this.unblockUiSource.asObservable();
-
-  confirmMsgSource = new Subject<ConfirmOptions>();
+  blockUiMsg$ = this.blockUiSource.asObservable();
+  private confirmMsgSource = new Subject<ConfirmOptions>();
   confirmMsg$ = this.confirmMsgSource.asObservable();
-
-  inputBoxSource = new Subject<InputBoxOptions>();
+  private inputBoxSource = new Subject<InputBoxOptions>();
   inputBoxMsg$ = this.inputBoxSource.asObservable();
-  // ------------------------
-  constructor() {
+  blockUi() { this.blockUiSource.next(true); }
+  unblockUi() { this.blockUiSource.next(false); }
+  confirm(opts: ConfirmOptions) { this.confirmMsgSource.next(opts); }
+  showInputBox(options: InputBoxOptions) { this.inputBoxSource.next(options); }
+  infoBox(message: string) { this.sendMessageBox('Information', message); }
+  successBox(message: string) { this.sendMessageBox('Success', message); }
+  warnBox(message: string) { this.sendMessageBox('Warning', message); }
+  errorBox(message: string) { this.sendMessageBox('Error', message); }
+  private sendMessageBox(header: string, message: string) { this.messageBox({ header, message }); }
+  messageBox(options: { header?: string; message: string }) { this.boxMsgSource.next(options); }
 
+  infoBubble(message: string, title = '資訊') {
+    this.sendBubbleMessage('info', title, message);
   }
-  // ------------------------
-  blockUi() {
-    this.blockUiSource.next(true);
+  successBubble(message: string, title = '成功') {
+    this.sendBubbleMessage('success', title, message);
   }
-
-  unblockUi() {
-    this.blockUiSource.next(false);
-    this.unblockUiSource.next(true);
+  warnBubble(message: string, title = '警告') {
+    this.sendBubbleMessage('warn', title, message);
   }
-
-  confirm(opts: ConfirmOptions) {
-    this.confirmMsgSource.next(opts);
+  errorBubble(message: string, title = '失敗') {
+    this.sendBubbleMessage('error', title, message || '發生不明錯誤');
   }
-
-  showInputBox(opts: InputBoxOptions) {
-    this.inputBoxSource.next(opts);
-  }
-
-  messageBox(opts: { header?: string; message: string }) {
-    this.boxMsgSource.next(opts);
-  }
-
-  infoBox(message: string) {
-    this.messageBox({ header: 'Information', message });
-  }
-
-  successBox(message: string) {
-    this.messageBox({ header: 'Success', message });
-  }
-
-  warnBox(message: string) {
-    this.messageBox({ header: 'Warning', message });
-  }
-
-  errorBox(message: string) {
-    this.messageBox({ header: 'Error', message });
-  }
-
-  infoBubble(message: string) {
-    this.bubbleMsgSource.next({ severity: 'info', summary: 'Info', detail: message });
-  }
-
-  successBubble(message: string) {
-    this.bubbleMsgSource.next({ severity: 'success', summary: 'Success', detail: message });
-  }
-
-  warnBubble(message: string) {
-    this.bubbleMsgSource.next({ severity: 'warn', summary: 'Warn', detail: message });
-  }
-
-  errorBubble(message: string) {
-    this.bubbleMsgSource.next({ severity: 'error', summary: 'Error', detail: message });
+  private sendBubbleMessage(severity: Message['severity'], summary: string, detail: string) {
+    this.bubbleMsgSource.next({ severity, summary, detail });
   }
 }

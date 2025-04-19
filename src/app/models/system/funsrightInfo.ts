@@ -35,4 +35,5 @@ export interface FunsrightInfo {
   report_api_path?: string;
   show_fg?: string;
   permissions?: string[];
+  label?: string;
 }

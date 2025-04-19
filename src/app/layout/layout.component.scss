@@ -1,0 +1,81 @@
+.search-form {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  border-radius: 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0.5rem 1rem;
+  transition:
+    background-color 0.3s,
+    border-color 0.3s;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  &:focus {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    outline: none;
+  }
+}
+
+::ng-deep .layout-sidebar {
+  top: 6rem;
+  left: 1rem;
+  height: calc(100vh - 7rem);
+  background-color: #1E293B;
+
+  ul a {
+    color: white;
+  }
+
+  ul a:hover {
+    color: #00B4D2;
+    background-color: #1E293B;
+  }
+
+  .selected > a {
+    color: #FFA500 !important; // 橘色
+  }
+
+  .active-menuitem > a {
+    background-color: #283e59;
+    color: #00B4D2;
+  }
+  .p-icon-field-right .p-input-icon:last-of-type {
+    right: 1rem;
+    color: #ffffff;
+    cursor: pointer;
+    transition: color 0.3s;
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.8);
+    }
+  }
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+    margin: 7px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #eaeaea;
+    border-radius: 12px;
+    border: 2px solid #1E293B;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #cccccc;
+  }
+}

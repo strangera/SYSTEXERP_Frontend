@@ -31,7 +31,7 @@ export class MenubarComponent implements OnInit {
 
       for (var i = this.menu.length - 1; i >= 0; i--) {
         if (this.menu[i]) {
-          if(i !== 0) {
+          if (i !== 0) {
             this.breadcrumbItems.push(
               {
                 label: this.menu[i],
@@ -76,7 +76,7 @@ export class MenubarComponent implements OnInit {
       if (index > -1) favorites.splice(index, 1);
     }
 
-    localStorage.setItem('Favorites', JSON.stringify(favorites));
+    sessionStorage.setItem('Favorites', JSON.stringify(favorites));
 
     // 即時更新麵包屑中的顏色變化
     this.updateBreadcrumbStyle();
