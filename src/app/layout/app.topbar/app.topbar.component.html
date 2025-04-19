@@ -1,7 +1,7 @@
 <div #appTopbarDiv class="layout-topbar justify-content-between flex-wrap lg:flex-nowrap">
   <a class="layout-topbar-logo" routerLink="/">
     <img [src]="logo" alt="logo">
-    <span>{{'management-platform-title' | translate}}</span>
+    <span class="min-w-max">{{'management-platform-title' | translate}}</span>
   </a>
   <!--手機-->
   <button #topbarmenubutton class="p-link layout-topbar-menu-button layout-topbar-button"
@@ -10,7 +10,7 @@
   </button>
   <!--桌機-->
   <button #menubutton class="p-link layout-menu-button layout-topbar-button" (click)="layoutService.onMenuToggle()">
-    <i class="pi pi-bars"></i>
+    <i class="pi pi-align-left"></i>
   </button>
   <div class="topbar-menu flex-grow-1  flex flex-row align-items-center">
     <ng-container *ngFor="let item of topLevelMenuItems">
@@ -36,12 +36,31 @@
           <p-inputIcon styleClass="pi pi-search" onclick="onSubmit(queryForm);" />
         </p-iconField>
       </form>
-      <button type="button" class="p-link layout-topbar-button border-1 w-2rem h-2rem m-0 justify-content-center"
-        title="個人資料" (click)="menu.toggle($event)">
+      <button type="button" class="p-link layout-topbar-button border-1 w-2rem h-2rem p-2 m-0 justify-content-center"
+        pTooltip="我的最愛" (click)="favorite.toggle($event)">
         <i class="pi pi-star"></i>
       </button>
+      <p-menu #favorite [model]="favoriteItems" [popup]="true" class="static" styleClass="border-round-xl p-2"
+        [style]="{'width': '15rem'}" appendTo="body">
+        <ng-template pTemplate="submenuheader" let-item>
+          <div
+            class="flex flex-row align-items-center justify-content-between font-bold text-lg text-primary hover:text-primary-700 cursor-pointer">
+            <span>{{ item.label }}</span>
+            <i [ngClass]="item.icon"></i>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="item" let-item>
+          <a pRipple class="flex justify-content-between align-items-center p-menuitem-link">
+            <span [class]="item.icon"></span>
+            <div class="w-full">
+              <span class="ml-2">{{ item.label }}</span>
+            </div>
+          </a>
+        </ng-template>
+      </p-menu>
       <div class="text-center ml-1 block" [ngStyle]="{'color': 'rgb(146, 60, 60)'}">
-        <button type="button" class="layout-topbar-button p-link" title="個人資料" (click)="menu.toggle($event)">
+        <button type="button" class="layout-topbar-button p-link min-w-max" pTooltip="個人資料"
+          (click)="menu.toggle($event)">
           <span class="text-sm text-gray-700 block">{{ data?.user_id }}</span>
           <span class="text-lg font-bold block">{{ data?.user_name }}</span>
           <i class="pi pi-angle-down"></i>

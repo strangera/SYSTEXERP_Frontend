@@ -46,9 +46,13 @@
 
     .p-button .p-button-label {
       font-weight: 500;
-      font-size: 20px;
+      font-size: 15px;
       color: black;
     }
+  }
+
+  .layout-topbar-button {
+    margin-left: 0 !important;
   }
 }
 
@@ -74,12 +78,12 @@
     .layout-topbar-menu {
       .layout-topbar-button {
         border-radius: 3px !important;
+        margin-left: 0 !important;
       }
     }
 
     .layout-topbar-button i {
-      font-size: 1rem;
-      margin-right: 0;
+      margin-right: 0 !important;
     }
   }
 }

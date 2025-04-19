@@ -19,6 +19,7 @@ export class AppTopbarComponent implements OnInit {
   title: string = 'management-platform-title';
   logo: string = 'assets/layout/images/logo.png';
   items!: MenuItem[];
+  favoriteItems!: MenuItem[];
   data: UserInfo | null = null; // 使用者資料
   image = '';// 預設圖片路徑
   @ViewChild('appTopbarDiv', { static: false }) appTopbarDiv!: ElementRef; // 修正此行
@@ -53,6 +54,7 @@ export class AppTopbarComponent implements OnInit {
         ]
       },
     ];
+    this.initFavoriteItems()
 
     const funRightsInfoString = sessionStorage.getItem("FunRightsInfo");
     if (funRightsInfoString) {
@@ -84,6 +86,20 @@ export class AppTopbarComponent implements OnInit {
       this.now = new Date();
     });
   };
+
+  initFavoriteItems() {
+    this.favoriteItems = [
+      {
+        label: '我的最愛',
+        icon: 'pi pi-pen-to-square',
+        items: [
+          { label: '1101 營業人申報設定', command: () => this.router.navigate(['/FIN1000/FIN11010']) },
+          { label: '1102 發票基本資料維護', command: () => this.router.navigate(['/FIN1000/FIN11020']) },
+          { label: '1103 銷項品項資料設定', command: () => this.router.navigate(['/FIN1000/FIN11030']) },
+        ]
+      },
+    ]
+  }
 
   filteredProgs: any[] = [];
   filterCountry(event: any) {
