@@ -25,7 +25,7 @@ export class AuthService {
     private encrypt: EncryptionService,
     private commService: CommonService,
   ) {
-    let userStorage: any = localStorage.getItem('UserInfo');
+    let userStorage: any = sessionStorage.getItem('UserInfo');
     this.userSubject = new BehaviorSubject(JSON.parse(userStorage)!);
     this.user = this.userSubject.asObservable();
   }
@@ -78,7 +78,7 @@ export class AuthService {
             console.log(logData);
           });
     */
-    localStorage.clear();
+    sessionStorage.clear();
     window.sessionStorage.clear();
 
     this.userSubject.next(null);
@@ -92,13 +92,13 @@ export class AuthService {
   getUserPermissions(progNo: string): FunsrightInfo {
     const initialFunsrightInfo: FunsrightInfo = {};
 
-    const funs = localStorage.getItem("FunRightsInfo");
+    const funs = sessionStorage.getItem("FunRightsInfo");
 
     if (funs == "undefined" || funs == null || funs == '') {
       return initialFunsrightInfo;
     } else {
       try {
-        const funs: FunsrightInfo[] = JSON.parse(localStorage.getItem("FunRightsInfo") || '');
+        const funs: FunsrightInfo[] = JSON.parse(sessionStorage.getItem("FunRightsInfo") || '');
         // filter
         var progs = funs.filter(x => x.prog_no == progNo);
         // Find the maximum values for each property
@@ -161,5 +161,13 @@ export class AuthService {
         return initialFunsrightInfo;
       }
     }
+  }
+
+  getFavorites(): Observable<any> {
+    return this.http.get<any>(`/assets/service/User/userFavorite.json`).pipe(
+      map((response: any) => {
+        sessionStorage.setItem('Favorites', JSON.stringify(response.favorite_items));
+        return response;
+      }));
   }
 }

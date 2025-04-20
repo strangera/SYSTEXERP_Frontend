@@ -8,6 +8,8 @@ import { UserInfo } from '../../models/system/userInfo';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { interval, Subscription } from 'rxjs';
 import { NotificationService } from '../../shared/service/notification.service';
+import { OverlayPanel } from 'primeng/overlaypanel';
+import { TableRowReorderEvent } from 'primeng/table';
 
 @Component({
   selector: 'app-topbar',
@@ -16,10 +18,13 @@ import { NotificationService } from '../../shared/service/notification.service';
   encapsulation: ViewEncapsulation.None,
 })
 export class AppTopbarComponent implements OnInit {
+  @ViewChild('op') favorite!: OverlayPanel; // 確保正確引入 pMenu
   title: string = 'management-platform-title';
   logo: string = 'assets/layout/images/logo.png';
   items!: MenuItem[];
-  favoriteItems!: MenuItem[];
+  Favorites!: MenuItem[];
+  selectedFavorites: MenuItem[] = []; // 新增：用於存儲選中的最愛項目
+  editingFavorites = false; // 是否編輯最愛
   data: UserInfo | null = null; // 使用者資料
   image = '';// 預設圖片路徑
   @ViewChild('appTopbarDiv', { static: false }) appTopbarDiv!: ElementRef; // 修正此行
@@ -54,8 +59,7 @@ export class AppTopbarComponent implements OnInit {
         ]
       },
     ];
-    this.initFavoriteItems()
-
+    this.initFavorites(); // 初始化最愛功能
     const funRightsInfoString = sessionStorage.getItem("FunRightsInfo");
     if (funRightsInfoString) {
       try {
@@ -87,18 +91,29 @@ export class AppTopbarComponent implements OnInit {
     });
   };
 
-  initFavoriteItems() {
-    this.favoriteItems = [
-      {
-        label: '我的最愛',
-        icon: 'pi pi-pen-to-square',
-        items: [
-          { label: '1101 營業人申報設定', command: () => this.router.navigate(['/FIN1000/FIN11010']) },
-          { label: '1102 發票基本資料維護', command: () => this.router.navigate(['/FIN1000/FIN11020']) },
-          { label: '1103 銷項品項資料設定', command: () => this.router.navigate(['/FIN1000/FIN11030']) },
-        ]
+  initFavorites(event?: any) {
+    if (this.favorite) {
+      this.favorite.toggle(event);
+    } // 確保 favorite 存在
+    this.authService.getFavorites().subscribe({
+      next: (response: { prog_no: string }[]) => { // 指明 response 的結構
+        const favoritesWithDetails: FunsrightInfo[] = [];
+        response.forEach(fav => {
+          const matchingFunRight = this.funRightsInfo.find(item => item.prog_no === fav.prog_no);
+          if (matchingFunRight) {
+            favoritesWithDetails.push(matchingFunRight);
+          } else {
+            console.warn(`找不到 prog_no: ${fav.prog_no} 對應的功能權限資訊。`);
+          }
+        });
+        sessionStorage.setItem('Favorites', JSON.stringify(response));
+        this.Favorites = favoritesWithDetails.map(item => ({
+          label: item.prog_no + ' ' + item.prog_name,
+          routerLink: item.path,
+        }));
       },
-    ]
+      error: error => { console.error('Error fetching favorites:', error); }
+    });
   }
 
   filteredProgs: any[] = [];
@@ -146,4 +161,25 @@ export class AppTopbarComponent implements OnInit {
       this.messageService.warnBubble('輸入的代碼不存在，或您目前無權限存取對應頁面。', '查無此快速碼');
     }
   }
+
+  editFavorites() {
+    this.editingFavorites = !this.editingFavorites; // 切換編輯狀態
+    this.selectedFavorites = []; // 清空選中的最愛項目
+  }
+
+  deleteSelectedFavorites() {
+    // 打刪除API
+    // ...
+    // 初始化最愛功能
+    this.initFavorites();
+  }
+
+  onRowReorder(event: TableRowReorderEvent) {
+    console.log('Row reordered:', event);
+    console.log('New order:', this.selectedFavorites);
+
+    // 初始化最愛功能
+    this.initFavorites();
+  }
+
 }

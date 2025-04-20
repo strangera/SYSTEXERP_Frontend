@@ -22,13 +22,13 @@ import { SYS1000Response } from '../../../models/SYS1000';
   styleUrl: './sysb200.cru.component.scss'
 })
 // 廠商基本資料維護作業 CRU
-export class SYSB200CRUComponent extends BasicCrupageComponent implements OnInit{
+export class SYSB200CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     manufacturerID: ['', [Validators.required, Validators.maxLength(14)]], // 廠商編號
     manufacturerUID: [1, []], // 統一編號
 
-    manufacturerCName: ['', [Validators.required,Validators.maxLength(60)]], // 廠商名稱(中文)
+    manufacturerCName: ['', [Validators.required, Validators.maxLength(60)]], // 廠商名稱(中文)
     manufacturerEName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
     manufacturerSName: ['', [Validators.maxLength(10)]], // 廠商簡稱
 
@@ -83,8 +83,8 @@ export class SYSB200CRUComponent extends BasicCrupageComponent implements OnInit
     private bankAccountCodeService: BankAccountCodeService,
     //
     private messagehint: MessageService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -128,8 +128,8 @@ export class SYSB200CRUComponent extends BasicCrupageComponent implements OnInit
       });
     });
     // ----------------------------------------------------------------
-    // 從 localStorage 抓取資料
-    const systemSettingString = localStorage.getItem('SYSTEMSetting');
+    // 從 sessionStorage 抓取資料
+    const systemSettingString = sessionStorage.getItem('SYSTEMSetting');
 
     if (systemSettingString) {
       // 將 JSON 字串解析成 JavaScript 物件
@@ -204,11 +204,11 @@ export class SYSB200CRUComponent extends BasicCrupageComponent implements OnInit
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }
@@ -241,7 +241,7 @@ export class SYSB200CRUComponent extends BasicCrupageComponent implements OnInit
     this.router.navigate(['/SYSB000/SYSB200']);
   }
 
-  demoShowUp(){
+  demoShowUp() {
     this.messagehint.add({ severity: 'success', summary: '同公司登記地址', detail: '測試' });
   }
 }

@@ -18,8 +18,8 @@ export class AuthGuard implements CanActivate {
 
     const user = this.authService.currentUserValue;
     if (user) {
-        // authorised so return true
-        return true;
+      // authorised so return true
+      return true;
     }
 
     // not logged in so redirect to login page with the return url
