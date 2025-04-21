@@ -1,22 +1,18 @@
 <div class="layout-wrapper" [ngClass]="containerClass" *ngIf="user">
-    <app-topbar></app-topbar>
-    <div class="layout-sidebar">
-        <app-menulist (menuaddTab)="onAddTab($event)"></app-menulist>
+  <div #appTopbarDiv>
+    <app-topbar (topMenuClick)="selectedTopMenuProgNo = $event"></app-topbar>
+  </div>
+  <div class="layout-sidebar w-full sm:w-22rem border-noround sm:border-round-xl">
+    <button type="button" class="absolute top-0 right-0 p-link layout-sidebar-close-button lg:hidden mr-3 mt-3"
+      (click)="onMaskClick()">
+      <i class="pi pi-times text-white text-2xl cursor-pointer"></i>
+    </button>
+    <app-menulist [activeTopMenuProgNo]="selectedTopMenuProgNo"></app-menulist>
+  </div>
+  <div #layoutMainContainer class="layout-main-container mt-0 lg:mt-3">
+    <div class="layout-main">
+      <router-outlet></router-outlet>
     </div>
-    <div class="layout-main-container">
-        <div class="layout-main">
-            <!---->
-            <router-outlet></router-outlet>
-            <!--
-            <p-tabView [(activeIndex)]="activeIndex" [scrollable]="true">
-                <p-tabPanel *ngFor="let tab of tabs; let i = index" [header]="tab.title" [closable]="i !== 0" (onClose)="onTabClose($event, i)">
-                    <ng-container *ngComponentOutlet="tab.component"></ng-container>
-                </p-tabPanel>
-            </p-tabView>-->
-        </div>
-        <app-footer></app-footer>
-    </div>
-    <div class="layout-mask"></div>
+  </div>
+  <div class="layout-mask" tabindex="0" (click)="onMaskClick()" (keydown.enter)="onMaskClick()"></div>
 </div>
-
-<!-- Main Content -->

@@ -62,7 +62,8 @@ export class LoginComponent implements OnInit {
       .subscribe({
         next: () => {
           this.notemessage.successBubble('登入成功');
-          this.fetchSys1000Data();
+          this.fetchSys1000Data(); // 讀取 SYS1000 資料
+
           // get return url from query parameters or default to home page
           const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
           this.router.navigateByUrl(returnUrl);
@@ -80,8 +81,8 @@ export class LoginComponent implements OnInit {
   fetchSys1000Data() {
     this.sys1000Service.getData().subscribe({
       next: response => {
-        // 將轉換後的數據存入 localStorage
-        localStorage.setItem('SYSTEMSetting', JSON.stringify(response));
+        // 將轉換後的數據存入 sessionStorage
+        sessionStorage.setItem('SYSTEMSetting', JSON.stringify(response));
         console.log('SYS1000 response data saved successfully');
       },
       error: error => {

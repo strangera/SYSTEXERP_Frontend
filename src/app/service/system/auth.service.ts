@@ -39,7 +39,7 @@ export class AuthService {
     private encrypt: EncryptionService,
     private commService: CommonService,
   ) {
-    let userStorage: any = localStorage.getItem('UserInfo');
+    let userStorage: any = sessionStorage.getItem('UserInfo');
     this.userSubject = new BehaviorSubject(JSON.parse(userStorage)!);
     this.user = this.userSubject.asObservable();
   }
@@ -89,7 +89,6 @@ export class AuthService {
     const key = `${data.code?.toLowerCase()}${now.utc_nowtime}${environment.PasswordKey}`.substring(0, 16);
     data.password = this.encrypt.encryptTripleDES(data.password as string, key, now.utc_nowtime);
     // data.password = "W0kPywQIWtw=";
-
     const url = `${this.apiUrl}/User/userLogin`;
     console.log('🔐 Login API URL:', url);
     console.log('📦 Login data:', data);
@@ -110,13 +109,13 @@ export class AuthService {
   // 移除存儲的 JWT Token
   logout() {
     let logData = {};
-/*
-    lastValueFrom(this.http.post<any>(`${this.apiUrl}/User/userLogout`, logData))
-      .then((data: any) => {
-        console.log(logData);
-      });
-*/
-    localStorage.clear();
+    /*
+        lastValueFrom(this.http.post<any>(`${this.apiUrl}/User/userLogout`, logData))
+          .then((data: any) => {
+            console.log(logData);
+          });
+    */
+    sessionStorage.clear();
     window.sessionStorage.clear();
 
     this.userSubject.next(null);
@@ -130,29 +129,29 @@ export class AuthService {
   getUserPermissions(progNo: string): FunsrightInfo {
     const initialFunsrightInfo: FunsrightInfo = {};
 
-    const funs = localStorage.getItem("FunRightsInfo");
+    const funs = sessionStorage.getItem("FunRightsInfo");
 
     if (funs == "undefined" || funs == null || funs == '') {
       return initialFunsrightInfo;
     } else {
       try {
-        const funs: FunsrightInfo[] = JSON.parse(localStorage.getItem("FunRightsInfo") || '');
+        const funs: FunsrightInfo[] = JSON.parse(sessionStorage.getItem("FunRightsInfo") || '');
         // filter
         var progs = funs.filter(x => x.prog_no == progNo);
         // Find the maximum values for each property
         const value: FunsrightInfo = progs.reduce((max: FunsrightInfo, prog: FunsrightInfo) => ({
-          add_api_path: (prog.add_api_path?.length || 0) > (max.add_api_path?.length || 0)? prog.add_api_path : max.add_api_path,
-          delete_api_path: (prog.delete_api_path?.length || 0) > (max.delete_api_path?.length || 0)? prog.delete_api_path : max.delete_api_path,
-          edit_api_path: (prog.edit_api_path?.length || 0) > (max.edit_api_path?.length || 0)? prog.edit_api_path : max.edit_api_path,
-          export_api_path: (prog.export_api_path?.length || 0) > (max.export_api_path?.length || 0)? prog.export_api_path : max.export_api_path,
-          extright1_api_path: (prog.extright1_api_path?.length || 0) > (max.extright1_api_path?.length || 0)? prog.extright1_api_path : max.extright1_api_path,
-          extright2_api_path: (prog.extright2_api_path?.length || 0) > (max.extright2_api_path?.length || 0)? prog.extright2_api_path : max.extright2_api_path,
-          extright3_api_path: (prog.extright3_api_path?.length || 0) > (max.extright3_api_path?.length || 0)? prog.extright3_api_path : max.extright3_api_path,
-          extright4_api_path: (prog.extright4_api_path?.length || 0) > (max.extright4_api_path?.length || 0)? prog.extright4_api_path : max.extright4_api_path,
-          extright5_api_path: (prog.extright5_api_path?.length || 0) > (max.extright5_api_path?.length || 0)? prog.extright5_api_path : max.extright5_api_path,
-          print_api_path: (prog.print_api_path?.length || 0) > (max.print_api_path?.length || 0)? prog.print_api_path : max.print_api_path,
-          query_api_path: (prog.query_api_path?.length || 0) > (max.query_api_path?.length || 0)? prog.query_api_path : max.query_api_path,
-          report_api_path: (prog.report_api_path?.length || 0) > (max.report_api_path?.length || 0)? prog.report_api_path : max.report_api_path,
+          add_api_path: (prog.add_api_path?.length || 0) > (max.add_api_path?.length || 0) ? prog.add_api_path : max.add_api_path,
+          delete_api_path: (prog.delete_api_path?.length || 0) > (max.delete_api_path?.length || 0) ? prog.delete_api_path : max.delete_api_path,
+          edit_api_path: (prog.edit_api_path?.length || 0) > (max.edit_api_path?.length || 0) ? prog.edit_api_path : max.edit_api_path,
+          export_api_path: (prog.export_api_path?.length || 0) > (max.export_api_path?.length || 0) ? prog.export_api_path : max.export_api_path,
+          extright1_api_path: (prog.extright1_api_path?.length || 0) > (max.extright1_api_path?.length || 0) ? prog.extright1_api_path : max.extright1_api_path,
+          extright2_api_path: (prog.extright2_api_path?.length || 0) > (max.extright2_api_path?.length || 0) ? prog.extright2_api_path : max.extright2_api_path,
+          extright3_api_path: (prog.extright3_api_path?.length || 0) > (max.extright3_api_path?.length || 0) ? prog.extright3_api_path : max.extright3_api_path,
+          extright4_api_path: (prog.extright4_api_path?.length || 0) > (max.extright4_api_path?.length || 0) ? prog.extright4_api_path : max.extright4_api_path,
+          extright5_api_path: (prog.extright5_api_path?.length || 0) > (max.extright5_api_path?.length || 0) ? prog.extright5_api_path : max.extright5_api_path,
+          print_api_path: (prog.print_api_path?.length || 0) > (max.print_api_path?.length || 0) ? prog.print_api_path : max.print_api_path,
+          query_api_path: (prog.query_api_path?.length || 0) > (max.query_api_path?.length || 0) ? prog.query_api_path : max.query_api_path,
+          report_api_path: (prog.report_api_path?.length || 0) > (max.report_api_path?.length || 0) ? prog.report_api_path : max.report_api_path,
           permissions: [],
         }), initialFunsrightInfo);
 
@@ -199,5 +198,13 @@ export class AuthService {
         return initialFunsrightInfo;
       }
     }
+  }
+
+  getFavorites(): Observable<any> {
+    return this.http.get<any>(`/assets/service/User/userFavorite.json`).pipe(
+      map((response: any) => {
+        sessionStorage.setItem('Favorites', JSON.stringify(response.favorite_items));
+        return response;
+      }));
   }
 }

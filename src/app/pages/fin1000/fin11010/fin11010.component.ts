@@ -17,7 +17,7 @@ import { WhetherService } from './../../../service/basic/whether.service';
   templateUrl: './fin11010.component.html',
   styleUrl: './fin11010.component.scss'
 })
-export class FIN11010Component extends BasicQpageComponent implements OnInit{
+export class FIN11010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     bId: [, [Validators.maxLength(8)]], // 營業人統編
@@ -40,7 +40,7 @@ export class FIN11010Component extends BasicQpageComponent implements OnInit{
   data: any[] = [
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '營業人統編', visible: true },
     { field: 'col2', header: '營業人名稱', visible: true },
     { field: 'col3', header: '縣市別', visible: true },

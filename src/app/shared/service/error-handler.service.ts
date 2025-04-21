@@ -55,13 +55,13 @@ export class ErrorHandlerService {
     // Display the error message
     this.notemessage.errorBubble(errorMessage);
     this.notemessage.unblockUi();
-    let errorsString = localStorage.getItem(this.LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS);
+    let errorsString = sessionStorage.getItem(this.LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS);
     let errors: any[] = JSON.parse(errorsString == null ? '[]' : errorsString);
     errors.splice(100, 1000, {
       datetime: new Date().toLocaleString(),
       message: errorMessage
     });
-    localStorage.setItem(this.LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS, JSON.stringify(errors));
+    sessionStorage.setItem(this.LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS, JSON.stringify(errors));
 
     // Return the error message or a user-friendly message
     return throwError(errorMessage);

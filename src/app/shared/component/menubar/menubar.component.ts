@@ -1,6 +1,5 @@
 import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
 import { MenuItem } from 'primeng/api';
-import { FunsrightInfo } from '../../../models/system/funsrightInfo';
 
 @Component({
   selector: 'app-menubar',
@@ -21,30 +20,17 @@ export class MenubarComponent implements OnInit {
   ngOnInit(): void {
     this.home = { icon: 'pi pi-home', routerLink: '/dashboard' };
     this.breadcrumbItems = [];
-    if (localStorage.getItem("FunRightsInfo")) {
-      let funs: FunsrightInfo[] = JSON.parse(localStorage.getItem("FunRightsInfo") || "");
-      // console.log(this.ProgNo);
-      this.getMenuName(funs, this.ProgNo);
-
-      // 檢查是否已經加入我的最愛
-      // this.isFavorite = this.checkIfFavorite(this.ProgNo);
-
-      for (var i = this.menu.length - 1; i >= 0; i--) {
+    const funs = sessionStorage.getItem("FunRightsInfo");
+    if (funs) {
+      this.getMenuName(JSON.parse(funs), this.ProgNo);
+      this.isFavorite = this.checkIfFavorite(this.ProgNo); // 檢查是否已經加入我的最愛
+      for (let i = this.menu.length - 1; i >= 0; i--) {
         if (this.menu[i]) {
-          if(i !== 0) {
-            this.breadcrumbItems.push(
-              {
-                label: this.menu[i],
-              });
-          } else {
-            this.breadcrumbItems.push(
-              {
-                label: this.menu[i],
-                icon: 'pi pi-star',
-                styleClass: this.isFavorite ? 'favorite-active' : '', // 如果有加入"我的最愛"變色
-                command: () => this.toggleFavorite()
-              });
-          }
+          this.breadcrumbItems.push({
+            label: this.menu[i],
+            command: i === 0 ? () => this.toggleFavorite() : undefined, // 只有第一個項目有 command
+            isLast: i === 0 // 標記是否為最後一個 (因為我們是反向 push)
+          });
         }
       }
     }
@@ -61,31 +47,34 @@ export class MenubarComponent implements OnInit {
   }
 
   checkIfFavorite(progNo: string): boolean {
-    const favorites = JSON.parse(localStorage.getItem('Favorites') || '[]');
-    return favorites.includes(progNo);
+    const favorites: { prog_no: string }[] = JSON.parse(sessionStorage.getItem('Favorites') || '[]');
+    return favorites.some(favorite => favorite.prog_no === progNo);
   }
 
   toggleFavorite() {
     this.isFavorite = !this.isFavorite;
-    const favorites = JSON.parse(localStorage.getItem('Favorites') || '[]');
-
+    const favorites: { prog_no: string }[] = JSON.parse(sessionStorage.getItem('Favorites') || '[]');
+    const currentFavorite = { prog_no: this.ProgNo };
     if (this.isFavorite) {
-      favorites.push(this.ProgNo);
+      if (!favorites.some(fav => fav.prog_no === this.ProgNo)) {
+        favorites.push(currentFavorite);
+      } else {
+        this.isFavorite = true;
+      }
     } else {
-      const index = favorites.indexOf(this.ProgNo);
-      if (index > -1) favorites.splice(index, 1);
+      const index = favorites.findIndex(fav => fav.prog_no === this.ProgNo);
+      if (index > -1) {
+        favorites.splice(index, 1);
+      }
     }
 
-    localStorage.setItem('Favorites', JSON.stringify(favorites));
-
-    // 即時更新麵包屑中的顏色變化
+    sessionStorage.setItem('Favorites', JSON.stringify(favorites));
     this.updateBreadcrumbStyle();
   }
 
   updateBreadcrumbStyle() {
     this.breadcrumbItems = this.breadcrumbItems.map(item => ({
       ...item,
-      styleClass: this.isFavorite ? 'favorite-active' : ''
     }));
   }
 }

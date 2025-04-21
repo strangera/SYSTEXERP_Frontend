@@ -1,77 +1,125 @@
-<div class="layout-topbar">
-    <a class="layout-topbar-logo" routerLink="">
-        <img [src]="logo" alt="logo">
-        <span>{{title}}</span>
-    </a>
-    <!--手機-->
-    <button #topbarmenubutton class="p-link layout-topbar-menu-button layout-topbar-button" (click)="layoutService.showProfileSidebar()">
+<div #appTopbarDiv class="layout-topbar justify-content-between flex-wrap lg:flex-nowrap">
+  <a class="layout-topbar-logo" routerLink="/">
+    <img [src]="logo" alt="logo">
+    <span class="min-w-max">{{'management-platform-title' | translate}}</span>
+  </a>
+  <!--手機-->
+  <button #topbarmenubutton class="p-link layout-topbar-menu-button layout-topbar-button"
+    (click)="layoutService.showProfileSidebar()">
     <i class="pi pi-ellipsis-v"></i>
-</button>
-    <!--桌機-->
-    <button #menubutton class="p-link layout-menu-button layout-topbar-button" (click)="layoutService.onMenuToggle()">
-      <i class="pi pi-bars"></i>
   </button>
-  <div class="topbar-menu">
-    <p-button 
-        *ngFor="let item of menuItems" 
-        [label]="item.label" 
-        [icon]="item.icon" 
-        [rounded]="true" 
-        [text]="true" 
-        severity="secondary" 
-        class="m-1"
-        (click)="resetMenuList(item.prog_no)">
-    </p-button>
-</div>
+  <!--桌機-->
+  <button #menubutton class="p-link layout-menu-button layout-topbar-button" (click)="layoutService.onMenuToggle()">
+    <i class="pi pi-align-left"></i>
+  </button>
+  <div class="topbar-menu flex-grow-1  flex flex-row align-items-center">
+    <ng-container *ngFor="let item of topLevelMenuItems">
+      <p-button [label]="item.prog_name" [rounded]="true" [text]="true" severity="secondary" class="m-1"
+        (click)="onTopMenuItemClick(item)" [styleClass]="activeTopMenuItem === item ? 'active-top-menu-item' : ''">
+      </p-button>
+    </ng-container>
+  </div>
 
-    <div #topbarmenu class="layout-topbar-menu col justify-content-end" [ngClass]="{'layout-topbar-menu-mobile-active': layoutService.state.profileSidebarVisible}">
-        <!---->
-        <p-button size="small" icon="pi pi-search" [outlined]="true" severity="secondary" class="m-1" pTooltip="快捷功能" tooltipPosition="top" (click)="showDialog()">
-        </p-button>
-        <!---->
-        <p-button size="small" icon="pi pi-star" [outlined]="true" severity="secondary" class="m-1" pTooltip="我的最愛" tooltipPosition="top" (click)="heart.toggle($event)">
-        </p-button>
-        <p-overlayPanel #heart [showCloseIcon]="true">
-            <ul class="list-none p-0 m-0">
-                <li class="mb-2">
-                    <div class="flex gap-3 p-3 bg-primary-600">
-                        <div class="flex flex-column cursor-pointer"><span class="font-semibold text-white">我的最愛</span></div>
-                    </div>
-                </li>
-                <li class="py-3 px-4 flex gap-2 cursor-pointer">
-                    <a><i class="pi pi-home text-lg"></i><span class="font-semibold mx-3">佈告欄</span></a>
-                </li>
-            </ul>
-        </p-overlayPanel>
-        <!---->
-        <p-button size="small" icon="pi pi-user" [outlined]="true" severity="secondary" class="m-1" pTooltip="個人功能" tooltipPosition="top" (click)="op.toggle($event)">
-        </p-button>
-        <p-overlayPanel #op [showCloseIcon]="true">
-            <ul class="list-none p-0 m-0">
-                <li class="mb-2">
-                    <div class="flex gap-3 p-3 bg-primary-600">
-                        <div class="flex flex-column cursor-pointer"><span class="font-semibold text-white">{{ user }}</span></div>
-                    </div>
-                </li>
-                <!--<li class="py-3 px-4 flex gap-2 cursor-pointer"><a><i class="pi pi-cog pi-star text-lg"></i><span class="font-semibold mx-3">Settings</span></a></li>
-  <li class="py-3 px-4 flex gap-2 cursor-pointer"><a><i class="pi pi-file pi-lock text-lg"></i><span class="font-semibold mx-3">Terms of Usage</span></a></li>
-  <li class="py-3 px-4 flex gap-2 cursor-pointer"><a><i class="pi pi-compass pi-image text-lg"></i><span class="font-semibold mx-3">Support</span></a></li>-->
-                <li class="py-3 px-4 flex gap-2 cursor-pointer"><a><i class="pi pi-power-off pi-image text-lg"></i><span class="font-semibold mx-3" (click)="logout()">Logout</span></a></li>
-            </ul>
-        </p-overlayPanel>
+  <div #topbarmenu class="layout-topbar-menu lg:flex lg:flex-column justify-content-center align-items-end"
+    [ngClass]="{'layout-topbar-menu-mobile-active': layoutService.state.profileSidebarVisible}">
+    <div
+      class="flex flex-row align-items-center font-bold text-primary justify-content-center col-flex gap-2 m-1 text-sm">
+      <i class="pi pi-clock text-sm"></i>
+      {{ now | date: 'yyyy/MM/dd HH:mm:ss' }}
     </div>
-</div>
-
-<!--快速選擇代碼-->
-<p-dialog header="快速選擇代碼" [modal]="true" [(visible)]="visible" [style]="{ width: '25rem' }">
-    <div class="grid p-fluid">
-        <div class="col-12">
-            <app-dropdown-item label="功能代碼" controlName="syscode" [options]="syscode" optionLabel="value" optionValue="key">
-            </app-dropdown-item>
+    <div class="flex flex-row align-items-center justify-content-center col-flex">
+      <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm);" class="mx-2">
+        <p-iconField iconPosition="right" class="h-full" styleClass="h-full">
+          <p-autoComplete formControlName="query_data" [suggestions]="filteredProgs" emptyMessage="查無此快速碼"
+            (completeMethod)="filterCountry($event)" optionLabel="label" placeholder="搜尋選單的名稱編號" styleClass="h-2rem"
+            inputStyleClass="border-1 border-black-alpha-50 border-round" (keydown.enter)="onSubmit(queryForm)" />
+          <p-inputIcon styleClass="pi pi-search" onclick="onSubmit(queryForm);" />
+        </p-iconField>
+      </form>
+      <button type="button" class="p-link layout-topbar-button border-1 w-2rem h-2rem p-2 m-0 justify-content-center"
+        pTooltip="我的最愛" (click)="initFavorites($event)">
+        <i class="pi pi-star"></i>
+      </button>
+      <p-overlayPanel #op styleClass="border-round-xl select-none" appendTo="body">
+        <div class="flex flex-column gap-1 max-w-max">
+          <div class="flex flex-column">
+            <p-table [value]="Favorites" selectionMode="multiple" [(selection)]="selectedFavorites"
+              [reorderableColumns]="editingFavorites" (onRowReorder)="onRowReorder($event)" dataKey="label">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th *ngIf="editingFavorites"><p-tableHeaderCheckbox /></th>
+                  <th *ngIf="editingFavorites" class="text-center">排序</th>
+                  <th *ngIf="!editingFavorites"
+                    class="border-round-xl p-0 flex justify-content-between align-items-center">
+                    <p-button class="w-full" styleClass="w-full border-round-lg" label="我的最愛" icon="pi pi-pen-to-square"
+                      iconPos="right" (click)="editFavorites()" />
+                  </th>
+                  <th *ngIf="editingFavorites"
+                    class="border-round-xl p-0 flex justify-content-between align-items-center">
+                    <p-button class="w-full" styleClass="w-full border-round-lg" severity="danger" label="刪除我的最愛"
+                      icon="pi pi-trash" iconPos="right" (click)="editFavorites()" />
+                  </th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+                <tr [pSelectableRow]="item" [pSelectableRowIndex]="rowIndex" [pReorderableRow]="rowIndex">
+                  <td *ngIf="editingFavorites">
+                    <p-tableCheckbox [value]="item" class="pointer-events-none" />
+                  </td>
+                  <td *ngIf="editingFavorites" class="text-center">
+                    <span class="pi pi-bars" pReorderableRowHandle></span>
+                  </td>
+                  <td class="p-2">
+                    <span *ngIf="!editingFavorites" (click)="onFavoriteItemClick(item)" class="min-w-max p-2">{{item.label}}</span>
+                    <span *ngIf="editingFavorites" class="min-w-max p-2">{{item.label}}</span>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                  <tr>
+                      <td colspan="1" class="min-w-max p-3 text-center">
+                        <span class="min-w-max p-3 text-center">
+                          尚未加入任何最愛，<br>請至功能頁加入
+                        </span>
+                      </td>
+                  </tr>
+              </ng-template>
+            </p-table>
+          </div>
         </div>
+      </p-overlayPanel>
+      <!-- <p-menu #favorite [model]="Favorites">
+        <ng-template pTemplate="item" let-item>
+          <a pRipple class="flex justify-content-between align-items-center p-menuitem-link">
+            <span [class]="item.icon"></span>
+            <div class="w-full">
+              <span class="ml-2">{{ item.label }}</span>
+            </div>
+          </a>
+        </ng-template>
+      </p-menu> -->
+      <div class="text-center ml-1 block" [ngStyle]="{'color': 'rgb(146, 60, 60)'}">
+        <button type="button" class="layout-topbar-button p-link min-w-max" pTooltip="個人資料"
+          (click)="menu.toggle($event)">
+          <span class="text-sm text-gray-700 block">{{ data?.user_id }}</span>
+          <span class="text-lg font-bold block">{{ data?.user_name }}</span>
+          <i class="pi pi-angle-down"></i>
+        </button>
+        <p-menu #menu [model]="items" [popup]="true" class="static" styleClass="border-round-xl p-2"
+          [style]="{'width': '12rem'}" appendTo="body">
+          <ng-template pTemplate="submenuheader" let-item>
+            <span class="font-bold text-lg text-primary">{{ item.label }}</span>
+          </ng-template>
+          <ng-template pTemplate="item" let-item>
+            <a pRipple class="flex justify-content-between align-items-center p-menuitem-link">
+              <span [class]="item.icon"></span>
+              <div class="w-full">
+                <span class="ml-2">{{ item.label }}</span>
+              </div>
+            </a>
+          </ng-template>
+        </p-menu>
+      </div>
     </div>
-    <div class="flex justify-content-end gap-2">
-        <p-button label="取消" severity="secondary" (onClick)="visible = false" />
-        <p-button label="確認" (onClick)="visible = false" />
-    </div>
-</p-dialog>
+  </div>
+</div>

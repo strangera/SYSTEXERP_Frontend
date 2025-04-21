@@ -1,33 +1,36 @@
 <ul class="layout-menu">
-    <ng-container *ngFor="let level1 of model; let i = index;">
-        <li class="layout-root-menuitem">
-            <div class="layout-menuitem-root-text">{{ level1.label }}</div>
-        </li>
-        <ul *ngFor="let level2 of level1.items; let j = index;">
-            <ng-container *ngIf="(!level2.routerLink || level2.items); else menulevel3">
-                <li [ngClass]="{'active-menuitem': level2.expanded, 'selected': activeItem === level2}">
-                    <a (click)="toggleActive(level2)" [attr.href]="level2.url" pRipple>
-                        <i [ngClass]="level2.icon" class="layout-menuitem-icon"></i>
-                        <span class="layout-menuitem-text">{{ level2.label }}</span>
-                        <i class="pi pi-fw pi-angle-down layout-submenu-toggler"></i>
-                    </a>
-                </li>
-                <ul *ngIf="level2.items" [@children]="level2.expanded ? 'expanded' : 'collapsed'">
-                    <li *ngFor="let level3 of level2.items; let k = index;" [ngClass]="{'selected': activeItem === level3}">
-                        <a (click)="onAddTab(level3)" [routerLink]="level3.routerLink" pRipple>
-                            <i [ngClass]="level3.icon" class="layout-menuitem-icon"></i>
-                            <span class="layout-menuitem-text">{{ level3.label }}</span>
-                        </a>
-                    </li>
-                </ul>
-            </ng-container>
-            <ng-template #menulevel3>
-                <a (click)="onAddTab(level2)" [routerLink]="level2.routerLink" pRipple [ngClass]="{'selected': activeItem === level2}">
-                    <i [ngClass]="level2.icon" class="layout-menuitem-icon"></i>
-                    <span class="layout-menuitem-text">{{ level2.label }}</span>
-                </a>
-            </ng-template>
-        </ul>
-        <hr>
-    </ng-container>
+  <ng-container *ngFor="let level1 of filteredModel; let i = index;">
+    <li class="layout-root-menuitem">
+      <div class="layout-menuitem-root-text">{{level1.label}}</div>
+    </li>
+    <ul *ngIf="level1.items">
+      <ng-container *ngFor="let level2 of level1.items; let j = index;">
+        <ng-container *ngIf="(!level2.routerLink || level2.items); else menulevel3">
+          <li [ngClass]="{'active-menuitem': level2.expanded}">
+            <a (click)="toggleActive(level2)" [attr.href]="level2.url ? level2.url : null" pRipple>
+              <i [ngClass]="level2.icon" class="layout-menuitem-icon"></i>
+              <span class="layout-menuitem-text">{{level2.label}}</span>
+              <i class="pi pi-fw pi-angle-down layout-submenu-toggler" *ngIf="level2.items"></i>
+            </a>
+          </li>
+          <ul *ngIf="level2.items" [@children]="level2.expanded ? 'expanded' : 'collapsed'" style="overflow: hidden;">
+            <li *ngFor="let level3 of level2.items; let k = index;">
+              <a [routerLink]="level3.routerLink" pRipple [ngClass]="{'menuitem-selected': level3['selected']}">
+                <i [ngClass]="level3.icon" class="layout-menuitem-icon"></i>
+                <span class="layout-menuitem-text">{{level3.label}}</span>
+              </a>
+            </li>
+          </ul>
+        </ng-container>
+        <ng-template #menulevel3>
+          <li class="layout-menuitem">
+            <a [routerLink]="level2.routerLink" pRipple [ngClass]="{'menuitem-selected': level2['selected']}">
+              <i [ngClass]="level2.icon" class="layout-menuitem-icon"></i>
+              <span class="layout-menuitem-text">{{level2.label}}</span>
+            </a>
+          </li>
+        </ng-template>
+      </ng-container>
+    </ul>
+  </ng-container>
 </ul>

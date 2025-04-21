@@ -48,13 +48,13 @@ export class SYSB200Component extends BasicQpageComponent implements OnInit {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { manufacturerID: '0000001', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址1', contactPerson: 'A先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-    { manufacturerID: '0000002', isdelete:false, approvalStatus: '未審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址2', contactPerson: 'B先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-    { manufacturerID: '0000003', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '停車管理',mailingAddress: '地址3', contactPerson: 'C先生',registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode:'0000123'},
+    { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+    { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+    { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'manufacturerID', header: '廠商編號', visible: true },
     { field: 'approvalStatus', header: '審核狀態', visible: true },
     { field: 'manufacturerUID', header: '統一編號', visible: true },
@@ -87,7 +87,7 @@ export class SYSB200Component extends BasicQpageComponent implements OnInit {
     { "id": 2, "code": "000000000-2", "name": "停車管理" },
     { "id": 3, "code": "000000000-3", "name": "南紡流通-特殊交易" },
   ];
-  filterFields: any[]= [
+  filterFields: any[] = [
     'code',
     'name'
   ];
@@ -97,7 +97,7 @@ export class SYSB200Component extends BasicQpageComponent implements OnInit {
   systemCodeOptions: any[] = [];
   t111Options: SYS1000Response[] = [];
 
-  venderColumns: any[]= [
+  venderColumns: any[] = [
     { field: 'id', header: 'ID', visible: true },
     { field: 'code', header: '廠商代碼', visible: true },
     { field: 'name', header: '廠商名稱', visible: true },
@@ -121,7 +121,7 @@ export class SYSB200Component extends BasicQpageComponent implements OnInit {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.authService.user.subscribe(x => this.user = x);
     // ----------------------------------------------------------------
-    this.reportHead =  {
+    this.reportHead = {
       reporttitle: this.funInfo.prog_name,
       exportuser: this.user?.user_name,
       reportname: this.funInfo.prog_name,
@@ -146,8 +146,8 @@ export class SYSB200Component extends BasicQpageComponent implements OnInit {
       // });
     });
     // ----------------------------------------------------------------
-    // 從 localStorage 抓取資料
-    const systemSettingString = localStorage.getItem('SYSTEMSetting');
+    // 從 sessionStorage 抓取資料
+    const systemSettingString = sessionStorage.getItem('SYSTEMSetting');
 
     if (systemSettingString) {
       // 將 JSON 字串解析成 JavaScript 物件
@@ -165,51 +165,51 @@ export class SYSB200Component extends BasicQpageComponent implements OnInit {
     this.messageService.blockUi();
 
     this.data = [
-      { manufacturerID: '0000001', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址1', contactPerson: 'A先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000002', isdelete:false, approvalStatus: '未審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址2', contactPerson: 'B先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000003', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '停車管理',mailingAddress: '地址3', contactPerson: 'C先生',registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000001', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址1', contactPerson: 'A先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000002', isdelete:false, approvalStatus: '未審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址2', contactPerson: 'B先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000003', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '停車管理',mailingAddress: '地址3', contactPerson: 'C先生',registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000001', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址1', contactPerson: 'A先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000002', isdelete:false, approvalStatus: '未審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址2', contactPerson: 'B先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000003', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '停車管理',mailingAddress: '地址3', contactPerson: 'C先生',registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000001', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址1', contactPerson: 'A先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000002', isdelete:false, approvalStatus: '未審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址2', contactPerson: 'B先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000003', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '停車管理',mailingAddress: '地址3', contactPerson: 'C先生',registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000001', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址1', contactPerson: 'A先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000002', isdelete:false, approvalStatus: '未審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址2', contactPerson: 'B先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000003', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '停車管理',mailingAddress: '地址3', contactPerson: 'C先生',registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000001', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址1', contactPerson: 'A先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000002', isdelete:false, approvalStatus: '未審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址2', contactPerson: 'B先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000003', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '停車管理',mailingAddress: '地址3', contactPerson: 'C先生',registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000001', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址1', contactPerson: 'A先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000002', isdelete:false, approvalStatus: '未審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址2', contactPerson: 'B先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000003', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '停車管理',mailingAddress: '地址3', contactPerson: 'C先生',registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000001', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址1', contactPerson: 'A先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000002', isdelete:false, approvalStatus: '未審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址2', contactPerson: 'B先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000003', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '停車管理',mailingAddress: '地址3', contactPerson: 'C先生',registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000001', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址1', contactPerson: 'A先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000002', isdelete:false, approvalStatus: '未審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址2', contactPerson: 'B先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000003', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '停車管理',mailingAddress: '地址3', contactPerson: 'C先生',registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000001', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址1', contactPerson: 'A先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000002', isdelete:false, approvalStatus: '未審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址2', contactPerson: 'B先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000003', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '停車管理',mailingAddress: '地址3', contactPerson: 'C先生',registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000001', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址1', contactPerson: 'A先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000002', isdelete:false, approvalStatus: '未審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址2', contactPerson: 'B先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000003', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '停車管理',mailingAddress: '地址3', contactPerson: 'C先生',registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000001', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址1', contactPerson: 'A先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000002', isdelete:false, approvalStatus: '未審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址2', contactPerson: 'B先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000003', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '停車管理',mailingAddress: '地址3', contactPerson: 'C先生',registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000001', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址1', contactPerson: 'A先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000002', isdelete:false, approvalStatus: '未審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址2', contactPerson: 'B先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000003', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '停車管理',mailingAddress: '地址3', contactPerson: 'C先生',registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000001', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址1', contactPerson: 'A先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000002', isdelete:false, approvalStatus: '未審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址2', contactPerson: 'B先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000003', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '停車管理',mailingAddress: '地址3', contactPerson: 'C先生',registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000001', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址1', contactPerson: 'A先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000002', isdelete:false, approvalStatus: '未審核', manufacturerUID: '00000000' ,manufacturerCName: '南紡流通服務台',mailingAddress: '地址2', contactPerson: 'B先生',registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode:'0000123'},
-      { manufacturerID: '0000003', isdelete:true, approvalStatus: '已審核', manufacturerUID: '00000000' ,manufacturerCName: '停車管理',mailingAddress: '地址3', contactPerson: 'C先生',registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode:'0000123'},
+      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
+      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
       // 其他資料
     ];
 
