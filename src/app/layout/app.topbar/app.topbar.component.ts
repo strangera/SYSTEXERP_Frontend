@@ -22,7 +22,7 @@ export class AppTopbarComponent implements OnInit {
   title: string = 'management-platform-title';
   logo: string = 'assets/layout/images/logo.png';
   items!: MenuItem[];
-  Favorites!: MenuItem[];
+  Favorites: MenuItem[] = [];
   selectedFavorites: MenuItem[] = []; // 新增：用於存儲選中的最愛項目
   editingFavorites = false; // 是否編輯最愛
   data: UserInfo | null = null; // 使用者資料
@@ -91,31 +91,7 @@ export class AppTopbarComponent implements OnInit {
     });
   };
 
-  initFavorites(event?: any) {
-    if (this.favorite) {
-      this.favorite.toggle(event);
-    } // 確保 favorite 存在
-    this.authService.getFavorites().subscribe({
-      next: (response: { prog_no: string }[]) => { // 指明 response 的結構
-        const favoritesWithDetails: FunsrightInfo[] = [];
-        response.forEach(fav => {
-          const matchingFunRight = this.funRightsInfo.find(item => item.prog_no === fav.prog_no);
-          if (matchingFunRight) {
-            favoritesWithDetails.push(matchingFunRight);
-          } else {
-            console.warn(`找不到 prog_no: ${fav.prog_no} 對應的功能權限資訊。`);
-          }
-        });
-        sessionStorage.setItem('Favorites', JSON.stringify(response));
-        this.Favorites = favoritesWithDetails.map(item => ({
-          label: item.prog_no + ' ' + item.prog_name,
-          path: item.path,
-        }));
-      },
-      error: error => { console.error('Error fetching favorites:', error); }
-    });
-  }
-
+  // 這不是Country這是功能權限篩選
   filteredProgs: any[] = [];
   filterCountry(event: any) {
     let filtered: { label: string; value: FunsrightInfo }[] = [];
@@ -135,7 +111,7 @@ export class AppTopbarComponent implements OnInit {
   // 點擊最愛項目時的處理函數
   onFavoriteItemClick(item: FunsrightInfo) {
     if (item.path?.trim() === '') {
-      this.messageService.warnBubble(`您目前無檢視(${item.label})的權限，請聯絡系統管理員開啟權限。`, '無法開啟畫面');
+      this.messageService.warnBubble(`您目前無檢視「${item.label}」的權限，請聯絡系統管理員開啟權限。`, '無法開啟畫面');
       return;
     }
     this.router.navigate([item.path]);
@@ -175,6 +151,29 @@ export class AppTopbarComponent implements OnInit {
   editFavorites() {
     this.editingFavorites = !this.editingFavorites; // 切換編輯狀態
     this.selectedFavorites = []; // 清空選中的最愛項目
+  }
+
+  initFavorites(event?: any) {
+    if (this.favorite) { this.favorite.toggle(event)}
+    this.authService.getFavorites().subscribe({
+      next: (response: { prog_no: string }[]) => { // 指明 response 的結構
+        const favoritesWithDetails: FunsrightInfo[] = [];
+        response.forEach(fav => {
+          const matchingFunRight = this.funRightsInfo.find(item => item.prog_no === fav.prog_no);
+          if (matchingFunRight) {
+            favoritesWithDetails.push(matchingFunRight);
+          } else {
+            console.warn(`找不到 prog_no: ${fav.prog_no} 對應的功能權限資訊。`);
+          }
+        });
+        sessionStorage.setItem('Favorites', JSON.stringify(response));
+        this.Favorites = favoritesWithDetails.map(item => ({
+          label: item.prog_no + ' ' + item.prog_name,
+          path: item.path,
+        }));
+      },
+      error: error => { console.error('Error fetching favorites:', error); }
+    });
   }
 
   deleteSelectedFavorites() {

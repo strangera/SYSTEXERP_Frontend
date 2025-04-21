@@ -50,61 +50,61 @@ export class AuthService {
   }
 
   // 登錄，並將 token 存儲到本地存儲
-  // login(data: userLogin): Observable<any> {
-  //   const now = this.commService.getNOW();
-
-  //   let key = data.code?.toLowerCase() + now.utc_nowtime + environment.PasswordKey;
-  //   key = key.substring(0, 16);
-  //   const pass = this.encrypt.encryptTripleDES(data.password as string, key, now.utc_nowtime);
-
-  //   data.password = pass;
-
-  //   console.log('receive Data', data);
-
-  //   // return this.http.get<UserInfo>(`${this.apiUrl}/assets/service/User/userLogin.json`).pipe(
-  //   return this.http.post<UserInfo>(`${this.apiUrl}/User/userLogin`, data).pipe(
-  //   // return this.http.post<UserInfo>(`${this.apiUrl}/assets/service/User/userLogin.json`, data).pipe(
-  //   //return this.http.get<UserInfo>(`https://liulyndon.github.io/TSRDERP_Frontend/assets/service/User/userLogin.json`).pipe( // github docs pages
-  //     map((response: any) => {
-  //       localStorage.setItem('UserInfo', JSON.stringify(response.user_info));
-  //       //access_token:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImFkbWluIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6IueuoeeQhuWToSIsImV4cCI6MTcyMDQ5OTQxNCwiaXNzIjoiSW5mb0xpbmsiLCJhdWQiOiJUT00ifQ.l8WnngdF6hqD3fQPoxiZIzJP8de1MNFWlXSk0pmYVtc"
-  //       //login_time:"2024-07-08T12:30:14.422596+08:00"
-  //       //sto_no:"100"
-  //       //sto_sname:"湯姆熊"
-  //       //user_id:"admin"
-  //       //user_name:"管理員"
-  //       localStorage.setItem('FunRightsInfo', JSON.stringify(response.funright_info));
-  //       localStorage.setItem('AuthorizeInfo', JSON.stringify(response.authorize_info));
-  //       //auh_checkpwd: "Y"
-  //       //auh_no: "00001"
-  //       //auh_password: "1234"
-  //       //auh_rights: "Y"
-  //       this.userSubject.next(response.user_info);
-  //       return response;
-  //     }));
-  // }
-
-  login(data: userLogin): Observable<UserInfo> {
+  login(data: userLogin): Observable<any> {
     const now = this.commService.getNOW();
-    const key = `${data.code?.toLowerCase()}${now.utc_nowtime}${environment.PasswordKey}`.substring(0, 16);
-    data.password = this.encrypt.encryptTripleDES(data.password as string, key, now.utc_nowtime);
-    // data.password = "W0kPywQIWtw=";
-    const url = `${this.apiUrl}/User/userLogin`;
-    console.log('🔐 Login API URL:', url);
-    console.log('📦 Login data:', data);
 
-    return this.http.post<ApiResponse<UserInfo>>(url, data).pipe(
-      map((response: ApiResponse<UserInfo>) => {
-        if (response.Status === '0000') {
-          sessionStorage.setItem('UserInfo', JSON.stringify(response.Data));
-          this.userSubject.next(response.Data);
-          return response.Data;
-        } else {
-          throw new Error(response.Message || 'Login failed');
-        }
-      })
-    );
+    let key = data.code?.toLowerCase() + now.utc_nowtime + environment.PasswordKey;
+    key = key.substring(0, 16);
+    const pass = this.encrypt.encryptTripleDES(data.password as string, key, now.utc_nowtime);
+
+    data.password = pass;
+
+    console.log('receive Data', data);
+
+    return this.http.get<UserInfo>(`assets/service/User/userLogin.json`).pipe(
+    // return this.http.post<UserInfo>(`${this.apiUrl}/User/userLogin`, data).pipe(
+    // return this.http.post<UserInfo>(`${this.apiUrl}/assets/service/User/userLogin.json`, data).pipe(
+    //return this.http.get<UserInfo>(`https://liulyndon.github.io/TSRDERP_Frontend/assets/service/User/userLogin.json`).pipe( // github docs pages
+      map((response: any) => {
+        sessionStorage.setItem('UserInfo', JSON.stringify(response.user_info));
+        //access_token:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImFkbWluIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6IueuoeeQhuWToSIsImV4cCI6MTcyMDQ5OTQxNCwiaXNzIjoiSW5mb0xpbmsiLCJhdWQiOiJUT00ifQ.l8WnngdF6hqD3fQPoxiZIzJP8de1MNFWlXSk0pmYVtc"
+        //login_time:"2024-07-08T12:30:14.422596+08:00"
+        //sto_no:"100"
+        //sto_sname:"湯姆熊"
+        //user_id:"admin"
+        //user_name:"管理員"
+        sessionStorage.setItem('FunRightsInfo', JSON.stringify(response.funright_info));
+        sessionStorage.setItem('AuthorizeInfo', JSON.stringify(response.authorize_info));
+        //auh_checkpwd: "Y"
+        //auh_no: "00001"
+        //auh_password: "1234"
+        //auh_rights: "Y"
+        this.userSubject.next(response.user_info);
+        return response;
+      }));
   }
+
+  // login(data: userLogin): Observable<UserInfo> {
+  //   const now = this.commService.getNOW();
+  //   const key = `${data.code?.toLowerCase()}${now.utc_nowtime}${environment.PasswordKey}`.substring(0, 16);
+  //   data.password = this.encrypt.encryptTripleDES(data.password as string, key, now.utc_nowtime);
+  //   // data.password = "W0kPywQIWtw=";
+  //   const url = `${this.apiUrl}/User/userLogin`;
+  //   console.log('🔐 Login API URL:', url);
+  //   console.log('📦 Login data:', data);
+
+  //   return this.http.post<ApiResponse<UserInfo>>(url, data).pipe(
+  //     map((response: ApiResponse<UserInfo>) => {
+  //       if (response.Status === '0000') {
+  //         sessionStorage.setItem('UserInfo', JSON.stringify(response.Data));
+  //         this.userSubject.next(response.Data);
+  //         return response.Data;
+  //       } else {
+  //         throw new Error(response.Message || 'Login failed');
+  //       }
+  //     })
+  //   );
+  // }
 
   // 移除存儲的 JWT Token
   logout() {
