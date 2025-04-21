@@ -10,6 +10,11 @@ const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }, // 重定向到 dashboard
       {
+        path: 'changepsw',
+        loadChildren: () => import('./changepsw/changepsw.module').then(m => m.ChangepswModule),
+        canActivate: [AuthGuard]
+      },
+      {
         path: '',
         loadChildren: () => import('./dashboard/dashboard.module').then(m => m.DashboardModule)
         , canActivate: [AuthGuard]
