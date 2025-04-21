@@ -3,9 +3,12 @@ import { CommonModule } from '@angular/common';
 
 import { ChangepswRoutingModule } from './changepsw-routing.module';
 import { SharedModule } from '../../shared/shared.module';
+import { ChangepswComponent } from './changepsw.component';
 
 @NgModule({
-  declarations: [],
+  declarations: [
+    ChangepswComponent,
+  ],
   imports: [
     CommonModule,
     SharedModule,
