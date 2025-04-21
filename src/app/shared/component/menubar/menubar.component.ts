@@ -62,7 +62,6 @@ export class MenubarComponent implements OnInit {
         this.isFavorite = true;
       }
     } else {
-      // 從收藏夾移除
       const index = favorites.findIndex(fav => fav.prog_no === this.ProgNo);
       if (index > -1) {
         favorites.splice(index, 1);

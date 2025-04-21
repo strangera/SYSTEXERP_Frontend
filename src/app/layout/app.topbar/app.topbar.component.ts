@@ -109,7 +109,7 @@ export class AppTopbarComponent implements OnInit {
         sessionStorage.setItem('Favorites', JSON.stringify(response));
         this.Favorites = favoritesWithDetails.map(item => ({
           label: item.prog_no + ' ' + item.prog_name,
-          routerLink: item.path,
+          path: item.path,
         }));
       },
       error: error => { console.error('Error fetching favorites:', error); }
@@ -130,6 +130,16 @@ export class AppTopbarComponent implements OnInit {
       }
     }
     this.filteredProgs = filtered;
+  }
+
+  // 點擊最愛項目時的處理函數
+  onFavoriteItemClick(item: FunsrightInfo) {
+    if (item.path?.trim() === '') {
+      this.messageService.warnBubble(`您目前無檢視(${item.label})的權限，請聯絡系統管理員開啟權限。`, '無法開啟畫面');
+      return;
+    }
+    this.router.navigate([item.path]);
+    this.favorite.hide(); // 點擊後關閉最愛選單
   }
 
   onTopMenuItemClick(item: FunsrightInfo) {
