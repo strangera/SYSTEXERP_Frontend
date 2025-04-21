@@ -2,72 +2,73 @@ import { Injectable, effect, signal } from '@angular/core';
 import { Subject } from 'rxjs';
 
 export interface AppConfig {
-    inputStyle: string;
-    colorScheme: string;
-    theme: string;
-    ripple: boolean;
-    menuMode: string;
-    scale: number;
+  inputStyle: string;
+  colorScheme: string;
+  theme: string;
+  ripple: boolean;
+  menuMode: string;
+  scale: number;
 }
 
 interface LayoutState {
-    staticMenuDesktopInactive: boolean;
-    overlayMenuActive: boolean;
-    profileSidebarVisible: boolean;
-    configSidebarVisible: boolean;
-    staticMenuMobileActive: boolean;
-    menuHoverActive: boolean;
+  staticMenuDesktopInactive: boolean;
+  overlayMenuActive: boolean;
+  profileSidebarVisible: boolean;
+  configSidebarVisible: boolean;
+  staticMenuMobileActive: boolean;
+  menuHoverActive: boolean;
 }
 
 @Injectable({
-    providedIn: 'root',
+  providedIn: 'root',
 })
 export class LayoutService {
-    _config: AppConfig = {
-        ripple: false,
-        inputStyle: 'outlined',
-        menuMode: 'static',
-        colorScheme: 'light',
-        theme: 'lara-light-indigo',
-        scale: 14,
-    };
+  _config: AppConfig = {
+    ripple: false,
+    inputStyle: 'outlined',
+    menuMode: 'static',
+    colorScheme: 'light',
+    theme: 'lara-light-indigo',
+    scale: 14,
+  };
 
-    config = signal<AppConfig>(this._config);
+  config = signal<AppConfig>(this._config);
 
-    state: LayoutState = {
-        staticMenuDesktopInactive: false,
-        overlayMenuActive: false,
-        profileSidebarVisible: false,
-        configSidebarVisible: false,
-        staticMenuMobileActive: false,
-        menuHoverActive: false,
-    };
+  state: LayoutState = {
+    staticMenuDesktopInactive: false,
+    overlayMenuActive: false,
+    profileSidebarVisible: false,
+    configSidebarVisible: false,
+    staticMenuMobileActive: false,
+    menuHoverActive: false,
+  };
 
-    private configUpdate = new Subject<AppConfig>();
+  private configUpdate = new Subject<AppConfig>();
+  private overlayOpen = new Subject<any>();
+  isDarkMode = signal(false);
 
-    private overlayOpen = new Subject<any>();
+  configUpdate$ = this.configUpdate.asObservable();
+  overlayOpen$ = this.overlayOpen.asObservable();
 
-    configUpdate$ = this.configUpdate.asObservable();
+  constructor() {
+    effect(() => {
+      const config = this.config();
+      this.updateThemeClass(config.colorScheme === 'dark');
+      if (this.updateStyle(config)) {
+        this.changeTheme();
+      }
+      this.changeScale(config.scale);
+      this.onConfigUpdate();
+    }, { allowSignalWrites: true }); // 添加 allowSignalWrites: true
+  }
 
-    overlayOpen$ = this.overlayOpen.asObservable();
 
-    constructor() {
-        effect(() => {
-            const config = this.config();
-            if (this.updateStyle(config)) {
-                this.changeTheme();
-            }
-            this.changeScale(config.scale);
-            this.onConfigUpdate();
-        });
-    }
-
-    updateStyle(config: AppConfig) {
-        return (
-            config.theme !== this._config.theme ||
-            config.colorScheme !== this._config.colorScheme
-        );
-    }
+  updateStyle(config: AppConfig) {
+    return (
+      config.theme !== this._config.theme ||
+      config.colorScheme !== this._config.colorScheme
+    );
+  }
 
     onMenuToggle() {
         if (this.isOverlay()) {
@@ -113,47 +114,59 @@ export class LayoutService {
         return !this.isDesktop();
     }
 
-    onConfigUpdate() {
-        this._config = { ...this.config() };
-        this.configUpdate.next(this.config());
+     onConfigUpdate() {
+    this._config = { ...this.config() };
+    this.configUpdate.next(this.config());
+  }
+
+  changeTheme() {
+    const config = this.config();
+    const themeLink = <HTMLLinkElement>document.getElementById('theme-css');
+    if (!themeLink) {
+      return;
     }
+    const themePath = `assets/layout/styles/themes/tomsworld/theme.css`; // 假設你只有一個 CSS，透過 class 控制
+    this.replaceThemeLink(themePath);
+  }
 
-    changeTheme() {
-        const config = this.config();
-        const themeLink = <HTMLLinkElement>document.getElementById('theme-css');
-        const themeLinkHref = themeLink.getAttribute('href')!;
-        const newHref = themeLinkHref
-            .split('/')
-            .map((el) =>
-                el == this._config.theme
-                    ? (el = config.theme)
-                    : el == `theme-${this._config.colorScheme}`
-                    ? (el = `theme-${config.colorScheme}`)
-                    : el
-            )
-            .join('/');
+  replaceThemeLink(href: string) {
+    const id = 'theme-css';
+    let themeLink = <HTMLLinkElement>document.getElementById(id);
+    const cloneLinkElement = <HTMLLinkElement>themeLink.cloneNode(true);
 
-        this.replaceThemeLink(newHref);
+    cloneLinkElement.setAttribute('href', href);
+    cloneLinkElement.setAttribute('id', id + '-clone');
+
+    themeLink.parentNode!.insertBefore(
+      cloneLinkElement,
+      themeLink.nextSibling
+    );
+    cloneLinkElement.addEventListener('load', () => {
+      themeLink.remove();
+      cloneLinkElement.setAttribute('id', id);
+    });
+  }
+  updateThemeClass(isDark: boolean) {
+    if (isDark) {
+      document.documentElement.classList.add('dark-theme');
+      document.documentElement.classList.remove('light-theme');
+    } else {
+      document.documentElement.classList.add('light-theme');
+      document.documentElement.classList.remove('dark-theme');
     }
-    replaceThemeLink(href: string) {
-        const id = 'theme-css';
-        let themeLink = <HTMLLinkElement>document.getElementById(id);
-        const cloneLinkElement = <HTMLLinkElement>themeLink.cloneNode(true);
+    this.isDarkMode.set(isDark); // 現在可以在 effect 中寫入 isDarkMode signal
+  }
+  changeScale(value: number) {
+    document.documentElement.style.fontSize = `${value}px`;
+  }
 
-        cloneLinkElement.setAttribute('href', href);
-        cloneLinkElement.setAttribute('id', id + '-clone');
-
-        themeLink.parentNode!.insertBefore(
-            cloneLinkElement,
-            themeLink.nextSibling
-        );
-        cloneLinkElement.addEventListener('load', () => {
-            themeLink.remove();
-            cloneLinkElement.setAttribute('id', id);
-        });
-    }
-
-    changeScale(value: number) {
-        document.documentElement.style.fontSize = `${value}px`;
-    }
+  /**
+   * 切換佈景主題 (light/dark)
+   */
+  toggleColorScheme() {
+    this.config.update(currentConfig => ({
+      ...currentConfig,
+      colorScheme: currentConfig.colorScheme === 'light' ? 'dark' : 'light',
+    }));
+  }
 }

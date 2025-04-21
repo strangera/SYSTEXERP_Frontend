@@ -9,3 +9,12 @@
         font-weight: bold;
     }
 }
+
+.p-breadcrumb {
+  background: var(--surface-a);
+  border: 1px solid var(--surface-border);
+  color: var(--text-color);
+  a span{
+    color: var(--text-color) !important;
+  }
+}
