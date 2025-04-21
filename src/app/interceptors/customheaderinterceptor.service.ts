@@ -18,7 +18,7 @@ export class CustomheaderinterceptorService implements HttpInterceptor {
         .set('X-Service', environment.Service_Id)
         .set('X-Terminal', environment.Terminal_Id)
         .set('X-Merchant', environment.Merchant_Id)
-        .set('TransactionTime', utc_now)
+        .set('X-TransactionTime', utc_now)
     });
 
     return next.handle(clonedReq);

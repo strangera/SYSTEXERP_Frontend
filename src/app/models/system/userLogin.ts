@@ -1,5 +1,5 @@
 export interface userLogin {
-  account_id? : string;
-  account_psw? : string;
+  code?: string;
+  password?: string;
   client_ip?: string;
 }
