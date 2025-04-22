@@ -123,7 +123,7 @@ export class SYSB200Component extends BasicQpageComponent implements OnInit {
     // ----------------------------------------------------------------
     this.reportHead = {
       reporttitle: this.funInfo.prog_name,
-      exportuser: this.user?.user_name,
+      exportuser: this.user?.user_Name,
       reportname: this.funInfo.prog_name,
       outputvisible: false,
     };

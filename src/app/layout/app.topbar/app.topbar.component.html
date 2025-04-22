@@ -95,8 +95,8 @@
       <div class="text-center ml-1 block" [ngStyle]="{'color': 'rgb(146, 60, 60)'}">
         <button type="button" class="layout-topbar-button p-link min-w-max" pTooltip="個人資料"
           (click)="menu.toggle($event)">
-          <span class="text-sm block" style="color: var(--text-color-secondary);">{{ data?.user_id }}</span>
-          <span class="text-lg font-bold block" style="color: var(--text-color);">{{ data?.user_name }}</span>
+          <span class="text-sm block" style="color: var(--text-color-secondary);">{{ data?.user_No }}</span>
+          <span class="text-lg font-bold block" style="color: var(--text-color);">{{ data?.user_Name }}</span>
           <i class="pi pi-angle-down" style="color: var(--text-color);"></i>
         </button>
         <p-menu #menu [model]="items" [popup]="true" class="static" styleClass="border-round-xl p-2"

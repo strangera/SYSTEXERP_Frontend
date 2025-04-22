@@ -76,8 +76,5 @@ export function HttpLoaderFactory(http: HttpClient) {
   bootstrap: [
     AppComponent
   ],
-  schemas: [
-    CUSTOM_ELEMENTS_SCHEMA
-  ],
 })
 export class AppModule { }

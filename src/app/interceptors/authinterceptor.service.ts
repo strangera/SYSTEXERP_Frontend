@@ -12,12 +12,12 @@ export class AuthinterceptorService implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const currentUser = this.authService.currentUserValue;
-    const isLoggedIn = currentUser && currentUser.access_token;
+    const isLoggedIn = currentUser && currentUser.AccessToken;
 
     // 確認這不是登錄請求 && 確定登入
     if (!req.url.includes('/account/login') && isLoggedIn) {
       const clonedReq = req.clone({
-        headers: req.headers.set('Authorization', `Bearer ${currentUser.access_token}`)
+        headers: req.headers.set('Authorization', `Bearer ${currentUser.AccessToken}`)
       });
       return next.handle(clonedReq);
     }

@@ -1,16 +1,15 @@
 import { Injectable } from '@angular/core';
-import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { ActivatedRoute, Router } from '@angular/router';
+import { BehaviorSubject, forkJoin, Observable, throwError } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { EncryptionService } from '../../shared/service/encryption.service';
-import { CommonService } from './../../shared/service/common.service';
-import { lastValueFrom } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
-import { userLogin} from '../../models/system/userLogin';
+import { catchError, map } from 'rxjs/operators';
+import { userLogin } from '../../models/system/userLogin';
 import { environment } from '../../../environments/environment';
 import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
 import { UserInfo } from '../../models/system/userInfo';
 import { NotificationService } from '../../shared/service/notification.service';
+import { Sys1000Service } from '../SYS100/sys1000.service';
 
 export interface ApiResponse<T> {
   Status: string;
@@ -38,8 +37,9 @@ export class AuthService {
     private router: Router,
     private http: HttpClient,
     private encrypt: EncryptionService,
-    private commService: CommonService,
     private notemessage: NotificationService,
+    private sys1000Service: Sys1000Service, // Router
+    private route: ActivatedRoute,
   ) {
     let userStorage: any = sessionStorage.getItem('UserInfo');
     this.userSubject = new BehaviorSubject(JSON.parse(userStorage)!);
@@ -51,55 +51,50 @@ export class AuthService {
     return this.userSubject.value;
   }
 
-  // 登錄，並將 token 存儲到本地存儲
-  login(data: userLogin): Observable<UserInfo> {
-    const now = this.commService.getNOW();
-    const key = `${data.code?.toLowerCase()}${now.utc_nowtime}${environment.PasswordKey}`.substring(0, 16);
-    data.password = this.encrypt.encryptTripleDES(data.password as string, key, now.utc_nowtime);
-    return this.http.get<UserInfo>(`assets/service/User/userLogin.json`).pipe(
-    // return this.http.post<UserInfo>(`${this.apiUrl}/User/userLogin`, data).pipe(
-    // return this.http.post<UserInfo>(`${this.apiUrl}/assets/service/User/userLogin.json`, data).pipe(
-    //return this.http.get<UserInfo>(`https://liulyndon.github.io/TSRDERP_Frontend/assets/service/User/userLogin.json`).pipe( // github docs pages
-      map((response: any) => {
-        sessionStorage.setItem('UserInfo', JSON.stringify(response.user_info));
-        //access_token:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImFkbWluIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6IueuoeeQhuWToSIsImV4cCI6MTcyMDQ5OTQxNCwiaXNzIjoiSW5mb0xpbmsiLCJhdWQiOiJUT00ifQ.l8WnngdF6hqD3fQPoxiZIzJP8de1MNFWlXSk0pmYVtc"
-        //login_time:"2024-07-08T12:30:14.422596+08:00"
-        //sto_no:"100"
-        //sto_sname:"湯姆熊"
-        //user_id:"admin"
-        //user_name:"管理員"
-        sessionStorage.setItem('FunRightsInfo', JSON.stringify(response.funright_info));
-        sessionStorage.setItem('AuthorizeInfo', JSON.stringify(response.authorize_info));
-        //auh_checkpwd: "Y"
-        //auh_no: "00001"
-        //auh_password: "1234"
-        //auh_rights: "Y"
-        this.userSubject.next(response.user_info);
-        return response;
-      }));
+  login(data: userLogin): Observable<ApiResponse<UserInfo>> {
+    data.password = this.encrypt.getPassword(data.code as string, data.password as string);
+    const url = `${this.apiUrl}/User/userLogin`;
+
+    return this.http.post<ApiResponse<UserInfo>>(url, data).pipe(
+      map((response: ApiResponse<UserInfo>) => {
+        if (response.Status === '0000') {
+          sessionStorage.setItem('UserInfo', JSON.stringify(response.Data));
+          if (response.Data.USER_PwdExpireDate <= new Date().toISOString()) {
+            this.notemessage.errorBubble('超過90天使用時間，請修改密碼');
+            this.router.navigate(['/changepsw/changepsw']);
+          } else {
+            this.userSubject.next(response.Data);
+            // 等 getFunRightsInfo 和 fetchSys1000Data 都完成後再導航
+            forkJoin([
+              this.getFunRightsInfo(),
+              this.sys1000Service.getData().pipe(
+                map(res => {
+                  sessionStorage.setItem('SYSTEMSetting', JSON.stringify(res));
+                  return res;
+                })
+              )
+            ]).subscribe({
+              next: () => {
+                const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+                this.router.navigateByUrl(returnUrl);
+              },
+              error: err => {
+                console.error('初始化資料時發生錯誤', err);
+                this.notemessage.errorBubble('初始化資料失敗，請稍後再試');
+              }
+            });
+          }
+          return response;
+        } else {
+          throw new Error(response.Message || 'Login failed');
+        }
+      }),
+      catchError(err => {
+        this.notemessage.errorBubble('登入失敗，請確認帳號密碼');
+        return throwError(() => err);
+      })
+    );
   }
-
-  // login(data: userLogin): Observable<UserInfo> {
-  //   const now = this.commService.getNOW();
-  //   const key = `${data.code?.toLowerCase()}${now.utc_nowtime}${environment.PasswordKey}`.substring(0, 16);
-  //   data.password = this.encrypt.encryptTripleDES(data.password as string, key, now.utc_nowtime);
-  //   // data.password = "W0kPywQIWtw=";
-  //   const url = `${this.apiUrl}/User/userLogin`;
-  //   console.log('🔐 Login API URL:', url);
-  //   console.log('📦 Login data:', data);
-
-  //   return this.http.post<ApiResponse<UserInfo>>(url, data).pipe(
-  //     map((response: ApiResponse<UserInfo>) => {
-  //       if (response.Status === '0000') {
-  //         sessionStorage.setItem('UserInfo', JSON.stringify(response.Data));
-  //         this.userSubject.next(response.Data);
-  //         return response.Data;
-  //       } else {
-  //         throw new Error(response.Message || 'Login failed');
-  //       }
-  //     })
-  //   );
-  // }
 
   // 移除存儲的 JWT Token
   logout(): void {
@@ -107,7 +102,11 @@ export class AuthService {
     const token = userInfoStr ? JSON.parse(userInfoStr).AccessToken : null;
 
     if (!token) {
-      console.warn('Access token 不存在，可能尚未登入');
+      sessionStorage.clear();
+      this.userSubject.next(null);
+      // this.queryStateService.clearAllQueryStates();
+      this.router.navigate(['/account/login'], { replaceUrl: true });
+      this.notemessage.infoBubble('已成功登出');
       return;
     }
 
@@ -214,11 +213,44 @@ export class AuthService {
     }
   }
 
+  fetchSys1000Data() {
+    this.sys1000Service.getData().subscribe({
+      next: response => {
+        // 將轉換後的數據存入 sessionStorage
+        sessionStorage.setItem('SYSTEMSetting', JSON.stringify(response));
+        console.log('SYS1000 response data saved successfully');
+      },
+      error: error => {
+        console.error('Failed to load SYS1000 data', error);
+        // 處理 SYS1000 錯誤
+      }
+    });
+  }
+
   getFavorites(): Observable<any> {
     return this.http.get<any>(`/assets/service/User/userFavorite.json`).pipe(
       map((response: any) => {
         sessionStorage.setItem('Favorites', JSON.stringify(response.favorite_items));
         return response;
       }));
+  }
+
+  getFunRightsInfo(): Observable<any> {
+    return this.http.get<any>(`assets/service/User/userLogin.json`).pipe(
+      map((response: any) => {
+        if (response && response.funright_info) {
+          sessionStorage.setItem('FunRightsInfo', JSON.stringify(response.funright_info));
+          sessionStorage.setItem('AuthorizeInfo', JSON.stringify(response.authorize_info));
+          console.log('FunRightsInfo saved to sessionStorage successfully (mock data)');
+        } else {
+          console.error('funright_info not found in mock data');
+        }
+        return response;
+      }),
+      catchError((error) => {
+        console.error('Error fetching mock FunRightsInfo', error);
+        return throwError(() => error);
+      })
+    );
   }
 }
