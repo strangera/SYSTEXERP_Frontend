@@ -12,6 +12,7 @@ import { LayoutService } from '../shared/service/layout.service';
 // Tab Component
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { FunsrightInfo } from '../models/system/funsrightInfo';
+import { computed } from '@angular/core';
 
 interface TabItem {
   title: string;
@@ -39,6 +40,7 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
   menuOutsideClickListener: (() => void) | null = null;
   user: UserInfo | null = null;
   private subscriptions: Subscription[] = [];
+  isDarkMode = computed(() => this.layoutService.config().colorScheme === 'dark');
 
   constructor(
     private router: Router,
@@ -75,7 +77,7 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
       } else if (Date.now() - startTime < checkTimeout) {
         requestAnimationFrame(checkElements);
       } else {
-        console.error('Failed to initialize elements within timeout.');
+        // console.error('Failed to initialize elements within timeout.');
       }
     };
 
@@ -154,6 +156,8 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
     return {
       'layout-theme-light': this.layoutService.config().colorScheme === 'light',
       'layout-theme-dark': this.layoutService.config().colorScheme === 'dark',
+      'dark-theme': this.layoutService.config().colorScheme === 'dark', // 添加 dark-theme class
+      'light-theme': this.layoutService.config().colorScheme === 'light', // 添加 light-theme class (可選，因為預設是 light)
       'layout-overlay': this.layoutService.config().menuMode === 'overlay',
       'layout-static': this.layoutService.config().menuMode === 'static',
       'layout-static-inactive': this.layoutService.state.staticMenuDesktopInactive && this.layoutService.config().menuMode === 'static',
@@ -227,5 +231,9 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
 
   onMaskClick() {
     this.hideMenu();
+  }
+
+  onToggleTheme() {
+    this.layoutService.toggleColorScheme();
   }
 }

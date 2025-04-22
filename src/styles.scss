@@ -1,4 +1,5 @@
 $gutter: 1rem; //for primeflex grid system
+
 @import "assets/layout/styles/layout/layout.scss";
 // primeNg editor quill
 @import "../node_modules/quill/dist/quill.core.css";
@@ -58,3 +59,4 @@ body {
     border-radius: 0;
   }
 }
+
