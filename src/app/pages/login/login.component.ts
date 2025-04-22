@@ -27,6 +27,7 @@ export class LoginComponent implements OnInit {
   submitted: boolean = false;
   loading: boolean = false;
   ipAddress: string = '';
+  overLoginPeriod: boolean = true; // 是否超過登入時間(90天使用時間) api提供
   // constructor
   constructor(
     private authService: AuthService,
@@ -63,10 +64,15 @@ export class LoginComponent implements OnInit {
         next: () => {
           this.notemessage.successBubble('登入成功');
           this.fetchSys1000Data(); // 讀取 SYS1000 資料
-
-          // get return url from query parameters or default to home page
-          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
-          this.router.navigateByUrl(returnUrl);
+          if(this.overLoginPeriod){
+            //超過90天使用時間，導向修改密碼頁面
+            this.notemessage.errorBubble('超過90天使用時間，請修改密碼');
+            this.router.navigate(['/changepsw/changepsw'])
+          }else{
+            // get return url from query parameters or default to home page
+            const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+            this.router.navigateByUrl(returnUrl);
+          }
         },
         error: error => {
           console.log('登入失敗');
