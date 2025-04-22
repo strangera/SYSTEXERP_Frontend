@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { EncryptionService } from '../../shared/service/encryption.service';
 import { CommonService } from './../../shared/service/common.service';
@@ -10,6 +10,7 @@ import { userLogin} from '../../models/system/userLogin';
 import { environment } from '../../../environments/environment';
 import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
 import { UserInfo } from '../../models/system/userInfo';
+import { NotificationService } from '../../shared/service/notification.service';
 
 export interface ApiResponse<T> {
   Status: string;
@@ -38,6 +39,7 @@ export class AuthService {
     private http: HttpClient,
     private encrypt: EncryptionService,
     private commService: CommonService,
+    private notemessage: NotificationService,
   ) {
     let userStorage: any = sessionStorage.getItem('UserInfo');
     this.userSubject = new BehaviorSubject(JSON.parse(userStorage)!);
@@ -50,17 +52,10 @@ export class AuthService {
   }
 
   // 登錄，並將 token 存儲到本地存儲
-  login(data: userLogin): Observable<any> {
+  login(data: userLogin): Observable<UserInfo> {
     const now = this.commService.getNOW();
-
-    let key = data.code?.toLowerCase() + now.utc_nowtime + environment.PasswordKey;
-    key = key.substring(0, 16);
-    const pass = this.encrypt.encryptTripleDES(data.password as string, key, now.utc_nowtime);
-
-    data.password = pass;
-
-    console.log('receive Data', data);
-
+    const key = `${data.code?.toLowerCase()}${now.utc_nowtime}${environment.PasswordKey}`.substring(0, 16);
+    data.password = this.encrypt.encryptTripleDES(data.password as string, key, now.utc_nowtime);
     return this.http.get<UserInfo>(`assets/service/User/userLogin.json`).pipe(
     // return this.http.post<UserInfo>(`${this.apiUrl}/User/userLogin`, data).pipe(
     // return this.http.post<UserInfo>(`${this.apiUrl}/assets/service/User/userLogin.json`, data).pipe(
@@ -107,20 +102,39 @@ export class AuthService {
   // }
 
   // 移除存儲的 JWT Token
-  logout() {
-    let logData = {};
-    /*
-        lastValueFrom(this.http.post<any>(`${this.apiUrl}/User/userLogout`, logData))
-          .then((data: any) => {
-            console.log(logData);
-          });
-    */
-    sessionStorage.clear();
-    window.sessionStorage.clear();
+  logout(): void {
+    const userInfoStr = sessionStorage.getItem('UserInfo');
+    const token = userInfoStr ? JSON.parse(userInfoStr).AccessToken : null;
 
-    this.userSubject.next(null);
-    this.router.navigate(['/account/login']);
+    if (!token) {
+      console.warn('Access token 不存在，可能尚未登入');
+      return;
+    }
+
+    const headers = {
+      Authorization: `Bearer ${token}`
+    };
+
+    this.http.post<ApiResponse<any>>(`${this.apiUrl}/User/userLogout`, {}, { headers }).pipe(
+      catchError((error) => {
+        console.error('Logout error:', error);
+        this.notemessage.errorBubble('登出失敗，請稍後再試');
+        return throwError(() => error);
+      })
+    ).subscribe({
+      next: () => {
+        sessionStorage.clear();
+        this.userSubject.next(null);
+        // this.queryStateService.clearAllQueryStates();
+        this.router.navigate(['/account/login'], { replaceUrl: true });
+        this.notemessage.infoBubble('已成功登出');
+      },
+      error: (error) => {
+        console.error('Logout error:', error);
+      }
+    });
   }
+
 
   isAuthenticated(): boolean {
     return !!this.currentUserValue;
