@@ -113,16 +113,6 @@ export class SYSB300CRUComponent extends BasicCrupageComponent implements OnInit
         if (this.canAdd()) {
           //檢查使否已有上層組織
           const query = {
-            "PageSize": 10,
-            "PageIndex": 0,
-            "OrderBy": "",
-            "Offset": 0,
-            "SortBy": [
-              {
-                "field": "A.LEVEL_ID",
-                "order": 1
-              }
-            ],
             "level_id": "",
             "level_name": "",
             "p_level_id": "",
@@ -132,9 +122,6 @@ export class SYSB300CRUComponent extends BasicCrupageComponent implements OnInit
             "level_id": this.dataForm.controls.level_id.value,
             "level_name": this.dataForm.controls.level_name.value,
             "p_level_id": this.dataForm.controls.p_level_id.value,
-            "CRT_Date": new Date().toISOString(),
-            "CRT_USR_No": "",
-            "CRT_USR_Name": ""
           }
 
           this.sysb300Service.querySYS3000(query).subscribe((response) => {
@@ -164,9 +151,6 @@ export class SYSB300CRUComponent extends BasicCrupageComponent implements OnInit
           "level_id": this.dataForm.controls.level_id.value,
           "level_name": this.dataForm.controls.level_name.value,
           "p_level_id": this.dataForm.controls.p_level_id.value,
-          "UPD_Date": new Date().toISOString(),
-          "UPD_USR_No": "",
-          "UPD_USR_Name": ""
         }
 
         console.log('update', update);

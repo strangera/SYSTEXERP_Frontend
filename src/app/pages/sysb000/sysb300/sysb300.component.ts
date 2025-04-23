@@ -77,16 +77,6 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
 
     if (frm.valid && this.canQuery()) {
       const query = {
-        "PageSize": 10,
-        "PageIndex": 0,
-        "OrderBy": "",
-        "Offset": 0,
-        "SortBy": [
-          {
-            "field": "A.LEVEL_ID",
-            "order": 1
-          }
-        ],
         "level_id": this.queryForm.value.level_id,
         "level_name": this.queryForm.value.level_name,
         "p_level_id": this.queryForm.value.p_level_id,
