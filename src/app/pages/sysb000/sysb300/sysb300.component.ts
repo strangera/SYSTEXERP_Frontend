@@ -8,6 +8,7 @@ import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/service/notification.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { Sysb300Service } from '../../../service/sysb/sysb300.service';
+import { Sys300m } from '../sysb300m/sysb300m';
 
 @Component({
   selector: 'app-sysb300',
@@ -20,6 +21,7 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
     // SYS3000 組織階層設定檔
+    id:[],
     level_id: ['', [Validators.maxLength(2)]], // 組織階層代碼
     level_name: ['', [Validators.maxLength(30)]], // 組織階層名稱
     p_level_id: [, [Validators.maxLength(2)]], // 上層組織階層代碼
@@ -34,7 +36,7 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
   });
   // 表格
   // ----------------------------------------------------------------
-  data: any[] = [];
+  data: Sys300m[] = [];
   filteredData: any[] = [...this.data];
   columns: any[] = [
     { field: 'level_id', header: '階層代碼', visible: true },
@@ -125,7 +127,7 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
     }
   }
 
-  onEdit(data: any) {
+  onEdit(data: Sys300m) {
     if (this.canEdit()) {
       let extras: NavigationExtras = {
         state: {
@@ -140,7 +142,7 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
     }
   }
 
-  onDetail(data: any) {
+  onDetail(data: Sys300m) {
     let extras: NavigationExtras = {
       state: {
         crudstatus: CRUDStatus.Read,

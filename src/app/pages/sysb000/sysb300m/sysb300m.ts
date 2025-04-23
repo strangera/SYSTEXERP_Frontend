@@ -1,4 +1,5 @@
 export interface Sys300m {
+    "id": string,
     "level_id": string,
     "level_name": string,
     "p_level_id": string,

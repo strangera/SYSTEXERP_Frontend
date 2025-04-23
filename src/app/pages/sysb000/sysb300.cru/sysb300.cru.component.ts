@@ -20,6 +20,7 @@ export class SYSB300CRUComponent extends BasicCrupageComponent implements OnInit
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // SYS3000 組織階層設定檔
+    id: [],
     level_id: ['', [Validators.required, Validators.maxLength(2)]], // 組織階層代碼
     level_name: ['', [Validators.required, Validators.maxLength(30)]], // 組織階層名稱
     p_level_id: [, [Validators.maxLength(2)]], // 上層組織階層代碼(空白代表第一層)
@@ -107,7 +108,6 @@ export class SYSB300CRUComponent extends BasicCrupageComponent implements OnInit
       return;
     }
 
-    console.log('request', this.dataForm.value);
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
@@ -159,8 +159,20 @@ export class SYSB300CRUComponent extends BasicCrupageComponent implements OnInit
         }
         break;
       case CRUDStatus.Edit:
+        const update = {
+          "id": this.dataForm.controls.id.value,
+          "level_id": this.dataForm.controls.level_id.value,
+          "level_name": this.dataForm.controls.level_name.value,
+          "p_level_id": this.dataForm.controls.p_level_id.value,
+          "UPD_Date": new Date().toISOString(),
+          "UPD_USR_No": "",
+          "UPD_USR_Name": ""
+        }
+
+        console.log('update', update);
+
         if (this.canEdit()) {
-            this.sysb300Service.updateSYS3000(this.dataForm.value).subscribe(() => {
+            this.sysb300Service.updateSYS3000(update).subscribe(() => {
               this.messageService.successBubble('更新成功');
               this.onCancel();
             });
