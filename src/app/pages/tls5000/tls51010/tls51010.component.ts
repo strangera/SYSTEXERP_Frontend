@@ -9,6 +9,7 @@ import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/service/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
+import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
 
 // 2.5.1.1  大分類維護作業
 @Component({
@@ -28,8 +29,8 @@ export class TLS51010Component {
   loading: boolean = false;
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
-    bCode: [, [Validators.maxLength(2),this.validationService.numberValidator]], // 大分類代碼
-    bName: ['', [Validators.maxLength(32)]], // 大分類名稱
+    CAT_LNo: [, [Validators.maxLength(2), this.validationService.numberValidator]], // 大分類代碼
+    CAT_LName: ['', [Validators.maxLength(32)]], // 大分類名稱
   });
   // 表格
   // ----------------------------------------------------------------
@@ -40,10 +41,16 @@ export class TLS51010Component {
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
-    { field: 'contactPerson', header: '大分類代碼', visible: true },
-    { field: 'contactDate', header: '大分類名稱', visible: true },
-    { field: 'UID', header: '備註', visible: true },
+  columns: any[] = [
+    { field: 'CAT_LNo', header: '大分類代碼', visible: true },
+    { field: 'CAT_LName', header: '大分類名稱', visible: true },
+    { field: 'CAT_MRemark', header: '備註', visible: true },
+    { field: 'CRT_Date', header: "test", visible: false },
+    { field: 'CRT_USR_No', header: "test", visible: false },
+    { field: 'CRT_USR_Name', header: "test", visible: false },
+    { field: 'UPD_Date', header: "test", visible: false },
+    { field: 'UPD_USR_No', header: "test", visible: false },
+    { field: 'UPD_USR_Name', header: "test", visible: false }
     // 其他欄位
   ];
   // ----------------------------------------------------------------
@@ -54,6 +61,7 @@ export class TLS51010Component {
     private messageService: NotificationService,
     private authService: AuthService,
     private validationService: ValidationService,
+    private apiService: TLS5000Service, // 取服務
   ) {
   }
 
@@ -84,10 +92,9 @@ export class TLS51010Component {
     if (frm.valid && this.canQuery()) {
       // 提交邏輯
       // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+      this.apiService.queryPOS20031(frm.value).subscribe((response: any) => {
+        this.data = response.Data;
+      });
     }
 
     this.loading = false;
