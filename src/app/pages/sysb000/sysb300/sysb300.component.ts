@@ -20,7 +20,7 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
     // SYS3000 組織階層設定檔
-    level_id: [, [Validators.maxLength(2)]], // 組織階層代碼
+    level_id: ['', [Validators.maxLength(2)]], // 組織階層代碼
     level_name: ['', [Validators.maxLength(30)]], // 組織階層名稱
     p_level_id: [, [Validators.maxLength(2)]], // 上層組織階層代碼
 
@@ -44,10 +44,10 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
   ];
   // ----------------------------------------------------------------
   upgroup_Options: any[] = [
-    { value: 0, label: '全公司' },
-    { value: 1, label: '室/部' },
-    { value: 2, label: 'Team' },
-    { value: 3, label: '樓/組' },
+    { value: "", label: '全公司' },
+    { value: "10", label: '室/部' },
+    { value: "20", label: 'Team' },
+    { value: "30", label: '樓/組' },
   ];
 
   constructor(
@@ -89,6 +89,8 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
         "level_name": this.queryForm.value.level_name,
         "p_level_id": this.queryForm.value.p_level_id,
       };
+
+      console.log('查詢條件', query);
 
       this.sysb300Service.querySYS3000(query).subscribe((response) => {
         this.data = response.Data;
