@@ -108,61 +108,61 @@ export class SYSB300CRUComponent extends BasicCrupageComponent implements OnInit
       return;
     }
 
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          //檢查使否已有上層組織
-          const query = {
-            "level_id": "",
-            "level_name": "",
-            "p_level_id": "",
-          };
+    //檢查使否已有上層組織
+    const query = {
+      "level_id": "",
+      "level_name": "",
+      "p_level_id": "",
+    };
 
-          const insert = {
-            "level_id": this.dataForm.controls.level_id.value,
-            "level_name": this.dataForm.controls.level_name.value,
-            "p_level_id": this.dataForm.controls.p_level_id.value,
-          }
+    this.sysb300Service.querySYS3000(query).subscribe((response) => {
+      this.allquery = response.Data;
+      const hasEmptypLevel = this.allquery.some(item => item.p_level_id === "")
+      const hasSameLevel = this.allquery.some(item => item.level_id === this.dataForm.controls.level_id.value);
+      console.log('上層組織階層存在 空白的單位',hasEmptypLevel);
 
-          this.sysb300Service.querySYS3000(query).subscribe((response) => {
-            this.allquery = response.Data;
-            const hasEmptypLevel = this.allquery.some(item => item.p_level_id === "")
-            const hasSameLevel = this.allquery.some(item => item.level_id === this.dataForm.controls.level_id.value);
-            console.log('上層組織階層存在 空白的單位',hasEmptypLevel);
-
-            if(hasEmptypLevel && this.dataForm.controls.p_level_id.value == ""){
-              this.messageService.errorBubble('已有上層組織階層為空白的單位，因此上層組織階層為必填欄位，請選擇上層組織階層');
-            }else if(hasSameLevel){
-              this.messageService.errorBubble('已有存在相同的組織階層代碼，請重新輸入');
-            }
-            else{
+      if(hasEmptypLevel && this.dataForm.controls.p_level_id.value == ""){
+        this.messageService.errorBubble('已有上層組織階層為空白的單位，因此上層組織階層為必填欄位，請選擇上層組織階層');
+      }else if(hasSameLevel){
+        this.messageService.errorBubble('已有存在相同的組織階層代碼，請重新輸入');
+      }
+      else{
+        switch (this.crudstatus) {
+          case CRUDStatus.Create:
+            if (this.canAdd()) {
+              const insert = {
+                "level_id": this.dataForm.controls.level_id.value,
+                "level_name": this.dataForm.controls.level_name.value,
+                "p_level_id": this.dataForm.controls.p_level_id.value,
+              }
+    
               console.log('insert', insert);
               this.sysb300Service.insertSYS3000(insert).subscribe(() => {
                 this.messageService.successBubble('新增成功');
                 this.onCancel();
               });
             }
-          });
+            break;
+          case CRUDStatus.Edit:
+            if (this.canEdit()) {
+              const update = {
+                "id": this.dataForm.controls.id.value,
+                "level_id": this.dataForm.controls.level_id.value,
+                "level_name": this.dataForm.controls.level_name.value,
+                "p_level_id": this.dataForm.controls.p_level_id.value,
+              }
+      
+              console.log('update', update);
+              this.sysb300Service.updateSYS3000(update).subscribe(() => {
+                this.messageService.successBubble('更新成功');
+                this.onCancel();
+              });
+            }
+            break;
         }
-        break;
-      case CRUDStatus.Edit:
-        const update = {
-          "id": this.dataForm.controls.id.value,
-          "level_id": this.dataForm.controls.level_id.value,
-          "level_name": this.dataForm.controls.level_name.value,
-          "p_level_id": this.dataForm.controls.p_level_id.value,
-        }
-
-        console.log('update', update);
-
-        if (this.canEdit()) {
-            this.sysb300Service.updateSYS3000(update).subscribe(() => {
-              this.messageService.successBubble('更新成功');
-              this.onCancel();
-            });
-        }
-        break;
-    }
+        
+      }
+    });
 
     this.messageService.unblockUi();
     this.submitted = false;
