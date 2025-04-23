@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { LayoutService } from '../../../shared/service/layout.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { UserInfo } from '../../../models/system/userInfo';
-import { Subscription } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 import { MenuItem } from 'primeng/api';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -10,6 +10,7 @@ import { ApiItem, SsoDashboardService } from './sso-dashboard.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { EncryptionService } from '../../../shared/service/encryption.service';
 import { NotificationService } from '../../../shared/service/notification.service';
+import { Sys1000Service } from '../../../service/SYS100/sys1000.service';
 
 @Component({
   selector: 'app-sso-dashboard',
@@ -40,6 +41,7 @@ export class SsoDashboardComponent implements OnInit {
   constructor(
     public layoutService: LayoutService,
     private authService: AuthService,
+    private sys1000Service: Sys1000Service,
     public router: Router,
     private ssoDashboardService: SsoDashboardService,
     private formBuilder: FormBuilder,
@@ -90,8 +92,29 @@ export class SsoDashboardComponent implements OnInit {
     });
   }
 
-  navigateToUrl(url: string): void {
-    window.open(url, '_blank');
+  navigateToUrl(item: ApiItem): void {
+    if (item.routerLink) {
+      this.loading = true; // 開始載入，顯示 loading 效果 (如果需要)
+      forkJoin([
+        this.authService.getFunRightsInfo(),
+        this.sys1000Service.getData()
+      ]).subscribe({
+        next: ([funRightsResponse, sys1000Response]) => {
+          sessionStorage.setItem('SYSTEMSetting', JSON.stringify(sys1000Response));
+          this.loading = false; // 停止載入
+          this.router.navigate([item.routerLink]); // 切換路由
+        },
+        error: (error) => {
+          // 其中一個或兩個 API 請求失敗
+          console.error('API 請求失敗:', error);
+          this.loading = false; // 停止載入
+          this.errorMessage = '載入資料失敗，無法導航。'; // 顯示錯誤訊息 (如果需要)
+          // 可以在這裡處理錯誤，例如顯示錯誤訊息給使用者
+        }
+      });
+    } else if (item.url) {
+      window.open(item.url, '_blank');
+    }
   }
 
   onSubmit(frm: FormGroup): void {

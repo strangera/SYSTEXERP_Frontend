@@ -60,3 +60,21 @@ body {
   }
 }
 
+// 以下用來調整暗黑明亮模式(需要用var()來調整)
+.p-accordion .p-accordion-content,
+.p-panel .p-panel-content {
+  border: 1px solid var(--surface-d);
+  background: var(--surface-a);
+  color: var(--text-color);
+}
+
+.p-accordion .p-accordion-header:not(.p-disabled).p-highlight .p-accordion-header-link {
+  border: 1px solid var(--surface-d);
+}
+
+
+.p-panel .p-panel-header {
+  border: 1px solid var(--surface-d);
+  background: var(--surface-d);
+  color: var(--text-color);
+}

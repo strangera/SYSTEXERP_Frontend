@@ -59,8 +59,8 @@
           </ng-template>
           <ng-template pTemplate="footer">
             <div class="flex gap-3 mt-1 w-full">
-              <p-button type="button" class="w-full" styleClass="w-full" label="前往入口" [routerLink]="item.routerLink"
-                (click)="item.url && navigateToUrl(item.url)" icon="pi pi-external-link"></p-button>
+              <p-button type="button" class="w-full" styleClass="w-full" label="前往入口"
+                (click)="navigateToUrl(item)" icon="pi pi-external-link"></p-button>
             </div>
           </ng-template>
         </p-card>

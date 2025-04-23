@@ -3,7 +3,7 @@ import {  Router } from '@angular/router';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { EncryptionService } from '../../shared/service/encryption.service';
-import { catchError, filter, map } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { userLogin } from '../../models/system/userLogin';
 import { environment } from '../../../environments/environment';
 import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
@@ -32,16 +32,6 @@ export class AuthService {
   private userSubject: BehaviorSubject<UserInfo | null>;
   public user: Observable<UserInfo | null>;
 
-  private funRightsInfoSubject = new BehaviorSubject<FunsrightInfo[] | null>(null);
-  funRightsInfo$ = this.funRightsInfoSubject.asObservable().pipe(
-    filter(data => data !== null) // 只發出非 null 的值
-  );
-
-  private userInfoSubject = new BehaviorSubject<UserInfo | null>(null);
-  userInfo$ = this.userInfoSubject.asObservable().pipe(
-    filter(data => data !== null) // 只發出非 null 的值
-  );
-
   constructor(
     private router: Router,
     private http: HttpClient,
@@ -51,26 +41,9 @@ export class AuthService {
     let userStorage: any = sessionStorage.getItem('UserInfo');
     this.userSubject = new BehaviorSubject(JSON.parse(userStorage)!);
     this.user = this.userSubject.asObservable();
-    const funRightsInfoString = sessionStorage.getItem("FunRightsInfo");
-    if (funRightsInfoString) {
-      try {
-        this.funRightsInfoSubject.next(JSON.parse(funRightsInfoString));
-      } catch (error) {
-        console.error("Failed to parse FunRightsInfo on init:", error);
-      }
-    }
-
-    const userInfoString = sessionStorage.getItem('UserInfo');
-    if (userInfoString) {
-      try {
-        this.userInfoSubject.next(JSON.parse(userInfoString));
-      } catch (error) {
-        console.error("Failed to parse UserInfo on init:", error);
-      }
-    }
   }
 
-  get currentUserValue(): UserInfo | null {
+  public get currentUserValue(): UserInfo | null {
     // 獲取存儲的 JWT Token
     return this.userSubject.value;
   }
@@ -228,6 +201,7 @@ export class AuthService {
         if (response && response.funright_info) {
           sessionStorage.setItem('FunRightsInfo', JSON.stringify(response.funright_info));
           sessionStorage.setItem('AuthorizeInfo', JSON.stringify(response.authorize_info));
+          console.log('FunRightsInfo saved to sessionStorage successfully (mock data)');
         } else {
           console.error('funright_info not found in mock data');
         }

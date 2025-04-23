@@ -6,7 +6,7 @@ import { AuthService } from '../../service/system/auth.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { UserInfo } from '../../models/system/userInfo';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
-import { combineLatest, interval, Subscription, take } from 'rxjs';
+import { interval, Subscription } from 'rxjs';
 import { NotificationService } from '../../shared/service/notification.service';
 import { OverlayPanel } from 'primeng/overlaypanel';
 import { TableRowReorderEvent } from 'primeng/table';
@@ -40,7 +40,6 @@ export class AppTopbarComponent implements OnInit {
   private timerSubscription!: Subscription; // 計時器訂閱
   @Output() topMenuClick = new EventEmitter<string | null>(); // 新增：點擊頂部菜單項時發射事件
   activeTopMenuItem: FunsrightInfo | null = null; // 新增：追蹤當前激活的頂部菜單項
-  private subscriptions = new Subscription();
 
   constructor(
     public layoutService: LayoutService,
@@ -60,15 +59,33 @@ export class AppTopbarComponent implements OnInit {
         ]
       },
     ];
-    this.subscriptions.add(combineLatest([this.authService.funRightsInfo$, this.authService.userInfo$])
-      .pipe(take(1)) // 只取第一次發出的值，確保初始化只執行一次
-      .subscribe(([funRightsInfo, userInfo]) => {
-        this.funRightsInfo = funRightsInfo;
-        this.data = userInfo;
-        this.initTopLevelMenuItems();
-      })
-    );
-    this.initFavorites();
+    this.initFavorites(); // 初始化最愛功能
+    const funRightsInfoString = sessionStorage.getItem("FunRightsInfo");
+    if (funRightsInfoString) {
+      try {
+        this.funRightsInfo = JSON.parse(funRightsInfoString)
+          .filter((item: FunsrightInfo) => item.prog_no !== '000000' && item.prog_no !== '999999')
+          .map((item: FunsrightInfo) => ({
+            ...item,
+            label: `${item.prog_no} ${item.prog_name}` // 建立 label 屬性
+          }));
+        this.topLevelMenuItems = this.funRightsInfo.filter(item => item.parent_id === '0'); // 假設 parent_id 為 null 或 undefined 表示第一層
+
+      } catch (error) {
+        console.error("Failed to parse FunRightsInfo:", error);
+        this.funRightsInfo = [];
+        this.topLevelMenuItems = [];
+      }
+    } else {
+      this.topLevelMenuItems = [];
+    }
+    try {
+      const userInfo = sessionStorage.getItem('UserInfo');
+      this.data = userInfo ? JSON.parse(userInfo) : null
+    } catch (error) {
+      console.error("Failed to parse UserInfo:", error);
+    }
+
     this.timerSubscription = interval(500).subscribe(() => {
       this.now = new Date();
     });
@@ -134,14 +151,6 @@ export class AppTopbarComponent implements OnInit {
   editFavorites() {
     this.editingFavorites = !this.editingFavorites; // 切換編輯狀態
     this.selectedFavorites = []; // 清空選中的最愛項目
-  }
-
-  initTopLevelMenuItems() {
-    this.topLevelMenuItems = this.funRightsInfo.filter(item => item.parent_id === '0')
-      .map(item => ({
-        ...item,
-        label: `${item.prog_no} ${item.prog_name}`
-      }));
   }
 
   initFavorites(event?: any) {
