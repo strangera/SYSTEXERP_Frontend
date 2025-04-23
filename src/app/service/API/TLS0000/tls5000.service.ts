@@ -5,10 +5,10 @@ import { ErrorHandlerService } from '../../../shared/service/error-handler.servi
 import { catchError, Observable, tap } from 'rxjs';
 
 // 查詢參數介面（可選，未來優化時使用）
-export interface BigCategoryQuery {
-  CAT_LNo?: string;
-  CAT_LName?: string;
-}
+// export interface BigCategoryQuery {
+//   CAT_LNo?: string;
+//   CAT_LName?: string;
+// }
 
 @Injectable({
   providedIn: 'root',
@@ -23,9 +23,9 @@ export class TLS5000Service {
   ) { }
 
   // 查詢 POS20031
-  queryPOS20031(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryPOS20031`, data).pipe(
-      tap((data) => console.debug('TLS5000 queryPOS20031 response', data)),
+  queryPOS2003(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryPOS2003`, data).pipe(
+      tap((data) => console.debug('TLS5000 queryPOS2003 response', data)),
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
