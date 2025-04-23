@@ -2,10 +2,11 @@ import { animate, state, style, transition, trigger } from '@angular/animations'
 import { ElementRef, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, ViewEncapsulation } from '@angular/core';
 import { Component } from '@angular/core';
 import { MenuItem } from 'primeng/api';
-import { Subscription } from 'rxjs';
+import { combineLatest, filter, Subscription } from 'rxjs';
 import { AccessService } from '../../shared/service/access.service';
 import { CurrentPageService } from './current-page.service';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
+import { AuthService } from '../../service/system/auth.service';
 
 @Component({
   selector: 'app-menulist',
@@ -29,16 +30,31 @@ export class AppMenulistComponent implements OnInit, OnDestroy, OnChanges {
   private routerLinkMap = new Map<string, MenuItem>(); // 用於快速查找選單項目
   filteredModel: MenuItem[] = []; // 新增：用於顯示過濾後的菜單
   private currentPageProgNoSubscription: Subscription | undefined;
+  private subscriptions = new Subscription(); // 用於管理訂閱
 
   constructor(
     public el: ElementRef,
     private accessService: AccessService,
-    private currentPageService: CurrentPageService // 注入 Service
+    private currentPageService: CurrentPageService, // 注入 Service
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
-    this.updateMenuModel();
-    this.filterMenuByTopMenu(); // 初始過濾
+    this.subscriptions.add(
+      combineLatest([
+        this.authService.funRightsInfo$.pipe(filter(data => !!data)), // 確保 funRightsInfo 有值
+        this.currentPageService.currentPageProgNo$ // 監聽當前頁面 ProgNo 的變化
+      ]).subscribe(([funRightsInfo, currentPageProgNo]) => {
+        this.model = this.buildMenuModel(funRightsInfo);
+        this.flatMenuList = this.flattenMenu(this.model);
+        this.filterMenuByTopMenu();
+        if (currentPageProgNo) {
+          this.setActiveItemByProgNo(currentPageProgNo);
+        } else {
+          this.clearSelection();
+        }
+      })
+    );
 
     this.accessService.menuUpdated.subscribe(newData => {
       this.model = this.buildMenuModel(newData);
@@ -63,14 +79,14 @@ export class AppMenulistComponent implements OnInit, OnDestroy, OnChanges {
     if (this.currentPageProgNoSubscription) {
       this.currentPageProgNoSubscription.unsubscribe();
     }
+    this.subscriptions.unsubscribe(); // 取消 combineLatest 的訂閱
   }
 
   ngOnChanges(): void {
     this.filterMenuByTopMenu(); // 當 activeTopMenuProgNo 改變時重新過濾
   }
   // 更新選單模型
-  updateMenuModel() {
-    const funRightsInfo = this.accessService.getSessionData('FunRightsInfo');
+  updateMenuModel(funRightsInfo: FunsrightInfo[]) {
     if (!Array.isArray(funRightsInfo) || funRightsInfo.length === 0) {
       this.clearMenu();
       return;
