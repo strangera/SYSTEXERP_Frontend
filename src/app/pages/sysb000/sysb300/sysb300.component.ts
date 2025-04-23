@@ -7,6 +7,8 @@ import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/service/notification.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { Sysb300Service } from '../../../service/sysb/sysb300.service';
+import { Sys300m } from '../sysb300m/sysb300m';
 
 @Component({
   selector: 'app-sysb300',
@@ -19,9 +21,8 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
     // SYS3000 組織階層設定檔
-    // id                  numeric(19,0) identity(1,1) not null,
-
-    level_id: [, [Validators.maxLength(2)]], // 組織階層代碼
+    id:[],
+    level_id: ['', [Validators.maxLength(2)]], // 組織階層代碼
     level_name: ['', [Validators.maxLength(30)]], // 組織階層名稱
     p_level_id: [, [Validators.maxLength(2)]], // 上層組織階層代碼
 
@@ -35,26 +36,20 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
   });
   // 表格
   // ----------------------------------------------------------------
-  data: any[] = [
-    { group_no: 10, group_name: '全公司', upgroup: '全公司' },
-    { group_no: 20, group_name: '室/部', upgroup: '全公司' },
-    { group_no: 30, group_name: 'Team', upgroup: '室/部' },
-    { group_no: 40, group_name: '樓/組', upgroup: 'Team' },
-    // 其他資料
-  ];
+  data: Sys300m[] = [];
   filteredData: any[] = [...this.data];
   columns: any[] = [
-    { field: 'group_no', header: '階層代碼', visible: true },
-    { field: 'group_name', header: '階層名稱', visible: true },
-    { field: 'upgroup', header: '上層組織', visible: true },
+    { field: 'level_id', header: '階層代碼', visible: true },
+    { field: 'level_name', header: '階層名稱', visible: true },
+    { field: 'p_level_id', header: '上層組織', visible: true },
     // 其他欄位
   ];
   // ----------------------------------------------------------------
   upgroup_Options: any[] = [
-    { value: 0, label: '全公司' },
-    { value: 1, label: '室/部' },
-    { value: 2, label: 'Team' },
-    { value: 3, label: '樓/組' },
+    { value: "", label: '全公司' },
+    { value: "10", label: '室/部' },
+    { value: "20", label: 'Team' },
+    { value: "30", label: '樓/組' },
   ];
 
   constructor(
@@ -62,6 +57,7 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
     private authService: AuthService,
+    private sysb300Service: Sysb300Service,
   ) {
     super();
   }
@@ -80,16 +76,21 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
     this.messageService.blockUi();
 
     if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
+      const query = {
+        "level_id": this.queryForm.value.level_id,
+        "level_name": this.queryForm.value.level_name,
+        "p_level_id": this.queryForm.value.p_level_id,
+      };
 
-    this.loading = false;
-    this.messageService.unblockUi();
+      console.log('查詢條件', query);
+
+      this.sysb300Service.querySYS3000(query).subscribe((response) => {
+        this.data = response.Data;
+        console.log('查詢結果',this.data);
+        // this.queryStateService.setQueryState(QUERY_STORAGE_KEY, form.value);
+        this.loading = false;
+      });
+    }
   }
 
   onSubmitQuery(frm: FormGroup) {
@@ -116,7 +117,7 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
     }
   }
 
-  onEdit(data: any) {
+  onEdit(data: Sys300m) {
     if (this.canEdit()) {
       let extras: NavigationExtras = {
         state: {
@@ -131,7 +132,7 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
     }
   }
 
-  onDetail(data: any) {
+  onDetail(data: Sys300m) {
     let extras: NavigationExtras = {
       state: {
         crudstatus: CRUDStatus.Read,
@@ -143,5 +144,4 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
 
     this.router.navigate(['/SYSB000/SYSB300CRU'], extras);
   }
-
 }

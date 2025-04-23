@@ -1,3 +1,4 @@
+import { Sysb300Service } from './../../../service/sysb/sysb300.service';
 import { Component, OnInit, } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,7 +8,7 @@ import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/service/notification.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Sys300m } from '../sysb300m/sysb300m';
 
 @Component({
   selector: 'app-sysb300.cru',
@@ -19,7 +20,8 @@ export class SYSB300CRUComponent extends BasicCrupageComponent implements OnInit
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // SYS3000 組織階層設定檔
-    level_id: [, [Validators.required, Validators.maxLength(2)]], // 組織階層代碼
+    id: [],
+    level_id: ['', [Validators.required, Validators.maxLength(2)]], // 組織階層代碼
     level_name: ['', [Validators.required, Validators.maxLength(30)]], // 組織階層名稱
     p_level_id: [, [Validators.maxLength(2)]], // 上層組織階層代碼(空白代表第一層)
 
@@ -33,11 +35,14 @@ export class SYSB300CRUComponent extends BasicCrupageComponent implements OnInit
   });
   //
   upgroup_Options: any[] = [
-    { value: 0, label: '全公司' },
-    { value: 1, label: '室/部' },
-    { value: 2, label: 'Team' },
-    { value: 3, label: '樓/組' },
+    { value: "", label: '全公司' },
+    { value: "10", label: '室/部' },
+    { value: "20", label: 'Team' },
+    { value: "30", label: '樓/組' },
   ];
+
+  allquery: Sys300m[] = [];
+
   // ----------------------------------------------------------------
   constructor(
     private router: Router,
@@ -45,7 +50,7 @@ export class SYSB300CRUComponent extends BasicCrupageComponent implements OnInit
     private messageService: NotificationService,
     private authService: AuthService,
     private translate: TranslateService,
-    private validationService: ValidationService,
+    private sysb300Service: Sysb300Service,
     ) {
       super();  // 呼叫父類建構子
   }
@@ -103,20 +108,61 @@ export class SYSB300CRUComponent extends BasicCrupageComponent implements OnInit
       return;
     }
 
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
+    //檢查使否已有上層組織
+    const query = {
+      "level_id": "",
+      "level_name": "",
+      "p_level_id": "",
+    };
+
+    this.sysb300Service.querySYS3000(query).subscribe((response) => {
+      this.allquery = response.Data;
+      const hasEmptypLevel = this.allquery.some(item => item.p_level_id === "")
+      const hasSameLevel = this.allquery.some(item => item.level_id === this.dataForm.controls.level_id.value);
+      console.log('上層組織階層存在 空白的單位',hasEmptypLevel);
+
+      if(hasEmptypLevel && this.dataForm.controls.p_level_id.value == ""){
+        this.messageService.errorBubble('已有上層組織階層為空白的單位，因此上層組織階層為必填欄位，請選擇上層組織階層');
+      }else if(hasSameLevel){
+        this.messageService.errorBubble('已有存在相同的組織階層代碼，請重新輸入');
+      }
+      else{
+        switch (this.crudstatus) {
+          case CRUDStatus.Create:
+            if (this.canAdd()) {
+              const insert = {
+                "level_id": this.dataForm.controls.level_id.value,
+                "level_name": this.dataForm.controls.level_name.value,
+                "p_level_id": this.dataForm.controls.p_level_id.value,
+              }
+    
+              console.log('insert', insert);
+              this.sysb300Service.insertSYS3000(insert).subscribe(() => {
+                this.messageService.successBubble('新增成功');
+                this.onCancel();
+              });
+            }
+            break;
+          case CRUDStatus.Edit:
+            if (this.canEdit()) {
+              const update = {
+                "id": this.dataForm.controls.id.value,
+                "level_id": this.dataForm.controls.level_id.value,
+                "level_name": this.dataForm.controls.level_name.value,
+                "p_level_id": this.dataForm.controls.p_level_id.value,
+              }
+      
+              console.log('update', update);
+              this.sysb300Service.updateSYS3000(update).subscribe(() => {
+                this.messageService.successBubble('更新成功');
+                this.onCancel();
+              });
+            }
+            break;
         }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
+        
+      }
+    });
 
     this.messageService.unblockUi();
     this.submitted = false;
@@ -125,7 +171,7 @@ export class SYSB300CRUComponent extends BasicCrupageComponent implements OnInit
   submitForm(frm: FormGroup) {
     // 查詢邏輯
     this.onSubmit(frm);
-  }//CRU
+  }
 
   onCancel() {
     this.router.navigate(['/SYSB000/SYSB300']);

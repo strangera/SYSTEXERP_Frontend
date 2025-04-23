@@ -12,8 +12,8 @@
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="組織階層代碼" controlName="level_id" [control]="queryForm.controls.level_id" [submitted]="submitted">>
-                        </app-input-serial-number>
+                        <app-input-text label="組織階層代碼" controlName="level_id" [control]="queryForm.controls.level_id" [submitted]="submitted">>
+                        </app-input-text>
                     </div>
                     <div class="col-12 md:col-12 lg:col-4">
                         <app-input-text label="組織階層名稱" controlName="level_name" [control]="queryForm.controls.level_name" [submitted]="submitted">
