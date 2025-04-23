@@ -22,7 +22,7 @@ export class AssetStatusService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getAssetStatus(): Observable<any[]> {
     return of(this.options).pipe(
