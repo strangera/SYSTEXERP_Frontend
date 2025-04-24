@@ -57,7 +57,32 @@ export class AuthService {
         if (response.Status === '0000') {
           this.userSubject.next(response.Data);
           sessionStorage.setItem('UserInfo', JSON.stringify(response.Data));
-          this.router.navigate(['/SSO/dashboard']);
+          
+          if (response.Data.USER_PwdExpireDate <= new Date().toISOString()) {
+            console.log('UserInfo', response.Data);
+            this.notemessage.errorBubble('超過90天使用時間，請修改密碼');
+            this.router.navigate(['/changepsw/changepsw']);
+          } else {
+            this.userSubject.next(response.Data);
+            // 等 getFunRightsInfo 和 fetchSys1000Data 都完成後再導航
+            forkJoin([
+              this.getFunRightsInfo(),
+              this.sys1000Service.getData().pipe(
+                map(res => {
+                  sessionStorage.setItem('SYSTEMSetting', JSON.stringify(res));
+                  return res;
+                })
+              )
+            ]).subscribe({
+              next: () => {
+                this.router.navigate(['/SSO/dashboard']);
+              },
+              error: err => {
+                console.error('初始化資料時發生錯誤', err);
+                this.notemessage.errorBubble('初始化資料失敗，請稍後再試');
+              }
+            });
+          }
           return response;
         } else {
           throw new Error(response.Message || 'Login failed');
