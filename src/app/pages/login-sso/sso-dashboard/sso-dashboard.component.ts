@@ -70,11 +70,11 @@ export class SsoDashboardComponent implements OnInit {
     this.fetchUrlList();
 
     const time = JSON.parse(sessionStorage.getItem('UserInfo') || '{}').USER_PwdExpireDate;
-    // if (time <= new Date().toISOString()) {
-    if (true) {
+    if (time <= new Date().toISOString()) {
+    // if (true) {
       this.messageService.errorBubble('超過90天使用時間，請修改密碼');
       this.visible = true;
-      console.log('密碼過期');
+      console.log('密碼過期', time);
     }
   }
   fetchUrlList(): void {
