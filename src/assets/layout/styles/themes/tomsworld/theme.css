@@ -345,7 +345,7 @@
     box-sizing: border-box;
   }
 
-  .p-component {
+  .p-Component extends BasicQpageComponent<any>
     font-family: var(--font-family);
     font-feature-settings: var(--font-feature-settings, normal);
     font-size: 1rem;
@@ -792,7 +792,7 @@
     border-top-right-radius: 3px;
     border-bottom-right-radius: 3px;
   }
-  .p-cascadeselect.p-invalid.p-component {
+  .p-cascadeselect.p-invalid.p-Component extends BasicQpageComponent<any>
     border-color: #f44336;
   }
 
@@ -1043,7 +1043,7 @@
     color: #6c757d;
     right: 2.357rem;
   }
-  .p-dropdown.p-invalid.p-component {
+  .p-dropdown.p-invalid.p-Component extends BasicQpageComponent<any>
     border-color: #f44336;
   }
 
@@ -1143,7 +1143,7 @@
 
   .p-inputgroup > .p-component,
 .p-inputgroup > .p-inputwrapper > .p-inputtext,
-.p-inputgroup > .p-float-label > .p-component {
+.p-inputgroup > .p-float-label > .p-Component extends BasicQpageComponent<any>
     border-radius: 0;
     margin: 0;
   }

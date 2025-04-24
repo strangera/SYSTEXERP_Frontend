@@ -28,7 +28,7 @@ interface UploadEvent {
   audio/*：接受所有音訊格式（如 MP3、WAV 等）。
   video/*：接受所有影片格式（如 MP4、AVI 等）。
   *//*：接受所有格式檔案。
-  <p-fileUpload name="myfile" url="./upload.php" accept="image/*,video/*" />
+<p-fileUpload name="myfile" url="./upload.php" accept="image/*,video/*" />
 */
 export enum FileType {
   JPG = '.jpg',
@@ -44,23 +44,23 @@ export enum FileType {
   encapsulation: ViewEncapsulation.None,
 })
 export class FileUploadComponent {
-    @Input() fileType: FileType = FileType.PNG;
-    @Input() uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
-    uploadedFiles: any[] = [];
-    chooseLab: string = '選擇檔案';
-    uploadLab: string = '上傳';
-    cancelLab: string = '取消';
-    fileszie: number = 3145728; // 3MB = 3 * 1,024(KB) * 1,024(bytes) = 3,145,728 bytes。
+  @Input() fileType: FileType = FileType.PNG;
+  @Input() uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
+  uploadedFiles: any[] = [];
+  chooseLab: string = '選擇檔案';
+  uploadLab: string = '上傳';
+  cancelLab: string = '取消';
+  fileszie: number = 3145728; // 3MB = 3 * 1,024(KB) * 1,024(bytes) = 3,145,728 bytes。
 
-    constructor(
-      private messageService: MessageService,
-    ) {}
+  constructor(
+    private messageService: MessageService,
+  ) { }
 
-    onUpload(event: any) { // UploadEvent
-      for(let file of event.files) {
-          this.uploadedFiles.push(file);
-      }
+  onUpload(event: any) { // UploadEvent
+    for (let file of event.files) {
+      this.uploadedFiles.push(file);
+    }
 
-      this.messageService.add({severity: 'info', summary: 'File Uploaded', detail: ''});
+    this.messageService.add({ severity: 'info', summary: 'File Uploaded', detail: '' });
   }
 }

@@ -59,7 +59,6 @@ export class AppTopbarComponent implements OnInit {
         ]
       },
     ];
-    this.initFavorites(); // 初始化最愛功能
     const funRightsInfoString = sessionStorage.getItem("FunRightsInfo");
     if (funRightsInfoString) {
       try {
@@ -70,7 +69,7 @@ export class AppTopbarComponent implements OnInit {
             label: `${item.prog_no} ${item.prog_name}` // 建立 label 屬性
           }));
         this.topLevelMenuItems = this.funRightsInfo.filter(item => item.parent_id === '0'); // 假設 parent_id 為 null 或 undefined 表示第一層
-
+        this.initFavorites(); // 初始化最愛功能
       } catch (error) {
         console.error("Failed to parse FunRightsInfo:", error);
         this.funRightsInfo = [];

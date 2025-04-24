@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import {  Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { EncryptionService } from '../../shared/service/encryption.service';
@@ -212,5 +212,18 @@ export class AuthService {
         return throwError(() => error);
       })
     );
+  }
+
+  getUserInfo(): UserInfo | null {
+    const userStr = sessionStorage.getItem("UserInfo");
+    if (!userStr || userStr === "undefined" || userStr === '') {
+      return null;
+    }
+    try {
+      return JSON.parse(userStr);
+    } catch (error) {
+      console.error('Error parsing UserInfo', error);
+      return null;
+    }
   }
 }
