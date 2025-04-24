@@ -8,8 +8,8 @@ import { UserInfo } from '../../../models/system/userInfo';
 export class BasicQpageComponent {
   // Page No
   // ----------------------------------------------------------------
-  ProgNo: string = '900001';
-  cruPage: string = '';
+  ProgNo = '900001';
+  cruPage = '';
   user?: UserInfo | null;
   // 權限
   // ----------------------------------------------------------------

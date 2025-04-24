@@ -1,1 +1,22 @@
-{}
+{
+    "files.exclude": {
+      "**/*.spec.*": true,
+      "eslint.config.js": true,
+      ".editorconfig": true,
+      ".angulardoc.json": true,
+      ".prettierrc": true,
+      "package-lock.json": true,
+      "server.ts": true
+    },
+    "html.format.wrapAttributes": "auto",
+    "html.format.endWithNewline": true, // 保持 HTML 結尾換行
+    "editor.formatOnSave": true, // 設置自動格式化
+    "editor.defaultFormatter": "esbenp.prettier-vscode", // 使用 Prettier 格式化
+    "prettier.singleQuote": true, // 使用單引號
+    "prettier.printWidth": 80, // 設定每行最大字符數
+    "prettier.tabWidth": 2, // 設定縮排寬度
+    "prettier.useTabs": false,
+    "[html]": {
+      "editor.defaultFormatter": "vscode.html-language-features"
+    } // 使用空格而非 Tab
+  }
