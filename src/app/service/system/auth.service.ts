@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { BehaviorSubject, forkJoin, Observable, throwError } from 'rxjs';
+import {  Router } from '@angular/router';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { EncryptionService } from '../../shared/service/encryption.service';
 import { catchError, map } from 'rxjs/operators';
@@ -9,7 +9,6 @@ import { environment } from '../../../environments/environment';
 import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
 import { UserInfo } from '../../models/system/userInfo';
 import { NotificationService } from '../../shared/service/notification.service';
-import { Sys1000Service } from '../SYS100/sys1000.service';
 
 export interface ApiResponse<T> {
   Status: string;
@@ -38,8 +37,6 @@ export class AuthService {
     private http: HttpClient,
     private encrypt: EncryptionService,
     private notemessage: NotificationService,
-    private sys1000Service: Sys1000Service, // Router
-    private route: ActivatedRoute,
   ) {
     let userStorage: any = sessionStorage.getItem('UserInfo');
     this.userSubject = new BehaviorSubject(JSON.parse(userStorage)!);
@@ -58,7 +55,9 @@ export class AuthService {
     return this.http.post<ApiResponse<UserInfo>>(url, data).pipe(
       map((response: ApiResponse<UserInfo>) => {
         if (response.Status === '0000') {
+          this.userSubject.next(response.Data);
           sessionStorage.setItem('UserInfo', JSON.stringify(response.Data));
+          
           if (response.Data.USER_PwdExpireDate <= new Date().toISOString()) {
             console.log('UserInfo', response.Data);
             this.notemessage.errorBubble('超過90天使用時間，請修改密碼');
@@ -76,8 +75,7 @@ export class AuthService {
               )
             ]).subscribe({
               next: () => {
-                const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
-                this.router.navigateByUrl(returnUrl);
+                this.router.navigate(['/SSO/dashboard']);
               },
               error: err => {
                 console.error('初始化資料時發生錯誤', err);
@@ -212,20 +210,6 @@ export class AuthService {
         return initialFunsrightInfo;
       }
     }
-  }
-
-  fetchSys1000Data() {
-    this.sys1000Service.getData().subscribe({
-      next: response => {
-        // 將轉換後的數據存入 sessionStorage
-        sessionStorage.setItem('SYSTEMSetting', JSON.stringify(response));
-        console.log('SYS1000 response data saved successfully');
-      },
-      error: error => {
-        console.error('Failed to load SYS1000 data', error);
-        // 處理 SYS1000 錯誤
-      }
-    });
   }
 
   getFavorites(): Observable<any> {

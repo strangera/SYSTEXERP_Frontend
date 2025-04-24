@@ -10,6 +10,7 @@ import { LayoutComponent } from './layout.component';
 import { AppTopbarComponent } from './app.topbar/app.topbar.component';
 import { AppFooterComponent } from './app.footer/app.footer.component';
 import { AppMenulistComponent } from './app.menulist/app.menulist.component';
+import { SsoDashboardComponent } from '../pages/login-sso/sso-dashboard/sso-dashboard.component';
 
 @NgModule({
   declarations: [
@@ -18,6 +19,7 @@ import { AppMenulistComponent } from './app.menulist/app.menulist.component';
     AppMenulistComponent,
     AppFooterComponent,
     DynamictabviewComponent,
+    SsoDashboardComponent
   ],
   imports: [
     CommonModule,
