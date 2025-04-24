@@ -14,11 +14,11 @@
                     <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="大分類代碼" controlName="bCode" [control]="queryForm.controls.bCode" [submitted]="submitted">
+                                <app-input-serial-number label="大分類代碼" controlName="CAT_LNo" [control]="queryForm.controls.CAT_LNo" [submitted]="submitted">
                                 </app-input-serial-number>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-text label="大分類名稱" controlName="bName" [control]="queryForm.controls.bName" [submitted]="submitted">
+                                <app-input-text label="大分類名稱" controlName="CAT_LName" [control]="queryForm.controls.CAT_LName" [submitted]="submitted">
                                 </app-input-text>
                             </div>
                         </div>

@@ -70,6 +70,28 @@ export class AuthService {
     );
   }
 
+  // login(data: userLogin): Observable<UserInfo> {
+  //   const now = this.commService.getNOW();
+  //   const key = `${data.code?.toLowerCase()}${now.utc_nowtime}${environment.PasswordKey}`.substring(0, 16);
+  //   data.password = this.encrypt.encryptTripleDES(data.password as string, key, now.utc_nowtime);
+  //   // data.password = "W0kPywQIWtw=";
+  //   const url = `${this.apiUrl}/User/userLogin`;
+  //   console.log('🔐 Login API URL:', url);
+  //   console.log('📦 Login data:', data);
+
+  //   return this.http.post<ApiResponse<UserInfo>>(url, data).pipe(
+  //     map((response: ApiResponse<UserInfo>) => {
+  //       if (response.Status === '0000') {
+  //         sessionStorage.setItem('UserInfo', JSON.stringify(response.Data));
+  //         this.userSubject.next(response.Data);
+  //         return response.Data;
+  //       } else {
+  //         throw new Error(response.Message || 'Login failed');
+  //       }
+  //     })
+  //   );
+  // }
+
   // 移除存儲的 JWT Token
   logout(): void {
     const userInfoStr = sessionStorage.getItem('UserInfo');
