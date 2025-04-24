@@ -96,6 +96,11 @@
   </p-accordion>
 </div>
 <div class="card">
+  <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [isRowSelectable]="isRowSelectable" [showCheckBox]="true">
+  </app-table>
+</div>
+<div class="card">
   <app-data-table-check [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
   </app-data-table-check>
 </div>

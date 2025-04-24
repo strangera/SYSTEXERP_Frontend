@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CheckboxComponent } from './checkbox.component';
+import { TableExpansionComponent } from './table-expansion.component';
 
-describe('CheckboxComponent', () => {
-  let component: CheckboxComponent;
-  let fixture: ComponentFixture<CheckboxComponent>;
+describe('TableExpansionComponent', () => {
+  let component: TableExpansionComponent;
+  let fixture: ComponentFixture<TableExpansionComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CheckboxComponent]
+      declarations: [TableExpansionComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(CheckboxComponent);
+    fixture = TestBed.createComponent(TableExpansionComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

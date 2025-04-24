@@ -1,0 +1,83 @@
+import { animate, state, style, transition, trigger } from "@angular/animations";
+import { NotificationService } from "../../service/notification.service";
+import { formatDateTime } from "../../models/base/format-data.model";
+export interface Column {
+  field: string;     // 欄位名稱 (資料的欄位名稱)
+  header: string;    // 欄位標題 (顯示在表格上的標題)
+  style?: (value: any) => string; // styles
+  visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
+  hidden?: boolean;  // 是否隱藏 (是否為無法篩選欄位)
+  disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
+  maxWidth?: string; // 最大寬度 max-w-{{ col.maxWidth }}
+  frozen?: boolean;  // 是否凍結 (是否為凍結欄位)
+  alignFrozen?: string; // 凍結欄位對齊方式
+  type?: string;     // 欄位類型 input、inputNumber、dropdown、default、html
+  validate?: ((value: string, rowData: any, data: any[], field: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
+  format?: (value: any) => string | number | null; // 格式化(日期、時間...)
+  prefix?: string;
+  fractionDigits?: number;
+  options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
+  optionLabel?: string; // 下拉選單 optionLabel
+  optionValue?: string; // 下拉選單 optionValue
+  buttonLabel?: string; // 選擇按鈕 label
+  chipLabel?: string | undefined; // chips 顯示的 label
+  checkboxValue?: string; // checkbox 顯示的 ngModel
+  checkboxLabel?: (value: any) => string; // checkbox 顯示的 label
+}
+
+export const toggleButtons = trigger('toggleButtons', [
+  state('hidden', style({ transform: 'translateX(-10px)', width: '0px', opacity: 0 })),
+  state('visible', style({ transform: 'translateX(0px)', width: 'auto', opacity: 1 })),
+  transition('hidden <=> visible', [animate('300ms ease-in-out')])
+]);
+
+export const expandAnimation = trigger('expandAnimation', [
+  state('collapsed', style({ height: '0px', opacity: 0 })),
+  state('expanded', style({ height: '*', opacity: 1 })),
+  transition('collapsed <=> expanded', animate('200ms ease-in-out'))
+]);
+
+
+export interface AddButton {
+  label: string;
+  icon: string;
+  action: (rowData: any) => void;
+  disabled?: (rowData: any) => boolean;
+}
+
+export const CreationColumns: Column[] = [
+  { field: 'CRT_Date', header: '建立日期', visible: false, format: (value: string) => formatDateTime(value) },
+  { field: 'CRT_USR_No', header: '建立人員', visible: false },
+  { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
+  { field: 'UPD_Date', header: '變更日期', visible: false, format: (value: string) => formatDateTime(value) },
+  { field: 'UPD_USR_No', header: '變更人員', visible: false },
+  { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
+];
+
+
+export interface RowEditSaveEvent {
+  oldData: any;
+  newData: any;
+  ri: number;
+  data: any[];
+}
+// 欄位變更事件
+export interface FieldChangeEvent {
+  rowData: any;
+  field: string;
+  value: any;
+}
+
+// 新增一個方法來驗證行數據
+export function validateRowData(rowData: any, columns: Column[], data: any, messageService: NotificationService): boolean {
+  return columns.every(col =>
+    !(col.validate?.some(validateFn => {
+      const { isValid, errorMessage } = validateFn(rowData[col.field], rowData, data, col.field);
+      if (!isValid) {
+        const [message, title] = errorMessage;
+        messageService.errorBubble(message, title);
+      }
+      return !isValid; // 发现验证失败则返回 true，导致 `some` 终止循环
+    }))
+  );
+}

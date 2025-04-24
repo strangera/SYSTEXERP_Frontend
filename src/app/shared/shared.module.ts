@@ -5,6 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 // FontAwesome
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 // primeng
+import { SkeletonModule } from 'primeng/skeleton';
 import { BlockUIModule } from 'primeng/blockui';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
@@ -89,7 +90,6 @@ import { InputNumberComponent } from './componentkit/input-number/input-number.c
 import { CheckboxOneComponent } from './componentkit/checkbox-one/checkbox-one.component';
 import { DatemmTwoComponent } from './componentkit/datemm-two/datemm-two.component';
 import { InputNumberRangeComponent } from './componentkit/input-number-range/input-number-range.component';
-import { CheckboxComponent } from './componentkit/checkbox/checkbox.component';
 import { RadiobuttonComponent } from './componentkit/radiobutton/radiobutton.component';
 import { EditorTextComponent } from './componentkit/editor-text/editor-text.component';
 import { DropdownMultlabelComponent } from './componentkit/dropdown-multlabel/dropdown-multlabel.component';
@@ -113,19 +113,23 @@ import { ButtonComponent } from './componentkit/button/button.component';
 import { DropdownComponent } from './componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from './componentkit/calendar/calendar.component';
 import { CalendarRangeComponent } from './componentkit/calendar-range/calendar-range.component';
+import { TableComponent } from './componentkit/table/table.component';
+import { TableExpansionComponent } from './componentkit/table/table-expansion/table-expansion.component';
 
 @NgModule({
   declarations: [
     MenubarComponent,
     ControlMessagesComponent,
     // componentKit
-    ButtonComponent, //!!! TMS使用的共通按鈕
-    DropdownComponent,//!!! TMS使用的共通按鈕
+    ButtonComponent,
+    DropdownComponent,
     InputTextComponent,
     InputNumberComponent,
     MultiSelectComponent,
     CalendarComponent,
     CalendarRangeComponent,
+    TableComponent,
+    TableExpansionComponent,
 
     ButtonDynamicallyaddComponent,
     ButtonDynamicallydeleteComponent,
@@ -141,7 +145,6 @@ import { CalendarRangeComponent } from './componentkit/calendar-range/calendar-r
     DropdownMultlabelComponent,
     DatemmTwoComponent,
     DateqtrRangeComponent,
-    CheckboxComponent,
     CheckboxOneComponent,
     RadiobuttonComponent,
     ExcelExportComponent,
@@ -161,6 +164,7 @@ import { CalendarRangeComponent } from './componentkit/calendar-range/calendar-r
     // FontAwesome
     FontAwesomeModule,
     // primeng
+    SkeletonModule,
     BlockUIModule,
     ProgressSpinnerModule,
     PanelModule,
@@ -243,6 +247,7 @@ import { CalendarRangeComponent } from './componentkit/calendar-range/calendar-r
     // FontAwesome
     FontAwesomeModule,
     // primeng
+    SkeletonModule,
     BlockUIModule,
     ProgressSpinnerModule,
     PanelModule,
@@ -331,11 +336,12 @@ import { CalendarRangeComponent } from './componentkit/calendar-range/calendar-r
     DropdownMultlabelComponent,
     DatemmTwoComponent,
     DateqtrRangeComponent,
-    CheckboxComponent,
     CheckboxOneComponent,
     MultiSelectComponent,
     CalendarComponent,
     CalendarRangeComponent,
+    TableComponent,
+    TableExpansionComponent,
     RadiobuttonComponent,
     InputMultiDialogComponent,
     InputAPIMultiDailogComponent,

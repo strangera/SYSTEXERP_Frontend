@@ -1,11 +1,6 @@
 import { SystemTypeService } from './../../../service/basic/system-type.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { FormGroup, Validators } from '@angular/forms';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { FileType } from '../../../shared/componentkit/file-upload/file-upload.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -65,16 +60,13 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     // ----------------------------------------------------------------
     radiolist: [1, []], // 條件篩選, radioButton
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
   // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [];
+  data: any[] = [
+    { 'name': 'William', 'isdelete': true, 'age': 35, 'email': 'william36@example.com', 'city': 'Yilan' },
+    { 'name': 'Sarah', 'isdelete': false, 'age': 30, 'email': 'sarah49@example.com', 'city': 'Tainan' },
+    { 'name': 'Emily', 'isdelete': true, 'age': 24, 'email': 'emily82@example.com', 'city': 'New Taipei' },
+    { 'name': 'Sarah', 'isdelete': false, 'age': 23, 'email': 'sarah51@example.com', 'city': 'Tainan' },
+  ];
   columns: any[] = [
     { field: 'name', header: 'Name', visible: true },
     { field: 'age', header: 'Age', visible: true },
@@ -82,20 +74,12 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     { field: 'city', header: 'City', visible: true },
     // 其他欄位
   ];
+
+  isRowSelectable(rowData: any): boolean {
+    return rowData.isdelete;
+  }
   // ----------------------------------------------------------------
   systemTypeOptions: any[] = [];
-  // 模擬的資料
-  tableColumns = [
-    { field: 'id', header: 'ID', visible: true },
-    { field: 'code', header: '代碼', visible: true },
-    { field: 'name', header: '名稱', visible: true }
-  ];
-
-  tableData = [
-    { id: 1, code: 'A001', name: '資料一' },
-    { id: 2, code: 'A002', name: '資料二' },
-    { id: 3, code: 'A003', name: '資料三' }
-  ];
 
   constructor(
     private systemTypeService: SystemTypeService,
@@ -105,32 +89,11 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '900001';
-    this.cruPage = '/demo/demoInputTableCRU';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('900001', '/demo/demoInputTableCRU');
     this.systemTypeService.getSystemTypes().subscribe(data => {
       this.systemTypeOptions = data;
-
-      // 全選填入
-      /*let allSystemValues = this.systemTypeOptions.map(system => system.value);
-      this.queryForm.patchValue({
-        systemtypemulti: allSystemValues
-      });*/
     });
-
-    this.systemTypeOptions = [
-      { "value": "4101", "label": "公司基本資料維護作業 (4101)" },
-      { "value": "4102", "label": "廠商基本資料維護作業 (4102)" },
-      { "value": "4103", "label": "組織階層設定作業 (4103)" },
-    ];
   }
-
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       // 提交邏輯 Service
@@ -145,12 +108,10 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
       //   });
     })
   }
-  // ----------------------------------------------------------------
   onDelete(data: any) {
     console.log(data);
   }
   onSystemTypeChange(selectedValue: any): void {
     console.log('選中的公告類型:', selectedValue);
-    // 在這裡處理選中的值，您可以更新表單或執行其他邏輯
   }
 }
