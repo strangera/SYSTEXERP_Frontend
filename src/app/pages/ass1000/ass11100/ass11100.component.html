@@ -4,31 +4,38 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <div *appHasPermission="addPermission">
-            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
         </div>
     </div>
     <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+            [headerStyleClass]="'query-accordionTab'">
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="倉別" controlName="storageType" [control]="queryForm.controls.storageType" [submitted]="submitted">
-                        </app-input-serial-number>
+                        <app-input-number [useGrouping]="false" label="倉別" controlName="storageType"
+                            [control]="queryForm.controls.storageType" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="倉別名稱" controlName="storageName" [control]="queryForm.controls.storageName" [submitted]="submitted">
+                        <app-input-text label="倉別名稱" controlName="storageName"
+                            [control]="queryForm.controls.storageName" [submitted]="submitted">
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-dropdown-item label="部門代號" controlName=" organizationNumber" [options]="organizationNumberOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.organizationNumber" [submitted]="submitted"></app-dropdown-item>
+                        <app-dropdown label="部門代號" controlName=" organizationNumber"
+                            [options]="organizationNumberOptions" optionLabel="label" optionValue="value"
+                            [control]="queryForm.controls.organizationNumber" [submitted]="submitted"></app-dropdown>
                     </div>
                 </div>
-                <app-editor-text label="備註" controlName="remark" [control]="queryForm.controls.remark" [style]="{ height: '100px' }" [submitted]="submitted">
+                <app-editor-text label="備註" controlName="remark" [control]="queryForm.controls.remark"
+                    [style]="{ height: '100px' }" [submitted]="submitted">
                 </app-editor-text>
                 <div *appHasPermission="queryPermission" class="col">
                     <div class="grid justify-content-end">
-                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                        <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                        <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                            [loading]="loading"></app-button>
                     </div>
                 </div>
             </form>

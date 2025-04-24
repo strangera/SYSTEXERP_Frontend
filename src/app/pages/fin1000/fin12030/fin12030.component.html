@@ -5,7 +5,8 @@
         </div>
     </div>
     <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+            [headerStyleClass]="'query-accordionTab'">
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
@@ -17,56 +18,72 @@
                         </app-datemm-one>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-dropdown-item label="發票類別" controlName="invoiceType" [options]="invoiceTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.invoiceType" [submitted]="submitted">
-                        </app-dropdown-item>
+                        <app-dropdown label="發票類別" controlName="invoiceType" [options]="invoiceTypeOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.invoiceType"
+                            [submitted]="submitted">
+                        </app-dropdown>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="字軌" controlName="wordTrack" [control]="queryForm.controls.wordTrack" [submitted]="submitted">
+                        <app-input-text label="字軌" controlName="wordTrack" [control]="queryForm.controls.wordTrack"
+                            [submitted]="submitted">
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="發票號碼" controlName="money" [control]="queryForm.controls.serialInvoice" [submitted]="submitted">
-                        </app-input-serial-number>
+                        <app-input-number [useGrouping]="false" label="發票號碼" controlName="money"
+                            [control]="queryForm.controls.serialInvoice" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number-range label="發票號碼起迄" [startControl]="queryForm.controls.startserialInvoice" [endControl]="queryForm.controls.endserialInvoice" [submitted]="submitted">
-                        </app-input-serial-number-range>
+                        <app-input-number-range [useGrouping]="false" label="發票號碼起迄"
+                            [startControl]="queryForm.controls.startserialInvoice"
+                            [endControl]="queryForm.controls.endserialInvoice" [submitted]="submitted">
+                        </app-input-number-range>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-dropdown-item label="收銀機代號" controlName="registerID" [options]="registerIDOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.registerID" [submitted]="submitted">
-                        </app-dropdown-item>
+                        <app-dropdown label="收銀機代號" controlName="registerID" [options]="registerIDOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.registerID"
+                            [submitted]="submitted">
+                        </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="領用單位" controlName="recruitingUnit" [control]="queryForm.controls.recruitingUnit" [submitted]="submitted">
+                        <app-input-text label="領用單位" controlName="recruitingUnit"
+                            [control]="queryForm.controls.recruitingUnit" [submitted]="submitted">
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="領用日期" [startControl]="queryForm.controls.startReceiveDate" [endControl]="queryForm.controls.endReceiveDate" [submitted]="submitted">
+                        <app-date-range label="領用日期" [startControl]="queryForm.controls.startReceiveDate"
+                            [endControl]="queryForm.controls.endReceiveDate" [submitted]="submitted">
                         </app-date-range>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="繳回日期" [startControl]="queryForm.controls.startReturnDate" [endControl]="queryForm.controls.endReturnDate" [submitted]="submitted">
+                        <app-date-range label="繳回日期" [startControl]="queryForm.controls.startReturnDate"
+                            [endControl]="queryForm.controls.endReturnDate" [submitted]="submitted">
                         </app-date-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-multi-select label="發票狀態" controlName="usageStatus" [options]="usageStatusOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.usageStatus" [submitted]="submitted">
+                        <app-multi-select label="發票狀態" controlName="usageStatus" [options]="usageStatusOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.usageStatus"
+                            [submitted]="submitted">
                         </app-multi-select>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-dropdown-item label="繳回機台" controlName="returnRegister" [options]="registerIDOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.returnRegister" [submitted]="submitted">
-                        </app-dropdown-item>
+                        <app-dropdown label="繳回機台" controlName="returnRegister" [options]="registerIDOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.returnRegister"
+                            [submitted]="submitted">
+                        </app-dropdown>
                     </div>
                 </div>
                 <div *appHasPermission="queryPermission" class="col">
                     <div class="grid justify-content-end">
-                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                        <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                        <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                            [loading]="loading"></app-button>
                     </div>
                 </div>
             </form>

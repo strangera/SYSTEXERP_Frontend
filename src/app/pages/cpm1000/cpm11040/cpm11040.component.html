@@ -4,75 +4,93 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <!-- <div *appHasPermission="addPermission">
-            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
         </div> -->
         <div *appHasPermission="addPermission">
-            <app-button-demo label="高權限查詢" (click)="onCreate()" class="col"></app-button-demo>
+            <app-button btnType="create" label="高權限查詢" (click)="onCreate()" class="col"></app-button>
         </div>
     </div>
     <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+            [headerStyleClass]="'query-accordionTab'">
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="記錄編號" controlName="recordCode" [control]="queryForm.controls.recordCode" [submitted]="submitted">
-                        </app-input-serial-number>
+                        <app-input-number [useGrouping]="false" label="記錄編號" controlName="recordCode"
+                            [control]="queryForm.controls.recordCode" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="出借日期" [startControl]="queryForm.controls.borrowDateFrom" [endControl]="queryForm.controls.borrowDateTo" [submitted]="submitted">
+                        <app-date-range label="出借日期" [startControl]="queryForm.controls.borrowDateFrom"
+                            [endControl]="queryForm.controls.borrowDateTo" [submitted]="submitted">
                         </app-date-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="姓名" controlName="name" [control]="queryForm.controls.name" [submitted]="submitted">
+                        <app-input-text label="姓名" controlName="name" [control]="queryForm.controls.name"
+                            [submitted]="submitted">
                         </app-input-text>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="歸還日期" [startControl]="queryForm.controls.returnDateFrom" [endControl]="queryForm.controls.returnDateTo" [submitted]="submitted">
+                        <app-date-range label="歸還日期" [startControl]="queryForm.controls.returnDateFrom"
+                            [endControl]="queryForm.controls.returnDateTo" [submitted]="submitted">
                         </app-date-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="連絡電話" controlName="phone" [control]="queryForm.controls.phone" [submitted]="submitted">
-                        </app-input-serial-number>
+                        <app-input-number [useGrouping]="false" label="連絡電話" controlName="phone"
+                            [control]="queryForm.controls.phone" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-multi-select label="證件類型" controlName="paperType" [options]="paperTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.paperType" [submitted]="submitted">
+                        <app-multi-select label="證件類型" controlName="paperType" [options]="paperTypeOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.paperType"
+                            [submitted]="submitted">
                         </app-multi-select>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="證件編號" controlName="paperCode" [control]="queryForm.controls.paperCode" [submitted]="submitted">
-                        </app-input-serial-number>
+                        <app-input-number [useGrouping]="false" label="證件編號" controlName="paperCode"
+                            [control]="queryForm.controls.paperCode" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-multi-select label="設備名稱" controlName="equipmentName" [options]="equipmentNameOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.equipmentName" [submitted]="submitted">
+                        <app-multi-select label="設備名稱" controlName="equipmentName" [options]="equipmentNameOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.equipmentName"
+                            [submitted]="submitted">
                         </app-multi-select>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="設備編號" controlName="deviceCode" [control]="queryForm.controls.deviceCode" [submitted]="submitted">
-                        </app-input-serial-number>
+                        <app-input-number [useGrouping]="false" label="設備編號" controlName="deviceCode"
+                            [control]="queryForm.controls.deviceCode" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-multi-select label="出借狀態" controlName="rentStatus" [options]="rentStatusOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.rentStatus" [submitted]="submitted">
+                        <app-multi-select label="出借狀態" controlName="rentStatus" [options]="rentStatusOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.rentStatus"
+                            [submitted]="submitted">
                         </app-multi-select>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-dropdown-item label="服務台位置編號" controlName="counterCode" [options]="counterCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.counterCode" [submitted]="submitted">
-                        </app-dropdown-item>
+                        <app-dropdown label="服務台位置編號" controlName="counterCode" [options]="counterCodeOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.counterCode"
+                            [submitted]="submitted">
+                        </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="出借處理人員" controlName="staffName" [control]="queryForm.controls.staffName" [submitted]="submitted">
+                        <app-input-text label="出借處理人員" controlName="staffName" [control]="queryForm.controls.staffName"
+                            [submitted]="submitted">
                         </app-input-text>
                     </div>
                 </div>
                 <div *appHasPermission="queryPermission" class="col">
                     <div class="grid justify-content-end">
-                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                        <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                        <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                            [loading]="loading"></app-button>
                     </div>
                 </div>
             </form>

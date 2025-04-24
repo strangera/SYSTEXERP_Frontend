@@ -8,26 +8,31 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="倉別" controlName="storageType" [control]="dataForm.controls.storageType" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="倉別" controlName="storageType"
+                        [control]="dataForm.controls.storageType" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="倉別名稱" controlName="storageName" [control]="dataForm.controls.storageName" [submitted]="submitted">
+                    <app-input-text label="倉別名稱" controlName="storageName" [control]="dataForm.controls.storageName"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="部門代號" controlName=" organizationNumber" [options]="organizationNumberOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.organizationNumber" [submitted]="submitted"></app-dropdown-item>
+                    <app-dropdown label="部門代號" controlName=" organizationNumber" [options]="organizationNumberOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.organizationNumber"
+                        [submitted]="submitted"></app-dropdown>
                 </div>
             </div>
-            <hr/>
-            <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark" [style]="{ height: '100px' }" [submitted]="submitted">
+            <hr />
+            <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark"
+                [style]="{ height: '100px' }" [submitted]="submitted">
             </app-editor-text>
-            <hr/>
+            <hr />
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

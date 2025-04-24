@@ -8,57 +8,70 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="公司代號(統一編號)" controlName="bId" [control]="dataForm.controls.bId" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="公司代號(統一編號)" controlName="bId"
+                        [control]="dataForm.controls.bId" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="營業人名稱" controlName="bName" [control]="dataForm.controls.bName" [submitted]="submitted">
+                    <app-input-text label="營業人名稱" controlName="bName" [control]="dataForm.controls.bName"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="稅籍編號" controlName="taxNumber" [control]="dataForm.controls.taxNumber" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="稅籍編號" controlName="taxNumber"
+                        [control]="dataForm.controls.taxNumber" [submitted]="submitted">
+                    </app-input-number>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="負責人姓名" controlName="chargePerson" [control]="dataForm.controls.chargePerson" [submitted]="submitted">
+                    <app-input-text label="負責人姓名" controlName="chargePerson" [control]="dataForm.controls.chargePerson"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="營業地址" controlName="bAddress" [control]="dataForm.controls.bAddress" [submitted]="submitted">
+                    <app-input-text label="營業地址" controlName="bAddress" [control]="dataForm.controls.bAddress"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="總繳代號" controlName="allPayCode" [options]="payMethodOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.allPayCode" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="總繳代號" controlName="allPayCode" [options]="payMethodOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.allPayCode" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="是否採直接扣扺法" controlName="directDeduction" [options]="whetherOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.directDeduction" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="是否採直接扣扺法" controlName="directDeduction" [options]="whetherOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.directDeduction"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="總公司統編" controlName="ubId" [control]="dataForm.controls.ubId" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="總公司統編" controlName="ubId"
+                        [control]="dataForm.controls.ubId" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="自行或委託辦理申報註記" controlName="apply" [options]="applyOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.apply" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="自行或委託辦理申報註記" controlName="apply" [options]="applyOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.apply" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="(代理)申報人姓名" controlName="notifierName" [control]="dataForm.controls.notifierName" [submitted]="submitted">
+                    <app-input-text label="(代理)申報人姓名" controlName="notifierName"
+                        [control]="dataForm.controls.notifierName" [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="(代理)申報人電話" controlName="notifierPhone" [control]="dataForm.controls.notifierPhone" [submitted]="submitted">
+                    <app-input-text label="(代理)申報人電話" controlName="notifierPhone"
+                        [control]="dataForm.controls.notifierPhone" [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="代理申報人證書(登錄)字號" controlName="notifierCertificate" [control]="dataForm.controls.notifierCertificate" [submitted]="submitted">
+                    <app-input-text label="代理申報人證書(登錄)字號" controlName="notifierCertificate"
+                        [control]="dataForm.controls.notifierCertificate" [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
@@ -71,8 +84,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

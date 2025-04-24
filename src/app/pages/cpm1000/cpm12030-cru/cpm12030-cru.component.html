@@ -8,22 +8,27 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="子類別編號" controlName="subCategoryCode" [control]="dataForm.controls.subCategoryCode" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="子類別編號" controlName="subCategoryCode"
+                        [control]="dataForm.controls.subCategoryCode" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="子類別名稱" controlName="subCategoryName" [control]="dataForm.controls.subCategoryName" [submitted]="submitted">
+                    <app-input-text label="子類別名稱" controlName="subCategoryName"
+                        [control]="dataForm.controls.subCategoryName" [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="客戶意見主類別" controlName="opinionCategory" [options]="opinionCategoryOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.opinionCategory" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="客戶意見主類別" controlName="opinionCategory" [options]="opinionCategoryOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.opinionCategory"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
-            <hr/>
-                <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark" [style]="{ height: '100px' }" [submitted]="submitted">
-                </app-editor-text>
-            <hr/>
+            <hr />
+            <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark"
+                [style]="{ height: '100px' }" [submitted]="submitted">
+            </app-editor-text>
+            <hr />
             <!---->
             <!-- <hr />
             <ng-container formArrayName="items">
@@ -38,8 +43,8 @@
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="所屬服務台位置" controlName="counterPosition" [options]="counterOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'counterPosition')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="所屬服務台位置" controlName="counterPosition" [options]="counterOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'counterPosition')" [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
                             <app-input-number label="分配設備數量" controlName="allocateNumber" [control]="getFormControl(i, 'allocateNumber')" [submitted]="submitted">
@@ -55,8 +60,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

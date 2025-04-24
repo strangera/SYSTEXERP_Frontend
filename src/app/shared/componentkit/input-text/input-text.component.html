@@ -1,5 +1,13 @@
 <label [for]="controlName">{{ label }}
   <span *ngIf="isRequired" class="required">*</span>
 </label>
-<input [id]="controlName" type="text" [formControl]="control" [placeholder]="placeholder" [min]=minLength [maxlength]=intLength [ngClass]="{'is-invalid': submitted && control.errors}" pInputText />
-<app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>
+<div class="input-group">
+  <input class="w-full" title='請輸入' [id]="controlName" type="text" [formControl]="control"
+    [placeholder]="control.disabled ? '' : placeholder" [min]="minLength" [maxlength]="maxLength"
+    [ngClass]="{'ng-invalid ng-dirty': submitted && control.errors || (this.errorForGroup && this.control.parent?.errors)}"
+    pInputText [attr.aria-label]="label || placeholder" title="{{ label || placeholder }}" />
+  <span *ngIf="showCopyButton" tabindex="0" pTooltip="複製" tooltipPosition="top" (click)="copyText(control)"
+    (keydown.enter)="copyText(control)" class="copy-button pi pi-copy"></span>
+</div>
+<app-control-messages [onerror]="submitted || (control.touched && control.invalid)" [control]="control"
+  [errorForGroup]='errorForGroup'></app-control-messages>

@@ -4,38 +4,46 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <div *appHasPermission="addPermission">
-            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
         </div>
     </div>
     <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+            [headerStyleClass]="'query-accordionTab'">
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="中分類代碼" controlName="midCategoryCode" [control]="queryForm.controls.midCategoryCode" [submitted]="submitted">
-                        </app-input-serial-number>
+                        <app-input-number [useGrouping]="false" label="中分類代碼" controlName="midCategoryCode"
+                            [control]="queryForm.controls.midCategoryCode" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="中分類名稱" controlName="midCategoryName" [control]="queryForm.controls.midCategoryName" [submitted]="submitted">
+                        <app-input-text label="中分類名稱" controlName="midCategoryName"
+                            [control]="queryForm.controls.midCategoryName" [submitted]="submitted">
                         </app-input-text>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-dropdown-item label="大分類代碼" controlName="bigCategoryCode" [options]="bigCategoryCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.bigCategoryCode" [submitted]="submitted">
-                        </app-dropdown-item>
+                        <app-dropdown label="大分類代碼" controlName="bigCategoryCode" [options]="bigCategoryCodeOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.bigCategoryCode"
+                            [submitted]="submitted">
+                        </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="大分類名稱" controlName="bigCategoryName" [control]="queryForm.controls.bigCategoryName" [submitted]="submitted">
+                        <app-input-text label="大分類名稱" controlName="bigCategoryName"
+                            [control]="queryForm.controls.bigCategoryName" [submitted]="submitted">
                         </app-input-text>
                     </div>
                 </div>
-                <app-editor-text label="說明" controlName="illustrate" [control]="queryForm.controls.illustrate" [style]="{ height: '100px' }" [submitted]="submitted">
+                <app-editor-text label="說明" controlName="illustrate" [control]="queryForm.controls.illustrate"
+                    [style]="{ height: '100px' }" [submitted]="submitted">
                 </app-editor-text>
                 <div *appHasPermission="queryPermission" class="col">
                     <div class="grid justify-content-end">
-                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                        <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                        <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                            [loading]="loading"></app-button>
                     </div>
                 </div>
             </form>

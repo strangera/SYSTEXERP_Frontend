@@ -5,147 +5,75 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="修改條件"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="修改條件" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="單據號碼"
-              controlName="documentNumber"
-              [control]="queryForm.controls.documentNumber"
-              [submitted]="submitted"
-            >
+            <app-input-text label="單據號碼" controlName="documentNumber" [control]="queryForm.controls.documentNumber"
+              [submitted]="submitted">
             </app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="專櫃編號"
-              controlName="counterCode"
-              [options]="counterCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.counterCode"
-              [submitted]="submitted"
-            >
-            </app-dropdown-item>
+            <app-dropdown label="專櫃編號" controlName="counterCode" [options]="counterCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.counterCode" [submitted]="submitted">
+            </app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="專櫃名稱"
-              controlName="counterName"
-              [control]="queryForm.controls.counterName"
-              [submitted]="submitted"
-            >
+            <app-input-text label="專櫃名稱" controlName="counterName" [control]="queryForm.controls.counterName"
+              [submitted]="submitted">
             </app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-one
-              label="營運截止日"
-              controlName="operationEndDate"
-              [control]="queryForm.controls.operationEndDate"
-              [submitted]="submitted"
-            >
+            <app-date-one label="營運截止日" controlName="operationEndDate" [control]="queryForm.controls.operationEndDate"
+              [submitted]="submitted">
             </app-date-one>
           </div>
 
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="扣款項目"
-              controlName="deductionItem"
-              [options]="deductionItemOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.deductionItem"
-              [submitted]="submitted"
-            >
-            </app-dropdown-item>
+            <app-dropdown label="扣款項目" controlName="deductionItem" [options]="deductionItemOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.deductionItem" [submitted]="submitted">
+            </app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="違規類別編號"
-              controlName="violationCategoryCode"
-              [control]="queryForm.controls.violationCategoryCode"
-              [submitted]="submitted"
-            >
+            <app-input-text label="違規類別編號" controlName="violationCategoryCode"
+              [control]="queryForm.controls.violationCategoryCode" [submitted]="submitted">
             </app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="扣款內容"
-              controlName="deductionContent"
-              [control]="queryForm.controls.deductionContent"
-              [submitted]="submitted"
-            >
+            <app-input-text label="扣款內容" controlName="deductionContent" [control]="queryForm.controls.deductionContent"
+              [submitted]="submitted">
             </app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-serial-number
-              label="金額"
-              
-              [control]="queryForm.controls.amount"
-              [submitted]="submitted"
-            >
-            </app-input-serial-number>
+            <app-input-number [useGrouping]="false" label="金額" [control]="queryForm.controls.amount"
+              [submitted]="submitted">
+            </app-input-number>
           </div>
-  
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="月結扣款"
-              controlName="monthlyDeduction"
-              [options]="monthlyDeduction"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.monthlyDeduction"
-              [submitted]="submitted"
-            >
-            </app-dropdown-item>
+            <app-dropdown label="月結扣款" controlName="monthlyDeduction" [options]="monthlyDeduction" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.monthlyDeduction" [submitted]="submitted">
+            </app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-one
-              label="扣款日期"
-              [control]="queryForm.controls.deductionDateStart"
-              [submitted]="submitted"
-            >
+            <app-date-one label="扣款日期" [control]="queryForm.controls.deductionDateStart" [submitted]="submitted">
             </app-date-one>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-one
-              label="違規日期"
-              [control]="queryForm.controls.violationDateStart"
-              [submitted]="submitted"
-            >
+            <app-date-one label="違規日期" [control]="queryForm.controls.violationDateStart" [submitted]="submitted">
             </app-date-one>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="開立人代號 / 名稱"
-              controlName="issuingUnit"
-              [options]="organizationNumberOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.issuingUnit"
-              [submitted]="submitted"
-            >
-            </app-dropdown-item>
+            <app-dropdown label="開立人代號 / 名稱" controlName="issuingUnit" [options]="organizationNumberOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.issuingUnit"
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="備註"
-              controlName="remarks"
-              [control]="queryForm.controls.remarks"
-              [submitted]="submitted"
-            >
+            <app-input-text label="備註" controlName="remarks" [control]="queryForm.controls.remarks"
+              [submitted]="submitted">
             </app-input-text>
           </div>
         </div>
@@ -153,10 +81,10 @@
       <div *appHasPermission="queryPermission" class="col">
         <div class="grid justify-content-end">
           <!-- 清除按鈕 -->
-          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
 
           <!-- 確認按鈕 -->
-          <app-button-action label="確認修改" type="submit" (onClick)="onSubmit(queryForm)" icon=""></app-button-action>
+          <app-button btnType="action" label="確認修改" type="submit" (onClick)="onSubmit(queryForm)" icon=""></app-button>
         </div>
       </div>
     </p-accordionTab>

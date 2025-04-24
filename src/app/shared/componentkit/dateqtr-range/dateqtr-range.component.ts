@@ -22,7 +22,7 @@ export class DateqtrRangeComponent extends BasicKitComponent implements OnInit {
 
   ngOnInit() {
     // Required *
-    this.checkTwoRequiredValidator(this.startControl, this.endControl);
+    // this.checkTwoRequiredValidator(this.startControl, this.endControl);
     //
     this.placeholder = '選擇季';
   }

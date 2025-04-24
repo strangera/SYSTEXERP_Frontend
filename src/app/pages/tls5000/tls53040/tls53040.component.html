@@ -5,84 +5,41 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="盤點單編號"
-              controlName="inventoryCode"
-              [control]="queryForm.controls.inventoryCode"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="盤點單編號" controlName="inventoryCode" [control]="queryForm.controls.inventoryCode"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="倉別"
-              controlName="warehouseCode"
-              [options]="warehouseOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.warehouseCode"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="倉別" controlName="warehouseCode" [options]="warehouseOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.warehouseCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range
-              label="盤點基準日期"
-              [startControl]="queryForm.controls.inventoryDateFrom"
-              [endControl]="queryForm.controls.inventoryDateTo"
-              [submitted]="submitted"
-            ></app-date-range>
+            <app-date-range label="盤點基準日期" [startControl]="queryForm.controls.inventoryDateFrom"
+              [endControl]="queryForm.controls.inventoryDateTo" [submitted]="submitted"></app-date-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range
-              label="調整日期"
-              [startControl]="queryForm.controls.adjustmentDateFrom"
-              [endControl]="queryForm.controls.adjustmentDateTo"
-              [submitted]="submitted"
-            ></app-date-range>
+            <app-date-range label="調整日期" [startControl]="queryForm.controls.adjustmentDateFrom"
+              [endControl]="queryForm.controls.adjustmentDateTo" [submitted]="submitted"></app-date-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="盤點單狀態"
-              controlName="inventoryStatus"
-              [options]="inventoryStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.inventoryStatus"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="盤點單狀態" controlName="inventoryStatus" [options]="inventoryStatusOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.inventoryStatus"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="品牌編號"
-              controlName="brandCode"
-              [options]="brandCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.brandCode"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="品牌編號" controlName="brandCode" [options]="brandCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.brandCode" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
       </form>
       <div *appHasPermission="queryPermission" class="col">
         <div class="grid justify-content-end">
-          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-          <app-button-query
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button-query>
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
         </div>
       </div>
     </p-accordionTab>

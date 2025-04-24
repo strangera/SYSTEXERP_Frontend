@@ -22,6 +22,6 @@ export class DropdownMultlabelComponent extends BasicKitComponent implements OnI
     // Required *
     this.checkRequiredValidator(this.control);
     // Placeholder
-    this.setPlaceholder('請選擇', this.control);
+    // this.setPlaceholder('請選擇', this.control);
   }
 }

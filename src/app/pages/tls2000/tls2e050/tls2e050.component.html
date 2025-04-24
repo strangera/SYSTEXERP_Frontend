@@ -6,62 +6,82 @@
                     <app-menubar [ProgNo]="ProgNo"></app-menubar>
                 </div>
                 <div *appHasPermission="addPermission">
-                    <app-button-demo label="試算報表" class="col"></app-button-demo>
+                    <app-button btnType="create" label="試算報表" class="col"></app-button>
                 </div>
             </div>
             <p-accordion>
-                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true"
+                    class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
                     <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-datemm-range label="查詢年月" [startControl]="queryForm.controls.startdate" [endControl]="queryForm.controls.enddate" [submitted]="submitted">
+                                <app-datemm-range label="查詢年月" [startControl]="queryForm.controls.startdate"
+                                    [endControl]="queryForm.controls.enddate" [submitted]="submitted">
                                 </app-datemm-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-dropdown-item label="結帳方式" controlName="checkout" [options]="checkoutOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.checkout" [submitted]="submitted">
-                                </app-dropdown-item>
+                                <app-dropdown label="結帳方式" controlName="checkout" [options]="checkoutOptions"
+                                    optionLabel="label" optionValue="value" [control]="queryForm.controls.checkout"
+                                    [submitted]="submitted">
+                                </app-dropdown>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-dropdown-item label="抽成方式" controlName="commissionMethod" [options]="commissionMethodOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.commissionMethod" [submitted]="submitted">
-                                </app-dropdown-item>
-                            </div>
-                        </div>
-                        <div class="grid p-fluid">
-                            <div class="col-12 md:col-6 lg:col-4">
-                                <app-dropdown-item label="廠商編號" controlName="vendorID" [options]="counterNameOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.vendorID" [submitted]="submitted">
-                                </app-dropdown-item>
-                            </div>
-                            <div class="col-12 md:col-6 lg:col-4">
-                                <app-dropdown-item label="專櫃編號" controlName="counterID" [options]="counterNameOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.counterID" [submitted]="submitted">
-                                </app-dropdown-item>
-                            </div>
-                            <div class="col-12 md:col-6 lg:col-4">
-                                <app-dropdown-item label="組織代號" controlName="organizationCode" [options]="organizationCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.organizationCode" [submitted]="submitted">
-                                </app-dropdown-item>
+                                <app-dropdown label="抽成方式" controlName="commissionMethod"
+                                    [options]="commissionMethodOptions" optionLabel="label" optionValue="value"
+                                    [control]="queryForm.controls.commissionMethod" [submitted]="submitted">
+                                </app-dropdown>
                             </div>
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-dropdown-item label="樓層" controlName="floor" [options]="floorOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.floor" [submitted]="submitted">
-                                </app-dropdown-item>
+                                <app-dropdown label="廠商編號" controlName="vendorID" [options]="counterNameOptions"
+                                    optionLabel="label" optionValue="value" [control]="queryForm.controls.vendorID"
+                                    [submitted]="submitted">
+                                </app-dropdown>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-dropdown-item label="業種/商品類別" controlName="industry" [options]="industryOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.industry" [submitted]="submitted">
-                                </app-dropdown-item>
+                                <app-dropdown label="專櫃編號" controlName="counterID" [options]="counterNameOptions"
+                                    optionLabel="label" optionValue="value" [control]="queryForm.controls.counterID"
+                                    [submitted]="submitted">
+                                </app-dropdown>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-multi-select label="是否使用業主發票" controlName="vendorInvoice" [options]="vendorInvoiceOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.vendorInvoice" [submitted]="submitted">
+                                <app-dropdown label="組織代號" controlName="organizationCode"
+                                    [options]="organizationCodeOptions" optionLabel="label" optionValue="value"
+                                    [control]="queryForm.controls.organizationCode" [submitted]="submitted">
+                                </app-dropdown>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown label="樓層" controlName="floor" [options]="floorOptions"
+                                    optionLabel="label" optionValue="value" [control]="queryForm.controls.floor"
+                                    [submitted]="submitted">
+                                </app-dropdown>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-dropdown label="業種/商品類別" controlName="industry" [options]="industryOptions"
+                                    optionLabel="label" optionValue="value" [control]="queryForm.controls.industry"
+                                    [submitted]="submitted">
+                                </app-dropdown>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-multi-select label="是否使用業主發票" controlName="vendorInvoice"
+                                    [options]="vendorInvoiceOptions" optionLabel="label" optionValue="value"
+                                    [control]="queryForm.controls.vendorInvoice" [submitted]="submitted">
                                 </app-multi-select>
                             </div>
                         </div>
                         <hr>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-4 lg:col-4">
-                                <app-checkbox-one label="只顯示應付帳款小於0" controlName="showAccount" [control]="queryForm.controls.showAccount">
+                                <app-checkbox-one label="只顯示應付帳款小於0" controlName="showAccount"
+                                    [control]="queryForm.controls.showAccount">
                                 </app-checkbox-one>
                             </div>
                             <div class="col-12 md:col-4 lg:col-4">
-                                <app-checkbox-one label="只顯示進貨總額小於0" controlName="showStock" [control]="queryForm.controls.showStock">
+                                <app-checkbox-one label="只顯示進貨總額小於0" controlName="showStock"
+                                    [control]="queryForm.controls.showStock">
                                 </app-checkbox-one>
                             </div>
                             <div class="col-12 md:col-4 lg:col-4">
@@ -72,22 +92,28 @@
                         <hr>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-dropdown-item label="結帳後n天付款" controlName="payDay" [options]="payDayOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.payDay" [submitted]="submitted">
-                                </app-dropdown-item>
+                                <app-dropdown label="結帳後n天付款" controlName="payDay" [options]="payDayOptions"
+                                    optionLabel="label" optionValue="value" [control]="queryForm.controls.payDay"
+                                    [submitted]="submitted">
+                                </app-dropdown>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-multi-select label="類別" controlName="category" [options]="categoryOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.category" [submitted]="submitted">
+                                <app-multi-select label="類別" controlName="category" [options]="categoryOptions"
+                                    optionLabel="label" optionValue="value" [control]="queryForm.controls.category"
+                                    [submitted]="submitted">
                                 </app-multi-select>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-radiobutton label="排序方式" groupname="order" [control]="queryForm.controls.order" [options]="orderOptions" [submitted]="submitted">
+                                <app-radiobutton label="排序方式" groupname="order" [control]="queryForm.controls.order"
+                                    [options]="orderOptions" [submitted]="submitted">
                                 </app-radiobutton>
                             </div>
                         </div>
                         <div *appHasPermission="queryPermission" class="col">
                             <div class="grid justify-content-end">
-                                <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                                <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                                <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                                <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                                    [loading]="loading"></app-button>
                             </div>
                         </div>
                     </form>

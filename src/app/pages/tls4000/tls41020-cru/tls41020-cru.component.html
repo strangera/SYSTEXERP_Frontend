@@ -12,70 +12,84 @@
                     </app-input-text>
                 </div> -->
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="收銀機號" controlName="ECR_No" [control]="dataForm.controls.ECR_No" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="收銀機號" controlName="ECR_No"
+                        [control]="dataForm.controls.ECR_No" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="信用卡刷卡機代碼" controlName="EDC_No" [control]="dataForm.controls.EDC_No" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="信用卡刷卡機代碼" controlName="EDC_No"
+                        [control]="dataForm.controls.EDC_No" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <!-- <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="收銀機位置" controlName="ECR_LocNo" [control]="dataForm.controls.ECR_LocNo" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="收銀機位置" controlName="ECR_LocNo" [control]="dataForm.controls.ECR_LocNo" [submitted]="submitted">
+                    </app-input-number>
                 </div> -->
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="啟用日期" controlName="EDC_No" [control]="dataForm.controls.EDC_BegDate" [submitted]="submitted">
+                    <app-date-one label="啟用日期" controlName="EDC_No" [control]="dataForm.controls.EDC_BegDate"
+                        [submitted]="submitted">
                     </app-date-one>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="停用日期" controlName="EDC_No" [control]="dataForm.controls.EDC_EdnDate" [submitted]="submitted">
+                    <app-date-one label="停用日期" controlName="EDC_No" [control]="dataForm.controls.EDC_EdnDate"
+                        [submitted]="submitted">
                     </app-date-one>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="信用卡刷卡機狀態" controlName="EDC_Status" [options]="EDC_Status_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.EDC_Status" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="信用卡刷卡機狀態" controlName="EDC_Status" [options]="EDC_Status_Option"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.EDC_Status"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="機台所屬專櫃編號" controlName="ECR_TLT_No" [control]="dataForm.controls.ECR_TLT_No" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="機台所屬專櫃編號" controlName="ECR_TLT_No"
+                        [control]="dataForm.controls.ECR_TLT_No" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="機台所屬專櫃名稱" controlName="ECR_TLT_Name" [control]="dataForm.controls.ECR_TLT_Name" [submitted]="submitted">
+                    <app-input-text label="機台所屬專櫃名稱" controlName="ECR_TLT_Name"
+                        [control]="dataForm.controls.ECR_TLT_Name" [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="第一台信用卡刷卡機IP" controlName="EDC_IP1" [control]="dataForm.controls.EDC_IP1" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="第一台信用卡刷卡機IP" controlName="EDC_IP1"
+                        [control]="dataForm.controls.EDC_IP1" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="第一台信用卡刷卡機端末機代碼" controlName="EDC_TmID1" [control]="dataForm.controls.EDC_TmID1" [submitted]="submitted">
-                    </app-input-serial-number>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="第二台信用卡刷卡機IP" controlName="EDC_IP2" [control]="dataForm.controls.EDC_IP2" [submitted]="submitted">
-                    </app-input-serial-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="第二台信用卡刷卡機端末機代碼" controlName="EDC_TmID2" [control]="dataForm.controls.EDC_TmID2" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="第一台信用卡刷卡機端末機代碼" controlName="EDC_TmID1"
+                        [control]="dataForm.controls.EDC_TmID1" [submitted]="submitted">
+                    </app-input-number>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="第三台信用卡刷卡機IP" controlName="EDC_IP3" [control]="dataForm.controls.EDC_IP3" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="第二台信用卡刷卡機IP" controlName="EDC_IP2"
+                        [control]="dataForm.controls.EDC_IP2" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="第三台信用卡刷卡機端末機代碼" controlName="EDC_TmID3" [control]="dataForm.controls.EDC_TmID3" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="第二台信用卡刷卡機端末機代碼" controlName="EDC_TmID2"
+                        [control]="dataForm.controls.EDC_TmID2" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number [useGrouping]="false" label="第三台信用卡刷卡機IP" controlName="EDC_IP3"
+                        [control]="dataForm.controls.EDC_IP3" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number [useGrouping]="false" label="第三台信用卡刷卡機端末機代碼" controlName="EDC_TmID3"
+                        [control]="dataForm.controls.EDC_TmID3" [submitted]="submitted">
+                    </app-input-number>
                 </div>
             </div>
             <hr>
@@ -86,8 +100,8 @@
                     </app-date-one>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="建立人員" controlName="CRT_USR_No" [control]="dataForm.controls.CRT_USR_No" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="建立人員" controlName="CRT_USR_No" [control]="dataForm.controls.CRT_USR_No" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="建立人員姓名" controlName="CRT_USR_Name" [control]="dataForm.controls.CRT_USR_Name" [submitted]="submitted">
@@ -102,8 +116,8 @@
                     </app-date-one>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="變更人員" controlName="UPD_USR_No" [control]="dataForm.controls.UPD_USR_No" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="變更人員" controlName="UPD_USR_No" [control]="dataForm.controls.UPD_USR_No" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="變更人員姓名" controlName="UPD_USR_Name" [control]="dataForm.controls.UPD_USR_Name" [submitted]="submitted">
@@ -113,8 +127,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

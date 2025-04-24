@@ -1,0 +1,13 @@
+<!-- 標籤 -->
+<label [for]="controlName">{{ label }}
+  <span *ngIf="isRequired" class="required">*</span>
+</label>
+<!-- 元件 -->
+<p-calendar [formControl]="control" [id]="controlName" [placeholder]="control.disabled ? '' : placeholder"
+  [timeOnly]="timeOnly" [showTime]="showTime" [hourFormat]="hourFormat" [showSeconds]="showSeconds" [view]="view"
+  [dateFormat]="dateFormat" [ngClass]="{'ng-invalid ng-dirty': submitted && control.errors}"
+  [showIcon]="!control.disabled" [minDate]="minDate" [maxDate]="maxDate" [appendTo]="'body'"
+  (onClose)="onClose()"></p-calendar>
+<!-- 錯誤訊息 -->
+<app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
+  [control]="control"></app-control-messages>

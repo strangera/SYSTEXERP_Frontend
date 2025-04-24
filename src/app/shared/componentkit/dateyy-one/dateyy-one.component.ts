@@ -16,6 +16,6 @@ export class DateyyOneComponent extends BasicKitComponent implements OnInit {
     // Required *
     this.checkRequiredValidator(this.control);
     // Placeholder
-    this.setPlaceholder('請選擇年', this.control);
+    // this.setPlaceholder('請選擇年', this.control);
   }
 }

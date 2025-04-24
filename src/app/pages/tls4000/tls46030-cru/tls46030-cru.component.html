@@ -9,11 +9,13 @@
             <h5>鍵盤設定主檔</h5>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="鍵盤型態" controlName="ECR_KBType" [control]="dataForm.controls.ECR_KBType" [submitted]="submitted">
+                    <app-input-text label="鍵盤型態" controlName="ECR_KBType" [control]="dataForm.controls.ECR_KBType"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="鍵盤權限等級" controlName="USR_Level" [control]="dataForm.controls.USR_Level" [submitted]="submitted">
+                    <app-input-text label="鍵盤權限等級" controlName="USR_Level" [control]="dataForm.controls.USR_Level"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
@@ -23,11 +25,13 @@
                     </app-date-one>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="建立人員" controlName="CRT_USR_No" [control]="dataForm.controls.CRT_USR_No" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="建立人員" controlName="CRT_USR_No"
+                        [control]="dataForm.controls.CRT_USR_No" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="建立人員姓名" controlName="CRT_USR_Name" [control]="dataForm.controls.CRT_USR_Name" [submitted]="submitted">
+                    <app-input-text label="建立人員姓名" controlName="CRT_USR_Name" [control]="dataForm.controls.CRT_USR_Name"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
@@ -37,31 +41,36 @@
                     </app-date-one>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="變更人員" controlName="UPD_USR_No" [control]="dataForm.controls.CRT_USR_No" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="變更人員" controlName="UPD_USR_No"
+                        [control]="dataForm.controls.CRT_USR_No" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="變更人員姓名" controlName="UPD_USR_Name" [control]="dataForm.controls.UPD_USR_Name" [submitted]="submitted">
+                    <app-input-text label="變更人員姓名" controlName="UPD_USR_Name" [control]="dataForm.controls.UPD_USR_Name"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
-                <app-editor-text label="鍵盤備註" controlName="ECR_KBDesc" [control]="dataForm.controls.ECR_KBDesc" [style]="{ height: '100px' }" [submitted]="submitted">
-                </app-editor-text>
-            <hr/>
+            <app-editor-text label="鍵盤備註" controlName="ECR_KBDesc" [control]="dataForm.controls.ECR_KBDesc"
+                [style]="{ height: '100px' }" [submitted]="submitted">
+            </app-editor-text>
+            <hr />
             <h5>鍵盤設定明細檔</h5>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="功能代碼" controlName="KB_Func" [control]="dataForm.controls.KB_Func" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="功能代碼" controlName="KB_Func"
+                        [control]="dataForm.controls.KB_Func" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="按鍵代碼" controlName="KB_ScanCode" [control]="dataForm.controls.KB_ScanCode" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="按鍵代碼" controlName="KB_ScanCode"
+                        [control]="dataForm.controls.KB_ScanCode" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <!-- 操作過程 先不要合併鍵-->
                 <!-- <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="合併鍵的按鍵代碼" controlName="KB_Merge" [control]="dataForm.controls.KB_Merge" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="合併鍵的按鍵代碼" controlName="KB_Merge" [control]="dataForm.controls.KB_Merge" [submitted]="submitted">
+                    </app-input-number>
                 </div> -->
             </div>
             <div class="grid p-fluid">
@@ -75,61 +84,75 @@
                     </app-input-number>
                 </div> -->
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="ON/OFF" controlName="KB_Switch" [options]="KB_Switch_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.KB_Switch" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="ON/OFF" controlName="KB_Switch" [options]="KB_Switch_Options"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.KB_Switch"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="顏色" controlName="KB_Color" [options]="Color_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.KB_Color" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="顏色" controlName="KB_Color" [options]="Color_Options" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.KB_Color" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="參數(1)" controlName="KB_Arg1" [control]="dataForm.controls.KB_Arg1" [submitted]="submitted">
+                    <app-input-text label="參數(1)" controlName="KB_Arg1" [control]="dataForm.controls.KB_Arg1"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="參數(2)" controlName="KB_Arg2" [control]="dataForm.controls.KB_Arg2" [submitted]="submitted">
+                    <app-input-text label="參數(2)" controlName="KB_Arg2" [control]="dataForm.controls.KB_Arg2"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="參數(3)" controlName="KB_Arg3" [control]="dataForm.controls.KB_Arg3" [submitted]="submitted">
+                    <app-input-text label="參數(3)" controlName="KB_Arg3" [control]="dataForm.controls.KB_Arg3"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
             <hr>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="顯示字型" controlName="KB_Font" [control]="dataForm.controls.KB_Font" [submitted]="submitted">
+                    <app-input-text label="顯示字型" controlName="KB_Font" [control]="dataForm.controls.KB_Font"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="顯示字型大小" controlName="KB_Size" [control]="dataForm.controls.KB_Size" [submitted]="submitted">
+                    <app-input-number label="顯示字型大小" controlName="KB_Size" [control]="dataForm.controls.KB_Size"
+                        [submitted]="submitted">
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-multi-select label="顯示字型" controlName="KB_Fonttyped" [options]="KB_Fonttyped_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.KB_Fonttyped" [submitted]="submitted">
+                    <app-multi-select label="顯示字型" controlName="KB_Fonttyped" [options]="KB_Fonttyped_Options"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.KB_Fonttyped"
+                        [submitted]="submitted">
                     </app-multi-select>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="字型顏色" controlName="KB_FontColor" [options]="Color_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.KB_FontColor" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="字型顏色" controlName="KB_FontColor" [options]="Color_Options" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.KB_FontColor" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <hr>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="按鍵型狀" controlName="KB_Style" [options]="KB_Style_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.KB_Style" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="按鍵型狀" controlName="KB_Style" [options]="KB_Style_Options" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.KB_Style" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="按鍵顯示(第一行)" controlName="KB_Display1" [control]="dataForm.controls.KB_Display1" [submitted]="submitted">
+                    <app-input-text label="按鍵顯示(第一行)" controlName="KB_Display1"
+                        [control]="dataForm.controls.KB_Display1" [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="按鍵顯示(第二行)" controlName="KB_Display2" [control]="dataForm.controls.KB_Display2" [submitted]="submitted">
+                    <app-input-text label="按鍵顯示(第二行)" controlName="KB_Display2"
+                        [control]="dataForm.controls.KB_Display2" [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
@@ -147,8 +170,8 @@
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-6 md:col-4 lg:col-2">
-                            <app-dropdown-default label="系統別初始" controlName="CashRegisterType" [options]="CashRegisterTypeItems" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'CashRegisterType')" [submitted]="submitted">
-                            </app-dropdown-default>
+                            <app-dropdown label="系統別初始" controlName="CashRegisterType" [options]="CashRegisterTypeItems" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'CashRegisterType')" [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                     </div>
                     <hr />
@@ -160,8 +183,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

@@ -13,94 +13,116 @@
                     </app-date-one>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="接洽人員" controlName="contactPerson" [options]="contactPersonOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.contactPerson" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="接洽人員" controlName="contactPerson" [options]="contactPersonOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.contactPerson"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-radiobutton label="廠商統一編號" groupname="vendorUID" [control]="dataForm.controls.vendorUID" [options]="vendorUIDOptions" [submitted]="submitted">
+                    <app-radiobutton label="廠商統一編號" groupname="vendorUID" [control]="dataForm.controls.vendorUID"
+                        [options]="vendorUIDOptions" [submitted]="submitted">
                     </app-radiobutton>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="業種代號" controlName="industryCode" [options]="industryCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.industryCode" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="業種代號" controlName="industryCode" [options]="industryCodeOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.industryCode"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商名稱(中文)" controlName="vendorCName" [control]="dataForm.controls.vendorCName" [submitted]="submitted">>
+                    <app-input-text label="廠商名稱(中文)" controlName="vendorCName" [control]="dataForm.controls.vendorCName"
+                        [submitted]="submitted">>
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商名稱(英文)" controlName="vendorEName" [control]="dataForm.controls.vendorEName" [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="品牌名稱(中文)" controlName="brandCName" [control]="dataForm.controls.brandCName" [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="品牌名稱(英文)" controlName="brandEName" [control]="dataForm.controls.brandEName" [submitted]="submitted">>
+                    <app-input-text label="廠商名稱(英文)" controlName="vendorEName" [control]="dataForm.controls.vendorEName"
+                        [submitted]="submitted">>
                     </app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="聯絡人" controlName="cPerson" [control]="dataForm.controls.cPerson" [submitted]="submitted">
+                    <app-input-text label="品牌名稱(中文)" controlName="brandCName" [control]="dataForm.controls.brandCName"
+                        [submitted]="submitted">>
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="聯絡人電話(O)" controlName="cPhone" [control]="dataForm.controls.cPhone" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="聯絡人頭銜" controlName="cTitle" [control]="dataForm.controls.cTitle" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="聯絡人傳真" controlName="cFax" [control]="dataForm.controls.cFax" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="聯絡人行動電話" controlName="cCellphone" [control]="dataForm.controls.cCellphone" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="聯絡人電子郵件" controlName="cEmail" [control]="dataForm.controls.cEmail" [submitted]="submitted">
+                    <app-input-text label="品牌名稱(英文)" controlName="brandEName" [control]="dataForm.controls.brandEName"
+                        [submitted]="submitted">>
                     </app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="公司通訊地址" controlName="companyAdress" [control]="dataForm.controls.companyAdress" [submitted]="submitted">
+                    <app-input-text label="聯絡人" controlName="cPerson" [control]="dataForm.controls.cPerson"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="公司負責人" controlName="companyResponsibility" [control]="dataForm.controls.companyResponsibility" [submitted]="submitted">
+                    <app-input-text label="聯絡人電話(O)" controlName="cPhone" [control]="dataForm.controls.cPhone"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="經營方式" controlName="businessStyle" [options]="businessStyleOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.businessStyle" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-input-text label="聯絡人頭銜" controlName="cTitle" [control]="dataForm.controls.cTitle"
+                        [submitted]="submitted">
+                    </app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="需求面積" controlName="requiredArea" [control]="dataForm.controls.requiredArea" [submitted]="submitted">
+                    <app-input-text label="聯絡人傳真" controlName="cFax" [control]="dataForm.controls.cFax"
+                        [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="聯絡人行動電話" controlName="cCellphone" [control]="dataForm.controls.cCellphone"
+                        [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="聯絡人電子郵件" controlName="cEmail" [control]="dataForm.controls.cEmail"
+                        [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="公司通訊地址" controlName="companyAdress"
+                        [control]="dataForm.controls.companyAdress" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="公司負責人" controlName="companyResponsibility"
+                        [control]="dataForm.controls.companyResponsibility" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown label="經營方式" controlName="businessStyle" [options]="businessStyleOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.businessStyle"
+                        [submitted]="submitted">
+                    </app-dropdown>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number label="需求面積" controlName="requiredArea" [control]="dataForm.controls.requiredArea"
+                        [submitted]="submitted">
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="商品出產地" controlName="origin" [control]="dataForm.controls.origin" [submitted]="submitted">
+                    <app-input-text label="商品出產地" controlName="origin" [control]="dataForm.controls.origin"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
             <hr>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark" [style]="{ height: '100px' }" [submitted]="submitted">
+                    <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark"
+                        [style]="{ height: '100px' }" [submitted]="submitted">
                     </app-editor-text>
                 </div>
             </div>
@@ -112,16 +134,19 @@
                             <h5>潛在客戶 {{i+1}}</h5>
                         </div>
                         <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                                class="col"></app-button-dynamicallydelete>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="其他商場" controlName="otherMall" [control]="getFormControl(i, 'otherMall')" [submitted]="submitted">
+                            <app-input-text label="其他商場" controlName="otherMall"
+                                [control]="getFormControl(i, 'otherMall')" [submitted]="submitted">
                             </app-input-text>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="面積 / 年營業額" controlName="annualTurnover" [control]="getFormControl(i, 'annualTurnover')" [submitted]="submitted">
+                            <app-input-text label="面積 / 年營業額" controlName="annualTurnover"
+                                [control]="getFormControl(i, 'annualTurnover')" [submitted]="submitted">
                             </app-input-text>
                         </div>
                     </div>
@@ -134,8 +159,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

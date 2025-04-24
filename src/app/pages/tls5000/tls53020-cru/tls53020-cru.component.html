@@ -9,67 +9,35 @@
   <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
     <div class="grid p-fluid">
       <div class="col-12 md:col-6 lg:col-4">
-        <app-input-text
-          label="盤點單編號"
-          controlName="inventoryCode"
-          [control]="dataForm.controls.inventoryCode"
-          [submitted]="submitted"
-        ></app-input-text>
+        <app-input-text label="盤點單編號" controlName="inventoryCode" [control]="dataForm.controls.inventoryCode"
+          [submitted]="submitted"></app-input-text>
       </div>
       <div class="col-12 md:col-6 lg:col-4">
-        <app-dropdown-item
-          label="倉別"
-          controlName="warehouseCode"
-          [options]="warehouseOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="dataForm.controls.warehouseCode"
-          [submitted]="submitted"
-        ></app-dropdown-item>
+        <app-dropdown label="倉別" controlName="warehouseCode" [options]="warehouseOptions" optionLabel="label"
+          optionValue="value" [control]="dataForm.controls.warehouseCode" [submitted]="submitted"></app-dropdown>
         <!-- 倉別 dropdown -->
       </div>
       <div class="col-12 md:col-6 lg:col-4">
-        <app-dropdown-item
-          label="品牌編號"
-          controlName="brandCode"
-          [options]="brandCodeOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="dataForm.controls.brandCode"
-          [submitted]="submitted"
-        ></app-dropdown-item>
+        <app-dropdown label="品牌編號" controlName="brandCode" [options]="brandCodeOptions" optionLabel="label"
+          optionValue="value" [control]="dataForm.controls.brandCode" [submitted]="submitted"></app-dropdown>
       </div>
       <div class="col-12 md:col-6 lg:col-4">
-        <app-date-one
-          label="盤點基準日期"
-          [control]="dataForm.controls.inventoryDateFrom"
-          [submitted]="submitted"
-        ></app-date-one>
+        <app-date-one label="盤點基準日期" [control]="dataForm.controls.inventoryDateFrom"
+          [submitted]="submitted"></app-date-one>
         <!-- 盤點基準日期 -->
       </div>
 
       <div class="col-12 md:col-6 lg:col-4">
-        <app-editor-text
-          label="盤點單說明"
-          controlName="Description"
-          [control]="dataForm.controls.Description"
-          [style]="{ height: '100px' }"
-          [submitted]="submitted"
-        ></app-editor-text>
+        <app-editor-text label="盤點單說明" controlName="Description" [control]="dataForm.controls.Description"
+          [style]="{ height: '100px' }" [submitted]="submitted"></app-editor-text>
       </div>
       <div class="col-12 md:col-6 lg:col-4">
-        <app-dropdown-item
-          label="盤點類別"
-          controlName="inventoryCategory"
-          [options]="inventoryCategoryOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="dataForm.controls.inventoryCategory"
-          [submitted]="submitted"
-        ></app-dropdown-item>
+        <app-dropdown label="盤點類別" controlName="inventoryCategory" [options]="inventoryCategoryOptions"
+          optionLabel="label" optionValue="value" [control]="dataForm.controls.inventoryCategory"
+          [submitted]="submitted"></app-dropdown>
       </div>
     </div>
-<!--     
+    <!--
     <hr />
     <ng-container formArrayName="items">
       <ng-container
@@ -78,7 +46,7 @@
       >
         <div class="grid align-items-center">
           <div class="col" style="flex: 1">
-          
+
           </div>
           <div>
             <app-button-dynamicallydelete
@@ -90,12 +58,12 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
+            <app-dropdown
               label="商品管理編號/名稱"
               controlName="mgname"
               [control]="getFormControl(i, 'mgname')"
               [submitted]="submitted"
-            ></app-dropdown-item>
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
@@ -133,11 +101,8 @@
   </form>
   <div class="col pt-4">
     <div class="grid justify-content-end">
-      <app-button-cancel (click)="onCancel()"></app-button-cancel>
-      <app-button-submit
-        (click)="submitForm(dataForm)"
-        *ngIf="isFormEditable"
-      ></app-button-submit>
+      <app-button btnType="cancel" (click)="onCancel()"></app-button>
+      <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
     </div>
   </div>
 </p-panel>

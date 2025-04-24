@@ -11,67 +11,36 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <!-- Dropdown for 補登類別 -->
-          <app-dropdown-item
-            label="補登類別"
-            controlName="supplementCategory"
-            [options]="supplementCategoryOptions" 
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls['supplementCategory']" 
-            [submitted]="submitted"
-          ></app-dropdown-item>
+          <app-dropdown label="補登類別" controlName="supplementCategory" [options]="supplementCategoryOptions"
+            optionLabel="label" optionValue="value" [control]="dataForm.controls['supplementCategory']"
+            [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one
-            label="銷售日期"
-            [control]="dataForm.controls.saleDateStart"
-            [submitted]="submitted"
-          ></app-date-one>
+          <app-date-one label="銷售日期" [control]="dataForm.controls.saleDateStart" [submitted]="submitted"></app-date-one>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
           <!-- Dropdown for 收銀機號 -->
-          <app-dropdown-item
-            label="收銀機號"
-            controlName="cashierCode"
-            [options]="cashierOptions" 
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls['cashierCode']" 
-            [submitted]="submitted"
-          ></app-dropdown-item>
+          <app-dropdown label="收銀機號" controlName="cashierCode" [options]="cashierOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls['cashierCode']" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <!-- Dropdown for 專櫃編號 -->
-          <app-dropdown-item
-            label="專櫃編號"
-            controlName="counterCode"
-            [options]="counterCodeOptions" 
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls['counterCode']"
-            [submitted]="submitted"
-          ></app-dropdown-item>
+          <app-dropdown label="專櫃編號" controlName="counterCode" [options]="counterCodeOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls['counterCode']" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <!-- Input for 交易序號 -->
-          <app-input-serial-number
-            label="交易序號"
-            controlName="transactionSerial"
-            [control]="dataForm.controls['transactionSerial']" 
-            [submitted]="submitted"
-          ></app-input-serial-number>
+          <app-input-number [useGrouping]="false" label="交易序號" controlName="transactionSerial"
+            [control]="dataForm.controls['transactionSerial']" [submitted]="submitted"></app-input-number>
         </div>
       </div>
     </form>
     <div class="col pt-4">
       <div class="grid justify-content-end">
-        <app-button-cancel (click)="onCancel()"></app-button-cancel>
-        <app-button-submit
-          (click)="submitForm(dataForm)"
-        ></app-button-submit>
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+        <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
       </div>
     </div>
   </p-panel>
 </div>
-

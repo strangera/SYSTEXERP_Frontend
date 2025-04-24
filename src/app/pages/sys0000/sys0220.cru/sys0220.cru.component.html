@@ -6,8 +6,9 @@
         <div>
             <!-- 操作按鈕區 -->
             <div>
-                <app-button-action label="重新設定" (click)="onReset()" icon="pi pi-undo" class="col"></app-button-action>
-                <app-button-action label="回上頁" (click)="onBack()" class="col"></app-button-action>
+                <app-button btnType="action" label="重新設定" (click)="onReset()" icon="pi pi-undo"
+                    class="col"></app-button>
+                <app-button btnType="action" label="回上頁" (click)="onBack()" class="col"></app-button>
             </div>
 
         </div>
@@ -26,8 +27,8 @@
         <!-- 提交和取消按鈕 -->
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
             </div>
         </div>
     </p-panel>

@@ -1,169 +1,113 @@
 <div class="card">
-    <div class="grid align-items-center">
-      <div class="col" style="flex: 1">
-        <app-menubar [ProgNo]="ProgNo"></app-menubar>
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <div>
+      <app-button btnType="cancel" (click)="onCancel()" class="col"></app-button>
+    </div>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <!-- 倉別 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="倉別" controlName="Warehouse" [control]="dataForm.controls.Warehouse"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <!-- 驗收單號 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="驗收單號" controlName="Receiptnumber" [control]="dataForm.controls.Receiptnumber"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <!-- 申請人編號 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="申請人編號" controlName="ApplicantCode" [control]="dataForm.controls.ApplicantCode"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <!-- 申請日期 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="申請日期" controlName="ApplicationDate" [control]="dataForm.controls.ApplicationDate"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <!-- 採購單狀態 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="採購單狀態" controlName="PurchaseOrderStatus"
+            [control]="dataForm.controls.PurchaseOrderStatus" [submitted]="submitted"></app-input-text>
+        </div>
+        <!-- 部門代號 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="部門代號" controlName="DepartmentCode" [control]="dataForm.controls.DepartmentCode"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <!-- 發料日期 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="發料日期" controlName="ShippingDate" [control]="dataForm.controls.ShippingDate"
+            [submitted]="submitted"></app-input-text>
+        </div>
       </div>
-      <div>
-        <app-button-cancel (click)="onCancel()" class="col"></app-button-cancel>
+
+      <!-- 動態新增品項 -->
+      <hr />
+      <ng-container formArrayName="items">
+        <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+          <div class="grid align-items-center">
+            <div class="col" style="flex: 1">
+              <p> {{ i + 1 }}</p>
+            </div>
+            <div>
+              <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                class="col"></app-button-dynamicallydelete>
+            </div>
+          </div>
+          <div class="grid p-fluid">
+            <!-- 品項編碼 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="品項編碼" controlName="ItemCode" [control]="getFormControl(i, 'ItemCode')"
+                [submitted]="submitted"></app-input-text>
+            </div>
+            <!-- 單位 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="單位" controlName="Unit" [control]="getFormControl(i, 'Unit')"
+                [submitted]="submitted"></app-input-text>
+            </div>
+            <!-- 申請數量 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="申請數量" controlName="RequestedQuantity"
+                [control]="getFormControl(i, 'RequestedQuantity')" [submitted]="submitted"></app-input-text>
+            </div>
+            <!-- 應發數量 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="應發數量" controlName="ExpectedQuantity"
+                [control]="getFormControl(i, 'ExpectedQuantity')" [submitted]="submitted"></app-input-text>
+            </div>
+            <!-- 實發數量 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="實發數量" controlName="ActualQuantity" [control]="getFormControl(i, 'ActualQuantity')"
+                [submitted]="submitted"></app-input-text>
+            </div>
+            <!-- 說明 -->
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="說明" controlName="Description" [control]="getFormControl(i, 'Description')"
+                [submitted]="submitted"></app-input-text>
+            </div>
+          </div>
+          <hr />
+        </ng-container>
+      </ng-container>
+
+      <!-- 動態新增按鈕 -->
+      <div class="pt-1">
+        <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+      </div>
+    </form>
+
+    <!-- 提交和取消按鈕 -->
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+        <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
       </div>
     </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-      <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-        <div class="grid p-fluid">
-          <!-- 倉別 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="倉別"
-              controlName="Warehouse"
-              [control]="dataForm.controls.Warehouse"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <!-- 驗收單號 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="驗收單號"
-              controlName="Receiptnumber"
-              [control]="dataForm.controls.Receiptnumber"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <!-- 申請人編號 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="申請人編號"
-              controlName="ApplicantCode"
-              [control]="dataForm.controls.ApplicantCode"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <!-- 申請日期 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="申請日期"
-              controlName="ApplicationDate"
-              [control]="dataForm.controls.ApplicationDate"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <!-- 採購單狀態 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="採購單狀態"
-              controlName="PurchaseOrderStatus"
-              [control]="dataForm.controls.PurchaseOrderStatus"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <!-- 部門代號 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="部門代號"
-              controlName="DepartmentCode"
-              [control]="dataForm.controls.DepartmentCode"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <!-- 發料日期 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="發料日期"
-              controlName="ShippingDate"
-              [control]="dataForm.controls.ShippingDate"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-        </div>
-  
-        <!-- 動態新增品項 -->
-        <hr />
-        <ng-container formArrayName="items">
-          <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-            <div class="grid align-items-center">
-              <div class="col" style="flex: 1">
-                <p> {{ i + 1 }}</p>
-              </div>
-              <div>
-                <app-button-dynamicallydelete
-                  (click)="onRemoveItem(i)"
-                  [crudstatus]="crudstatus"
-                  class="col"
-                ></app-button-dynamicallydelete>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <!-- 品項編碼 -->
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="品項編碼"
-                  controlName="ItemCode"
-                  [control]="getFormControl(i, 'ItemCode')"
-                  [submitted]="submitted"
-                ></app-input-text>
-              </div>
-              <!-- 單位 -->
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="單位"
-                  controlName="Unit"
-                  [control]="getFormControl(i, 'Unit')"
-                  [submitted]="submitted"
-                ></app-input-text>
-              </div>
-              <!-- 申請數量 -->
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="申請數量"
-                  controlName="RequestedQuantity"
-                  [control]="getFormControl(i, 'RequestedQuantity')"
-                  [submitted]="submitted"
-                ></app-input-text>
-              </div>
-              <!-- 應發數量 -->
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="應發數量"
-                  controlName="ExpectedQuantity"
-                  [control]="getFormControl(i, 'ExpectedQuantity')"
-                  [submitted]="submitted"
-                ></app-input-text>
-              </div>
-              <!-- 實發數量 -->
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="實發數量"
-                  controlName="ActualQuantity"
-                  [control]="getFormControl(i, 'ActualQuantity')"
-                  [submitted]="submitted"
-                ></app-input-text>
-              </div>
-              <!-- 說明 -->
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="說明"
-                  controlName="Description"
-                  [control]="getFormControl(i, 'Description')"
-                  [submitted]="submitted"
-                ></app-input-text>
-              </div>
-            </div>
-            <hr />
-          </ng-container>
-        </ng-container>
-  
-        <!-- 動態新增按鈕 -->
-        <div class="pt-1">
-          <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
-        </div>
-      </form>
-  
-      <!-- 提交和取消按鈕 -->
-      <div class="col pt-4">
-        <div class="grid justify-content-end">
-          <app-button-cancel (click)="onCancel()"></app-button-cancel>
-          <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
-        </div>
-      </div>
-    </p-panel>
-  </div>
-  
+  </p-panel>
+</div>

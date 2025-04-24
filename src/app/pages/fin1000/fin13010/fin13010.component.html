@@ -4,11 +4,12 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <div *appHasPermission="addPermission">
-            <app-button-demo label="發票區段轉檔" (click)="onCreate()" class="col"></app-button-demo>
+            <app-button btnType="create" label="發票區段轉檔" (click)="onCreate()" class="col"></app-button>
         </div>
     </div>
     <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+            [headerStyleClass]="'query-accordionTab'">
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
@@ -16,12 +17,15 @@
                         </app-datemm-one>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="銷售日期" [startControl]="queryForm.controls.startSalesDate" [endControl]="queryForm.controls.endSalesDate" [submitted]="submitted">
+                        <app-date-range label="銷售日期" [startControl]="queryForm.controls.startSalesDate"
+                            [endControl]="queryForm.controls.endSalesDate" [submitted]="submitted">
                         </app-date-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-dropdown-item label="稅籍編號" controlName="taxNumber" [options]="taxNumberOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.taxNumber" [submitted]="submitted">
-                        </app-dropdown-item>
+                        <app-dropdown label="稅籍編號" controlName="taxNumber" [options]="taxNumberOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.taxNumber"
+                            [submitted]="submitted">
+                        </app-dropdown>
                     </div>
                 </div>
                 <ul>

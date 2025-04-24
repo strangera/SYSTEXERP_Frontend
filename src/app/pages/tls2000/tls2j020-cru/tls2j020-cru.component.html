@@ -8,8 +8,9 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="業種" controlName="industry" [options]="industryOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.industry" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="業種" controlName="industry" [options]="industryOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.industry" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <!---->
@@ -21,17 +22,20 @@
                             <h5>品項 {{i+1}}</h5>
                         </div>
                         <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                                class="col"></app-button-dynamicallydelete>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="品項名稱" controlName="name" [control]="getFormControl(i, 'name')" [submitted]="submitted">
+                            <app-input-text label="品項名稱" controlName="name" [control]="getFormControl(i, 'name')"
+                                [submitted]="submitted">
                             </app-input-text>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="稅別" controlName="tax" [options]="taxOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'tax')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="稅別" controlName="tax" [options]="taxOptions" optionLabel="label"
+                                optionValue="value" [control]="getFormControl(i, 'tax')" [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                     </div>
                     <hr />
@@ -43,8 +47,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

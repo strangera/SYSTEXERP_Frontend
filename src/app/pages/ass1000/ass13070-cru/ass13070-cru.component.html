@@ -6,15 +6,18 @@
     </div>
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            
+
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="新保管單位" controlName="keeperUnit" [options]="organizationOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.keeperUnit" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="新保管單位" controlName="keeperUnit" [options]="organizationOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.keeperUnit"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="新保管人" controlName="keeper" [options]="userCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.keeper" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="新保管人" controlName="keeper" [options]="userCodeOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.keeper" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-date-one label="移轉生效日" [control]="dataForm.controls.transferDate" [submitted]="submitted">
@@ -23,12 +26,15 @@
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="新使用單位" controlName="userUnit" [options]="organizationOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.userUnit" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="新使用單位" controlName="userUnit" [options]="organizationOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.userUnit"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="新使用人" controlName="user" [options]="userCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.user" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="新使用人" controlName="user" [options]="userCodeOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.user" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <!-- <hr>
@@ -44,8 +50,8 @@
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="科目代號" controlName="subjectCode" [options]="subjectCodeOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'subjectCode')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="科目代號" controlName="subjectCode" [options]="subjectCodeOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'subjectCode')" [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                     </div>
                     <hr>
@@ -57,8 +63,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

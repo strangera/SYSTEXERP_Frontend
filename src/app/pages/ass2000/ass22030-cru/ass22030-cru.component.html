@@ -1,127 +1,84 @@
 <div class="card">
-    <div class="grid align-items-center">
-      <div class="col" style="flex: 1">
-        <app-menubar [ProgNo]="ProgNo"></app-menubar>
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+
+          <app-datemm-one label="結算年月" controlName="settlementYM" [control]="dataForm.controls.settlementYM"
+            [submitted]="submitted">
+          </app-datemm-one>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="能源類型" controlName="Energytype" [options]="Energytype" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.Energytype" [submitted]="submitted"></app-dropdown>
+        </div>
+
+
+      </div>
+      <hr />
+      <ng-container formArrayName="items">
+        <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+          <div class="grid align-items-center">
+            <div class="col" style="flex: 1">
+              <p> {{ i + 1 }}</p>
+            </div>
+            <div>
+              <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                class="col"></app-button-dynamicallydelete>
+            </div>
+          </div>
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="瓦斯錶編號" controlName="unit" [control]="getFormControl(i, 'unit')"
+                [submitted]="submitted">
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="上次抄錶日" controlName="unit" [control]="getFormControl(i, 'unit')"
+                [submitted]="submitted">
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="上次抄錶度" controlName="unit" [control]="getFormControl(i, 'unit')"
+                [submitted]="submitted">
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-date-one label="本次抄錶日" controlName="unit" [control]="getFormControl(i, 'unit')"
+                [submitted]="submitted">
+              </app-date-one>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="本次抄錶度" controlName="unit" [control]="getFormControl(i, 'unit')"
+                [submitted]="submitted">
+              </app-input-text>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="備註" controlName="unit" [control]="getFormControl(i, 'unit')"
+                [submitted]="submitted">
+              </app-input-text>
+            </div>
+
+          </div>
+
+          <hr />
+        </ng-container>
+      </ng-container>
+      <div class="pt-1">
+        <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+      </div>
+    </form>
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+        <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
       </div>
     </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-      <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-        <div class="grid p-fluid">
-            <div class="col-12 md:col-6 lg:col-4">
-              
-                    <app-datemm-one
-                      label="結算年月"
-                      controlName="settlementYM"
-                      [control]="dataForm.controls.settlementYM"
-                      [submitted]="submitted"
-                    >
-                    </app-datemm-one>
-                  </div>
-                  <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown-item
-                  label="能源類型"
-                  controlName="Energytype"
-                  [options]="Energytype"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="dataForm.controls.Energytype"
-                  [submitted]="submitted"
-                ></app-dropdown-item>
-              </div>
-    
-        
-        </div>
-        <hr />
-        <ng-container formArrayName="items">
-          <ng-container
-            *ngFor="let item of items.controls; let i = index"
-            [formGroupName]="i"
-          >
-            <div class="grid align-items-center">
-              <div class="col" style="flex: 1">
-                <p> {{ i + 1 }}</p>
-              </div>
-              <div>
-                <app-button-dynamicallydelete
-                  (click)="onRemoveItem(i)"
-                  [crudstatus]="crudstatus"
-                  class="col"
-                ></app-button-dynamicallydelete>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text
-                      label="瓦斯錶編號"
-                      controlName="unit"
-                      [control]="getFormControl(i, 'unit')"
-                      [submitted]="submitted"
-                    >
-                    </app-input-text>
-                  </div>            <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text
-                      label="上次抄錶日"
-                      controlName="unit"
-                      [control]="getFormControl(i, 'unit')"
-                      [submitted]="submitted"
-                    >
-                    </app-input-text>
-                  </div>            <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text
-                      label="上次抄錶度"
-                      controlName="unit"
-                      [control]="getFormControl(i, 'unit')"
-                      [submitted]="submitted"
-                    >
-                    </app-input-text>
-                  </div>            <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one
-                      label="本次抄錶日"
-                      controlName="unit"
-                      [control]="getFormControl(i, 'unit')"
-                      [submitted]="submitted"
-                    >
-                    </app-date-one>
-                  </div>            <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text
-                      label="本次抄錶度"
-                      controlName="unit"
-                      [control]="getFormControl(i, 'unit')"
-                      [submitted]="submitted"
-                    >
-                    </app-input-text>
-                  </div>
-  
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="備註"
-                  controlName="unit"
-                  [control]="getFormControl(i, 'unit')"
-                  [submitted]="submitted"
-                >
-                </app-input-text>
-              </div>
-              
-            </div>
-  
-            <hr />
-          </ng-container>
-        </ng-container>
-        <div class="pt-1">
-          <app-button-dynamicallyadd
-            (click)="onAddItem()"
-          ></app-button-dynamicallyadd>
-        </div>
-      </form>
-      <div class="col pt-4">
-        <div class="grid justify-content-end">
-          <app-button-cancel (click)="onCancel()"></app-button-cancel>
-          <app-button-submit
-            (click)="submitForm(dataForm)"
-            *ngIf="isFormEditable"
-          ></app-button-submit>
-        </div>
-      </div>
-    </p-panel>
-  </div>
-  
+  </p-panel>
+</div>

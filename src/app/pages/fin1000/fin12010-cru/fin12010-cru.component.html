@@ -12,25 +12,29 @@
                     </app-datemm-two>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="字軌" controlName="wordTrack" [control]="dataForm.controls.wordTrack" [submitted]="submitted">
+                    <app-input-text label="字軌" controlName="wordTrack" [control]="dataForm.controls.wordTrack"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number-range label="發票號碼" [startControl]="dataForm.controls.startserialInvoice" [endControl]="dataForm.controls.endserialInvoice" [submitted]="submitted">
-                    </app-input-serial-number-range>
+                    <app-input-number-range [useGrouping]="false" label="發票號碼"
+                        [startControl]="dataForm.controls.startserialInvoice"
+                        [endControl]="dataForm.controls.endserialInvoice" [submitted]="submitted">
+                    </app-input-number-range>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="使用別" controlName="usageType" [options]="usageTypeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.usageType" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="使用別" controlName="usageType" [options]="usageTypeOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.usageType" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

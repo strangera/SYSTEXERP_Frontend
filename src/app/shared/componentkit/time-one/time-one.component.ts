@@ -16,7 +16,7 @@ export class TimeOneComponent extends BasicKitComponent implements OnInit {
     // Required *
     this.checkRequiredValidator(this.control);
     // Placeholder
-    this.setPlaceholder('請選擇時間', this.control);
+    // this.setPlaceholder('請選擇時間', this.control);
   }
 }
 

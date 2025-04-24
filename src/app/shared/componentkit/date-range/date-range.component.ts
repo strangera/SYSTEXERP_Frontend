@@ -16,9 +16,9 @@ export class DateRangeComponent extends BasicKitComponent implements OnInit {
 
   ngOnInit() {
     // Required *
-    this.checkTwoRequiredValidator(this.startControl, this.endControl);
+    // this.checkTwoRequiredValidator(this.startControl, this.endControl);
     // Placeholder
-    this.setDefaultPlaceholder('請選擇日期');
+    // this.setDefaultPlaceholder('請選擇日期');
     //
     this.startControl.valueChanges.subscribe(() => this.validateRange());
     this.endControl.valueChanges.subscribe(() => this.validateRange());

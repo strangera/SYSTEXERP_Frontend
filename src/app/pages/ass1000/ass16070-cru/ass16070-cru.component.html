@@ -1,150 +1,84 @@
 <div class="card">
-    <div class="grid align-items-center">
-      <div class="col" style="flex: 1">
-        <app-menubar [ProgNo]="ProgNo"></app-menubar>
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="調出倉別" controlName="Kurabe" [options]="Kurabe" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.Kurabe" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="調入倉別" controlName="Kurabe" [options]="Kurabe" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.Kurabe" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="申請人" controlName="Applicantcode" [options]="Applicantcode" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.Applicantcode" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="組織編號" controlName="Departmentcode" [options]="Departmentcode" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.Departmentcode" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-date-one label="申請日期" [control]="dataForm.controls.rtnDate" [submitted]="submitted">
+          </app-date-one>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-editor-text label="備註" [control]="dataForm.controls.retExp" [style]="{ height: '100px' }"
+            [submitted]="submitted">
+          </app-editor-text>
+        </div>
+      </div>
+      <hr />
+      <ng-container formArrayName="items">
+        <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+          <div class="grid align-items-center">
+            <div class="col" style="flex: 1">
+              <p>{{ i + 1 }}</p>
+            </div>
+            <div>
+              <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                class="col"></app-button-dynamicallydelete>
+            </div>
+          </div>
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="品項編號" controlName="Pettycashcustodian" [options]="itemCodeOptions"
+                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'itemCodeOptions')"
+                [submitted]="submitted"></app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="單位" controlName="unit" [control]="getFormControl(i, 'unit')"
+                [submitted]="submitted">
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="調撥數量" controlName="returnQty" [control]="getFormControl(i, 'returnQty')"
+                [submitted]="submitted">
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="說明" controlName="desc" [control]="getFormControl(i, 'desc')"
+                [submitted]="submitted">
+              </app-input-text>
+            </div>
+          </div>
+          <hr />
+        </ng-container>
+      </ng-container>
+      <div class="pt-1">
+        <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+      </div>
+    </form>
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+        <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
       </div>
     </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-      <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="調出倉別"
-              controlName="Kurabe"
-              [options]="Kurabe"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.Kurabe"
-              [submitted]="submitted"
-            ></app-dropdown-item>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="調入倉別"
-              controlName="Kurabe"
-              [options]="Kurabe"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.Kurabe"
-              [submitted]="submitted"
-            ></app-dropdown-item>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="申請人"
-              controlName="Applicantcode"
-              [options]="Applicantcode"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.Applicantcode"
-              [submitted]="submitted"
-            ></app-dropdown-item>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="組織編號"
-              controlName="Departmentcode"
-              [options]="Departmentcode"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.Departmentcode"
-              [submitted]="submitted"
-            ></app-dropdown-item>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-date-one
-              label="申請日期"
-              [control]="dataForm.controls.rtnDate"
-              [submitted]="submitted"
-            >
-            </app-date-one>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-editor-text
-              label="備註"
-              [control]="dataForm.controls.retExp"
-              [style]="{ height: '100px' }"
-              [submitted]="submitted"
-            >
-            </app-editor-text>
-          </div>
-        </div>
-        <hr />
-        <ng-container formArrayName="items">
-          <ng-container
-            *ngFor="let item of items.controls; let i = index"
-            [formGroupName]="i"
-          >
-            <div class="grid align-items-center">
-              <div class="col" style="flex: 1">
-                <p>{{ i + 1 }}</p>
-              </div>
-              <div>
-                <app-button-dynamicallydelete
-                  (click)="onRemoveItem(i)"
-                  [crudstatus]="crudstatus"
-                  class="col"
-                ></app-button-dynamicallydelete>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown-item
-                  label="品項編號"
-                  controlName="Pettycashcustodian"
-                  [options]="itemCodeOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="getFormControl(i, 'itemCodeOptions')"
-                  [submitted]="submitted"
-                ></app-dropdown-item>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="單位"
-                  controlName="unit"
-                  [control]="getFormControl(i, 'unit')"
-                  [submitted]="submitted"
-                >
-                </app-input-text>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="調撥數量"
-                  controlName="returnQty"
-                  [control]="getFormControl(i, 'returnQty')"
-                  [submitted]="submitted"
-                >
-                </app-input-text>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="說明"
-                  controlName="desc"
-                  [control]="getFormControl(i, 'desc')"
-                  [submitted]="submitted"
-                >
-                </app-input-text>
-              </div>
-            </div>
-            <hr />
-          </ng-container>
-        </ng-container>
-        <div class="pt-1">
-          <app-button-dynamicallyadd
-            (click)="onAddItem()"
-          ></app-button-dynamicallyadd>
-        </div>
-      </form>
-      <div class="col pt-4">
-        <div class="grid justify-content-end">
-          <app-button-cancel (click)="onCancel()"></app-button-cancel>
-          <app-button-submit
-            (click)="submitForm(dataForm)"
-            *ngIf="isFormEditable"
-          ></app-button-submit>
-        </div>
-      </div>
-    </p-panel>
-  </div>
-  
+  </p-panel>
+</div>

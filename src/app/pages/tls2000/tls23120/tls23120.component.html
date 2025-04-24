@@ -6,43 +6,25 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range
-              label="銷售日期"
-              [startControl]="queryForm.controls.saleDateStart"
-              [endControl]="queryForm.controls.saleDateEnd"
-              [submitted]="submitted"
-            ></app-date-range>
+            <app-date-range label="銷售日期" [startControl]="queryForm.controls.saleDateStart"
+              [endControl]="queryForm.controls.saleDateEnd" [submitted]="submitted"></app-date-range>
           </div>
           <div class="col-12 md:col-6 lg:col-8"></div>
           <!-- Radio + 專櫃編號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <div class="grid align-items-center">
               <div class="col-2">
-                <input
-                  type="radio"
-                  formControlName="locationRadio"
-                  [value]="'organizationCode'"
-                />
+                <input type="radio" formControlName="locationRadio" [value]="'organizationCode'" />
               </div>
               <div class="col-10">
-                <app-dropdown-item
-                  label="專櫃編號"
-                  controlName="organizationCode"
-                  [options]="organizationOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.organizationCode"
-                  [submitted]="submitted"
-                ></app-dropdown-item>
+                <app-dropdown label="專櫃編號" controlName="organizationCode" [options]="organizationOptions"
+                  optionLabel="label" optionValue="value" [control]="queryForm.controls.organizationCode"
+                  [submitted]="submitted"></app-dropdown>
               </div>
             </div>
           </div>
@@ -51,32 +33,14 @@
           <div class="col-12 md:col-6 lg:col-4">
             <div class="grid align-items-center">
               <div class="col-2">
-                <input
-                  type="radio"
-                  formControlName="locationRadio"
-                  [value]="'regionOrFloor'"
-                />
+                <input type="radio" formControlName="locationRadio" [value]="'regionOrFloor'" />
               </div>
               <div class="col-10">
-                <app-dropdown-item
-                  label="區域"
-                  controlName="regionCode"
-                  [options]="regionOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.regionCode"
-                  [submitted]="submitted"
-                ></app-dropdown-item>
+                <app-dropdown label="區域" controlName="regionCode" [options]="regionOptions" optionLabel="label"
+                  optionValue="value" [control]="queryForm.controls.regionCode" [submitted]="submitted"></app-dropdown>
 
-                <app-dropdown-item
-                  label="樓層"
-                  controlName="floorCode"
-                  [options]="floorOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.floorCode"
-                  [submitted]="submitted"
-                ></app-dropdown-item>
+                <app-dropdown label="樓層" controlName="floorCode" [options]="floorOptions" optionLabel="label"
+                  optionValue="value" [control]="queryForm.controls.floorCode" [submitted]="submitted"></app-dropdown>
               </div>
             </div>
           </div>
@@ -85,22 +49,12 @@
           <div class="col-12 md:col-6 lg:col-4">
             <div class="grid align-items-center">
               <div class="col-2">
-                <input
-                  type="radio"
-                  formControlName="locationRadio"
-                  [value]="'businessTypeCode'"
-                />
+                <input type="radio" formControlName="locationRadio" [value]="'businessTypeCode'" />
               </div>
               <div class="col-10">
-                <app-dropdown-item
-                  label="業種"
-                  controlName="businessTypeCode"
-                  [options]="businessTypeCodeOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.businessTypeCode"
-                  [submitted]="submitted"
-                ></app-dropdown-item>
+                <app-dropdown label="業種" controlName="businessTypeCode" [options]="businessTypeCodeOptions"
+                  optionLabel="label" optionValue="value" [control]="queryForm.controls.businessTypeCode"
+                  [submitted]="submitted"></app-dropdown>
               </div>
             </div>
           </div>
@@ -109,11 +63,8 @@
 
       <div *appHasPermission="queryPermission" class="col">
         <div class="grid justify-content-end">
-          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-          <app-button-query
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button-query>
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -121,12 +72,8 @@
 
   <div class="col-12">
     <div class="card">
-      <app-data-table
-        [data]="filteredData"
-        [columns]="columns"
-        (edit)="onEdit($event)"
-        (detail)="onDetail($event)"
-      ></app-data-table>
+      <app-data-table [data]="filteredData" [columns]="columns" (edit)="onEdit($event)"
+        (detail)="onDetail($event)"></app-data-table>
     </div>
   </div>
 </div>

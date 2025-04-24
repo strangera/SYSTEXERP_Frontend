@@ -6,88 +6,104 @@
                     <app-menubar [ProgNo]="ProgNo"></app-menubar>
                 </div>
                 <div *appHasPermission="addPermission">
-                    <app-button-create (click)="onCreate()" class="col"></app-button-create>
+                    <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
                 </div>
             </div>
             <p-accordion>
-                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true"
+                    class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
                     <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="排程編號" controlName="ECR_SchNo" [control]="queryForm.controls.ECR_SchNo" [submitted]="submitted">
-                                </app-input-serial-number>
+                                <app-input-number [useGrouping]="false" label="排程編號" controlName="ECR_SchNo"
+                                    [control]="queryForm.controls.ECR_SchNo" [submitted]="submitted">
+                                </app-input-number>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-one label="設定啟用日期" controlName="ECR_SchDate" [control]="queryForm.controls.ECR_SchDate" [submitted]="submitted">
+                                <app-date-one label="設定啟用日期" controlName="ECR_SchDate"
+                                    [control]="queryForm.controls.ECR_SchDate" [submitted]="submitted">
                                 </app-date-one>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-multi-select label="排程狀態" controlName="ECR_SchStatus" [options]="ECR_SchStatus_Options" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_SchStatus" [submitted]="submitted">
+                                <app-multi-select label="排程狀態" controlName="ECR_SchStatus"
+                                    [options]="ECR_SchStatus_Options" optionLabel="label" optionValue="value"
+                                    [control]="queryForm.controls.ECR_SchStatus" [submitted]="submitted">
                                 </app-multi-select>
                             </div>
                         </div>
                         <div class="grid p-fluid">
                             <!-- <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="收銀機所屬門市店號" controlName="SYS_StoreNo" [control]="queryForm.controls.SYS_StoreNo" [submitted]="submitted">
-                                </app-input-serial-number>
+                                <app-input-number [useGrouping]="false" label="收銀機所屬門市店號" controlName="SYS_StoreNo" [control]="queryForm.controls.SYS_StoreNo" [submitted]="submitted">
+                                </app-input-number>
                             </div> -->
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="收銀機號" controlName="ECR_No" [control]="queryForm.controls.ECR_No" [submitted]="submitted">
-                                </app-input-serial-number>
+                                <app-input-number [useGrouping]="false" label="收銀機號" controlName="ECR_No"
+                                    [control]="queryForm.controls.ECR_No" [submitted]="submitted">
+                                </app-input-number>
                             </div>
                         </div>
                         <hr>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="新機台所屬專櫃編號" controlName="ECR_TLT_No" [control]="queryForm.controls.ECR_TLT_No" [submitted]="submitted">
-                                </app-input-serial-number>
+                                <app-input-number [useGrouping]="false" label="新機台所屬專櫃編號" controlName="ECR_TLT_No"
+                                    [control]="queryForm.controls.ECR_TLT_No" [submitted]="submitted">
+                                </app-input-number>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="原機台所屬專櫃編號" controlName="ORG_ECR_TLT_No" [control]="queryForm.controls.ORG_ECR_TLT_No" [submitted]="submitted">
-                                </app-input-serial-number>
-                            </div>
-                        </div>
-                        <div class="grid p-fluid">
-                            <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="新機台所屬收銀員" controlName="ECR_USR_No" [control]="queryForm.controls.ECR_USR_No" [submitted]="submitted">
-                                </app-input-serial-number>
-                            </div>
-                            <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="原機台所屬收銀員" controlName="ORG_ECR_USR_No" [control]="queryForm.controls.ORG_ECR_USR_No" [submitted]="submitted">
-                                </app-input-serial-number>
+                                <app-input-number [useGrouping]="false" label="原機台所屬專櫃編號" controlName="ORG_ECR_TLT_No"
+                                    [control]="queryForm.controls.ORG_ECR_TLT_No" [submitted]="submitted">
+                                </app-input-number>
                             </div>
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="新環境變數編號" controlName="ECR_TmplNo" [control]="queryForm.controls.ECR_TmplNo" [submitted]="submitted">
-                                </app-input-serial-number>
+                                <app-input-number [useGrouping]="false" label="新機台所屬收銀員" controlName="ECR_USR_No"
+                                    [control]="queryForm.controls.ECR_USR_No" [submitted]="submitted">
+                                </app-input-number>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="原環境變數編號" controlName="ORG_ECR_TmplNo" [control]="queryForm.controls.ORG_ECR_TmplNo" [submitted]="submitted">
-                                </app-input-serial-number>
+                                <app-input-number [useGrouping]="false" label="原機台所屬收銀員" controlName="ORG_ECR_USR_No"
+                                    [control]="queryForm.controls.ORG_ECR_USR_No" [submitted]="submitted">
+                                </app-input-number>
                             </div>
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="新收銀機狀態" controlName="ECR_Status" [control]="queryForm.controls.ECR_Status" [submitted]="submitted">
-                                </app-input-serial-number>
+                                <app-input-number [useGrouping]="false" label="新環境變數編號" controlName="ECR_TmplNo"
+                                    [control]="queryForm.controls.ECR_TmplNo" [submitted]="submitted">
+                                </app-input-number>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="原收銀機狀態" controlName="ORG_ECR_Status" [control]="queryForm.controls.ORG_ECR_Status" [submitted]="submitted">
-                                </app-input-serial-number>
+                                <app-input-number [useGrouping]="false" label="原環境變數編號" controlName="ORG_ECR_TmplNo"
+                                    [control]="queryForm.controls.ORG_ECR_TmplNo" [submitted]="submitted">
+                                </app-input-number>
+                            </div>
+                        </div>
+                        <div class="grid p-fluid">
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-number [useGrouping]="false" label="新收銀機狀態" controlName="ECR_Status"
+                                    [control]="queryForm.controls.ECR_Status" [submitted]="submitted">
+                                </app-input-number>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-number [useGrouping]="false" label="原收銀機狀態" controlName="ORG_ECR_Status"
+                                    [control]="queryForm.controls.ORG_ECR_Status" [submitted]="submitted">
+                                </app-input-number>
                             </div>
                         </div>
                         <hr>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-datetime-one label="異動作業完成時間" controlName="ECR_SchFinTime" [control]="queryForm.controls.ECR_SchFinTime" [submitted]="submitted">
+                                <app-datetime-one label="異動作業完成時間" controlName="ECR_SchFinTime"
+                                    [control]="queryForm.controls.ECR_SchFinTime" [submitted]="submitted">
                                 </app-datetime-one>
                             </div>
                         </div>
                         <div *appHasPermission="queryPermission" class="col">
                             <div class="grid justify-content-end">
-                                <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                                <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                                <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                                <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                                    [loading]="loading"></app-button>
                             </div>
                         </div>
                     </form>

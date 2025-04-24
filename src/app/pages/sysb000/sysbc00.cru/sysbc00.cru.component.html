@@ -8,25 +8,30 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="銀行代號" controlName="BNK_No" [control]="dataForm.controls.BNK_No" [submitted]="submitted">>
+                    <app-input-text label="銀行代號" controlName="BNK_No" [control]="dataForm.controls.BNK_No"
+                        [submitted]="submitted">>
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="銀行名稱" controlName="BNK_Name" [control]="dataForm.controls.BNK_Name" [submitted]="submitted">
+                    <app-input-text label="銀行名稱" controlName="BNK_Name" [control]="dataForm.controls.BNK_Name"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="銀行簡稱" controlName="BNK_ShortName" [control]="dataForm.controls.BNK_ShortName" [submitted]="submitted">
+                    <app-input-text label="銀行簡稱" controlName="BNK_ShortName" [control]="dataForm.controls.BNK_ShortName"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid" *ngIf="crudstatus !== 'Create'">
                 <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-number label="該行帳號最小長度" controlName="Min_Length" [control]="dataForm.controls.Min_Length" [submitted]="submitted">
+                    <app-input-number label="該行帳號最小長度" controlName="Min_Length" [control]="dataForm.controls.Min_Length"
+                        [submitted]="submitted">
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-number label="該行帳號最大長度" controlName="Max_Length" [control]="dataForm.controls.Max_Length" [submitted]="submitted">
+                    <app-input-number label="該行帳號最大長度" controlName="Max_Length" [control]="dataForm.controls.Max_Length"
+                        [submitted]="submitted">
                     </app-input-number>
                 </div>
             </div>
@@ -38,17 +43,20 @@
                             <h5>分行 {{ i + 1 }}</h5>
                         </div>
                         <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                                class="col"></app-button-dynamicallydelete>
                         </div>
                     </div>
                     <!-- 分行 選擇區 -->
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="銀行分行代號" controlName="BNK_BranchNo" [control]="getFormControl(i, 'BNK_BranchNo')" [submitted]="submitted">
+                            <app-input-text label="銀行分行代號" controlName="BNK_BranchNo"
+                                [control]="getFormControl(i, 'BNK_BranchNo')" [submitted]="submitted">
                             </app-input-text>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="銀行分行名稱" controlName="BNK_BranchName" [control]="getFormControl(i, 'BNK_BranchName')" [submitted]="submitted">
+                            <app-input-text label="銀行分行名稱" controlName="BNK_BranchName"
+                                [control]="getFormControl(i, 'BNK_BranchName')" [submitted]="submitted">
                             </app-input-text>
                         </div>
                     </div>
@@ -61,8 +69,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

@@ -9,87 +9,49 @@
       <div class="grid p-fluid">
         <!-- 開始日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one
-            label="開始日期"
-            controlName="startDate"
-            [control]="dataForm.controls.startDate"
-            [submitted]="submitted"
-          ></app-date-one>
+          <app-date-one label="開始日期" controlName="startDate" [control]="dataForm.controls.startDate"
+            [submitted]="submitted"></app-date-one>
         </div>
         <!-- 結束日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one
-            label="結束日期"
-            controlName="endDate"
-            [control]="dataForm.controls.endDate"
-            [submitted]="submitted"
-          ></app-date-one>
+          <app-date-one label="結束日期" controlName="endDate" [control]="dataForm.controls.endDate"
+            [submitted]="submitted"></app-date-one>
         </div>
         <!-- 行銷檔期代號 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown-item
-            label="行銷檔期代號"
-            controlName="marketingCampaignCode"
-            [options]="marketingCampaignOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.marketingCampaignCode"
-            [submitted]="submitted"
-          ></app-dropdown-item>
+          <app-dropdown label="行銷檔期代號" controlName="marketingCampaignCode" [options]="marketingCampaignOptions"
+            optionLabel="label" optionValue="value" [control]="dataForm.controls.marketingCampaignCode"
+            [submitted]="submitted"></app-dropdown>
         </div>
         <!-- 檔期名稱 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="檔期名稱"
-            controlName="campaignName"
-            [control]="dataForm.controls.campaignName"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="檔期名稱" controlName="campaignName" [control]="dataForm.controls.campaignName"
+            [submitted]="submitted"></app-input-text>
         </div>
         <!-- 檔期說明 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="檔期說明"
-            controlName="campaignDescription"
-            [control]="dataForm.controls.campaignDescription"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="檔期說明" controlName="campaignDescription"
+            [control]="dataForm.controls.campaignDescription" [submitted]="submitted"></app-input-text>
         </div>
         <!-- 檔期天數 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="檔期天數"
-            controlName="campaignDays"
-            [control]="dataForm.controls.campaignDays"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="檔期天數" controlName="campaignDays" [control]="dataForm.controls.campaignDays"
+            [submitted]="submitted"></app-input-text>
         </div>
         <!-- 檔期年度 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="檔期年度"
-            controlName="campaignYear"
-            [control]="dataForm.controls.campaignYear"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="檔期年度" controlName="campaignYear" [control]="dataForm.controls.campaignYear"
+            [submitted]="submitted"></app-input-text>
         </div>
         <!-- 檔期季別 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="檔期季別"
-            controlName="campaignSeason"
-            [control]="dataForm.controls.campaignSeason"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="檔期季別" controlName="campaignSeason" [control]="dataForm.controls.campaignSeason"
+            [submitted]="submitted"></app-input-text>
         </div>
         <!-- 預算金額總合計 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="預算金額總合計"
-            controlName="totalBudgetAmount"
-            [control]="dataForm.controls.totalBudgetAmount"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="預算金額總合計" controlName="totalBudgetAmount"
+            [control]="dataForm.controls.totalBudgetAmount" [submitted]="submitted"></app-input-text>
         </div>
       </div>
       <hr />
@@ -101,133 +63,76 @@
               <p>{{ i + 1 }}</p>
             </div>
             <div>
-              <app-button-dynamicallydelete
-                (click)="onRemoveItem(i)"
-                [crudstatus]="crudstatus"
-                class="col"
-              ></app-button-dynamicallydelete>
+              <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                class="col"></app-button-dynamicallydelete>
             </div>
           </div>
           <div class="grid p-fluid">
             <!-- 活動類別 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown-item
-                label="活動類別"
-                controlName="activityCategory"
-                [options]="activityCategory"
-                optionLabel="label"
-                optionValue="value"
-                [control]="getFormControl(i, 'activityCategory')"
-                [submitted]="submitted"
-              ></app-dropdown-item>
+              <app-dropdown label="活動類別" controlName="activityCategory" [options]="activityCategory" optionLabel="label"
+                optionValue="value" [control]="getFormControl(i, 'activityCategory')"
+                [submitted]="submitted"></app-dropdown>
             </div>
             <!-- 活動代號 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="活動代號"
-                controlName="activityCode"
-                [control]="getFormControl(i, 'activityCode')"
-                [submitted]="submitted"
-              ></app-input-text>
+              <app-input-text label="活動代號" controlName="activityCode" [control]="getFormControl(i, 'activityCode')"
+                [submitted]="submitted"></app-input-text>
             </div>
             <!-- 活動說明 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="活動說明"
-                controlName="activityDescription"
-                [control]="getFormControl(i, 'activityDescription')"
-                [submitted]="submitted"
-              ></app-input-text>
+              <app-input-text label="活動說明" controlName="activityDescription"
+                [control]="getFormControl(i, 'activityDescription')" [submitted]="submitted"></app-input-text>
             </div>
             <!-- 活動狀態 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="活動狀態"
-                controlName="activityStatus"
-                [control]="getFormControl(i, 'activityStatus')"
-                [submitted]="submitted"
-              ></app-input-text>
+              <app-input-text label="活動狀態" controlName="activityStatus" [control]="getFormControl(i, 'activityStatus')"
+                [submitted]="submitted"></app-input-text>
             </div>
             <!-- 預算金額 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="預算金額"
-                controlName="budgetAmount"
-                [control]="getFormControl(i, 'budgetAmount')"
-                [submitted]="submitted"
-              ></app-input-text>
+              <app-input-text label="預算金額" controlName="budgetAmount" [control]="getFormControl(i, 'budgetAmount')"
+                [submitted]="submitted"></app-input-text>
             </div>
             <!-- 活動負責人 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="活動負責人"
-                controlName="activityOwner"
-                [control]="getFormControl(i, 'activityOwner')"
-                [submitted]="submitted"
-              ></app-input-text>
+              <app-input-text label="活動負責人" controlName="activityOwner" [control]="getFormControl(i, 'activityOwner')"
+                [submitted]="submitted"></app-input-text>
             </div>
             <!-- 活動準備起始日 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one
-                label="活動準備起始日"
-                controlName="preparationStartDate"
-                [control]="getFormControl(i, 'preparationStartDate')"
-                [submitted]="submitted"
-              ></app-date-one>
+              <app-date-one label="活動準備起始日" controlName="preparationStartDate"
+                [control]="getFormControl(i, 'preparationStartDate')" [submitted]="submitted"></app-date-one>
             </div>
             <!-- 活動準備結束日 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one
-                label="活動準備結束日"
-                controlName="preparationEndDate"
-                [control]="getFormControl(i, 'preparationEndDate')"
-                [submitted]="submitted"
-              ></app-date-one>
+              <app-date-one label="活動準備結束日" controlName="preparationEndDate"
+                [control]="getFormControl(i, 'preparationEndDate')" [submitted]="submitted"></app-date-one>
             </div>
             <!-- 活動準備備註 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="活動準備備註"
-                controlName="preparationRemark"
-                [control]="getFormControl(i, 'preparationRemark')"
-                [submitted]="submitted"
-              ></app-input-text>
+              <app-input-text label="活動準備備註" controlName="preparationRemark"
+                [control]="getFormControl(i, 'preparationRemark')" [submitted]="submitted"></app-input-text>
             </div>
             <!-- 活動開始日期 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one
-                label="活動開始日期"
-                controlName="activityStartDate"
-                [control]="getFormControl(i, 'activityStartDate')"
-                [submitted]="submitted"
-              ></app-date-one>
+              <app-date-one label="活動開始日期" controlName="activityStartDate"
+                [control]="getFormControl(i, 'activityStartDate')" [submitted]="submitted"></app-date-one>
             </div>
             <!-- 活動結束日期 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one
-                label="活動結束日期"
-                controlName="activityEndDate"
-                [control]="getFormControl(i, 'activityEndDate')"
-                [submitted]="submitted"
-              ></app-date-one>
+              <app-date-one label="活動結束日期" controlName="activityEndDate"
+                [control]="getFormControl(i, 'activityEndDate')" [submitted]="submitted"></app-date-one>
             </div>
             <!-- 活動狀態異動人員 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="活動狀態異動人員"
-                controlName="statusChanger"
-                [control]="getFormControl(i, 'statusChanger')"
-                [submitted]="submitted"
-              ></app-input-text>
+              <app-input-text label="活動狀態異動人員" controlName="statusChanger"
+                [control]="getFormControl(i, 'statusChanger')" [submitted]="submitted"></app-input-text>
             </div>
             <!-- 活動狀態異動日期 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one
-                label="活動狀態異動日期"
-                controlName="statusChangeDate"
-                [control]="getFormControl(i, 'statusChangeDate')"
-                [submitted]="submitted"
-              ></app-date-one>
+              <app-date-one label="活動狀態異動日期" controlName="statusChangeDate"
+                [control]="getFormControl(i, 'statusChangeDate')" [submitted]="submitted"></app-date-one>
             </div>
           </div>
           <hr />
@@ -240,11 +145,8 @@
     </form>
     <div class="col pt-4">
       <div class="grid justify-content-end">
-        <app-button-cancel (click)="onCancel()"></app-button-cancel>
-        <app-button-submit
-          (click)="submitForm(dataForm)"
-          *ngIf="isFormEditable"
-        ></app-button-submit>
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+        <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
       </div>
     </div>
   </p-panel>

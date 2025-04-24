@@ -5,24 +5,12 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-one
-              label="日期"
-              [control]="queryForm.controls.date"
-              [submitted]="submitted"
-            >
+            <app-date-one label="日期" [control]="queryForm.controls.date" [submitted]="submitted">
             </app-date-one>
           </div>
 
@@ -30,23 +18,13 @@
           <div class="col-12 md:col-6 lg:col-4">
             <div class="grid align-items-center">
               <div class="col-2">
-                <input
-                  type="radio"
-                  [checked]="queryForm.controls.floorRadio.value === 'floor'"
-                  (click)="onRadioSelect('floor')"
-                />
+                <input type="radio" [checked]="queryForm.controls.floorRadio.value === 'floor'"
+                  (click)="onRadioSelect('floor')" />
               </div>
               <div class="col-10">
-                <app-dropdown-item
-                  label="樓層"
-                  controlName="floor"
-                  [options]="floorOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.floor"
-                  [submitted]="submitted"
-                >
-                </app-dropdown-item>
+                <app-dropdown label="樓層" controlName="floor" [options]="floorOptions" optionLabel="label"
+                  optionValue="value" [control]="queryForm.controls.floor" [submitted]="submitted">
+                </app-dropdown>
               </div>
             </div>
           </div>
@@ -55,43 +33,29 @@
           <div class="col-12 md:col-6 lg:col-4">
             <div class="grid align-items-center">
               <div class="col-2">
-                <input
-                  type="radio"
-                  [checked]="queryForm.controls.machineCodeRadio.value === 'machineCode'"
-                  (click)="onRadioSelect('machineCode')"
-                />
+                <input type="radio" [checked]="queryForm.controls.machineCodeRadio.value === 'machineCode'"
+                  (click)="onRadioSelect('machineCode')" />
               </div>
               <div class="col-10">
-                <app-input-serial-number
-                  label="收銀機代碼"
-                  controlName="machineCode"
-                  [control]="queryForm.controls.machineCode"
-                  [submitted]="submitted"
-                >
-                </app-input-serial-number>
+                <app-input-number [useGrouping]="false" label="收銀機代碼" controlName="machineCode"
+                  [control]="queryForm.controls.machineCode" [submitted]="submitted">
+                </app-input-number>
               </div>
             </div>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="顯示選項"
-              groupname="machineDisplayOptions"
-              [control]="queryForm.controls.machineDisplayOptions"
-              [options]="machinedisplayOptions"
-              [submitted]="submitted"
-            >
+            <app-radiobutton label="顯示選項" groupname="machineDisplayOptions"
+              [control]="queryForm.controls.machineDisplayOptions" [options]="machinedisplayOptions"
+              [submitted]="submitted">
             </app-radiobutton>
           </div>
         </div>
       </form>
       <div *appHasPermission="queryPermission" class="col">
         <div class="grid justify-content-end">
-          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-          <app-button-query
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button-query>
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -100,15 +64,10 @@
 
 <div class="card">
   <div class="col-12">
-    <app-data-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    >
+    <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
     </app-data-table>
   </div>
 </div>
-* 發票總金額(F) = 發票未稅金額(M) + 發票稅額(N) + 發票免稅金額(O)  
-* 付款金額(H) = 發票總金額(F) + 溢收(G) + 已開發票金額 (E) + 訂金結帳訂金 (C3) + 代收/付金額 (L)  
-* 已開發票溢付(I)=溢收 (G)) 
+* 發票總金額(F) = 發票未稅金額(M) + 發票稅額(N) + 發票免稅金額(O)
+* 付款金額(H) = 發票總金額(F) + 溢收(G) + 已開發票金額 (E) + 訂金結帳訂金 (C3) + 代收/付金額 (L)
+* 已開發票溢付(I)=溢收 (G))

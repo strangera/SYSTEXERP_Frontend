@@ -12,7 +12,7 @@
           <div class="grid p-fluid">
             <!-- 銀行代碼 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown-item
+              <app-dropdown
                 label="銀行代碼"
                 controlName="bankcode"
                 [options]="bankcode"
@@ -21,7 +21,7 @@
                 [control]="getFormControl(i, 'bankcode')"
                 [submitted]="submitted"
                 (change)="onBankCodeChange($event, i)"
-              ></app-dropdown-item>
+              ></app-dropdown>
             </div>
 
             <div class="col-12 md:col-6 lg:col-4">
@@ -30,13 +30,13 @@
                 controlName="bankname"
                 [control]="getFormControl(i, 'bankname')"
                 [submitted]="submitted"
-                
+
               ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4"></div>
             <!-- 卡種 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown-item
+              <app-dropdown
                 label="卡種"
                 controlName="cardTypeOptions"
                 [options]="cardTypeOptions"
@@ -44,12 +44,12 @@
                 optionValue="value"
                 [control]="getFormControl(i, 'cardTypeOptions')"
                 [submitted]="submitted"
-              ></app-dropdown-item>
+              ></app-dropdown>
             </div>
 
             <!-- 卡別 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown-item
+              <app-dropdown
                 label="卡別"
                 controlName="cardCategoryOptions"
                 [options]="cardCategoryOptions"
@@ -57,7 +57,7 @@
                 optionValue="value"
                 [control]="getFormControl(i, 'cardCategoryOptions')"
                 [submitted]="submitted"
-              ></app-dropdown-item>
+              ></app-dropdown>
             </div>
 
             <!-- 卡種識別碼 -->

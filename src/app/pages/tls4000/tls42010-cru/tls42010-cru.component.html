@@ -12,31 +12,37 @@
                     </app-input-text>
                 </div> -->
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="菜單類別" controlName="SBM_Type" [options]="SBM_Type_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.SBM_Type" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="菜單類別" controlName="SBM_Type" [options]="SBM_Type_Options" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.SBM_Type" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="商品條碼" controlName="PLU_No" [control]="dataForm.controls.PLU_No" [submitted]="submitted">
+                    <app-input-text label="商品條碼" controlName="PLU_No" [control]="dataForm.controls.PLU_No"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="專櫃編號" controlName="TLT_No" [control]="dataForm.controls.TLT_No" [submitted]="submitted">
+                    <app-input-text label="專櫃編號" controlName="TLT_No" [control]="dataForm.controls.TLT_No"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="專櫃名稱" controlName="TLT_Name" [control]="dataForm.controls.TLT_Name" [submitted]="submitted">
+                    <app-input-text label="專櫃名稱" controlName="TLT_Name" [control]="dataForm.controls.TLT_Name"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-datetime-one label="有效啟始日期" controlName="SBM_BegDate" [control]="dataForm.controls.SBM_BegDate" [submitted]="submitted">
+                    <app-datetime-one label="有效啟始日期" controlName="SBM_BegDate" [control]="dataForm.controls.SBM_BegDate"
+                        [submitted]="submitted">
                     </app-datetime-one>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-datetime-one label="有效結束日期" controlName="SBM_EndDate" [control]="dataForm.controls.SBM_EndDate" [submitted]="submitted">
+                    <app-datetime-one label="有效結束日期" controlName="SBM_EndDate" [control]="dataForm.controls.SBM_EndDate"
+                        [submitted]="submitted">
                     </app-datetime-one>
                 </div>
             </div>
@@ -49,7 +55,8 @@
                             <h4>收銀菜單 {{ i + 1 }}</h4>
                         </div>
                         <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                                class="col"></app-button-dynamicallydelete>
                         </div>
                     </div>
                     <!-- <div class="grid p-fluid">
@@ -68,35 +75,42 @@
                     </div> -->
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="菜單序號" controlName="SBM_SeqNo" [control]="getFormControl(i, 'SBM_SeqNo')" [submitted]="submitted">
-                            </app-input-serial-number>
+                            <app-input-number [useGrouping]="false" label="菜單序號" controlName="SBM_SeqNo"
+                                [control]="getFormControl(i, 'SBM_SeqNo')" [submitted]="submitted">
+                            </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="菜單按鍵序號" controlName="SBM_BtnNo" [control]="getFormControl(i, 'SBM_BtnNo')" [submitted]="submitted">
+                            <app-input-number label="菜單按鍵序號" controlName="SBM_BtnNo"
+                                [control]="getFormControl(i, 'SBM_BtnNo')" [submitted]="submitted">
                             </app-input-number>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="商品貨號" controlName="PLU_MagNo" [control]="getFormControl(i, 'PLU_MagNo')" [submitted]="submitted">
+                            <app-input-text label="商品貨號" controlName="PLU_MagNo"
+                                [control]="getFormControl(i, 'PLU_MagNo')" [submitted]="submitted">
                             </app-input-text>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="商品名稱" controlName="PLU_Name" [control]="getFormControl(i, 'PLU_Name')" [submitted]="submitted">
+                            <app-input-text label="商品名稱" controlName="PLU_Name"
+                                [control]="getFormControl(i, 'PLU_Name')" [submitted]="submitted">
                             </app-input-text>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="商品列印名稱" controlName="PLU_PrnName" [control]="getFormControl(i, 'PLU_PrnName')" [submitted]="submitted">
+                            <app-input-text label="商品列印名稱" controlName="PLU_PrnName"
+                                [control]="getFormControl(i, 'PLU_PrnName')" [submitted]="submitted">
                             </app-input-text>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="商品定價" controlName="PLU_FixPrc" [control]="getFormControl(i, 'PLU_FixPrc')" [submitted]="submitted">
+                            <app-input-number label="商品定價" controlName="PLU_FixPrc"
+                                [control]="getFormControl(i, 'PLU_FixPrc')" [submitted]="submitted">
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="商品售價" controlName="PLU_SalePrc" [control]="getFormControl(i, 'PLU_SalePrc')" [submitted]="submitted">
+                            <app-input-number label="商品售價" controlName="PLU_SalePrc"
+                                [control]="getFormControl(i, 'PLU_SalePrc')" [submitted]="submitted">
                             </app-input-number>
                         </div>
                     </div>
@@ -109,8 +123,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

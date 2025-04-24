@@ -12,22 +12,28 @@
                     </app-datemm-two>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="字軌" controlName="track" [control]="dataForm.controls.track" [submitted]="submitted">
+                    <app-input-text label="字軌" controlName="track" [control]="dataForm.controls.track"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number-range label="發票號碼" [startControl]="dataForm.controls.startserialticket" [endControl]="dataForm.controls.endserialticket" [submitted]="submitted">
-                    </app-input-serial-number-range>
+                    <app-input-number-range [useGrouping]="false" label="發票號碼"
+                        [startControl]="dataForm.controls.startserialticket"
+                        [endControl]="dataForm.controls.endserialticket" [submitted]="submitted">
+                    </app-input-number-range>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="類別" controlName="invoiceCategory" [options]="invoiceCategoryOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.invoiceCategory" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="類別" controlName="invoiceCategory" [options]="invoiceCategoryOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.invoiceCategory"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="有無副聯" controlName="viceTicket" [options]="whetherOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.viceTicket" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="有無副聯" controlName="viceTicket" [options]="whetherOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.viceTicket" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-datemm-one label="申報年月" [control]="dataForm.controls.declareYm" [submitted]="submitted">
@@ -36,15 +42,16 @@
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="卷數" controlName="rollNumber" [control]="dataForm.controls.rollNumber" [submitted]="submitted">
+                    <app-input-number label="卷數" controlName="rollNumber" [control]="dataForm.controls.rollNumber"
+                        [submitted]="submitted">
                     </app-input-number>
                 </div>
             </div>
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

@@ -1,39 +1,45 @@
 <label [for]="controlName">{{ label }}
-  <span *ngIf="isRequired" class="required">*</span>
+    <span *ngIf="isRequired" class="required">*</span>
 </label>
 <p-inputGroup>
-    <input hidden [id]="controlName" type="text" [formControl]="control" [(ngModel)]="selectedValueID" [ngClass]="{'is-invalid': submitted && control.errors}" pInputText />
-    <input type="text" [(ngModel)]="selectedValueMajor" pInputText disabled/>
-    <input type="text" [(ngModel)]="selectedValueMinor" pInputText disabled/>
+    <input hidden [id]="controlName" type="text" [formControl]="control" [(ngModel)]="selectedValueID"
+        [ngClass]="{'is-invalid': submitted && control.errors}" pInputText />
+    <input type="text" [(ngModel)]="selectedValueMajor" pInputText disabled />
+    <input type="text" [(ngModel)]="selectedValueMinor" pInputText disabled />
     <p-button icon="pi pi-search" styleClass="custom-color-button" severity="contrast" (click)="showDialog()" />
 </p-inputGroup>
 <app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>
 <!---->
 <p-dialog [header]=label [(visible)]="visible" [modal]="true">
     <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+            [headerStyleClass]="'query-accordionTab'">
             <form [formGroup]="queryForm" id="queryForm">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
                         <div>
                             <label for="code">代碼：</label>
-                            <input pInputText id="code" type="text" formControlName="code" placeholder="輸入代碼" class="w-full" />
+                            <input pInputText id="code" type="text" formControlName="code" placeholder="輸入代碼"
+                                class="w-full" />
                         </div>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <label for="name">名稱：</label>
-                        <input pInputText id="name" type="text" formControlName="name" placeholder="輸入名稱" class="w-full" />
+                        <input pInputText id="name" type="text" formControlName="name" placeholder="輸入名稱"
+                            class="w-full" />
                     </div>
                     <div class="col">
                         <div class="grid justify-content-end">
-                            <app-button-query (onClick)="onSubmit(queryForm, dt1)"></app-button-query>
+                            <app-button btnType="query" (onClick)="onSubmit(queryForm, dt1)"></app-button>
                         </div>
                     </div>
                 </div>
             </form>
         </p-accordionTab>
     </p-accordion>
-    <p-table #dt1 [scrollable]="true" scrollHeight="500px" styleClass="p-datatable-striped" (onRowSelect)="onRowSelect($event)" [(selection)]="selectedItem" [value]="data" [globalFilterFields]="filterFields" styleClass="p-datatable-gridlines" selectionMode="single">
+    <p-table #dt1 [scrollable]="true" scrollHeight="500px" styleClass="p-datatable-striped"
+        (onRowSelect)="onRowSelect($event)" [(selection)]="selectedItem" [value]="data"
+        [globalFilterFields]="filterFields" styleClass="p-datatable-gridlines" selectionMode="single">
         <!--<ng-template pTemplate="caption">
             <div class="flex justify-content-between flex-column sm:flex-row">
                 <span class="p-input-icon-left mb-2">
@@ -58,6 +64,6 @@
         </ng-template>
     </p-table>
     <!--<ng-template pTemplate="footer">
-        <app-button-action label="取消" icon="pi pi-times" (onClick)="visible = false"></app-button-action>
+        <app-button btnType="action" label="取消" icon="pi pi-times" (onClick)="visible = false"></app-button>
     </ng-template>-->
 </p-dialog>

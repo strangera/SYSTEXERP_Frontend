@@ -8,31 +8,37 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="中分類代碼" controlName="midCategoryCode" [control]="dataForm.controls.midCategoryCode" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="中分類代碼" controlName="midCategoryCode"
+                        [control]="dataForm.controls.midCategoryCode" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="中分類名稱" controlName="midCategoryName" [control]="dataForm.controls.midCategoryName" [submitted]="submitted">
+                    <app-input-text label="中分類名稱" controlName="midCategoryName"
+                        [control]="dataForm.controls.midCategoryName" [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="大分類代碼" controlName="bigCategoryCode" [options]="bigCategoryCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.bigCategoryCode" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="大分類代碼" controlName="bigCategoryCode" [options]="bigCategoryCodeOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.bigCategoryCode"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="大分類名稱" controlName="bigCategoryName" [control]="dataForm.controls.bigCategoryName" [submitted]="submitted">
+                    <app-input-text label="大分類名稱" controlName="bigCategoryName"
+                        [control]="dataForm.controls.bigCategoryName" [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
-            <app-editor-text label="說明" controlName="illustrate" [control]="dataForm.controls.illustrate" [style]="{ height: '100px' }" [submitted]="submitted">
+            <app-editor-text label="說明" controlName="illustrate" [control]="dataForm.controls.illustrate"
+                [style]="{ height: '100px' }" [submitted]="submitted">
             </app-editor-text>
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

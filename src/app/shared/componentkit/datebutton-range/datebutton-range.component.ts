@@ -17,9 +17,9 @@ export class DatebuttonRangeComponent extends BasicKitComponent implements OnIni
 
   ngOnInit() {
     // Required *
-    this.checkTwoRequiredValidator(this.startControl, this.endControl);
+    // this.checkTwoRequiredValidator(this.startControl, this.endControl);
     // Placeholder
-    this.setDefaultPlaceholder('請選擇日期');
+    // this.setDefaultPlaceholder('請選擇日期');
     //
     this.startControl.valueChanges.subscribe(() => this.validateRange());
     this.endControl.valueChanges.subscribe(() => this.validateRange());
@@ -56,7 +56,7 @@ export class DatebuttonRangeComponent extends BasicKitComponent implements OnIni
     const endDate = new Date(lastYear, 11, 31); // 11 是十二月
     this.endControl.setValue(endDate, { emitEvent: true });
   }
-	// 今年:
+  // 今年:
   onThisYear() {
     const now = new Date();
     const startDate = new Date(now.getFullYear(), 0, 1); // 今年1月1日
@@ -65,7 +65,7 @@ export class DatebuttonRangeComponent extends BasicKitComponent implements OnIni
     this.endControl.setValue(endDate, { emitEvent: true });
     this.validateRange();
   }
-	// 上半年:
+  // 上半年:
   onFirstHalf() {
     const now = new Date();
     const startDate = new Date(now.getFullYear(), 0, 1); // 今年1月1日
@@ -74,7 +74,7 @@ export class DatebuttonRangeComponent extends BasicKitComponent implements OnIni
     this.endControl.setValue(endDate, { emitEvent: true });
     this.validateRange();
   }
-	// 下半年:
+  // 下半年:
   onSecondHalf() {
     const now = new Date();
     const startDate = new Date(now.getFullYear(), 6, 1); // 今年7月1日
@@ -83,7 +83,7 @@ export class DatebuttonRangeComponent extends BasicKitComponent implements OnIni
     this.endControl.setValue(endDate, { emitEvent: true });
     this.validateRange();
   }
-	// 第一季:
+  // 第一季:
   onFirstQuarter() {
     const now = new Date();
     const startDate = new Date(now.getFullYear(), 0, 1); // 今年1月1日
@@ -92,7 +92,7 @@ export class DatebuttonRangeComponent extends BasicKitComponent implements OnIni
     this.endControl.setValue(endDate, { emitEvent: true });
     this.validateRange();
   }
-	// 第二季:
+  // 第二季:
   onSecondQuarter() {
     const now = new Date();
     const startDate = new Date(now.getFullYear(), 3, 1); // 今年4月1日
@@ -101,7 +101,7 @@ export class DatebuttonRangeComponent extends BasicKitComponent implements OnIni
     this.endControl.setValue(endDate, { emitEvent: true });
     this.validateRange();
   }
-	// 第三季:
+  // 第三季:
   onThirdQuarter() {
     const now = new Date();
     const startDate = new Date(now.getFullYear(), 6, 1); // 今年7月1日
@@ -110,7 +110,7 @@ export class DatebuttonRangeComponent extends BasicKitComponent implements OnIni
     this.endControl.setValue(endDate, { emitEvent: true });
     this.validateRange();
   }
-	// 第四季:
+  // 第四季:
   onFourthQuarter() {
     const now = new Date();
     const startDate = new Date(now.getFullYear(), 9, 1); // 今年10月1日
@@ -119,7 +119,7 @@ export class DatebuttonRangeComponent extends BasicKitComponent implements OnIni
     this.endControl.setValue(endDate, { emitEvent: true });
     this.validateRange();
   }
-	// 上上個月:
+  // 上上個月:
   onMonthBeforeLast() {
     const now = new Date();
     const startDate = new Date(now.getFullYear(), now.getMonth() - 2, 1); // 上上個月的1日
@@ -128,7 +128,7 @@ export class DatebuttonRangeComponent extends BasicKitComponent implements OnIni
     this.endControl.setValue(endDate, { emitEvent: true });
     this.validateRange();
   }
-	// 上個月:
+  // 上個月:
   onLastMonth() {
     const now = new Date();
     const startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1); // 上個月的1日
@@ -137,7 +137,7 @@ export class DatebuttonRangeComponent extends BasicKitComponent implements OnIni
     this.endControl.setValue(endDate, { emitEvent: true });
     this.validateRange();
   }
-	// 本月:
+  // 本月:
   onThisMonth() {
     const now = new Date();
     const startDate = new Date(now.getFullYear(), now.getMonth(), 1); // 本月的1日
@@ -146,7 +146,7 @@ export class DatebuttonRangeComponent extends BasicKitComponent implements OnIni
     this.endControl.setValue(endDate, { emitEvent: true });
     this.validateRange();
   }
-	// 上週:
+  // 上週:
   onLastWeek() {
     const now = new Date();
     const dayOfWeek = now.getDay();
@@ -156,7 +156,7 @@ export class DatebuttonRangeComponent extends BasicKitComponent implements OnIni
     this.endControl.setValue(endDate, { emitEvent: true });
     this.validateRange();
   }
-	// 前天:
+  // 前天:
   onDayBeforeYesterday() {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 2); // 前天
@@ -164,7 +164,7 @@ export class DatebuttonRangeComponent extends BasicKitComponent implements OnIni
     this.endControl.setValue(startDate, { emitEvent: true });
     this.validateRange();
   }
-	// 昨天:
+  // 昨天:
   onYesterday() {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 1); // 昨天
@@ -172,7 +172,7 @@ export class DatebuttonRangeComponent extends BasicKitComponent implements OnIni
     this.endControl.setValue(startDate, { emitEvent: true });
     this.validateRange();
   }
-	// 今天:
+  // 今天:
   onToday() {
     const startDate = new Date(); // 今天
     this.startControl.setValue(startDate, { emitEvent: true });

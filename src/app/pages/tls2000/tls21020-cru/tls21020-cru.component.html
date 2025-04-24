@@ -21,9 +21,7 @@
                             <p> {{ i + 1 }}</p>
                         </div>
                         <div>
-                            <app-button-dynamicallydelete 
-                                (click)="onRemoveItem(i)" 
-                                [crudstatus]="crudstatus" 
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
                                 class="col">
                             </app-button-dynamicallydelete>
                         </div>
@@ -33,90 +31,60 @@
                     <div class="grid p-fluid">
                         <!-- 項目名稱 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text 
-                                label="項目名稱" 
-                                controlName="itemName" 
-                                [control]="getFormControl(i, 'itemName')" 
-                                [submitted]="submitted">
+                            <app-input-text label="項目名稱" controlName="itemName"
+                                [control]="getFormControl(i, 'itemName')" [submitted]="submitted">
                             </app-input-text>
                         </div>
-                        
+
                         <!-- 會計科目 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-default 
-                                label="會計科目" 
-                                controlName="accountingSubject" 
-                                [options]="accountingSubjectItems" 
-                                optionLabel="label" 
-                                optionValue="value" 
-                                [control]="getFormControl(i, 'accountingSubject')" 
-                                [submitted]="submitted">
-                            </app-dropdown-default>
+                            <app-dropdown label="會計科目" controlName="accountingSubject"
+                                [options]="accountingSubjectItems" optionLabel="label" optionValue="value"
+                                [control]="getFormControl(i, 'accountingSubject')" [submitted]="submitted">
+                            </app-dropdown>
                         </div>
-                        
+
                         <!-- 組織代碼 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-default 
-                                label="組織代碼" 
-                                controlName="organizationCode" 
-                                [options]="organizationCodeItems" 
-                                optionLabel="label" 
-                                optionValue="value" 
-                                [control]="getFormControl(i, 'organizationCode')" 
-                                [submitted]="submitted">
-                            </app-dropdown-default>
+                            <app-dropdown label="組織代碼" controlName="organizationCode" [options]="organizationCodeItems"
+                                optionLabel="label" optionValue="value"
+                                [control]="getFormControl(i, 'organizationCode')" [submitted]="submitted">
+                            </app-dropdown>
                         </div>
-                        
+
                         <!-- 傳票備註 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text 
-                                label="傳票備註" 
-                                controlName="voucherRemarks" 
-                                [control]="getFormControl(i, 'voucherRemarks')" 
-                                [submitted]="submitted">
+                            <app-input-text label="傳票備註" controlName="voucherRemarks"
+                                [control]="getFormControl(i, 'voucherRemarks')" [submitted]="submitted">
                             </app-input-text>
                         </div>
 
                         <!-- 是否依合約拆立組織 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text 
-                                label="是否依合約拆立組織" 
-                                controlName="contractOrganizationSplit" 
-                                [control]="getFormControl(i, 'contractOrganizationSplit')" 
-                                [submitted]="submitted">
+                            <app-input-text label="是否依合約拆立組織" controlName="contractOrganizationSplit"
+                                [control]="getFormControl(i, 'contractOrganizationSplit')" [submitted]="submitted">
                             </app-input-text>
                         </div>
 
                         <!-- 區分關係人會科 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text 
-                                label="區分關係人會科" 
-                                controlName="relatedPartyAccounting" 
-                                [control]="getFormControl(i, 'relatedPartyAccounting')" 
-                                [submitted]="submitted">
+                            <app-input-text label="區分關係人會科" controlName="relatedPartyAccounting"
+                                [control]="getFormControl(i, 'relatedPartyAccounting')" [submitted]="submitted">
                             </app-input-text>
                         </div>
-                        
+
                         <!-- 應收廠商 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-default 
-                                label="應收廠商" 
-                                controlName="receivableVendor" 
-                                [options]="receivableVendorItems" 
-                                optionLabel="label" 
-                                optionValue="value" 
-                                [control]="getFormControl(i, 'receivableVendor')" 
-                                [submitted]="submitted">
-                            </app-dropdown-default>
+                            <app-dropdown label="應收廠商" controlName="receivableVendor" [options]="receivableVendorItems"
+                                optionLabel="label" optionValue="value"
+                                [control]="getFormControl(i, 'receivableVendor')" [submitted]="submitted">
+                            </app-dropdown>
                         </div>
 
                         <!-- 付款天數 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text 
-                                label="付款天數" 
-                                controlName="paymentDays" 
-                                [control]="getFormControl(i, 'paymentDays')" 
-                                [submitted]="submitted">
+                            <app-input-text label="付款天數" controlName="paymentDays"
+                                [control]="getFormControl(i, 'paymentDays')" [submitted]="submitted">
                             </app-input-text>
                         </div>
                     </div>
@@ -133,11 +101,9 @@
         <!-- Submit and Cancel Buttons -->
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit 
-                    (click)="submitForm(dataForm)" 
-                    *ngIf="isFormEditable">
-                </app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable">
+                </app-button>
             </div>
         </div>
     </p-panel>

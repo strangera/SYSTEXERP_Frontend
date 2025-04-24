@@ -4,26 +4,33 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <div *appHasPermission="addPermission">
-            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
         </div>
     </div>
     <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+            [headerStyleClass]="'query-accordionTab'">
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-multi-dialog label="廠商編號" controlName="manufacturerID" [control]="queryForm.controls.manufacturerID" [columns]="venderColumns" [data]="venderOptions" [filterFields]="filterFields" [searchplaceholder]="vendersearchplaceholder" [submitted]="submitted">
+                        <app-input-multi-dialog label="廠商編號" controlName="manufacturerID"
+                            [control]="queryForm.controls.manufacturerID" [columns]="venderColumns"
+                            [data]="venderOptions" [filterFields]="filterFields"
+                            [searchplaceholder]="vendersearchplaceholder" [submitted]="submitted">
                         </app-input-multi-dialog>
                     </div>
                 </div>
                 <div class="grid p-fluid">
 
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-multi-select label="審核狀態" controlName="industryType" [options]="approvalOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.approvalStatus" [submitted]="submitted">
+                        <app-multi-select label="審核狀態" controlName="industryType" [options]="approvalOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.approvalStatus"
+                            [submitted]="submitted">
                         </app-multi-select>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="廠商統一編號或個人身份證字號" controlName="manufacturerUID" [control]="queryForm.controls.manufacturerUID" [submitted]="submitted">>
+                        <app-input-text label="廠商統一編號或個人身份證字號" controlName="manufacturerUID"
+                            [control]="queryForm.controls.manufacturerUID" [submitted]="submitted">>
                         </app-input-text>
                     </div>
                 </div>
@@ -33,93 +40,113 @@
                         </app-input-text>
                     </div> -->
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="廠商名稱(英文)" controlName="manufacturerEName" [control]="queryForm.controls.manufacturerEName" [submitted]="submitted">>
+                        <app-input-text label="廠商名稱(英文)" controlName="manufacturerEName"
+                            [control]="queryForm.controls.manufacturerEName" [submitted]="submitted">>
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="廠商簡稱" controlName="manufacturerSName" [control]="queryForm.controls.manufacturerSName" [submitted]="submitted">>
+                        <app-input-text label="廠商簡稱" controlName="manufacturerSName"
+                            [control]="queryForm.controls.manufacturerSName" [submitted]="submitted">>
                         </app-input-text>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-6">
-                        <app-input-serial-number label="廠商匯款銀行代號" controlName="remittanceBankCode" [control]="queryForm.controls.remittanceBankCode" [submitted]="submitted">
-                        </app-input-serial-number>
+                        <app-input-number [useGrouping]="false" label="廠商匯款銀行代號" controlName="remittanceBankCode"
+                            [control]="queryForm.controls.remittanceBankCode" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-6">
-                        <app-input-text label="通訊地址" controlName="mailingAddress" [control]="queryForm.controls.mailingAddress" [submitted]="submitted">>
+                        <app-input-text label="通訊地址" controlName="mailingAddress"
+                            [control]="queryForm.controls.mailingAddress" [submitted]="submitted">>
                         </app-input-text>
                     </div>
                 </div>
                 <hr>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-3">
-                        <app-input-text label="聯絡人" controlName="contactPerson" [control]="queryForm.controls.contactPerson" [submitted]="submitted">>
+                        <app-input-text label="聯絡人" controlName="contactPerson"
+                            [control]="queryForm.controls.contactPerson" [submitted]="submitted">>
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-3">
-                        <app-input-text label="聯絡人職稱" controlName="contactPersonTitle" [control]="queryForm.controls.contactPersonTitle" [submitted]="submitted">>
+                        <app-input-text label="聯絡人職稱" controlName="contactPersonTitle"
+                            [control]="queryForm.controls.contactPersonTitle" [submitted]="submitted">>
                         </app-input-text>
                     </div>
 
                     <div class="col-12 md:col-6 lg:col-6">
-                        <app-input-text label="聯絡人電子郵件" controlName="contactEmail" [control]="queryForm.controls.contactEmail" [submitted]="submitted">>
+                        <app-input-text label="聯絡人電子郵件" controlName="contactEmail"
+                            [control]="queryForm.controls.contactEmail" [submitted]="submitted">>
                         </app-input-text>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-3">
-                        <app-input-text label="聯絡人電話" controlName="contactPersonPhone" [control]="queryForm.controls.contactPersonPhone" [submitted]="submitted">>
+                        <app-input-text label="聯絡人電話" controlName="contactPersonPhone"
+                            [control]="queryForm.controls.contactPersonPhone" [submitted]="submitted">>
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-3">
-                        <app-input-text label="聯絡人身份証字號" controlName="contactPersonUID" [control]="queryForm.controls.contactPersonUID" [submitted]="submitted">>
+                        <app-input-text label="聯絡人身份証字號" controlName="contactPersonUID"
+                            [control]="queryForm.controls.contactPersonUID" [submitted]="submitted">>
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-6">
-                        <app-input-text label="聯絡人聯絡地址" controlName="contactAddress" [control]="queryForm.controls.contactAddress" [submitted]="submitted">>
+                        <app-input-text label="聯絡人聯絡地址" controlName="contactAddress"
+                            [control]="queryForm.controls.contactAddress" [submitted]="submitted">>
                         </app-input-text>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-3">
-                        <app-input-text label="公司登記電話" controlName="registeredPhone" [control]="queryForm.controls.registeredPhone" [submitted]="submitted">>
+                        <app-input-text label="公司登記電話" controlName="registeredPhone"
+                            [control]="queryForm.controls.registeredPhone" [submitted]="submitted">>
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-3">
-                        <app-input-text label="公司傳真" controlName="companyFax" [control]="queryForm.controls.companyFax" [submitted]="submitted">>
+                        <app-input-text label="公司傳真" controlName="companyFax" [control]="queryForm.controls.companyFax"
+                            [submitted]="submitted">>
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-6">
-                        <app-input-text label="公司登記地址(中文)" controlName="registeredAddress" [control]="queryForm.controls.registeredAddress" [submitted]="submitted">>
+                        <app-input-text label="公司登記地址(中文)" controlName="registeredAddress"
+                            [control]="queryForm.controls.registeredAddress" [submitted]="submitted">>
                         </app-input-text>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-3">
-                        <app-input-text label="公司網址" controlName="companyWebsite" [control]="queryForm.controls.companyWebsite" [submitted]="submitted">>
+                        <app-input-text label="公司網址" controlName="companyWebsite"
+                            [control]="queryForm.controls.companyWebsite" [submitted]="submitted">>
                         </app-input-text>
                     </div>
                 </div>
                 <hr>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-3">
-                        <app-multi-select label="系統別" controlName="systemtype" [options]="systemCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.systemtype" [submitted]="submitted">
+                        <app-multi-select label="系統別" controlName="systemtype" [options]="systemCodeOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.systemtype"
+                            [submitted]="submitted">
                         </app-multi-select>
                     </div>
                     <div class="col-12 md:col-6 lg:col-3">
-                        <app-dropdown-item label="付款期限(天數)" controlName="expirationDay" [options]="t111Options" optionLabel="SYS_Name" optionValue="id" [control]="queryForm.controls.expirationDay" [submitted]="submitted">
-                        </app-dropdown-item>
+                        <app-dropdown label="付款期限(天數)" controlName="expirationDay" [options]="t111Options"
+                            optionLabel="SYS_Name" optionValue="id" [control]="queryForm.controls.expirationDay"
+                            [submitted]="submitted">
+                        </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-6">
-                        <app-input-text label="備註" controlName="remark" [control]="queryForm.controls.remark" [submitted]="submitted">>
+                        <app-input-text label="備註" controlName="remark" [control]="queryForm.controls.remark"
+                            [submitted]="submitted">>
                         </app-input-text>
                     </div>
                 </div>
                 <div *appHasPermission="queryPermission" class="col">
                     <div class="grid justify-content-end">
-                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                        <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                        <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                            [loading]="loading"></app-button>
                     </div>
                 </div>
             </form>

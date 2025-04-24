@@ -4,23 +4,27 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <div *appHasPermission="addPermission">
-            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
         </div>
     </div>
     <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+            [headerStyleClass]="'query-accordionTab'">
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="字軌" controlName="wordTrack" [control]="queryForm.controls.wordTrack" [submitted]="submitted">
+                        <app-input-text label="字軌" controlName="wordTrack" [control]="queryForm.controls.wordTrack"
+                            [submitted]="submitted">
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="發票號碼" controlName="invoiceNumber" [control]="queryForm.controls.invoiceNumber" [submitted]="submitted">
-                        </app-input-serial-number>
+                        <app-input-number [useGrouping]="false" label="發票號碼" controlName="invoiceNumber"
+                            [control]="queryForm.controls.invoiceNumber" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="發票日期" [startControl]="queryForm.controls.invoiceDateFrom" [endControl]="queryForm.controls.invoiceDateTo" [submitted]="submitted">
+                        <app-date-range label="發票日期" [startControl]="queryForm.controls.invoiceDateFrom"
+                            [endControl]="queryForm.controls.invoiceDateTo" [submitted]="submitted">
                         </app-date-range>
                     </div>
                 </div>
@@ -34,76 +38,97 @@
                         </app-datemm-one>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="專櫃編號" controlName="counterID" [control]="queryForm.controls.counterID" [submitted]="submitted">
-                        </app-input-serial-number>
+                        <app-input-number [useGrouping]="false" label="專櫃編號" controlName="counterID"
+                            [control]="queryForm.controls.counterID" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="廠客代號" controlName="factoryID" [control]="queryForm.controls.factoryID" [submitted]="submitted">
-                        </app-input-serial-number>
+                        <app-input-number [useGrouping]="false" label="廠客代號" controlName="factoryID"
+                            [control]="queryForm.controls.factoryID" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="銷售人統一編號" controlName="salesPersonUid" [control]="queryForm.controls.salesPersonUid" [submitted]="submitted">
-                        </app-input-serial-number>
+                        <app-input-number [useGrouping]="false" label="銷售人統一編號" controlName="salesPersonUid"
+                            [control]="queryForm.controls.salesPersonUid" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="買受人統一編號" controlName="buyerPersonUid" [control]="queryForm.controls.buyerPersonUid" [submitted]="submitted">
-                        </app-input-serial-number>
+                        <app-input-number [useGrouping]="false" label="買受人統一編號" controlName="buyerPersonUid"
+                            [control]="queryForm.controls.buyerPersonUid" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="發票格式" controlName="invoiveFormat" [control]="queryForm.controls.invoiveFormat" [submitted]="submitted">
+                        <app-input-text label="發票格式" controlName="invoiveFormat"
+                            [control]="queryForm.controls.invoiveFormat" [submitted]="submitted">
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number-range label="發票總金額" [startControl]="queryForm.controls.totalPriceFrom" [endControl]="queryForm.controls.totalPriceTo" [submitted]="submitted">
-                        </app-input-serial-number-range>
+                        <app-input-number-range [useGrouping]="false" label="發票總金額"
+                            [startControl]="queryForm.controls.totalPriceFrom"
+                            [endControl]="queryForm.controls.totalPriceTo" [submitted]="submitted">
+                        </app-input-number-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-multi-select label="課稅別" controlName="taxType" [options]="taxTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.taxType" [submitted]="submitted">
+                        <app-multi-select label="課稅別" controlName="taxType" [options]="taxTypeOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.taxType"
+                            [submitted]="submitted">
                         </app-multi-select>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number-range label="發票未稅金額" [startControl]="queryForm.controls.nonTaxPriceFrom" [endControl]="queryForm.controls.nonTaxPriceTo" [submitted]="submitted">
-                        </app-input-serial-number-range>
+                        <app-input-number-range [useGrouping]="false" label="發票未稅金額"
+                            [startControl]="queryForm.controls.nonTaxPriceFrom"
+                            [endControl]="queryForm.controls.nonTaxPriceTo" [submitted]="submitted">
+                        </app-input-number-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number-range label="稅額" [startControl]="queryForm.controls.taxPriceFrom" [endControl]="queryForm.controls.taxPriceTo" [submitted]="submitted">
-                        </app-input-serial-number-range>
+                        <app-input-number-range [useGrouping]="false" label="稅額"
+                            [startControl]="queryForm.controls.taxPriceFrom"
+                            [endControl]="queryForm.controls.taxPriceTo" [submitted]="submitted">
+                        </app-input-number-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="憑證單號" controlName="certificateNumber" [control]="queryForm.controls.certificateNumber" [submitted]="submitted">
-                        </app-input-serial-number>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="傳票號碼" controlName="summonsNumber" [control]="queryForm.controls.summonsNumber" [submitted]="submitted">
-                        </app-input-serial-number>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-multi-select label="資產註記" controlName="assetsRemrk" [options]="assetsRemrkOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.assetsRemrk" [submitted]="submitted">
-                        </app-multi-select>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-multi-select label="系統別" controlName="systemCategory" [options]="systemCategoryOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.systemCategory" [submitted]="submitted">
-                        </app-multi-select>
+                        <app-input-number [useGrouping]="false" label="憑證單號" controlName="certificateNumber"
+                            [control]="queryForm.controls.certificateNumber" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="備註" controlName="remark" [control]="queryForm.controls.remark" [submitted]="submitted">
+                        <app-input-number [useGrouping]="false" label="傳票號碼" controlName="summonsNumber"
+                            [control]="queryForm.controls.summonsNumber" [submitted]="submitted">
+                        </app-input-number>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-multi-select label="資產註記" controlName="assetsRemrk" [options]="assetsRemrkOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.assetsRemrk"
+                            [submitted]="submitted">
+                        </app-multi-select>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-multi-select label="系統別" controlName="systemCategory" [options]="systemCategoryOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.systemCategory"
+                            [submitted]="submitted">
+                        </app-multi-select>
+                    </div>
+                </div>
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-text label="備註" controlName="remark" [control]="queryForm.controls.remark"
+                            [submitted]="submitted">
                         </app-input-text>
                     </div>
                 </div>
                 <div *appHasPermission="queryPermission" class="col">
                     <div class="grid justify-content-end">
-                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                        <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                        <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                            [loading]="loading"></app-button>
                     </div>
                 </div>
             </form>

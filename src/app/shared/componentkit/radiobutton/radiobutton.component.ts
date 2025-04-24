@@ -7,7 +7,7 @@ import { FormControl } from '@angular/forms';
   templateUrl: './radiobutton.component.html',
   styleUrl: './radiobutton.component.scss'
 })
-export class RadiobuttonComponent extends BasicKitComponent implements OnInit{
+export class RadiobuttonComponent extends BasicKitComponent implements OnInit {
   @Input() label: string = '';
   @Input() groupname: string = '';
   @Input() control: FormControl = new FormControl();
@@ -19,7 +19,7 @@ export class RadiobuttonComponent extends BasicKitComponent implements OnInit{
     // Required *
     this.checkRequiredValidator(this.control);
     // Placeholder
-    this.setPlaceholder('請選擇', this.control);
+    // this.setPlaceholder('請選擇', this.control);
   }
 
   onSelectionChange(value: any): void {

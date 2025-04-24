@@ -4,30 +4,36 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <div *appHasPermission="addPermission">
-            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
         </div>
     </div>
     <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+            [headerStyleClass]="'query-accordionTab'">
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="組織階層代碼" controlName="level_id" [control]="queryForm.controls.level_id" [submitted]="submitted">>
+                        <app-input-text label="組織階層代碼" controlName="level_id" [control]="queryForm.controls.level_id"
+                            [submitted]="submitted">>
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-12 lg:col-4">
-                        <app-input-text label="組織階層名稱" controlName="level_name" [control]="queryForm.controls.level_name" [submitted]="submitted">
+                        <app-input-text label="組織階層名稱" controlName="level_name"
+                            [control]="queryForm.controls.level_name" [submitted]="submitted">
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-dropdown-item label="上層組織" controlName="p_level_id" [options]="upgroup_Options" optionLabel="label" optionValue="value" [control]="queryForm.controls.p_level_id" [submitted]="submitted">
-                        </app-dropdown-item>
+                        <app-dropdown label="上層組織" controlName="p_level_id" [options]="upgroup_Options"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.p_level_id"
+                            [submitted]="submitted">
+                        </app-dropdown>
                     </div>
                 </div>
                 <div *appHasPermission="queryPermission" class="col">
                     <div class="grid justify-content-end">
-                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                        <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                        <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                            [loading]="loading"></app-button>
                     </div>
                 </div>
             </form>

@@ -8,12 +8,14 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="折抵時數" controlName="creditHours" [control]="dataForm.controls.creditHours" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="折抵時數" controlName="creditHours"
+                        [control]="dataForm.controls.creditHours" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="折抵金額" controlName="creditAmount" [control]="dataForm.controls.creditAmount" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="折抵金額" controlName="creditAmount"
+                        [control]="dataForm.controls.creditAmount" [submitted]="submitted">
+                    </app-input-number>
                 </div>
             </div>
             <!---->
@@ -30,8 +32,8 @@
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="所屬服務台位置" controlName="counterPosition" [options]="counterOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'counterPosition')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="所屬服務台位置" controlName="counterPosition" [options]="counterOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'counterPosition')" [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
                             <app-input-number label="分配設備數量" controlName="allocateNumber" [control]="getFormControl(i, 'allocateNumber')" [submitted]="submitted">
@@ -47,8 +49,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

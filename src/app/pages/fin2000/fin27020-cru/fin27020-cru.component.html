@@ -8,33 +8,38 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="建立日期" controlName="buildDate" [control]="dataForm.controls.buildDate" [submitted]="submitted">
+                    <app-date-one label="建立日期" controlName="buildDate" [control]="dataForm.controls.buildDate"
+                        [submitted]="submitted">
                     </app-date-one>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="開票日期" controlName="ticketDate" [control]="dataForm.controls.ticketDate" [submitted]="submitted">
+                    <app-date-one label="開票日期" controlName="ticketDate" [control]="dataForm.controls.ticketDate"
+                        [submitted]="submitted">
                     </app-date-one>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="銀行代號" controlName="bankCode" [control]="dataForm.controls.bankCode" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="銀行代號" controlName="bankCode"
+                        [control]="dataForm.controls.bankCode" [submitted]="submitted">
+                    </app-input-number>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="開票來源單號" controlName="transferSource" [control]="dataForm.controls.transferSource" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="開票來源單號" controlName="transferSource"
+                        [control]="dataForm.controls.transferSource" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-radiobutton label="開票方式" groupname="ticketmethod" [control]="dataForm.controls.ticketmethod" [options]="ticketOptions" [submitted]="submitted">
+                    <app-radiobutton label="開票方式" groupname="ticketmethod" [control]="dataForm.controls.ticketmethod"
+                        [options]="ticketOptions" [submitted]="submitted">
                     </app-radiobutton>
                 </div>
             </div>
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

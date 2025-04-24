@@ -4,7 +4,7 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <div *appHasPermission="addPermission">
-            <app-button-demo label="下一步(待扣款設定)" class="col"></app-button-demo>
+            <app-button btnType="create" label="下一步(待扣款設定)" class="col"></app-button>
         </div>
     </div>
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
@@ -12,52 +12,67 @@
             <h4>基本資料</h4>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="專櫃招募編號" controlName="recruitmentNumber" [control]="dataForm.controls.recruitmentNumber" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="專櫃招募編號" controlName="recruitmentNumber"
+                        [control]="dataForm.controls.recruitmentNumber" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="專櫃編號" controlName="counterID" [control]="dataForm.controls.counterID" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="專櫃編號" controlName="counterID"
+                        [control]="dataForm.controls.counterID" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="廠商統一編號" controlName="vendorUID" [options]="vendorUIDOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.vendorUID" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="廠商統一編號" controlName="vendorUID" [options]="vendorUIDOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.vendorUID"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商名稱" controlName="vendorName" [control]="dataForm.controls.vendorName" [submitted]="submitted">>
+                    <app-input-text label="廠商名稱" controlName="vendorName" [control]="dataForm.controls.vendorName"
+                        [submitted]="submitted">>
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="品牌(專櫃名稱)" controlName="counterName" [control]="dataForm.controls.counterName" [submitted]="submitted">>
+                    <app-input-text label="品牌(專櫃名稱)" controlName="counterName" [control]="dataForm.controls.counterName"
+                        [submitted]="submitted">>
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="版本編號" controlName="versionNumber" [control]="dataForm.controls.versionNumber" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="版本編號" controlName="versionNumber"
+                        [control]="dataForm.controls.versionNumber" [submitted]="submitted">
+                    </app-input-number>
                 </div>
             </div>
             <hr>
             <h4>洽談階段資訊</h4>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="營業型態" controlName="businessType" [options]="businessTypeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.businessType" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="營業型態" controlName="businessType" [options]="businessTypeOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.businessType"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="組織代號" controlName="organizationCode" [options]="organizationCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.organizationCode" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="組織代號" controlName="organizationCode" [options]="organizationCodeOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.organizationCode"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="業種" controlName="industryCode" [options]="industryCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.industryCode" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="業種" controlName="industryCode" [options]="industryCodeOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.industryCode"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="商品類別" controlName="productCategory" [options]="productCategoryOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.productCategory" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="商品類別" controlName="productCategory" [options]="productCategoryOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.productCategory"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-date-one label="契約起始日" [control]="dataForm.controls.contractStartDate" [submitted]="submitted">
@@ -70,7 +85,8 @@
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="營運起始日" [control]="dataForm.controls.operationStartDate" [submitted]="submitted">
+                    <app-date-one label="營運起始日" [control]="dataForm.controls.operationStartDate"
+                        [submitted]="submitted">
                     </app-date-one>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
@@ -92,71 +108,89 @@
                     </app-date-one>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="洽談者" controlName="negotiator" [options]="negotiatorOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.negotiator" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="洽談者" controlName="negotiator" [options]="negotiatorOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.negotiator" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <hr>
             <h4>商務條件</h4>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="櫃別" controlName="counterType" [options]="counterTypeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.counterType" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="櫃別" controlName="counterType" [options]="counterTypeOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.counterType"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="裝潢方式" controlName="decorationStyle" [options]="decorationStyleOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.decorationStyle" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="裝潢方式" controlName="decorationStyle" [options]="decorationStyleOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.decorationStyle"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="抽成別" controlName="chargeType" [options]="chargeTypeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.chargeType" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="抽成別" controlName="chargeType" [options]="chargeTypeOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.chargeType" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="抽成額計算方式" controlName="calculationMethod" [options]="calculationMethodOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.calculationMethod" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="抽成額計算方式" controlName="calculationMethod" [options]="calculationMethodOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.calculationMethod"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-4 lg:col-4">
-                    <app-checkbox-one label="是否使用業主商店代號" controlName="ownerStoreCode" [control]="dataForm.controls.ownerStoreCode">
+                    <app-checkbox-one label="是否使用業主商店代號" controlName="ownerStoreCode"
+                        [control]="dataForm.controls.ownerStoreCode">
                     </app-checkbox-one>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="包底類別" controlName="packageType" [options]="packageTypeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.packageType" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="包底類別" controlName="packageType" [options]="packageTypeOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.packageType"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="超出部份處理方式" controlName="exceededPart" [options]="exceededPartOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.exceededPart" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="超出部份處理方式" controlName="exceededPart" [options]="exceededPartOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.exceededPart"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-4 lg:col-4">
                     <app-checkbox-one label="預收租金" controlName="advanceRent" [control]="dataForm.controls.advanceRent">
                     </app-checkbox-one>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="預收租金期數" controlName="advanceRentPeriod" [control]="dataForm.controls.advanceRentPeriod" [submitted]="submitted">>
+                    <app-input-number label="預收租金期數" controlName="advanceRentPeriod"
+                        [control]="dataForm.controls.advanceRentPeriod" [submitted]="submitted">>
                     </app-input-number>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="固定租金" controlName="fixedRent" [control]="dataForm.controls.fixedRent" [submitted]="submitted">>
+                    <app-input-number label="固定租金" controlName="fixedRent" [control]="dataForm.controls.fixedRent"
+                        [submitted]="submitted">>
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="押金" controlName="deposit" [control]="dataForm.controls.deposit" [submitted]="submitted">>
+                    <app-input-number label="押金" controlName="deposit" [control]="dataForm.controls.deposit"
+                        [submitted]="submitted">>
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-4 lg:col-4">
-                    <app-checkbox-one label="是否開立業主發票" controlName="venderInvoice" [control]="dataForm.controls.venderInvoice">
+                    <app-checkbox-one label="是否開立業主發票" controlName="venderInvoice"
+                        [control]="dataForm.controls.venderInvoice">
                     </app-checkbox-one>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-4 lg:col-4">
-                    <app-checkbox-one label="是否使用業主收銀機" controlName="venderRegister" [control]="dataForm.controls.venderRegister">
+                    <app-checkbox-one label="是否使用業主收銀機" controlName="venderRegister"
+                        [control]="dataForm.controls.venderRegister">
                     </app-checkbox-one>
                 </div>
                 <div class="col-12 md:col-4 lg:col-4">
@@ -164,123 +198,155 @@
                     </app-checkbox-one>
                 </div>
                 <div class="col-12 md:col-4 lg:col-4">
-                    <app-checkbox-one label="是否為抽成" controlName="commissionCheck" [control]="dataForm.controls.commissionCheck">
+                    <app-checkbox-one label="是否為抽成" controlName="commissionCheck"
+                        [control]="dataForm.controls.commissionCheck">
                     </app-checkbox-one>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="結帳方式" controlName="checkout" [options]="checkoutOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.checkout" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="結帳方式" controlName="checkout" [options]="checkoutOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.checkout" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="配合方式" controlName="cooerationType" [options]="cooerationTypeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.cooerationType" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="配合方式" controlName="cooerationType" [options]="cooerationTypeOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.cooerationType"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="對帳方式" controlName="reconciliationMethod" [options]="reconciliationMethodOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.reconciliationMethod" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="對帳方式" controlName="reconciliationMethod"
+                        [options]="reconciliationMethodOptions" optionLabel="label" optionValue="value"
+                        [control]="dataForm.controls.reconciliationMethod" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="付款方式" controlName="payment" [options]="paymentOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.payment" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="付款方式" controlName="payment" [options]="paymentOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.payment" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-4 lg:col-4">
-                    <app-checkbox-one label="是否配合聯名卡	" controlName="brandedCardCooperate" [control]="dataForm.controls.brandedCardCooperate">
+                    <app-checkbox-one label="是否配合聯名卡	" controlName="brandedCardCooperate"
+                        [control]="dataForm.controls.brandedCardCooperate">
                     </app-checkbox-one>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="聯名卡折數" controlName="brandedCardDiscount" [control]="dataForm.controls.brandedCardDiscount" [submitted]="submitted">>
+                    <app-input-number label="聯名卡折數" controlName="brandedCardDiscount"
+                        [control]="dataForm.controls.brandedCardDiscount" [submitted]="submitted">>
                     </app-input-number>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="年目標營業額(業主)" controlName="ownerAnnualTurnover" [control]="dataForm.controls.ownerAnnualTurnover" [submitted]="submitted">>
+                    <app-input-number label="年目標營業額(業主)" controlName="ownerAnnualTurnover"
+                        [control]="dataForm.controls.ownerAnnualTurnover" [submitted]="submitted">>
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="年預估營業額(廠商)" controlName="venderAnnualTurnover" [control]="dataForm.controls.venderAnnualTurnover" [submitted]="submitted">>
+                    <app-input-number label="年預估營業額(廠商)" controlName="venderAnnualTurnover"
+                        [control]="dataForm.controls.venderAnnualTurnover" [submitted]="submitted">>
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="保證金付款方式" controlName="recognizancePaymentMethod" [options]="paymentWithCashOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.recognizancePaymentMethod" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="保證金付款方式" controlName="recognizancePaymentMethod"
+                        [options]="paymentWithCashOptions" optionLabel="label" optionValue="value"
+                        [control]="dataForm.controls.recognizancePaymentMethod" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="履約保證金" controlName="recognizance" [control]="dataForm.controls.recognizance" [submitted]="submitted">>
+                    <app-input-number label="履約保證金" controlName="recognizance"
+                        [control]="dataForm.controls.recognizance" [submitted]="submitted">>
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="施工保證金付款方式" controlName="constructionPaymentMethod" [options]="paymentWithCashOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.constructionPaymentMethod" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="施工保證金付款方式" controlName="constructionPaymentMethod"
+                        [options]="paymentWithCashOptions" optionLabel="label" optionValue="value"
+                        [control]="dataForm.controls.constructionPaymentMethod" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="施工保證金" controlName="constructionRecognizance" [control]="dataForm.controls.constructionRecognizance" [submitted]="submitted">>
-                    </app-input-number>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="付款期限(天數)" controlName="payDay" [control]="dataForm.controls.payDay" [submitted]="submitted">>
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="請款單據別" controlName="requestForm" [options]="requestFormOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.requestForm" [submitted]="submitted">
-                    </app-dropdown-item>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="電子信箱" controlName="email" [control]="dataForm.controls.email" [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="發票電子郵件" controlName="invoiceEmail" [control]="dataForm.controls.invoiceEmail" [submitted]="submitted">>
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="票據抬頭" controlName="ticketTitle" [control]="dataForm.controls.ticketTitle" [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="專櫃電話號碼" controlName="counterPhone" [control]="dataForm.controls.counterPhone" [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="廠商匯款銀行代號" controlName="bankCode" [options]="bankCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.bankCode" [submitted]="submitted">
-                    </app-dropdown-item>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商帳戶名稱" controlName="venderAccountName" [control]="dataForm.controls.venderAccountName" [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="廠商銀行帳號" controlName="venderAccount" [control]="dataForm.controls.venderAccount" [submitted]="submitted">>
+                    <app-input-number label="施工保證金" controlName="constructionRecognizance"
+                        [control]="dataForm.controls.constructionRecognizance" [submitted]="submitted">>
                     </app-input-number>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="公司電話號碼(O)" controlName="companyPhone" [control]="dataForm.controls.companyPhone" [submitted]="submitted">>
-                    </app-input-text>
+                    <app-input-number label="付款期限(天數)" controlName="payDay" [control]="dataForm.controls.payDay"
+                        [submitted]="submitted">>
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="公司傳真號碼(F)" controlName="companyFex" [control]="dataForm.controls.companyFex" [submitted]="submitted">>
-                    </app-input-text>
+                    <app-dropdown label="請款單據別" controlName="requestForm" [options]="requestFormOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.requestForm"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="郵寄地址" controlName="postAddress" [control]="dataForm.controls.postAddress" [submitted]="submitted">>
+                    <app-input-text label="電子信箱" controlName="email" [control]="dataForm.controls.email"
+                        [submitted]="submitted">>
                     </app-input-text>
                 </div>
             </div>
-            <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark" [style]="{ height: '100px' }" [submitted]="submitted">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number label="發票電子郵件" controlName="invoiceEmail"
+                        [control]="dataForm.controls.invoiceEmail" [submitted]="submitted">>
+                    </app-input-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="票據抬頭" controlName="ticketTitle" [control]="dataForm.controls.ticketTitle"
+                        [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="專櫃電話號碼" controlName="counterPhone" [control]="dataForm.controls.counterPhone"
+                        [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown label="廠商匯款銀行代號" controlName="bankCode" [options]="bankCodeOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.bankCode"
+                        [submitted]="submitted">
+                    </app-dropdown>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="廠商帳戶名稱" controlName="venderAccountName"
+                        [control]="dataForm.controls.venderAccountName" [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number label="廠商銀行帳號" controlName="venderAccount"
+                        [control]="dataForm.controls.venderAccount" [submitted]="submitted">>
+                    </app-input-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="公司電話號碼(O)" controlName="companyPhone"
+                        [control]="dataForm.controls.companyPhone" [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="公司傳真號碼(F)" controlName="companyFex" [control]="dataForm.controls.companyFex"
+                        [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="郵寄地址" controlName="postAddress" [control]="dataForm.controls.postAddress"
+                        [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+            </div>
+            <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark"
+                [style]="{ height: '100px' }" [submitted]="submitted">
             </app-editor-text>
             <!---->
             <hr>
@@ -291,30 +357,37 @@
                             <h5>租賃位置 {{i+1}}</h5>
                         </div>
                         <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                                class="col"></app-button-dynamicallydelete>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="位置編號" controlName="locationNumber" [options]="locationNumberOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'locationNumber')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="位置編號" controlName="locationNumber" [options]="locationNumberOptions"
+                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'locationNumber')"
+                                [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="樓層" controlName="floor" [options]="floorOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'floor')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="樓層" controlName="floor" [options]="floorOptions" optionLabel="label"
+                                optionValue="value" [control]="getFormControl(i, 'floor')" [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="區域" controlName="region" [options]="regionOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'region')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="區域" controlName="region" [options]="regionOptions" optionLabel="label"
+                                optionValue="value" [control]="getFormControl(i, 'region')" [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="營業坪數" controlName="squareMeters" [control]="getFormControl(i, 'squareMeters')" [submitted]="submitted">>
+                            <app-input-number label="營業坪數" controlName="squareMeters"
+                                [control]="getFormControl(i, 'squareMeters')" [submitted]="submitted">>
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-range label="使用期間" [startControl]="getFormControl(i, 'startdate')" [endControl]="getFormControl(i, 'enddate')" [submitted]="submitted">
+                            <app-date-range label="使用期間" [startControl]="getFormControl(i, 'startdate')"
+                                [endControl]="getFormControl(i, 'enddate')" [submitted]="submitted">
                             </app-date-range>
                         </div>
                     </div>
@@ -327,8 +400,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

@@ -4,104 +4,51 @@
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
     <!-- <div *appHasPermission="addPermission">
-        <app-button-create (click)="onCreate()" class="col"></app-button-create>
+        <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
       </div> -->
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="以狀態查詢"
-              [control]="queryForm.controls.Querybystatus"
-              [options]="Querybystatus"
-              [submitted]="submitted"
-            >
+            <app-radiobutton label="以狀態查詢" [control]="queryForm.controls.Querybystatus" [options]="Querybystatus"
+              [submitted]="submitted">
             </app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="以財產編號查詢"
-              controlName="propertynumber"
-              [options]="assetCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.propertynumber"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="以財產編號查詢" controlName="propertynumber" [options]="assetCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.propertynumber" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="以財產類型查詢"
-              [control]="queryForm.controls.propertytype"
-              [options]="propertytype"
-              [submitted]="submitted"
-            >
+            <app-radiobutton label="以財產類型查詢" [control]="queryForm.controls.propertytype" [options]="propertytype"
+              [submitted]="submitted">
             </app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="大分類代碼"
-              controlName="bigCategoryCode"
-              [options]="bigCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.bigCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="大分類代碼" controlName="bigCategoryCode" [options]="bigCategoryOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.bigCategoryCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="中分類代碼"
-              controlName="midCategoryCode"
-              [options]="midCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.midCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="中分類代碼" controlName="midCategoryCode" [options]="midCategoryOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.midCategoryCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="小分類代碼"
-              controlName="smallCategoryCode"
-              [options]="smallCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.smallCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="小分類代碼" controlName="smallCategoryCode" [options]="smallCategoryOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.smallCategoryCode"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="品項編號"
-              controlName="Itemnumber"
-              [options]="Itemnumber"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Itemnumber"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="品項編號" controlName="Itemnumber" [options]="Itemnumber" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.Itemnumber" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
       </form>
       <div *appHasPermission="queryPermission" class="col">
         <div class="grid justify-content-end">
-          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-          <app-button-query
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button-query>
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -110,12 +57,7 @@
 
 <div class="card">
   <div class="col-12">
-    <app-data-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    >
+    <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
     </app-data-table>
   </div>
 </div>

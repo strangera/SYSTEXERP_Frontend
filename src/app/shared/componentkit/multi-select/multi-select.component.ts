@@ -1,6 +1,7 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { MultiSelect } from 'primeng/multiselect';
 
 @Component({
   selector: 'app-multi-select',
@@ -8,18 +9,19 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
   styleUrl: './multi-select.component.scss'
 })
 export class MultiSelectComponent extends BasicKitComponent implements OnInit {
-  @Input() label: string = '';
-  @Input() controlName: string = '';
+  @ViewChild('multiSelect') multiSelect!: MultiSelect;
+  @Input() label = '';
+  @Input() controlName = '';
   @Input() options: any[] = [];
-  @Input() optionLabel: string = ''; // 資料的 Label
-  @Input() optionValue: string = ''; // 資料的 Value
-  @Input() control: FormControl = new FormControl;
-  @Input() submitted: boolean = false; // 檢查欄位是否標準
+  @Input() optionLabel = ''; // 資料的 Label
+  @Input() optionValue = ''; // 資料的 Value
+  @Input() control = new FormControl;
+  @Input() submitted = false; // 檢查欄位是否標準
+  @Input() variant: 'filled' | 'outlined' = 'outlined';
 
   ngOnInit(): void {
-    // Required *
-    this.checkRequiredValidator(this.control);
-    // Placeholder
-    this.setPlaceholder('請選擇', this.control);
+    if (!this.control.disabled) {
+      this.updateControlState(this.control);
+    }
   }
 }

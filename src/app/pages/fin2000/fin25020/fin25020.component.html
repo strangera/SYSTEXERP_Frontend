@@ -4,50 +4,61 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <div *appHasPermission="addPermission">
-            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
         </div>
     </div>
     <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+            [headerStyleClass]="'query-accordionTab'">
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-dropdown-item label="匯款單號" controlName="transferSource" [options]="transferSourceOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.transferSource" [submitted]="submitted">
-                        </app-dropdown-item>
+                        <app-dropdown label="匯款單號" controlName="transferSource" [options]="transferSourceOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.transferSource"
+                            [submitted]="submitted">
+                        </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-datetime-range label="建立日期" [startControl]="queryForm.controls.buildDateFrom" [endControl]="queryForm.controls.buildDateTo" [submitted]="submitted">
+                        <app-datetime-range label="建立日期" [startControl]="queryForm.controls.buildDateFrom"
+                            [endControl]="queryForm.controls.buildDateTo" [submitted]="submitted">
                         </app-datetime-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-datetime-range label="匯款日期" [startControl]="queryForm.controls.transferDateFrom" [endControl]="queryForm.controls.transferDateTo" [submitted]="submitted">
+                        <app-datetime-range label="匯款日期" [startControl]="queryForm.controls.transferDateFrom"
+                            [endControl]="queryForm.controls.transferDateTo" [submitted]="submitted">
                         </app-datetime-range>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="銀行代號" controlName="bankCode" [control]="queryForm.controls.bankCode" [submitted]="submitted">
-                        </app-input-serial-number>
+                        <app-input-number [useGrouping]="false" label="銀行代號" controlName="bankCode"
+                            [control]="queryForm.controls.bankCode" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="銀行名稱" controlName="bankName" [control]="queryForm.controls.bankName" [submitted]="submitted">
+                        <app-input-text label="銀行名稱" controlName="bankName" [control]="queryForm.controls.bankName"
+                            [submitted]="submitted">
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-multi-select label="拋轉傳票" controlName="tossSummon" [options]="whetherOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.tossSummon" [submitted]="submitted">
+                        <app-multi-select label="拋轉傳票" controlName="tossSummon" [options]="whetherOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.tossSummon"
+                            [submitted]="submitted">
                         </app-multi-select>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="傳票編號" controlName="SummonNumber" [control]="queryForm.controls.SummonNumber" [submitted]="submitted">
-                        </app-input-serial-number>
+                        <app-input-number [useGrouping]="false" label="傳票編號" controlName="SummonNumber"
+                            [control]="queryForm.controls.SummonNumber" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                 </div>
                 <div *appHasPermission="queryPermission" class="col">
                     <div class="grid justify-content-end">
-                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                        <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                        <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                            [loading]="loading"></app-button>
                     </div>
                 </div>
             </form>

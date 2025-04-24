@@ -16,58 +16,76 @@
                             <h5>扣款項目 {{i+1}}</h5>
                         </div>
                         <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                                class="col"></app-button-dynamicallydelete>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="扣款項目編號" controlName="deductionItemNumber" [control]="getFormControl(i, 'deductionItemNumber')" [submitted]="submitted">
-                            </app-input-serial-number>
+                            <app-input-number [useGrouping]="false" label="扣款項目編號" controlName="deductionItemNumber"
+                                [control]="getFormControl(i, 'deductionItemNumber')" [submitted]="submitted">
+                            </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="扣款項目名稱" controlName="deductionItemName" [control]="getFormControl(i, 'deductionItemName')" [submitted]="submitted">>
+                            <app-input-text label="扣款項目名稱" controlName="deductionItemName"
+                                [control]="getFormControl(i, 'deductionItemName')" [submitted]="submitted">>
                             </app-input-text>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="扣款類別" controlName="deductionCategory" [options]="deductionCategoryOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'deductionCategory')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="扣款類別" controlName="deductionCategory"
+                                [options]="deductionCategoryOptions" optionLabel="label" optionValue="value"
+                                [control]="getFormControl(i, 'deductionCategory')" [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="銷售類型" controlName="salesType" [options]="salesTypeOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'salesType')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="銷售類型" controlName="salesType" [options]="salesTypeOptions"
+                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'salesType')"
+                                [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="收單行" controlName="receiveBank" [options]="receiveBankOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'receiveBank')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="收單行" controlName="receiveBank" [options]="receiveBankOptions"
+                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'receiveBank')"
+                                [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="期數" controlName="payPeriod" [options]="payPeriodOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'payPeriod')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="期數" controlName="payPeriod" [options]="payPeriodOptions"
+                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'payPeriod')"
+                                [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-multi-select label="券類支付工具類別" controlName="couponType" [options]="couponTypeOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'couponType')" [submitted]="submitted">
+                            <app-multi-select label="券類支付工具類別" controlName="couponType" [options]="couponTypeOptions"
+                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'couponType')"
+                                [submitted]="submitted">
                             </app-multi-select>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="券類計算方式" controlName="couponCalculation" [options]="couponCalculationOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'couponCalculation')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="券類計算方式" controlName="couponCalculation"
+                                [options]="couponCalculationOptions" optionLabel="label" optionValue="value"
+                                [control]="getFormControl(i, 'couponCalculation')" [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="基準 金額/比率" controlName="basicRate" [control]="getFormControl(i, 'basicRate')" [submitted]="submitted">
+                            <app-input-number label="基準 金額/比率" controlName="basicRate"
+                                [control]="getFormControl(i, 'basicRate')" [submitted]="submitted">
                             </app-input-number>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="預設金額" controlName="defaultAmount" [control]="getFormControl(i, 'defaultAmount')" [submitted]="submitted">
-                            </app-input-serial-number>
+                            <app-input-number [useGrouping]="false" label="預設金額" controlName="defaultAmount"
+                                [control]="getFormControl(i, 'defaultAmount')" [submitted]="submitted">
+                            </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="備註" controlName="remark" [control]="getFormControl(i, 'remark')" [submitted]="submitted">>
+                            <app-input-text label="備註" controlName="remark" [control]="getFormControl(i, 'remark')"
+                                [submitted]="submitted">>
                             </app-input-text>
                         </div>
                     </div>
@@ -80,8 +98,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

@@ -1,212 +1,105 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true">
+      <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <app-input-text class="col-12 md:col-6 lg:col-5" label="InputTextComponent" controlName="name"
+            [control]="queryForm.controls.name" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-5" label="InputTextComponent" controlName="name"
+            [control]="queryForm.controls.name" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-5" label="InputNumberComponent" controlName="money"
+            [control]="queryForm.controls.money" [submitted]="submitted" />
+          <app-input-number-range class="col-12 md:col-6 lg:col-5" label="InputNumberRangeComponent"
+            [startControl]="queryForm.controls.startticket" [endControl]="queryForm.controls.endticket"
+            [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-5" label="DropdownComponent" controlName="systemtypedefault"
+            [options]="systemTypeOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.systemtypedefault" [submitted]="submitted" />
+          <app-multi-select class="col-12 md:col-6 lg:col-5" label="MultiSelectComponent" controlName="systemtypemulti"
+            [options]="systemTypeOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.systemtypemulti" [submitted]="submitted" />
+          <app-calendar calendarType="timeOne" class="col-12 md:col-6 lg:col-5" label="CalendarComponent"
+            [control]="queryForm.controls.onetime" [submitted]="submitted" />
+          <app-calendar-range calendarType="timeRange" class="col-12 md:col-6 lg:col-5" label="CalendarRangeComponent"
+            [startControl]="queryForm.controls.starttime" [endControl]="queryForm.controls.endtime"
+            [submitted]="submitted" />
+          <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="CalendarComponent"
+            [control]="queryForm.controls.onetime" [submitted]="submitted" />
+          <app-calendar-range calendarType="dateRange" class="col-12 md:col-6 lg:col-5" label="CalendarRangeComponent"
+            [startControl]="queryForm.controls.starttime" [endControl]="queryForm.controls.endtime"
+            [submitted]="submitted" />
+          <app-calendar calendarType="dateTimeOne" class="col-12 md:col-6 lg:col-5" label="CalendarComponent"
+            [control]="queryForm.controls.onetime" [submitted]="submitted" />
+          <app-calendar-range calendarType="dateTimeRange" class="col-12 md:col-6 lg:col-5"
+            label="CalendarRangeComponent" [startControl]="queryForm.controls.starttime"
+            [endControl]="queryForm.controls.endtime" [submitted]="submitted" />
+          <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-5" label="CalendarComponent"
+            [control]="queryForm.controls.onetime" [submitted]="submitted" />
+          <app-calendar-range calendarType="dateMonthRange" class="col-12 md:col-6 lg:col-5"
+            label="CalendarRangeComponent" [startControl]="queryForm.controls.starttime"
+            [endControl]="queryForm.controls.endtime" [submitted]="submitted" />
+          <app-calendar calendarType="dateYearOne" class="col-12 md:col-6 lg:col-5" label="CalendarComponent"
+            [control]="queryForm.controls.onetime" [submitted]="submitted" />
+          <app-calendar-range calendarType="dateYearRange" class="col-12 md:col-6 lg:col-5"
+            label="CalendarRangeComponent" [startControl]="queryForm.controls.starttime"
+            [endControl]="queryForm.controls.endtime" [submitted]="submitted" />
         </div>
-        <div *appHasPermission="addPermission">
-            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+        <hr />
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-file-upload [uploadUrl]="uploadUrl" [fileType]="fileType">
+            </app-file-upload>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dateqtr-range label="活動季別" [startControl]="queryForm.controls.startqtr"
+              [endControl]="queryForm.controls.endqtr" [submitted]="submitted">
+            </app-dateqtr-range>
+          </div>
+          <div class="col-12 md:col-8 lg:col-8">
+            <app-datebutton-range label="變更時間範圍" [startControl]="queryForm.controls.startbuttontime"
+              [endControl]="queryForm.controls.endbuttontime" [submitted]="submitted">
+            </app-datebutton-range>
+          </div>
+          <div class="col-12 md:col-4 lg:col-4">
+            <app-checkbox-one label="是否起始" controlName="usagec" [control]="queryForm.controls.usagec">
+            </app-checkbox-one>
+          </div>
+          <div class="col-12 md:col-4 lg:col-4">
+            <app-checkbutton-toggle label="是否審核" controlName="reviewc" [control]="queryForm.controls.reviewc"
+              [submitted]="submitted">
+            </app-checkbutton-toggle>
+          </div>
+          <app-radiobutton label="公告類型" groupname="systemtyperadio" [control]="queryForm.controls.radiolist"
+            [options]="systemTypeOptions" [submitted]="submitted" (valueChange)="onSystemTypeChange($event)">
+          </app-radiobutton>
+          <!-- 地址輸入 -->
+          <app-address-form></app-address-form>
+          <app-editor-text label="editor text" controlName="editortext" [control]="queryForm.controls.editortext"
+            [style]="{ height: '100px' }" [submitted]="submitted">
+          </app-editor-text>
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-datemm-two label="發票月" [control]="queryForm.controls.twodatemm" [submitted]="submitted">
+            </app-datemm-two>
+          </div>
         </div>
-        <!--202411-->
-        <div>
-            <app-button-demo label="測試" class="col"></app-button-demo>
+        <!-- <div *appHasPermission="queryPermission" class="col"> -->
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
-        <div>
-            <app-button-action label="下一步" icon="pi pi-arrow-right"></app-button-action>
-        </div>
-    </div>
-    <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
-            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
-                <!--202411-->
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="Z座標" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="名字" controlName="name" [control]="queryForm.controls.name" [submitted]="submitted">
-                        </app-input-text>
-                    </div>
-                    <div class="col-12 md:col-12 lg:col-8">
-                        <app-input-text label="{{ 'address' | translate }}" controlName="address" [control]="queryForm.controls.address" [submitted]="submitted">
-                        </app-input-text>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-file-upload [uploadUrl]="uploadUrl" [fileType]="fileType">
-                        </app-file-upload>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-two-dialog label="ID" controlName="systemid" [data]="tableData" [columns]="tableColumns" [control]="queryForm.controls.systemid" [submitted]="submitted">
-                        </app-input-two-dialog>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-three-dialog label="三層ID" controlName="systemid" [control]="queryForm.controls.systemid" [submitted]="submitted">
-                        </app-input-three-dialog>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-8">
-                        <app-input-two-list parentLabel="父階層" subLabel="子階層" controlName="systemid" [control]="queryForm.controls.systemid" [submitted]="submitted">
-                        </app-input-two-list>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-posquickkey label="快速鍵代碼" controlName="posquickkeyid" [control]="queryForm.controls.posquickkeyid" [submitted]="submitted">
-                        </app-input-posquickkey>
-                    </div>
-                </div>
-                <hr />
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-number label="金額" controlName="money" [control]="queryForm.controls.money" [submitted]="submitted">
-                        </app-input-number>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-number-range label="發票張數" [startControl]="queryForm.controls.startticket" [endControl]="queryForm.controls.endticket" [submitted]="submitted">
-                        </app-input-number-range>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="編號" controlName="money" [control]="queryForm.controls.serialnumber" [submitted]="submitted">
-                        </app-input-serial-number>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number-range label="版本編號" [startControl]="queryForm.controls.startserialticket" [endControl]="queryForm.controls.endserialticket" [submitted]="submitted">
-                        </app-input-serial-number-range>
-                    </div>
-                </div>
-                <hr />
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-dropdown-default label="系統別初始" controlName="systemtypedefault" [options]="systemTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.systemtypedefault" [submitted]="submitted">
-                        </app-dropdown-default>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-dropdown-item label="系統別" controlName="systemtype" [options]="systemTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.systemtype" [submitted]="submitted">
-                        </app-dropdown-item>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-multi-select label="系統別多選" controlName="systemtypemulti" [options]="systemTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.systemtypemulti" [submitted]="submitted">
-                        </app-multi-select>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-dropdown-item label="選擇角色" controlName="rolesmultilabel" [options]="roles" optionLabel="roleCode, roleName" optionValue="id" [control]="queryForm.controls.rolesmultilabel" [submitted]="submitted">
-                        </app-dropdown-item>
-                    </div>
-                </div>
-                <hr />
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-2">
-                        <app-time-one label="選擇時間" [control]="queryForm.controls.onetime" [submitted]="submitted">
-                        </app-time-one>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-time-range label="時間範圍" [startControl]="queryForm.controls.starttime" [endControl]="queryForm.controls.endtime" [submitted]="submitted">
-                        </app-time-range>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-2">
-                        <app-date-one label="選擇日期" [control]="queryForm.controls.onedatedd" [submitted]="submitted">
-                        </app-date-one>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-5">
-                        <app-date-range label="變更時間範圍" [startControl]="queryForm.controls.startdate" [endControl]="queryForm.controls.enddate" [submitted]="submitted">
-                        </app-date-range>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-2">
-                        <app-datetime-one label="時間" [control]="queryForm.controls.onedatetime" [submitted]="submitted">
-                        </app-datetime-one>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-5">
-                        <app-datetime-range label="日期時間範圍" [startControl]="queryForm.controls.startdatetime" [endControl]="queryForm.controls.enddatetime" [submitted]="submitted">
-                        </app-datetime-range>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-2">
-                        <app-datemm-one label="年月" [control]="queryForm.controls.onedatemm" [submitted]="submitted">
-                        </app-datemm-one>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-5">
-                        <app-datemm-range label="月範圍" [startControl]="queryForm.controls.startdate" [endControl]="queryForm.controls.enddate" [submitted]="submitted">
-                        </app-datemm-range>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-3">
-                        <app-datemm-two label="發票月" [control]="queryForm.controls.twodatemm" [submitted]="submitted">
-                        </app-datemm-two>
-                    </div>
-
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-dateqtr-range label="活動季別" [startControl]="queryForm.controls.startqtr" [endControl]="queryForm.controls.endqtr" [submitted]="submitted">
-                        </app-dateqtr-range>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-8 lg:col-8">
-                        <app-datebutton-range label="變更時間範圍" [startControl]="queryForm.controls.startbuttontime" [endControl]="queryForm.controls.endbuttontime" [submitted]="submitted">
-                        </app-datebutton-range>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-2">
-                        <app-dateyy-one label="年" [control]="queryForm.controls.onedatetyy" [submitted]="submitted">
-                        </app-dateyy-one>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-5">
-                        <app-dateyy-range label="年範圍" [startControl]="queryForm.controls.startdate" [endControl]="queryForm.controls.enddate" [submitted]="submitted">
-                        </app-dateyy-range>
-                    </div>
-                </div>
-                <hr />
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-4 lg:col-4">
-                        <app-checkbox-one label="是否起始" controlName="usagec" [control]="queryForm.controls.usagec">
-                        </app-checkbox-one>
-                    </div>
-                    <div class="col-12 md:col-4 lg:col-4">
-                        <app-checkbutton-toggle label="是否審核" controlName="reviewc" [control]="queryForm.controls.reviewc" [submitted]="submitted">
-                        </app-checkbutton-toggle>
-                    </div>
-                </div>
-                <hr />
-                <div class="grid p-fluid">
-                    <app-radiobutton label="公告類型" groupname="systemtyperadio" [control]="queryForm.controls.radiolist" [options]="systemTypeOptions" [submitted]="submitted" (valueChange)="onSystemTypeChange($event)">
-                    </app-radiobutton>
-                </div>
-
-                <!-- 地址輸入 -->
-                <app-address-form></app-address-form>
-
-                <hr />
-                <app-editor-text label="editor text" controlName="editortext" [control]="queryForm.controls.editortext" [style]="{ height: '100px' }" [submitted]="submitted">
-                </app-editor-text>
-                <hr />
-                <div *appHasPermission="queryPermission" class="col">
-                    <div class="grid justify-content-end">
-                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
-                    </div>
-                </div>
-            </form>
-        </p-accordionTab>
-    </p-accordion>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
 </div>
 <div class="card">
-    <app-data-table-check [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-    </app-data-table-check>
+  <app-data-table-check [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+  </app-data-table-check>
 </div>
 <div class="card">
-    <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-    </app-data-table>
+  <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+  </app-data-table>
 </div>

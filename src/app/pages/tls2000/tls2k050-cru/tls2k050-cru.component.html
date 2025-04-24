@@ -10,47 +10,55 @@
                 <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="餘代卡卡號" controlName="oldCardID" [control]="dataForm.controls.oldCardID" [submitted]="submitted">
-                            </app-input-serial-number>
+                            <app-input-number [useGrouping]="false" label="餘代卡卡號" controlName="oldCardID"
+                                [control]="dataForm.controls.oldCardID" [submitted]="submitted">
+                            </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-datetime-one label="換卡日期" [control]="dataForm.controls.changeCardDate" [submitted]="submitted">
+                            <app-datetime-one label="換卡日期" [control]="dataForm.controls.changeCardDate"
+                                [submitted]="submitted">
                             </app-datetime-one>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="餘代卡狀態" controlName="status" [control]="dataForm.controls.status" [submitted]="submitted">
+                            <app-input-text label="餘代卡狀態" controlName="status" [control]="dataForm.controls.status"
+                                [submitted]="submitted">
                             </app-input-text>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="已開金額" controlName="payout" [control]="dataForm.controls.payout" [submitted]="submitted">
+                            <app-input-number label="已開金額" controlName="payout" [control]="dataForm.controls.payout"
+                                [submitted]="submitted">
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="未開金額" controlName="nonPayout" [control]="dataForm.controls.nonPayout" [submitted]="submitted">
+                            <app-input-number label="未開金額" controlName="nonPayout"
+                                [control]="dataForm.controls.nonPayout" [submitted]="submitted">
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-datetime-one label="卡片發行日" [control]="dataForm.controls.releaseCardDate" [submitted]="submitted">
+                            <app-datetime-one label="卡片發行日" [control]="dataForm.controls.releaseCardDate"
+                                [submitted]="submitted">
                             </app-datetime-one>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="新餘代卡卡號" controlName="newCardID" [control]="dataForm.controls.newCardID" [submitted]="submitted">
-                            </app-input-serial-number>
+                            <app-input-number [useGrouping]="false" label="新餘代卡卡號" controlName="newCardID"
+                                [control]="dataForm.controls.newCardID" [submitted]="submitted">
+                            </app-input-number>
                         </div>
                     </div>
                     <hr>
-                    <app-editor-text label="換卡說明" controlName="changeInfo" [control]="dataForm.controls.changeInfo" [style]="{ height: '100px' }" [submitted]="submitted">
+                    <app-editor-text label="換卡說明" controlName="changeInfo" [control]="dataForm.controls.changeInfo"
+                        [style]="{ height: '100px' }" [submitted]="submitted">
                     </app-editor-text>
                     <hr>
                 </form>
                 <div class="col pt-4">
                     <div class="grid justify-content-end">
-                        <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                        <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                        <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
                     </div>
                 </div>
             </p-panel>

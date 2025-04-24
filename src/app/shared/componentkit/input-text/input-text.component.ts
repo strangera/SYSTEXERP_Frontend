@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { AbstractControl, FormControl, Validators } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 
 @Component({
@@ -8,17 +8,22 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
   styleUrl: './input-text.component.scss'
 })
 export class InputTextComponent extends BasicKitComponent implements OnInit {
-  @Input() label: string = '';
-  @Input() controlName: string = '';
-  @Input() control: FormControl = new FormControl;
-  @Input() submitted: boolean = false; // 檢查欄位是否標準
+  @Input() label = '';
+  @Input() controlName = '';
+  @Input() control = new FormControl;
+  @Input() submitted = false; // 檢查欄位是否標準
+  @Input() disabled: boolean | undefined;
+  @Input() showCopyButton = false;
+  @Input() customPlaceholder: string | undefined;
+  @Input() errorForGroup = false;
 
   ngOnInit(): void {
-    // Required *
-    this.checkRequiredValidator(this.control);
-    // Placeholder
-    this.setPlaceholder('輸入文字', this.control);
-    // IntLength
-    this.checkIntLengthValidator(this.control);
+    if (this.disabled) {
+      this.control.disable({ emitEvent: false });
+    }
+    if (this.customPlaceholder) {
+      this.placeholder = this.customPlaceholder;
+    }
+    this.updateControlState(this.control);
   }
 }

@@ -9,85 +9,103 @@
             <h5>必 要 欄 位 資 料</h5>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="分店代號" controlName="branchCode" [control]="dataForm.controls.branchCode" [submitted]="submitted">>
+                    <app-input-text label="分店代號" controlName="branchCode" [control]="dataForm.controls.branchCode"
+                        [submitted]="submitted">>
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="公司代號(統一編號)" controlName="unifiedNumber" [control]="dataForm.controls.unifiedNumber" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="公司代號(統一編號)" controlName="unifiedNumber"
+                        [control]="dataForm.controls.unifiedNumber" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="公司名稱(中文)" controlName="companyCName" [control]="dataForm.controls.companyCName" [submitted]="submitted">
+                    <app-input-text label="公司名稱(中文)" controlName="companyCName"
+                        [control]="dataForm.controls.companyCName" [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="商場名稱" controlName="mallName" [control]="dataForm.controls.mallName" [submitted]="submitted">>
+                    <app-input-text label="商場名稱" controlName="mallName" [control]="dataForm.controls.mallName"
+                        [submitted]="submitted">>
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="公司名稱(英文)" controlName="companyEName" [control]="dataForm.controls.companyEName" [submitted]="submitted">
+                    <app-input-text label="公司名稱(英文)" controlName="companyEName"
+                        [control]="dataForm.controls.companyEName" [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="稅籍編號" controlName="taxNumber" [control]="dataForm.controls.taxNumber" [submitted]="submitted">>
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="稅籍編號" controlName="taxNumber"
+                        [control]="dataForm.controls.taxNumber" [submitted]="submitted">>
+                    </app-input-number>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="負責人" controlName="principal" [control]="dataForm.controls.principal" [submitted]="submitted">>
+                    <app-input-text label="負責人" controlName="principal" [control]="dataForm.controls.principal"
+                        [submitted]="submitted">>
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="聯絡人" controlName="contactPerson" [control]="dataForm.controls.contactPerson" [submitted]="submitted">
+                    <app-input-text label="聯絡人" controlName="contactPerson" [control]="dataForm.controls.contactPerson"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="聯絡人電話" controlName="contactPersonPhone" [control]="dataForm.controls.contactPersonPhone" [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="聯絡人傳真" controlName="contactPersonFax" [control]="dataForm.controls.contactPersonFax" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="郵遞區號" controlName="postalCode" [control]="dataForm.controls.postalCode" [submitted]="submitted">>
-                    </app-input-serial-number>
-                </div>
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-serial-number label="營業登記證號" controlName="BusinessCertificateNumber" [control]="dataForm.controls.BusinessCertificateNumber" [submitted]="submitted">
-                    </app-input-serial-number>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="公司電話" controlName="companyPhone" [control]="dataForm.controls.companyPhone" [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="公司(營業處)地址(中文)" controlName="companyCAddress" [control]="dataForm.controls.companyCAddress" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="公司(營業處)地址(英文)" controlName="companyEAddress" [control]="dataForm.controls.companyEAddress" [submitted]="submitted">>
+                    <app-input-text label="聯絡人電話" controlName="contactPersonPhone"
+                        [control]="dataForm.controls.contactPersonPhone" [submitted]="submitted">>
                     </app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="公司登記地址(中文)" controlName="registeredCAddress" [control]="dataForm.controls.registeredCAddress" [submitted]="submitted">
+                    <app-input-text label="聯絡人傳真" controlName="contactPersonFax"
+                        [control]="dataForm.controls.contactPersonFax" [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="公司登記地址(英文)" controlName="registeredEAddress" [control]="dataForm.controls.registeredEAddress" [submitted]="submitted">>
+                    <app-input-number [useGrouping]="false" label="郵遞區號" controlName="postalCode"
+                        [control]="dataForm.controls.postalCode" [submitted]="submitted">>
+                    </app-input-number>
+                </div>
+                <div class="col-12 md:col-12 lg:col-4">
+                    <app-input-number [useGrouping]="false" label="營業登記證號" controlName="BusinessCertificateNumber"
+                        [control]="dataForm.controls.BusinessCertificateNumber" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="公司電話" controlName="companyPhone" [control]="dataForm.controls.companyPhone"
+                        [submitted]="submitted">>
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="發票地址" controlName="invoiceAddress" [control]="dataForm.controls.invoiceAddress" [submitted]="submitted">
+                    <app-input-text label="公司(營業處)地址(中文)" controlName="companyCAddress"
+                        [control]="dataForm.controls.companyCAddress" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="公司(營業處)地址(英文)" controlName="companyEAddress"
+                        [control]="dataForm.controls.companyEAddress" [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-12 lg:col-4">
+                    <app-input-text label="公司登記地址(中文)" controlName="registeredCAddress"
+                        [control]="dataForm.controls.registeredCAddress" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="公司登記地址(英文)" controlName="registeredEAddress"
+                        [control]="dataForm.controls.registeredEAddress" [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-12 lg:col-4">
+                    <app-input-text label="發票地址" controlName="invoiceAddress"
+                        [control]="dataForm.controls.invoiceAddress" [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
@@ -95,33 +113,38 @@
             <h5>郵 寄 資 料</h5>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="郵寄電話" controlName="mailingPhone" [control]="dataForm.controls.mailingPhone" [submitted]="submitted">>
+                    <app-input-text label="郵寄電話" controlName="mailingPhone" [control]="dataForm.controls.mailingPhone"
+                        [submitted]="submitted">>
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="郵寄傳真" controlName="mailingFex" [control]="dataForm.controls.mailingFex" [submitted]="submitted">
+                    <app-input-text label="郵寄傳真" controlName="mailingFex" [control]="dataForm.controls.mailingFex"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="郵寄地址" controlName="mailingAddress" [control]="dataForm.controls.mailingAddress" [submitted]="submitted">>
+                    <app-input-text label="郵寄地址" controlName="mailingAddress"
+                        [control]="dataForm.controls.mailingAddress" [submitted]="submitted">>
                     </app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="電子信箱" controlName="email" [control]="dataForm.controls.email" [submitted]="submitted">
+                    <app-input-text label="電子信箱" controlName="email" [control]="dataForm.controls.email"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="公司網址" controlName="companyWebsite" [control]="dataForm.controls.companyWebsite" [submitted]="submitted">>
+                    <app-input-text label="公司網址" controlName="companyWebsite"
+                        [control]="dataForm.controls.companyWebsite" [submitted]="submitted">>
                     </app-input-text>
                 </div>
             </div>
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

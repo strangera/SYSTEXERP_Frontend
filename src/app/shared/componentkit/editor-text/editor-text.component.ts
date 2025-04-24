@@ -18,7 +18,7 @@ export class EditorTextComponent extends BasicKitComponent implements OnInit {
     // Required *
     this.checkRequiredValidator(this.control);
     // Placeholder
-    this.setPlaceholder('輸入文字', this.control);
+    // this.setPlaceholder('輸入文字', this.control);
   }
 
   onValueChange(value: string) {

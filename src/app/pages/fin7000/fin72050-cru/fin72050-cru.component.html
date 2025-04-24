@@ -1,36 +1,25 @@
 <div class="card">
-    <div class="grid align-items-center">
-      <div class="col" style="flex: 1">
-        <app-menubar [ProgNo]="ProgNo"></app-menubar>
-      </div>
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-      <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-        <div class="grid p-fluid">
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
 
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item
-                      label="保管人"
-                      controlName="custodian "
-                      [options]="usercode"
-                      optionLabel="label"
-                      optionValue="value"
-                      [control]="dataForm.controls.custodian "
-                      [submitted]="submitted"
-                    ></app-dropdown-item>
-                  </div>
-                  <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one
-                      label="盤點日期"
-                      controlName="invDate"
-                      [control]="dataForm.controls.invDate"
-                      [submitted]="submitted"
-                    ></app-date-one>
-                  </div>
-               
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="保管人" controlName="custodian " [options]="usercode" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.custodian " [submitted]="submitted"></app-dropdown>
         </div>
-  
-        <!-- <hr />
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-date-one label="盤點日期" controlName="invDate" [control]="dataForm.controls.invDate"
+            [submitted]="submitted"></app-date-one>
+        </div>
+
+      </div>
+
+      <!-- <hr />
             <ng-container formArrayName="items">
               <ng-container
                 *ngFor="let item of items.controls; let i = index"
@@ -50,7 +39,7 @@
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-dropdown-item
+                        <app-dropdown
                           label="保管人"
                           controlName="Pettycashcustodian"
                           [options]="usercode"
@@ -58,7 +47,7 @@
                           optionValue="value"
                           [control]="dateForm.controls.Pettycashcustodian"
                           [submitted]="submitted"
-                        ></app-dropdown-item>
+                        ></app-dropdown>
                       </div>
                   <div class="col-12 md:col-6 lg:col-4">
                       <app-input-text
@@ -70,7 +59,7 @@
                       </app-input-text>
                     </div>
                   <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-default
+                    <app-dropdown
                       label="組織代號"
                       controlName="Organizationcode"
                       [options]="Organizationcode"
@@ -79,10 +68,10 @@
                       [control]="getFormControl(i, 'Organizationcode')"
                       [submitted]="submitted"
                     >
-                    </app-dropdown-default>
+                    </app-dropdown>
                   </div>
                   <div class="col-12 md:col-6 lg:col-4">
-                      <app-dropdown-default
+                      <app-dropdown
                         label="明細類別"
                         controlName="Detailedcategory"
                         [options]="Detailedcategory"
@@ -91,10 +80,10 @@
                         [control]="getFormControl(i, 'Detailedcategory')"
                         [submitted]="submitted"
                       >
-                      </app-dropdown-default>
+                      </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                      <app-dropdown-default
+                      <app-dropdown
                         label="發票格式"
                         controlName="Invoiceformat"
                         [options]="Invoiceformat"
@@ -103,7 +92,7 @@
                         [control]="getFormControl(i, 'Invoiceformat')"
                         [submitted]="submitted"
                       >
-                      </app-dropdown-default>
+                      </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                       <app-input-text
@@ -142,7 +131,7 @@
                       </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                      <app-dropdown-default
+                      <app-dropdown
                         label="發票用途"
                         controlName="invoicePurpose"
                         [options]="invoicePurpose"
@@ -151,7 +140,7 @@
                         [control]="getFormControl(i, 'invoicePurpose')"
                         [submitted]="submitted"
                       >
-                      </app-dropdown-default>
+                      </app-dropdown>
                     </div>
                   <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text
@@ -163,7 +152,7 @@
                     </app-input-text>
                   </div>
                   <div class="col-12 md:col-6 lg:col-4">
-                      <app-dropdown-default
+                      <app-dropdown
                         label="課稅別"
                         controlName="taxCategory"
                         [options]="taxCategory"
@@ -172,7 +161,7 @@
                         [control]="getFormControl(i, 'taxCategory')"
                         [submitted]="submitted"
                       >
-                      </app-dropdown-default>
+                      </app-dropdown>
                     </div>
                   <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text
@@ -192,9 +181,9 @@
                         >>
                       </app-input-text>
                     </div>
-  
+
                   <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-default
+                    <app-dropdown
                       label="扣扺代號"
                       controlName="deductionCode"
                       [options]="deductionCode"
@@ -203,9 +192,9 @@
                       [control]="getFormControl(i, 'deductionCode')"
                       [submitted]="submitted"
                       >>
-                    </app-dropdown-default>
+                    </app-dropdown>
                   </div>
-      
+
                   <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text
                       label="彙總張數"
@@ -224,16 +213,12 @@
                 (click)="onAddItem()"
               ></app-button-dynamicallyadd>
             </div> -->
-      </form>
-      <div class="col pt-4">
-        <div class="grid justify-content-end">
-          <app-button-cancel (click)="onCancel()"></app-button-cancel>
-          <app-button-submit
-            (click)="submitForm(dataForm)"
-            *ngIf="isFormEditable"
-          ></app-button-submit>
-        </div>
+    </form>
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+        <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
       </div>
-    </p-panel>
-  </div>
-  
+    </div>
+  </p-panel>
+</div>
