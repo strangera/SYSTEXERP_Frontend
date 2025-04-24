@@ -6,6 +6,7 @@ import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/service/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { ValidationService } from '../../../shared/service/validation.service';
+import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
 //
 
 // 2.5.1.1 大分類維護作業 CRU
@@ -23,9 +24,9 @@ export class TLS51010CRUComponent {
   editPermission = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    bCode: [, [Validators.required, Validators.maxLength(2), this.validationService.numberValidator]], // Input serial number
-    bName: ['', [Validators.required, Validators.maxLength(32)]], // Input Text\
-    remark: [,], // editor text
+    CAT_LNo: [, [Validators.required, Validators.maxLength(2), this.validationService.numberValidator]], // Input serial number
+    CAT_LName: ['', [Validators.required, Validators.maxLength(32)]], // Input Text\
+    CAT_LRemark: [,], // editor text
   });
   // ----------------------------------------------------------------
   crudstatus: CRUDStatus = CRUDStatus.Create;
@@ -41,6 +42,7 @@ export class TLS51010CRUComponent {
     private messageService: NotificationService,
     private authService: AuthService,
     private validationService: ValidationService,
+    private apiService: TLS5000Service
     //
   ) {
   }

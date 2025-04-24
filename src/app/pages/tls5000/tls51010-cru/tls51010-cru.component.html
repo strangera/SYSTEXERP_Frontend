@@ -10,16 +10,16 @@
                 <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="大分類代碼" controlName="bCode" [control]="dataForm.controls.bCode" [submitted]="submitted">
+                            <app-input-serial-number label="大分類代碼" controlName="CAT_LNo" [control]="dataForm.controls.CAT_LNo" [submitted]="submitted">
                             </app-input-serial-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="大分類名稱" controlName="bName" [control]="dataForm.controls.bName" [submitted]="submitted">
+                            <app-input-text label="大分類名稱" controlName="CAT_LName" [control]="dataForm.controls.CAT_LName" [submitted]="submitted">
                             </app-input-text>
                         </div>
                     </div>
                     <hr>
-                    <app-editor-text label="說明" controlName="editortext" [control]="dataForm.controls.remark" [style]="{ height: '100px' }" [submitted]="submitted">
+                    <app-editor-text label="說明" controlName="CAT_LRemark" [control]="dataForm.controls.CAT_LRemark" [style]="{ height: '100px' }" [submitted]="submitted">
                     </app-editor-text>
                     <hr>
                 </form>

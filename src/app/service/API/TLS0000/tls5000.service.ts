@@ -22,12 +22,35 @@ export class TLS5000Service {
     private errorHandler: ErrorHandlerService
   ) { }
 
-  // 查詢 POS20031
+  // 查詢 POS2003
   queryPOS2003(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryPOS2003`, data).pipe(
       tap((data) => console.debug('TLS5000 queryPOS2003 response', data)),
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
+  //新增 POS2003
+  insertPOS2003(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertPOS2003`, data).pipe(
+      tap((data) => console.debug('TLS5000 insertPOS2003 response', data)),
+      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
+    );
+  }
 
+
+  //修改 POS2003
+  updatePOS2003(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updatePOS2003`, data).pipe(
+      tap((data) => console.debug('TLS5000 updatePOS2003 response', data)),
+      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
+    );
+  }
+
+  //刪除 POS2003
+  deletePOS2003(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deletePOS2003`, data).pipe(
+      tap((data) => console.debug('TLS5000 deletePOS2003 response', data)),
+      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
+    );
+  }
 }
