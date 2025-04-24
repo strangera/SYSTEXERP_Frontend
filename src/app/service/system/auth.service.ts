@@ -60,6 +60,7 @@ export class AuthService {
         if (response.Status === '0000') {
           sessionStorage.setItem('UserInfo', JSON.stringify(response.Data));
           if (response.Data.USER_PwdExpireDate <= new Date().toISOString()) {
+            console.log('UserInfo', response.Data);
             this.notemessage.errorBubble('超過90天使用時間，請修改密碼');
             this.router.navigate(['/changepsw/changepsw']);
           } else {

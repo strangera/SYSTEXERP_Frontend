@@ -10,18 +10,14 @@
       <div *ngIf="activeIndex === 0">
         <h6>輸入舊密碼</h6>
         <input type="password" pInputText [(ngModel)]="oldPassword" placeholder="請輸入舊密碼" class="w-full mb-3"/>
+        <hr>
+        <h6>輸入新密碼</h6>
+        <input type="password" pInputText [(ngModel)]="newPassword" placeholder="請輸入新密碼" class="w-full mb-3"/>
+        <input type="password" pInputText [(ngModel)]="confirmPassword" placeholder="再次輸入新密碼" class="w-full mb-3"/>
         <button pButton label="下一步" (click)="next()"></button>
       </div>
   
       <div *ngIf="activeIndex === 1">
-        <h6>輸入新密碼</h6>
-        <input type="password" pInputText [(ngModel)]="newPassword" placeholder="請輸入新密碼" class="w-full mb-3"/>
-        <input type="password" pInputText [(ngModel)]="confirmPassword" placeholder="再次輸入新密碼" class="w-full mb-3"/>
-        <button pButton label="上一步" class="mr-2" (click)="prev()"></button>
-        <button pButton label="下一步" (click)="next()"></button>
-      </div>
-  
-      <div *ngIf="activeIndex === 2">
         <h6>確認送出</h6>
         <p>請確認您要變更密碼。</p>
         <button pButton label="上一步" class="mr-2" (click)="prev()"></button>

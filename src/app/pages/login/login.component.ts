@@ -47,6 +47,7 @@ export class LoginComponent implements OnInit {
     this.authService.login(this.loginForm.value as userLogin).pipe(first()).subscribe({
       next: () => {
         this.notemessage.successBubble('登入成功');
+        console.log('登入成功', this.loginForm.value);
         this.loading = false;
       },
       error: () => {
