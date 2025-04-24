@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {  Router } from '@angular/router';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, forkJoin, Observable, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { EncryptionService } from '../../shared/service/encryption.service';
 import { catchError, map } from 'rxjs/operators';
@@ -9,6 +9,7 @@ import { environment } from '../../../environments/environment';
 import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
 import { UserInfo } from '../../models/system/userInfo';
 import { NotificationService } from '../../shared/service/notification.service';
+import { Sys1000Service } from '../SYS100/sys1000.service';
 
 export interface ApiResponse<T> {
   Status: string;
@@ -37,6 +38,7 @@ export class AuthService {
     private http: HttpClient,
     private encrypt: EncryptionService,
     private notemessage: NotificationService,
+    private sys1000Service: Sys1000Service
   ) {
     let userStorage: any = sessionStorage.getItem('UserInfo');
     this.userSubject = new BehaviorSubject(JSON.parse(userStorage)!);
