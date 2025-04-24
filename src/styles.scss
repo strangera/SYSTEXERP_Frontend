@@ -6,7 +6,17 @@ $gutter: 1rem; //for primeflex grid system
 @import "../node_modules/quill/dist/quill.snow.css";
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, “Segoe UI”, Roboto, Helvetica, Arial, sans-serif, “Apple Color Emoji”, “Segoe UI Emoji”, “Segoe UI Symbol”;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    “Segoe UI”,
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif,
+    “Apple Color Emoji”,
+    “Segoe UI Emoji”,
+    “Segoe UI Symbol”;
 }
 
 .no-wrap {
@@ -27,19 +37,19 @@ body {
 }
 
 .query-accordionTab {
-  background-color: #A2E7C6;
+  background-color: #a2e7c6;
   color: black;
   font-weight: bold;
 }
 
 .create-accordionTab {
-  background-color: #A2E7C6;
+  background-color: #a2e7c6;
   color: black;
   font-weight: bold;
 }
 
 .edit-accordionTab {
-  background-color: #A2E7C6;
+  background-color: #a2e7c6;
   color: black;
   font-weight: bold;
 }
@@ -68,13 +78,22 @@ body {
   color: var(--text-color);
 }
 
-.p-accordion .p-accordion-header:not(.p-disabled).p-highlight .p-accordion-header-link {
+.p-accordion
+  .p-accordion-header:not(.p-disabled).p-highlight
+  .p-accordion-header-link {
   border: 1px solid var(--surface-d);
 }
-
 
 .p-panel .p-panel-header {
   border: 1px solid var(--surface-d);
   background: var(--surface-d);
   color: var(--text-color);
+}
+
+.p-dialog-mask-scrollblocker {
+  z-index: 9999 !important;
+}
+
+.p-toast {
+  z-index: 10000 !important;
 }

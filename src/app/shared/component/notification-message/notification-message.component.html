@@ -1,37 +1,38 @@
-<!-- Block UI -->
-<p-blockUI [blocked]="blockedDocument">
-    <p-progressSpinner></p-progressSpinner>
-</p-blockUI>
+<!-- <p-blockUI [blocked]="blockedDocument">
+  <p-progressSpinner></p-progressSpinner>
+</p-blockUI> -->
 
-<!-- Confirmation Service -->
-<p-confirmDialog [transitionOptions]="'0ms'">
-    <!-- 禁用過度動畫 -->
+<p-confirmDialog #cd>
+  <ng-template pTemplate="headless" let-message>
+    <div class="flex flex-column align-items-center p-5 surface-overlay border-round">
+      <div class="border-circle bg-primary inline-flex justify-content-center align-items-center h-6rem w-6rem">
+        <i class="pi pi-{{ message.icon }} text-5xl"></i>
+      </div>
+      <span class="font-bold text-2xl block mb-2 mt-4">
+        {{ message.header }}
+      </span>
+      <p class="mb-0" [innerHTML]="message.message"></p>
+      <div class="flex align-items-center gap-2 mt-4">
+        <p-button title="確定" label="確定" (click)="cd.accept()" severity="primary" styleClass="w-8rem">
+        </p-button>
+        <p-button title="取消" label="取消" (click)="cd.reject()" outlined="true" styleClass="w-8rem ">
+        </p-button>
+      </div>
+    </div>
+  </ng-template>
 </p-confirmDialog>
 
-<!-- Message Box -->
-<p-dialog [header]="msgBoxHeader" [(visible)]="msgBoxDisplay" [modal]="true" [closeOnEscape]="true" [dismissableMask]="true" (onHide)="hideAndCleanMsgBox();">
-    <div style="min-width: 20em;">
-        <pre>{{ msgBoxMessage }}</pre>
-    </div>
-    <ng-template pTemplate="footer">
-        <button type="button" pButton icon="pi pi-check" iconPos="left" label="OK" (click)="hideAndCleanMsgBox();" autofocus></button>
-    </ng-template>
-</p-dialog>
+<p-toast position="top-right" preventOpenDuplicates="true" styleClass="p-4"
+  [breakpoints]="{ '960px': { width: '100%', right: '0', left: '0' } }"></p-toast>
 
-<!-- Message Bubble -->
-<p-toast position="top-right"></p-toast>
-
-<!-- Inputbox
-(onHide)="hideAndCleanCommentBox();"
--->
-<p-dialog [header]="inputBoxHeader" [(visible)]="inputBoxDisplay" [modal]="true" [closeOnEscape]="false" [dismissableMask]="false">
-    <div style="min-width: 40em;">
-        {{ inputBoxMessage }}
-        <textarea #txtInputBoxInputText pInputTextarea [(ngModel)]="inputBoxInputText" style="width: 100%" (keydown.enter)="onClickInputBoxOK()" autofocus></textarea>
-        <small>Use shift + enter to break line or enter to submit.</small>
-    </div>
-    <ng-template pTemplate="footer">
-        <button #btnInputBoxCancel type="button" pButton icon="pi pi-times" iconPos="left" label="Cancel" (click)="onClickInputBoxCancel()"></button>
-        <button #btnInputBoxOK type="button" pButton icon="pi pi-check" iconPos="left" label="OK" (click)="onClickInputBoxOK()"></button>
-    </ng-template>
+<p-dialog [header]="msgBoxHeader" [(visible)]="msgBoxDisplay" [modal]="true" [closeOnEscape]="true"
+  [dismissableMask]="true" (onHide)="hideAndCleanMsgBox();" class="msg-box-dialog">
+  <div class="msg-box-content">
+    <pre>{{ msgBoxMessage }}</pre>
+  </div>
+  <ng-template pTemplate="footer">
+    <button type="button" pButton icon="pi pi-check" iconPos="left" label="確定" (click)="hideAndCleanMsgBox();">
+      <span class="sr-only">OK</span>
+    </button>
+  </ng-template>
 </p-dialog>
