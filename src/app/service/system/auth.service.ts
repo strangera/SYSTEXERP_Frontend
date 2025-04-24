@@ -38,8 +38,8 @@ export class AuthService {
     private encrypt: EncryptionService,
     private notemessage: NotificationService,
   ) {
-    let userStorage: any = sessionStorage.getItem('UserInfo');
-    this.userSubject = new BehaviorSubject(JSON.parse(userStorage)!);
+    const userStorage: any = sessionStorage.getItem('UserInfo');
+    this.userSubject = new BehaviorSubject(JSON.parse(userStorage));
     this.user = this.userSubject.asObservable();
   }
 
@@ -98,7 +98,6 @@ export class AuthService {
       next: () => {
         sessionStorage.clear();
         this.userSubject.next(null);
-        // this.queryStateService.clearAllQueryStates();
         this.router.navigate(['/account/login'], { replaceUrl: true });
         this.notemessage.infoBubble('已成功登出');
       },
@@ -124,7 +123,7 @@ export class AuthService {
       try {
         const funs: FunsrightInfo[] = JSON.parse(sessionStorage.getItem("FunRightsInfo") || '');
         // filter
-        var progs = funs.filter(x => x.prog_no == progNo);
+        const progs = funs.filter(x => x.prog_no == progNo);
         // Find the maximum values for each property
         const value: FunsrightInfo = progs.reduce((max: FunsrightInfo, prog: FunsrightInfo) => ({
           add_api_path: (prog.add_api_path?.length || 0) > (max.add_api_path?.length || 0) ? prog.add_api_path : max.add_api_path,

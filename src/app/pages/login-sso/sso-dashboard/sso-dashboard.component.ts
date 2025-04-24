@@ -18,7 +18,7 @@ import { Sys1000Service } from '../../../service/SYS100/sys1000.service';
   styleUrl: './sso-dashboard.component.scss'
 })
 export class SsoDashboardComponent implements OnInit {
-  logo: string = 'assets/layout/images/logo.png';
+  logo = 'assets/layout/images/logo.png';
   user: UserInfo | null = null;
   private subscriptions: Subscription[] = [];
   data: UserInfo | null = null; // 使用者資料
@@ -72,9 +72,8 @@ export class SsoDashboardComponent implements OnInit {
     const time = JSON.parse(sessionStorage.getItem('UserInfo') || '{}').USER_PwdExpireDate;
     // if (time <= new Date().toISOString()) {
     if (true) {
-      this.messageService.errorBubble('超過90天使用時間，請修改密碼');
+      this.messageService.warnBubble('為維護帳號安全，您的密碼已超過 90 天未變更，為保障帳戶安全，請立即設定新密碼後再登入系統。', '建議您定期更換密碼');
       this.visible = true;
-      console.log('密碼過期');
     }
   }
   fetchUrlList(): void {
@@ -99,7 +98,7 @@ export class SsoDashboardComponent implements OnInit {
         this.authService.getFunRightsInfo(),
         this.sys1000Service.getData()
       ]).subscribe({
-        next: ([funRightsResponse, sys1000Response]) => {
+        next: ([sys1000Response]) => {
           sessionStorage.setItem('SYSTEMSetting', JSON.stringify(sys1000Response));
           this.loading = false; // 停止載入
           this.router.navigate([item.routerLink]); // 切換路由
