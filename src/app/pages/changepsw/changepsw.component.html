@@ -1,28 +1,22 @@
 <div class="card mb-3">
-    <div class="w-full">
-      <div class="flex align-items-center justify-content-between mb-4">
-        <h5>變更密碼</h5>
-      </div>
-  
-      <p-toast></p-toast>
-      <p-steps [model]="steps" [activeIndex]="activeIndex" class="mb-4"></p-steps>
-  
-      <div *ngIf="activeIndex === 0">
-        <h6>輸入舊密碼</h6>
-        <input type="password" pInputText [(ngModel)]="oldPassword" placeholder="請輸入舊密碼" class="w-full mb-3"/>
-        <hr>
-        <h6>輸入新密碼</h6>
-        <input type="password" pInputText [(ngModel)]="newPassword" placeholder="請輸入新密碼" class="w-full mb-3"/>
-        <input type="password" pInputText [(ngModel)]="confirmPassword" placeholder="再次輸入新密碼" class="w-full mb-3"/>
-        <button pButton label="下一步" (click)="next()"></button>
-      </div>
-  
-      <div *ngIf="activeIndex === 1">
-        <h6>確認送出</h6>
-        <p>請確認您要變更密碼。</p>
-        <button pButton label="上一步" class="mr-2" (click)="prev()"></button>
-        <button pButton label="完成" class="p-button-success" (click)="submit()"></button>
-      </div>
+  <div class="w-full">
+    <div class="flex align-items-center justify-content-between mb-4">
+      <h5>變更密碼</h5>
     </div>
+
+    <p-toast></p-toast>
+
+    <form [formGroup]="passwordForm" (ngSubmit)="onSubmit()">
+      <h6>輸入舊密碼</h6>
+      <input type="password" pInputText formControlName="oldPassword" placeholder="請輸入舊密碼" class="w-full mb-3" />
+
+      <hr>
+
+      <h6>輸入新密碼</h6>
+      <input type="password" pInputText formControlName="newPassword" placeholder="請輸入新密碼" class="w-full mb-3" />
+      <input type="password" pInputText formControlName="confirmPassword" placeholder="再次輸入新密碼" class="w-full mb-3" />
+
+      <button pButton label="變更密碼" type="submit" [disabled]="passwordForm.invalid"></button>
+    </form>
   </div>
-  
+</div>
