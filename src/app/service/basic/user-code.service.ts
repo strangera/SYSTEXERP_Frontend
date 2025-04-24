@@ -145,4 +145,9 @@ export class UserCodeService {
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
+
+  // 更新 使用者密碼
+  changePassword(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/User/changePassword`, body);
+  }
 }
