@@ -235,4 +235,13 @@ export class AuthService {
       })
     );
   }
+
+  getUserInfo(): any {
+    const userInfo = sessionStorage.getItem('UserInfo');
+    if (userInfo) {
+      return JSON.parse(userInfo);
+    } else {
+      return null;
+    }
+  }
 }
