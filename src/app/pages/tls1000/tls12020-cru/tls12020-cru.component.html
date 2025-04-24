@@ -79,13 +79,14 @@
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="訪談日期" [control]="dataForm.controls.interviewDate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="訪談日期" [control]="dataForm.controls.interviewDate"
+                        [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-time-one label="訪談時間(24H)" [control]="dataForm.controls.interviewDate24"
+                    <app-calendar calendarType="timeOne" label="訪談時間(24H)" [control]="dataForm.controls.interviewDate24"
                         [submitted]="submitted">
-                    </app-time-one>
+                    </app-calendar>
                 </div>
             </div>
             <div class="grid p-fluid">

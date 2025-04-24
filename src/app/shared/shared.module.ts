@@ -84,31 +84,19 @@ import { HasPermissionDirective } from './directive/has-permission.directive';
 //
 import { InputTextComponent } from './componentkit/input-text/input-text.component';
 import { DataTableComponent } from './componentkit/data-table/data-table.component';
-import { DatetimeRangeComponent } from './componentkit/datetime-range/datetime-range.component';
-import { DateRangeComponent } from './componentkit/date-range/date-range.component';
 import { MultiSelectComponent } from './componentkit/multi-select/multi-select.component';
 import { InputNumberComponent } from './componentkit/input-number/input-number.component';
-import { DatetimeOneComponent } from './componentkit/datetime-one/datetime-one.component';
 import { CheckboxOneComponent } from './componentkit/checkbox-one/checkbox-one.component';
-import { DatemmOneComponent } from './componentkit/datemm-one/datemm-one.component';
 import { DatemmTwoComponent } from './componentkit/datemm-two/datemm-two.component';
 import { InputNumberRangeComponent } from './componentkit/input-number-range/input-number-range.component';
-import { DateyyOneComponent } from './componentkit/dateyy-one/dateyy-one.component';
-import { DateOneComponent } from './componentkit/date-one/date-one.component';
 import { CheckboxComponent } from './componentkit/checkbox/checkbox.component';
 import { RadiobuttonComponent } from './componentkit/radiobutton/radiobutton.component';
 import { EditorTextComponent } from './componentkit/editor-text/editor-text.component';
 import { DropdownMultlabelComponent } from './componentkit/dropdown-multlabel/dropdown-multlabel.component';
-import { CheckbuttonToggleComponent } from './componentkit/checkbutton-toggle/checkbutton-toggle.component';
-import { DatemmRangeComponent } from './componentkit/datemm-range/datemm-range.component';
-import { TimeRangeComponent } from './componentkit/time-range/time-range.component';
-import { TimeOneComponent } from './componentkit/time-one/time-one.component';
 import { FileUploadComponent } from './componentkit/file-upload/file-upload.component';
 import { ButtonDynamicallyaddComponent } from './componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 import { ButtonDynamicallydeleteComponent } from './componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { DatebuttonRangeComponent } from './componentkit/datebutton-range/datebutton-range.component';
 import { DataTableCheckComponent } from './componentkit/data-table-check/data-table-check.component';
-import { DateyyRangeComponent } from './componentkit/dateyy-range/dateyy-range.component';
 import { DateqtrRangeComponent } from './componentkit/dateqtr-range/dateqtr-range.component';
 import { DataTableSpanComponent } from './componentkit/data-table-span/data-table-span.component';
 import { AddressFormComponent } from './componentkit/address-form/address-form.component';
@@ -118,7 +106,6 @@ import { DataTableSettingComponent } from './componentkit/data-table-setting/dat
 import { DataTableGroupComponent } from './componentkit/data-table-group/data-table-group.component';
 import { DataTableReportComponent } from './componentkit/data-table-report/data-table-report.component';
 import { ExcelExportComponent } from './componentkit/excel-export/excel-export.component';
-import { CategorySelectorComponent } from './componentkit/category-selector/category-selector.component';
 import { InputMultiDialogComponent } from './componentkit/input-multi-dialog/input-multi-dialog.component';
 import { FilterMultiDialogComponent } from './filter-multi-dialog/filter-multi-dialog.component';
 import { InputAPIMultiDailogComponent } from './componentkit/input-apimulti-dailog/input-apimulti-dailog.component';
@@ -152,25 +139,12 @@ import { CalendarRangeComponent } from './componentkit/calendar-range/calendar-r
     DataTableGroupComponent,
     DataTableReportComponent,
     DropdownMultlabelComponent,
-    TimeOneComponent,
-    TimeRangeComponent,
-    DateOneComponent,
-    DateRangeComponent,
-    DatetimeOneComponent,
-    DatetimeRangeComponent,
-    DatemmOneComponent,
     DatemmTwoComponent,
-    DatemmRangeComponent,
-    DatebuttonRangeComponent,
     DateqtrRangeComponent,
-    DateyyOneComponent,
-    DateyyRangeComponent,
     CheckboxComponent,
     CheckboxOneComponent,
-    CheckbuttonToggleComponent,
     RadiobuttonComponent,
     ExcelExportComponent,
-    CategorySelectorComponent,
     InputMultiDialogComponent,
     FilterMultiDialogComponent,
     InputAPIMultiDailogComponent,
@@ -355,22 +329,10 @@ import { CalendarRangeComponent } from './componentkit/calendar-range/calendar-r
     DataTableSpanComponent,
     DataTableReportComponent,
     DropdownMultlabelComponent,
-    TimeOneComponent,
-    TimeRangeComponent,
-    DateOneComponent,
-    DateRangeComponent,
-    DatetimeOneComponent,
-    DatetimeRangeComponent,
-    DatemmOneComponent,
     DatemmTwoComponent,
-    DatemmRangeComponent,
-    DatebuttonRangeComponent,
     DateqtrRangeComponent,
-    DateyyOneComponent,
-    DateyyRangeComponent,
     CheckboxComponent,
     CheckboxOneComponent,
-    CheckbuttonToggleComponent,
     MultiSelectComponent,
     CalendarComponent,
     CalendarRangeComponent,

@@ -9,13 +9,13 @@
       <div class="grid p-fluid">
         <!-- 開始日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="開始日期" controlName="startDate" [control]="dataForm.controls.startDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="開始日期" controlName="startDate"
+            [control]="dataForm.controls.startDate" [submitted]="submitted"></app-calendar>
         </div>
         <!-- 結束日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="結束日期" controlName="endDate" [control]="dataForm.controls.endDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="結束日期" controlName="endDate" [control]="dataForm.controls.endDate"
+            [submitted]="submitted"></app-calendar>
         </div>
 
         <!-- 行銷檔期代號 -->

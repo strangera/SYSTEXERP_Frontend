@@ -106,14 +106,16 @@
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-range label="接件日期" [startControl]="queryForm.controls.receiveDateFrom"
+                            <app-calendar-range calendarType="dateRange" label="接件日期"
+                                [startControl]="queryForm.controls.receiveDateFrom"
                                 [endControl]="queryForm.controls.receiveDateTo" [submitted]="submitted">
-                            </app-date-range>
+                            </app-calendar-range>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-range label="通知相關單位處理日期" [startControl]="queryForm.controls.notifyDateFrom"
+                            <app-calendar-range calendarType="dateRange" label="通知相關單位處理日期"
+                                [startControl]="queryForm.controls.notifyDateFrom"
                                 [endControl]="queryForm.controls.notifyDateTo" [submitted]="submitted">
-                            </app-date-range>
+                            </app-calendar-range>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
                             <app-input-text label="對象" controlName="object" [control]="queryForm.controls.object"

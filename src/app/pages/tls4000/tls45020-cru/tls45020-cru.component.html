@@ -13,9 +13,9 @@
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="設定啟用日期" controlName="ECR_SchDate" [control]="dataForm.controls.ECR_SchDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="設定啟用日期" controlName="ECR_SchDate"
+                        [control]="dataForm.controls.ECR_SchDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-multi-select label="排程狀態" controlName="ECR_SchStatus" [options]="ECR_SchStatus_Options"
@@ -36,9 +36,9 @@
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-datetime-one label="異動作業完成時間" controlName="ECR_SchFinTime"
+                    <app-calendar calendarType="dateTimeOne" label="異動作業完成時間" controlName="ECR_SchFinTime"
                         [control]="dataForm.controls.ECR_SchFinTime" [submitted]="submitted">
-                    </app-datetime-one>
+                    </app-calendar>
                 </div>
             </div>
             <hr>

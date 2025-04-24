@@ -13,8 +13,9 @@
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-datemm-one label="申報年月" [control]="queryForm.controls.declareYm" [submitted]="submitted">
-                        </app-datemm-one>
+                        <app-calendar calendarType="dateMonthOne" label="申報年月" [control]="queryForm.controls.declareYm"
+                            [submitted]="submitted">
+                        </app-calendar>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-dropdown label="申報書種類" controlName="declareType" [options]="declareTypeOptions"

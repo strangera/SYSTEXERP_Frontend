@@ -50,14 +50,14 @@
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-one label="發票日期" [control]="getFormControl(i, 'invoiceDate')"
-                                [submitted]="submitted">
-                            </app-date-one>
+                            <app-calendar calendarType="dateOne" label="發票日期"
+                                [control]="getFormControl(i, 'invoiceDate')" [submitted]="submitted">
+                            </app-calendar>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-datemm-one label="申報年月" [control]="getFormControl(i, 'onedatemm')"
-                                [submitted]="submitted">
-                            </app-datemm-one>
+                            <app-calendar calendarType="dateMonthOne" label="申報年月"
+                                [control]="getFormControl(i, 'onedatemm')" [submitted]="submitted">
+                            </app-calendar>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
                             <app-dropdown label="買受人統一編號" controlName="buyerUID" [options]="vendorUIDOptions"

@@ -1,125 +1,127 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-        <div *appHasPermission="addPermission">
-            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-        </div>
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-            [headerStyleClass]="'query-accordionTab'">
-            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-number-range [useGrouping]="false" label="發票號碼"
-                            [startControl]="queryForm.controls.startserialinvoice"
-                            [endControl]="queryForm.controls.endserialinvoice" [submitted]="submitted">
-                        </app-input-number-range>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="發票日期" [startControl]="queryForm.controls.startInvoiceDate"
-                            [endControl]="queryForm.controls.endInvoiceDate" [submitted]="submitted">
-                        </app-date-range>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-datemm-range label="資料所屬年月" [startControl]="queryForm.controls.dataYmStart"
-                            [endControl]="queryForm.controls.dataYmEnd" [submitted]="submitted">
-                        </app-datemm-range>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-datemm-one label="申報年月" [control]="queryForm.controls.declareYm" [submitted]="submitted">
-                        </app-datemm-one>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-number [useGrouping]="false" label="買受人統一編號" controlName="buyerUid"
-                            [control]="queryForm.controls.buyerUid" [submitted]="submitted">
-                        </app-input-number>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="貨物或勞務名稱" controlName="goodsName" [control]="queryForm.controls.goodsName"
-                            [submitted]="submitted">
-                        </app-input-text>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-number-range label="貨物或勞務數量" [startControl]="queryForm.controls.startGoodsNumber"
-                            [endControl]="queryForm.controls.endGoodsNumber" [submitted]="submitted">
-                        </app-input-number-range>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-multi-select label="外銷方式" controlName="exportMethod" [options]="exportMethodOptions"
-                            optionLabel="label" optionValue="value" [control]="queryForm.controls.exportMethod"
-                            [submitted]="submitted">
-                        </app-multi-select>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="證明文件名稱" controlName="certificate"
-                            [control]="queryForm.controls.certificate" [submitted]="submitted">
-                        </app-input-text>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-number [useGrouping]="false" label="證明文件號碼" controlName="certificateID"
-                            [control]="queryForm.controls.certificateID" [submitted]="submitted">
-                        </app-input-number>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-number-range label="非經海關出口金額"
-                            [startControl]="queryForm.controls.startNonCustomsExportAmount"
-                            [endControl]="queryForm.controls.endNonCustomsExportAmount" [submitted]="submitted">
-                        </app-input-number-range>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-multi-select label="出口報單類別" controlName="exportDeclarationCategory"
-                            [options]="exportCategoryOptions" optionLabel="label" optionValue="value"
-                            [control]="queryForm.controls.exportDeclarationCategory" [submitted]="submitted">
-                        </app-multi-select>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-number [useGrouping]="false" label="出口報單號碼" controlName="exportDeclarationNumber"
-                            [control]="queryForm.controls.exportDeclarationNumber" [submitted]="submitted">
-                        </app-input-number>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-number-range label="經海關出口金額" [startControl]="queryForm.controls.startExportAmount"
-                            [endControl]="queryForm.controls.endExportAmount" [submitted]="submitted">
-                        </app-input-number-range>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="輸出或結匯日期" [startControl]="queryForm.controls.startSettlementDate"
-                            [endControl]="queryForm.controls.endSettlementDate" [submitted]="submitted">
-                        </app-date-range>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="備註" controlName="remark" [control]="queryForm.controls.remark"
-                            [submitted]="submitted">
-                        </app-input-text>
-                    </div>
-                </div>
-                <div *appHasPermission="queryPermission" class="col">
-                    <div class="grid justify-content-end">
-                        <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-                        <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
-                            [loading]="loading"></app-button>
-                    </div>
-                </div>
-            </form>
-        </p-accordionTab>
-    </p-accordion>
+    <div *appHasPermission="addPermission">
+      <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range [useGrouping]="false" label="發票號碼"
+              [startControl]="queryForm.controls.startserialinvoice" [endControl]="queryForm.controls.endserialinvoice"
+              [submitted]="submitted">
+            </app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateRange" label="發票日期"
+              [startControl]="queryForm.controls.startInvoiceDate" [endControl]="queryForm.controls.endInvoiceDate"
+              [submitted]="submitted">
+            </app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateMonthRange" label="資料所屬年月"
+              [startControl]="queryForm.controls.dataYmStart" [endControl]="queryForm.controls.dataYmEnd"
+              [submitted]="submitted">
+            </app-calendar-range>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar calendarType="dateMonthOne" label="申報年月" [control]="queryForm.controls.declareYm"
+              [submitted]="submitted">
+            </app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number [useGrouping]="false" label="買受人統一編號" controlName="buyerUid"
+              [control]="queryForm.controls.buyerUid" [submitted]="submitted">
+            </app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="貨物或勞務名稱" controlName="goodsName" [control]="queryForm.controls.goodsName"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range label="貨物或勞務數量" [startControl]="queryForm.controls.startGoodsNumber"
+              [endControl]="queryForm.controls.endGoodsNumber" [submitted]="submitted">
+            </app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="外銷方式" controlName="exportMethod" [options]="exportMethodOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.exportMethod"
+              [submitted]="submitted">
+            </app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="證明文件名稱" controlName="certificate" [control]="queryForm.controls.certificate"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number [useGrouping]="false" label="證明文件號碼" controlName="certificateID"
+              [control]="queryForm.controls.certificateID" [submitted]="submitted">
+            </app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range label="非經海關出口金額" [startControl]="queryForm.controls.startNonCustomsExportAmount"
+              [endControl]="queryForm.controls.endNonCustomsExportAmount" [submitted]="submitted">
+            </app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="出口報單類別" controlName="exportDeclarationCategory" [options]="exportCategoryOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.exportDeclarationCategory"
+              [submitted]="submitted">
+            </app-multi-select>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number [useGrouping]="false" label="出口報單號碼" controlName="exportDeclarationNumber"
+              [control]="queryForm.controls.exportDeclarationNumber" [submitted]="submitted">
+            </app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range label="經海關出口金額" [startControl]="queryForm.controls.startExportAmount"
+              [endControl]="queryForm.controls.endExportAmount" [submitted]="submitted">
+            </app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateRange" label="輸出或結匯日期"
+              [startControl]="queryForm.controls.startSettlementDate"
+              [endControl]="queryForm.controls.endSettlementDate" [submitted]="submitted">
+            </app-calendar-range>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="備註" controlName="remark" [control]="queryForm.controls.remark"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+        </div>
+        <div *appHasPermission="queryPermission" class="col">
+          <div class="grid justify-content-end">
+            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+            <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+          </div>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
 </div>
 <div class="card">
-    <div class="col-13">
-        <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-        </app-data-table>
-    </div>
+  <div class="col-13">
+    <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+    </app-data-table>
+  </div>
 </div>

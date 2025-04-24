@@ -12,12 +12,12 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="col-12 md:col-6 lg:col-2">
-          <app-date-range label="入帳日" [startControl]="queryForm.controls.startAccountDate"
-            [endControl]="queryForm.controls.endAccountDate" [submitted]="submitted"></app-date-range>
+          <app-calendar-range calendarType="dateRange" label="入帳日" [startControl]="queryForm.controls.startAccountDate"
+            [endControl]="queryForm.controls.endAccountDate" [submitted]="submitted"></app-calendar-range>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-date-range label="繳袋日期" [startControl]="queryForm.controls.startPaymentDate"
-            [endControl]="queryForm.controls.endPaymentDate" [submitted]="submitted"></app-date-range>
+          <app-calendar-range calendarType="dateRange" label="繳袋日期" [startControl]="queryForm.controls.startPaymentDate"
+            [endControl]="queryForm.controls.endPaymentDate" [submitted]="submitted"></app-calendar-range>
         </div>
 
         <div class="grid p-fluid">

@@ -18,12 +18,14 @@
             </app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="建立日期" controlName="creationDate " [startControl]="queryForm.controls.ScreationDate"
-              [endControl]="queryForm.controls.EcreationDate" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="建立日期" controlName="creationDate "
+              [startControl]="queryForm.controls.ScreationDate" [endControl]="queryForm.controls.EcreationDate"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="轉帳日期" controlName="transferdate " [startControl]="queryForm.controls.Stransferdate"
-              [endControl]="queryForm.controls.Etransferdate" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="轉帳日期" controlName="transferdate "
+              [startControl]="queryForm.controls.Stransferdate" [endControl]="queryForm.controls.Etransferdate"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="轉入公司銀行科目代號" controlName="TCBAC" [options]="TCBACOptions" optionLabel="label"

@@ -19,9 +19,9 @@
             </app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-5">
-            <app-date-range label="產生日期" [startControl]="queryForm.controls.startdate"
+            <app-calendar-range calendarType="dateRange" label="產生日期" [startControl]="queryForm.controls.startdate"
               [endControl]="queryForm.controls.enddate" [submitted]="submitted">
-            </app-date-range>
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="零用金申請人" controlName="Pettycashapplicant" [options]="Pettycashapplicant"

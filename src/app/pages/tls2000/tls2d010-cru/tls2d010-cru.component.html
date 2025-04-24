@@ -40,9 +40,9 @@
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-one label="扣款日期" [control]="getFormControl(i, 'debitDay')"
+                            <app-calendar calendarType="dateOne" label="扣款日期" [control]="getFormControl(i, 'debitDay')"
                                 [submitted]="submitted">
-                            </app-date-one>
+                            </app-calendar>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
                             <app-dropdown label="扣款項目" controlName="deductionItems" [options]="deductionItemsOptions"

@@ -25,8 +25,9 @@
                         [submitted]="submitted"></app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="申請日期" [control]="dataForm.controls.applicationDate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.applicationDate"
+                        [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <hr />

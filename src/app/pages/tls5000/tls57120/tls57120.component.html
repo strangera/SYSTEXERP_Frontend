@@ -14,8 +14,8 @@
               optionValue="value" [control]="queryForm.controls.displayMode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-datemm-one label="基準月份" controlName="stockDate" [control]="queryForm.controls.stockDate"
-              [submitted]="submitted"></app-datemm-one>
+            <app-calendar calendarType="dateMonthOne" label="基準月份" controlName="stockDate"
+              [control]="queryForm.controls.stockDate" [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="倉別" controlName="warehouseCode" [options]="warehouseOptions" optionLabel="label"
@@ -26,9 +26,10 @@
               optionValue="value" [control]="queryForm.controls.brandCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-datetime-range label="日期時間範圍" [startControl]="queryForm.controls.startdatetime"
-              [endControl]="queryForm.controls.enddatetime" [submitted]="submitted">
-            </app-datetime-range>
+            <app-calendar-range calendarType="dateTimeRange" label="日期時間範圍"
+              [startControl]="queryForm.controls.startdatetime" [endControl]="queryForm.controls.enddatetime"
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="顯示行數" controlName="displayCount" [control]="queryForm.controls.displayCount"

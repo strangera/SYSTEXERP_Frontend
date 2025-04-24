@@ -20,8 +20,8 @@
           </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="傳票日期" controlName="accountsummary" [control]="dataForm.controls.Subpoenadate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="傳票日期" controlName="accountsummary"
+            [control]="dataForm.controls.Subpoenadate" [submitted]="submitted"></app-calendar>
         </div>
         <!-- <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
@@ -47,8 +47,8 @@
             [control]="dataForm.controls.builder" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="	建立日期" controlName="builddate" [control]="dataForm.controls.builddate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="	建立日期" controlName="builddate"
+            [control]="dataForm.controls.builddate" [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="修改者" controlName="modifyer" [options]="usercode" optionLabel="label" optionValue="value"
@@ -56,8 +56,8 @@
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="修改日" controlName="modifydate" [control]="dataForm.controls.modifydate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="修改日" controlName="modifydate"
+            [control]="dataForm.controls.modifydate" [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-checkbox-one label="Quick Menu" controlName="uickMenu" [control]="dataForm.controls.uickMenu">

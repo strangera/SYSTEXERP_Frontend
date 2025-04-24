@@ -34,8 +34,9 @@
               optionValue="value" [control]="queryForm.controls.brandCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="申請日期" [startControl]="queryForm.controls.applicationDateFrom"
-              [endControl]="queryForm.controls.applicationDateTo" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="申請日期"
+              [startControl]="queryForm.controls.applicationDateFrom"
+              [endControl]="queryForm.controls.applicationDateTo" [submitted]="submitted"></app-calendar-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">

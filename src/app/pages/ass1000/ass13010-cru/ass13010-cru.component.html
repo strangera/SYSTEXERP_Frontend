@@ -46,9 +46,9 @@
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="購入日期" controlName="purchaseDate" [control]="dataForm.controls.purchaseDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="購入日期" controlName="purchaseDate"
+                        [control]="dataForm.controls.purchaseDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-number label="購入金額" controlName="purchasePrice"
@@ -78,9 +78,9 @@
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="入帳日期" controlName="entryDate" [control]="dataForm.controls.entryDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="入帳日期" controlName="entryDate"
+                        [control]="dataForm.controls.entryDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-number [useGrouping]="false" label="設備編號" controlName="deviceCode"
@@ -177,9 +177,9 @@
             <h5>處分資訊</h5>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="處份日期(變賣或報廢)" controlName="disposalDate"
+                    <app-calendar calendarType="dateOne" label="處份日期(變賣或報廢)" controlName="disposalDate"
                         [control]="dataForm.controls.disposalDate" [submitted]="submitted">
-                    </app-date-one>
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-dropdown label="處份廠商" controlName="dispose_Manufacturers" [options]="supplierCodeOptions"

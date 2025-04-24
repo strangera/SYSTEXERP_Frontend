@@ -34,20 +34,23 @@
 
           <!-- 開票日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="開票日期" controlName="issueDate" [startControl]="queryForm.controls.issueDateStart"
-              [endControl]="queryForm.controls.issueDateEnd" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="開票日期" controlName="issueDate"
+              [startControl]="queryForm.controls.issueDateStart" [endControl]="queryForm.controls.issueDateEnd"
+              [submitted]="submitted"></app-calendar-range>
           </div>
 
           <!-- 到期日 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="到期日" controlName="dueDate" [startControl]="queryForm.controls.dueDateStart"
-              [endControl]="queryForm.controls.dueDateEnd" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="到期日" controlName="dueDate"
+              [startControl]="queryForm.controls.dueDateStart" [endControl]="queryForm.controls.dueDateEnd"
+              [submitted]="submitted"></app-calendar-range>
           </div>
 
           <!-- 兌現日 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="兌現日" controlName="cashDate" [startControl]="queryForm.controls.cashDateStart"
-              [endControl]="queryForm.controls.cashDateEnd" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="兌現日" controlName="cashDate"
+              [startControl]="queryForm.controls.cashDateStart" [endControl]="queryForm.controls.cashDateEnd"
+              [submitted]="submitted"></app-calendar-range>
           </div>
 
           <!-- 票面金額 -->
@@ -110,9 +113,9 @@
 
           <!-- 領取日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="領取日期" controlName="collectionDate"
+            <app-calendar-range calendarType="dateRange" label="領取日期" controlName="collectionDate"
               [startControl]="queryForm.controls.collectionDateStart"
-              [endControl]="queryForm.controls.collectionDateEnd" [submitted]="submitted"></app-date-range>
+              [endControl]="queryForm.controls.collectionDateEnd" [submitted]="submitted"></app-calendar-range>
           </div>
 
           <!-- 應付票據開票單號 -->

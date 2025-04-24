@@ -14,17 +14,16 @@
                             [control]="queryForm.controls.systemYear" [submitted]="submitted"></app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-datemm-one label="系統開帳年月" controlName="accountingStartMonth"
-                            [control]="queryForm.controls.accountingStartMonth"
-                            [submitted]="submitted"></app-datemm-one>
+                        <app-calendar calendarType="dateMonthOne" label="系統開帳年月" controlName="accountingStartMonth"
+                            [control]="queryForm.controls.accountingStartMonth" [submitted]="submitted"></app-calendar>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-datemm-one label="系統關帳年月" controlName="accountingEndMonth"
-                            [control]="queryForm.controls.accountingEndMonth" [submitted]="submitted"></app-datemm-one>
+                        <app-calendar calendarType="dateMonthOne" label="系統關帳年月" controlName="accountingEndMonth"
+                            [control]="queryForm.controls.accountingEndMonth" [submitted]="submitted"></app-calendar>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-datemm-one label="傳票日期預設" controlName="defaultVoucherDate"
-                            [control]="queryForm.controls.defaultVoucherDate" [submitted]="submitted"></app-datemm-one>
+                        <app-calendar calendarType="dateMonthOne" label="傳票日期預設" controlName="defaultVoucherDate"
+                            [control]="queryForm.controls.defaultVoucherDate" [submitted]="submitted"></app-calendar>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-dropdown label="預設組織" controlName="defaultOrganization" [options]="departmentOptions"
@@ -87,9 +86,9 @@
                             [submitted]="submitted"></app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="貼現銷項稅額科目" controlName="discountOutputTaxAccount"
-                            [startControl]="queryForm.controls.startdate" [endControl]="queryForm.controls.enddate"
-                            [submitted]="submitted"></app-date-range>
+                        <app-calendar-range calendarType="dateRange" label="貼現銷項稅額科目"
+                            controlName="discountOutputTaxAccount" [startControl]="queryForm.controls.startdate"
+                            [endControl]="queryForm.controls.enddate" [submitted]="submitted"></app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-dropdown label="銀行匯款手續費科目" controlName="bankTransferFeeAccount" [options]="accountOptions"

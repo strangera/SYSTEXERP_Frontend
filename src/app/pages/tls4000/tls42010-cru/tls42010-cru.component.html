@@ -36,14 +36,14 @@
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-datetime-one label="有效啟始日期" controlName="SBM_BegDate" [control]="dataForm.controls.SBM_BegDate"
-                        [submitted]="submitted">
-                    </app-datetime-one>
+                    <app-calendar calendarType="dateTimeOne" label="有效啟始日期" controlName="SBM_BegDate"
+                        [control]="dataForm.controls.SBM_BegDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-datetime-one label="有效結束日期" controlName="SBM_EndDate" [control]="dataForm.controls.SBM_EndDate"
-                        [submitted]="submitted">
-                    </app-datetime-one>
+                    <app-calendar calendarType="dateTimeOne" label="有效結束日期" controlName="SBM_EndDate"
+                        [control]="dataForm.controls.SBM_EndDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <!---->

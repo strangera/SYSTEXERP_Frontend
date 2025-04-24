@@ -19,8 +19,9 @@
             </app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="開票日期" controlName="generalCode" [startControl]="queryForm.controls.startdate"
-              [endControl]="queryForm.controls.enddate" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="開票日期" controlName="generalCode"
+              [startControl]="queryForm.controls.startdate" [endControl]="queryForm.controls.enddate"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="開票單號" controlName="Billingordernumber" [options]="Billingordernumber"

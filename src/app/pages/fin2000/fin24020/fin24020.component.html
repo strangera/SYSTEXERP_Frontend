@@ -24,8 +24,9 @@
                         </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-datemm-one label="年月" [control]="queryForm.controls.onedatemm" [submitted]="submitted">
-                        </app-datemm-one>
+                        <app-calendar calendarType="dateMonthOne" label="年月" [control]="queryForm.controls.onedatemm"
+                            [submitted]="submitted">
+                        </app-calendar>
                     </div>
                 </div>
                 <div class="grid p-fluid">
@@ -35,9 +36,10 @@
                         </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="退保留款日期" [startControl]="queryForm.controls.startRefundDate"
+                        <app-calendar-range calendarType="dateRange" label="退保留款日期"
+                            [startControl]="queryForm.controls.startRefundDate"
                             [endControl]="queryForm.controls.endRefundDate" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-input-number-range label="退保留款金額" [startControl]="queryForm.controls.startRefundRetainer"

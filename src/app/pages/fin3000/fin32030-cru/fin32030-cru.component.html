@@ -16,8 +16,8 @@
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="收款日期" controlName="receive_Date" [control]="dataForm.controls.receive_Date"
-                        [submitted]="submitted"></app-date-one>
+                    <app-calendar calendarType="dateOne" label="收款日期" controlName="receive_Date"
+                        [control]="dataForm.controls.receive_Date" [submitted]="submitted"></app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-dropdown label="業務員代號" controlName="salesperson_Code" [options]="salesCodeOptions"

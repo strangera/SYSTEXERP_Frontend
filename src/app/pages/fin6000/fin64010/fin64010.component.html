@@ -36,8 +36,9 @@
 
           <!-- 託收日 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="託收日" controlName="issueDate" [startControl]="queryForm.controls.issueDateStart"
-              [endControl]="queryForm.controls.issueDateEnd" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="託收日" controlName="issueDate"
+              [startControl]="queryForm.controls.issueDateStart" [endControl]="queryForm.controls.issueDateEnd"
+              [submitted]="submitted"></app-calendar-range>
           </div>
 
           <!-- 公司銀行科目代號託收銀行 -->
@@ -49,8 +50,9 @@
 
           <!-- 收票日 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="收票日" controlName="dueDate" [startControl]="queryForm.controls.dueDateStart"
-              [endControl]="queryForm.controls.dueDateEnd" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="收票日" controlName="dueDate"
+              [startControl]="queryForm.controls.dueDateStart" [endControl]="queryForm.controls.dueDateEnd"
+              [submitted]="submitted"></app-calendar-range>
           </div>
 
           <!-- 收票業務員代碼 -->
@@ -67,21 +69,23 @@
 
           <!-- 到期日 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="到期日" controlName="expiryDate" [startControl]="queryForm.controls.expiryDateStart"
-              [endControl]="queryForm.controls.expiryDateEnd" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="到期日" controlName="expiryDate"
+              [startControl]="queryForm.controls.expiryDateStart" [endControl]="queryForm.controls.expiryDateEnd"
+              [submitted]="submitted"></app-calendar-range>
           </div>
 
           <!-- 預兌日 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="預兌日" controlName="expectedCashDate"
+            <app-calendar-range calendarType="dateRange" label="預兌日" controlName="expectedCashDate"
               [startControl]="queryForm.controls.expectedCashDateStart"
-              [endControl]="queryForm.controls.expectedCashDateEnd" [submitted]="submitted"></app-date-range>
+              [endControl]="queryForm.controls.expectedCashDateEnd" [submitted]="submitted"></app-calendar-range>
           </div>
 
           <!-- 兌現日 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="兌現日" controlName="cashDate" [startControl]="queryForm.controls.cashDateStart"
-              [endControl]="queryForm.controls.cashDateEnd" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="兌現日" controlName="cashDate"
+              [startControl]="queryForm.controls.cashDateStart" [endControl]="queryForm.controls.cashDateEnd"
+              [submitted]="submitted"></app-calendar-range>
           </div>
 
           <!-- 票面金額 -->

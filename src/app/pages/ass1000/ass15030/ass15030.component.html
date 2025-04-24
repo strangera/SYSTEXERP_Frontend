@@ -32,9 +32,10 @@
                         </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="購入日期" [startControl]="queryForm.controls.purchaseDateFrom"
+                        <app-calendar-range calendarType="dateRange" label="購入日期"
+                            [startControl]="queryForm.controls.purchaseDateFrom"
                             [endControl]="queryForm.controls.purchaseDateTo" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                 </div>
                 <div class="grid p-fluid">
@@ -59,9 +60,10 @@
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="入帳日期" [startControl]="queryForm.controls.entryDateFrom"
+                        <app-calendar-range calendarType="dateRange" label="入帳日期"
+                            [startControl]="queryForm.controls.entryDateFrom"
                             [endControl]="queryForm.controls.entryDateTo" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-dropdown label="品項編號" controlName="itemCode" [options]="itemCodeOptions"
@@ -70,8 +72,9 @@
                         </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-datemm-one label="基準日" [control]="queryForm.controls.baseYYMM" [submitted]="submitted">
-                        </app-datemm-one>
+                        <app-calendar calendarType="dateMonthOne" label="基準日" [control]="queryForm.controls.baseYYMM"
+                            [submitted]="submitted">
+                        </app-calendar>
                     </div>
                 </div>
                 <hr>

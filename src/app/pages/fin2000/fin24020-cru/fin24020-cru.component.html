@@ -13,9 +13,9 @@
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="立帳日期" controlName="establishDate" [control]="dataForm.controls.establishDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="立帳日期" controlName="establishDate"
+                        [control]="dataForm.controls.establishDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-number [useGrouping]="false" label="廠客代號" controlName="factoryID"
@@ -66,9 +66,9 @@
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-one label="保留款退款日期" controlName="refundDate"
+                            <app-calendar calendarType="dateOne" label="保留款退款日期" controlName="refundDate"
                                 [control]="getFormControl(i, 'refundDate')" [submitted]="submitted">
-                            </app-date-one>
+                            </app-calendar>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
                             <app-input-number [useGrouping]="false" label="保留款退款金額" controlName="refundAmount"

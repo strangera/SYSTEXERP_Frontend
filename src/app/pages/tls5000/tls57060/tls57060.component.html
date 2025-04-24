@@ -18,8 +18,8 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="銷售日期" [startControl]="queryForm.controls.salesDateFrom"
-              [endControl]="queryForm.controls.salesDateTo" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="銷售日期" [startControl]="queryForm.controls.salesDateFrom"
+              [endControl]="queryForm.controls.salesDateTo" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="品牌" controlName="brandCode" [options]="brandCodeOptions" optionLabel="label"

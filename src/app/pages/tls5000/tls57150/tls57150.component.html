@@ -14,9 +14,10 @@
               optionValue="value" [control]="queryForm.controls.warehouseCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-datetime-range label="盤點調整日期" [startControl]="queryForm.controls.startdatetime"
-              [endControl]="queryForm.controls.enddatetime" [submitted]="submitted">
-            </app-datetime-range>
+            <app-calendar-range calendarType="dateTimeRange" label="盤點調整日期"
+              [startControl]="queryForm.controls.startdatetime" [endControl]="queryForm.controls.enddatetime"
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="品牌" controlName="brandCode" [options]="brandCodeOptions" optionLabel="label"

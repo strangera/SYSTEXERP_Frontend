@@ -18,8 +18,10 @@
                         </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="收款日期" [startControl]="queryForm.controls.receive_Date_From"
-                            [endControl]="queryForm.controls.receive_Date_To" [submitted]="submitted"></app-date-range>
+                        <app-calendar-range calendarType="dateRange" label="收款日期"
+                            [startControl]="queryForm.controls.receive_Date_From"
+                            [endControl]="queryForm.controls.receive_Date_To"
+                            [submitted]="submitted"></app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-dropdown label="業務員代號" controlName="salesperson_Code" [options]="salesCodeOptions"

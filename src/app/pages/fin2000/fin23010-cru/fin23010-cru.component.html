@@ -13,9 +13,9 @@
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="申請日期" controlName="requestDate" [control]="dataForm.controls.requestDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="申請日期" controlName="requestDate"
+                        [control]="dataForm.controls.requestDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-number [useGrouping]="false" label="預支金額" controlName="advanceAmount"
@@ -25,9 +25,9 @@
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="預計核銷日" controlName="writeOffDate" [control]="dataForm.controls.writeOffDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="預計核銷日" controlName="writeOffDate"
+                        [control]="dataForm.controls.writeOffDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-dropdown label="申請廠商/員工" controlName="requsetEmployee" [options]="requsetEmployeeOptions"
@@ -72,9 +72,9 @@
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="預計付款日" controlName="eExpectPayDate"
+                    <app-calendar calendarType="dateOne" label="預計付款日" controlName="eExpectPayDate"
                         [control]="dataForm.controls.eExpectPayDate" [submitted]="submitted">
-                    </app-date-one>
+                    </app-calendar>
                 </div>
             </div>
             <div class="grid p-fluid">

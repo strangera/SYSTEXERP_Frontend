@@ -8,9 +8,9 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="預計收/付款日" controlName="settlementDate"
+                    <app-calendar calendarType="dateOne" label="預計收/付款日" controlName="settlementDate"
                         [control]="dataForm.controls.settlementDate" [submitted]="submitted">
-                    </app-date-one>
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-number-range [useGrouping]="false" label="廠客代號"

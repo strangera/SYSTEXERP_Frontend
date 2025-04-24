@@ -15,13 +15,15 @@
         <div class="grid p-fluid">
           <!-- 開始日期範圍 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="開始日期" controlName="startDateRange" [startControl]="queryForm.controls.startDateStart"
-              [endControl]="queryForm.controls.startDateEnd" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="開始日期" controlName="startDateRange"
+              [startControl]="queryForm.controls.startDateStart" [endControl]="queryForm.controls.startDateEnd"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <!-- 結束日期範圍 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="結束日期" controlName="endDateRange" [startControl]="queryForm.controls.endDateStart"
-              [endControl]="queryForm.controls.endDateEnd" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="結束日期" controlName="endDateRange"
+              [startControl]="queryForm.controls.endDateStart" [endControl]="queryForm.controls.endDateEnd"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <!-- 行銷檔期代號 -->
           <div class="col-12 md:col-6 lg:col-4">

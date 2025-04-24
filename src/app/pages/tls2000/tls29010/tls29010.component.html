@@ -34,9 +34,9 @@
             </app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="開放起始日" [startControl]="queryForm.controls.startDate"
+            <app-calendar-range calendarType="dateRange" label="開放起始日" [startControl]="queryForm.controls.startDate"
               [endControl]="queryForm.controls.endDate" [submitted]="submitted">
-            </app-date-range>
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="是否使用中" controlName="isActive" [options]="isActiveOptions" optionLabel="label"
@@ -49,8 +49,9 @@
             </app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-one label="維護日" [control]="queryForm.controls.lastModifiedDate" [submitted]="submitted">
-            </app-date-one>
+            <app-calendar calendarType="dateOne" label="維護日" [control]="queryForm.controls.lastModifiedDate"
+              [submitted]="submitted">
+            </app-calendar>
           </div>
         </div>
       </form>

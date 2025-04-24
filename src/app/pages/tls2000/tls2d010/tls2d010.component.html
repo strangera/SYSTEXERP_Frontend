@@ -40,12 +40,14 @@
                         </app-multi-select>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-one label="扣款日期" [control]="queryForm.controls.debitDay" [submitted]="submitted">
-                        </app-date-one>
+                        <app-calendar calendarType="dateOne" label="扣款日期" [control]="queryForm.controls.debitDay"
+                            [submitted]="submitted">
+                        </app-calendar>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-datemm-one label="扣款年月" [control]="queryForm.controls.onedatemm" [submitted]="submitted">
-                        </app-datemm-one>
+                        <app-calendar calendarType="dateMonthOne" label="扣款年月" [control]="queryForm.controls.onedatemm"
+                            [submitted]="submitted">
+                        </app-calendar>
                     </div>
                 </div>
                 <div class="grid p-fluid">
@@ -56,8 +58,9 @@
                         </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-one label="維護日" [control]="queryForm.controls.maintenanceDay" [submitted]="submitted">
-                        </app-date-one>
+                        <app-calendar calendarType="dateOne" label="維護日" [control]="queryForm.controls.maintenanceDay"
+                            [submitted]="submitted">
+                        </app-calendar>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-dropdown label="建立者" controlName="builder" [options]="builderOptions" optionLabel="label"

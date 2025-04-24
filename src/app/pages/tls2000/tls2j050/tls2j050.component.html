@@ -12,9 +12,9 @@
                     <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-one label="換開日期" [control]="queryForm.controls.onedatedd"
-                                    [submitted]="submitted">
-                                </app-date-one>
+                                <app-calendar calendarType="dateOne" label="換開日期"
+                                    [control]="queryForm.controls.onedatedd" [submitted]="submitted">
+                                </app-calendar>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
                                 <app-input-text label="三聯式發票號碼" controlName="invoice"

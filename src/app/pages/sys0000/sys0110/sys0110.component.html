@@ -41,14 +41,17 @@
 
                     <!-- 帳號有效起始日期 -->
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="帳號有效起始日期" [startControl]="queryForm.controls.startDate"
-                            [endControl]="queryForm.controls.endDate" [submitted]="submitted"></app-date-range>
+                        <app-calendar-range calendarType="dateRange" label="帳號有效起始日期"
+                            [startControl]="queryForm.controls.startDate" [endControl]="queryForm.controls.endDate"
+                            [submitted]="submitted"></app-calendar-range>
                     </div>
 
                     <!-- 上次登入時間 -->
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="上次登入時間" [startControl]="queryForm.controls.lastLoginStartTime"
-                            [endControl]="queryForm.controls.lastLoginEndTime" [submitted]="submitted"></app-date-range>
+                        <app-calendar-range calendarType="dateRange" label="上次登入時間"
+                            [startControl]="queryForm.controls.lastLoginStartTime"
+                            [endControl]="queryForm.controls.lastLoginEndTime"
+                            [submitted]="submitted"></app-calendar-range>
                     </div>
 
                     <!-- 使用者狀態 -->

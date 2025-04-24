@@ -33,9 +33,10 @@
                         </app-input-number-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="請款日期" [startControl]="queryForm.controls.startRequestDate"
+                        <app-calendar-range calendarType="dateRange" label="請款日期"
+                            [startControl]="queryForm.controls.startRequestDate"
                             [endControl]="queryForm.controls.endRequestDate" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                 </div>
                 <div *appHasPermission="queryPermission" class="col">

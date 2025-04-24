@@ -50,14 +50,14 @@
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="啟用日期" [control]="dataForm.controls.ECR_ActiveDate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="啟用日期" [control]="dataForm.controls.ECR_ActiveDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="停用日期" [control]="dataForm.controls.ECR_CloseDate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="停用日期" [control]="dataForm.controls.ECR_CloseDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-dropdown label="收銀機狀態" controlName="ECR_Status" [options]="ECR_Status_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_Status" [submitted]="submitted">

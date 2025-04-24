@@ -37,8 +37,9 @@
               [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="發貨日期" [startControl]="queryForm.controls.shipmentDateFrom"
-              [endControl]="queryForm.controls.shipmentDateTo" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="發貨日期"
+              [startControl]="queryForm.controls.shipmentDateFrom" [endControl]="queryForm.controls.shipmentDateTo"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="倉別調撥單狀態" controlName="issuanceNoteStatus" [options]="issuanceNoteStatusOptions"

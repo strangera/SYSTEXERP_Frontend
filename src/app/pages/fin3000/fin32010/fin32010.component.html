@@ -21,8 +21,9 @@
                         </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-datemm-one label="帳款年月" [control]="queryForm.controls.accountYm" [submitted]="submitted">
-                        </app-datemm-one>
+                        <app-calendar calendarType="dateMonthOne" label="帳款年月" [control]="queryForm.controls.accountYm"
+                            [submitted]="submitted">
+                        </app-calendar>
                     </div>
                 </div>
                 <div class="grid p-fluid">
@@ -50,14 +51,16 @@
                         </app-input-number-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="預計收款日" [startControl]="queryForm.controls.startExpectReceiveDate"
+                        <app-calendar-range calendarType="dateRange" label="預計收款日"
+                            [startControl]="queryForm.controls.startExpectReceiveDate"
                             [endControl]="queryForm.controls.endExpectReceivefDate" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="立帳日期" [startControl]="queryForm.controls.startEstablishDate"
+                        <app-calendar-range calendarType="dateRange" label="立帳日期"
+                            [startControl]="queryForm.controls.startEstablishDate"
                             [endControl]="queryForm.controls.endEstablishfDate" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                 </div>
                 <div class="grid p-fluid">

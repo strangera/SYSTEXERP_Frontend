@@ -17,9 +17,10 @@
                 </app-dropdown>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
-                <app-datetime-range label="LOG日期時間" [startControl]="queryForm.controls.lastLoginStartTime"
+                <app-calendar-range calendarType="dateTimeRange" label="LOG日期時間"
+                  [startControl]="queryForm.controls.lastLoginStartTime"
                   [endControl]="queryForm.controls.lastLoginEndTime" [submitted]="submitted">
-                </app-datetime-range>
+                </app-calendar-range>
               </div>
 
               <div class="col-12 md:col-6 lg:col-4">

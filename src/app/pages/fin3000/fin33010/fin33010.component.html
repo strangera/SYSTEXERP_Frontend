@@ -16,8 +16,8 @@
                         </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-one label="傳票日期" [control]="queryForm.controls.summons_Date"
-                            [submitted]="submitted"></app-date-one>
+                        <app-calendar calendarType="dateOne" label="傳票日期" [control]="queryForm.controls.summons_Date"
+                            [submitted]="submitted"></app-calendar>
                     </div>
                 </div>
                 <div *appHasPermission="queryPermission" class="col">

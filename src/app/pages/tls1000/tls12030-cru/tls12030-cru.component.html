@@ -49,8 +49,9 @@
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="洽談日期" [control]="dataForm.controls.negotiationDate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="洽談日期" [control]="dataForm.controls.negotiationDate"
+                        [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-dropdown label="業種" controlName="industryCode" [options]="industryCodeOptions"
@@ -59,22 +60,26 @@
                     </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="回函日期" [control]="dataForm.controls.replyDate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="回函日期" [control]="dataForm.controls.replyDate"
+                        [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="回函截止日" [control]="dataForm.controls.replyEndDate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="回函截止日" [control]="dataForm.controls.replyEndDate"
+                        [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="合約起始日" [control]="dataForm.controls.contractStartDate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="合約起始日" [control]="dataForm.controls.contractStartDate"
+                        [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="合約截止日" [control]="dataForm.controls.contractEndDate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="合約截止日" [control]="dataForm.controls.contractEndDate"
+                        [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <hr>

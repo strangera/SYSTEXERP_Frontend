@@ -56,9 +56,10 @@
                         </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="申請日期" [startControl]="queryForm.controls.applicantStartdate"
+                        <app-calendar-range calendarType="dateRange" label="申請日期"
+                            [startControl]="queryForm.controls.applicantStartdate"
                             [endControl]="queryForm.controls.applicantEnddate" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                 </div>
                 <div class="grid p-fluid">
@@ -69,9 +70,10 @@
                         </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="審核日期" [startControl]="queryForm.controls.checkStartdate"
+                        <app-calendar-range calendarType="dateRange" label="審核日期"
+                            [startControl]="queryForm.controls.checkStartdate"
                             [endControl]="queryForm.controls.checkEnddate" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                 </div>
                 <div class="grid p-fluid">
@@ -82,9 +84,10 @@
                         </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="結案日期" [startControl]="queryForm.controls.closeStartdate"
+                        <app-calendar-range calendarType="dateRange" label="結案日期"
+                            [startControl]="queryForm.controls.closeStartdate"
                             [endControl]="queryForm.controls.closeEnddate" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                 </div>
                 <div *appHasPermission="queryPermission" class="col">

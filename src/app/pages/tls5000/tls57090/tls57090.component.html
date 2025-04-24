@@ -22,12 +22,14 @@
               optionValue="value" [control]="queryForm.controls.vendorCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="申請日期" [startControl]="queryForm.controls.applicationDateFrom"
-              [endControl]="queryForm.controls.applicationDateTo" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="申請日期"
+              [startControl]="queryForm.controls.applicationDateFrom"
+              [endControl]="queryForm.controls.applicationDateTo" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="審核日期" [startControl]="queryForm.controls.approvalDateFrom"
-              [endControl]="queryForm.controls.approvalDateTo" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="審核日期"
+              [startControl]="queryForm.controls.approvalDateFrom" [endControl]="queryForm.controls.approvalDateTo"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="單據類型" controlName="documentType" [options]="documentTypeOptions" optionLabel="label"

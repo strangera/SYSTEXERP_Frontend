@@ -11,8 +11,9 @@
         <div class="grid p-fluid">
           <!-- 認列日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-one label="認列日期" [control]="queryForm.controls.startRecognitionDate" [submitted]="submitted">
-            </app-date-one>
+            <app-calendar calendarType="dateOne" label="認列日期" [control]="queryForm.controls.startRecognitionDate"
+              [submitted]="submitted">
+            </app-calendar>
           </div>
 
           <!-- 批號 -->

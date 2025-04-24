@@ -21,18 +21,20 @@
               optionValue="value" [control]="queryForm.controls.custodyunit" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="申請日期" [startControl]="queryForm.controls.SApplicationdate"
-              [endControl]="queryForm.controls.EApplicationdate" [submitted]="submitted">
-            </app-date-range>
+            <app-calendar-range calendarType="dateRange" label="申請日期"
+              [startControl]="queryForm.controls.SApplicationdate" [endControl]="queryForm.controls.EApplicationdate"
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="審核日期" [startControl]="queryForm.controls.SReviewdate"
+            <app-calendar-range calendarType="dateRange" label="審核日期" [startControl]="queryForm.controls.SReviewdate"
               [endControl]="queryForm.controls.EReviewdate" [submitted]="submitted">
-            </app-date-range>
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-datemm-one label="基準日" [control]="queryForm.controls.basedate" [submitted]="submitted">
-            </app-datemm-one>
+            <app-calendar calendarType="dateMonthOne" label="基準日" [control]="queryForm.controls.basedate"
+              [submitted]="submitted">
+            </app-calendar>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">

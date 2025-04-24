@@ -13,8 +13,8 @@
             optionValue="value" [control]="dataForm.controls.custodian " [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="盤點日期" controlName="invDate" [control]="dataForm.controls.invDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="盤點日期" controlName="invDate" [control]="dataForm.controls.invDate"
+            [submitted]="submitted"></app-calendar>
         </div>
 
       </div>
@@ -110,7 +110,7 @@
                         [control]="getFormControl(i, 'Invoicedate')"
                         [submitted]="submitted"
                         >>
-                      </app-date-one>
+                      </app-calendar>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                       <app-datemm-one
@@ -119,7 +119,7 @@
                         [control]="getFormControl(i, 'YMdeclaration')"
                         [submitted]="submitted"
                         >>
-                      </app-datemm-one>
+                      </app-calendar>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                       <app-input-text

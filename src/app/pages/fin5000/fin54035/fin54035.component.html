@@ -10,8 +10,8 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-datemm-one label="反關年月" controlName="yearmm" [control]="queryForm.controls.yearmm"
-              [submitted]="submitted"></app-datemm-one>
+            <app-calendar calendarType="dateMonthOne" label="反關年月" controlName="yearmm"
+              [control]="queryForm.controls.yearmm" [submitted]="submitted"></app-calendar>
           </div>
         </div>
       </form>

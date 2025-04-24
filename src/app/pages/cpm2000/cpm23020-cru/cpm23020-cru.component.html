@@ -44,8 +44,8 @@
 
         <!-- 入庫日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="入庫日期" controlName="lastStorageDate" [control]="dataForm.controls.lastStorageDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="入庫日期" controlName="lastStorageDate"
+            [control]="dataForm.controls.lastStorageDate" [submitted]="submitted"></app-calendar>
         </div>
 
         <!-- 入庫人員 -->

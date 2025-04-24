@@ -38,14 +38,14 @@
 
                         <!-- 帳號有效起始日期 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-one label="帳號有效起始日期" [control]="dataForm.controls.startDate"
-                                [submitted]="submitted"></app-date-one>
+                            <app-calendar calendarType="dateOne" label="帳號有效起始日期"
+                                [control]="dataForm.controls.startDate" [submitted]="submitted"></app-calendar>
                         </div>
 
                         <!-- 帳號終止日 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-one label="帳號終止日" [control]="dataForm.controls.endDate"
-                                [submitted]="submitted"></app-date-one>
+                            <app-calendar calendarType="dateOne" label="帳號終止日" [control]="dataForm.controls.endDate"
+                                [submitted]="submitted"></app-calendar>
                         </div>
 
                         <!-- 使用者狀態 -->

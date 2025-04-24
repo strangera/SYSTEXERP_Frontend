@@ -28,9 +28,9 @@
             </app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-5">
-            <app-date-range label="變更時間範圍" [startControl]="queryForm.controls.startdate"
+            <app-calendar-range calendarType="dateRange" label="變更時間範圍" [startControl]="queryForm.controls.startdate"
               [endControl]="queryForm.controls.enddate" [submitted]="submitted">
-            </app-date-range>
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="支出請款單號" controlName="PettyCashOrderNumber" [options]="PettyCashOrderNumber"

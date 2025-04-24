@@ -67,9 +67,10 @@
                         </app-multi-select>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="購入日期" [startControl]="queryForm.controls.purchaseDateFrom"
+                        <app-calendar-range calendarType="dateRange" label="購入日期"
+                            [startControl]="queryForm.controls.purchaseDateFrom"
                             [endControl]="queryForm.controls.purchaseDateTo" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                 </div>
                 <hr />

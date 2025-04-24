@@ -19,9 +19,9 @@
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-datemm-one label="結轉資料年月" [control]="queryForm.controls.turnoverYm"
-                            [submitted]="submitted">
-                        </app-datemm-one>
+                        <app-calendar calendarType="dateMonthOne" label="結轉資料年月"
+                            [control]="queryForm.controls.turnoverYm" [submitted]="submitted">
+                        </app-calendar>
                     </div>
                 </div>
                 <div *appHasPermission="queryPermission" class="col">

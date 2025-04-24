@@ -10,12 +10,14 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-datemm-range label="日期(年)" controlName="accountsummary" [startControl]="queryForm.controls.Sdate"
-              [endControl]="queryForm.controls.Edate" [submitted]="submitted"></app-datemm-range>
+            <app-calendar-range calendarType="dateMonthRange" label="日期(年)" controlName="accountsummary"
+              [startControl]="queryForm.controls.Sdate" [endControl]="queryForm.controls.Edate"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-datemm-range label="比較日期(年)" controlName="accountsummary" [startControl]="queryForm.controls.CSdate"
-              [endControl]="queryForm.controls.CEdate" [submitted]="submitted"></app-datemm-range>
+            <app-calendar-range calendarType="dateMonthRange" label="比較日期(年)" controlName="accountsummary"
+              [startControl]="queryForm.controls.CSdate" [endControl]="queryForm.controls.CEdate"
+              [submitted]="submitted"></app-calendar-range>
           </div>
 
 

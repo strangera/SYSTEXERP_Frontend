@@ -12,8 +12,9 @@
         <div class="grid p-fluid">
           <!-- 活動年度別 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dateyy-range label="活動年度別" controlName="activityYear" [startControl]="queryForm.controls.startYear"
-              [endControl]="queryForm.controls.endYear" [submitted]="submitted"></app-dateyy-range>
+            <app-calendar-range calendarType="dateYearRange" label="活動年度別" controlName="activityYear"
+              [startControl]="queryForm.controls.startYear" [endControl]="queryForm.controls.endYear"
+              [submitted]="submitted"></app-calendar-range>
           </div>
 
           <!-- 行銷檔期代號 -->

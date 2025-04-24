@@ -33,8 +33,9 @@
                     </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="報廢申請日期" [control]="dataForm.controls.scrapDate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="報廢申請日期" [control]="dataForm.controls.scrapDate"
+                        [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-dropdown label="資產類型" controlName="assetsType" [options]="assetsTypeOptions"

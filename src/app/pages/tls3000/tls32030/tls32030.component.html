@@ -25,14 +25,16 @@
                 <span class="p-1" style="background-color:#FFF1F2"><B>比較資料條件範圍(比較)</B></span>
                 <div style="display:flex" class="col-12 md:col-6 lg:col-12" *ngIf="selectedOption == '1'">
                   <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="日期" [control]="queryForm.controls.onedatedd" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="日期" [control]="queryForm.controls.onedatedd"
+                      [submitted]="submitted">
+                    </app-calendar>
                   </div>
                 </div>
                 <div style="display:flex" class="col-12 md:col-6 lg:col-12" *ngIf="selectedOption == '2'">
                   <div class="col-12 md:col-6 lg:col-3">
-                    <app-dateyy-one label="年度" [control]="queryForm.controls.onedateyy" [submitted]="submitted">
-                    </app-dateyy-one>
+                    <app-calendar calendarType="dateYearOne" label="年度" [control]="queryForm.controls.onedateyy"
+                      [submitted]="submitted">
+                    </app-calendar>
                   </div>
                   <div class="col-12 md:col-6 lg:col-3">
                     <app-input-number label="週數" controlName="weeks" [control]="queryForm.controls.weeks"
@@ -47,15 +49,17 @@
 
                 <div style="display:flex" class="col-12 md:col-6 lg:col-12" *ngIf="selectedOption == '3'">
                   <div class="col-12 md:col-6 lg:col-3">
-                    <app-datemm-one label="年月" [control]="queryForm.controls.onedatemm" [submitted]="submitted">
-                    </app-datemm-one>
+                    <app-calendar calendarType="dateMonthOne" label="年月" [control]="queryForm.controls.onedatemm"
+                      [submitted]="submitted">
+                    </app-calendar>
                   </div>
                 </div>
 
                 <div style="display:flex" class="col-12 md:col-6 lg:col-12" *ngIf="selectedOption == '4'">
                   <div class="col-12 md:col-6 lg:col-3">
-                    <app-dateyy-one label="年度" [control]="queryForm.controls.onedateyy" [submitted]="submitted">
-                    </app-dateyy-one>
+                    <app-calendar calendarType="dateYearOne" label="年度" [control]="queryForm.controls.onedateyy"
+                      [submitted]="submitted">
+                    </app-calendar>
                   </div>
                   <div class="col-12 md:col-6 lg:col-3">
                     <app-dropdown label="半年別" controlName="systemtypedefault" [options]="halfyearOptions"
@@ -67,16 +71,18 @@
 
                 <div style="display:flex" class="col-12 md:col-6 lg:col-12" *ngIf="selectedOption == '5'">
                   <div class="col-12 md:col-6 lg:col-3">
-                    <app-dateyy-one label="年度" [control]="queryForm.controls.onedateyy" [submitted]="submitted">
-                    </app-dateyy-one>
+                    <app-calendar calendarType="dateYearOne" label="年度" [control]="queryForm.controls.onedateyy"
+                      [submitted]="submitted">
+                    </app-calendar>
                   </div>
                 </div>
 
                 <div style="display:flex" class="col-12 md:col-6 lg:col-12" *ngIf="selectedOption == '6'">
                   <div class="col-12 md:col-6 lg:col-6">
-                    <app-date-range label="日期範圍" [startControl]="queryForm.controls.startdate"
-                      [endControl]="queryForm.controls.enddate" [submitted]="submitted">
-                    </app-date-range>
+                    <app-calendar-range calendarType="dateRange" label="日期範圍"
+                      [startControl]="queryForm.controls.startdate" [endControl]="queryForm.controls.enddate"
+                      [submitted]="submitted">
+                    </app-calendar-range>
                   </div>
                 </div>
 
@@ -88,23 +94,26 @@
                     </app-dropdown>
                   </div>
                   <div class="col-12 md:col-6 lg:col-6">
-                    <app-date-range label="日期範圍" [startControl]="queryForm.controls.startdate"
-                      [endControl]="queryForm.controls.enddate" [submitted]="submitted">
-                    </app-date-range>
+                    <app-calendar-range calendarType="dateRange" label="日期範圍"
+                      [startControl]="queryForm.controls.startdate" [endControl]="queryForm.controls.enddate"
+                      [submitted]="submitted">
+                    </app-calendar-range>
                   </div>
                 </div>
               </td>
               <td><span style="background-color:#ddf4ff"><B>比較資料條件範圍(基準)</B></span>
                 <div style="display:flex" class="col-12 md:col-6 lg:col-12" *ngIf="selectedOption == '1'">
                   <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="日期" [control]="queryForm.controls.onedatedd" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="日期" [control]="queryForm.controls.onedatedd"
+                      [submitted]="submitted">
+                    </app-calendar>
                   </div>
                 </div>
                 <div style="display:flex" class="col-12 md:col-6 lg:col-12" *ngIf="selectedOption == '2'">
                   <div class="col-12 md:col-6 lg:col-3">
-                    <app-dateyy-one label="年度" [control]="queryForm.controls.onedateyy" [submitted]="submitted">
-                    </app-dateyy-one>
+                    <app-calendar calendarType="dateYearOne" label="年度" [control]="queryForm.controls.onedateyy"
+                      [submitted]="submitted">
+                    </app-calendar>
                   </div>
                   <div class="col-12 md:col-6 lg:col-3">
                     <app-input-number label="週數" controlName="weeks" [control]="queryForm.controls.weeks"
@@ -119,15 +128,17 @@
 
                 <div style="display:flex" class="col-12 md:col-6 lg:col-12" *ngIf="selectedOption == '3'">
                   <div class="col-12 md:col-6 lg:col-3">
-                    <app-datemm-one label="年月" [control]="queryForm.controls.onedatemm" [submitted]="submitted">
-                    </app-datemm-one>
+                    <app-calendar calendarType="dateMonthOne" label="年月" [control]="queryForm.controls.onedatemm"
+                      [submitted]="submitted">
+                    </app-calendar>
                   </div>
                 </div>
 
                 <div style="display:flex" class="col-12 md:col-6 lg:col-12" *ngIf="selectedOption == '4'">
                   <div class="col-12 md:col-6 lg:col-3">
-                    <app-dateyy-one label="年度" [control]="queryForm.controls.onedateyy" [submitted]="submitted">
-                    </app-dateyy-one>
+                    <app-calendar calendarType="dateYearOne" label="年度" [control]="queryForm.controls.onedateyy"
+                      [submitted]="submitted">
+                    </app-calendar>
                   </div>
                   <div class="col-12 md:col-6 lg:col-3">
                     <app-dropdown label="半年別" controlName="systemtypedefault" [options]="halfyearOptions"
@@ -139,16 +150,18 @@
 
                 <div style="display:flex" class="col-12 md:col-6 lg:col-12" *ngIf="selectedOption == '5'">
                   <div class="col-12 md:col-6 lg:col-3">
-                    <app-dateyy-one label="年度" [control]="queryForm.controls.onedateyy" [submitted]="submitted">
-                    </app-dateyy-one>
+                    <app-calendar calendarType="dateYearOne" label="年度" [control]="queryForm.controls.onedateyy"
+                      [submitted]="submitted">
+                    </app-calendar>
                   </div>
                 </div>
 
                 <div style="display:flex" class="col-12 md:col-6 lg:col-12" *ngIf="selectedOption == '6'">
                   <div class="col-12 md:col-6 lg:col-6">
-                    <app-date-range label="日期範圍" [startControl]="queryForm.controls.startdate"
-                      [endControl]="queryForm.controls.enddate" [submitted]="submitted">
-                    </app-date-range>
+                    <app-calendar-range calendarType="dateRange" label="日期範圍"
+                      [startControl]="queryForm.controls.startdate" [endControl]="queryForm.controls.enddate"
+                      [submitted]="submitted">
+                    </app-calendar-range>
                   </div>
                 </div>
 
@@ -160,9 +173,10 @@
                     </app-dropdown>
                   </div>
                   <div class="col-12 md:col-6 lg:col-6">
-                    <app-date-range label="日期範圍" [startControl]="queryForm.controls.startdate"
-                      [endControl]="queryForm.controls.enddate" [submitted]="submitted">
-                    </app-date-range>
+                    <app-calendar-range calendarType="dateRange" label="日期範圍"
+                      [startControl]="queryForm.controls.startdate" [endControl]="queryForm.controls.enddate"
+                      [submitted]="submitted">
+                    </app-calendar-range>
                   </div>
                 </div>
               </td>

@@ -21,9 +21,10 @@
                         </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="出借日期" [startControl]="queryForm.controls.borrowDateFrom"
+                        <app-calendar-range calendarType="dateRange" label="出借日期"
+                            [startControl]="queryForm.controls.borrowDateFrom"
                             [endControl]="queryForm.controls.borrowDateTo" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-input-text label="姓名" controlName="name" [control]="queryForm.controls.name"
@@ -33,9 +34,10 @@
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="歸還日期" [startControl]="queryForm.controls.returnDateFrom"
+                        <app-calendar-range calendarType="dateRange" label="歸還日期"
+                            [startControl]="queryForm.controls.returnDateFrom"
                             [endControl]="queryForm.controls.returnDateTo" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-input-number [useGrouping]="false" label="連絡電話" controlName="phone"

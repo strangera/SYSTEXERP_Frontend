@@ -79,8 +79,9 @@
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-datetime-one label="接件日期" [control]="dataForm.controls.receiveDate" [submitted]="submitted">
-                    </app-datetime-one>
+                    <app-calendar calendarType="dateTimeOne" label="接件日期" [control]="dataForm.controls.receiveDate"
+                        [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="建檔人員" controlName="builder" [control]="dataForm.controls.builder"
@@ -101,9 +102,9 @@
                     </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-datetime-one label="通知相關單位處理日期" [control]="dataForm.controls.notifyDate"
+                    <app-calendar calendarType="dateTimeOne" label="通知相關單位處理日期" [control]="dataForm.controls.notifyDate"
                         [submitted]="submitted">
-                    </app-datetime-one>
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-dropdown label="處理情況" controlName="handlingSituation" [options]="handlingOptions"

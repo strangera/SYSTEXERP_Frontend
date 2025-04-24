@@ -15,18 +15,18 @@
         <div class="grid p-fluid">
           <!-- 活動開始日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-one label="活動開始日期" controlName="activityStartDate"
-              [control]="queryForm.controls.activityStartDate" [submitted]="submitted"></app-date-one>
+            <app-calendar calendarType="dateOne" label="活動開始日期" controlName="activityStartDate"
+              [control]="queryForm.controls.activityStartDate" [submitted]="submitted"></app-calendar>
           </div>
           <!-- 活動結束日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-one label="活動結束日期" controlName="activityEndDate" [control]="queryForm.controls.activityEndDate"
-              [submitted]="submitted"></app-date-one>
+            <app-calendar calendarType="dateOne" label="活動結束日期" controlName="activityEndDate"
+              [control]="queryForm.controls.activityEndDate" [submitted]="submitted"></app-calendar>
           </div>
           <!-- 最後歸還日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-one label="最後歸還日期" controlName="finalReturnDate" [control]="queryForm.controls.finalReturnDate"
-              [submitted]="submitted"></app-date-one>
+            <app-calendar calendarType="dateOne" label="最後歸還日期" controlName="finalReturnDate"
+              [control]="queryForm.controls.finalReturnDate" [submitted]="submitted"></app-calendar>
           </div>
           <!-- 行銷檔期代號 -->
           <div class="col-12 md:col-6 lg:col-4">

@@ -46,14 +46,14 @@
 
         <!-- 收款日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="收款日期" controlName="receiptDate" [control]="dataForm.controls.receiptDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="收款日期" controlName="receiptDate"
+            [control]="dataForm.controls.receiptDate" [submitted]="submitted"></app-calendar>
         </div>
 
         <!-- 保證金到期日 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="保證金到期日" controlName="depositDueDate" [control]="dataForm.controls.depositDueDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="保證金到期日" controlName="depositDueDate"
+            [control]="dataForm.controls.depositDueDate" [submitted]="submitted"></app-calendar>
         </div>
 
         <!-- 支票號碼 -->
@@ -63,8 +63,8 @@
         </div>
         <!-- 票據到期日 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="票據到期日" controlName="billDueDate" [control]="dataForm.controls.billDueDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="票據到期日" controlName="billDueDate"
+            [control]="dataForm.controls.billDueDate" [submitted]="submitted"></app-calendar>
         </div>
 
         <!-- 金融機構 -->
@@ -98,8 +98,8 @@
 
         <!-- 狀態變更日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="狀態變更日期" controlName="statusChangeDate" [control]="dataForm.controls.statusChangeDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="狀態變更日期" controlName="statusChangeDate"
+            [control]="dataForm.controls.statusChangeDate" [submitted]="submitted"></app-calendar>
         </div>
 
         <!-- 收款會計科目(借) -->

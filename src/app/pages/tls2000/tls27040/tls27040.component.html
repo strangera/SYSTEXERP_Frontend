@@ -43,9 +43,10 @@
             </app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-datetime-range label="銷售日期" [startControl]="queryForm.controls.salesDateStart"
-              [endControl]="queryForm.controls.salesDateEnd" [submitted]="submitted">
-            </app-datetime-range>
+            <app-calendar-range calendarType="dateTimeRange" label="銷售日期"
+              [startControl]="queryForm.controls.salesDateStart" [endControl]="queryForm.controls.salesDateEnd"
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="卡號" controlName="cardNumber" [control]="queryForm.controls.cardNumber"
@@ -58,9 +59,10 @@
             </app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="請款日期" [startControl]="queryForm.controls.billingDateStart"
-              [endControl]="queryForm.controls.billingDateEnd" [submitted]="submitted">
-            </app-date-range>
+            <app-calendar-range calendarType="dateRange" label="請款日期"
+              [startControl]="queryForm.controls.billingDateStart" [endControl]="queryForm.controls.billingDateEnd"
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="交易類別" controlName="transactionType" [options]="transactionTypeOptions"

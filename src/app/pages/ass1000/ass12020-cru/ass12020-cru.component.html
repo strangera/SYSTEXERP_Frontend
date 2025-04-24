@@ -17,8 +17,9 @@
                     </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="報價期限" [control]="dataForm.controls.reportdate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="報價期限" [control]="dataForm.controls.reportdate"
+                        [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <hr />

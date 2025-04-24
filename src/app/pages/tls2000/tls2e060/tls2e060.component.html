@@ -18,9 +18,9 @@
                     <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-datemm-one label="查詢年月" [control]="queryForm.controls.onedatemm"
-                                    [submitted]="submitted">
-                                </app-datemm-one>
+                                <app-calendar calendarType="dateMonthOne" label="查詢年月"
+                                    [control]="queryForm.controls.onedatemm" [submitted]="submitted">
+                                </app-calendar>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
                                 <app-dropdown label="結帳方式" controlName="checkout" [options]="checkoutOptions"

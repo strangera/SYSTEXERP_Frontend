@@ -40,14 +40,16 @@
                                 </app-dropdown>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-range label="活動起始日期" [startControl]="queryForm.controls.startdateFrom"
+                                <app-calendar-range calendarType="dateRange" label="活動起始日期"
+                                    [startControl]="queryForm.controls.startdateFrom"
                                     [endControl]="queryForm.controls.startdateTo" [submitted]="submitted">
-                                </app-date-range>
+                                </app-calendar-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-range label="活動結束日期" [startControl]="queryForm.controls.endDateFrom"
+                                <app-calendar-range calendarType="dateRange" label="活動結束日期"
+                                    [startControl]="queryForm.controls.endDateFrom"
                                     [endControl]="queryForm.controls.endDateTo" [submitted]="submitted">
-                                </app-date-range>
+                                </app-calendar-range>
                             </div>
                         </div>
                         <div class="grid p-fluid">

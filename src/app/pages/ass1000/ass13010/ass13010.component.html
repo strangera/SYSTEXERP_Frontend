@@ -51,9 +51,10 @@
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="購入日期" [startControl]="queryForm.controls.purchaseDateFrom"
+                        <app-calendar-range calendarType="dateRange" label="購入日期"
+                            [startControl]="queryForm.controls.purchaseDateFrom"
                             [endControl]="queryForm.controls.purchaseDateTo" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-input-number-range label="原購入金額" [startControl]="queryForm.controls.original_priceFrom"
@@ -81,9 +82,10 @@
                         </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="入帳日期" [startControl]="queryForm.controls.entryDateFrom"
+                        <app-calendar-range calendarType="dateRange" label="入帳日期"
+                            [startControl]="queryForm.controls.entryDateFrom"
                             [endControl]="queryForm.controls.entryDateTo" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                 </div>
                 <div class="grid p-fluid">
@@ -169,9 +171,10 @@
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="處份日期(變賣或報廢)" [startControl]="queryForm.controls.disposalDateFrom"
+                        <app-calendar-range calendarType="dateRange" label="處份日期(變賣或報廢)"
+                            [startControl]="queryForm.controls.disposalDateFrom"
                             [endControl]="queryForm.controls.disposalDateTo" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-dropdown label="處份廠商" controlName="dispose_Manufacturers" [options]="supplierCodeOptions"

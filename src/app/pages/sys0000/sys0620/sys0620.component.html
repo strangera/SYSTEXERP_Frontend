@@ -25,9 +25,10 @@
                     </div>
                     <!-- 變更時間 -->
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="變更時間" [startControl]="queryForm.controls.changeStartTime"
+                        <app-calendar-range calendarType="dateRange" label="變更時間"
+                            [startControl]="queryForm.controls.changeStartTime"
                             [endControl]="queryForm.controls.changeEndTime" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                 </div>
 

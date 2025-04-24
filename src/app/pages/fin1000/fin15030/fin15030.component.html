@@ -25,8 +25,9 @@
                         </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-datemm-one label="申報年月" [control]="queryForm.controls.declareYm" [submitted]="submitted">
-                        </app-datemm-one>
+                        <app-calendar calendarType="dateMonthOne" label="申報年月" [control]="queryForm.controls.declareYm"
+                            [submitted]="submitted">
+                        </app-calendar>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-dropdown label="稅籍編號" controlName="taxNumber" [options]="taxNumberOptions"

@@ -49,14 +49,16 @@
               </app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-range label="合約起始日" [startControl]="queryForm.controls.contractStartDate"
-                [endControl]="queryForm.controls.contractEndDate" [submitted]="submitted">
-              </app-date-range>
+              <app-calendar-range calendarType="dateRange" label="合約起始日"
+                [startControl]="queryForm.controls.contractStartDate" [endControl]="queryForm.controls.contractEndDate"
+                [submitted]="submitted">
+              </app-calendar-range>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-range label="合約截止日" [startControl]="queryForm.controls.contractDeadlineStartDate"
+              <app-calendar-range calendarType="dateRange" label="合約截止日"
+                [startControl]="queryForm.controls.contractDeadlineStartDate"
                 [endControl]="queryForm.controls.contractDeadlineEndDate" [submitted]="submitted">
-              </app-date-range>
+              </app-calendar-range>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="扣款類別" controlName="deductionCategory" [options]="deductionCategoryOptions"
@@ -71,14 +73,16 @@
               </app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-range label="扣款起日" [startControl]="queryForm.controls.deductionStartDate"
+              <app-calendar-range calendarType="dateRange" label="扣款起日"
+                [startControl]="queryForm.controls.deductionStartDate"
                 [endControl]="queryForm.controls.deductionEndDate" [submitted]="submitted">
-              </app-date-range>
+              </app-calendar-range>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-range label="扣款迄日" [startControl]="queryForm.controls.deductionDeadlineStartDate"
+              <app-calendar-range calendarType="dateRange" label="扣款迄日"
+                [startControl]="queryForm.controls.deductionDeadlineStartDate"
                 [endControl]="queryForm.controls.deductionDeadlineEndDate" [submitted]="submitted">
-              </app-date-range>
+              </app-calendar-range>
             </div>
           </div>
 

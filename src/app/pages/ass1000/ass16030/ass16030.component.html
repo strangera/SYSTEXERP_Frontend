@@ -31,18 +31,20 @@
               optionValue="value" [control]="queryForm.controls.Departmentcode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="申請日期" [startControl]="queryForm.controls.SApplicationdate"
-              [endControl]="queryForm.controls.EApplicationdate" [submitted]="submitted">
-            </app-date-range>
+            <app-calendar-range calendarType="dateRange" label="申請日期"
+              [startControl]="queryForm.controls.SApplicationdate" [endControl]="queryForm.controls.EApplicationdate"
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="審核日期" [startControl]="queryForm.controls.SReviewdate"
+            <app-calendar-range calendarType="dateRange" label="審核日期" [startControl]="queryForm.controls.SReviewdate"
               [endControl]="queryForm.controls.EReviewdate" [submitted]="submitted">
-            </app-date-range>
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-one label="發料日期" [control]="queryForm.controls.Shippingdate" [submitted]="submitted">
-            </app-date-one>
+            <app-calendar calendarType="dateOne" label="發料日期" [control]="queryForm.controls.Shippingdate"
+              [submitted]="submitted">
+            </app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="審核者" controlName="reviewer" [options]="reviewer" optionLabel="label"

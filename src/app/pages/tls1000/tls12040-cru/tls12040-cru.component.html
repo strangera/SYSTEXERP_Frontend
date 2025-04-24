@@ -75,37 +75,43 @@
                     </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="契約起始日" [control]="dataForm.controls.contractStartDate" [submitted]="submitted">
-                    </app-date-one>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="契約截止日" [control]="dataForm.controls.contractEndDate" [submitted]="submitted">
-                    </app-date-one>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="營運起始日" [control]="dataForm.controls.operationStartDate"
+                    <app-calendar calendarType="dateOne" label="契約起始日" [control]="dataForm.controls.contractStartDate"
                         [submitted]="submitted">
-                    </app-date-one>
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="營運截止日" [control]="dataForm.controls.operationEndDate" [submitted]="submitted">
-                    </app-date-one>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="回函日期" [control]="dataForm.controls.replyStartDate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="契約截止日" [control]="dataForm.controls.contractEndDate"
+                        [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="回函截止日" [control]="dataForm.controls.replyEndDate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="營運起始日" [control]="dataForm.controls.operationStartDate"
+                        [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="洽談日期" [control]="dataForm.controls.negotiationDate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="營運截止日" [control]="dataForm.controls.operationEndDate"
+                        [submitted]="submitted">
+                    </app-calendar>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-calendar calendarType="dateOne" label="回函日期" [control]="dataForm.controls.replyStartDate"
+                        [submitted]="submitted">
+                    </app-calendar>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-calendar calendarType="dateOne" label="回函截止日" [control]="dataForm.controls.replyEndDate"
+                        [submitted]="submitted">
+                    </app-calendar>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-calendar calendarType="dateOne" label="洽談日期" [control]="dataForm.controls.negotiationDate"
+                        [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-dropdown label="洽談者" controlName="negotiator" [options]="negotiatorOptions" optionLabel="label"
@@ -386,9 +392,10 @@
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-range label="使用期間" [startControl]="getFormControl(i, 'startdate')"
+                            <app-calendar-range calendarType="dateRange" label="使用期間"
+                                [startControl]="getFormControl(i, 'startdate')"
                                 [endControl]="getFormControl(i, 'enddate')" [submitted]="submitted">
-                            </app-date-range>
+                            </app-calendar-range>
                         </div>
                     </div>
                     <hr />

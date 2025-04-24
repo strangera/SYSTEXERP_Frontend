@@ -25,9 +25,10 @@
                         </app-input-number-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="清點日期" [startControl]="queryForm.controls.inventory_DateFrom"
+                        <app-calendar-range calendarType="dateRange" label="清點日期"
+                            [startControl]="queryForm.controls.inventory_DateFrom"
                             [endControl]="queryForm.controls.inventory_DateTo" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-dropdown label="清點人代碼" controlName="inventory_PersonCode" [options]="userCodeOptions"

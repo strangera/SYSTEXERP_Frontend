@@ -20,8 +20,8 @@
             <fieldset class="no-border">
               <legend>實際值</legend>
               <div class="col-12">
-                <app-datemm-one label="年月" controlName="year" [control]="queryForm.controls.year1"
-                  [submitted]="submitted"></app-datemm-one>
+                <app-calendar calendarType="dateMonthOne" label="年月" controlName="year"
+                  [control]="queryForm.controls.year1" [submitted]="submitted"></app-calendar>
               </div>
             </fieldset>
           </div>
@@ -31,8 +31,8 @@
             <fieldset class="no-border">
               <legend>預算版本1</legend>
               <div class="col-12">
-                <app-datemm-one label="年月" controlName="year" [control]="queryForm.controls.year2"
-                  [submitted]="submitted"></app-datemm-one>
+                <app-calendar calendarType="dateMonthOne" label="年月" controlName="year"
+                  [control]="queryForm.controls.year2" [submitted]="submitted"></app-calendar>
               </div>
               <div class="col-12">
                 <app-input-text label="版本別" controlName="version1" [control]="queryForm.controls.version1"
@@ -46,8 +46,8 @@
             <fieldset class="no-border">
               <legend>預算版本2</legend>
               <div class="col-12">
-                <app-datemm-one label="年月" controlName="year" [control]="queryForm.controls.year"
-                  [submitted]="submitted"></app-datemm-one>
+                <app-calendar calendarType="dateMonthOne" label="年月" controlName="year"
+                  [control]="queryForm.controls.year" [submitted]="submitted"></app-calendar>
               </div>
               <div class="col-12">
                 <app-input-text label="版本別" controlName="version2" [control]="queryForm.controls.version2"

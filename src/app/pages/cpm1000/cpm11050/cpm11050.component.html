@@ -29,36 +29,39 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="登錄日期" [startControl]="queryForm.controls.registerDateFrom"
-              [endControl]="queryForm.controls.registerDateTo" [submitted]="submitted">
-            </app-date-range>
+            <app-calendar-range calendarType="dateRange" label="登錄日期"
+              [startControl]="queryForm.controls.registerDateFrom" [endControl]="queryForm.controls.registerDateTo"
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="遺失日期" [startControl]="queryForm.controls.lossDateFrom"
+            <app-calendar-range calendarType="dateRange" label="遺失日期" [startControl]="queryForm.controls.lossDateFrom"
               [endControl]="queryForm.controls.lossDateTo" [submitted]="submitted">
-            </app-date-range>
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="拾獲日期" [startControl]="queryForm.controls.foundDateFrom"
+            <app-calendar-range calendarType="dateRange" label="拾獲日期" [startControl]="queryForm.controls.foundDateFrom"
               [endControl]="queryForm.controls.foundDateTo" [submitted]="submitted">
-            </app-date-range>
+            </app-calendar-range>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="通知日期" [startControl]="queryForm.controls.notificationDateFrom"
+            <app-calendar-range calendarType="dateRange" label="通知日期"
+              [startControl]="queryForm.controls.notificationDateFrom"
               [endControl]="queryForm.controls.notificationDateFrom" [submitted]="submitted">
-            </app-date-range>
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="領回日期" [startControl]="queryForm.controls.pickUpDateFrom"
+            <app-calendar-range calendarType="dateRange" label="領回日期" [startControl]="queryForm.controls.pickUpDateFrom"
               [endControl]="queryForm.controls.pickUpDateFrom" [submitted]="submitted">
-            </app-date-range>
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="轉出日期" [startControl]="queryForm.controls.transferDateFrom"
-              [endControl]="queryForm.controls.transferDateTo" [submitted]="submitted">
-            </app-date-range>
+            <app-calendar-range calendarType="dateRange" label="轉出日期"
+              [startControl]="queryForm.controls.transferDateFrom" [endControl]="queryForm.controls.transferDateTo"
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
         </div>
         <hr>

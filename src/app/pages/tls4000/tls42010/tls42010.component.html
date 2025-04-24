@@ -50,14 +50,16 @@
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-datetime-range label="有效啟始日期" [startControl]="queryForm.controls.SBM_BegDate_From"
+                                <app-calendar-range calendarType="dateTimeRange" label="有效啟始日期"
+                                    [startControl]="queryForm.controls.SBM_BegDate_From"
                                     [endControl]="queryForm.controls.SBM_BegDate_To" [submitted]="submitted">
-                                </app-datetime-range>
+                                </app-calendar-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-datetime-range label="有效結束日期" [startControl]="queryForm.controls.SBM_EndDate_From"
+                                <app-calendar-range calendarType="dateTimeRange" label="有效結束日期"
+                                    [startControl]="queryForm.controls.SBM_EndDate_From"
                                     [endControl]="queryForm.controls.SBM_EndDate_To" [submitted]="submitted">
-                                </app-datetime-range>
+                                </app-calendar-range>
                             </div>
                         </div>
                         <div *appHasPermission="queryPermission" class="col">

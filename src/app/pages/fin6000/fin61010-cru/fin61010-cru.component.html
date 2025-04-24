@@ -8,12 +8,12 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="起用日" controlName="accountsummary" [control]="dataForm.controls.Subpoenadate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="起用日" controlName="accountsummary"
+            [control]="dataForm.controls.Subpoenadate" [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="停用日期" controlName="accountsummary" [control]="dataForm.controls.Subpoenadate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="停用日期" controlName="accountsummary"
+            [control]="dataForm.controls.Subpoenadate" [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="公司銀行代號" controlName="Companybankcode" [options]="Companybankcode" optionLabel="label"

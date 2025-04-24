@@ -18,20 +18,20 @@
 
           <!-- 立帳日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="立帳日期" [startControl]="queryForm.controls.sPostDate"
-              [endControl]="queryForm.controls.ePostDate" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="立帳日期" [startControl]="queryForm.controls.sPostDate"
+              [endControl]="queryForm.controls.ePostDate" [submitted]="submitted"></app-calendar-range>
           </div>
 
           <!-- 收/付款日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="收/付款日期" [startControl]="queryForm.controls.sRpd"
-              [endControl]="queryForm.controls.eRpd" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="收/付款日期" [startControl]="queryForm.controls.sRpd"
+              [endControl]="queryForm.controls.eRpd" [submitted]="submitted"></app-calendar-range>
           </div>
 
           <!-- 調整日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="調整日期" [startControl]="queryForm.controls.sAdjDate"
-              [endControl]="queryForm.controls.eAdjDate" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="調整日期" [startControl]="queryForm.controls.sAdjDate"
+              [endControl]="queryForm.controls.eAdjDate" [submitted]="submitted"></app-calendar-range>
           </div>
 
 

@@ -41,9 +41,9 @@
                             <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
                                 <div class="grid p-fluid">
                                     <div class="col-12 md:col-6 lg:col-4">
-                                        <app-date-one label="銷售日期" [control]="getFormControl(i, 'salesDate')"
-                                            [submitted]="submitted">
-                                        </app-date-one>
+                                        <app-calendar calendarType="dateOne" label="銷售日期"
+                                            [control]="getFormControl(i, 'salesDate')" [submitted]="submitted">
+                                        </app-calendar>
                                     </div>
                                     <div class="col-12 md:col-6 lg:col-4">
                                         <app-input-number [useGrouping]="false" label="收銀機代號" controlName="registerID"

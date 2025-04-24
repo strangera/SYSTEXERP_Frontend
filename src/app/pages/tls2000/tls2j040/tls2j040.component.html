@@ -30,9 +30,10 @@
               <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
                 <div class="grid p-fluid">
                   <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-range label="銷售日期" [startControl]="getFormControl(i, 'startdate')"
-                      [endControl]="getFormControl(i, 'enddate')" [submitted]="submitted">
-                    </app-date-range>
+                    <app-calendar-range calendarType="dateRange" label="銷售日期"
+                      [startControl]="getFormControl(i, 'startdate')" [endControl]="getFormControl(i, 'enddate')"
+                      [submitted]="submitted">
+                    </app-calendar-range>
                   </div>
                   <div class="col-12 md:col-6 lg:col-4">
                     <app-input-number [useGrouping]="false" label="收銀機代號" controlName="registerID"

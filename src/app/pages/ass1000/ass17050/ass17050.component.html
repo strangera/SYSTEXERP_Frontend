@@ -22,8 +22,9 @@
               </app-radiobutton>
             </div> -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dateyy-one label="統計日期" [control]="queryForm.controls.Sdate" [submitted]="submitted">
-            </app-dateyy-one>
+            <app-calendar calendarType="dateYearOne" label="統計日期" [control]="queryForm.controls.Sdate"
+              [submitted]="submitted">
+            </app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="部門代號" controlName="Departmentcode" [options]="Departmentcode" optionLabel="label"

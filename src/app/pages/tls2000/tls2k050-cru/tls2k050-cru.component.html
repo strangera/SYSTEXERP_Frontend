@@ -15,9 +15,9 @@
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-datetime-one label="換卡日期" [control]="dataForm.controls.changeCardDate"
-                                [submitted]="submitted">
-                            </app-datetime-one>
+                            <app-calendar calendarType="dateTimeOne" label="換卡日期"
+                                [control]="dataForm.controls.changeCardDate" [submitted]="submitted">
+                            </app-calendar>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
                             <app-input-text label="餘代卡狀態" controlName="status" [control]="dataForm.controls.status"
@@ -37,9 +37,9 @@
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-datetime-one label="卡片發行日" [control]="dataForm.controls.releaseCardDate"
-                                [submitted]="submitted">
-                            </app-datetime-one>
+                            <app-calendar calendarType="dateTimeOne" label="卡片發行日"
+                                [control]="dataForm.controls.releaseCardDate" [submitted]="submitted">
+                            </app-calendar>
                         </div>
                     </div>
                     <div class="grid p-fluid">

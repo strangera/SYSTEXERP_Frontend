@@ -17,8 +17,8 @@
                   (click)="onRadioSelect('month')" />
               </div>
               <div class="col-10">
-                <app-datemm-one label="查詢年月" [control]="queryForm.controls.onedatemm"
-                  [submitted]="submitted"></app-datemm-one>
+                <app-calendar calendarType="dateMonthOne" label="查詢年月" [control]="queryForm.controls.onedatemm"
+                  [submitted]="submitted"></app-calendar>
               </div>
             </div>
           </div>
@@ -31,9 +31,10 @@
                   (click)="onRadioSelect('dateRange')" />
               </div>
               <div class="col-10">
-                <app-date-range label="查詢日期" [startControl]="queryForm.controls.queryStartDate"
-                  [endControl]="queryForm.controls.queryEndDate" [submitted]="submitted">
-                </app-date-range>
+                <app-calendar-range calendarType="dateRange" label="查詢日期"
+                  [startControl]="queryForm.controls.queryStartDate" [endControl]="queryForm.controls.queryEndDate"
+                  [submitted]="submitted">
+                </app-calendar-range>
               </div>
             </div>
           </div>

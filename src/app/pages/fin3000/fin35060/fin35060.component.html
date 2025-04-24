@@ -46,15 +46,16 @@
 
           <!-- 付款日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="付款日期" controlName="receiptDate" [startControl]="queryForm.controls.receiptDateStart"
-              [endControl]="queryForm.controls.receiptDateEnd" [submitted]="submitted"></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="付款日期" controlName="receiptDate"
+              [startControl]="queryForm.controls.receiptDateStart" [endControl]="queryForm.controls.receiptDateEnd"
+              [submitted]="submitted"></app-calendar-range>
           </div>
 
           <!-- 保證金到期日 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="保證金到期日" controlName="depositDueDate"
+            <app-calendar-range calendarType="dateRange" label="保證金到期日" controlName="depositDueDate"
               [startControl]="queryForm.controls.depositDueDateStart"
-              [endControl]="queryForm.controls.depositDueDateEnd" [submitted]="submitted"></app-date-range>
+              [endControl]="queryForm.controls.depositDueDateEnd" [submitted]="submitted"></app-calendar-range>
           </div>
 
           <!-- 支票號碼 -->
@@ -84,9 +85,9 @@
 
           <!-- 狀態變更日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="狀態變更日期" controlName="statusChangeDate"
+            <app-calendar-range calendarType="dateRange" label="狀態變更日期" controlName="statusChangeDate"
               [startControl]="queryForm.controls.statusChangeDateStart"
-              [endControl]="queryForm.controls.statusChangeDateEnd" [submitted]="submitted"></app-date-range>
+              [endControl]="queryForm.controls.statusChangeDateEnd" [submitted]="submitted"></app-calendar-range>
           </div>
 
           <!-- 付款計科目(借) -->

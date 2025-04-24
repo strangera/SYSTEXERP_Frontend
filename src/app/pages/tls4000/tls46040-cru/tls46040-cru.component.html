@@ -15,9 +15,9 @@
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-one label="設定啟用日期" controlName="ECR_SchDate"
+                            <app-calendar calendarType="dateOne" label="設定啟用日期" controlName="ECR_SchDate"
                                 [control]="dataForm.controls.ECR_SchDate" [submitted]="submitted">
-                            </app-date-one>
+                            </app-calendar>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
                             <app-dropdown label="排程狀態" controlName="ECR_SchStatus" [options]="ECR_SchStatus_Options"
@@ -89,17 +89,17 @@
                     <hr>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-datetime-one label="異動作業完成時間" controlName="ECR_SchFinTime"
+                            <app-calendar calendarType="dateTimeOne" label="異動作業完成時間" controlName="ECR_SchFinTime"
                                 [control]="dataForm.controls.ECR_SchFinTime" [submitted]="submitted">
-                            </app-datetime-one>
+                            </app-calendar>
                         </div>
                     </div>
                     <!-- <hr>
                     <h5>建立人員</h5>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-one label="建立日期" controlName="CRT_Date" [control]="dataForm.controls.CRT_Date" [submitted]="submitted">
-                            </app-date-one>
+                            <app-calendar calendarType="dateOne" label="建立日期" controlName="CRT_Date" [control]="dataForm.controls.CRT_Date" [submitted]="submitted">
+                            </app-calendar>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
                             <app-input-number [useGrouping]="false" label="建立人員" controlName="CRT_USR_No" [control]="dataForm.controls.CRT_USR_No" [submitted]="submitted">
@@ -114,8 +114,8 @@
                     <h5>變更人員</h5>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-one label="變更日期" controlName="UPD_Date" [control]="dataForm.controls.UPD_Date" [submitted]="submitted">
-                            </app-date-one>
+                            <app-calendar calendarType="dateOne" label="變更日期" controlName="UPD_Date" [control]="dataForm.controls.UPD_Date" [submitted]="submitted">
+                            </app-calendar>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
                             <app-input-number [useGrouping]="false" label="變更人員" controlName="UPD_USR_No" [control]="dataForm.controls.UPD_USR_No" [submitted]="submitted">

@@ -14,9 +14,10 @@
         <div class="grid p-fluid">
           <!-- 傳票日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="傳票日期" [startControl]="queryForm.controls.startVoucherDate"
-              [endControl]="queryForm.controls.endVoucherDate" [submitted]="submitted">
-            </app-date-range>
+            <app-calendar-range calendarType="dateRange" label="傳票日期"
+              [startControl]="queryForm.controls.startVoucherDate" [endControl]="queryForm.controls.endVoucherDate"
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
 
           <!-- 行銷檔期代號 -->

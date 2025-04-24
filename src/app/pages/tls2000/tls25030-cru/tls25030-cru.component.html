@@ -38,12 +38,14 @@
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="扣款日期" [control]="dataForm.controls.deductionDateStart" [submitted]="submitted">
-          </app-date-one>
+          <app-calendar calendarType="dateOne" label="扣款日期" [control]="dataForm.controls.deductionDateStart"
+            [submitted]="submitted">
+          </app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="違規日期" [control]="dataForm.controls.violationDateStart" [submitted]="submitted">
-          </app-date-one>
+          <app-calendar calendarType="dateOne" label="違規日期" [control]="dataForm.controls.violationDateStart"
+            [submitted]="submitted">
+          </app-calendar>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">

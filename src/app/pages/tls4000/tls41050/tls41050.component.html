@@ -24,20 +24,20 @@
                                 </app-input-text>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-one label="開始時間" controlName="NOT_BegDateTime"
+                                <app-calendar calendarType="dateOne" label="開始時間" controlName="NOT_BegDateTime"
                                     [control]="queryForm.controls.NOT_BegDateTime" [submitted]="submitted">
-                                </app-date-one>
+                                </app-calendar>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-one label="結束時間" controlName="NOT_EndDateTime"
+                                <app-calendar calendarType="dateOne" label="結束時間" controlName="NOT_EndDateTime"
                                     [control]="queryForm.controls.NOT_EndDateTime" [submitted]="submitted">
-                                </app-date-one>
+                                </app-calendar>
                             </div>
                         </div>
                         <div class="grid p-fluid">
                             <!-- <div class="col-12 md:col-6 lg:col-4">
-                                <app-datetime-one label="通告產生時間" [control]="queryForm.controls.NOT_DateTime" [submitted]="submitted">
-                                </app-datetime-one>
+                                <app-calendar calendarType="dateTimeOne" label="通告產生時間" [control]="queryForm.controls.NOT_DateTime" [submitted]="submitted">
+                                </app-calendar>
                             </div> -->
                             <!-- <div class="col-12 md:col-6 lg:col-4">
                                 <app-multi-select label="通告顯示種類" controlName="NOT_Type" [options]="NOT_Type_Options" optionLabel="label" optionValue="value" [control]="queryForm.controls.NOT_Type" [submitted]="submitted">

@@ -14,14 +14,16 @@
                 <div *appHasPermission="queryPermission" class="col">
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-range label="接件日期" [startControl]="queryForm.controls.receiveDateFrom"
+                            <app-calendar-range calendarType="dateRange" label="接件日期"
+                                [startControl]="queryForm.controls.receiveDateFrom"
                                 [endControl]="queryForm.controls.receiveDateTo" [submitted]="submitted">
-                            </app-date-range>
+                            </app-calendar-range>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-range label="通知日期" [startControl]="queryForm.controls.notificationDateFrom"
+                            <app-calendar-range calendarType="dateRange" label="通知日期"
+                                [startControl]="queryForm.controls.notificationDateFrom"
                                 [endControl]="queryForm.controls.notificationDateTo" [submitted]="submitted">
-                            </app-date-range>
+                            </app-calendar-range>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
                             <app-multi-select label="處理情況" controlName="handlingSituation" [options]="handlingOptions"

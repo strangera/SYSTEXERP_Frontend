@@ -18,9 +18,9 @@
                                 </app-dropdown>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-dateyy-one label="查詢年" [control]="queryForm.controls.onedatetyy"
-                                    [submitted]="submitted">
-                                </app-dateyy-one>
+                                <app-calendar calendarType="dateYearOne" label="查詢年"
+                                    [control]="queryForm.controls.onedatetyy" [submitted]="submitted">
+                                </app-calendar>
                             </div>
                         </div>
                         <div *appHasPermission="queryPermission" class="col">

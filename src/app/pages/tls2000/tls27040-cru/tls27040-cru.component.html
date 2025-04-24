@@ -41,8 +41,9 @@
           </app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="入帳日" [control]="dataForm.controls.postingDate" [submitted]="submitted">
-          </app-date-one>
+          <app-calendar calendarType="dateOne" label="入帳日" [control]="dataForm.controls.postingDate"
+            [submitted]="submitted">
+          </app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="卡號" controlName="cardID" [control]="dataForm.controls.cardID" [submitted]="submitted">
@@ -53,8 +54,9 @@
           </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="請款日期" [control]="dataForm.controls.billingDate" [submitted]="submitted">
-          </app-date-one>
+          <app-calendar calendarType="dateOne" label="請款日期" [control]="dataForm.controls.billingDate"
+            [submitted]="submitted">
+          </app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="授權碼" controlName="authorizationCode" [control]="dataForm.controls.authorizationCode"
@@ -84,8 +86,9 @@
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-time-one label="時間" [control]="dataForm.controls.transactionTime" [submitted]="submitted">
-          </app-time-one>
+          <app-calendar calendarType="timeOne" label="時間" [control]="dataForm.controls.transactionTime"
+            [submitted]="submitted">
+          </app-calendar>
         </div>
       </div>
     </form>

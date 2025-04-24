@@ -20,9 +20,10 @@
                             </app-multi-select>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-range label="接件日期" [startControl]="queryForm.controls.receiveDateFrom"
+                            <app-calendar-range calendarType="dateRange" label="接件日期"
+                                [startControl]="queryForm.controls.receiveDateFrom"
                                 [endControl]="queryForm.controls.receiveDateTo" [submitted]="submitted">
-                            </app-date-range>
+                            </app-calendar-range>
                         </div>
                     </div>
                     <div *appHasPermission="queryPermission" class="col">

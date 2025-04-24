@@ -15,9 +15,10 @@
                         </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="申請日期" [startControl]="queryForm.controls.startRequestDate"
+                        <app-calendar-range calendarType="dateRange" label="申請日期"
+                            [startControl]="queryForm.controls.startRequestDate"
                             [endControl]="queryForm.controls.endRequestDate" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-dropdown label="申請廠商/員工" controlName="requsetEmployee" [options]="requsetEmployeeOptions"

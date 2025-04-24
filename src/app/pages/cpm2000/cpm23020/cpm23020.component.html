@@ -15,23 +15,23 @@
 
           <!-- 活動開始日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-one label="活動開始日期" controlName="eventStartDate" [control]="queryForm.controls.eventStartDate"
-              [submitted]="submitted">
-            </app-date-one>
+            <app-calendar calendarType="dateOne" label="活動開始日期" controlName="eventStartDate"
+              [control]="queryForm.controls.eventStartDate" [submitted]="submitted">
+            </app-calendar>
           </div>
 
           <!-- 活動結束日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-one label="活動結束日期" controlName="eventEndDate" [control]="queryForm.controls.eventEndDate"
-              [submitted]="submitted">
-            </app-date-one>
+            <app-calendar calendarType="dateOne" label="活動結束日期" controlName="eventEndDate"
+              [control]="queryForm.controls.eventEndDate" [submitted]="submitted">
+            </app-calendar>
           </div>
 
           <!-- 最後入庫日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-one label="最後入庫日期" controlName="lastStorageDate" [control]="queryForm.controls.lastStorageDate"
-              [submitted]="submitted">
-            </app-date-one>
+            <app-calendar calendarType="dateOne" label="最後入庫日期" controlName="lastStorageDate"
+              [control]="queryForm.controls.lastStorageDate" [submitted]="submitted">
+            </app-calendar>
           </div>
 
           <!-- 行銷檔期代號 -->

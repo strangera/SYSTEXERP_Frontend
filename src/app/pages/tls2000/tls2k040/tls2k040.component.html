@@ -23,9 +23,10 @@
                                 </app-input-number>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-range label="補登日期" [startControl]="queryForm.controls.backupStartdate"
+                                <app-calendar-range calendarType="dateRange" label="補登日期"
+                                    [startControl]="queryForm.controls.backupStartdate"
                                     [endControl]="queryForm.controls.backupEnddate" [submitted]="submitted">
-                                </app-date-range>
+                                </app-calendar-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
                                 <app-multi-select label="餘代卡狀態" controlName="status" [options]="statusOptions"
@@ -36,9 +37,10 @@
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-range label="卡片發行日" [startControl]="queryForm.controls.releaseStartdate"
+                                <app-calendar-range calendarType="dateRange" label="卡片發行日"
+                                    [startControl]="queryForm.controls.releaseStartdate"
                                     [endControl]="queryForm.controls.releaseEnddate" [submitted]="submitted">
-                                </app-date-range>
+                                </app-calendar-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
                                 <app-input-number-range [useGrouping]="false" label="機號"

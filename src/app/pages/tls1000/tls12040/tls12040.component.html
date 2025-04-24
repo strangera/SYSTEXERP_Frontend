@@ -104,21 +104,24 @@
                                 </app-multi-select>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-range label="回函日期" [startControl]="queryForm.controls.replyStartDateFrom"
+                                <app-calendar-range calendarType="dateRange" label="回函日期"
+                                    [startControl]="queryForm.controls.replyStartDateFrom"
                                     [endControl]="queryForm.controls.replyStartDateTo" [submitted]="submitted">
-                                </app-date-range>
+                                </app-calendar-range>
                             </div>
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-range label="回函截止日" [startControl]="queryForm.controls.replyEndDateFrom"
+                                <app-calendar-range calendarType="dateRange" label="回函截止日"
+                                    [startControl]="queryForm.controls.replyEndDateFrom"
                                     [endControl]="queryForm.controls.replyEndDateTo" [submitted]="submitted">
-                                </app-date-range>
+                                </app-calendar-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-range label="洽談日期" [startControl]="queryForm.controls.negotiationDateFrom"
+                                <app-calendar-range calendarType="dateRange" label="洽談日期"
+                                    [startControl]="queryForm.controls.negotiationDateFrom"
                                     [endControl]="queryForm.controls.negotiationDateTo" [submitted]="submitted">
-                                </app-date-range>
+                                </app-calendar-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
                                 <app-multi-select label="營業型態" controlName="businessType"
@@ -129,26 +132,30 @@
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-range label="契約起始日" [startControl]="queryForm.controls.contractStartDateFrom"
+                                <app-calendar-range calendarType="dateRange" label="契約起始日"
+                                    [startControl]="queryForm.controls.contractStartDateFrom"
                                     [endControl]="queryForm.controls.contractStartDateTo" [submitted]="submitted">
-                                </app-date-range>
+                                </app-calendar-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-range label="契約截止日" [startControl]="queryForm.controls.contractEndDateFrom"
+                                <app-calendar-range calendarType="dateRange" label="契約截止日"
+                                    [startControl]="queryForm.controls.contractEndDateFrom"
                                     [endControl]="queryForm.controls.contractEndDateTo" [submitted]="submitted">
-                                </app-date-range>
+                                </app-calendar-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-range label="營運起始日" [startControl]="queryForm.controls.operationStartDateFrom"
+                                <app-calendar-range calendarType="dateRange" label="營運起始日"
+                                    [startControl]="queryForm.controls.operationStartDateFrom"
                                     [endControl]="queryForm.controls.operationStartDateTo" [submitted]="submitted">
-                                </app-date-range>
+                                </app-calendar-range>
                             </div>
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-range label="營運截止日" [startControl]="queryForm.controls.operationEndDateFrom"
+                                <app-calendar-range calendarType="dateRange" label="營運截止日"
+                                    [startControl]="queryForm.controls.operationEndDateFrom"
                                     [endControl]="queryForm.controls.operationEndDateTo" [submitted]="submitted">
-                                </app-date-range>
+                                </app-calendar-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
                                 <app-multi-select label="櫃別" controlName="counterType" [options]="counterTypeOptions"

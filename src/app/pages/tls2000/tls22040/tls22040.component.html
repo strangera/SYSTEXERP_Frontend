@@ -10,14 +10,14 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="產檔日期" [startControl]="queryForm.controls.fileDateRange"
+            <app-calendar-range calendarType="dateRange" label="產檔日期" [startControl]="queryForm.controls.fileDateRange"
               [endControl]="queryForm.controls.fileDateRange" [submitted]="submitted">
-            </app-date-range>
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="銷售日期" [startControl]="queryForm.controls.saleDateRange"
+            <app-calendar-range calendarType="dateRange" label="銷售日期" [startControl]="queryForm.controls.saleDateRange"
               [endControl]="queryForm.controls.saleDateRange" [submitted]="submitted">
-            </app-date-range>
+            </app-calendar-range>
           </div>
         </div>
       </form>

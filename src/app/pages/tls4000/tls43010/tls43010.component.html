@@ -24,21 +24,23 @@
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-one label="建立日期" controlName="NOT_Date" [control]="queryForm.controls.NOT_Date"
-                            [submitted]="submitted">
-                        </app-date-one>
+                        <app-calendar calendarType="dateOne" label="建立日期" controlName="NOT_Date"
+                            [control]="queryForm.controls.NOT_Date" [submitted]="submitted">
+                        </app-calendar>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-datetime-range label="有效開始日期時間" [startControl]="queryForm.controls.NOT_BegDate_From"
+                        <app-calendar-range calendarType="dateTimeRange" label="有效開始日期時間"
+                            [startControl]="queryForm.controls.NOT_BegDate_From"
                             [endControl]="queryForm.controls.NOT_BegDate_To" [submitted]="submitted">
-                        </app-datetime-range>
+                        </app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-datetime-range label="有效結束日期時間" [startControl]="queryForm.controls.NOT_EndDate_From"
+                        <app-calendar-range calendarType="dateTimeRange" label="有效結束日期時間"
+                            [startControl]="queryForm.controls.NOT_EndDate_From"
                             [endControl]="queryForm.controls.NOT_EndDate_To" [submitted]="submitted">
-                        </app-datetime-range>
+                        </app-calendar-range>
                     </div>
                 </div>
                 <div class="grid p-fluid">

@@ -9,13 +9,13 @@
       <div class="grid p-fluid">
         <!-- 開始日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="開始日期" controlName="startDate" [control]="dataForm.controls.startDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="開始日期" controlName="startDate"
+            [control]="dataForm.controls.startDate" [submitted]="submitted"></app-calendar>
         </div>
         <!-- 結束日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="結束日期" controlName="endDate" [control]="dataForm.controls.endDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="結束日期" controlName="endDate" [control]="dataForm.controls.endDate"
+            [submitted]="submitted"></app-calendar>
         </div>
         <!-- 行銷檔期代號 -->
         <div class="col-12 md:col-6 lg:col-4">
@@ -101,13 +101,13 @@
             </div>
             <!-- 活動準備起始日 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one label="活動準備起始日" controlName="preparationStartDate"
-                [control]="getFormControl(i, 'preparationStartDate')" [submitted]="submitted"></app-date-one>
+              <app-calendar calendarType="dateOne" label="活動準備起始日" controlName="preparationStartDate"
+                [control]="getFormControl(i, 'preparationStartDate')" [submitted]="submitted"></app-calendar>
             </div>
             <!-- 活動準備結束日 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one label="活動準備結束日" controlName="preparationEndDate"
-                [control]="getFormControl(i, 'preparationEndDate')" [submitted]="submitted"></app-date-one>
+              <app-calendar calendarType="dateOne" label="活動準備結束日" controlName="preparationEndDate"
+                [control]="getFormControl(i, 'preparationEndDate')" [submitted]="submitted"></app-calendar>
             </div>
             <!-- 活動準備備註 -->
             <div class="col-12 md:col-6 lg:col-4">
@@ -116,13 +116,13 @@
             </div>
             <!-- 活動開始日期 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one label="活動開始日期" controlName="activityStartDate"
-                [control]="getFormControl(i, 'activityStartDate')" [submitted]="submitted"></app-date-one>
+              <app-calendar calendarType="dateOne" label="活動開始日期" controlName="activityStartDate"
+                [control]="getFormControl(i, 'activityStartDate')" [submitted]="submitted"></app-calendar>
             </div>
             <!-- 活動結束日期 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one label="活動結束日期" controlName="activityEndDate"
-                [control]="getFormControl(i, 'activityEndDate')" [submitted]="submitted"></app-date-one>
+              <app-calendar calendarType="dateOne" label="活動結束日期" controlName="activityEndDate"
+                [control]="getFormControl(i, 'activityEndDate')" [submitted]="submitted"></app-calendar>
             </div>
             <!-- 活動狀態異動人員 -->
             <div class="col-12 md:col-6 lg:col-4">
@@ -131,8 +131,8 @@
             </div>
             <!-- 活動狀態異動日期 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one label="活動狀態異動日期" controlName="statusChangeDate"
-                [control]="getFormControl(i, 'statusChangeDate')" [submitted]="submitted"></app-date-one>
+              <app-calendar calendarType="dateOne" label="活動狀態異動日期" controlName="statusChangeDate"
+                [control]="getFormControl(i, 'statusChangeDate')" [submitted]="submitted"></app-calendar>
             </div>
           </div>
           <hr />

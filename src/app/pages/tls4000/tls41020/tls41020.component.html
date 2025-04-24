@@ -35,14 +35,16 @@
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-range label="啟用日期" [startControl]="queryForm.controls.EDC_BegDate_From"
+                                <app-calendar-range calendarType="dateRange" label="啟用日期"
+                                    [startControl]="queryForm.controls.EDC_BegDate_From"
                                     [endControl]="queryForm.controls.EDC_BegDate_To" [submitted]="submitted">
-                                </app-date-range>
+                                </app-calendar-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-range label="停用日期" [startControl]="queryForm.controls.EDC_EdnDate_From"
+                                <app-calendar-range calendarType="dateRange" label="停用日期"
+                                    [startControl]="queryForm.controls.EDC_EdnDate_From"
                                     [endControl]="queryForm.controls.EDC_EdnDate_To" [submitted]="submitted">
-                                </app-date-range>
+                                </app-calendar-range>
                             </div>
                         </div>
                         <div class="grid p-fluid">

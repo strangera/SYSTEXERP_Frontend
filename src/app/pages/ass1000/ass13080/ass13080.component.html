@@ -30,9 +30,10 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="購入日期" [startControl]="queryForm.controls.purchaseDateFrom"
-              [endControl]="queryForm.controls.purchaseDateTo" [submitted]="submitted">
-            </app-date-range>
+            <app-calendar-range calendarType="dateRange" label="購入日期"
+              [startControl]="queryForm.controls.purchaseDateFrom" [endControl]="queryForm.controls.purchaseDateTo"
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="資產狀態" controlName="assetStatus" [options]="assetsStatusOptions" optionLabel="label"
@@ -88,9 +89,9 @@
             </app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="入帳日期" [startControl]="queryForm.controls.entryDateFrom"
+            <app-calendar-range calendarType="dateRange" label="入帳日期" [startControl]="queryForm.controls.entryDateFrom"
               [endControl]="queryForm.controls.entryDateTo" [submitted]="submitted">
-            </app-date-range>
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number [useGrouping]="false" label="顯示筆數" controlName="displayNumber"

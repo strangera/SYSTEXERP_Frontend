@@ -74,14 +74,14 @@
                     </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="啟用日期" controlName="ECR_GUI_Type" [control]="dataForm.controls.ECR_ActiveDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="啟用日期" controlName="ECR_GUI_Type"
+                        [control]="dataForm.controls.ECR_ActiveDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="停用日期" controlName="ECR_CloseDate" [control]="dataForm.controls.ECR_CloseDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="停用日期" controlName="ECR_CloseDate"
+                        [control]="dataForm.controls.ECR_CloseDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <!-- <div class="col-12 md:col-6 lg:col-4">
@@ -239,9 +239,9 @@
                         </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-time-one label="清機提示時間" controlName="ECR_SettleHHNN"
+                        <app-calendar calendarType="timeOne" label="清機提示時間" controlName="ECR_SettleHHNN"
                             [control]="dataForm.controls.ECR_SettleHHNN" [submitted]="submitted">
-                        </app-time-one>
+                        </app-calendar>
                     </div>
                 </div>
                 <hr>

@@ -13,8 +13,9 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-datemm-one label="結帳年月" [control]="queryForm.controls.checkoutoOnedatemm" [submitted]="submitted">
-            </app-datemm-one>
+            <app-calendar calendarType="dateMonthOne" label="結帳年月" [control]="queryForm.controls.checkoutoOnedatemm"
+              [submitted]="submitted">
+            </app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="專櫃編號" controlName="counterID" [options]="counterIDOptions" optionLabel="label"
@@ -34,9 +35,10 @@
             </app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="單據日期" [startControl]="queryForm.controls.invoiceStartdate"
-              [endControl]="queryForm.controls.invoiceEnddate" [submitted]="submitted">
-            </app-date-range>
+            <app-calendar-range calendarType="dateRange" label="單據日期"
+              [startControl]="queryForm.controls.invoiceStartdate" [endControl]="queryForm.controls.invoiceEnddate"
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="結帳方式" controlName="checkoutMethod" [control]="queryForm.controls.checkoutMethod"
@@ -46,16 +48,18 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-datemm-one label="請款付款年月" [control]="queryForm.controls.requestOnedatemm" [submitted]="submitted">
-            </app-datemm-one>
+            <app-calendar calendarType="dateMonthOne" label="請款付款年月" [control]="queryForm.controls.requestOnedatemm"
+              [submitted]="submitted">
+            </app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="帳次" controlName="bill" [control]="queryForm.controls.bill" [submitted]="submitted">
             </app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-datemm-one label="申報年月" [control]="queryForm.controls.declareOnedatemm" [submitted]="submitted">
-            </app-datemm-one>
+            <app-calendar calendarType="dateMonthOne" label="申報年月" [control]="queryForm.controls.declareOnedatemm"
+              [submitted]="submitted">
+            </app-calendar>
           </div>
         </div>
         <div class="grid p-fluid">
@@ -100,9 +104,10 @@
             </app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="傳送日期" [startControl]="queryForm.controls.transferStartdate"
-              [endControl]="queryForm.controls.transferEnddate" [submitted]="submitted">
-            </app-date-range>
+            <app-calendar-range calendarType="dateRange" label="傳送日期"
+              [startControl]="queryForm.controls.transferStartdate" [endControl]="queryForm.controls.transferEnddate"
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="建立者" controlName="builder" [control]="queryForm.controls.builder"
@@ -120,9 +125,9 @@
         <hr>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range label="建立日期" [startControl]="queryForm.controls.buildStartdate"
+            <app-calendar-range calendarType="dateRange" label="建立日期" [startControl]="queryForm.controls.buildStartdate"
               [endControl]="queryForm.controls.buildEnddate" [submitted]="submitted">
-            </app-date-range>
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="樓層" controlName="floor" [options]="floorOptions" optionLabel="label"

@@ -27,9 +27,9 @@
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="傳票日期" controlName="subpoenaDate" [control]="dataForm.controls.subpoenaDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="傳票日期" controlName="subpoenaDate"
+                        [control]="dataForm.controls.subpoenaDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="傳票摘要" controlName="subpoenaSummary"
@@ -55,9 +55,9 @@
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="建立日期" controlName="buildDate" [control]="dataForm.controls.buildDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="建立日期" controlName="buildDate"
+                        [control]="dataForm.controls.buildDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <div class="grid p-fluid">
@@ -67,9 +67,9 @@
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="修改日" controlName="modifyDate" [control]="dataForm.controls.modifyDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="修改日" controlName="modifyDate"
+                        [control]="dataForm.controls.modifyDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <hr>

@@ -47,9 +47,9 @@
                     </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="購入日期" controlName="purchaseDate" [control]="dataForm.controls.purchaseDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="購入日期" controlName="purchaseDate"
+                        [control]="dataForm.controls.purchaseDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-number [useGrouping]="false" label="購入金額" controlName="purchaseAmount"
@@ -90,9 +90,9 @@
                     </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="入帳日期" controlName="entryDate" [control]="dataForm.controls.entryDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="入帳日期" controlName="entryDate"
+                        [control]="dataForm.controls.entryDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <hr>
@@ -194,9 +194,9 @@
             <h5>處分資訊</h5>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="變賣日期" controlName="scrapDate" [control]="dataForm.controls.scrapDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="變賣日期" controlName="scrapDate"
+                        [control]="dataForm.controls.scrapDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-dropdown label="變賣廠商" controlName="scrapManufacturers" [options]="organizationOptions"

@@ -18,8 +18,9 @@
                 <input type="radio" formControlName="dateRadio" [value]="'saleDate'" />
               </div>
               <div class="col-10">
-                <app-date-range label="銷售日期區間" [startControl]="queryForm.controls.saleDateStart"
-                  [endControl]="queryForm.controls.saleDateEnd" [submitted]="submitted"></app-date-range>
+                <app-calendar-range calendarType="dateRange" label="銷售日期區間"
+                  [startControl]="queryForm.controls.saleDateStart" [endControl]="queryForm.controls.saleDateEnd"
+                  [submitted]="submitted"></app-calendar-range>
               </div>
             </div>
           </div>
@@ -31,8 +32,8 @@
                 <input type="radio" formControlName="dateRadio" [value]="'saleMonthYear'" />
               </div>
               <div class="col-10">
-                <app-datemm-one label="銷售年/月" [control]="queryForm.controls.saleMonthYear"
-                  [submitted]="submitted"></app-datemm-one>
+                <app-calendar calendarType="dateMonthOne" label="銷售年/月" [control]="queryForm.controls.saleMonthYear"
+                  [submitted]="submitted"></app-calendar>
               </div>
             </div>
           </div>

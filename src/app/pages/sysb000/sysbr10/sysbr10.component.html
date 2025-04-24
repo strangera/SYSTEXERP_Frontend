@@ -26,14 +26,16 @@
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-datetime-range label="有效開始日期時間" [startControl]="queryForm.controls.ANS_BegDateTime_From"
+                        <app-calendar-range calendarType="dateTimeRange" label="有效開始日期時間"
+                            [startControl]="queryForm.controls.ANS_BegDateTime_From"
                             [endControl]="queryForm.controls.ANS_BegDateTime_To" [submitted]="submitted">
-                        </app-datetime-range>
+                        </app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-datetime-range label="有效結束日期時間" [startControl]="queryForm.controls.ANS_EndDateTime_From"
+                        <app-calendar-range calendarType="dateTimeRange" label="有效結束日期時間"
+                            [startControl]="queryForm.controls.ANS_EndDateTime_From"
                             [endControl]="queryForm.controls.ANS_EndDateTime_To" [submitted]="submitted">
-                        </app-datetime-range>
+                        </app-calendar-range>
                     </div>
                 </div>
                 <div class="grid p-fluid">

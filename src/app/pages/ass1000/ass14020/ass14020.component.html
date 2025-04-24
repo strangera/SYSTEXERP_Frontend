@@ -13,8 +13,9 @@
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-one label="關帳日期" [control]="queryForm.controls.closeDate" [submitted]="submitted">
-                        </app-date-one>
+                        <app-calendar calendarType="dateOne" label="關帳日期" [control]="queryForm.controls.closeDate"
+                            [submitted]="submitted">
+                        </app-calendar>
                     </div>
                 </div>
                 <hr>

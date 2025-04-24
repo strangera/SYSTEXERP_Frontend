@@ -19,9 +19,9 @@
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-datetime-one label="登錄日期" controlName="registerDate" [control]="dataForm.controls.registerDate"
-                        [submitted]="submitted">
-                    </app-datetime-one>
+                    <app-calendar calendarType="dateTimeOne" label="登錄日期" controlName="registerDate"
+                        [control]="dataForm.controls.registerDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <div class="grid p-fluid">
@@ -32,9 +32,9 @@
                     </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="遺失日期" controlName="lossDate" [control]="dataForm.controls.lossDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="遺失日期" controlName="lossDate"
+                        [control]="dataForm.controls.lossDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="地點" controlName="location" [control]="dataForm.controls.location"
@@ -44,9 +44,9 @@
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="轉出日期" controlName="location" [control]="dataForm.controls.transferDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="轉出日期" controlName="location"
+                        [control]="dataForm.controls.transferDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="登錄者" controlName="register" [control]="dataForm.controls.register"
@@ -67,9 +67,9 @@
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="通知日期" controlName="notificationDate"
+                    <app-calendar calendarType="dateOne" label="通知日期" controlName="notificationDate"
                         [control]="dataForm.controls.notificationDate" [submitted]="submitted">
-                    </app-date-one>
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-radiobutton label="是否廣播" groupname="broadcastStatus"

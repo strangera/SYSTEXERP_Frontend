@@ -28,14 +28,14 @@
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="啟用日期" controlName="EDC_No" [control]="dataForm.controls.EDC_BegDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="啟用日期" controlName="EDC_No"
+                        [control]="dataForm.controls.EDC_BegDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="停用日期" controlName="EDC_No" [control]="dataForm.controls.EDC_EdnDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="停用日期" controlName="EDC_No"
+                        [control]="dataForm.controls.EDC_EdnDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-dropdown label="信用卡刷卡機狀態" controlName="EDC_Status" [options]="EDC_Status_Option"
@@ -96,8 +96,8 @@
             <!-- <h5>建立人員</h5>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="建立日期" controlName="CRT_Date" [control]="dataForm.controls.CRT_Date" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="建立日期" controlName="CRT_Date" [control]="dataForm.controls.CRT_Date" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-number [useGrouping]="false" label="建立人員" controlName="CRT_USR_No" [control]="dataForm.controls.CRT_USR_No" [submitted]="submitted">
@@ -112,8 +112,8 @@
             <h5>變更人員</h5>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="變更日期" controlName="UPD_Date" [control]="dataForm.controls.UPD_Date" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="變更日期" controlName="UPD_Date" [control]="dataForm.controls.UPD_Date" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-number [useGrouping]="false" label="變更人員" controlName="UPD_USR_No" [control]="dataForm.controls.UPD_USR_No" [submitted]="submitted">

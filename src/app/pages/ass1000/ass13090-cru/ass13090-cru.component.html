@@ -53,19 +53,19 @@
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="購入日期" controlName="purchaseDate" [control]="dataForm.controls.purchaseDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="購入日期" controlName="purchaseDate"
+                        [control]="dataForm.controls.purchaseDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="入帳日期" controlName="entryDate" [control]="dataForm.controls.entryDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="入帳日期" controlName="entryDate"
+                        [control]="dataForm.controls.entryDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="攤提起始日" controlName="amortizedDate" [control]="dataForm.controls.amortizedDate"
-                        [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="攤提起始日" controlName="amortizedDate"
+                        [control]="dataForm.controls.amortizedDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <div class="grid p-fluid">

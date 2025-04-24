@@ -28,15 +28,16 @@
             [submitted]="submitted"></app-editor-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="啟用日期" [control]="dataForm.controls.startDate" [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="啟用日期" [control]="dataForm.controls.startDate"
+            [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="申請人" controlName="applicantCode" [options]="userCodeOptions" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.applicantCode" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="申請日期" [control]="dataForm.controls.applicationDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.applicationDate"
+            [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number label="進價折扣%" controlName="costPriceDiscount"

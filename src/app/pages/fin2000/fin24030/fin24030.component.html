@@ -18,9 +18,10 @@
                         </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="貼現日期" [startControl]="queryForm.controls.startDiscountDate"
+                        <app-calendar-range calendarType="dateRange" label="貼現日期"
+                            [startControl]="queryForm.controls.startDiscountDate"
                             [endControl]="queryForm.controls.endDiscountDate" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-input-number-range label="貼現金額" [startControl]="queryForm.controls.startDiscountCash"

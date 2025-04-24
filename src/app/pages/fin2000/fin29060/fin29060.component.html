@@ -16,14 +16,16 @@
                         </app-input-number-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="立帳日期" [startControl]="queryForm.controls.startBillDate"
+                        <app-calendar-range calendarType="dateRange" label="立帳日期"
+                            [startControl]="queryForm.controls.startBillDate"
                             [endControl]="queryForm.controls.endBillDate" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="開票/匯款日期" [startControl]="queryForm.controls.startTransferDate"
+                        <app-calendar-range calendarType="dateRange" label="開票/匯款日期"
+                            [startControl]="queryForm.controls.startTransferDate"
                             [endControl]="queryForm.controls.endTransferDate" [submitted]="submitted">
-                        </app-date-range>
+                        </app-calendar-range>
                     </div>
                 </div>
                 <div class="grid p-fluid">

@@ -30,8 +30,8 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-one label="庫存基準日期" [control]="queryForm.controls.inventoryDateFrom"
-              [submitted]="submitted"></app-date-one>
+            <app-calendar calendarType="dateOne" label="庫存基準日期" [control]="queryForm.controls.inventoryDateFrom"
+              [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <p-checkbox label="顯示庫存為零" formControlName="displayEmptyStock"></p-checkbox>

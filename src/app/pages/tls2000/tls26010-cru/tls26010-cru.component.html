@@ -8,9 +8,9 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-range label="截止日期" [startControl]="dataForm.controls.age" [endControl]="dataForm.controls.age"
-            [submitted]="submitted">
-          </app-date-range>
+          <app-calendar-range calendarType="dateRange" label="截止日期" [startControl]="dataForm.controls.age"
+            [endControl]="dataForm.controls.age" [submitted]="submitted">
+          </app-calendar-range>
         </div>
 
       </div>

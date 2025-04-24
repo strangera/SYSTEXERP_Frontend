@@ -13,13 +13,13 @@
       <div class="grid p-fluid">
         <!-- 開始日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="開始日期" controlName="startDate" [control]="dataForm.controls.startDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="開始日期" controlName="startDate"
+            [control]="dataForm.controls.startDate" [submitted]="submitted"></app-calendar>
         </div>
         <!-- 結束日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="結束日期" controlName="endDate" [control]="dataForm.controls.endDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="結束日期" controlName="endDate" [control]="dataForm.controls.endDate"
+            [submitted]="submitted"></app-calendar>
         </div>
         <!-- 行銷檔期代號 -->
         <div class="col-12 md:col-6 lg:col-4">
@@ -44,13 +44,13 @@
         </div>
         <!-- 去年開始日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="去年開始日期" controlName="lastYearStartDate" [control]="dataForm.controls.lastYearStartDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="去年開始日期" controlName="lastYearStartDate"
+            [control]="dataForm.controls.lastYearStartDate" [submitted]="submitted"></app-calendar>
         </div>
         <!-- 去年結束日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="去年結束日期" controlName="lastYearEndDate" [control]="dataForm.controls.lastYearEndDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="去年結束日期" controlName="lastYearEndDate"
+            [control]="dataForm.controls.lastYearEndDate" [submitted]="submitted"></app-calendar>
         </div>
       </div>
       <hr />
@@ -69,8 +69,8 @@
           <div class="grid p-fluid">
             <!-- 營業日期 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one label="營業日期" controlName="businessDate" [control]="getFormControl(i, 'businessDate')"
-                [submitted]="submitted"></app-date-one>
+              <app-calendar calendarType="dateOne" label="營業日期" controlName="businessDate"
+                [control]="getFormControl(i, 'businessDate')" [submitted]="submitted"></app-calendar>
             </div>
             <!-- 星期 -->
             <div class="col-12 md:col-6 lg:col-4">
@@ -99,8 +99,8 @@
             </div>
             <!-- 去年日期 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one label="去年日期" controlName="lastYearDate" [control]="getFormControl(i, 'lastYearDate')"
-                [submitted]="submitted"></app-date-one>
+              <app-calendar calendarType="dateOne" label="去年日期" controlName="lastYearDate"
+                [control]="getFormControl(i, 'lastYearDate')" [submitted]="submitted"></app-calendar>
             </div>
             <!-- 去年客單價 -->
             <div class="col-12 md:col-6 lg:col-4">

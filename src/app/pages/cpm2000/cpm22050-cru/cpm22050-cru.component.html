@@ -9,13 +9,13 @@
       <div class="grid p-fluid">
         <!-- 開始日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="開始日期" controlName="startDate" [control]="dataForm.controls.startDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="開始日期" controlName="startDate"
+            [control]="dataForm.controls.startDate" [submitted]="submitted"></app-calendar>
         </div>
         <!-- 結束日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one label="結束日期" controlName="endDate" [control]="dataForm.controls.endDate"
-            [submitted]="submitted"></app-date-one>
+          <app-calendar calendarType="dateOne" label="結束日期" controlName="endDate" [control]="dataForm.controls.endDate"
+            [submitted]="submitted"></app-calendar>
         </div>
         <!-- 行銷檔期代號 -->
         <div class="col-12 md:col-6 lg:col-4">
@@ -85,23 +85,23 @@
             </div>
             <!-- 使用起始日期 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one label="使用起始日期" controlName="usageStartDate" [control]="getFormControl(i, 'usageStartDate')"
-                [submitted]="submitted"></app-date-one>
+              <app-calendar calendarType="dateOne" label="使用起始日期" controlName="usageStartDate"
+                [control]="getFormControl(i, 'usageStartDate')" [submitted]="submitted"></app-calendar>
             </div>
             <!-- 使用起始時間 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-datetime-one label="使用起始時間" controlName="usageStartTime"
-                [control]="getFormControl(i, 'usageStartTime')" [submitted]="submitted"></app-datetime-one>
+              <app-calendar calendarType="dateTimeOne" label="使用起始時間" controlName="usageStartTime"
+                [control]="getFormControl(i, 'usageStartTime')" [submitted]="submitted"></app-calendar>
             </div>
             <!-- 使用結束日期 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one label="使用結束日期" controlName="usageEndDate" [control]="getFormControl(i, 'usageEndDate')"
-                [submitted]="submitted"></app-date-one>
+              <app-calendar calendarType="dateOne" label="使用結束日期" controlName="usageEndDate"
+                [control]="getFormControl(i, 'usageEndDate')" [submitted]="submitted"></app-calendar>
             </div>
             <!-- 使用結束時間 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-datetime-one label="使用結束時間" controlName="usageEndTime" [control]="getFormControl(i, 'usageEndTime')"
-                [submitted]="submitted"></app-datetime-one>
+              <app-calendar calendarType="dateTimeOne" label="使用結束時間" controlName="usageEndTime"
+                [control]="getFormControl(i, 'usageEndTime')" [submitted]="submitted"></app-calendar>
             </div>
             <!-- 預計需要數量 -->
             <div class="col-12 md:col-6 lg:col-4">
