@@ -76,7 +76,7 @@ export class ChangepswComponent implements OnInit {
       User_No: this.userInfo.user_No,
       Old_password: this.encrypt.getPassword(this.userInfo.user_No, oldPassword),
       New_password: this.encrypt.getPassword(this.userInfo.user_No, newPassword),
-      PwdExpireDate: this.userInfo.USER_PwdExpireDate,
+      PwdExpireDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 密碼到期日設為90天後
     };
 
     this.userCodeService.changePassword(query).subscribe({
