@@ -5,93 +5,40 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range
-              label="採購日期"
-              [startControl]="queryForm.controls.purchaseDateFrom"
-              [endControl]="queryForm.controls.purchaseDateTo"
-              [submitted]="submitted"
-            ></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="採購日期"
+              [startControl]="queryForm.controls.purchaseDateFrom" [endControl]="queryForm.controls.purchaseDateTo"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="品牌"
-              controlName="brandCode"
-              [options]="brandCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.brandCode"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="品牌" controlName="brandCode" [options]="brandCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.brandCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="供應商編號"
-              controlName="vendorCode"
-              [options]="vendorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.vendorCode"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="供應商編號" controlName="vendorCode" [options]="vendorOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.vendorCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="管理編號"
-              controlName="managementID"
-              [options]="managementIDOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.managementID"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="管理編號" controlName="managementID" [options]="managementIDOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.managementID" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="採購單狀態"
-              controlName="paperStatus"
-              [options]="paperStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.paperStatus"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="採購單狀態" controlName="paperStatus" [options]="paperStatusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.paperStatus" [submitted]="submitted"></app-dropdown>
           </div>
           <!-- New Section -->
           <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox
-              label="包含已採購未交量"
-              binary="true"
-              formControlName="includePendingPurchase"
-            ></p-checkbox>
+            <p-checkbox label="包含已採購未交量" binary="true" formControlName="includePendingPurchase"></p-checkbox>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <label>報表樣式</label>
             <div class="field-radiobutton">
-              <p-radioButton
-                name="reportStyle"
-                value="匯總"
-                label="匯總"
-                formControlName="reportStyle"
-              ></p-radioButton>
-              <p-radioButton
-                name="reportStyle"
-                value="明細"
-                label="明細"
-                formControlName="reportStyle"
-              ></p-radioButton>
+              <p-radioButton name="reportStyle" value="匯總" label="匯總" formControlName="reportStyle"></p-radioButton>
+              <p-radioButton name="reportStyle" value="明細" label="明細" formControlName="reportStyle"></p-radioButton>
             </div>
           </div>
           <!-- End of New Section -->
@@ -99,11 +46,8 @@
       </form>
       <div *appHasPermission="queryPermission" class="col">
         <div class="grid justify-content-end">
-          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-          <app-button-query
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button-query>
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -111,11 +55,7 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-data-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-data-table>
+    <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)"
+      (detail)="onDetail($event)"></app-data-table>
   </div>
 </div>

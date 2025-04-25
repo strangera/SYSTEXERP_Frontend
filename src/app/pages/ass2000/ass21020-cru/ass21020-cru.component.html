@@ -1,107 +1,58 @@
 <div class="card">
-    <div class="grid align-items-center">
-      <div class="col" style="flex: 1">
-        <app-menubar [ProgNo]="ProgNo"></app-menubar>
-      </div>
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-      <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-        <div class="grid p-fluid">
-            <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown-item
-                  label="能源類型"
-                  controlName="Energytype"
-                  [options]="Energytype"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="dataForm.controls.Energytype"
-                  [submitted]="submitted"
-                ></app-dropdown-item>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="錶號"
-                  controlName="meterNo"
-                  [control]="dataForm.controls.meterNo"
-                  [submitted]="submitted"
-                >
-                </app-input-text>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown-item
-                  label="錶號位置編號"
-                  controlName="meterPosCode"
-                  [options]="meterPosCode"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="dataForm.controls.meterPosCode"
-                  [submitted]="submitted"
-                ></app-dropdown-item>
-              </div>
-              
-  
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="樓層"
-              controlName="floor"
-              [options]="floor"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.floor"
-              [submitted]="submitted"
-            ></app-dropdown-item>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="樓別"
-              controlName="floorCat"
-              [control]="dataForm.controls.floorCat"
-              [submitted]="submitted"
-            >
-            </app-input-text>
-          </div>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="能源類型" controlName="Energytype" [options]="Energytype" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.Energytype" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="錶號" controlName="meterNo" [control]="dataForm.controls.meterNo"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="錶號位置編號" controlName="meterPosCode" [options]="meterPosCode" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.meterPosCode" [submitted]="submitted"></app-dropdown>
+        </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="平面圖X座標"
-              controlName="xCoordinate"
-              [control]="dataForm.controls.xCoordinate"
-              [submitted]="submitted"
-            >
-            </app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="平面圖Y座標"
-              controlName="yCoordinate"
-              [control]="dataForm.controls.yCoordinate"
-              [submitted]="submitted"
-            >
-            </app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="查看平面圖"
-              controlName="VFP"
-              [options]="VFP"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.VFP"
-              [submitted]="submitted"
-            ></app-dropdown-item>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-editor-text
-              label="備註"
-              controlName="desc"
-              [control]="dataForm.controls.desc"
-              [style]="{ height: '100px' }"
-              [submitted]="submitted"
-            >
-            </app-editor-text>
-          </div>
-         </div>
-        <!-- <hr />
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="樓層" controlName="floor" [options]="floor" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.floor" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="樓別" controlName="floorCat" [control]="dataForm.controls.floorCat"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="平面圖X座標" controlName="xCoordinate" [control]="dataForm.controls.xCoordinate"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="平面圖Y座標" controlName="yCoordinate" [control]="dataForm.controls.yCoordinate"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="查看平面圖" controlName="VFP" [options]="VFP" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.VFP" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-editor-text label="備註" controlName="desc" [control]="dataForm.controls.desc"
+            [style]="{ height: '100px' }" [submitted]="submitted">
+          </app-editor-text>
+        </div>
+      </div>
+      <!-- <hr />
         <ng-container formArrayName="items">
           <ng-container
             *ngFor="let item of items.controls; let i = index"
@@ -127,16 +78,12 @@
             (click)="onAddItem()"
           ></app-button-dynamicallyadd>
         </div> -->
-      </form>
-      <div class="col pt-4">
-        <div class="grid justify-content-end">
-          <app-button-cancel (click)="onCancel()"></app-button-cancel>
-          <app-button-submit
-            (click)="submitForm(dataForm)"
-            *ngIf="isFormEditable"
-          ></app-button-submit>
-        </div>
+    </form>
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+        <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
       </div>
-    </p-panel>
-  </div>
-  
+    </div>
+  </p-panel>
+</div>

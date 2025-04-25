@@ -7,7 +7,7 @@
         </div>
         <!-- <div *appHasPermission="addPermission"> -->
         <div>
-          <app-button-create (click)="onCreate()" class="col"></app-button-create>
+          <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
         </div>
         <!-- </div> -->
       </div>
@@ -29,8 +29,8 @@
             </div>
             <!-- <div *appHasPermission="queryPermission" class="col"> -->
             <div class="grid justify-content-end">
-              <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-              <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+              <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+              <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
             </div>
             <!-- </div> -->
           </form>

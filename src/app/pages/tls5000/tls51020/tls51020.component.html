@@ -7,7 +7,7 @@
         </div>
         <!-- <div *appHasPermission="addPermission"> -->
         <div>
-          <app-button-create (click)="onCreate()" class="col"></app-button-create>
+          <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
         </div>
         <!-- </div> -->
       </div>
@@ -27,10 +27,9 @@
                 </app-input-text>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown-item label="大分類代碼" controlName="CAT_LNo" [options]="bigCategoryOptions"
-                  optionLabel="label" optionValue="value" [control]="queryForm.controls.CAT_LNo"
-                  [submitted]="submitted">
-                </app-dropdown-item>
+                <app-dropdown label="大分類代碼" controlName="CAT_LNo" [options]="bigCategoryOptions" optionLabel="label"
+                  optionValue="value" [control]="queryForm.controls.CAT_LNo" [submitted]="submitted">
+                </app-dropdown>
               </div>
             </div>
             <!-- 看起來好像沒有說明這段查詢我先註解 -->
@@ -42,8 +41,8 @@
             <hr>
             <!-- <div *appHasPermission="queryPermission" class="col"> -->
             <div class="grid justify-content-end">
-              <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-              <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+              <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+              <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
             </div>
             <!-- </div> -->
           </form>

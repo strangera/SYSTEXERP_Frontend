@@ -13,24 +13,29 @@
                             <h5>銷項品項 {{i+1}}</h5>
                         </div>
                         <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                                class="col"></app-button-dynamicallydelete>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="品項編號" controlName="itemSerialnumber" [control]="getFormControl(i, 'itemSerialnumber')" [submitted]="submitted">
-                            </app-input-serial-number>
+                            <app-input-number [useGrouping]="false" label="品項編號" controlName="itemSerialnumber"
+                                [control]="getFormControl(i, 'itemSerialnumber')" [submitted]="submitted">
+                            </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="品項名稱" controlName="itemName" [control]="getFormControl(i, 'itemName')" [submitted]="submitted">
+                            <app-input-text label="品項名稱" controlName="itemName"
+                                [control]="getFormControl(i, 'itemName')" [submitted]="submitted">
                             </app-input-text>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="使用別" controlName="usageType" [options]="usageTypeOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'usageType')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="使用別" controlName="usageType" [options]="usageTypeOptions"
+                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'usageType')"
+                                [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                     </div>
-                    <hr/>
+                    <hr />
                 </ng-container>
             </ng-container>
             <div class="pt-1">
@@ -39,8 +44,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

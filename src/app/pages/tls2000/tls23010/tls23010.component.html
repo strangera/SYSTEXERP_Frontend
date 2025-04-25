@@ -5,245 +5,131 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range
-              label="銷售日期*"
-              [startControl]="queryForm.controls.saleDate"
-              [endControl]="queryForm.controls.saleDate"
-              [submitted]="submitted"
-            >
-            </app-date-range>
+            <app-calendar-range calendarType="dateRange" label="銷售日期*" [startControl]="queryForm.controls.saleDate"
+              [endControl]="queryForm.controls.saleDate" [submitted]="submitted">
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-serial-number
-              label="收銀機代號"
-              controlName="cashierCode"
-              [control]="queryForm.controls.cashierCode"
-              [submitted]="submitted"
-            >
-            </app-input-serial-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-serial-number-range
-              label="交易序號(起/迄)"
-              [startControl]="queryForm.controls.transactionSerialStart"
-              [endControl]="queryForm.controls.transactionSerialEnd"
-              [submitted]="submitted"
-            >
-            </app-input-serial-number-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="專櫃編號"
-              controlName="counterCode"
-              [control]="queryForm.controls.counterCode"
-              [submitted]="submitted"
-            >
-            </app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-serial-number
-              label="發票起始號碼"
-              controlName="invoiceStart"
-              [control]="queryForm.controls.invoiceStart"
-              [submitted]="submitted"
-            >
-            </app-input-serial-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-serial-number
-              label="發票結束號碼"
-              controlName="invoiceEnd"
-              [control]="queryForm.controls.invoiceEnd"
-              [submitted]="submitted"
-            >
-            </app-input-serial-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="交易型態"
-              controlName="transactionType"
-              [options]="transactionTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.transactionType"
-              [submitted]="submitted"
-            >
-            </app-dropdown-item>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="狀態旗標"
-              controlName="statusFlag"
-              [options]="statusFlagOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.statusFlag"
-              [submitted]="submitted"
-            >
-            </app-dropdown-item>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="交易附屬型態"
-              controlName="transactionSubType"
-              [options]="transactionSubTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.transactionSubType"
-              [submitted]="submitted"
-            >
-            </app-dropdown-item>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-serial-number
-              label="收銀員編號"
-              controlName="cashierId"
-              [control]="queryForm.controls.cashierId"
-              [submitted]="submitted"
-            >
-            </app-input-serial-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="預售/訂金編號"
-              controlName="presaleCode"
-              [control]="queryForm.controls.presaleCode"
-              [submitted]="submitted"
-            >
-            </app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-serial-number
-              label="停車卡號"
-              controlName="parkingCardNumber"
-              [control]="queryForm.controls.parkingCardNumber"
-              [submitted]="submitted"
-            >
-            </app-input-serial-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-serial-number
-              label="會員卡號"
-              controlName="membershipNumber"
-              [control]="queryForm.controls.membershipNumber"
-              [submitted]="submitted"
-            >
-            </app-input-serial-number>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-serial-number
-              label="統一編號"
-              controlName="unifiedBusinessNumber"
-              [control]="queryForm.controls.unifiedBusinessNumber"
-              [submitted]="submitted"
-            >
-            </app-input-serial-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-serial-number
-              label="限制筆數"
-              controlName="limitRecords"
-              [control]="queryForm.controls.limitRecords"
-              [submitted]="submitted"
-            >
-            </app-input-serial-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-serial-number
-              label="愛心碼"
-              controlName="loveCode"
-              [control]="queryForm.controls.loveCode"
-              [submitted]="submitted"
-            >
-            </app-input-serial-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="載具種類"
-              controlName="carrierType"
-              [options]="carrierTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.carrierType"
-              [submitted]="submitted"
-            >
-            </app-dropdown-item>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-serial-number
-              label="載具號碼"
-              controlName="carrierNumber"
-              [control]="queryForm.controls.carrierNumber"
-              [submitted]="submitted"
-            >
-            </app-input-serial-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="是否開立業主發票"
-              controlName="issueOwnerInvoice"
-              [options]="whetherOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.issueOwnerInvoice"
-              [submitted]="submitted"
-            >
-            </app-dropdown-item>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="是否為業主收現"
-              controlName="ownerCollectCash"
-              [options]="whetherOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ownerCollectCash"
-              [submitted]="submitted"
-            >
-            </app-dropdown-item>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="限制筆數"
-              controlName="limitnumber"
-              [control]="queryForm.controls.limitnumber"
-              [submitted]="submitted"
-              >>
+            <app-input-number [useGrouping]="false" label="收銀機代號" controlName="cashierCode"
+              [control]="queryForm.controls.cashierCode" [submitted]="submitted">
             </app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="是否查總額:"
-              groupname="checkTotalAmount"
-              [control]="queryForm.controls.checkTotalAmount"
-              [options]="checkTotalAmount"
-              [submitted]="submitted"
-            >
+            <app-input-number-range [useGrouping]="false" label="交易序號(起/迄)"
+              [startControl]="queryForm.controls.transactionSerialStart"
+              [endControl]="queryForm.controls.transactionSerialEnd" [submitted]="submitted">
+            </app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="專櫃編號" controlName="counterCode" [control]="queryForm.controls.counterCode"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number [useGrouping]="false" label="發票起始號碼" controlName="invoiceStart"
+              [control]="queryForm.controls.invoiceStart" [submitted]="submitted">
+            </app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number [useGrouping]="false" label="發票結束號碼" controlName="invoiceEnd"
+              [control]="queryForm.controls.invoiceEnd" [submitted]="submitted">
+            </app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="交易型態" controlName="transactionType" [options]="transactionTypeOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.transactionType"
+              [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="狀態旗標" controlName="statusFlag" [options]="statusFlagOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.statusFlag" [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="交易附屬型態" controlName="transactionSubType" [options]="transactionSubTypeOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.transactionSubType"
+              [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number [useGrouping]="false" label="收銀員編號" controlName="cashierId"
+              [control]="queryForm.controls.cashierId" [submitted]="submitted">
+            </app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="預售/訂金編號" controlName="presaleCode" [control]="queryForm.controls.presaleCode"
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number [useGrouping]="false" label="停車卡號" controlName="parkingCardNumber"
+              [control]="queryForm.controls.parkingCardNumber" [submitted]="submitted">
+            </app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number [useGrouping]="false" label="會員卡號" controlName="membershipNumber"
+              [control]="queryForm.controls.membershipNumber" [submitted]="submitted">
+            </app-input-number>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number [useGrouping]="false" label="統一編號" controlName="unifiedBusinessNumber"
+              [control]="queryForm.controls.unifiedBusinessNumber" [submitted]="submitted">
+            </app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number [useGrouping]="false" label="限制筆數" controlName="limitRecords"
+              [control]="queryForm.controls.limitRecords" [submitted]="submitted">
+            </app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number [useGrouping]="false" label="愛心碼" controlName="loveCode"
+              [control]="queryForm.controls.loveCode" [submitted]="submitted">
+            </app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="載具種類" controlName="carrierType" [options]="carrierTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.carrierType" [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number [useGrouping]="false" label="載具號碼" controlName="carrierNumber"
+              [control]="queryForm.controls.carrierNumber" [submitted]="submitted">
+            </app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="是否開立業主發票" controlName="issueOwnerInvoice" [options]="whetherOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.issueOwnerInvoice"
+              [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="是否為業主收現" controlName="ownerCollectCash" [options]="whetherOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ownerCollectCash" [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number label="限制筆數" controlName="limitnumber" [control]="queryForm.controls.limitnumber"
+              [submitted]="submitted">>
+            </app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton label="是否查總額:" groupname="checkTotalAmount" [control]="queryForm.controls.checkTotalAmount"
+              [options]="checkTotalAmount" [submitted]="submitted">
             </app-radiobutton>
           </div>
         </div>
       </form>
       <div *appHasPermission="queryPermission" class="col">
         <div class="grid justify-content-end">
-          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-          <app-button-query
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button-query>
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -251,12 +137,7 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-data-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    >
+    <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
     </app-data-table>
   </div>
 </div>

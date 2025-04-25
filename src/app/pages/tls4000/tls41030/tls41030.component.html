@@ -6,67 +6,82 @@
                     <app-menubar [ProgNo]="ProgNo"></app-menubar>
                 </div>
                 <div *appHasPermission="addPermission">
-                    <app-button-create (click)="onCreate()" class="col"></app-button-create>
+                    <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
                 </div>
                 <div *appHasPermission="addPermission">
-                    <app-button-demo label="專櫃人員密碼簽收表" class="col"></app-button-demo>
+                    <app-button btnType="create" label="專櫃人員密碼簽收表" class="col"></app-button>
                 </div>
             </div>
             <p-accordion>
-                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true"
+                    class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
                     <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="收銀員編號" controlName="USR_No" [control]="queryForm.controls.USR_No" [submitted]="submitted">
-                                </app-input-serial-number>
+                                <app-input-number [useGrouping]="false" label="收銀員編號" controlName="USR_No"
+                                    [control]="queryForm.controls.USR_No" [submitted]="submitted">
+                                </app-input-number>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-text label="收銀員姓名" controlName="USR_Name" [control]="queryForm.controls.USR_Name" [submitted]="submitted">
+                                <app-input-text label="收銀員姓名" controlName="USR_Name"
+                                    [control]="queryForm.controls.USR_Name" [submitted]="submitted">
                                 </app-input-text>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="收銀員授權等級" controlName="USR_Auth" [control]="queryForm.controls.USR_Auth" [submitted]="submitted">
-                                </app-input-serial-number>
+                                <app-input-number [useGrouping]="false" label="收銀員授權等級" controlName="USR_Auth"
+                                    [control]="queryForm.controls.USR_Auth" [submitted]="submitted">
+                                </app-input-number>
                             </div>
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-dropdown-item label="收銀員狀態" controlName="USR_JobStatus" [options]="USR_JobStatus_Options" optionLabel="label" optionValue="value" [control]="queryForm.controls.USR_JobStatus" [submitted]="submitted">
-                                </app-dropdown-item>
+                                <app-dropdown label="收銀員狀態" controlName="USR_JobStatus"
+                                    [options]="USR_JobStatus_Options" optionLabel="label" optionValue="value"
+                                    [control]="queryForm.controls.USR_JobStatus" [submitted]="submitted">
+                                </app-dropdown>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-dropdown-item label="收銀員等級" controlName="USR_Class" [options]="USR_Class_Options" optionLabel="label" optionValue="value" [control]="queryForm.controls.USR_Class" [submitted]="submitted">
-                                </app-dropdown-item>
+                                <app-dropdown label="收銀員等級" controlName="USR_Class" [options]="USR_Class_Options"
+                                    optionLabel="label" optionValue="value" [control]="queryForm.controls.USR_Class"
+                                    [submitted]="submitted">
+                                </app-dropdown>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-dropdown-item label="收銀員區分" controlName="USR_RegType" [options]="USR_RegType_Options" optionLabel="label" optionValue="value" [control]="queryForm.controls.USR_RegType" [submitted]="submitted">
-                                </app-dropdown-item>
+                                <app-dropdown label="收銀員區分" controlName="USR_RegType" [options]="USR_RegType_Options"
+                                    optionLabel="label" optionValue="value" [control]="queryForm.controls.USR_RegType"
+                                    [submitted]="submitted">
+                                </app-dropdown>
                             </div>
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="收銀員所屬櫃編" controlName="USR_TLT_No" [control]="queryForm.controls.USR_TLT_No" [submitted]="submitted">
-                                </app-input-serial-number>
+                                <app-input-number [useGrouping]="false" label="收銀員所屬櫃編" controlName="USR_TLT_No"
+                                    [control]="queryForm.controls.USR_TLT_No" [submitted]="submitted">
+                                </app-input-number>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-text label="收銀員所屬專櫃名稱" controlName="USR_TLT_Name" [control]="queryForm.controls.USR_TLT_Name" [submitted]="submitted">
+                                <app-input-text label="收銀員所屬專櫃名稱" controlName="USR_TLT_Name"
+                                    [control]="queryForm.controls.USR_TLT_Name" [submitted]="submitted">
                                 </app-input-text>
                             </div>
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-one label="啟用日期" controlName="USR_OnJobDate" [control]="queryForm.controls.USR_OnJobDate" [submitted]="submitted">
-                                </app-date-one>
+                                <app-calendar calendarType="dateOne" label="啟用日期" controlName="USR_OnJobDate"
+                                    [control]="queryForm.controls.USR_OnJobDate" [submitted]="submitted">
+                                </app-calendar>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-one label="停用日期" controlName="USR_QuitDate" [control]="queryForm.controls.USR_QuitDate" [submitted]="submitted">
-                                </app-date-one>
+                                <app-calendar calendarType="dateOne" label="停用日期" controlName="USR_QuitDate"
+                                    [control]="queryForm.controls.USR_QuitDate" [submitted]="submitted">
+                                </app-calendar>
                             </div>
                         </div>
                         <div *appHasPermission="queryPermission" class="col">
                             <div class="grid justify-content-end">
-                                <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                                <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                                <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                                <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                                    [loading]="loading"></app-button>
                             </div>
                         </div>
                     </form>

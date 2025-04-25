@@ -5,7 +5,8 @@
         </div>
     </div>
     <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+            [headerStyleClass]="'query-accordionTab'">
             <!-- <form
               [formGroup]="queryForm"
               id="queryForm"
@@ -14,59 +15,79 @@
           </form> -->
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="專櫃編號" controlName="counterCode" [control]="queryForm.controls.counterCode" [submitted]="submitted">
+                    <app-input-text label="專櫃編號" controlName="counterCode" [control]="queryForm.controls.counterCode"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="專櫃名稱" controlName="counterName" [control]="queryForm.controls.counterName" [submitted]="submitted">
+                    <app-input-text label="專櫃名稱" controlName="counterName" [control]="queryForm.controls.counterName"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="樓層" controlName="floorCode" [options]="floorOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.floorCode" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="樓層" controlName="floorCode" [options]="floorOptions" optionLabel="label"
+                        optionValue="value" [control]="queryForm.controls.floorCode" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="區域" controlName="regionCode" [options]="regionOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.regionCode" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="區域" controlName="regionCode" [options]="regionOptions" optionLabel="label"
+                        optionValue="value" [control]="queryForm.controls.regionCode" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="業種" controlName="businessTypeCode" [options]="businessTypeCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.businessTypeCode" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="業種" controlName="businessTypeCode" [options]="businessTypeCodeOptions"
+                        optionLabel="label" optionValue="value" [control]="queryForm.controls.businessTypeCode"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="專櫃營運狀況" controlName="operationStatus" [options]="operationStatusOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.operationStatus" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="專櫃營運狀況" controlName="operationStatus" [options]="operationStatusOptions"
+                        optionLabel="label" optionValue="value" [control]="queryForm.controls.operationStatus"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-range label="合約起始日" [startControl]="queryForm.controls.contractStartDate" [endControl]="queryForm.controls.contractEndDate" [submitted]="submitted">
-                    </app-date-range>
+                    <app-calendar-range calendarType="dateRange" label="合約起始日"
+                        [startControl]="queryForm.controls.contractStartDate"
+                        [endControl]="queryForm.controls.contractEndDate" [submitted]="submitted">
+                    </app-calendar-range>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-range label="合約截止日" [startControl]="queryForm.controls.contractDeadlineStartDate" [endControl]="queryForm.controls.contractDeadlineEndDate" [submitted]="submitted">
-                    </app-date-range>
+                    <app-calendar-range calendarType="dateRange" label="合約截止日"
+                        [startControl]="queryForm.controls.contractDeadlineStartDate"
+                        [endControl]="queryForm.controls.contractDeadlineEndDate" [submitted]="submitted">
+                    </app-calendar-range>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="抽成別" controlName="commissionType" [options]="commissionTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.commissionTypeOptions" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="抽成別" controlName="commissionType" [options]="commissionTypeOptions"
+                        optionLabel="label" optionValue="value" [control]="queryForm.controls.commissionTypeOptions"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="抽成類別" controlName="DeductionbigCategoryOptions" [options]="DeductionbigCategoryOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.DeductionbigCategoryOptions" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="抽成類別" controlName="DeductionbigCategoryOptions"
+                        [options]="DeductionbigCategoryOptions" optionLabel="label" optionValue="value"
+                        [control]="queryForm.controls.DeductionbigCategoryOptions" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="折扣別" controlName="discountOptions" [options]="discountOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.discountOptions" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="折扣別" controlName="discountOptions" [options]="discountOptions"
+                        optionLabel="label" optionValue="value" [control]="queryForm.controls.discountOptions"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="組織" controlName="organizationCode" [options]="organizationOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.organizationOptions" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="組織" controlName="organizationCode" [options]="organizationOptions"
+                        optionLabel="label" optionValue="value" [control]="queryForm.controls.organizationOptions"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
 
             <div *appHasPermission="queryPermission" class="col">
                 <div class="grid justify-content-end">
-                    <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                    <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                    <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                    <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
                 </div>
             </div>
 

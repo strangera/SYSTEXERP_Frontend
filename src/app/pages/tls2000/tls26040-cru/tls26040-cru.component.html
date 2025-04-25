@@ -4,11 +4,8 @@
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
     <div>
-      <app-button-submit
-        (click)="submitForm(dataForm)"
-        *ngIf="isFormEditable"
-      ></app-button-submit>
-      <app-button-cancel (click)="onCancel()" class="col"></app-button-cancel>
+      <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
+      <app-button btnType="cancel" (click)="onCancel()" class="col"></app-button>
     </div>
   </div>
 </div>
@@ -16,90 +13,51 @@
   <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
     <div class="grid p-fluid">
       <div class="col-12 md:col-6 lg:col-4">
-        <app-date-one
-          label="結帳日期"
-          controlName="name"
-          [control]="dataForm.controls.name"
-          [submitted]="submitted"
-        >
-        </app-date-one>
+        <app-calendar calendarType="dateOne" label="結帳日期" controlName="name" [control]="dataForm.controls.name"
+          [submitted]="submitted">
+        </app-calendar>
       </div>
       <div class="col-12 md:col-6 lg:col-4">
-        <app-input-text
-          label="預估結帳金額"
-          controlName="name"
-          [control]="dataForm.controls.name"
-          [submitted]="submitted"
-        >
+        <app-input-text label="預估結帳金額" controlName="name" [control]="dataForm.controls.name" [submitted]="submitted">
         </app-input-text>
       </div>
     </div>
   </form>
 </p-panel>
 <div class="card">
-<app-button-action label="查詢預售資料" icon="pi pi-search"></app-button-action>
+  <app-button btnType="action" label="查詢預售資料" icon="pi pi-search"></app-button>
 
 
   <p-accordion>
-    <p-accordionTab
-      header="預售資料"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-date-range
-            label="預售日期"
-            controlName="name"
-            [startControl]="dataForm.controls.name"
-            [endControl]="dataForm.controls.name"
-            [submitted]="submitted"
-          >
-          </app-date-range>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="收銀機機號"
-            controlName="name"
-            [control]="dataForm.controls.name"
-            [submitted]="submitted"
-          >
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="交易序號"
-              controlName="name"
-              [control]="dataForm.controls.name"
-              [submitted]="submitted"
-            >
+    <p-accordionTab header="預售資料" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateRange" label="預售日期" controlName="name"
+              [startControl]="dataForm.controls.name" [endControl]="dataForm.controls.name" [submitted]="submitted">
+            </app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="收銀機機號" controlName="name" [control]="dataForm.controls.name" [submitted]="submitted">
             </app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="專櫃編號"
-              controlName="name"
-              [control]="dataForm.controls.name"
-              [submitted]="submitted"
-            >
+            <app-input-text label="交易序號" controlName="name" [control]="dataForm.controls.name" [submitted]="submitted">
+            </app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="專櫃編號" controlName="name" [control]="dataForm.controls.name" [submitted]="submitted">
             </app-input-text>
           </div>
 
-      </div>
-    </form>
-</p-accordionTab>
-</p-accordion>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
 
-<div class="card">
+  <div class="card">
     <div class="col-12">
-      <app-data-table-check
-        [data]="data"
-        [columns]="columns"
-        (edit)="onEdit($event)"
-        (detail)="onDetail($event)"
-      >
+      <app-data-table-check [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
       </app-data-table-check>
     </div>
   </div>

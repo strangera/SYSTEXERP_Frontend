@@ -4,40 +4,52 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <!-- <div *appHasPermission="addPermission">
-            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
         </div> -->
     </div>
     <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+            [headerStyleClass]="'query-accordionTab'">
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number-range label="清點單號" [startControl]="queryForm.controls.inventory_NumberFrom" [endControl]="queryForm.controls.inventory_NumberTo" [submitted]="submitted">
-                        </app-input-serial-number-range>
+                        <app-input-number-range [useGrouping]="false" label="清點單號"
+                            [startControl]="queryForm.controls.inventory_NumberFrom"
+                            [endControl]="queryForm.controls.inventory_NumberTo" [submitted]="submitted">
+                        </app-input-number-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="清點日期" [startControl]="queryForm.controls.inventory_DateFrom" [endControl]="queryForm.controls.inventory_DateTo" [submitted]="submitted">
-                        </app-date-range>
+                        <app-calendar-range calendarType="dateRange" label="清點日期"
+                            [startControl]="queryForm.controls.inventory_DateFrom"
+                            [endControl]="queryForm.controls.inventory_DateTo" [submitted]="submitted">
+                        </app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-dropdown-item label="清點人代碼" controlName="inventory_PersonCode" [options]="userCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.inventory_PersonCode" [submitted]="submitted">
-                        </app-dropdown-item>
+                        <app-dropdown label="清點人代碼" controlName="inventory_PersonCode" [options]="userCodeOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.inventory_PersonCode"
+                            [submitted]="submitted">
+                        </app-dropdown>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-multi-select label="資產狀態(盤點後)" controlName="inventory_DataStatus" [options]="dataStatusOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.inventory_DataStatus" [submitted]="submitted">
+                        <app-multi-select label="資產狀態(盤點後)" controlName="inventory_DataStatus"
+                            [options]="dataStatusOptions" optionLabel="label" optionValue="value"
+                            [control]="queryForm.controls.inventory_DataStatus" [submitted]="submitted">
                         </app-multi-select>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-multi-select label="資產類別" controlName="assetsType" [options]="assetsTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.assetsType" [submitted]="submitted">
+                        <app-multi-select label="資產類別" controlName="assetsType" [options]="assetsTypeOptions"
+                            optionLabel="label" optionValue="value" [control]="queryForm.controls.assetsType"
+                            [submitted]="submitted">
                         </app-multi-select>
                     </div>
                 </div>
                 <div *appHasPermission="queryPermission" class="col">
                     <div class="grid justify-content-end">
-                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                        <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                        <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                            [loading]="loading"></app-button>
                     </div>
                 </div>
             </form>

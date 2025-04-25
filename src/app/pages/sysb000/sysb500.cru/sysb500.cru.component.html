@@ -8,19 +8,21 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="區域別編號" controlName="area_no" [control]="dataForm.controls.area_no" [submitted]="submitted">>
+                    <app-input-text label="區域別編號" controlName="area_no" [control]="dataForm.controls.area_no"
+                        [submitted]="submitted">>
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="區域別名稱" controlName="area_desc" [control]="dataForm.controls.area_desc" [submitted]="submitted">
+                    <app-input-text label="區域別名稱" controlName="area_desc" [control]="dataForm.controls.area_desc"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

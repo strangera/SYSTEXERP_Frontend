@@ -7,60 +7,33 @@
         </div>
       </div>
       <p-accordion>
-        <p-accordionTab
-          header="{{ 'query-conditions' | translate }}"
-          [selected]="true"
-          class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'"
-        >
-          <form
-            [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)"
-          >
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+          [headerStyleClass]="'query-accordionTab'">
+          <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
             <div class="grid p-fluid">
               <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown-item
-                  label="使用者"
-                  controlName="UserCodeOptions"
-                  [options]="UserCodeOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.UserCodeOptions"
-                  [submitted]="submitted"
-                >
-                </app-dropdown-item>
+                <app-dropdown label="使用者" controlName="UserCodeOptions" [options]="UserCodeOptions" optionLabel="label"
+                  optionValue="value" [control]="queryForm.controls.UserCodeOptions" [submitted]="submitted">
+                </app-dropdown>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
-                <app-datetime-range
-                  label="LOG日期時間"
+                <app-calendar-range calendarType="dateTimeRange" label="LOG日期時間"
                   [startControl]="queryForm.controls.lastLoginStartTime"
-                  [endControl]="queryForm.controls.lastLoginEndTime"
-                  [submitted]="submitted"
-                >
-                </app-datetime-range>
+                  [endControl]="queryForm.controls.lastLoginEndTime" [submitted]="submitted">
+                </app-calendar-range>
               </div>
 
               <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown-item
-                  label="作業代碼"
-                  controlName="systemTypeDetailOptions"
-                  [options]="systemTypeDetailOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.systemTypeDetail"
-                  [submitted]="submitted"
-                >
-                </app-dropdown-item>
+                <app-dropdown label="作業代碼" controlName="systemTypeDetailOptions" [options]="systemTypeDetailOptions"
+                  optionLabel="label" optionValue="value" [control]="queryForm.controls.systemTypeDetail"
+                  [submitted]="submitted">
+                </app-dropdown>
               </div>
             </div>
             <div *appHasPermission="queryPermission" class="col">
               <div class="grid justify-content-end">
-                <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                <app-button-query
-                  (onClick)="onSubmitQuery(queryForm)"
-                  [loading]="loading"
-                ></app-button-query>
+                <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
               </div>
             </div>
           </form>
@@ -69,12 +42,7 @@
     </div>
     <div class="card">
       <div class="col-12">
-        <app-data-table-check
-          [data]="data"
-          [columns]="columns"
-          (edit)="onEdit($event)"
-          (detail)="onDetail($event)"
-        >
+        <app-data-table-check [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
         </app-data-table-check>
       </div>
     </div>

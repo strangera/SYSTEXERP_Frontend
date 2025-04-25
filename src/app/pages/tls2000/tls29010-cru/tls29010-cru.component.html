@@ -8,21 +8,13 @@
         </div> -->
     <p-panel [header]="formTitle" class="line-height-3 m-0">
       <div class="col-12">
-        <app-data-table
-          [data]="data"
-          [columns]="columns"
-          (edit)="onEdit($event)"
-          (detail)="onDetail($event)"
-        >
+        <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
         </app-data-table>
       </div>
       <div class="col pt-4">
         <div class="grid justify-content-end">
-          <app-button-cancel (click)="onCancel()"></app-button-cancel>
-          <app-button-submit
-            (click)="submitForm(dataForm)"
-            *ngIf="isFormEditable"
-          ></app-button-submit>
+          <app-button btnType="cancel" (click)="onCancel()"></app-button>
+          <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
         </div>
       </div>
     </p-panel>

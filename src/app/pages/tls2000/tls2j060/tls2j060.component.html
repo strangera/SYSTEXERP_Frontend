@@ -7,68 +7,91 @@
                 </div>
             </div>
             <p-accordion>
-                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true"
+                    class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
                     <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-text label="統一編號" controlName="uID" [control]="queryForm.controls.uID" [submitted]="submitted">
+                                <app-input-text label="統一編號" controlName="uID" [control]="queryForm.controls.uID"
+                                    [submitted]="submitted">
                                 </app-input-text>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number-range label="二聯式發票號碼" [startControl]="queryForm.controls.startserialinvoice2" [endControl]="queryForm.controls.endserialinvoice2" [submitted]="submitted">
-                                </app-input-serial-number-range>
+                                <app-input-number-range [useGrouping]="false" label="二聯式發票號碼"
+                                    [startControl]="queryForm.controls.startserialinvoice2"
+                                    [endControl]="queryForm.controls.endserialinvoice2" [submitted]="submitted">
+                                </app-input-number-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-text label="三聯式發票號碼" controlName="invoice3" [control]="queryForm.controls.invoice3" [submitted]="submitted">
+                                <app-input-text label="三聯式發票號碼" controlName="invoice3"
+                                    [control]="queryForm.controls.invoice3" [submitted]="submitted">
                                 </app-input-text>
                             </div>
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-range label="換開日期" [startControl]="queryForm.controls.startdate" [endControl]="queryForm.controls.enddate" [submitted]="submitted">
-                                </app-date-range>
+                                <app-calendar-range calendarType="dateRange" label="換開日期"
+                                    [startControl]="queryForm.controls.startdate"
+                                    [endControl]="queryForm.controls.enddate" [submitted]="submitted">
+                                </app-calendar-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-text label="品項" controlName="items" [control]="queryForm.controls.items" [submitted]="submitted">
+                                <app-input-text label="品項" controlName="items" [control]="queryForm.controls.items"
+                                    [submitted]="submitted">
                                 </app-input-text>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-dropdown-item label="稅別" controlName="taxType" [options]="taxTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.taxType" [submitted]="submitted">
-                                </app-dropdown-item>
+                                <app-dropdown label="稅別" controlName="taxType" [options]="taxTypeOptions"
+                                    optionLabel="label" optionValue="value" [control]="queryForm.controls.taxType"
+                                    [submitted]="submitted">
+                                </app-dropdown>
                             </div>
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number-range label="銷售淨額" [startControl]="queryForm.controls.salesAmountFrom" [endControl]="queryForm.controls.salesAmountTo" [submitted]="submitted">
-                                </app-input-serial-number-range>
+                                <app-input-number-range [useGrouping]="false" label="銷售淨額"
+                                    [startControl]="queryForm.controls.salesAmountFrom"
+                                    [endControl]="queryForm.controls.salesAmountTo" [submitted]="submitted">
+                                </app-input-number-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number-range label="稅額" [startControl]="queryForm.controls.taxAmountFrom" [endControl]="queryForm.controls.taxAmountTo" [submitted]="submitted">
-                                </app-input-serial-number-range>
+                                <app-input-number-range [useGrouping]="false" label="稅額"
+                                    [startControl]="queryForm.controls.taxAmountFrom"
+                                    [endControl]="queryForm.controls.taxAmountTo" [submitted]="submitted">
+                                </app-input-number-range>
                             </div>
                             <div class="col-12 md:col-4 lg:col-4">
-                                <app-radiobutton label="交易類型" groupname="transferTyperadio" [control]="queryForm.controls.transferType" [options]="transferTypeOptions" [submitted]="submitted">
+                                <app-radiobutton label="交易類型" groupname="transferTyperadio"
+                                    [control]="queryForm.controls.transferType" [options]="transferTypeOptions"
+                                    [submitted]="submitted">
                                 </app-radiobutton>
                             </div>
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-4 lg:col-4">
-                                <app-radiobutton label="發票類型" groupname="invoiceTyperadio" [control]="queryForm.controls.invoiceType" [options]="invoiceTypeOptions" [submitted]="submitted">
+                                <app-radiobutton label="發票類型" groupname="invoiceTyperadio"
+                                    [control]="queryForm.controls.invoiceType" [options]="invoiceTypeOptions"
+                                    [submitted]="submitted">
                                 </app-radiobutton>
                             </div>
                             <div class="col-12 md:col-4 lg:col-4">
-                                <app-radiobutton label="作廢/刪除" groupname="invoiceManagementradio" [control]="queryForm.controls.invoiceManagement" [options]="invoiceManagementOptions" [submitted]="submitted">
+                                <app-radiobutton label="作廢/刪除" groupname="invoiceManagementradio"
+                                    [control]="queryForm.controls.invoiceManagement"
+                                    [options]="invoiceManagementOptions" [submitted]="submitted">
                                 </app-radiobutton>
                             </div>
                             <div class="col-12 md:col-4 lg:col-4">
-                                <app-radiobutton label="發票換開類別" groupname="systemtyperadio" [control]="queryForm.controls.systemtyperadio" [options]="transferTypeOptions" [submitted]="submitted">
+                                <app-radiobutton label="發票換開類別" groupname="systemtyperadio"
+                                    [control]="queryForm.controls.systemtyperadio" [options]="transferTypeOptions"
+                                    [submitted]="submitted">
                                 </app-radiobutton>
                             </div>
                         </div>
                         <div *appHasPermission="queryPermission" class="col">
                             <div class="grid justify-content-end">
-                                <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                                <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                                <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                                <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                                    [loading]="loading"></app-button>
                             </div>
                         </div>
                     </form>

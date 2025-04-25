@@ -4,35 +4,44 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <div *appHasPermission="addPermission">
-            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
         </div>
     </div>
     <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+            [headerStyleClass]="'query-accordionTab'">
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number label="調整單號" controlName="adjust_ID" [control]="queryForm.controls.adjust_ID" [submitted]="submitted">
-                        </app-input-serial-number>
+                        <app-input-number [useGrouping]="false" label="調整單號" controlName="adjust_ID"
+                            [control]="queryForm.controls.adjust_ID" [submitted]="submitted">
+                        </app-input-number>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-date-range label="調整日期" [startControl]="queryForm.controls.adjust_Date_From" [endControl]="queryForm.controls.adjust_Date_To" [submitted]="submitted"></app-date-range>
+                        <app-calendar-range calendarType="dateRange" label="調整日期"
+                            [startControl]="queryForm.controls.adjust_Date_From"
+                            [endControl]="queryForm.controls.adjust_Date_To"
+                            [submitted]="submitted"></app-calendar-range>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="備註" controlName="remark" [control]="queryForm.controls.remark" [submitted]="submitted">
+                        <app-input-text label="備註" controlName="remark" [control]="queryForm.controls.remark"
+                            [submitted]="submitted">
                         </app-input-text>
                     </div>
                 </div>
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-serial-number-range label="傳票單號" [startControl]="queryForm.controls.summons_ID_From" [endControl]="queryForm.controls.summons_ID_To" [submitted]="submitted">
-                        </app-input-serial-number-range>
+                        <app-input-number-range [useGrouping]="false" label="傳票單號"
+                            [startControl]="queryForm.controls.summons_ID_From"
+                            [endControl]="queryForm.controls.summons_ID_To" [submitted]="submitted">
+                        </app-input-number-range>
                     </div>
                 </div>
                 <div *appHasPermission="queryPermission" class="col">
                     <div class="grid justify-content-end">
-                        <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                        <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                        <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                        <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                            [loading]="loading"></app-button>
                     </div>
                 </div>
             </form>

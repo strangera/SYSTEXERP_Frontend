@@ -1,62 +1,69 @@
 <div class="grid align-items-center">
-    <div class="col" style="flex: 1; display: flex; gap: 10px;">
-        <p-multiSelect [options]="columns" [(ngModel)]="selectedColumns" optionLabel="header" (onChange)="toggleColumnVisibility($event)" dropdownIcon="pi pi-cog" class="hide-selected-items" pTooltip="過濾欄位" tooltipPosition="top">
-        </p-multiSelect>
-        <button type="button" (click)="togglePaginator()" class="custom-button" pTooltip="報表" tooltipPosition="top" pButton><i class="pi pi-file icon"></i></button>
-        <button type="button" (click)="togglePrint()" class="custom-button" pTooltip="列印" tooltipPosition="top" pButton [disabled]="IsPaginator"><i class="pi pi-print icon"></i></button>
-        <div style="height: 24px; width: 1px; background-color: #ccc; margin: 0 10px;"></div>
-        <button type="button" (click)="onDelete()" class="custom-button" pTooltip="全部刪除" tooltipPosition="top" pButton [disabled]="isDisabled()" [ngStyle]="{'color': isDisabled() ? '' : 'red'}"><i class="pi pi-trash icon" ></i></button>
-    </div>
-    <!--<div>
+  <div class="col" style="flex: 1; display: flex; gap: 10px;">
+    <p-multiSelect [options]="columns" [(ngModel)]="selectedColumns" optionLabel="header"
+      (onChange)="toggleColumnVisibility($event)" dropdownIcon="pi pi-cog" class="hide-selected-items" pTooltip="過濾欄位"
+      tooltipPosition="top">
+    </p-multiSelect>
+    <button type="button" (click)="togglePaginator()" class="custom-button" pTooltip="報表" tooltipPosition="top"
+      pButton><i class="pi pi-file icon"></i></button>
+    <button type="button" (click)="togglePrint()" class="custom-button" pTooltip="列印" tooltipPosition="top" pButton
+      [disabled]="IsPaginator"><i class="pi pi-print icon"></i></button>
+    <div style="height: 24px; width: 1px; background-color: #ccc; margin: 0 10px;"></div>
+    <button type="button" (click)="onDelete()" class="custom-button" pTooltip="全部刪除" tooltipPosition="top" pButton
+      [disabled]="isDisabled()" [ngStyle]="{'color': isDisabled() ? '' : 'red'}"><i
+        class="pi pi-trash icon"></i></button>
+  </div>
+  <!--<div>
         查詢時間:
         <p-calendar inputId="calendar-24h" [showTime]="true" />
     </div>-->
-    <div *ngIf="IsPaginator">
-        <p-dropdown [options]="pages" [(ngModel)]="selectedPage" optionLabel="label" optionValue="value" (onChange)="goToPage($event.value)" class="col">
-        </p-dropdown>
-    </div>
+  <div *ngIf="IsPaginator">
+    <p-dropdown [options]="pages" [(ngModel)]="selectedPage" optionLabel="label" optionValue="value"
+      (onChange)="goToPage($event.value)" class="col">
+    </p-dropdown>
+  </div>
 </div>
-<p-table [value]="data" [sortMode]="'multiple'" [resizableColumns]="true" [paginator]=IsPaginator [scrollable]="IsScrollable" [scrollHeight]="IsScrollHeight" [rows]="rows" [rowsPerPageOptions]="[10, 25, 50, 75, 100]" [styleClass]="tableSize" [showCurrentPageReport]="true"
-    [(selection)]="selectedRows" currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})" [(first)]="first" (onPage)="onPageChange($event)">
-    <ng-template pTemplate="header">
-        <tr>
-            <th>
-                序號
-            </th>
-            <th style="width: 4rem" *ngIf="IsPaginator">
-                <p-tableHeaderCheckbox />
-            </th>
-            <th *ngFor="let col of getVisibleColumns()" [pSortableColumn]="col.field">
-                {{col.header}}
-                <p-sortIcon [field]="col.field"></p-sortIcon>
-            </th>
-            <ng-container *ngIf="IsPaginator">
-                <th>管理</th>
-            </ng-container>
-        </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
-        <tr>
-            <td>{{ rowIndex + 1 }}</td>
-            <td *ngIf="IsPaginator">
-                <i *ngIf="rowData.isdelete === false" class="pi pi-times"></i>
-                <p-tableCheckbox *ngIf="rowData.isdelete === true" [value]="rowData" />
-            </td>
-            <!-- 這裡顯示行索引，從 1 開始 -->
-            <td *ngFor="let col of getVisibleColumns()">
-                {{rowData[col.field]}}
-            </td>
-            <ng-container *ngIf="IsPaginator">
-                <td class="no-wrap">
-                    <button pButton pRipple type="button" pTooltip="{{ 'edit' | translate }}" tooltipPosition="top" icon="pi pi-pencil" (click)="onEdit(rowData)" class="icon-button mr-2"></button>
-                    <button pButton pRipple type="button" pTooltip="{{ 'display' | translate }}" tooltipPosition="top" icon="pi pi-eye" (click)="onDetail(rowData)" class="icon-button"></button>
-                </td>
-            </ng-container>
-        </tr>
-    </ng-template>
+<p-table [value]="data" [sortMode]="'multiple'" [resizableColumns]="true" [paginator]=IsPaginator
+  [scrollable]="IsScrollable" [scrollHeight]="IsScrollHeight" [rows]="rows" [rowsPerPageOptions]="[10, 25, 50, 75, 100]"
+  [styleClass]="tableSize" [showCurrentPageReport]="true" [(selection)]="selectedRows"
+  currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})" [(first)]="first"
+  (onPage)="onPageChange($event)">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>
+        序號
+      </th>
+      <th style="width: 4rem" *ngIf="IsPaginator">
+        <p-tableHeaderCheckbox />
+      </th>
+      <th *ngFor="let col of getVisibleColumns()" [pSortableColumn]="col.field">
+        {{col.header}}
+        <p-sortIcon [field]="col.field"></p-sortIcon>
+      </th>
+      <ng-container *ngIf="IsPaginator">
+        <th>管理</th>
+      </ng-container>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
+    <tr>
+      <td>{{ rowIndex + 1 }}</td>
+      <td *ngIf="IsPaginator">
+        <i *ngIf="rowData.isdelete === false" class="pi pi-times"></i>
+        <p-tableCheckbox *ngIf="rowData.isdelete === true" [value]="rowData" />
+      </td>
+      <!-- 這裡顯示行索引，從 1 開始 -->
+      <td *ngFor="let col of getVisibleColumns()">
+        {{rowData[col.field]}}
+      </td>
+      <ng-container *ngIf="IsPaginator">
+        <td class="no-wrap">
+          <button pButton pRipple type="button" pTooltip="{{ 'edit' | translate }}" tooltipPosition="top"
+            icon="pi pi-pencil" (click)="onEdit(rowData)" class="icon-button mr-2"></button>
+          <button pButton pRipple type="button" pTooltip="{{ 'display' | translate }}" tooltipPosition="top"
+            icon="pi pi-eye" (click)="onDetail(rowData)" class="icon-button"></button>
+        </td>
+      </ng-container>
+    </tr>
+  </ng-template>
 </p-table>
-<!--<div class="col pt-4">
-    <div class="grid justify-content-end">
-        <app-button-delete label="全部刪除" (click)="onDelete()" [isDisabled]="isDisabled()"></app-button-delete>
-    </div>
-</div>-->

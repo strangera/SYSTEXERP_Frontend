@@ -13,93 +13,48 @@
                 controlName="accountsummary"
                 [control]="dataForm.controls.Subpoenadate"
                 [submitted]="submitted"
-              ></app-date-one>
+              ></app-calendar>
             </div> -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="調撥單號"
-            controlName="dialnumber"
-            [control]="dataForm.controls.dialnumber"
-            [submitted]="submitted"
-          >
+          <app-input-text label="調撥單號" controlName="dialnumber" [control]="dataForm.controls.dialnumber"
+            [submitted]="submitted">
           </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown-item
-            label="建立者"
-            controlName="founder"
-            [options]="founder"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.founder"
-            [submitted]="submitted"
-          ></app-dropdown-item>
+          <app-dropdown label="建立者" controlName="founder" [options]="founder" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.founder" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one
-            label="建立日期"
-            controlName="creationDate "
-            [control]="dataForm.controls.creationDate"
-            [submitted]="submitted"
-          ></app-date-one>
+          <app-calendar calendarType="dateOne" label="建立日期" controlName="creationDate "
+            [control]="dataForm.controls.creationDate" [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one
-            label="轉帳日期"
-            controlName="transferdate "
-            [control]="dataForm.controls.transferdate"
-            [submitted]="submitted"
-          ></app-date-one>
+          <app-calendar calendarType="dateOne" label="轉帳日期" controlName="transferdate "
+            [control]="dataForm.controls.transferdate" [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown-item
-            label="轉入公司銀行科目代號"
-            controlName="TCBAC"
-            [options]="TCBACOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.TCBAC"
-            [submitted]="submitted"
-          ></app-dropdown-item>
+          <app-dropdown label="轉入公司銀行科目代號" controlName="TCBAC" [options]="TCBACOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.TCBAC" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown-item
-            label="轉出公司銀行科目代號"
-            controlName="TOCBAC"
-            [options]="TOCBACOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.TOCBAC"
-            [submitted]="submitted"
-          ></app-dropdown-item>
+          <app-dropdown label="轉出公司銀行科目代號" controlName="TOCBAC" [options]="TOCBACOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.TOCBAC" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="金額"
-              controlName="dialnumber"
-              [control]="dataForm.controls.dialnumber"
-              [submitted]="submitted"
-            >
-            </app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="手續費"
-              controlName="dialnumber"
-              [control]="dataForm.controls.dialnumber"
-              [submitted]="submitted"
-            >
-            </app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="備註"
-              controlName="dialnumber"
-              [control]="dataForm.controls.dialnumber"
-              [submitted]="submitted"
-            >
-            </app-input-text>
-          </div>
+          <app-input-text label="金額" controlName="dialnumber" [control]="dataForm.controls.dialnumber"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="手續費" controlName="dialnumber" [control]="dataForm.controls.dialnumber"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="備註" controlName="dialnumber" [control]="dataForm.controls.dialnumber"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
       </div>
 
       <!-- <hr />
@@ -122,7 +77,7 @@
             </div>
             <div class="grid p-fluid">
               <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown-default
+                <app-dropdown
                   label="科目代號"
                   controlName="Accountcode"
                   [options]="Accountcode"
@@ -131,11 +86,11 @@
                   [control]="getFormControl(i, 'Accountcode')"
                   [submitted]="submitted"
                 >
-                </app-dropdown-default>
+                </app-dropdown>
               </div>
-  
+
               <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown-default
+                <app-dropdown
                   label="廠商/員工代號"
                   controlName="vendorCodeOptions"
                   [options]="vendorCodeOptions"
@@ -144,7 +99,7 @@
                   [control]="getFormControl(i, 'vendorCodeOptions')"
                   [submitted]="submitted"
                 >
-                </app-dropdown-default>
+                </app-dropdown>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
                 <app-input-text
@@ -174,7 +129,7 @@
                 </app-input-text>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown-default
+                <app-dropdown
                   label="組織代號"
                   controlName="Organization code"
                   [options]="Organizationcode"
@@ -183,10 +138,10 @@
                   [control]="getFormControl(i, 'Organizationcode')"
                   [submitted]="submitted"
                 >
-                </app-dropdown-default>
+                </app-dropdown>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown-default
+                <app-dropdown
                   label="立沖代號"
                   controlName="StandingInstructionCode"
                   [options]="StandingInstructionCode"
@@ -195,10 +150,10 @@
                   [control]="getFormControl(i, 'StandingInstructionCode')"
                   [submitted]="submitted"
                   >>
-                </app-dropdown-default>
+                </app-dropdown>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown-default
+                <app-dropdown
                   label="活動代號"
                   controlName="Activitycode"
                   [options]="Activitycode"
@@ -207,9 +162,9 @@
                   [control]="getFormControl(i, 'Activitycode')"
                   [submitted]="submitted"
                   >>
-                </app-dropdown-default>
+                </app-dropdown>
               </div>
-  
+
               <div class="col-12 md:col-6 lg:col-4">
                 <app-input-text
                   label="對象別編號"
@@ -240,11 +195,8 @@
     </form>
     <div class="col pt-4">
       <div class="grid justify-content-end">
-        <app-button-cancel (click)="onCancel()"></app-button-cancel>
-        <app-button-submit
-          (click)="submitForm(dataForm)"
-          *ngIf="isFormEditable"
-        ></app-button-submit>
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+        <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
       </div>
     </div>
   </p-panel>

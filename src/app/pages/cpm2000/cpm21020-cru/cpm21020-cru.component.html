@@ -9,17 +9,20 @@
             <h5>基本資料</h5>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="廠商編號" controlName="vendorId" [control]="dataForm.controls.vendorId" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="廠商編號" controlName="vendorId"
+                        [control]="dataForm.controls.vendorId" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="廠商統一編號" controlName="vendorUid" [control]="dataForm.controls.vendorUid" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="廠商統一編號" controlName="vendorUid"
+                        [control]="dataForm.controls.vendorUid" [submitted]="submitted">
+                    </app-input-number>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商名稱(中文)" controlName="vendorCName" [control]="dataForm.controls.vendorCName" [submitted]="submitted">
+                    <app-input-text label="廠商名稱(中文)" controlName="vendorCName" [control]="dataForm.controls.vendorCName"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <!-- <div class="col-12 md:col-6 lg:col-6">
@@ -27,11 +30,13 @@
                     </app-input-text>
                 </div> -->
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商名稱(英文)" controlName="vendorEName" [control]="dataForm.controls.vendorEName" [submitted]="submitted">
+                    <app-input-text label="廠商名稱(英文)" controlName="vendorEName" [control]="dataForm.controls.vendorEName"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商簡稱" controlName="vendorSName" [control]="dataForm.controls.vendorSName" [submitted]="submitted">
+                    <app-input-text label="廠商簡稱" controlName="vendorSName" [control]="dataForm.controls.vendorSName"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
@@ -39,29 +44,35 @@
             <h5>負責人資料</h5>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="負責人" controlName="principal" [control]="dataForm.controls.principal" [submitted]="submitted">
+                    <app-input-text label="負責人" controlName="principal" [control]="dataForm.controls.principal"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="負責人職稱" controlName="principalTitle" [control]="dataForm.controls.principalTitle" [submitted]="submitted">
+                    <app-input-text label="負責人職稱" controlName="principalTitle"
+                        [control]="dataForm.controls.principalTitle" [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="負責人身份証字號" controlName="principalUid" [control]="dataForm.controls.principalUid" [submitted]="submitted">
+                    <app-input-text label="負責人身份証字號" controlName="principalUid"
+                        [control]="dataForm.controls.principalUid" [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-3">
-                    <app-input-serial-number label="負責人電話" controlName="principalPhone" [control]="dataForm.controls.principalPhone" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="負責人電話" controlName="principalPhone"
+                        [control]="dataForm.controls.principalPhone" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-3">
-                    <app-input-text label="負責人電子郵件" controlName="principalEmail" [control]="dataForm.controls.principalEmail" [submitted]="submitted">
+                    <app-input-text label="負責人電子郵件" controlName="principalEmail"
+                        [control]="dataForm.controls.principalEmail" [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-6">
-                    <app-input-text label="負責人聯絡地址" controlName="principalAddress" [control]="dataForm.controls.principalAddress" [submitted]="submitted">
+                    <app-input-text label="負責人聯絡地址" controlName="principalAddress"
+                        [control]="dataForm.controls.principalAddress" [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
@@ -69,29 +80,34 @@
             <h5>公司資料</h5>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-3">
-                    <app-input-serial-number label="公司登記電話" controlName="companyPhone" [control]="dataForm.controls.companyPhone" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="公司登記電話" controlName="companyPhone"
+                        [control]="dataForm.controls.companyPhone" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-3">
-                    <app-input-serial-number label="公司傳真" controlName="companyFax" [control]="dataForm.controls.companyFax" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="公司傳真" controlName="companyFax"
+                        [control]="dataForm.controls.companyFax" [submitted]="submitted">
+                    </app-input-number>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-6">
-                    <app-input-text label="公司登記地址(中文)" controlName="companyAddress" [control]="dataForm.controls.companyAddress" [submitted]="submitted">
+                    <app-input-text label="公司登記地址(中文)" controlName="companyAddress"
+                        [control]="dataForm.controls.companyAddress" [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-6">
-                    <app-input-text label="通訊地址" controlName="contactAddress" [control]="dataForm.controls.contactAddress" [submitted]="submitted">
+                    <app-input-text label="通訊地址" controlName="contactAddress"
+                        [control]="dataForm.controls.contactAddress" [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
             <hr>
             <h5>廠商資料</h5>
-            <app-editor-text label="附註" controlName="remark" [control]="dataForm.controls.remark" [style]="{ height: '100px' }" [submitted]="submitted">
+            <app-editor-text label="附註" controlName="remark" [control]="dataForm.controls.remark"
+                [style]="{ height: '100px' }" [submitted]="submitted">
             </app-editor-text>
-            <hr/>
+            <hr />
             <!---->
             <!-- <hr />
             <ng-container formArrayName="items">
@@ -106,8 +122,8 @@
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="所屬服務台位置" controlName="counterPosition" [options]="counterOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'counterPosition')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="所屬服務台位置" controlName="counterPosition" [options]="counterOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'counterPosition')" [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
                             <app-input-number label="分配設備數量" controlName="allocateNumber" [control]="getFormControl(i, 'allocateNumber')" [submitted]="submitted">
@@ -123,8 +139,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

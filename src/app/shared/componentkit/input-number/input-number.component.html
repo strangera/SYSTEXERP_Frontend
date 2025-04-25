@@ -1,5 +1,13 @@
 <label [for]="controlName">{{ label }}
   <span *ngIf="isRequired" class="required">*</span>
 </label>
-<p-inputNumber [id]="controlName" [formControl]="control" [placeholder]="placeholder" [ngClass]="{'is-invalid': submitted && control.errors}" />
-<app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>
+<p-inputGroup id="input-number">
+  <p-inputNumber [id]="controlName" [formControl]="control" [placeholder]="placeholder" [showButtons]="showButtons"
+    [min]="min" [max]="max" [step]="step" [useGrouping]="useGrouping" [minFractionDigits]="minFractionDigits"
+    [maxFractionDigits]="maxFractionDigits" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
+    [mode]="mode" [incrementButtonClass]="incrementButtonClass" [decrementButtonClass]="decrementButtonClass"
+    (onInputChange)="onInputChange($event)" (onBlur)="onBlur($event)" />
+  <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
+</p-inputGroup>
+<app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
+  [control]="control"></app-control-messages>

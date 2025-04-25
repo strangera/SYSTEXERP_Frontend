@@ -8,89 +8,107 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="字軌" controlName="wordTrack" [control]="dataForm.controls.wordTrack" [submitted]="submitted">
+                    <app-input-text label="字軌" controlName="wordTrack" [control]="dataForm.controls.wordTrack"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="發票號碼" controlName="invoiceNumber" [control]="dataForm.controls.invoiceNumber" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="發票號碼" controlName="invoiceNumber"
+                        [control]="dataForm.controls.invoiceNumber" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="發票日期" controlName="invoiceDate" [control]="dataForm.controls.invoiceDate" [submitted]="submitted">
-                    </app-date-one>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-datemm-one label="申報年月" [control]="dataForm.controls.declareYm" [submitted]="submitted">
-                    </app-datemm-one>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="專櫃編號" controlName="counterID" [control]="dataForm.controls.counterID" [submitted]="submitted">
-                    </app-input-serial-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="廠客代號" controlName="factoryID" [control]="dataForm.controls.factoryID" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-calendar calendarType="dateOne" label="發票日期" controlName="invoiceDate"
+                        [control]="dataForm.controls.invoiceDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="銷售人統一編號" controlName="salesPersonUid" [control]="dataForm.controls.salesPersonUid" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-calendar calendarType="dateMonthOne" label="申報年月" [control]="dataForm.controls.declareYm"
+                        [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="買受人統一編號" controlName="buyerPersonUid" [control]="dataForm.controls.buyerPersonUid" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="專櫃編號" controlName="counterID"
+                        [control]="dataForm.controls.counterID" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="發票格式" controlName="invoiveFormat" [control]="dataForm.controls.invoiveFormat" [submitted]="submitted">
+                    <app-input-number [useGrouping]="false" label="廠客代號" controlName="factoryID"
+                        [control]="dataForm.controls.factoryID" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number [useGrouping]="false" label="銷售人統一編號" controlName="salesPersonUid"
+                        [control]="dataForm.controls.salesPersonUid" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number [useGrouping]="false" label="買受人統一編號" controlName="buyerPersonUid"
+                        [control]="dataForm.controls.buyerPersonUid" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="發票格式" controlName="invoiveFormat" [control]="dataForm.controls.invoiveFormat"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="發票總金額" controlName="totalPrice" [control]="dataForm.controls.totalPrice" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="發票總金額" controlName="totalPrice"
+                        [control]="dataForm.controls.totalPrice" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="課稅別" controlName="taxType" [options]="taxTypeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.taxType" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="課稅別" controlName="taxType" [options]="taxTypeOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.taxType" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="發票未稅金額" controlName="nonTaxPrice" [control]="dataForm.controls.nonTaxPrice" [submitted]="submitted">
-                    </app-input-serial-number>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="稅額" controlName="taxPrice" [control]="dataForm.controls.taxPrice" [submitted]="submitted">
-                    </app-input-serial-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="憑證單號" controlName="certificateNumber" [control]="dataForm.controls.certificateNumber" [submitted]="submitted">
-                    </app-input-serial-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="傳票號碼" controlName="summonsNumber" [control]="dataForm.controls.summonsNumber" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="發票未稅金額" controlName="nonTaxPrice"
+                        [control]="dataForm.controls.nonTaxPrice" [submitted]="submitted">
+                    </app-input-number>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="資產註記" controlName="assetsRemrk" [options]="assetsRemrkOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.assetsRemrk" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-input-number [useGrouping]="false" label="稅額" controlName="taxPrice"
+                        [control]="dataForm.controls.taxPrice" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="備註" controlName="remark" [control]="dataForm.controls.remark" [submitted]="submitted">
+                    <app-input-number [useGrouping]="false" label="憑證單號" controlName="certificateNumber"
+                        [control]="dataForm.controls.certificateNumber" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number [useGrouping]="false" label="傳票號碼" controlName="summonsNumber"
+                        [control]="dataForm.controls.summonsNumber" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown label="資產註記" controlName="assetsRemrk" [options]="assetsRemrkOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.assetsRemrk"
+                        [submitted]="submitted">
+                    </app-dropdown>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="備註" controlName="remark" [control]="dataForm.controls.remark"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

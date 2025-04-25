@@ -4,25 +4,29 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <div *appHasPermission="addPermission">
-            <app-button-demo label="套用請購申請單" class="col"></app-button-demo>
+            <app-button btnType="create" label="套用請購申請單" class="col"></app-button>
         </div>
     </div>
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="供應商編號" controlName="supplierCode" [options]="supplierCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.supplierCode" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="供應商編號" controlName="supplierCode" [options]="supplierCodeOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.supplierCode"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="報價期限" [control]="dataForm.controls.reportdate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="報價期限" [control]="dataForm.controls.reportdate"
+                        [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
-            <hr/>
-                <app-editor-text label="說明" controlName="remark" [control]="dataForm.controls.remark" [style]="{ height: '100px' }" [submitted]="submitted">
-                </app-editor-text>
-            <hr/>    
+            <hr />
+            <app-editor-text label="說明" controlName="remark" [control]="dataForm.controls.remark"
+                [style]="{ height: '100px' }" [submitted]="submitted">
+            </app-editor-text>
+            <hr />
             <ng-container formArrayName="items">
                 <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
                     <div class="grid align-items-center">
@@ -30,55 +34,68 @@
                             <h5>品項 {{ i + 1 }}</h5>
                         </div>
                         <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                                class="col"></app-button-dynamicallydelete>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="請購單號" controlName="requestCode" [control]="getFormControl(i, 'requestCode')" [submitted]="submitted">
-                            </app-input-serial-number>
+                            <app-input-number [useGrouping]="false" label="請購單號" controlName="requestCode"
+                                [control]="getFormControl(i, 'requestCode')" [submitted]="submitted">
+                            </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="品項編號" controlName="itemCode" [options]="itemCodeOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'itemCode')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="品項編號" controlName="itemCode" [options]="itemCodeOptions"
+                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'itemCode')"
+                                [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="單價(未稅)" controlName="singlePrice" [control]="getFormControl(i, 'singlePrice')" [submitted]="submitted">
+                            <app-input-number label="單價(未稅)" controlName="singlePrice"
+                                [control]="getFormControl(i, 'singlePrice')" [submitted]="submitted">
                             </app-input-number>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="請購數量" controlName="requestAmount" [control]="getFormControl(i, 'requestAmount')" [submitted]="submitted">
+                            <app-input-number label="請購數量" controlName="requestAmount"
+                                [control]="getFormControl(i, 'requestAmount')" [submitted]="submitted">
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="數量" controlName="amount" [control]="getFormControl(i, 'amount')" [submitted]="submitted">
+                            <app-input-number label="數量" controlName="amount" [control]="getFormControl(i, 'amount')"
+                                [submitted]="submitted">
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="品項單位" controlName="itemUnit" [control]="getFormControl(i, 'itemUnit')" [submitted]="submitted">
+                            <app-input-text label="品項單位" controlName="itemUnit"
+                                [control]="getFormControl(i, 'itemUnit')" [submitted]="submitted">
                             </app-input-text>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="總金額" controlName="totalAmount" [control]="getFormControl(i, 'totalAmount')" [submitted]="submitted">
+                            <app-input-number label="總金額" controlName="totalAmount"
+                                [control]="getFormControl(i, 'totalAmount')" [submitted]="submitted">
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="保固期限(月)" controlName="warrantyPeriod" [control]="getFormControl(i, 'warrantyPeriod')" [submitted]="submitted">
+                            <app-input-number label="保固期限(月)" controlName="warrantyPeriod"
+                                [control]="getFormControl(i, 'warrantyPeriod')" [submitted]="submitted">
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="倉別" controlName="storage" [control]="getFormControl(i, 'storage')" [submitted]="submitted">
+                            <app-input-text label="倉別" controlName="storage" [control]="getFormControl(i, 'storage')"
+                                [submitted]="submitted">
                             </app-input-text>
                         </div>
                     </div>
-                    <hr/>
-                        <app-editor-text label="單項說明" controlName="singleRemark" [control]="getFormControl(i, 'singleRemark')" [style]="{ height: '100px' }" [submitted]="submitted">
-                        </app-editor-text>
-                    <hr/>
+                    <hr />
+                    <app-editor-text label="單項說明" controlName="singleRemark"
+                        [control]="getFormControl(i, 'singleRemark')" [style]="{ height: '100px' }"
+                        [submitted]="submitted">
+                    </app-editor-text>
+                    <hr />
                 </ng-container>
             </ng-container>
             <div class="pt-1">
@@ -87,8 +104,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

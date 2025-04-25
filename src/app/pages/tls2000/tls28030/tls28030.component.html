@@ -4,113 +4,58 @@
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
     <!-- <div *appHasPermission="addPermission">
-                    <app-button-create (click)="onCreate()" class="col"></app-button-create>
+                    <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
                 </div> -->
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
-      <div class="col-12 md:col-6 lg:col-2">
-        <app-date-range
-          label="入帳日"
-          [startControl]="queryForm.controls.startAccountDate"
-          [endControl]="queryForm.controls.endAccountDate"
-          [submitted]="submitted"
-        ></app-date-range>
-      </div>
-  <div class="col-12 md:col-6 lg:col-3">
-        <app-date-range
-          label="繳袋日期"
-          [startControl]="queryForm.controls.startPaymentDate"
-          [endControl]="queryForm.controls.endPaymentDate"
-          [submitted]="submitted"
-        ></app-date-range>
-      </div>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="col-12 md:col-6 lg:col-2">
+          <app-calendar-range calendarType="dateRange" label="入帳日" [startControl]="queryForm.controls.startAccountDate"
+            [endControl]="queryForm.controls.endAccountDate" [submitted]="submitted"></app-calendar-range>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar-range calendarType="dateRange" label="繳袋日期" [startControl]="queryForm.controls.startPaymentDate"
+            [endControl]="queryForm.controls.endPaymentDate" [submitted]="submitted"></app-calendar-range>
+        </div>
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="袋子條碼"
-              controlName="bagBarcode"
-              [control]="queryForm.controls.bagBarcode"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="袋子條碼" controlName="bagBarcode" [control]="queryForm.controls.bagBarcode"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="收銀機代號"
-              controlName="cashierCode"
-              [control]="queryForm.controls.cashierCode"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="收銀機代號" controlName="cashierCode" [control]="queryForm.controls.cashierCode"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="專櫃編號"
-              controlName="counterCode"
-              [control]="queryForm.controls.counterCode"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="專櫃編號" controlName="counterCode" [control]="queryForm.controls.counterCode"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <label>只顯示虛擬機台</label>
-            <app-checkbox-one
-              label="是"
-              controlName="showVirtualMachine"
-              [control]="queryForm.controls.showVirtualMachine"
-            ></app-checkbox-one>
+            <p-checkbox label="是" controlName="showVirtualMachine"></p-checkbox>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="樓層"
-              controlName="floor"
-              [options]="floorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.floor"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="樓層" controlName="floor" [options]="floorOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.floor" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="機台屬性"
-              controlName="machineAttribute"
-              [options]="machineAttributeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.machineAttribute"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="機台屬性" controlName="machineAttribute" [options]="machineAttributeOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.machineAttribute"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="狀態"
-              controlName="status"
-              [options]="statusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.status"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="狀態" controlName="status" [options]="statusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.status" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
       </form>
       <div *appHasPermission="queryPermission" class="col">
         <div class="grid justify-content-end">
-          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-          <app-button-query
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button-query>
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
         </div>
       </div>
     </p-accordionTab>

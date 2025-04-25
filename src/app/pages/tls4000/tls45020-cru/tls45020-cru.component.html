@@ -8,70 +8,85 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="排程編號" controlName="ECR_SchNo" [control]="dataForm.controls.ECR_SchNo" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="排程編號" controlName="ECR_SchNo"
+                        [control]="dataForm.controls.ECR_SchNo" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="設定啟用日期" controlName="ECR_SchDate" [control]="dataForm.controls.ECR_SchDate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="設定啟用日期" controlName="ECR_SchDate"
+                        [control]="dataForm.controls.ECR_SchDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-multi-select label="排程狀態" controlName="ECR_SchStatus" [options]="ECR_SchStatus_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_SchStatus" [submitted]="submitted">
+                    <app-multi-select label="排程狀態" controlName="ECR_SchStatus" [options]="ECR_SchStatus_Options"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_SchStatus"
+                        [submitted]="submitted">
                     </app-multi-select>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="收銀機所屬門市店號" controlName="SYS_StoreNo" [control]="dataForm.controls.SYS_StoreNo" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="收銀機所屬門市店號" controlName="SYS_StoreNo"
+                        [control]="dataForm.controls.SYS_StoreNo" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="收銀機號" controlName="ECR_No" [control]="dataForm.controls.ECR_No" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="收銀機號" controlName="ECR_No"
+                        [control]="dataForm.controls.ECR_No" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-datetime-one label="異動作業完成時間" controlName="ECR_SchFinTime" [control]="dataForm.controls.ECR_SchFinTime" [submitted]="submitted">
-                    </app-datetime-one>
+                    <app-calendar calendarType="dateTimeOne" label="異動作業完成時間" controlName="ECR_SchFinTime"
+                        [control]="dataForm.controls.ECR_SchFinTime" [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <hr>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="原機台所屬專櫃編號" controlName="ORG_ECR_TLT_No" [control]="dataForm.controls.ORG_ECR_TLT_No" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="原機台所屬專櫃編號" controlName="ORG_ECR_TLT_No"
+                        [control]="dataForm.controls.ORG_ECR_TLT_No" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="機台所屬專櫃編號" controlName="ECR_TLT_No" [control]="dataForm.controls.ECR_TLT_No" [submitted]="submitted">
+                    <app-input-text label="機台所屬專櫃編號" controlName="ECR_TLT_No" [control]="dataForm.controls.ECR_TLT_No"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="機台所屬收銀員" controlName="ORG_ECR_USR_No" [control]="dataForm.controls.ORG_ECR_USR_No" [submitted]="submitted">
+                    <app-input-text label="機台所屬收銀員" controlName="ORG_ECR_USR_No"
+                        [control]="dataForm.controls.ORG_ECR_USR_No" [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="新機台所屬收銀員" controlName="ECR_USR_No" [control]="dataForm.controls.ECR_USR_No" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="原模版編號" controlName="ORG_ECR_TmplNo" [control]="dataForm.controls.ORG_ECR_TmplNo" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="新模版編號" controlName="ECR_TmplNo" [control]="dataForm.controls.ECR_TmplNo" [submitted]="submitted">
+                    <app-input-text label="新機台所屬收銀員" controlName="ECR_USR_No" [control]="dataForm.controls.ECR_USR_No"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="原收銀機狀態" controlName="ORG_ECR_Status" [control]="dataForm.controls.ORG_ECR_Status" [submitted]="submitted">
+                    <app-input-text label="原模版編號" controlName="ORG_ECR_TmplNo"
+                        [control]="dataForm.controls.ORG_ECR_TmplNo" [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="收銀機狀態" controlName="ECR_Status" [control]="dataForm.controls.ECR_Status" [submitted]="submitted">
+                    <app-input-text label="新模版編號" controlName="ECR_TmplNo" [control]="dataForm.controls.ECR_TmplNo"
+                        [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="原收銀機狀態" controlName="ORG_ECR_Status"
+                        [control]="dataForm.controls.ORG_ECR_Status" [submitted]="submitted">
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="收銀機狀態" controlName="ECR_Status" [control]="dataForm.controls.ECR_Status"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
@@ -89,8 +104,8 @@
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-6 md:col-4 lg:col-2">
-                            <app-dropdown-default label="系統別初始" controlName="CashRegisterType" [options]="CashRegisterTypeItems" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'CashRegisterType')" [submitted]="submitted">
-                            </app-dropdown-default>
+                            <app-dropdown label="系統別初始" controlName="CashRegisterType" [options]="CashRegisterTypeItems" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'CashRegisterType')" [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                     </div>
                     <hr />
@@ -102,8 +117,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

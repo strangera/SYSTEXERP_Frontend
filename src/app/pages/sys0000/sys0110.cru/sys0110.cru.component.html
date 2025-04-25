@@ -8,66 +8,84 @@
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <p-accordion>
-                <p-accordionTab header="系統權限設定" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'createblock-accordionTab'">
+                <p-accordionTab header="系統權限設定" [selected]="true" class="line-height-3 m-0"
+                    [headerStyleClass]="'createblock-accordionTab'">
                     <div class="grid p-fluid">
                         <!-- 使用者編號 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="使用者編號" controlName="userCode" [control]="dataForm.controls.userCode" [submitted]="submitted"></app-input-number>
+                            <app-input-number label="使用者編號" controlName="userCode"
+                                [control]="dataForm.controls.userCode" [submitted]="submitted"></app-input-number>
                         </div>
 
                         <!-- 使用者名稱 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="使用者名稱" controlName="userAlias" [control]="dataForm.controls.userAlias" [submitted]="submitted"></app-input-text>
+                            <app-input-text label="使用者名稱" controlName="userAlias"
+                                [control]="dataForm.controls.userAlias" [submitted]="submitted"></app-input-text>
                         </div>
 
                         <!-- 密碼 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="密碼" controlName="password" [control]="dataForm.controls.password" [submitted]="submitted"></app-input-text>
+                            <app-input-text label="密碼" controlName="password" [control]="dataForm.controls.password"
+                                [submitted]="submitted"></app-input-text>
                         </div>
 
                         <!-- 組織編號 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="組織編號" controlName="organizationNumber" [options]="organizationNumberOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.organizationNumber" [submitted]="submitted"></app-dropdown-item>
+                            <app-dropdown label="組織編號" controlName="organizationNumber"
+                                [options]="organizationNumberOptions" optionLabel="label" optionValue="value"
+                                [control]="dataForm.controls.organizationNumber" [submitted]="submitted"></app-dropdown>
                         </div>
 
                         <!-- 帳號有效起始日期 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-one label="帳號有效起始日期" [control]="dataForm.controls.startDate" [submitted]="submitted"></app-date-one>
+                            <app-calendar calendarType="dateOne" label="帳號有效起始日期"
+                                [control]="dataForm.controls.startDate" [submitted]="submitted"></app-calendar>
                         </div>
 
                         <!-- 帳號終止日 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-one label="帳號終止日" [control]="dataForm.controls.endDate" [submitted]="submitted"></app-date-one>
+                            <app-calendar calendarType="dateOne" label="帳號終止日" [control]="dataForm.controls.endDate"
+                                [submitted]="submitted"></app-calendar>
                         </div>
 
                         <!-- 使用者狀態 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="使用者狀態" controlName="userStatus" [options]="userStatusOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.userStatus" [submitted]="submitted"></app-dropdown-item>
+                            <app-dropdown label="使用者狀態" controlName="userStatus" [options]="userStatusOptions"
+                                optionLabel="label" optionValue="value" [control]="dataForm.controls.userStatus"
+                                [submitted]="submitted"></app-dropdown>
                         </div>
 
                         <!-- 使用者型態 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="使用者型態" controlName="userType" [options]="userTypeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.userType" [submitted]="submitted"></app-dropdown-item>
+                            <app-dropdown label="使用者型態" controlName="userType" [options]="userTypeOptions"
+                                optionLabel="label" optionValue="value" [control]="dataForm.controls.userType"
+                                [submitted]="submitted"></app-dropdown>
                         </div>
 
                         <!-- 使用者等級 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="使用者等級" controlName="userLevel" [options]="userLevelOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.userLevel" [submitted]="submitted"></app-dropdown-item>
+                            <app-dropdown label="使用者等級" controlName="userLevel" [options]="userLevelOptions"
+                                optionLabel="label" optionValue="value" [control]="dataForm.controls.userLevel"
+                                [submitted]="submitted"></app-dropdown>
                         </div>
 
                         <!-- 備註 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark" [style]="{ height: '100px' }" [submitted]="submitted"></app-editor-text>
+                            <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark"
+                                [style]="{ height: '100px' }" [submitted]="submitted"></app-editor-text>
                         </div>
 
                         <!-- 電子信箱 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="電子信箱" controlName="email" [control]="dataForm.controls.email" [submitted]="submitted"></app-input-text>
+                            <app-input-text label="電子信箱" controlName="email" [control]="dataForm.controls.email"
+                                [submitted]="submitted"></app-input-text>
                         </div>
 
                         <!-- 職位 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="職位" controlName="jobPositionOptions" [options]="jobPositionOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.userLevel" [submitted]="submitted"></app-dropdown-item>
+                            <app-dropdown label="職位" controlName="jobPositionOptions" [options]="jobPositionOptions"
+                                optionLabel="label" optionValue="value" [control]="dataForm.controls.userLevel"
+                                [submitted]="submitted"></app-dropdown>
                         </div>
                     </div>
 
@@ -75,26 +93,37 @@
             </p-accordion>
             <br>
             <p-accordion>
-                <p-accordionTab header="相關代碼設定" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'createblock-accordionTab'">
+                <p-accordionTab header="相關代碼設定" [selected]="true" class="line-height-3 m-0"
+                    [headerStyleClass]="'createblock-accordionTab'">
                     <div class="grid p-fluid">
                         <!-- 樓層代碼 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-multi-select label="樓層代碼" controlName="floorOptions" [options]="FloorOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.FloorOptions" [submitted]="submitted"></app-multi-select>
+                            <app-multi-select label="樓層代碼" controlName="floorOptions" [options]="FloorOptions"
+                                optionLabel="label" optionValue="value" [control]="dataForm.controls.FloorOptions"
+                                [submitted]="submitted"></app-multi-select>
                         </div>
 
                         <!-- 區域代碼 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-multi-select label="區域代碼" controlName="regionCodeOptions" [options]="regionCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.regionCodeOptions" [submitted]="submitted"></app-multi-select>
+                            <app-multi-select label="區域代碼" controlName="regionCodeOptions" [options]="regionCodeOptions"
+                                optionLabel="label" optionValue="value" [control]="dataForm.controls.regionCodeOptions"
+                                [submitted]="submitted"></app-multi-select>
                         </div>
 
                         <!-- 業種代號 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-multi-select label="業種代號" controlName="businessTypeCodeOptions" [options]="businessTypeCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.businessTypeCodeOptions" [submitted]="submitted"></app-multi-select>
+                            <app-multi-select label="業種代號" controlName="businessTypeCodeOptions"
+                                [options]="businessTypeCodeOptions" optionLabel="label" optionValue="value"
+                                [control]="dataForm.controls.businessTypeCodeOptions"
+                                [submitted]="submitted"></app-multi-select>
                         </div>
 
                         <!-- 專櫃代碼 -->
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-multi-select label="專櫃代碼" controlName="counterCodeOptions" [options]="counterCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.counterCodeOptions" [submitted]="submitted"></app-multi-select>
+                            <app-multi-select label="專櫃代碼" controlName="counterCodeOptions"
+                                [options]="counterCodeOptions" optionLabel="label" optionValue="value"
+                                [control]="dataForm.controls.counterCodeOptions"
+                                [submitted]="submitted"></app-multi-select>
                         </div>
                     </div>
 
@@ -102,16 +131,18 @@
             </p-accordion>
             <br>
             <p-accordion>
-                <p-accordionTab header="組織代號設定" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'createblock-accordionTab'">
-                    <p-tree [value]="nodes" [(selection)]="selectedNodes" selectionMode="checkbox" (selectionChange)="onSelectionChange($event)"></p-tree>
+                <p-accordionTab header="組織代號設定" [selected]="true" class="line-height-3 m-0"
+                    [headerStyleClass]="'createblock-accordionTab'">
+                    <p-tree [value]="nodes" [(selection)]="selectedNodes" selectionMode="checkbox"
+                        (selectionChange)="onSelectionChange($event)"></p-tree>
                 </p-accordionTab>
             </p-accordion>
         </form>
 
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
             </div>
         </div>
     </p-panel>

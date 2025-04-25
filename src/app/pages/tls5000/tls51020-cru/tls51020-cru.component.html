@@ -20,10 +20,9 @@
               </app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown-item label="大分類代碼" controlName="bigCategory" [options]="bigCategoryOptions"
-                optionLabel="label" optionValue="value" [control]="dataForm.controls.bigCategory"
-                [submitted]="submitted">
-              </app-dropdown-item>
+              <app-dropdown label="大分類代碼" controlName="bigCategory" [options]="bigCategoryOptions" optionLabel="label"
+                optionValue="value" [control]="dataForm.controls.bigCategory" [submitted]="submitted">
+              </app-dropdown>
             </div>
           </div>
           <hr>
@@ -34,8 +33,8 @@
         </form>
         <div class="col pt-4">
           <div class="grid justify-content-end">
-            <app-button-cancel (click)="onCancel()"></app-button-cancel>
-            <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+            <app-button btnType="cancel" (click)="onCancel()"></app-button>
+            <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
           </div>
         </div>
       </p-panel>

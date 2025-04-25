@@ -5,75 +5,46 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- 開始日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range
-              label="開始日期"
-              controlName="startDate"
-              [startControl]="queryForm.controls.startDateStart"
-              [endControl]="queryForm.controls.startDateEnd"
-              [submitted]="submitted"
-            ></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="開始日期" controlName="startDate"
+              [startControl]="queryForm.controls.startDateStart" [endControl]="queryForm.controls.startDateEnd"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <!-- 結束日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range
-              label="結束日期"
-              controlName="endDate"
-              [startControl]="queryForm.controls.endDateStart"
-              [endControl]="queryForm.controls.endDateEnd"
-              [submitted]="submitted"
-            ></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="結束日期" controlName="endDate"
+              [startControl]="queryForm.controls.endDateStart" [endControl]="queryForm.controls.endDateEnd"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <!-- 行銷檔期代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="行銷檔期代號"
-              controlName="marketingCampaignCode"
-              [options]="marketingCampaignOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.marketingCampaignCode"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="行銷檔期代號" controlName="marketingCampaignCode" [options]="marketingCampaignOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.marketingCampaignCode"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <!-- 行銷檔期名稱 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="行銷檔期名稱"
-              controlName="campaignName"
-              [control]="queryForm.controls.campaignName"
-              [submitted]="submitted"
-            >
+            <app-input-text label="行銷檔期名稱" controlName="campaignName" [control]="queryForm.controls.campaignName"
+              [submitted]="submitted">
             </app-input-text>
           </div>
           <!-- 檔期說明 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="檔期說明"
-              controlName="campaignDescription"
-              [control]="queryForm.controls.campaignDescription"
-              [submitted]="submitted"
-            >
+            <app-input-text label="檔期說明" controlName="campaignDescription"
+              [control]="queryForm.controls.campaignDescription" [submitted]="submitted">
             </app-input-text>
           </div>
         </div>
       </form>
       <div *appHasPermission="queryPermission" class="col">
         <div class="grid justify-content-end">
-          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-          <app-button-query
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button-query>
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -81,12 +52,7 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-data-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    >
+    <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
     </app-data-table>
   </div>
 </div>

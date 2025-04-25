@@ -1,55 +1,36 @@
 <div class="card">
-    <div class="grid align-items-center">
-      <div class="col" style="flex: 1">
-        <app-menubar [ProgNo]="ProgNo"></app-menubar>
-      </div>
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <p-accordion>
-      <p-accordionTab
-        header="{{ 'query-conditions' | translate }}"
-        [selected]="true"
-        class="line-height-3 m-0"
-        [headerStyleClass]="'query-accordionTab'"
-      >
-        <form
-          [formGroup]="queryForm"
-          id="queryForm"
-          (ngSubmit)="onSubmit(queryForm)"
-        >
-          <div class="grid p-fluid">
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-date-range
-                label="退票日"
-                controlName="generalCode"
-                [startControl]="queryForm.controls.startdate"
-                [endControl]="queryForm.controls.enddate"
-                [submitted]="submitted"
-              ></app-date-range>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="票據號碼"
-                controlName="Ticketnumber"
-                [control]="queryForm.controls.Ticketnumber"
-                [submitted]="submitted"
-              >
-              </app-input-text>
-            </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateRange" label="退票日" controlName="generalCode"
+              [startControl]="queryForm.controls.startdate" [endControl]="queryForm.controls.enddate"
+              [submitted]="submitted"></app-calendar-range>
           </div>
-        </form>
-        <div *appHasPermission="queryPermission" class="col">
-          <div class="grid justify-content-end">
-            <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-            <app-button-query
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button-query>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="票據號碼" controlName="Ticketnumber" [control]="queryForm.controls.Ticketnumber"
+              [submitted]="submitted">
+            </app-input-text>
           </div>
         </div>
-      </p-accordionTab>
-    </p-accordion>
-  </div>
-  <!-- <div class="card">
+      </form>
+      <div *appHasPermission="queryPermission" class="col">
+        <div class="grid justify-content-end">
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<!-- <div class="card">
     <div class="col-12">
       <app-data-table
         [data]="data"
@@ -59,4 +40,3 @@
       ></app-data-table>
     </div>
   </div> -->
-  

@@ -1,72 +1,44 @@
 <div class="card">
-    <div class="grid align-items-center">
-      <div class="col" style="flex: 1">
-        <app-menubar [ProgNo]="ProgNo"></app-menubar>
-      </div>
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <p-accordion>
-      <p-accordionTab
-        header="整批還原查詢"
-        [selected]="true"
-        class="line-height-3 m-0"
-        [headerStyleClass]="'query-accordionTab'"
-      >
-        <form
-          [formGroup]="queryForm"
-          id="queryForm"
-          (ngSubmit)="onSubmit(queryForm)"
-        >
-          <div class="grid p-fluid">
-            <!-- 認列日期 -->
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one
-                label="認列日期"
-                [control]="queryForm.controls.startRecognitionDate"
-                [submitted]="submitted"
-              >
-              </app-date-one>
-            </div>
-  
-            <!-- 批號 -->
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="批號"
-                controlName="batchNumber"
-                [control]="queryForm.controls.batchNumber"
-                [submitted]="submitted"
-              >
-              </app-input-text>
-            </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="整批還原查詢" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <!-- 認列日期 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar calendarType="dateOne" label="認列日期" [control]="queryForm.controls.startRecognitionDate"
+              [submitted]="submitted">
+            </app-calendar>
           </div>
-        </form>
-        <div *appHasPermission="queryPermission" class="col">
-          <div class="grid justify-content-end">
-            <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-            <app-button-query
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button-query>
+
+          <!-- 批號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="批號" controlName="batchNumber" [control]="queryForm.controls.batchNumber"
+              [submitted]="submitted">
+            </app-input-text>
           </div>
         </div>
-      </p-accordionTab>
-    </p-accordion>
+      </form>
+      <div *appHasPermission="queryPermission" class="col">
+        <div class="grid justify-content-end">
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <div class="col-12">
+    <app-data-table-check [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+    </app-data-table-check>
   </div>
-  
-  <div class="card">
-    <div class="col-12">
-      <app-data-table-check
-        [data]="data"
-        [columns]="columns"
-        (edit)="onEdit($event)"
-        (detail)="onDetail($event)"
-      >
-      </app-data-table-check>
-    </div>
-    <app-button-action
-        label="確定還原"
-        icon="pi pi-refresh"
-        (click)="onRefresh()"
-        >
-    </app-button-action>
-  </div>
-  
+  <app-button btnType="action" label="確定還原" icon="pi pi-refresh" (click)="onRefresh()">
+  </app-button>
+</div>

@@ -5,97 +5,50 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-range
-              label="日期"
-              controlName="accountsummary"
-              [startControl]="queryForm.controls.SSubpoenadate"
-              [endControl]="queryForm.controls.ESubpoenadate"
-              [submitted]="submitted"
-            ></app-date-range>
+            <app-calendar-range calendarType="dateRange" label="日期" controlName="accountsummary"
+              [startControl]="queryForm.controls.SSubpoenadate" [endControl]="queryForm.controls.ESubpoenadate"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="類別"
-              [control]="queryForm.controls.category"
-              [options]="category"
-              [submitted]="submitted"
-            >
+            <app-radiobutton label="類別" [control]="queryForm.controls.category" [options]="category"
+              [submitted]="submitted">
             </app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="部門"
-              controlName="department"
-              [options]="departmentOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.department"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="部門" controlName="department" [options]="departmentOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.department" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="科目代號"
-              controlName="Accountcode"
-              [options]="accountingaccountOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Accountcode"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="科目代號" controlName="Accountcode" [options]="accountingaccountOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.Accountcode"
+              [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="廠商代號"
-              controlName="vander"
-              [options]="vendorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.vander"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="廠商代號" controlName="vander" [options]="vendorOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.vander" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="會科是否全部顯示"
-              [control]="queryForm.controls.display"
-              [options]="display"
-              [submitted]="submitted"
-            >
+            <app-radiobutton label="會科是否全部顯示" [control]="queryForm.controls.display" [options]="display"
+              [submitted]="submitted">
             </app-radiobutton>
           </div>
 
           <div class="col-12 md:col-4 lg:col-4">
-            <app-checkbox-one
-              label="列印簽核欄"
-              controlName="Approvalcolumn"
-              [control]="queryForm.controls.Approvalcolumn"
-            >
-            </app-checkbox-one>
+            <p-checkbox label="列印簽核欄" controlName="Approvalcolumn">
+            </p-checkbox>
           </div>
         </div>
       </form>
       <div *appHasPermission="queryPermission" class="col">
         <div class="grid justify-content-end">
-          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-          <app-button-query
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button-query>
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -103,11 +56,7 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-data-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-data-table>
+    <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)"
+      (detail)="onDetail($event)"></app-data-table>
   </div>
 </div>

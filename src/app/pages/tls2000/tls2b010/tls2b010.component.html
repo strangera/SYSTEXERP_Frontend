@@ -7,41 +7,54 @@
                 </div>
             </div>
             <p-accordion>
-                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true"
+                    class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
                     <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-one label="銷售日期" [control]="queryForm.controls.onedatedd" [submitted]="submitted">
-                                </app-date-one>
+                                <app-calendar calendarType="dateOne" label="銷售日期"
+                                    [control]="queryForm.controls.onedatedd" [submitted]="submitted">
+                                </app-calendar>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number-range label="收銀機代號" [startControl]="queryForm.controls.cahserStart" [endControl]="queryForm.controls.cahserEnd" [submitted]="submitted">
-                                </app-input-serial-number-range>
+                                <app-input-number-range [useGrouping]="false" label="收銀機代號"
+                                    [startControl]="queryForm.controls.cahserStart"
+                                    [endControl]="queryForm.controls.cahserEnd" [submitted]="submitted">
+                                </app-input-number-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number-range label="專櫃編號" [startControl]="queryForm.controls.counterStart" [endControl]="queryForm.controls.counterEnd" [submitted]="submitted">
-                                </app-input-serial-number-range>
+                                <app-input-number-range [useGrouping]="false" label="專櫃編號"
+                                    [startControl]="queryForm.controls.counterStart"
+                                    [endControl]="queryForm.controls.counterEnd" [submitted]="submitted">
+                                </app-input-number-range>
                             </div>
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-dropdown-item label="收銀機類型" controlName="cahserType" [options]="cahserTypeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.cahserType" [submitted]="submitted">
-                                </app-dropdown-item>
+                                <app-dropdown label="收銀機類型" controlName="cahserType" [options]="cahserTypeOptions"
+                                    optionLabel="label" optionValue="value" [control]="queryForm.controls.cahserType"
+                                    [submitted]="submitted">
+                                </app-dropdown>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-multi-select label="顯示欄位" controlName="reimbursementType" [options]="reimbursementOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.reimbursementType" [submitted]="submitted">
+                                <app-multi-select label="顯示欄位" controlName="reimbursementType"
+                                    [options]="reimbursementOptions" optionLabel="label" optionValue="value"
+                                    [control]="queryForm.controls.reimbursementType" [submitted]="submitted">
                                 </app-multi-select>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-radiobutton label="顯示方式" groupname="systemtyperadio" [control]="queryForm.controls.cashShowUp" [options]="CashShowupByOptions" [submitted]="submitted">
+                                <app-radiobutton label="顯示方式" groupname="systemtyperadio"
+                                    [control]="queryForm.controls.cashShowUp" [options]="CashShowupByOptions"
+                                    [submitted]="submitted">
                                 </app-radiobutton>
                             </div>
                         </div>
                         <h6>最近關帳日期:2020/2/9</h6>
                         <div *appHasPermission="queryPermission" class="col">
                             <div class="grid justify-content-end">
-                                <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                                <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                                <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                                <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                                    [loading]="loading"></app-button>
                             </div>
                         </div>
                     </form>

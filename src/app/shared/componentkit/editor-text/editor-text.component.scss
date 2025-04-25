@@ -1,0 +1,13 @@
+::ng-deep {
+  .ng-invalid.ng-dirty > * {
+    border-color: #f44336 !important;
+  }
+
+  .p-editor-toolbar {
+    display: none;
+  }
+}
+
+.errorMessage {
+  color: red;
+}

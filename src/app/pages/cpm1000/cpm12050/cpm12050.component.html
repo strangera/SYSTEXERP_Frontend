@@ -4,101 +4,130 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <div *appHasPermission="addPermission">
-            <app-button-action label="高權限查詢" icon="pi pi-user-plus" (click)="onSupremeAuthority()" class="col"></app-button-action>
+            <app-button btnType="action" label="高權限查詢" icon="pi pi-user-plus" (click)="onSupremeAuthority()"
+                class="col"></app-button>
         </div>
         <div *appHasPermission="addPermission">
-            <app-button-create (click)="onCreate()" class="col"></app-button-create>
+            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
         </div>
     </div>
     <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+            [headerStyleClass]="'query-accordionTab'">
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div *appHasPermission="queryPermission" class="col">
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="客戶意見編號" controlName="opinionCode" [options]="opinionCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.opinionCode" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="客戶意見編號" controlName="opinionCode" [options]="opinionCodeOptions"
+                                optionLabel="label" optionValue="value" [control]="queryForm.controls.opinionCode"
+                                [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="顧客姓名" controlName="customerName" [control]="queryForm.controls.customerName" [submitted]="submitted">
+                            <app-input-text label="顧客姓名" controlName="customerName"
+                                [control]="queryForm.controls.customerName" [submitted]="submitted">
                             </app-input-text>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-multi-select label="處理情況" controlName="handlingSituation" [options]="handlingOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.handlingSituation" [submitted]="submitted">
+                            <app-multi-select label="處理情況" controlName="handlingSituation" [options]="handlingOptions"
+                                optionLabel="label" optionValue="value" [control]="queryForm.controls.handlingSituation"
+                                [submitted]="submitted">
                             </app-multi-select>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-multi-select label="性別" controlName="gender" [options]="genderOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.gender" [submitted]="submitted">
+                            <app-multi-select label="性別" controlName="gender" [options]="genderOptions"
+                                optionLabel="label" optionValue="value" [control]="queryForm.controls.gender"
+                                [submitted]="submitted">
                             </app-multi-select>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-multi-select label="客戶意見類別" controlName="opinionCategory" [options]="opinionCategoryOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.opinionCategory" [submitted]="submitted">
+                            <app-multi-select label="客戶意見類別" controlName="opinionCategory"
+                                [options]="opinionCategoryOptions" optionLabel="label" optionValue="value"
+                                [control]="queryForm.controls.opinionCategory" [submitted]="submitted">
                             </app-multi-select>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-multi-select label="客戶意見來源別" controlName="opinionSource" [options]="opinionSourceOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.opinionSource" [submitted]="submitted">
+                            <app-multi-select label="客戶意見來源別" controlName="opinionSource"
+                                [options]="opinionSourceOptions" optionLabel="label" optionValue="value"
+                                [control]="queryForm.controls.opinionSource" [submitted]="submitted">
                             </app-multi-select>
                         </div>
                     </div>
                     <hr>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="聯絡電話" controlName="contactPhone" [control]="queryForm.controls.contactPhone" [submitted]="submitted">
-                            </app-input-serial-number>
+                            <app-input-number [useGrouping]="false" label="聯絡電話" controlName="contactPhone"
+                                [control]="queryForm.controls.contactPhone" [submitted]="submitted">
+                            </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-6">
-                            <app-input-text label="聯絡住址" controlName="contactAddress" [control]="queryForm.controls.contactAddress" [submitted]="submitted">
+                            <app-input-text label="聯絡住址" controlName="contactAddress"
+                                [control]="queryForm.controls.contactAddress" [submitted]="submitted">
                             </app-input-text>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="行動電話" controlName="cellPhone" [control]="queryForm.controls.cellPhone" [submitted]="submitted">
-                            </app-input-serial-number>
+                            <app-input-number [useGrouping]="false" label="行動電話" controlName="cellPhone"
+                                [control]="queryForm.controls.cellPhone" [submitted]="submitted">
+                            </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="電子信箱" controlName="email" [control]="queryForm.controls.email" [submitted]="submitted">
+                            <app-input-text label="電子信箱" controlName="email" [control]="queryForm.controls.email"
+                                [submitted]="submitted">
                             </app-input-text>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="件號" controlName="pieces" [control]="queryForm.controls.pieces" [submitted]="submitted">
-                            </app-input-serial-number>
+                            <app-input-number [useGrouping]="false" label="件號" controlName="pieces"
+                                [control]="queryForm.controls.pieces" [submitted]="submitted">
+                            </app-input-number>
                         </div>
                     </div>
-                    <hr/>
-                    <app-editor-text label="顧客意見內容" controlName="emailContent" [control]="queryForm.controls.emailContent" [style]="{ height: '100px' }" [submitted]="submitted">
+                    <hr />
+                    <app-editor-text label="顧客意見內容" controlName="emailContent"
+                        [control]="queryForm.controls.emailContent" [style]="{ height: '100px' }"
+                        [submitted]="submitted">
                     </app-editor-text>
-                    <hr/>
+                    <hr />
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="責任單位" controlName="responsibleUnit" [options]="responsibleUnitOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.responsibleUnit" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="責任單位" controlName="responsibleUnit" [options]="responsibleUnitOptions"
+                                optionLabel="label" optionValue="value" [control]="queryForm.controls.responsibleUnit"
+                                [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="建檔人員" controlName="builder" [control]="queryForm.controls.builder" [submitted]="submitted">
+                            <app-input-text label="建檔人員" controlName="builder" [control]="queryForm.controls.builder"
+                                [submitted]="submitted">
                             </app-input-text>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-range label="接件日期" [startControl]="queryForm.controls.receiveDateFrom" [endControl]="queryForm.controls.receiveDateTo" [submitted]="submitted">
-                            </app-date-range>
+                            <app-calendar-range calendarType="dateRange" label="接件日期"
+                                [startControl]="queryForm.controls.receiveDateFrom"
+                                [endControl]="queryForm.controls.receiveDateTo" [submitted]="submitted">
+                            </app-calendar-range>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-date-range label="通知相關單位處理日期" [startControl]="queryForm.controls.notifyDateFrom" [endControl]="queryForm.controls.notifyDateTo" [submitted]="submitted">
-                            </app-date-range>
+                            <app-calendar-range calendarType="dateRange" label="通知相關單位處理日期"
+                                [startControl]="queryForm.controls.notifyDateFrom"
+                                [endControl]="queryForm.controls.notifyDateTo" [submitted]="submitted">
+                            </app-calendar-range>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="對象" controlName="object" [control]="queryForm.controls.object" [submitted]="submitted">
+                            <app-input-text label="對象" controlName="object" [control]="queryForm.controls.object"
+                                [submitted]="submitted">
                             </app-input-text>
                         </div>
                     </div>
                     <div *appHasPermission="queryPermission" class="col">
                         <div class="grid justify-content-end">
-                            <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                            <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                            <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                                [loading]="loading"></app-button>
                         </div>
                     </div>
                 </div>

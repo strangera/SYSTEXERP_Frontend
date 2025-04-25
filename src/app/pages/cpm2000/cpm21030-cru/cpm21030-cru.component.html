@@ -8,45 +8,56 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="場地代號" controlName="filedCode" [control]="dataForm.controls.filedCode" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="場地代號" controlName="filedCode"
+                        [control]="dataForm.controls.filedCode" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="場地名稱" controlName="filedName" [control]="dataForm.controls.filedName" [submitted]="submitted">
+                    <app-input-text label="場地名稱" controlName="filedName" [control]="dataForm.controls.filedName"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="區域" controlName="area" [options]="areaOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.area" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="區域" controlName="area" [options]="areaOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.area" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="管理部門" controlName=" organizationNumber" [options]="organizationNumberOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.organizationNumber" [submitted]="submitted"></app-dropdown-item>
+                    <app-dropdown label="管理部門" controlName=" organizationNumber" [options]="organizationNumberOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.organizationNumber"
+                        [submitted]="submitted"></app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="面積(坪)" controlName="square" [control]="dataForm.controls.square" [submitted]="submitted">
+                    <app-input-number label="面積(坪)" controlName="square" [control]="dataForm.controls.square"
+                        [submitted]="submitted">
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="座位數量" controlName="sitNumber" [control]="dataForm.controls.sitNumber" [submitted]="submitted">
+                    <app-input-number label="座位數量" controlName="sitNumber" [control]="dataForm.controls.sitNumber"
+                        [submitted]="submitted">
                     </app-input-number>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="可容納人數" controlName="capacity" [control]="dataForm.controls.capacity" [submitted]="submitted">
+                    <app-input-number label="可容納人數" controlName="capacity" [control]="dataForm.controls.capacity"
+                        [submitted]="submitted">
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="場地狀況" controlName="fieldStatus" [options]="fieldStatusOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.fieldStatus" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="場地狀況" controlName="fieldStatus" [options]="fieldStatusOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.fieldStatus"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
-            <hr/>
-                <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark" [style]="{ height: '100px' }" [submitted]="submitted">
-                </app-editor-text>
-            <hr/>
+            <hr />
+            <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark"
+                [style]="{ height: '100px' }" [submitted]="submitted">
+            </app-editor-text>
+            <hr />
             <!---->
             <!-- <hr />
             <ng-container formArrayName="items">
@@ -61,8 +72,8 @@
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="所屬服務台位置" controlName="counterPosition" [options]="counterOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'counterPosition')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="所屬服務台位置" controlName="counterPosition" [options]="counterOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'counterPosition')" [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
                             <app-input-number label="分配設備數量" controlName="allocateNumber" [control]="getFormControl(i, 'allocateNumber')" [submitted]="submitted">
@@ -78,8 +89,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

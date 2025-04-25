@@ -16,219 +16,120 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="退貨驗收單號"
-            controlName="returnAcceptanceNumber"
-            [control]="dataForm.controls.returnAcceptanceNumber"
-            [submitted]="submitted"
-          >
+          <app-input-text label="退貨驗收單號" controlName="returnAcceptanceNumber"
+            [control]="dataForm.controls.returnAcceptanceNumber" [submitted]="submitted">
           </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown-item
-            label="廠商編號"
-            controlName="vendorCode"
-            [options]="vendorOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.vendorCode"
-            [submitted]="submitted"
-          ></app-dropdown-item>
+          <app-dropdown label="廠商編號" controlName="vendorCode" [options]="vendorOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.vendorCode" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown-item
-            label="倉別"
-            controlName="warehouseId"
-            [options]="warehouseOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.warehouseId"
-            [submitted]="submitted"
-          >
-          </app-dropdown-item>
+          <app-dropdown label="倉別" controlName="warehouseId" [options]="warehouseOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.warehouseId" [submitted]="submitted">
+          </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="退貨驗收金額"
-            controlName="returnAcceptanceAmount"
-            [control]="dataForm.controls.returnAcceptanceAmount"
-            [submitted]="submitted"
-          >
+          <app-input-text label="退貨驗收金額" controlName="returnAcceptanceAmount"
+            [control]="dataForm.controls.returnAcceptanceAmount" [submitted]="submitted">
           </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="稅額"
-            controlName="taxAmount"
-            [control]="dataForm.controls.taxAmount"
-            [submitted]="submitted"
-          >
+          <app-input-text label="稅額" controlName="taxAmount" [control]="dataForm.controls.taxAmount"
+            [submitted]="submitted">
           </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="合計金額"
-            controlName="totalAmount"
-            [control]="dataForm.controls.totalAmount"
-            [submitted]="submitted"
-          >
+          <app-input-text label="合計金額" controlName="totalAmount" [control]="dataForm.controls.totalAmount"
+            [submitted]="submitted">
           </app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown-item
-            label="申請人"
-            controlName="applicantId"
-            [options]="userCodeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.applicantId"
-            [submitted]="submitted"
-          >
-          </app-dropdown-item>
+          <app-dropdown label="申請人" controlName="applicantId" [options]="userCodeOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.applicantId" [submitted]="submitted">
+          </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one
-            label="申請日期"
-            [control]="dataForm.controls.applicationDateFrom"
-            [submitted]="submitted"
-          >
-          </app-date-one>
+          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.applicationDateFrom"
+            [submitted]="submitted">
+          </app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="售價總計"
-            controlName="totalSaleAmount"
-            [control]="dataForm.controls.totalSaleAmount"
-            [submitted]="submitted"
-          >
+          <app-input-text label="售價總計" controlName="totalSaleAmount" [control]="dataForm.controls.totalSaleAmount"
+            [submitted]="submitted">
           </app-input-text>
         </div>
       </div>
       <!--動態增加-->
       <hr />
       <ng-container formArrayName="items">
-        <ng-container
-          *ngFor="let item of items.controls; let i = index"
-          [formGroupName]="i"
-        >
+        <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
           <div class="grid align-items-center">
             <div class="col" style="flex: 1"></div>
             <div>
-              <app-button-dynamicallydelete
-                (click)="onRemoveItem(i)"
-                [crudstatus]="crudstatus"
-                class="col"
-              ></app-button-dynamicallydelete>
+              <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                class="col"></app-button-dynamicallydelete>
             </div>
-        </div>
-                      <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                          <app-input-text
-                            label="商品管理編號/名稱"
-                            controlName="mgname"
-                            [control]="getFormControl(i, 'mgname')"
-                            [submitted]="submitted"
-                          ></app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                          <app-input-text
-                            label="可退回數量"
-                            controlName="arenum"
-                            [control]="getFormControl(i, 'arenum')"
-                            [submitted]="submitted"
-                          ></app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                          <app-input-text
-                            label="退回數量"
-                            controlName="renum"
-                            [control]="getFormControl(i, 'renum')"
-                            [submitted]="submitted"
-                          ></app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                          <app-input-text
-                            label="商品單位"
-                            controlName="unit"
-                            [control]="getFormControl(i, 'unit')"
-                            [submitted]="submitted"
-                          ></app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                          <app-input-text
-                            label="單價"
-                            controlName="unitprice"
-                            [control]="getFormControl(i, 'unitprice')"
-                            [submitted]="submitted"
-                          ></app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                          <app-input-text
-                            label="稅別"
-                            controlName="tax"
-                            [control]="getFormControl(i, 'tax')"
-                            [submitted]="submitted"
-                          ></app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                          <app-input-text
-                            label="未稅金額"
-                            controlName="untax"
-                            [control]="getFormControl(i, 'untax')"
-                            [submitted]="submitted"
-                          ></app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                          <app-input-text
-                            label="售價"
-                            controlName="price"
-                            [control]="getFormControl(i, 'price')"
-                            [submitted]="submitted"
-                          ></app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                          <app-input-text
-                            label="售價小計"
-                            controlName="sumprice"
-                            [control]="getFormControl(i, 'sumprice')"
-                            [submitted]="submitted"
-                          ></app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                          <app-input-text
-                            label="退貨單編號"
-                            controlName="recode"
-                            [control]="getFormControl(i, 'recode')"
-                            [submitted]="submitted"
-                          ></app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                          <app-input-text
-                            label="單項備註"
-                            controlName="remark"
-                            [control]="getFormControl(i, 'remark')"
-                            [submitted]="submitted"
-                          ></app-input-text>
-                        </div>
-                    </div>
-                    <hr />
-                  </ng-container>
-                </ng-container>
-                <div class="pt-1">
-                  <app-button-dynamicallyadd
-                    (click)="onAddItem()"
-                  ></app-button-dynamicallyadd>
-                </div>
-              </form>
-              <div class="col pt-4">
-                <div class="grid justify-content-end">
-                  <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                  <app-button-submit
-                    (click)="submitForm(dataForm)"
-                    *ngIf="isFormEditable"
-                  ></app-button-submit>
-                </div>
-              </div>
-            </p-panel>
           </div>
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="商品管理編號/名稱" controlName="mgname" [control]="getFormControl(i, 'mgname')"
+                [submitted]="submitted"></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="可退回數量" controlName="arenum" [control]="getFormControl(i, 'arenum')"
+                [submitted]="submitted"></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="退回數量" controlName="renum" [control]="getFormControl(i, 'renum')"
+                [submitted]="submitted"></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="商品單位" controlName="unit" [control]="getFormControl(i, 'unit')"
+                [submitted]="submitted"></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="單價" controlName="unitprice" [control]="getFormControl(i, 'unitprice')"
+                [submitted]="submitted"></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="稅別" controlName="tax" [control]="getFormControl(i, 'tax')"
+                [submitted]="submitted"></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="未稅金額" controlName="untax" [control]="getFormControl(i, 'untax')"
+                [submitted]="submitted"></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="售價" controlName="price" [control]="getFormControl(i, 'price')"
+                [submitted]="submitted"></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="售價小計" controlName="sumprice" [control]="getFormControl(i, 'sumprice')"
+                [submitted]="submitted"></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="退貨單編號" controlName="recode" [control]="getFormControl(i, 'recode')"
+                [submitted]="submitted"></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="單項備註" controlName="remark" [control]="getFormControl(i, 'remark')"
+                [submitted]="submitted"></app-input-text>
+            </div>
+          </div>
+          <hr />
+        </ng-container>
+      </ng-container>
+      <div class="pt-1">
+        <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+      </div>
+    </form>
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+        <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
+      </div>
+    </div>
+  </p-panel>
+</div>

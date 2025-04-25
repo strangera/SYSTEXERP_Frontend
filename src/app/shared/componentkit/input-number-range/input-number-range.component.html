@@ -1,16 +1,30 @@
-<div class="datetime-range">
-    <label [for]="endControl">{{ label }}
-      <span *ngIf="isRequired" class="required">*</span>
-    </label>
-    <div class="datetime-inputs">
-        <div class="input-group">
-            <p-inputNumber [formControl]="startControl" [placeholder]="placeholder" [ngClass]="{'is-invalid': submitted && startControl.errors}"></p-inputNumber>
-            <app-control-messages [onerror]="submitted" [control]="startControl"></app-control-messages>
-        </div>
-        ~
-        <div class="input-group">
-            <p-inputNumber [formControl]="endControl" [placeholder]="placeholder" [ngClass]="{'is-invalid': submitted && endControl.errors}"></p-inputNumber>
-            <app-control-messages [onerror]="submitted" [control]="endControl"></app-control-messages>
-        </div>
-    </div>
+<label for="input-number-range">{{ label }}
+  <span *ngIf="isRequired" class="required">*</span>
+</label>
+<div class="grid p-fluid">
+  <div class="col pb-0">
+    <p-inputGroup id="input-number-start">
+      <p-inputNumber id="input-number-range" [formControl]="startControl" [placeholder]="placeholder"
+        [showButtons]="showButtons" [min]="minBoundary" [max]="maxBoundary" [step]="step" [useGrouping]="useGrouping"
+        [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
+        [ngClass]="{'ng-dirty ng-invalid': submitted && startControl.errors}" [mode]="mode"
+        [incrementButtonClass]="incrementButtonClass" [decrementButtonClass]="decrementButtonClass"
+        (onInputChange)="onStartInputChange($event)" (onBlur)="onStartBlur($event)" />
+      <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
+    </p-inputGroup>
+  </div>
+  <span>~</span>
+  <div class="col pb-0">
+    <p-inputGroup id="input-number-end">
+      <p-inputNumber id="input-number-range" [formControl]="endControl" [placeholder]="placeholder"
+        [showButtons]="showButtons" [min]="minBoundary" [max]="maxBoundary" [step]="step" [useGrouping]="useGrouping"
+        [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
+        [ngClass]="{'ng-dirty ng-invalid': submitted && endControl.errors}" [mode]="mode"
+        [incrementButtonClass]="incrementButtonClass" [decrementButtonClass]="decrementButtonClass"
+        (onInputChange)="onEndInputChange($event)" (onBlur)="onEndBlur($event)" />
+      <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
+    </p-inputGroup>
+  </div>
 </div>
+<app-control-messages [onerror]="submitted || (startControl.touched && startControl.invalid)"
+  [control]="startControl"></app-control-messages>

@@ -8,27 +8,33 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="固資重估單" controlName="assets_Revaluation_Sheet" [control]="dataForm.controls.assets_Revaluation_Sheet" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="固資重估單" controlName="assets_Revaluation_Sheet"
+                        [control]="dataForm.controls.assets_Revaluation_Sheet" [submitted]="submitted">
+                    </app-input-number>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="申請人員編號" controlName="userCode" [options]="userCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.userCode" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="申請人員編號" controlName="userCode" [options]="userCodeOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.userCode" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="部門代號" controlName=" organizationNumber" [options]="organizationNumberOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.organizationNumber" [submitted]="submitted"></app-dropdown-item>
+                    <app-dropdown label="部門代號" controlName=" organizationNumber" [options]="organizationNumberOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.organizationNumber"
+                        [submitted]="submitted"></app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="申請日期" [control]="dataForm.controls.applicationDate" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.applicationDate"
+                        [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
-            <hr/>
-                <app-editor-text label="固資重估說明" controlName="reamrk" [control]="dataForm.controls.reamrk" [style]="{ height: '100px' }" [submitted]="submitted">
-                </app-editor-text>
-            <hr/>
+            <hr />
+            <app-editor-text label="固資重估說明" controlName="reamrk" [control]="dataForm.controls.reamrk"
+                [style]="{ height: '100px' }" [submitted]="submitted">
+            </app-editor-text>
+            <hr />
             <ng-container formArrayName="items">
                 <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
                     <div class="grid align-items-center">
@@ -36,79 +42,97 @@
                             <h5>商品 {{ i + 1 }}</h5>
                         </div>
                         <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                                class="col"></app-button-dynamicallydelete>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="商品編號/名稱" controlName="managementCode" [control]="getFormControl(i, 'managementCode')" [submitted]="submitted">
-                            </app-input-serial-number>
+                            <app-input-number [useGrouping]="false" label="商品編號/名稱" controlName="managementCode"
+                                [control]="getFormControl(i, 'managementCode')" [submitted]="submitted">
+                            </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="商品單位" controlName="unit" [control]="getFormControl(i, 'unit')" [submitted]="submitted">
+                            <app-input-text label="商品單位" controlName="unit" [control]="getFormControl(i, 'unit')"
+                                [submitted]="submitted">
                             </app-input-text>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="數量" controlName="amount" [control]="getFormControl(i, 'amount')" [submitted]="submitted">
+                            <app-input-number label="數量" controlName="amount" [control]="getFormControl(i, 'amount')"
+                                [submitted]="submitted">
                             </app-input-number>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="折舊年限" controlName="depreciationLife" [control]="getFormControl(i, 'depreciationLife')" [submitted]="submitted">
-                            </app-input-serial-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="已異動折舊年限" controlName="altered_depreciationLife" [control]="getFormControl(i, 'altered_depreciationLife')" [submitted]="submitted">
-                            </app-input-serial-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="異動年限" controlName="alteredLife" [control]="getFormControl(i, 'alteredLife')" [submitted]="submitted">
-                            </app-input-serial-number>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="取得價格" controlName="receivePrice" [control]="getFormControl(i, 'receivePrice')" [submitted]="submitted">
+                            <app-input-number [useGrouping]="false" label="折舊年限" controlName="depreciationLife"
+                                [control]="getFormControl(i, 'depreciationLife')" [submitted]="submitted">
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="已異動價格" controlName="alteredPrice" [control]="getFormControl(i, 'alteredPrice')" [submitted]="submitted">
+                            <app-input-number [useGrouping]="false" label="已異動折舊年限"
+                                controlName="altered_depreciationLife"
+                                [control]="getFormControl(i, 'altered_depreciationLife')" [submitted]="submitted">
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="累計已攤提金額" controlName="total_sharedPrice" [control]="getFormControl(i, 'total_sharedPrice')" [submitted]="submitted">
+                            <app-input-number [useGrouping]="false" label="異動年限" controlName="alteredLife"
+                                [control]="getFormControl(i, 'alteredLife')" [submitted]="submitted">
                             </app-input-number>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="累計已攤提月數" controlName="total_sharedMonth" [control]="getFormControl(i, 'total_sharedMonth')" [submitted]="submitted">
+                            <app-input-number label="取得價格" controlName="receivePrice"
+                                [control]="getFormControl(i, 'receivePrice')" [submitted]="submitted">
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="異動購入金額" controlName="altered_buyPrice" [control]="getFormControl(i, 'altered_buyPrice')" [submitted]="submitted">
+                            <app-input-number label="已異動價格" controlName="alteredPrice"
+                                [control]="getFormControl(i, 'alteredPrice')" [submitted]="submitted">
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="折舊科目" controlName="depreciation" [control]="getFormControl(i, 'depreciation')" [submitted]="submitted">
+                            <app-input-number label="累計已攤提金額" controlName="total_sharedPrice"
+                                [control]="getFormControl(i, 'total_sharedPrice')" [submitted]="submitted">
                             </app-input-number>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="累計折舊科目" controlName="totalDepreciation" [control]="getFormControl(i, 'totalDepreciation')" [submitted]="submitted">
+                            <app-input-number label="累計已攤提月數" controlName="total_sharedMonth"
+                                [control]="getFormControl(i, 'total_sharedMonth')" [submitted]="submitted">
                             </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="使用單位" controlName="usageUnit" [control]="getFormControl(i, 'usageUnit')" [submitted]="submitted">
+                            <app-input-number label="異動購入金額" controlName="altered_buyPrice"
+                                [control]="getFormControl(i, 'altered_buyPrice')" [submitted]="submitted">
+                            </app-input-number>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-number label="折舊科目" controlName="depreciation"
+                                [control]="getFormControl(i, 'depreciation')" [submitted]="submitted">
                             </app-input-number>
                         </div>
                     </div>
-                    <hr/>
-                        <app-editor-text label="單項說明" controlName="singleRemark" [control]="getFormControl(i, 'singleRemark')" [style]="{ height: '100px' }" [submitted]="submitted">
-                        </app-editor-text>
-                    <hr/>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-number label="累計折舊科目" controlName="totalDepreciation"
+                                [control]="getFormControl(i, 'totalDepreciation')" [submitted]="submitted">
+                            </app-input-number>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-number label="使用單位" controlName="usageUnit"
+                                [control]="getFormControl(i, 'usageUnit')" [submitted]="submitted">
+                            </app-input-number>
+                        </div>
+                    </div>
+                    <hr />
+                    <app-editor-text label="單項說明" controlName="singleRemark"
+                        [control]="getFormControl(i, 'singleRemark')" [style]="{ height: '100px' }"
+                        [submitted]="submitted">
+                    </app-editor-text>
+                    <hr />
                 </ng-container>
             </ng-container>
             <div class="pt-1">
@@ -117,8 +141,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

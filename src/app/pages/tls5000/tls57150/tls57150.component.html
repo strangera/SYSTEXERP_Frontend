@@ -5,117 +5,56 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="倉別"
-              controlName="warehouseCode"
-              [options]="warehouseOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.warehouseCode"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="倉別" controlName="warehouseCode" [options]="warehouseOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.warehouseCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-datetime-range
-              label="盤點調整日期"
-              [startControl]="queryForm.controls.startdatetime"
-              [endControl]="queryForm.controls.enddatetime"
-              [submitted]="submitted"
-            >
-            </app-datetime-range>
+            <app-calendar-range calendarType="dateTimeRange" label="盤點調整日期"
+              [startControl]="queryForm.controls.startdatetime" [endControl]="queryForm.controls.enddatetime"
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="品牌"
-              controlName="brandCode"
-              [options]="brandCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.brandCode"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="品牌" controlName="brandCode" [options]="brandCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.brandCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="盤點單號"
-              controlName="Inventoryordernumber"
-              [control]="queryForm.controls.Inventoryordernumber"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="盤點單號" controlName="Inventoryordernumber"
+              [control]="queryForm.controls.Inventoryordernumber" [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="管理編號"
-              controlName="managementCode"
-              [options]="managementIDOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.managementCode"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="管理編號" controlName="managementCode" [options]="managementIDOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.managementCode" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <label class="block font-medium mb-2">顯示方式</label>
             <div class="flex align-items-center">
-              <p-radioButton
-                name="displayMode"
-                value="差異顯示"
-                label="差異顯示"
-                formControlName="displayMode"
-                [inputId]="'差異顯示'"
-              ></p-radioButton>
-              <p-radioButton
-                name="displayMode"
-                value="全部顯示"
-                label="全部顯示"
-                formControlName="displayMode"
-                [inputId]="'全部顯示'"
-                class="ml-3"
-              ></p-radioButton>
+              <p-radioButton name="displayMode" value="差異顯示" label="差異顯示" formControlName="displayMode"
+                [inputId]="'差異顯示'"></p-radioButton>
+              <p-radioButton name="displayMode" value="全部顯示" label="全部顯示" formControlName="displayMode"
+                [inputId]="'全部顯示'" class="ml-3"></p-radioButton>
             </div>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="匯總/明細"
-              controlName="displayMode"
-              [options]="displayModeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.displayMode"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="匯總/明細" controlName="displayMode" [options]="displayModeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.displayMode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="顯示行數"
-              controlName="displayCount"
-              [control]="queryForm.controls.displayCount"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number label="顯示行數" controlName="displayCount" [control]="queryForm.controls.displayCount"
+              [submitted]="submitted"></app-input-number>
           </div>
         </div>
       </form>
       <div *appHasPermission="queryPermission" class="col">
         <div class="grid justify-content-end">
-          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-          <app-button-query
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button-query>
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
         </div>
       </div>
     </p-accordionTab>

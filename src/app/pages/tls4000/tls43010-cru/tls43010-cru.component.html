@@ -8,50 +8,61 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="通告編號" controlName="NOT_No" [control]="dataForm.controls.NOT_No" [submitted]="submitted">
+                    <app-input-text label="通告編號" controlName="NOT_No" [control]="dataForm.controls.NOT_No"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one label="建立日期" controlName="NOT_Date" [control]="dataForm.controls.NOT_Date" [submitted]="submitted">
-                    </app-date-one>
+                    <app-calendar calendarType="dateOne" label="建立日期" controlName="NOT_Date"
+                        [control]="dataForm.controls.NOT_Date" [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-datetime-one label="有效開始日期時間" controlName="NOT_BegDate" [control]="dataForm.controls.NOT_BegDate" [submitted]="submitted">
-                    </app-datetime-one>
+                    <app-calendar calendarType="dateTimeOne" label="有效開始日期時間" controlName="NOT_BegDate"
+                        [control]="dataForm.controls.NOT_BegDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-datetime-one label="有效結束日期時間" controlName="NOT_EndDate" [control]="dataForm.controls.NOT_EndDate" [submitted]="submitted">
-                    </app-datetime-one>
+                    <app-calendar calendarType="dateTimeOne" label="有效結束日期時間" controlName="NOT_EndDate"
+                        [control]="dataForm.controls.NOT_EndDate" [submitted]="submitted">
+                    </app-calendar>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="媒體檔案名稱" controlName="NOT_File" [control]="dataForm.controls.NOT_File" [submitted]="submitted">
+                    <app-input-text label="媒體檔案名稱" controlName="NOT_File" [control]="dataForm.controls.NOT_File"
+                        [submitted]="submitted">
                     </app-input-text>
-                </div> 
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="狀態" controlName="NOT_Status" [options]="NOT_Status_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.NOT_Status" [submitted]="submitted">
-                    </app-dropdown-item>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="優先順序" controlName="NOT_Priority" [control]="dataForm.controls.NOT_Priority" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-dropdown label="狀態" controlName="NOT_Status" [options]="NOT_Status_Options" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.NOT_Status" [submitted]="submitted">
+                    </app-dropdown>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number [useGrouping]="false" label="優先順序" controlName="NOT_Priority"
+                        [control]="dataForm.controls.NOT_Priority" [submitted]="submitted">
+                    </app-input-number>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="媒體檔播放秒數" controlName="NOT_PlayTime" [control]="dataForm.controls.NOT_PlayTime" [submitted]="submitted">
+                    <app-input-number label="媒體檔播放秒數" controlName="NOT_PlayTime"
+                        [control]="dataForm.controls.NOT_PlayTime" [submitted]="submitted">
                     </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="是否限制播放條件" controlName="NOT_DtlLimit" [options]="NOT_DtlLimit_Options" optionLabel="label" optionValue="value" [control]="dataForm.controls.NOT_DtlLimit" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-dropdown label="是否限制播放條件" controlName="NOT_DtlLimit" [options]="NOT_DtlLimit_Options"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.NOT_DtlLimit"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <hr>
-            <app-editor-text label="備註" controlName="NOT_Note" [control]="dataForm.controls.NOT_Note" [style]="{ height: '100px' }" [submitted]="submitted">   
+            <app-editor-text label="備註" controlName="NOT_Note" [control]="dataForm.controls.NOT_Note"
+                [style]="{ height: '100px' }" [submitted]="submitted">
             </app-editor-text>
             <!---->
             <hr />
@@ -62,48 +73,59 @@
                             <h4>廣告資訊設定明細 {{ i + 1 }}</h4>
                         </div>
                         <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
+                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                                class="col"></app-button-dynamicallydelete>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="通告序號" controlName="NOT_SeqNo" [control]="getFormControl(i, 'NOT_SeqNo')" [submitted]="submitted">>
-                            </app-input-serial-number>
+                            <app-input-number [useGrouping]="false" label="通告序號" controlName="NOT_SeqNo"
+                                [control]="getFormControl(i, 'NOT_SeqNo')" [submitted]="submitted">>
+                            </app-input-number>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="狀態" controlName="NOT_Status" [options]="NOT_Status_Options" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'NOT_Status')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="狀態" controlName="NOT_Status" [options]="NOT_Status_Options"
+                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'NOT_Status')"
+                                [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="收銀機號" controlName="ECR_No" [control]="getFormControl(i, 'ECR_No')" [submitted]="submitted">>
-                            </app-input-text>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="專櫃編號" controlName="TLT_No" [control]="getFormControl(i, 'TLT_No')" [submitted]="submitted">>
-                            </app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="機台類型" controlName="ECR_Type" [control]="getFormControl(i, 'ECR_Type')" [submitted]="submitted">>
-                            </app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="機台群組編號" controlName="ECR_GrpNo" [control]="getFormControl(i, 'ECR_GrpNo')" [submitted]="submitted">>
+                            <app-input-text label="收銀機號" controlName="ECR_No" [control]="getFormControl(i, 'ECR_No')"
+                                [submitted]="submitted">>
                             </app-input-text>
                         </div>
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="館別" controlName="BUILDING_No" [control]="getFormControl(i, 'BUILDING_No')" [submitted]="submitted">>
+                            <app-input-text label="專櫃編號" controlName="TLT_No" [control]="getFormControl(i, 'TLT_No')"
+                                [submitted]="submitted">>
                             </app-input-text>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="樓層代碼" controlName="FLOOR_No" [control]="getFormControl(i, 'FLOOR_No')" [submitted]="submitted">>
+                            <app-input-text label="機台類型" controlName="ECR_Type"
+                                [control]="getFormControl(i, 'ECR_Type')" [submitted]="submitted">>
                             </app-input-text>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="區域代碼" controlName="AREA_No" [control]="getFormControl(i, 'AREA_No')" [submitted]="submitted">>
+                            <app-input-text label="機台群組編號" controlName="ECR_GrpNo"
+                                [control]="getFormControl(i, 'ECR_GrpNo')" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="館別" controlName="BUILDING_No"
+                                [control]="getFormControl(i, 'BUILDING_No')" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="樓層代碼" controlName="FLOOR_No"
+                                [control]="getFormControl(i, 'FLOOR_No')" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="區域代碼" controlName="AREA_No" [control]="getFormControl(i, 'AREA_No')"
+                                [submitted]="submitted">>
                             </app-input-text>
                         </div>
                     </div>
@@ -116,8 +138,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

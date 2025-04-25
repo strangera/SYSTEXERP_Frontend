@@ -6,53 +6,67 @@
                     <app-menubar [ProgNo]="ProgNo"></app-menubar>
                 </div>
                 <div *appHasPermission="addPermission">
-                    <app-button-demo label="發行補登" (click)="onCreate()" class="col"></app-button-demo>
+                    <app-button btnType="create" label="發行補登" (click)="onCreate()" class="col"></app-button>
                 </div>
                 <div *appHasPermission="addPermission">
-                    <app-button-demo label="使用補登" (click)="onCreate()" class="col"></app-button-demo>
+                    <app-button btnType="create" label="使用補登" (click)="onCreate()" class="col"></app-button>
                 </div>
             </div>
             <p-accordion>
-                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true"
+                    class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
                     <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="餘代卡卡號" controlName="cardID" [control]="queryForm.controls.cardID" [submitted]="submitted">
-                                </app-input-serial-number>
+                                <app-input-number [useGrouping]="false" label="餘代卡卡號" controlName="cardID"
+                                    [control]="queryForm.controls.cardID" [submitted]="submitted">
+                                </app-input-number>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-range label="補登日期" [startControl]="queryForm.controls.backupStartdate" [endControl]="queryForm.controls.backupEnddate" [submitted]="submitted">
-                                </app-date-range>
+                                <app-calendar-range calendarType="dateRange" label="補登日期"
+                                    [startControl]="queryForm.controls.backupStartdate"
+                                    [endControl]="queryForm.controls.backupEnddate" [submitted]="submitted">
+                                </app-calendar-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-multi-select label="餘代卡狀態" controlName="status" [options]="statusOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.status" [submitted]="submitted">
+                                <app-multi-select label="餘代卡狀態" controlName="status" [options]="statusOptions"
+                                    optionLabel="label" optionValue="value" [control]="queryForm.controls.status"
+                                    [submitted]="submitted">
                                 </app-multi-select>
                             </div>
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-range label="卡片發行日" [startControl]="queryForm.controls.releaseStartdate" [endControl]="queryForm.controls.releaseEnddate" [submitted]="submitted">
-                                </app-date-range>
+                                <app-calendar-range calendarType="dateRange" label="卡片發行日"
+                                    [startControl]="queryForm.controls.releaseStartdate"
+                                    [endControl]="queryForm.controls.releaseEnddate" [submitted]="submitted">
+                                </app-calendar-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number-range label="機號" [startControl]="queryForm.controls.machineStart" [endControl]="queryForm.controls.machineEnd" [submitted]="submitted">
-                                </app-input-serial-number-range>
+                                <app-input-number-range [useGrouping]="false" label="機號"
+                                    [startControl]="queryForm.controls.machineStart"
+                                    [endControl]="queryForm.controls.machineEnd" [submitted]="submitted">
+                                </app-input-number-range>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number-range label="交易序號" [startControl]="queryForm.controls.transferStart" [endControl]="queryForm.controls.transferEnd" [submitted]="submitted">
-                                </app-input-serial-number-range>
+                                <app-input-number-range [useGrouping]="false" label="交易序號"
+                                    [startControl]="queryForm.controls.transferStart"
+                                    [endControl]="queryForm.controls.transferEnd" [submitted]="submitted">
+                                </app-input-number-range>
                             </div>
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="專櫃編號/櫃號" controlName="serialnumber" [control]="queryForm.controls.serialnumber" [submitted]="submitted">
-                                </app-input-serial-number>
+                                <app-input-number [useGrouping]="false" label="專櫃編號/櫃號" controlName="serialnumber"
+                                    [control]="queryForm.controls.serialnumber" [submitted]="submitted">
+                                </app-input-number>
                             </div>
                         </div>
                         <div *appHasPermission="queryPermission" class="col">
                             <div class="grid justify-content-end">
-                                <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                                <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                                <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                                <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                                    [loading]="loading"></app-button>
                             </div>
                         </div>
                     </form>

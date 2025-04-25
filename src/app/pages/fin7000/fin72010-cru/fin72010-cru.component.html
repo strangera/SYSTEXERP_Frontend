@@ -13,273 +13,146 @@
                   controlName="accountsummary"
                   [control]="dataForm.controls.Subpoenadate"
                   [submitted]="submitted"
-                ></app-date-one>
+                ></app-calendar>
               </div> -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown-item
-            label="零用金單號"
-            controlName="PettyCashOrderNumber"
-            [options]="PettyCashOrderNumber"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.PettyCashOrderNumber"
-            [submitted]="submitted"
-          >
-          </app-dropdown-item>
+          <app-dropdown label="零用金單號" controlName="PettyCashOrderNumber" [options]="PettyCashOrderNumber"
+            optionLabel="label" optionValue="value" [control]="dataForm.controls.PettyCashOrderNumber"
+            [submitted]="submitted">
+          </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one
-            label="申請日期"
-            [control]="dataForm.controls.Applicationdate"
-            [submitted]="submitted"
-          >
-          </app-date-one>
+          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.Applicationdate"
+            [submitted]="submitted">
+          </app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown-item
-            label="零用金申請人"
-            controlName="Pettycashapplicant"
-            [options]="usercode"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.Pettycashapplicant"
-            [submitted]="submitted"
-          ></app-dropdown-item>
+          <app-dropdown label="零用金申請人" controlName="Pettycashapplicant" [options]="usercode" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.Pettycashapplicant" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown-item
-            label="零用金保管人"
-            controlName="Pettycashcustodian"
-            [options]="usercode"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.Pettycashcustodian"
-            [submitted]="submitted"
-          ></app-dropdown-item>
+          <app-dropdown label="零用金保管人" controlName="Pettycashcustodian" [options]="usercode" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.Pettycashcustodian" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="申請人組織代號"
-            controlName="Debitamount"
-            [control]="dataForm.controls.Applicantorganizationcode"
-            [submitted]="submitted"
-            >>
+          <app-input-text label="申請人組織代號" controlName="Debitamount"
+            [control]="dataForm.controls.Applicantorganizationcode" [submitted]="submitted">>
           </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="保管人組織代號"
-            controlName="Debitamount"
-            [control]="dataForm.controls.Custodianorganizationcode"
-            [submitted]="submitted"
-            >>
+          <app-input-text label="保管人組織代號" controlName="Debitamount"
+            [control]="dataForm.controls.Custodianorganizationcode" [submitted]="submitted">>
           </app-input-text>
         </div>
       </div>
 
       <hr />
-          <ng-container formArrayName="items">
-            <ng-container
-              *ngFor="let item of items.controls; let i = index"
-              [formGroupName]="i"
-            >
-              <div class="grid align-items-center">
-                <div class="col" style="flex: 1">
-                  <p>{{ i + 1 }}</p>
-                </div>
-                <div>
-                  <app-button-dynamicallydelete
-                    (click)="onRemoveItem(i)"
-                    [crudstatus]="crudstatus"
-                    class="col"
-                  ></app-button-dynamicallydelete>
-                </div>
-              </div>
-              <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                  <app-dropdown-default
-                    label="費用會計科目"
-                    controlName="ExpenseAccount"
-                    [options]="ExpenseAccount"
-                    optionLabel="label"
-                    optionValue="value"
-                    [control]="getFormControl(i, 'ExpenseAccount')"
-                    [submitted]="submitted"
-                  >
-                  </app-dropdown-default>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text
-                      label="項目摘要"
-                      controlName="summary"
-                      [control]="getFormControl(i, 'summary')"
-                      [submitted]="submitted"
-                      >>
-                    </app-input-text>
-                  </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                  <app-dropdown-default
-                    label="組織代號"
-                    controlName="Organizationcode"
-                    [options]="Organizationcode"
-                    optionLabel="label"
-                    optionValue="value"
-                    [control]="getFormControl(i, 'Organizationcode')"
-                    [submitted]="submitted"
-                  >
-                  </app-dropdown-default>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-default
-                      label="明細類別"
-                      controlName="Detailedcategory"
-                      [options]="Detailedcategory"
-                      optionLabel="label"
-                      optionValue="value"
-                      [control]="getFormControl(i, 'Detailedcategory')"
-                      [submitted]="submitted"
-                    >
-                    </app-dropdown-default>
-                  </div>
-                  <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-default
-                      label="發票格式"
-                      controlName="Invoiceformat"
-                      [options]="Invoiceformat"
-                      optionLabel="label"
-                      optionValue="value"
-                      [control]="getFormControl(i, 'Invoiceformat')"
-                      [submitted]="submitted"
-                    >
-                    </app-dropdown-default>
-                  </div>
-                  <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text
-                      label="發票/收據號碼"
-                      controlName="receiptnumber"
-                      [control]="getFormControl(i, 'receiptnumber')"
-                      [submitted]="submitted"
-                      >>
-                    </app-input-text>
-                  </div>
-                  <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-one
-                      label="發票日期"
-                      controlName="Invoicedate"
-                      [control]="getFormControl(i, 'Invoicedate')"
-                      [submitted]="submitted"
-                      >>
-                    </app-date-one>
-                  </div>
-                  <div class="col-12 md:col-6 lg:col-4">
-                    <app-datemm-one
-                      label="申報年月"
-                      controlName="YMdeclaration"
-                      [control]="getFormControl(i, 'YMdeclaration')"
-                      [submitted]="submitted"
-                      >>
-                    </app-datemm-one>
-                  </div>
-                  <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text
-                      label="廠商統一編號"
-                      controlName="vendorUnifiedNumber"
-                      [control]="getFormControl(i, 'vendorUnifiedNumber')"
-                      [submitted]="submitted"
-                      >>
-                    </app-input-text>
-                  </div>
-                  <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-default
-                      label="發票用途"
-                      controlName="invoicePurpose"
-                      [options]="invoicePurpose"
-                      optionLabel="label"
-                      optionValue="value"
-                      [control]="getFormControl(i, 'invoicePurpose')"
-                      [submitted]="submitted"
-                    >
-                    </app-dropdown-default>
-                  </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                  <app-input-text
-                    label="發票總金額"
-                    controlName="TIA"
-                    [control]="getFormControl(i, 'TIA')"
-                    [submitted]="submitted"
-                    >>
-                  </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-default
-                      label="課稅別"
-                      controlName="taxCategory"
-                      [options]="taxCategory"
-                      optionLabel="label"
-                      optionValue="value"
-                      [control]="getFormControl(i, 'taxCategory')"
-                      [submitted]="submitted"
-                    >
-                    </app-dropdown-default>
-                  </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                  <app-input-text
-                    label="發票未稅金額"
-                    controlName="invoiceAmtExclTax"
-                    [control]="getFormControl(i, 'invoiceAmtExclTax')"
-                    [submitted]="submitted"
-                    >>
-                  </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text
-                      label="發票稅額"
-                      controlName="ITA"
-                      [control]="getFormControl(i, 'ITA')"
-                      [submitted]="submitted"
-                      >>
-                    </app-input-text>
-                  </div>
-
-                <div class="col-12 md:col-6 lg:col-4">
-                  <app-dropdown-default
-                    label="扣扺代號"
-                    controlName="deductionCode"
-                    [options]="deductionCode"
-                    optionLabel="label"
-                    optionValue="value"
-                    [control]="getFormControl(i, 'deductionCode')"
-                    [submitted]="submitted"
-                    >>
-                  </app-dropdown-default>
-                </div>
-    
-                <div class="col-12 md:col-6 lg:col-4">
-                  <app-input-text
-                    label="彙總張數"
-                    controlName="totalSheetCount"
-                    [control]="getFormControl(i, 'totalSheetCount')"
-                    [submitted]="submitted"
-                    >>
-                  </app-input-text>
-                </div>
-              </div>
-              <hr />
-            </ng-container>
-          </ng-container>
-          <div class="pt-1">
-            <app-button-dynamicallyadd
-              (click)="onAddItem()"
-            ></app-button-dynamicallyadd>
+      <ng-container formArrayName="items">
+        <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+          <div class="grid align-items-center">
+            <div class="col" style="flex: 1">
+              <p>{{ i + 1 }}</p>
+            </div>
+            <div>
+              <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                class="col"></app-button-dynamicallydelete>
+            </div>
           </div>
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="費用會計科目" controlName="ExpenseAccount" [options]="ExpenseAccount" optionLabel="label"
+                optionValue="value" [control]="getFormControl(i, 'ExpenseAccount')" [submitted]="submitted">
+              </app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="項目摘要" controlName="summary" [control]="getFormControl(i, 'summary')"
+                [submitted]="submitted">>
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="組織代號" controlName="Organizationcode" [options]="Organizationcode" optionLabel="label"
+                optionValue="value" [control]="getFormControl(i, 'Organizationcode')" [submitted]="submitted">
+              </app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="明細類別" controlName="Detailedcategory" [options]="Detailedcategory" optionLabel="label"
+                optionValue="value" [control]="getFormControl(i, 'Detailedcategory')" [submitted]="submitted">
+              </app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="發票格式" controlName="Invoiceformat" [options]="Invoiceformat" optionLabel="label"
+                optionValue="value" [control]="getFormControl(i, 'Invoiceformat')" [submitted]="submitted">
+              </app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="發票/收據號碼" controlName="receiptnumber" [control]="getFormControl(i, 'receiptnumber')"
+                [submitted]="submitted">>
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-calendar calendarType="dateOne" label="發票日期" controlName="Invoicedate"
+                [control]="getFormControl(i, 'Invoicedate')" [submitted]="submitted">>
+              </app-calendar>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-calendar calendarType="dateMonthOne" label="申報年月" controlName="YMdeclaration"
+                [control]="getFormControl(i, 'YMdeclaration')" [submitted]="submitted">>
+              </app-calendar>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="廠商統一編號" controlName="vendorUnifiedNumber"
+                [control]="getFormControl(i, 'vendorUnifiedNumber')" [submitted]="submitted">>
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="發票用途" controlName="invoicePurpose" [options]="invoicePurpose" optionLabel="label"
+                optionValue="value" [control]="getFormControl(i, 'invoicePurpose')" [submitted]="submitted">
+              </app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="發票總金額" controlName="TIA" [control]="getFormControl(i, 'TIA')"
+                [submitted]="submitted">>
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="課稅別" controlName="taxCategory" [options]="taxCategory" optionLabel="label"
+                optionValue="value" [control]="getFormControl(i, 'taxCategory')" [submitted]="submitted">
+              </app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="發票未稅金額" controlName="invoiceAmtExclTax"
+                [control]="getFormControl(i, 'invoiceAmtExclTax')" [submitted]="submitted">>
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="發票稅額" controlName="ITA" [control]="getFormControl(i, 'ITA')"
+                [submitted]="submitted">>
+              </app-input-text>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="扣扺代號" controlName="deductionCode" [options]="deductionCode" optionLabel="label"
+                optionValue="value" [control]="getFormControl(i, 'deductionCode')" [submitted]="submitted">>
+              </app-dropdown>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="彙總張數" controlName="totalSheetCount"
+                [control]="getFormControl(i, 'totalSheetCount')" [submitted]="submitted">>
+              </app-input-text>
+            </div>
+          </div>
+          <hr />
+        </ng-container>
+      </ng-container>
+      <div class="pt-1">
+        <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+      </div>
     </form>
     <div class="col pt-4">
       <div class="grid justify-content-end">
-        <app-button-cancel (click)="onCancel()"></app-button-cancel>
-        <app-button-submit
-          (click)="submitForm(dataForm)"
-          *ngIf="isFormEditable"
-        ></app-button-submit>
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+        <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
       </div>
     </div>
   </p-panel>

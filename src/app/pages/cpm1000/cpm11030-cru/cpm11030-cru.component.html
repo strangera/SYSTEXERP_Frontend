@@ -8,50 +8,63 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="記錄編號" controlName="recordCode" [control]="dataForm.controls.recordCode" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="記錄編號" controlName="recordCode"
+                        [control]="dataForm.controls.recordCode" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-date-range label="出借日期" [startControl]="dataForm.controls.borrowDateFrom" [endControl]="dataForm.controls.borrowDateTo" [submitted]="submitted">
-                    </app-date-range>
+                    <app-calendar-range calendarType="dateRange" label="出借日期"
+                        [startControl]="dataForm.controls.borrowDateFrom" [endControl]="dataForm.controls.borrowDateTo"
+                        [submitted]="submitted">
+                    </app-calendar-range>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="姓名" controlName="name" [control]="dataForm.controls.name" [submitted]="submitted">
+                    <app-input-text label="姓名" controlName="name" [control]="dataForm.controls.name"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="出借處理人員" controlName="staffName" [control]="dataForm.controls.staffName" [submitted]="submitted">
+                    <app-input-text label="出借處理人員" controlName="staffName" [control]="dataForm.controls.staffName"
+                        [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="連絡電話" controlName="phone" [control]="dataForm.controls.phone" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-input-number [useGrouping]="false" label="連絡電話" controlName="phone"
+                        [control]="dataForm.controls.phone" [submitted]="submitted">
+                    </app-input-number>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="證件類型" controlName="paperType" [options]="paperTypeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.paperType" [submitted]="submitted">
-                    </app-dropdown-item>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="證件編號" controlName="paperCode" [control]="dataForm.controls.paperCode" [submitted]="submitted">
-                    </app-input-serial-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="設備名稱" controlName="equipmentName" [options]="equipmentNameOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.equipmentName" [submitted]="submitted">
-                    </app-dropdown-item>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-serial-number label="設備編號" controlName="deviceCode" [control]="dataForm.controls.deviceCode" [submitted]="submitted">
-                    </app-input-serial-number>
+                    <app-dropdown label="證件類型" controlName="paperType" [options]="paperTypeOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.paperType" [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item label="服務台位置編號" controlName="counterCode" [options]="counterCodeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.counterCode" [submitted]="submitted">
-                    </app-dropdown-item>
+                    <app-input-number [useGrouping]="false" label="證件編號" controlName="paperCode"
+                        [control]="dataForm.controls.paperCode" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown label="設備名稱" controlName="equipmentName" [options]="equipmentNameOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.equipmentName"
+                        [submitted]="submitted">
+                    </app-dropdown>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number [useGrouping]="false" label="設備編號" controlName="deviceCode"
+                        [control]="dataForm.controls.deviceCode" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown label="服務台位置編號" controlName="counterCode" [options]="counterCodeOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.counterCode"
+                        [submitted]="submitted">
+                    </app-dropdown>
                 </div>
             </div>
             <!---->
@@ -68,8 +81,8 @@
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="所屬服務台位置" controlName="counterPosition" [options]="counterOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'counterPosition')" [submitted]="submitted">
-                            </app-dropdown-item>
+                            <app-dropdown label="所屬服務台位置" controlName="counterPosition" [options]="counterOptions" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'counterPosition')" [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
                             <app-input-number label="分配設備數量" controlName="allocateNumber" [control]="getFormControl(i, 'allocateNumber')" [submitted]="submitted">
@@ -85,8 +98,8 @@
         </form>
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

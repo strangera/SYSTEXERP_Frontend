@@ -1,6 +1,8 @@
 <label [for]="controlName">{{ label }}
   <span *ngIf="isRequired" class="required">*</span>
 </label>
-<p-multiSelect [id]="controlName" [options]="options" [optionLabel]="optionLabel" [optionValue]="optionValue" [formControl]="control" [ngClass]="{'is-invalid': submitted && control.errors}">
+<p-multiSelect #multiSelect [id]="controlName" [options]="options" [optionLabel]="optionLabel"
+  [optionValue]="optionValue" [formControl]="control" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
+  [showToggleAll]="true" placeholder="全部" [appendTo]="'body'" [variant]="variant">
 </p-multiSelect>
 <app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>

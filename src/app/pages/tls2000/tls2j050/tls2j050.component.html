@@ -7,20 +7,24 @@
                 </div>
             </div>
             <p-accordion>
-                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true"
+                    class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
                     <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-date-one label="換開日期" [control]="queryForm.controls.onedatedd" [submitted]="submitted">
-                                </app-date-one>
+                                <app-calendar calendarType="dateOne" label="換開日期"
+                                    [control]="queryForm.controls.onedatedd" [submitted]="submitted">
+                                </app-calendar>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-text label="三聯式發票號碼" controlName="invoice" [control]="queryForm.controls.invoice" [submitted]="submitted">
+                                <app-input-text label="三聯式發票號碼" controlName="invoice"
+                                    [control]="queryForm.controls.invoice" [submitted]="submitted">
                                 </app-input-text>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-serial-number label="買受人統一編號" controlName="serialnumber" [control]="queryForm.controls.serialnumber" [submitted]="submitted">
-                                </app-input-serial-number>
+                                <app-input-number [useGrouping]="false" label="買受人統一編號" controlName="serialnumber"
+                                    [control]="queryForm.controls.serialnumber" [submitted]="submitted">
+                                </app-input-number>
                             </div>
                         </div>
                         <ul>印表機設定-請將捲軸靠最右邊 IE設定列印格式-
@@ -31,8 +35,9 @@
                         </ul>
                         <div *appHasPermission="queryPermission" class="col">
                             <div class="grid justify-content-end">
-                                <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-                                <app-button-query (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button-query>
+                                <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                                <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                                    [loading]="loading"></app-button>
                             </div>
                         </div>
                     </form>

@@ -4,7 +4,7 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <!-- <div>
-            <app-button-cancel (click)="onCancel()" class="col"></app-button-cancel>
+            <app-button btnType="cancel" (click)="onCancel()" class="col"></app-button>
         </div> -->
     </div>
 
@@ -15,20 +15,14 @@
 
                 <!-- 保管人代碼 -->
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item
-                      label="保管人代碼"
-                      controlName="usercode"
-                      [options]="usercodeOptions"
-                      optionLabel="label"
-                      optionValue="value"
-                      [control]="dataForm.controls.usercode"
-                      [submitted]="submitted"
-                    ></app-dropdown-item>
+                    <app-dropdown label="保管人代碼" controlName="usercode" [options]="usercodeOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.usercode"
+                        [submitted]="submitted"></app-dropdown>
                 </div>
 
                 <!-- 應付費用 -->
                 <!-- <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-item
+                    <app-dropdown
                       label="應付費用"
                       controlName="feespayable"
                       [options]="feespayableOptions"
@@ -36,28 +30,19 @@
                       optionValue="value"
                       [control]="dataForm.controls.feespayable"
                       [submitted]="submitted"
-                    ></app-dropdown-item>
+                    ></app-dropdown>
                 </div> -->
 
                 <!-- 零用金額度 -->
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text
-                      label="零用金額度"
-                      [control]="dataForm.controls.PettyAmount"
-                    
-                      [submitted]="submitted"
-                    ></app-input-text>
+                    <app-input-text label="零用金額度" [control]="dataForm.controls.PettyAmount"
+                        [submitted]="submitted"></app-input-text>
                 </div>
 
                 <!-- 說明 -->
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-editor-text
-                      label="說明"
-                      controlName="description"
-                      [control]="dataForm.controls.description"
-                      [style]="{ height: '100px' }"
-                      [submitted]="submitted"
-                    ></app-editor-text>
+                    <app-editor-text label="說明" controlName="description" [control]="dataForm.controls.description"
+                        [style]="{ height: '100px' }" [submitted]="submitted"></app-editor-text>
                 </div>
 
             </div>
@@ -66,8 +51,8 @@
         <!-- Action Buttons -->
         <div class="col pt-4">
             <div class="grid justify-content-end">
-                <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
             </div>
         </div>
     </p-panel>

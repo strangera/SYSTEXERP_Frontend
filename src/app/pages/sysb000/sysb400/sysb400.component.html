@@ -4,12 +4,12 @@
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
     <div *appHasPermission="addPermission">
-      <app-button-action label="組織架構列表" icon="pi pi-sitemap" (click)="onSitemap()" class="col">
-      </app-button-action>
+      <app-button btnType="action" label="組織架構列表" icon="pi pi-sitemap" (click)="onSitemap()" class="col">
+      </app-button>
     </div>
     <div *appHasPermission="addPermission">
-      <app-button-create (click)="onCreate()" class="col">
-      </app-button-create>
+      <app-button btnType="create" (click)="onCreate()" class="col">
+      </app-button>
     </div>
   </div>
 
@@ -32,26 +32,25 @@
             </app-input-text>
           </div>
         </div>
-        <!-- <div class="grid p-fluid">
+        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item label="上層組織代碼" controlName="p_org_id" [options]="level_nameOptions" optionLabel="label"
+            <!-- <app-dropdown label="上層組織代碼" controlName="p_org_id" [options]="level_nameOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.p_org_id">
-            </app-dropdown-item>
+            </app-dropdown> -->
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="上層階層代碼" controlName="p_level_id" [control]="queryForm.controls.p_level_id">
-            </app-input-text>
+            <!-- <app-input-text label="上層階層代碼" controlName="p_level_id" [control]="queryForm.controls.p_level_id">
+            </app-input-text> -->
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="是否停用" controlName="stop_flag" [options]="whetherOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.stop_flag" [submitted]="submitted">
-            </app-multi-select>
-          </div>
-        </div> -->
+            </app-multi-select> -->
+        </div>
         <div class="grid justify-content-end">
-          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-          <app-button-query [loading]="loading" (onClick)="applyFilters()">
-          </app-button-query>
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="query" [loading]="loading" (onClick)="applyFilters()">
+          </app-button>
         </div>
       </form>
     </p-accordionTab>

@@ -9,212 +9,120 @@
       <div class="grid p-fluid">
         <!-- 開始日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one
-            label="開始日期"
-            controlName="startDate"
-            [control]="dataForm.controls.startDate"
-            [submitted]="submitted"
-          ></app-date-one>
+          <app-calendar calendarType="dateOne" label="開始日期" controlName="startDate"
+            [control]="dataForm.controls.startDate" [submitted]="submitted"></app-calendar>
         </div>
         <!-- 結束日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-date-one
-            label="結束日期"
-            controlName="endDate"
-            [control]="dataForm.controls.endDate"
-            [submitted]="submitted"
-          ></app-date-one>
+          <app-calendar calendarType="dateOne" label="結束日期" controlName="endDate" [control]="dataForm.controls.endDate"
+            [submitted]="submitted"></app-calendar>
         </div>
         <!-- 行銷檔期代號 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown-item
-            label="行銷檔期代號"
-            controlName="marketingCampaignCode"
-            [options]="marketingCampaignOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.marketingCampaignCode"
-            [submitted]="submitted"
-          ></app-dropdown-item>
+          <app-dropdown label="行銷檔期代號" controlName="marketingCampaignCode" [options]="marketingCampaignOptions"
+            optionLabel="label" optionValue="value" [control]="dataForm.controls.marketingCampaignCode"
+            [submitted]="submitted"></app-dropdown>
         </div>
         <!-- 檔期名稱 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="檔期名稱"
-            controlName="campaignName"
-            [control]="dataForm.controls.campaignName"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="檔期名稱" controlName="campaignName" [control]="dataForm.controls.campaignName"
+            [submitted]="submitted"></app-input-text>
         </div>
         <!-- 活動負責人 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="活動負責人"
-            controlName="activityOwner"
-            [control]="dataForm.controls.activityOwner"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="活動負責人" controlName="activityOwner" [control]="dataForm.controls.activityOwner"
+            [submitted]="submitted"></app-input-text>
         </div>
         <!-- 活動類別 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="活動類別"
-            controlName="activityCategory"
-            [control]="dataForm.controls.activityCategory"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="活動類別" controlName="activityCategory" [control]="dataForm.controls.activityCategory"
+            [submitted]="submitted"></app-input-text>
         </div>
         <!-- 活動代號 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="活動代號"
-            controlName="activityCode"
-            [control]="dataForm.controls.activityCode"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="活動代號" controlName="activityCode" [control]="dataForm.controls.activityCode"
+            [submitted]="submitted"></app-input-text>
         </div>
         <!-- 活動說明 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="活動說明"
-            controlName="activityDescription"
-            [control]="dataForm.controls.activityDescription"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="活動說明" controlName="activityDescription"
+            [control]="dataForm.controls.activityDescription" [submitted]="submitted"></app-input-text>
         </div>
       </div>
       <hr />
       <ng-container formArrayName="items">
-        <ng-container
-          *ngFor="let item of items.controls; let i = index"
-          [formGroupName]="i"
-        >
+        <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
           <div class="grid align-items-center">
             <div class="col" style="flex: 1">
               <p>{{ i + 1 }}</p>
             </div>
             <div>
-              <app-button-dynamicallydelete
-                (click)="onRemoveItem(i)"
-                [crudstatus]="crudstatus"
-                class="col"
-              ></app-button-dynamicallydelete>
+              <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
+                class="col"></app-button-dynamicallydelete>
             </div>
           </div>
           <div class="grid p-fluid">
             <!-- 設備類別代號 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown-item
-                label="設備類別代號"
-                controlName="equipmentCategoryCode"
-                [options]="equipmentCategoryOptions"
-                optionLabel="label"
-                optionValue="value"
-                [control]="getFormControl(i, 'equipmentCategoryCode')"
-                [submitted]="submitted"
-              ></app-dropdown-item>
+              <app-dropdown label="設備類別代號" controlName="equipmentCategoryCode" [options]="equipmentCategoryOptions"
+                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'equipmentCategoryCode')"
+                [submitted]="submitted"></app-dropdown>
             </div>
             <!-- 活動用品代號 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="活動用品代號"
-                controlName="activityItemCode"
-                [control]="getFormControl(i, 'activityItemCode')"
-                [submitted]="submitted"
-              ></app-input-text>
+              <app-input-text label="活動用品代號" controlName="activityItemCode"
+                [control]="getFormControl(i, 'activityItemCode')" [submitted]="submitted"></app-input-text>
             </div>
             <!-- 活動用品名稱 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="活動用品名稱"
-                controlName="activityItemName"
-                [control]="getFormControl(i, 'activityItemName')"
-                [submitted]="submitted"
-              ></app-input-text>
+              <app-input-text label="活動用品名稱" controlName="activityItemName"
+                [control]="getFormControl(i, 'activityItemName')" [submitted]="submitted"></app-input-text>
             </div>
             <!-- 申請狀態 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="申請狀態"
-                controlName="applicationStatus"
-                [control]="getFormControl(i, 'applicationStatus')"
-                [submitted]="submitted"
-              ></app-input-text>
+              <app-input-text label="申請狀態" controlName="applicationStatus"
+                [control]="getFormControl(i, 'applicationStatus')" [submitted]="submitted"></app-input-text>
             </div>
             <!-- 使用起始日期 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one
-                label="使用起始日期"
-                controlName="usageStartDate"
-                [control]="getFormControl(i, 'usageStartDate')"
-                [submitted]="submitted"
-              ></app-date-one>
+              <app-calendar calendarType="dateOne" label="使用起始日期" controlName="usageStartDate"
+                [control]="getFormControl(i, 'usageStartDate')" [submitted]="submitted"></app-calendar>
             </div>
             <!-- 使用起始時間 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-datetime-one
-                label="使用起始時間"
-                controlName="usageStartTime"
-                [control]="getFormControl(i, 'usageStartTime')"
-                [submitted]="submitted"
-              ></app-datetime-one>
+              <app-calendar calendarType="dateTimeOne" label="使用起始時間" controlName="usageStartTime"
+                [control]="getFormControl(i, 'usageStartTime')" [submitted]="submitted"></app-calendar>
             </div>
             <!-- 使用結束日期 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-date-one
-                label="使用結束日期"
-                controlName="usageEndDate"
-                [control]="getFormControl(i, 'usageEndDate')"
-                [submitted]="submitted"
-              ></app-date-one>
+              <app-calendar calendarType="dateOne" label="使用結束日期" controlName="usageEndDate"
+                [control]="getFormControl(i, 'usageEndDate')" [submitted]="submitted"></app-calendar>
             </div>
             <!-- 使用結束時間 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-datetime-one
-                label="使用結束時間"
-                controlName="usageEndTime"
-                [control]="getFormControl(i, 'usageEndTime')"
-                [submitted]="submitted"
-              ></app-datetime-one>
+              <app-calendar calendarType="dateTimeOne" label="使用結束時間" controlName="usageEndTime"
+                [control]="getFormControl(i, 'usageEndTime')" [submitted]="submitted"></app-calendar>
             </div>
             <!-- 預計需要數量 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="預計需要數量"
-                controlName="expectedQuantity"
-                [control]="getFormControl(i, 'expectedQuantity')"
-                [submitted]="submitted"
-              ></app-input-text>
+              <app-input-text label="預計需要數量" controlName="expectedQuantity"
+                [control]="getFormControl(i, 'expectedQuantity')" [submitted]="submitted"></app-input-text>
             </div>
             <!-- 目前庫存量 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="目前庫存量"
-                controlName="currentStock"
-                [control]="getFormControl(i, 'currentStock')"
-                [submitted]="submitted"
-              ></app-input-text>
+              <app-input-text label="目前庫存量" controlName="currentStock" [control]="getFormControl(i, 'currentStock')"
+                [submitted]="submitted"></app-input-text>
             </div>
             <!-- 使用地點 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown-item
-                label="使用地點"
-                controlName="usageLocation"
-                [options]="locationOptions"
-                optionLabel="label"
-                optionValue="value"
-                [control]="getFormControl(i, 'usageLocation')"
-                [submitted]="submitted"
-              ></app-dropdown-item>
+              <app-dropdown label="使用地點" controlName="usageLocation" [options]="locationOptions" optionLabel="label"
+                optionValue="value" [control]="getFormControl(i, 'usageLocation')"
+                [submitted]="submitted"></app-dropdown>
             </div>
             <!-- 備註 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="備註"
-                controlName="remarks"
-                [control]="getFormControl(i, 'remarks')"
-                [submitted]="submitted"
-              ></app-input-text>
+              <app-input-text label="備註" controlName="remarks" [control]="getFormControl(i, 'remarks')"
+                [submitted]="submitted"></app-input-text>
             </div>
           </div>
           <hr />
@@ -226,11 +134,8 @@
     </form>
     <div class="col pt-4">
       <div class="grid justify-content-end">
-        <app-button-cancel (click)="onCancel()"></app-button-cancel>
-        <app-button-submit
-          (click)="submitForm(dataForm)"
-          *ngIf="isFormEditable"
-        ></app-button-submit>
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+        <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
       </div>
     </div>
   </p-panel>

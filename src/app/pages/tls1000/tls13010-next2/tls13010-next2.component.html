@@ -3,8 +3,8 @@
         <div class="col" style="flex: 1">
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
-        <app-button-submit (click)="submitForm()"></app-button-submit>
-        <app-button-cancel (click)="onCancel()"></app-button-cancel>
+        <app-button btnType="submit" (click)="submitForm()"></app-button>
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
     </div>
 
     <p-accordion>
@@ -49,41 +49,49 @@
             <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
                 <div class="card" style="position: relative;">
                     <!-- 清除按鈕 -->
-                    <p-button label="清除" [text]="true" class="p-button-text p-button-danger custom-clear-button" (click)="onRemoveItem(i)">
+                    <p-button label="清除" [text]="true" class="p-button-text p-button-danger custom-clear-button"
+                        (click)="onRemoveItem(i)">
                     </p-button>
 
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="抽成類別" controlName="commissionType" [control]="getFormControl(i, 'commissionType')" [submitted]="submitted">
+                            <app-input-text label="抽成類別" controlName="commissionType"
+                                [control]="getFormControl(i, 'commissionType')" [submitted]="submitted">
                             </app-input-text>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="抽成類別名稱" controlName="commissionTypeName" [control]="getFormControl(i, 'commissionTypeName')" [submitted]="submitted">
+                            <app-input-text label="抽成類別名稱" controlName="commissionTypeName"
+                                [control]="getFormControl(i, 'commissionTypeName')" [submitted]="submitted">
                             </app-input-text>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-default label="稅別" controlName="taxType" [control]="getFormControl(i, 'taxType')" [options]="taxTypeOptions" optionLabel="label" optionValue="value" [submitted]="submitted">
-                            </app-dropdown-default>
+                            <app-dropdown label="稅別" controlName="taxType" [control]="getFormControl(i, 'taxType')"
+                                [options]="taxTypeOptions" optionLabel="label" optionValue="value"
+                                [submitted]="submitted">
+                            </app-dropdown>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
                             <label for="discountSummary{{ i }}">設定摘要</label>
-                            <input type="text" id="discountSummary{{ i }}" [formControl]="getFormControl(i, 'discountSummary')" readonly />
+                            <input type="text" id="discountSummary{{ i }}"
+                                [formControl]="getFormControl(i, 'discountSummary')" readonly />
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="單筆交易金額(含)以上" controlName="transactionAmount" [control]="getFormControl(i, 'transactionAmount')" [submitted]="submitted">
+                            <app-input-text label="單筆交易金額(含)以上" controlName="transactionAmount"
+                                [control]="getFormControl(i, 'transactionAmount')" [submitted]="submitted">
                             </app-input-text>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="特價抽成(%)" controlName="specialCommission" [control]="getFormControl(i, 'specialCommission')" [submitted]="submitted">
+                            <app-input-text label="特價抽成(%)" controlName="specialCommission"
+                                [control]="getFormControl(i, 'specialCommission')" [submitted]="submitted">
                             </app-input-text>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-checkbox-one label="全館消費滿額集點活動">
-                            </app-checkbox-one>
+                            <p-checkbox label="全館消費滿額集點活動">
+                            </p-checkbox>
                         </div>
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-checkbox-one label="滿仟送佰">
-                            </app-checkbox-one>
+                            <p-checkbox label="滿仟送佰">
+                            </p-checkbox>
                         </div>
                     </div>
                     <br>
@@ -104,21 +112,26 @@
                                         </tr>
                                     </thead>
                                     <tbody formArrayName="discountSettingItems">
-                                        <tr *ngFor="let innerItem of getDiscountSettingItems(i).controls; let j = index" [formGroupName]="j">
+                                        <tr *ngFor="let innerItem of getDiscountSettingItems(i).controls; let j = index"
+                                            [formGroupName]="j">
                                             <td><input type="checkbox" formControlName="selected" /></td>
                                             <td>
-                                                <select id="discountType1_{{ i }}{{ j }}" formControlName="discountType">
-                          <option value="" disabled>選擇折扣別</option>
-                          <option *ngFor="let discount of discounts" [value]="discount.value">{{ discount.label }}</option>
-                        </select>
+                                                <select id="discountType1_{{ i }}{{ j }}"
+                                                    formControlName="discountType">
+                                                    <option value="" disabled>選擇折扣別</option>
+                                                    <option *ngFor="let discount of discounts" [value]="discount.value">
+                                                        {{ discount.label }}</option>
+                                                </select>
                                             </td>
                                             <td><input type="date" formControlName="startDate" /></td>
                                             <td><input type="date" formControlName="endDate" /></td>
                                             <td><input type="text" formControlName="rate" /></td>
-                                            <td><button type="button" (click)="removeDiscountSettingItem(i, j)">刪除</button></td>
+                                            <td><button type="button"
+                                                    (click)="removeDiscountSettingItem(i, j)">刪除</button></td>
                                         </tr>
                                         <tr>
-                                            <td colspan="6"><button type="button" (click)="addDiscountSettingItem(i)">新增項目</button></td>
+                                            <td colspan="6"><button type="button"
+                                                    (click)="addDiscountSettingItem(i)">新增項目</button></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -138,16 +151,19 @@
                                         </tr>
                                     </thead>
                                     <tbody formArrayName="annualPerformanceItems">
-                                        <tr *ngFor="let innerItem of getAnnualPerformanceItems(i).controls; let j = index" [formGroupName]="j">
+                                        <tr *ngFor="let innerItem of getAnnualPerformanceItems(i).controls; let j = index"
+                                            [formGroupName]="j">
                                             <td><input type="checkbox" formControlName="selected" /></td>
                                             <td><input type="date" /></td>
                                             <td><input type="date" /></td>
                                             <td><input type="text" formControlName="discountAmount" /></td>
                                             <td><input type="text" formControlName="rate" /></td>
-                                            <td><button type="button" (click)="removeAnnualPerformanceItem(i, j)">刪除</button></td>
+                                            <td><button type="button"
+                                                    (click)="removeAnnualPerformanceItem(i, j)">刪除</button></td>
                                         </tr>
                                         <tr>
-                                            <td colspan="4"><button type="button" (click)="addAnnualPerformanceItem(i)">新增項目</button></td>
+                                            <td colspan="4"><button type="button"
+                                                    (click)="addAnnualPerformanceItem(i)">新增項目</button></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -167,21 +183,26 @@
                                         </tr>
                                     </thead>
                                     <tbody formArrayName="discountLevelItems">
-                                        <tr *ngFor="let innerItem of getDiscountLevelItems(i).controls; let j = index" [formGroupName]="j">
+                                        <tr *ngFor="let innerItem of getDiscountLevelItems(i).controls; let j = index"
+                                            [formGroupName]="j">
                                             <td><input type="checkbox" formControlName="selected" /></td>
                                             <td>
-                                                <select id="discountType3_{{ i }}{{ j }}" formControlName="discountType">
-                          <option value="" disabled>選擇折扣別</option>
-                          <option *ngFor="let discount of discounts" [value]="discount.value">{{ discount.label }}</option>
-                        </select>
+                                                <select id="discountType3_{{ i }}{{ j }}"
+                                                    formControlName="discountType">
+                                                    <option value="" disabled>選擇折扣別</option>
+                                                    <option *ngFor="let discount of discounts" [value]="discount.value">
+                                                        {{ discount.label }}</option>
+                                                </select>
                                             </td>
                                             <td><input type="text" formControlName="startAmount" /></td>
                                             <td><input type="text" formControlName="endAmount" /></td>
                                             <td><input type="text" formControlName="rate" /></td>
-                                            <td><button type="button" (click)="removeDiscountLevelItem(i, j)">刪除</button></td>
+                                            <td><button type="button"
+                                                    (click)="removeDiscountLevelItem(i, j)">刪除</button></td>
                                         </tr>
                                         <tr>
-                                            <td colspan="6"><button type="button" (click)="addDiscountLevelItem(i)">新增項目</button></td>
+                                            <td colspan="6"><button type="button"
+                                                    (click)="addDiscountLevelItem(i)">新增項目</button></td>
                                         </tr>
                                     </tbody>
                                 </table>

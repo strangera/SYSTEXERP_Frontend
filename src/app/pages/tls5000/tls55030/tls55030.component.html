@@ -4,176 +4,89 @@
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
     <div *appHasPermission="addPermission">
-      <app-button-create (click)="onCreate()" class="col"></app-button-create>
+      <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="單據種類"
-              controlName="paperType"
-              [options]="paperTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.paperType"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="單據種類" controlName="paperType" [options]="paperTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.paperType" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="發票/收據號碼"
-              controlName="invoiceCode"
-              [control]="queryForm.controls.invoiceCode"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="發票/收據號碼" controlName="invoiceCode" [control]="queryForm.controls.invoiceCode"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-date-one
-              label="單據日期"
-              controlName="documentDate"
-              [control]="queryForm.controls.documentDate"
-              [submitted]="submitted"
-            ></app-date-one>
+            <app-calendar calendarType="dateOne" label="單據日期" controlName="documentDate"
+              [control]="queryForm.controls.documentDate" [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="結帳年月"
-              controlName="billingYearMonth"
-              [control]="queryForm.controls.billingYearMonth"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="結帳年月" controlName="billingYearMonth" [control]="queryForm.controls.billingYearMonth"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="結帳方式"
-              controlName="billingMethod"
-              [control]="queryForm.controls.billingMethod"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="結帳方式" controlName="billingMethod" [control]="queryForm.controls.billingMethod"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="帳次"
-              controlName="billingCount"
-              [control]="queryForm.controls.billingCount"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="帳次" controlName="billingCount" [control]="queryForm.controls.billingCount"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="申報年月"
-              controlName="reportYearMonth"
-              [control]="queryForm.controls.reportYearMonth"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="申報年月" controlName="reportYearMonth" [control]="queryForm.controls.reportYearMonth"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="廠商統一編號"
-              controlName="vendorCode"
-              [control]="queryForm.controls.vendorCode"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="廠商統一編號" controlName="vendorCode" [control]="queryForm.controls.vendorCode"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="課稅別"
-              controlName="taxCategory"
-              [options]="taxCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.taxCategory"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="課稅別" controlName="taxCategory" [options]="taxCategoryOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.taxCategory" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-serial-number-range
-              label="發票總額"
-              [startControl]="queryForm.controls.amountFrom"
-              [endControl]="queryForm.controls.amountTo"
-              [submitted]="submitted"
-            ></app-input-serial-number-range>
+            <app-input-number-range [useGrouping]="false" label="發票總額" [startControl]="queryForm.controls.amountFrom"
+              [endControl]="queryForm.controls.amountTo" [submitted]="submitted"></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-serial-number-range
-              label="未稅金額"
-              [startControl]="queryForm.controls.unTaxAmountFrom"
-              [endControl]="queryForm.controls.unTaxAmountTo"
-              [submitted]="submitted"
-            ></app-input-serial-number-range>
+            <app-input-number-range [useGrouping]="false" label="未稅金額"
+              [startControl]="queryForm.controls.unTaxAmountFrom" [endControl]="queryForm.controls.unTaxAmountTo"
+              [submitted]="submitted"></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-serial-number-range
-              label="稅額"
-              [startControl]="queryForm.controls.taxAmountFrom"
-              [endControl]="queryForm.controls.taxAmountTo"
-              [submitted]="submitted"
-            ></app-input-serial-number-range>
+            <app-input-number-range [useGrouping]="false" label="稅額" [startControl]="queryForm.controls.taxAmountFrom"
+              [endControl]="queryForm.controls.taxAmountTo" [submitted]="submitted"></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="格式"
-              controlName="format"
-              [control]="queryForm.controls.format"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="格式" controlName="format" [control]="queryForm.controls.format"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-item
-              label="狀況"
-              controlName="discountStatus"
-              [options]="discountStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.discountStatus"
-              [submitted]="submitted"
-            ></app-dropdown-item>
+            <app-dropdown label="狀況" controlName="discountStatus" [options]="discountStatusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.discountStatus" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-serial-number-range
-              label="傳送日期"
-              [startControl]="queryForm.controls.sendDateFrom"
-              [endControl]="queryForm.controls.sendDateTo"
-              [submitted]="submitted"
-            ></app-input-serial-number-range>
+            <app-input-number-range [useGrouping]="false" label="傳送日期" [startControl]="queryForm.controls.sendDateFrom"
+              [endControl]="queryForm.controls.sendDateTo" [submitted]="submitted"></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="建立者"
-              controlName="creator"
-              [control]="queryForm.controls.creator"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="建立者" controlName="creator" [control]="queryForm.controls.creator"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="折讓維護單號"
-              controlName="discountMaintenanceCode"
-              [control]="queryForm.controls.discountMaintenanceCode"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="折讓維護單號" controlName="discountMaintenanceCode"
+              [control]="queryForm.controls.discountMaintenanceCode" [submitted]="submitted"></app-input-text>
           </div>
         </div>
       </form>
       <div *appHasPermission="queryPermission" class="col">
         <div class="grid justify-content-end">
-          <app-button-clear (onClick)="onClearForm()"></app-button-clear>
-          <app-button-query
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button-query>
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -181,11 +94,7 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-data-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-data-table>
+    <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)"
+      (detail)="onDetail($event)"></app-data-table>
   </div>
 </div>
