@@ -1,3 +1,4 @@
+import { Sysb400Service } from './../../../service/sysb/sysb400.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 // Shared
@@ -28,11 +29,7 @@ interface Organization {
   styleUrls: ['./sysb400.component.scss'],
 })
 export class SYSB400Component extends BasicQpageComponent implements OnInit {
-  data: Organization[] = [
-    { stop_flag: false, org_id: 0, org_name: '全公司', level_id: '100000', level_name: '全公司', p_level_id: '全公司' },
-    { stop_flag: true, org_id: 1, org_name: '室/部', level_id: '101000', level_name: '經營企劃部(停用)', p_level_id: '全公司' },
-    // 更多資料...
-  ];
+  data: Organization[] = [];
   filteredData: Organization[] = [...this.data];
   columns: any[] = [
     { field: 'org_id', header: '階層代碼', visible: true },
@@ -47,9 +44,9 @@ export class SYSB400Component extends BasicQpageComponent implements OnInit {
     org_id: ['', Validators.maxLength(20)], // 組織代碼
     org_name: ['', Validators.maxLength(40)], // 組織名稱
     level_id: ['', Validators.maxLength(2)], // 階層代碼
-    p_org_id: ['', Validators.maxLength(20)], // 上層組織代碼
-    p_level_id: ['', Validators.maxLength(2)], // 上層組織階層代碼(空白代表第一層)
-    stop_flag: [['N'] as string[], Validators.maxLength(2)], // 是否停用
+    // p_org_id: ['', Validators.maxLength(20)], // 上層組織代碼
+    // p_level_id: ['', Validators.maxLength(2)], // 上層組織階層代碼(空白代表第一層)
+    // stop_flag: [['N'] as string[], Validators.maxLength(2)], // 是否停用
   });
 
   rowsPerPageOptions = [10, 25, 50, 100];
@@ -86,8 +83,8 @@ export class SYSB400Component extends BasicQpageComponent implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private authService: AuthService,
-    private messageService: NotificationService,
     private router: Router,
+    private sysb400Service: Sysb400Service,
   ) {
     super();
   }
@@ -132,36 +129,23 @@ export class SYSB400Component extends BasicQpageComponent implements OnInit {
   }
 
   applyFilters(): void {
-    const filters = this.queryForm.value;
-    this.filteredData = [...this.data];
+    // const filters = this.queryForm.value;
+    // this.filteredData = [...this.data];
 
-    if (filters.org_name) {
-      this.filteredData = this.filteredData.filter(
-        item => item.org_name === filters.org_name
-      );
-    }
+    // if (filters.org_name) {
+    //   this.filteredData = this.filteredData.filter(
+    //     item => item.org_name === filters.org_name
+    //   );
+    // }
 
-    if (filters.org_id) {
-      const org_id = parseInt(filters.org_id, 10);
-      this.filteredData = this.filteredData.filter(item => item.org_id >= org_id);
-    }
-
-    if (filters.level_id) {
-      this.filteredData = this.filteredData.filter(item =>
-        item.level_id.includes(filters.level_id ?? '')
-      );
-    }
-
-    if (filters.p_org_id) {
-      this.filteredData = this.filteredData.filter(item =>
-        item.level_name.includes(filters.p_org_id ?? '')
-      );
-    }
-
-    if (filters.p_level_id) {
-      this.filteredData = this.filteredData.filter(item =>
-        item.p_level_id.includes(filters.p_level_id ?? '')
-      );
+    if (this.queryForm.valid && this.canQuery()) {
+      // console.log('查詢條件', this.queryForm.value);
+      this.sysb400Service.querySYS3100(this.queryForm.value).subscribe((response) => {
+        this.data = response.Data;
+        console.log('查詢結果',this.data);
+        // this.queryStateService.setQueryState(QUERY_STORAGE_KEY, form.value);
+        this.loading = false;
+      });
     }
   }
 

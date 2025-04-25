@@ -11,6 +11,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { EncryptionService } from '../../../shared/service/encryption.service';
 import { NotificationService } from '../../../shared/service/notification.service';
 import { Sys1000Service } from '../../../service/SYS100/sys1000.service';
+import { UserCodeService } from '../../../service/basic/user-code.service';
 
 @Component({
   selector: 'app-sso-dashboard',
@@ -18,7 +19,7 @@ import { Sys1000Service } from '../../../service/SYS100/sys1000.service';
   styleUrl: './sso-dashboard.component.scss'
 })
 export class SsoDashboardComponent implements OnInit {
-  logo: string = 'assets/layout/images/logo.png';
+  logo = 'assets/layout/images/logo.png';
   user: UserInfo | null = null;
   private subscriptions: Subscription[] = [];
   data: UserInfo | null = null; // 使用者資料
@@ -48,6 +49,7 @@ export class SsoDashboardComponent implements OnInit {
     private validationService: ValidationService,
     private encryptionService: EncryptionService,
     private messageService: NotificationService,
+    private userCodeService: UserCodeService,
   ) {
     this.subscriptions.push(this.authService.user.subscribe(x => this.user = x));
   }
@@ -70,11 +72,9 @@ export class SsoDashboardComponent implements OnInit {
     this.fetchUrlList();
 
     const time = JSON.parse(sessionStorage.getItem('UserInfo') || '{}').USER_PwdExpireDate;
-    // if (time <= new Date().toISOString()) {
-    if (true) {
-      this.messageService.errorBubble('超過90天使用時間，請修改密碼');
+    if (time <= new Date().toISOString()) {
+      this.messageService.warnBubble('為維護帳號安全，您的密碼已超過 90 天未變更，為保障帳戶安全，請立即設定新密碼後再登入系統。', '建議您定期更換密碼');
       this.visible = true;
-      console.log('密碼過期');
     }
   }
   fetchUrlList(): void {
@@ -99,7 +99,7 @@ export class SsoDashboardComponent implements OnInit {
         this.authService.getFunRightsInfo(),
         this.sys1000Service.getData()
       ]).subscribe({
-        next: ([funRightsResponse, sys1000Response]) => {
+        next: ([sys1000Response]) => {
           sessionStorage.setItem('SYSTEMSetting', JSON.stringify(sys1000Response));
           this.loading = false; // 停止載入
           this.router.navigate([item.routerLink]); // 切換路由
@@ -128,15 +128,25 @@ export class SsoDashboardComponent implements OnInit {
       // };
       // this.authService.changePassword(body).subscribe({
       //   next: () => {
-      this.messageService.successBubble('更新成功');
-      this.authService.logout();
-      this.formButtonLoading = false;
-      //   },
-      //   error: (error) => {
-      //     this.messageService.errorBubble(error?.message, '錯誤');
-      //     this.formButtonLoading = false;
-      //   }
-      // })
+
+      const query = {
+        User_No: this.data?.user_No || '',
+        Old_password: this.encryptionService.getPassword(this.data?.user_No || '', frm.value.oldPassword),
+        New_password: this.encryptionService.getPassword(this.data?.user_No || '', frm.value.newPassword),
+        PwdExpireDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 密碼到期日設為90天後
+      };
+  
+      this.userCodeService.changePassword(query).subscribe({
+        next: () => {
+          this.messageService.successBubble('密碼修改成功');
+          this.authService.logout();
+          this.formButtonLoading = false;
+        },
+        error: (error) => {
+          console.error('密碼修改失敗:', error);
+          this.messageService.errorBubble('密碼修改失敗，請稍後再試。');
+        }
+      });
     }
   }
   get containerClass() {

@@ -16,15 +16,15 @@ registerLocaleData(zhHant, 'zh-tw');
   styleUrl: './login.component.scss',
 })
 export class LoginComponent implements OnInit {
-  logoPath: string = 'assets/layout/images/login_logo.png';
+  logoPath = 'assets/layout/images/login_logo.png';
   loginForm = this.formBuilder.group({
     code: ['admin' as string, Validators.required],
     password: ['1' as string, Validators.required],
     client_ip: ['' as string]
   });
-  submitted: boolean = false;
-  loading: boolean = false;
-  ipAddress: string = '';
+  submitted = false;
+  loading = false;
+  ipAddress = '';
   constructor(
     private authService: AuthService,
     private formBuilder: FormBuilder,

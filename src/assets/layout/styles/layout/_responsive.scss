@@ -1,5 +1,4 @@
 @media screen and (min-width: 1960px) {
-
   .layout-main,
   .landing-wrapper {
     width: 1504px;
@@ -34,7 +33,7 @@
 
     &.layout-static {
       .layout-main-container {
-        margin-left: 300px;
+        margin-left: calc(300px + 1.5rem);
       }
 
       &.layout-static-inactive {
