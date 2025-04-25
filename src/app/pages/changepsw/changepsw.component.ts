@@ -24,6 +24,8 @@ export interface UserInfo {
 export class ChangepswComponent implements OnInit {
   passwordForm: FormGroup;
   userInfo: UserInfo | null = null;
+  formButtonLoading = false; // 控制按鈕的載入狀態
+  strongRegex = '^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>\-_+=`~[\]\\;\']).{4,8}$';
 
   constructor(
     private fb: FormBuilder,
@@ -70,26 +72,31 @@ export class ChangepswComponent implements OnInit {
       return;
     }
 
-    const { oldPassword, newPassword } = this.passwordForm.value;
+    if(this.passwordForm.valid){
+      this.formButtonLoading = true;
 
-    const query = {
-      User_No: this.userInfo.user_No,
-      Old_password: this.encrypt.getPassword(this.userInfo.user_No, oldPassword),
-      New_password: this.encrypt.getPassword(this.userInfo.user_No, newPassword),
-      PwdExpireDate: this.userInfo.USER_PwdExpireDate,
-    };
+      const { oldPassword, newPassword } = this.passwordForm.value;
 
-    this.userCodeService.changePassword(query).subscribe({
-      next: () => {
-        this.notemessage.successBubble('密碼修改成功');
-        this.messageService.add({ severity: 'success', summary: '成功', detail: '密碼已變更' });
-        this.passwordForm.reset();
-        this.authService.logout();
-      },
-      error: (error) => {
-        console.error('密碼修改失敗:', error);
-        this.notemessage.errorBubble('密碼修改失敗，請稍後再試。');
-      }
-    });
-  }
+      const query = {
+        User_No: this.userInfo.user_No,
+        Old_password: this.encrypt.getPassword(this.userInfo.user_No, oldPassword),
+        New_password: this.encrypt.getPassword(this.userInfo.user_No, newPassword),
+        PwdExpireDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 密碼到期日設為90天後
+      };
+
+      this.userCodeService.changePassword(query).subscribe({
+        next: () => {
+          this.notemessage.successBubble('密碼修改成功');
+          this.messageService.add({ severity: 'success', summary: '成功', detail: '密碼已變更' });
+          this.passwordForm.reset();
+          this.authService.logout();
+        },
+        error: (error) => {
+          console.error('密碼修改失敗:', error);
+          this.notemessage.errorBubble('密碼修改失敗，請稍後再試。');
+        }
+      });
+      this.formButtonLoading = false;
+    }
+    }
 }
