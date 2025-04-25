@@ -1,39 +1,44 @@
 <div class="grid">
-    <div class="col-12">
-        <div class="card">
-            <div class="grid p-fluid ">
-                <div class="col-20 md:col-10 lg:col-12">
-                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
-                </div>
-            </div>
-            <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-                <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-serial-number label="中分類代碼" controlName="mCode" [control]="dataForm.controls.mCode" [submitted]="submitted">
-                            </app-input-serial-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="中分類名稱" controlName="mName" [control]="dataForm.controls.mName" [submitted]="submitted">
-                            </app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown-item label="大分類代碼" controlName="bigCategory" [options]="bigCategoryOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.bigCategory" [submitted]="submitted">
-                            </app-dropdown-item>
-                        </div>
-                    </div>
-                    <hr>
-                    <app-editor-text label="說明" controlName="editortext" [control]="dataForm.controls.editortext" [style]="{ height: '100px' }" [submitted]="submitted">
-                    </app-editor-text>
-                    <hr>
-                </form>
-                <div class="col pt-4">
-                    <div class="grid justify-content-end">
-                        <app-button-cancel (click)="onCancel()"></app-button-cancel>
-                        <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
-                    </div>
-                </div>
-            </p-panel>
+  <div class="col-12">
+    <div class="card">
+      <div class="grid p-fluid ">
+        <div class="col-20 md:col-10 lg:col-12">
+          <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
+      </div>
+      <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="中分類代碼" controlName="mCode" [control]="dataForm.controls.mCode"
+                [submitted]="submitted">
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="中分類名稱" controlName="mName" [control]="dataForm.controls.mName"
+                [submitted]="submitted">
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown-item label="大分類代碼" controlName="bigCategory" [options]="bigCategoryOptions"
+                optionLabel="label" optionValue="value" [control]="dataForm.controls.bigCategory"
+                [submitted]="submitted">
+              </app-dropdown-item>
+            </div>
+          </div>
+          <hr>
+          <app-editor-text label="說明" controlName="editortext" [control]="dataForm.controls.editortext"
+            [style]="{ height: '100px' }" [submitted]="submitted">
+          </app-editor-text>
+          <hr>
+        </form>
+        <div class="col pt-4">
+          <div class="grid justify-content-end">
+            <app-button-cancel (click)="onCancel()"></app-button-cancel>
+            <app-button-submit (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button-submit>
+          </div>
+        </div>
+      </p-panel>
     </div>
+  </div>
 </div>

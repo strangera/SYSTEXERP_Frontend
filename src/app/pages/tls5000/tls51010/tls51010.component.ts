@@ -54,22 +54,17 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
   // submitted: boolean = false;
 
   queryForm = this.formBuilder.group({
-    CAT_LNo: ['', [Validators.maxLength(2)]],
+    CAT_LNo: ['', [Validators.maxLength(2), this.validationService.numberValidator]],
     CAT_LName: ['', [Validators.maxLength(32)]],
   });
 
   data: CategoryItem[] = [];
   filteredData: CategoryItem[] = [...this.data];
+  //篩選表格的欄位
   columns: any[] = [
     { field: 'CAT_LNo', header: '大分類代碼', visible: true },
     { field: 'CAT_LName', header: '大分類名稱', visible: true },
     { field: 'CAT_LRemark', header: '備註', visible: true },
-    { field: 'CRT_Date', header: '創建日期', visible: false },
-    { field: 'CRT_USR_No', header: '創建用戶編號', visible: false },
-    { field: 'CRT_USR_Name', header: '創建用戶名稱', visible: false },
-    { field: 'UPD_Date', header: '更新日期', visible: false },
-    { field: 'UPD_USR_No', header: '更新用戶編號', visible: false },
-    { field: 'UPD_USR_Name', header: '更新用戶名稱', visible: false }
   ];
   pageSize: number = 10;
   pageIndex: number = 0;

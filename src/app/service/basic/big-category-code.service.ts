@@ -11,17 +11,17 @@ export class BigCategoryCodeService {
   apiUrl: string = environment.ApiUrl;
   title: string = '大分類代碼';
   options: any[] = [
-    { value: 1, label: '化妝品' },
-    { value: 2, label: '內睡衣' },
-    { value: 3, label: '電子商務EC' },
-    { value: 4, label: '電子商務EC-萊雅' },
-    { value: 5, label: '電子商務EC-台鹽' },
+    { value: '1', label: '化妝品' },
+    { value: '2', label: '內睡衣' },
+    { value: '3', label: '電子商務EC' },
+    { value: '4', label: '電子商務EC-萊雅' },
+    { value: '5', label: '電子商務EC-台鹽' },
   ];
 
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getSystemTypes(): Observable<any[]> {
     return of(this.options).pipe(
