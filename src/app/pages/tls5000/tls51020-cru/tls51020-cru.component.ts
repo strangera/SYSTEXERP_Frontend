@@ -51,76 +51,39 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   ngOnInit(): void {
-    this.initializePage('25002', this.dataForm);
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
+    this.initializePage('250002', this.dataForm);
     this.bigCategoryCodeService.getSystemTypes().subscribe(data => {
       this.bigCategoryOptions = data;
     });
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      case CRUDStatus.Create:
-        this.formTitle = '新增資料';
-        this.showConfirm = this.canAdd();
-        break;
-      case CRUDStatus.Edit:
-        console.log(state.rowdata);
-        this.formTitle = '編輯資料';
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      case CRUDStatus.Read:
-        this.formTitle = '顯示資料';
-        this.Read(state.rowdata);
-        break;
-    }
-  }
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
   }
 
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble('新增成功');
+       // 修改：使用父類的 handleSubmit 方法
+       this.handleSubmit(frm, () => {
+        switch (this.crudstatus) {
+          case CRUDStatus.Create:
+            if (this.canAdd()) {
+              // 待實現：調用 API 進行新增
+              this.apiService.insertPOS20031(frm.value).subscribe((response: any) => {
+                this.messageService.successBubble('新增成功');
+                this.onCancel(); // 新增成功後返回查詢頁面
+              });
+            }
+            break;
+          case CRUDStatus.Edit:
+            if (this.canEdit()) {
+              // 待實現：調用 API 進行更新
+              this.apiService.updatePOS20031(frm.value).subscribe((response: any) => {
+                this.messageService.successBubble('更新成功');
+                this.onCancel(); // 更新成功後返回查詢頁面
+              });
+            }
+            break;
         }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble('更新成功');
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+      });
   }
 
   submitForm(frm: FormGroup) {
-    // 查詢邏輯
     this.onSubmit(frm);
   }
 
