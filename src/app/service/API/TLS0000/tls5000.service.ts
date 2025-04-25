@@ -4,12 +4,6 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { ErrorHandlerService } from '../../../shared/service/error-handler.service';
 import { catchError, Observable, tap } from 'rxjs';
 
-// 查詢參數介面（可選，未來優化時使用）
-// export interface BigCategoryQuery {
-//   CAT_LNo?: string;
-//   CAT_LName?: string;
-// }
-
 @Injectable({
   providedIn: 'root',
 })
@@ -22,6 +16,7 @@ export class TLS5000Service {
     private errorHandler: ErrorHandlerService
   ) { }
 
+  //自營大分類
   // 查詢 POS2003
   queryPOS2003(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryPOS2003`, data).pipe(
@@ -29,6 +24,7 @@ export class TLS5000Service {
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
+
   //新增 POS2003
   insertPOS2003(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertPOS2003`, data).pipe(
@@ -38,7 +34,7 @@ export class TLS5000Service {
   }
 
 
-  //修改 POS2003
+  //修改 POS20031
   updatePOS2003(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updatePOS2003`, data).pipe(
       tap((data) => console.debug('TLS5000 updatePOS2003 response', data)),
@@ -50,6 +46,39 @@ export class TLS5000Service {
   deletePOS2003(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deletePOS2003`, data).pipe(
       tap((data) => console.debug('TLS5000 deletePOS2003 response', data)),
+      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
+    );
+  }
+
+  //中分類
+  // 查詢 POS20031
+  queryPOS20031(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryPOS20031`, data).pipe(
+      tap((data) => console.debug('TLS5000 queryPOS20031 response', data)),
+      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
+    );
+  }
+  //新增 POS20031
+  insertPOS20031(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertPOS20031`, data).pipe(
+      tap((data) => console.debug('TLS5000 insertPOS20031 response', data)),
+      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
+    );
+  }
+
+
+  //修改 POS20031
+  updatePOS20031(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updatePOS20031`, data).pipe(
+      tap((data) => console.debug('TLS5000 updatePOS20031 response', data)),
+      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
+    );
+  }
+
+  //刪除 POS20031
+  deletePOS20031(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deletePOS20031`, data).pipe(
+      tap((data) => console.debug('TLS5000 deletePOS20031 response', data)),
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }

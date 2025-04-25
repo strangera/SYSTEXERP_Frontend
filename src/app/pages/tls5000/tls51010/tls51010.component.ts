@@ -8,7 +8,7 @@ import { NotificationService } from '../../../shared/service/notification.servic
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
-
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 interface CategoryItem {
   CAT_LNo: string;
   CAT_LName: string;
@@ -37,30 +37,34 @@ interface NavigationState {
   templateUrl: './tls51010.component.html',
   styleUrl: './tls51010.component.scss'
 })
-export class TLS51010Component implements OnInit {
-  ProgNo: string = '250001';
-  funInfo: FunsrightInfo = {};
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
+  // 移除：ProgNo 移到 initializePage 設置
+  // ProgNo: string = '250001';
+
+  // 移除：funInfo 由父類提供
+  // funInfo: FunsrightInfo = {};
+
+  // 移除：權限屬性由父類提供
+  // addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
+  // queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
+  // editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+
+  // 移除：loading 和 submitted 由父類提供
+  // loading: boolean = false;
+  // submitted: boolean = false;
+
   queryForm = this.formBuilder.group({
     CAT_LNo: ['', [Validators.maxLength(2), this.validationService.numberValidator]],
     CAT_LName: ['', [Validators.maxLength(32)]],
   });
+
   data: CategoryItem[] = [];
   filteredData: CategoryItem[] = [...this.data];
+  //篩選表格的欄位
   columns: any[] = [
     { field: 'CAT_LNo', header: '大分類代碼', visible: true },
     { field: 'CAT_LName', header: '大分類名稱', visible: true },
-    { field: 'CAT_MRemark', header: '備註', visible: true },
-    { field: 'CRT_Date', header: '創建日期', visible: false },
-    { field: 'CRT_USR_No', header: '創建用戶編號', visible: false },
-    { field: 'CRT_USR_Name', header: '創建用戶名稱', visible: false },
-    { field: 'UPD_Date', header: '更新日期', visible: false },
-    { field: 'UPD_USR_No', header: '更新用戶編號', visible: false },
-    { field: 'UPD_USR_Name', header: '更新用戶名稱', visible: false }
+    { field: 'CAT_LRemark', header: '備註', visible: true },
   ];
   pageSize: number = 10;
   pageIndex: number = 0;
@@ -70,16 +74,25 @@ export class TLS51010Component implements OnInit {
   sortOrder: number = 1;
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
+    // 移除：父類已注入 Router、FormBuilder、NotificationService 和 AuthService
     private validationService: ValidationService,
     private apiService: TLS5000Service
-  ) { }
+  ) {
+    // 新增：調用父類構造函數
+    super();
+  }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // 新增：在 ngOnInit 中調用 initializePage 設置 ProgNo 和 cruPage
+    this.initializePage('250001', '/TLS5000/TLS51010CRU');
+
+    // 新增：調試權限數據
+    console.log('funInfo:', this.funInfo);
+    console.log('queryPermission:', this.queryPermission);
+
+    // 移除：funInfo 初始化由父類處理
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     const state = history.state as NavigationState;
     console.log('Navigation state:', state); // 調試用
     if (state && state.queryParams) {
@@ -97,28 +110,26 @@ export class TLS51010Component implements OnInit {
     }
   }
 
-  canQuery(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
-  }
-  canAdd(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
-  }
-  canEdit(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
-  }
+  // 移除：canQuery、canAdd 和 canEdit 由父類的 canPerformAction 替代
+  // canQuery(): boolean {
+  //   return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
+  // }
+  // canAdd(): boolean {
+  //   return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
+  // }
+  // canEdit(): boolean {
+  //   return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
+  // }
 
   onSubmit(frm: FormGroup) {
     console.log('Form value:', frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
+    // 修改：使用父類的 handleSubmit 替代原始邏輯（移除 canQuery 檢查）
+    this.handleSubmit(frm, () => {
       const queryParams = {
         CAT_LNo: frm.value.CAT_LNo || '',
-        CAT_MName: frm.value.CAT_LName || '',
+        CAT_LName: frm.value.CAT_LName || '',
         PageSize: this.pageSize,
-        PageIndex: this.pageIndex,
+        PageIndex: '1',
         OrderBy: this.sortField || 'CAT_LNo',
         SortBy: [{ field: this.sortField || 'CAT_LNo', order: this.sortOrder || 1 }]
       };
@@ -135,30 +146,26 @@ export class TLS51010Component implements OnInit {
             if (this.data.length === 0) {
               console.log('查詢結果為空');
             }
-            this.loading = false;
-            this.messageService.unblockUi();
           } else {
             console.error('API error:', response.Status, response.Message);
-
-            this.loading = false;
-            this.messageService.unblockUi();
           }
+          // 確保 loading 狀態重置
+          this.loading = false;
+          this.messageService.unblockUi();
         },
         error: (err: string) => {
           console.error('API error:', err);
-
+          // 確保 loading 狀態重置
           this.loading = false;
           this.messageService.unblockUi();
         }
       });
-    } else {
-      console.log('Form invalid or no query permission');
-      this.loading = false;
-      this.messageService.unblockUi();
-    }
+    });
   }
 
   onSubmitQuery(frm: FormGroup) {
+    // 新增：調試日誌
+    console.log('onSubmitQuery triggered');
     this.pageIndex = 0;
     this.onSubmit(frm);
   }
@@ -186,37 +193,37 @@ export class TLS51010Component implements OnInit {
     this.onSubmit(this.queryForm);
   }
 
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
-    }
-  }
+  // 移除：onCreate、onEdit 和 onDetail 由父類提供
+  // onCreate() {
+  //   if (this.canAdd()) {
+  //     this.navigateWithState(CRUDStatus.Create);
+  //   }
+  // }
+  // onEdit(data: CategoryItem) {
+  //   console.log('Edit data:', data);
+  //   if (this.canEdit()) {
+  //     this.navigateWithState(CRUDStatus.Edit, data);
+  //   }
+  // }
+  // onDetail(data: CategoryItem) {
+  //   console.log(data);
+  //   this.navigateWithState(CRUDStatus.Read, data);
+  // }
 
-  onEdit(data: CategoryItem) {
-    console.log('Edit data:', data);
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
-    }
-  }
-
-  onDetail(data: CategoryItem) {
-    console.log(data);
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
-
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: CategoryItem) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
-        queryParams: this.lastQueryParams,
-        pageIndex: this.pageIndex,
-        pageSize: this.pageSize,
-        totalRecords: this.totalRecords,
-        sortField: this.sortField,
-        sortOrder: this.sortOrder,
-      },
-    };
-    this.router.navigate(['/TLS5000/TLS51010CRU'], extras);
-  }
+  // // 修改：重寫 navigateWithState 以保留分頁狀態
+  // navigateWithState(crudstatus: CRUDStatus, rowdata?: CategoryItem) {
+  //   let extras: NavigationExtras = {
+  //     state: {
+  //       crudstatus: crudstatus,
+  //       rowdata: rowdata,
+  //       queryParams: this.lastQueryParams,
+  //       pageIndex: this.pageIndex,
+  //       pageSize: this.pageSize,
+  //       totalRecords: this.totalRecords,
+  //       sortField: this.sortField,
+  //       sortOrder: this.sortOrder,
+  //     },
+  //   };
+  //   this.router.navigate([this.cruPage], extras);
+  // }
 }

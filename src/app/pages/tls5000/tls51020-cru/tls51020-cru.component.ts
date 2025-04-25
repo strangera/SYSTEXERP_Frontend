@@ -1,4 +1,4 @@
-import { Component, } from '@angular/core';
+import { Component, OnInit, } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
 import { NavigationExtras, Router } from '@angular/router';
@@ -8,6 +8,18 @@ import { AuthService } from '../../../service/system/auth.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 //
 import { BigCategoryCodeService } from './../../../service/basic/big-category-code.service';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
+
+// 新增：定義數據接口
+interface CategoryItem {
+  id: number;
+  CAT_LNo: string;
+  CAT_LName: string;
+  CAT_LRemark: string | null;
+  CRT_USR_No: string | "";
+  CRT_USR_Name: string | "";
+}
 
 // 2.5.1.2 中分類維護作業 CRU
 @Component({
@@ -15,84 +27,61 @@ import { BigCategoryCodeService } from './../../../service/basic/big-category-co
   templateUrl: './tls51020-cru.component.html',
   styleUrl: './tls51020-cru.component.scss'
 })
-export class TLS51020CRUComponent {
-  ProgNo: string = '250002';
-  // 權限
-  // ----------------------------------------------------------------
-  funInfo: FunsrightInfo = {};
-  addPermission = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  editPermission = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
+
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    mCode: [, [Validators.required, Validators.maxLength(3),this.validationService.numberValidator]], // Input serial number
+    id: [0], // ID
+    mCode: [, [Validators.required, Validators.maxLength(3), this.validationService.numberValidator]], // Input serial number
     mName: ['', [Validators.required, Validators.maxLength(32)]], // Input Text
     bigCategory: [, [Validators.required]], // DropDown
-    editortext: [, ], // editor text
+    editortext: [,], // editor text
   });
-  // ----------------------------------------------------------------
-  crudstatus: CRUDStatus = CRUDStatus.Read;
-  formTitle: string = '';
   showConfirm: boolean = false;
-  submitted = false;
 
   // ----------------------------------------------------------------
   bigCategoryOptions: any[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private validationService: ValidationService,
-    //
+    private apiService: TLS5000Service,
     private bigCategoryCodeService: BigCategoryCodeService,
-    ) {
+  ) {
+    super();
   }
 
   ngOnInit(): void {
-      //
-      // ----------------------------------------------------------------
-      this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-      //
-      this.bigCategoryCodeService.getSystemTypes().subscribe(data => {
-        this.bigCategoryOptions = data;
-      });
-      // ----------------------------------------------------------------
-      const state = this.router.lastSuccessfulNavigation?.extras.state as {
-        crudstatus: CRUDStatus,
-        rowdata: any,
-      };
+    this.initializePage('25002', this.dataForm);
+    //
+    // ----------------------------------------------------------------
+    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    //
+    this.bigCategoryCodeService.getSystemTypes().subscribe(data => {
+      this.bigCategoryOptions = data;
+    });
+    // ----------------------------------------------------------------
+    const state = this.router.lastSuccessfulNavigation?.extras.state as {
+      crudstatus: CRUDStatus,
+      rowdata: any,
+    };
 
-      switch (state.crudstatus) {
-        case CRUDStatus.Create:
-          this.formTitle = '新增資料';
-          this.showConfirm = this.canAdd();
-          break;
-        case CRUDStatus.Edit:
-          console.log(state.rowdata);
-          this.formTitle = '編輯資料';
-          this.showConfirm = this.canEdit();
-          this.Edit(state.rowdata);
-          break;
-        case CRUDStatus.Read:
-          this.formTitle = '顯示資料';
-          this.Read(state.rowdata);
-          break;
-      }
+    switch (state.crudstatus) {
+      case CRUDStatus.Create:
+        this.formTitle = '新增資料';
+        this.showConfirm = this.canAdd();
+        break;
+      case CRUDStatus.Edit:
+        console.log(state.rowdata);
+        this.formTitle = '編輯資料';
+        this.showConfirm = this.canEdit();
+        this.Edit(state.rowdata);
+        break;
+      case CRUDStatus.Read:
+        this.formTitle = '顯示資料';
+        this.Read(state.rowdata);
+        break;
+    }
   }
-  // ----------------------------------------------------------------
-  get isFormEditable(): boolean {
-    return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());
-  }
-
-  canAdd(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
-  }
-
-  canEdit(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
-  }
-  // ----------------------------------------------------------------
   Edit(rowdata: any) {
     this.dataForm.patchValue(rowdata);
   }
@@ -102,11 +91,11 @@ export class TLS51020CRUComponent {
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }
@@ -137,8 +126,8 @@ export class TLS51020CRUComponent {
 
   onClearForm() {
     this.dataForm.reset();  // 重置表單
-  }  
-  
+  }
+
   onCancel() {
     this.router.navigate(['/TLS5000/TLS51020']);
   }
