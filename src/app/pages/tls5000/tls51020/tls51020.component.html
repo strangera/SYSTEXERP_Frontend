@@ -51,8 +51,9 @@
     </div>
     <div class="card">
       <div class="col-13">
-        <app-data-table-check [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-        </app-data-table-check>
+        <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (delete)="onDelete($event)"
+          (detail)="onDetail($event)" [showCheckBox]="true" dataKey="id">
+        </app-table>
       </div>
     </div>
   </div>

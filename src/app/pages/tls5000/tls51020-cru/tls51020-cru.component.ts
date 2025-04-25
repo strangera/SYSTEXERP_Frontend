@@ -32,10 +32,10 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [0], // ID
-    mCode: [, [Validators.required, Validators.maxLength(3), this.validationService.numberValidator]], // Input serial number
-    mName: ['', [Validators.required, Validators.maxLength(32)]], // Input Text
-    bigCategory: [, [Validators.required]], // DropDown
-    editortext: [,], // editor text
+    CAT_MNo: ['', [Validators.required, Validators.maxLength(3), this.validationService.numberValidator]], // Input serial number
+    CAT_MName: ['', [Validators.required, Validators.maxLength(32)]], // Input Text
+    CAT_LNo: ['', [Validators.required]], // DropDown
+    CAT_MRemark: [''], // editor text
   });
   showConfirm: boolean = false;
 
@@ -58,30 +58,31 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   onSubmit(frm: FormGroup) {
-       // 修改：使用父類的 handleSubmit 方法
-       this.handleSubmit(frm, () => {
-        switch (this.crudstatus) {
-          case CRUDStatus.Create:
-            if (this.canAdd()) {
-              // 待實現：調用 API 進行新增
-              this.apiService.insertPOS20031(frm.value).subscribe((response: any) => {
-                this.messageService.successBubble('新增成功');
-                this.onCancel(); // 新增成功後返回查詢頁面
-              });
-            }
-            break;
-          case CRUDStatus.Edit:
-            if (this.canEdit()) {
-              // 待實現：調用 API 進行更新
-              this.apiService.updatePOS20031(frm.value).subscribe((response: any) => {
-                this.messageService.successBubble('更新成功');
-                this.onCancel(); // 更新成功後返回查詢頁面
-              });
-            }
-            break;
-        }
-      });
+    // 修改：使用父類的 handleSubmit 方法
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            // 待實現：調用 API 進行新增
+            this.apiService.insertPOS20031(frm.value).subscribe((response: any) => {
+              this.messageService.successBubble('新增成功');
+              this.onCancel(); // 新增成功後返回查詢頁面
+            });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            // 待實現：調用 API 進行更新
+            this.apiService.updatePOS20031(frm.value).subscribe((response: any) => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel(); // 更新成功後返回查詢頁面
+            });
+          }
+          break;
+      }
+    });
   }
+
 
   submitForm(frm: FormGroup) {
     this.onSubmit(frm);
