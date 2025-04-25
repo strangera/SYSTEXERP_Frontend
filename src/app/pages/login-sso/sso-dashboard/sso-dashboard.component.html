@@ -10,7 +10,7 @@
       <i class="pi pi-ellipsis-v"></i>
     </button>
     <div #topbarmenu class="layout-topbar-menu lg:flex lg:flex-column justify-content-center align-items-end"
-    [ngClass]="{'layout-topbar-menu-mobile-active': layoutService.state.profileSidebarVisible}">
+      [ngClass]="{'layout-topbar-menu-mobile-active': layoutService.state.profileSidebarVisible}">
       <div class="flex flex-row align-items-center justify-content-center col-flex">
         <div class="text-center ml-1 block" [ngStyle]="{'color': 'rgb(146, 60, 60)'}">
           <button type="button" class="layout-topbar-button p-link min-w-max" pTooltip="個人資料"
@@ -59,8 +59,8 @@
           </ng-template>
           <ng-template pTemplate="footer">
             <div class="flex gap-3 mt-1 w-full">
-              <p-button type="button" class="w-full" styleClass="w-full" label="前往入口"
-                (click)="navigateToUrl(item)" icon="pi pi-external-link"></p-button>
+              <p-button type="button" class="w-full" styleClass="w-full" label="前往入口" (click)="navigateToUrl(item)"
+                icon="pi pi-external-link"></p-button>
             </div>
           </ng-template>
         </p-card>
@@ -108,6 +108,11 @@
         <small
           *ngIf="form.controls['newPassword'].touched && form.controls['newPassword'].errors?.['invalidPasswordStrength']"
           class="p-error block">密碼強度不足，請符合密碼規則。</small>
+        <!-- 錯誤訊息 -->
+        <small *ngIf="passwordForm.hasError('mismatch') && passwordForm.get('confirmPassword')?.touched"
+          class="text-red-500 text-sm mt-1">
+          新密碼與確認密碼不一致
+        </small>
       </div>
     </div>
     <div class="field grid">

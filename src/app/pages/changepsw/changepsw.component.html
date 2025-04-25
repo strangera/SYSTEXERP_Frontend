@@ -38,6 +38,11 @@
       <small
         *ngIf="passwordForm.controls['newPassword'].touched && passwordForm.controls['newPassword'].errors?.['invalidPasswordStrength']"
         class="p-error block">密碼強度不足，請符合密碼規則。</small>
+      <!-- 錯誤訊息 -->
+      <small *ngIf="passwordForm.hasError('mismatch') && passwordForm.get('confirmPassword')?.touched"
+        class="text-red-500 text-sm mt-1">
+        新密碼與確認密碼不一致
+      </small>
     </div>
   </div>
   <div class="field grid">
