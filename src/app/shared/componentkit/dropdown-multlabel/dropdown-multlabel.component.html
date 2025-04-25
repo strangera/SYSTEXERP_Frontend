@@ -1,6 +1,0 @@
-<label [for]="controlName">{{ label }}
-  <span *ngIf="isRequired" class="required">*</span>
-</label>
-<p-dropdown [id]="controlName" [formControl]="control" [options]="options" [optionLabel]="optionLabel" [optionValue]="optionValue" [placeholder]="placeholder" [filter]="true" [showClear]="true" [ngClass]="{'is-invalid': submitted && control.errors}">
-</p-dropdown>
-<app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>

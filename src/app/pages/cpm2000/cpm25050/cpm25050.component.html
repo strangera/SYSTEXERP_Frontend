@@ -18,8 +18,9 @@
 
           <!-- 活動季別 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dateqtr-range label="活動季別" [startControl]="queryForm.controls.startQuarter"
-              [endControl]="queryForm.controls.endQuarter" [submitted]="submitted"></app-dateqtr-range>
+            <app-dropdown label="活動季別" controlName="activityCategoryCode" [options]="activityCategoryOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.activityCategoryCode"
+              [submitted]="submitted"></app-dropdown>
           </div>
 
           <!-- 活動類別代號 -->

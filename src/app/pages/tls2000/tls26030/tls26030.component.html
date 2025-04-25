@@ -54,20 +54,6 @@
   </p-accordion>
 </div>
 
-<!-- <app-excel-export
-  [data]="filteredData"
-  [columns]="columns"
-  fileName="銷售報表"
-  [startRow]="5"
-  [startColumn]="2"
-  [extraHeaders]="[
-    { label: '報表名稱', value: '銷售資料報表' },
-    { label: '生成日期', value: '2024/11/05' },
-    { label: '作者', value: '使用者名稱' },
-
-  ]"
-></app-excel-export> -->
-
 <div class="card">
   <div class="col-12">
     <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">

@@ -71,17 +71,16 @@
             <hr>
             <div class="grid p-fluid">
               <div class="col-12 md:col-4 lg:col-4">
-                <app-checkbox-one label="只顯示應付帳款小於0" controlName="showAccount"
-                  [control]="queryForm.controls.showAccount">
-                </app-checkbox-one>
+                <p-checkbox label="只顯示應付帳款小於0" controlName="showAccount">
+                </p-checkbox>
               </div>
               <div class="col-12 md:col-4 lg:col-4">
-                <app-checkbox-one label="只顯示進貨總額小於0" controlName="showStock" [control]="queryForm.controls.showStock">
-                </app-checkbox-one>
+                <p-checkbox label="只顯示進貨總額小於0" controlName="showStock">
+                </p-checkbox>
               </div>
               <div class="col-12 md:col-4 lg:col-4">
-                <app-checkbox-one label="是否NET" controlName="net" [control]="queryForm.controls.net">
-                </app-checkbox-one>
+                <p-checkbox label="是否NET" controlName="net">
+                </p-checkbox>
               </div>
             </div>
             <hr>

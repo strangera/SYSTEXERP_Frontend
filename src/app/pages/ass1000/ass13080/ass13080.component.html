@@ -101,8 +101,8 @@
         </div>
         <hr>
         <div class="col-12 md:col-4 lg:col-4">
-          <app-checkbox-one label="已達耐用年限" controlName="outofLimit" [control]="queryForm.controls.outofLimit">
-          </app-checkbox-one>
+          <p-checkbox label="已達耐用年限" formControlName="outofLimit">
+          </p-checkbox>
         </div>
         <div *appHasPermission="queryPermission" class="col">
           <div class="grid justify-content-end">

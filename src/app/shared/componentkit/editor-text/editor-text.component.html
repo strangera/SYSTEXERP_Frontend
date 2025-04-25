@@ -1,13 +1,11 @@
 <label [for]="controlName">{{ label }}
   <span *ngIf="isRequired" class="required">*</span>
 </label>
-<p-editor [ngModel]="control.value" (ngModelChange)="onValueChange($event)" [style]="style">
-    <ng-template pTemplate="header">
-        <!--<span class="ql-formats">
-        <button type="button" class="ql-bold" aria-label="Bold"></button>
-        <button type="button" class="ql-italic" aria-label="Italic"></button>
-        <button type="button" class="ql-underline" aria-label="Underline"></button>
-      </span>-->
-    </ng-template>
+<p-editor [id]="controlName" [formControl]="control" [style]="{ height: '300px' }"
+  [styleClass]="submitted && control.errors|| control.touched && control.errors ? 'ng-invalid ng-dirty' : ''"
+  (onTextChange)="onTextChange($event)" (onInit)="onInit($event)" [readonly]="control.disabled"
+  [placeholder]="control.disabled ? '' : placeholder" [modules]="modules">
 </p-editor>
-<app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>
+
+<app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
+  [control]="control"></app-control-messages>

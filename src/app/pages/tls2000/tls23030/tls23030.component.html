@@ -83,9 +83,8 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <label>是否查詢券類大批</label>
-            <app-checkbox-one label="是(此條件必需配合付款別選擇[商品券]或[紙張禮券])" controlName="batchVoucherSearch"
-              [control]="queryForm.controls.batchVoucherSearch">
-            </app-checkbox-one>
+            <p-checkbox label="是(此條件必需配合付款別選擇[商品券]或[紙張禮券])" controlName="batchVoucherSearch">
+            </p-checkbox>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="是否開立業主發票" controlName="issueOwnerInvoice" [options]="WhetherOptions"
