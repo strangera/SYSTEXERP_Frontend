@@ -87,28 +87,19 @@ import { InputTextComponent } from './componentkit/input-text/input-text.compone
 import { DataTableComponent } from './componentkit/data-table/data-table.component';
 import { MultiSelectComponent } from './componentkit/multi-select/multi-select.component';
 import { InputNumberComponent } from './componentkit/input-number/input-number.component';
-import { CheckboxOneComponent } from './componentkit/checkbox-one/checkbox-one.component';
-import { DatemmTwoComponent } from './componentkit/datemm-two/datemm-two.component';
 import { InputNumberRangeComponent } from './componentkit/input-number-range/input-number-range.component';
 import { RadiobuttonComponent } from './componentkit/radiobutton/radiobutton.component';
 import { EditorTextComponent } from './componentkit/editor-text/editor-text.component';
-import { DropdownMultlabelComponent } from './componentkit/dropdown-multlabel/dropdown-multlabel.component';
 import { FileUploadComponent } from './componentkit/file-upload/file-upload.component';
 import { ButtonDynamicallyaddComponent } from './componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 import { ButtonDynamicallydeleteComponent } from './componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
 import { DataTableCheckComponent } from './componentkit/data-table-check/data-table-check.component';
-import { DateqtrRangeComponent } from './componentkit/dateqtr-range/dateqtr-range.component';
 import { DataTableSpanComponent } from './componentkit/data-table-span/data-table-span.component';
-import { AddressFormComponent } from './componentkit/address-form/address-form.component';
 import { OrganizationChartModule } from 'primeng/organizationchart';
 import { NgChartsModule } from 'ng2-charts';
 import { DataTableSettingComponent } from './componentkit/data-table-setting/data-table-setting.component';
 import { DataTableGroupComponent } from './componentkit/data-table-group/data-table-group.component';
 import { DataTableReportComponent } from './componentkit/data-table-report/data-table-report.component';
-import { ExcelExportComponent } from './componentkit/excel-export/excel-export.component';
-import { InputMultiDialogComponent } from './componentkit/input-multi-dialog/input-multi-dialog.component';
-import { FilterMultiDialogComponent } from './filter-multi-dialog/filter-multi-dialog.component';
-import { InputAPIMultiDailogComponent } from './componentkit/input-apimulti-dailog/input-apimulti-dailog.component';
 import { ButtonComponent } from './componentkit/button/button.component';
 import { DropdownComponent } from './componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from './componentkit/calendar/calendar.component';
@@ -142,17 +133,9 @@ import { TableExpansionComponent } from './componentkit/table/table-expansion/ta
     DataTableSpanComponent,
     DataTableGroupComponent,
     DataTableReportComponent,
-    DropdownMultlabelComponent,
-    DatemmTwoComponent,
-    DateqtrRangeComponent,
-    CheckboxOneComponent,
     RadiobuttonComponent,
-    ExcelExportComponent,
-    InputMultiDialogComponent,
-    FilterMultiDialogComponent,
-    InputAPIMultiDailogComponent,
     // Directive
-    HasPermissionDirective, AddressFormComponent,
+    HasPermissionDirective,
     //
   ],
   imports: [
@@ -333,26 +316,17 @@ import { TableExpansionComponent } from './componentkit/table/table-expansion/ta
     DataTableGroupComponent,
     DataTableSpanComponent,
     DataTableReportComponent,
-    DropdownMultlabelComponent,
-    DatemmTwoComponent,
-    DateqtrRangeComponent,
-    CheckboxOneComponent,
     MultiSelectComponent,
     CalendarComponent,
     CalendarRangeComponent,
     TableComponent,
     TableExpansionComponent,
     RadiobuttonComponent,
-    InputMultiDialogComponent,
-    InputAPIMultiDailogComponent,
     //
     InputIconModule,
     IconFieldModule,
     FloatLabelModule,
     EditorModule,
-    AddressFormComponent,
-    ExcelExportComponent,
-    FilterMultiDialogComponent,
 
     OrganizationChartModule
   ],

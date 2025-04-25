@@ -19,7 +19,7 @@ import { NeedPayTicketService } from '../../../service/basic/need-pay-ticket.ser
   templateUrl: './ass13080.component.html',
   styleUrl: './ass13080.component.scss'
 })
-export class ASS13080Component extends BasicQpageComponent implements OnInit{
+export class ASS13080Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     assetsCode: [, [Validators.maxLength(20)]], // 資產代號
@@ -41,7 +41,7 @@ export class ASS13080Component extends BasicQpageComponent implements OnInit{
     orderNumber: [], // 驗收單號
     entryDateFrom: [], // 入帳日期
     entryDateTo: [], // 入帳日期
-    outofLimit: [, ], // 已達耐用年限
+    outofLimit: [,], // 已達耐用年限
     displayNumber: [, [this.validationService.numberValidator, Validators.maxLength(160)]], // 	顯示筆數
   });
   // 下拉資料多個呈現
@@ -54,14 +54,15 @@ export class ASS13080Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'assetsCode': '1A232300040001', 'itemCode': '1A232300040004/3F', 'entryDateFrom': '2014/12/31', 'assetStatus': '使用中',
+    {
+      'assetsCode': '1A232300040001', 'itemCode': '1A232300040004/3F', 'entryDateFrom': '2014/12/31', 'assetStatus': '使用中',
       'keeper': '楊先生', 'user': '', 'purchaseAmountFrom': 56108772, 'shareCode': '1A232300040004001',
-     },
+    },
     // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'assetsCode', header: '資產代號', visible: true },
     { field: 'itemCode', header: '品項編號', visible: true },
     { field: 'entryDateFrom', header: '入帳日期', visible: true },
@@ -76,7 +77,7 @@ export class ASS13080Component extends BasicQpageComponent implements OnInit{
   ];
   // ----------------------------------------------------------------
   //
-  itemCodeOptions:any[] = [];
+  itemCodeOptions: any[] = [];
   assetsStatusOptions: any[] = [];
   assetTypeOptions: any[] = [];
   accountingCodeOptions: any[] = [];

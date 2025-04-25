@@ -5,20 +5,12 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-multi-dialog
+            <!-- <app-input-multi-dialog
               label="小分類別代碼"
               controlName="subcategoryCode"
               [control]="queryForm.controls.id"
@@ -28,30 +20,19 @@
               [searchplaceholder]="backsearchplaceholder"
               [submitted]="submitted"
             >
-            </app-input-multi-dialog>
+            </app-input-multi-dialog> -->
           </div>
-     
+
           <div class="col-12 md:col-6 lg:col-4">
-          <app-filter-multi-dialog
-            #filterDialog
-            [label]="'小分類別'"
-            [columns]="columns"
-            [data]="data"
-            [searchFields]="searchFields"
-            (onSelect)="handleRowSelect($event)"
-          ></app-filter-multi-dialog>
-      </div>
-    </div>
+            <!-- <app-filter-multi-dialog #filterDialog [label]="'小分類別'" [columns]="columns" [data]="data"
+              [searchFields]="searchFields" (onSelect)="handleRowSelect($event)"></app-filter-multi-dialog> -->
+          </div>
+        </div>
         <div class="flex justify-content-end mt-4">
-          <p-button
-            label="{{ 'query' | translate }}"
-            icon="pi pi-search"
-            styleClass="p-button-primary"
-            type="submit"
-          ></p-button>
+          <p-button label="{{ 'query' | translate }}" icon="pi pi-search" styleClass="p-button-primary"
+            type="submit"></p-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
-

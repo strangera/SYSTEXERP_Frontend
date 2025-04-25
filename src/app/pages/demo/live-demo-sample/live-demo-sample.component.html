@@ -5,17 +5,9 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <!--<div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-input-multi-dialog label="ID" controlName="systemid" [control]="queryForm.controls.systemid" [columns]="columns" [data]="systemTypeOptions" [filterFields]="filterFields" [submitted]="submitted">
@@ -24,7 +16,7 @@
                 </div>-->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-multi-dialog
+            <!-- <app-input-multi-dialog
               label="銀行代碼"
               controlName="systemid"
               [control]="queryForm.controls.systemid"
@@ -34,11 +26,10 @@
               [searchplaceholder]="backsearchplaceholder"
               [submitted]="submitted"
             >
-            </app-input-multi-dialog>
+            </app-input-multi-dialog> -->
           </div>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
-

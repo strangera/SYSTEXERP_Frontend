@@ -161,18 +161,3 @@
   <app-data-table-span [data]="data" [headerRow1]="headerRow1" [headerRow2]="headerRow2">
   </app-data-table-span>
 </div>
-
-<!-- <app-excel-export
-  [data]="filteredData"
-  [headerRow1]="headerRow1"
-  [headerRow2]="headerRow2"
-  [startRow]="5"
-  [startColumn]="2"
-  [extraHeaders]="[
-    { label: '報表名稱', value: '銷售資料報表' },
-    { label: '生成日期', value: '2024/11/05' },
-    { label: '作者', value: '使用者名稱' }
-  ]"
-></app-excel-export> -->
-<app-excel-export [data]="data" [headerRow1]="headerRow1" [headerRow2]="headerRow2" [fileName]="fileName">
-</app-excel-export>

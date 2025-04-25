@@ -10,7 +10,13 @@
       <p-calendar [formControl]="startControl" [placeholder]="startControl.disabled ? '' : placeholder"
         [timeOnly]="timeOnly" [showTime]="showTime" hourFormat="24" [dateFormat]="dateFormat" [view]="view"
         [ngClass]="{'ng-invalid ng-dirty': submitted && startControl.errors}" [showIcon]="!startControl.disabled"
-        [minDate]="minDate" [maxDate]=" startMaxDate ? startMaxDate:endControl.value" [appendTo]="'body'"></p-calendar>
+        [iconDisplay]="'input'" [minDate]="minDate" [maxDate]=" startMaxDate ? startMaxDate:endControl.value"
+        [appendTo]="'body'">
+        <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+          <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
+          <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>
+        </ng-template>
+      </p-calendar>
       <app-control-messages [onerror]="submitted || (startControl.touched && startControl.invalid)"
         [control]="startControl">
       </app-control-messages>
@@ -22,8 +28,14 @@
       </label>
       <p-calendar [formControl]="endControl" [placeholder]="endControl.disabled ? '' : placeholder"
         [timeOnly]="timeOnly" [showTime]="showTime" hourFormat="24" [dateFormat]="dateFormat" [view]="view"
-        [ngClass]="{'ng-invalid ng-dirty': submitted && endControl.errors}" [showIcon]="!endControl.disabled"
-        [minDate]="endMinDate ? endMinDate:startControl.value" [maxDate]="maxDate" [appendTo]="'body'"></p-calendar>
+        [iconDisplay]="'input'" [ngClass]="{'ng-invalid ng-dirty': submitted && endControl.errors}"
+        [showIcon]="!endControl.disabled" [minDate]="endMinDate ? endMinDate:startControl.value" [maxDate]="maxDate"
+        [appendTo]="'body'">
+        <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+          <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
+          <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>
+        </ng-template>
+      </p-calendar>
       <app-control-messages [onerror]="submitted || (endControl.touched && endControl.invalid)" [control]="endControl">
       </app-control-messages>
     </div>
