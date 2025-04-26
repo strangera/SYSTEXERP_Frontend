@@ -2,10 +2,10 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 // Services for dropdowns
@@ -109,7 +109,7 @@ export class TLS27040CRUComponent {
     private queryFilterService: QueryFilterService,
     private creditCardTransactionTypeService: CreditCardTransactionTypeService // Inject service for transaction category
 
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
@@ -251,8 +251,8 @@ export class TLS27040CRUComponent {
 
   onClearForm() {
     this.dataForm.reset();  // 重置表單
-  }  
-  
+  }
+
   onCancel() {
     this.router.navigate(['TLS2000/TLS21040']);
   }

@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -18,10 +18,10 @@ import { PaymentMethodService } from '../../../service/basic/payment-method.serv
   templateUrl: './fin25010-cru.component.html',
   styleUrl: './fin25010-cru.component.scss'
 })
-export class FIN25010CRUComponent extends BasicCrupageComponent implements OnInit{
+export class FIN25010CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    settlementDate: [,[Validators.required]], // 收/付款日
+    settlementDate: [, [Validators.required]], // 收/付款日
     startFactoryID: [, [this.validationService.numberValidator, Validators.max(99999999999999)]], // 廠客代號
     endFactoryID: [, [this.validationService.numberValidator, Validators.max(99999999999999)]], // 廠客代號
     shouldPayId: [, [this.validationService.numberValidator, Validators.maxLength(14)]], // 應付帳款ID
@@ -38,7 +38,7 @@ export class FIN25010CRUComponent extends BasicCrupageComponent implements OnIni
     { value: 4, label: '過帳' },
     { value: 5, label: '刪除' },
   ];
-  payoutMethodOptions:any[]=[];
+  payoutMethodOptions: any[] = [];
 
   constructor(
     private router: Router,
@@ -49,8 +49,8 @@ export class FIN25010CRUComponent extends BasicCrupageComponent implements OnIni
     private validationService: ValidationService,
     //
     private paymentMethodService: PaymentMethodService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -103,11 +103,11 @@ export class FIN25010CRUComponent extends BasicCrupageComponent implements OnIni
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }

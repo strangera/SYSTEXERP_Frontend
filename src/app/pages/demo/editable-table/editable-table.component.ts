@@ -4,9 +4,9 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
 import { NavigationExtras, Router } from '@angular/router';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 
 
 interface Deduction {
@@ -30,7 +30,7 @@ interface Deduction {
   styleUrl: './editable-table.component.scss'
 })
 
-export class EditableTableComponent extends BasicCrupageComponent implements OnInit{
+export class EditableTableComponent extends BasicCrupageComponent implements OnInit {
   deductions: Deduction[] = [];
 
   editingRows: Set<any> = new Set(); // 用來追蹤哪些列正在編輯
@@ -57,7 +57,7 @@ export class EditableTableComponent extends BasicCrupageComponent implements OnI
 
   ngOnInit(): void {
     this.ProgNo = '210010';
-  
+
     // 一次扣款資料
     this.deductions = [
       { serialNumber: 1, deductionCode: 'A01', deductionName: '開標費財費', YearMonth: new Date(2015, 0), unit: '', unitPrice: 10000, quantity: 1, amount: 10000, organization: 102220, invoiceStatus: '開立' },
@@ -128,65 +128,65 @@ export class EditableTableComponent extends BasicCrupageComponent implements OnI
     this.loading = false;
     this.messageService.unblockUi();
   }
-    // Check if the user has query permission
-    canQuery(): boolean {
-      return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
-    }
+  // Check if the user has query permission
+  canQuery(): boolean {
+    return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
+  }
 
-    addNewRow() {
-      const newRow: Deduction = { 
-        serialNumber: this.deductions.length + 1, 
-        deductionCode: '', 
-        deductionName: '', 
-        YearMonth: new Date(2024, 0, 1),
-        unit: '', 
-        unitPrice: 0, 
-        quantity: 0, 
-        amount: 0, 
-        organization: 102220, 
-        invoiceStatus: '未開立',
-        editing: true // 新增行直接進入編輯狀態
-      };
-      this.deductions.push(newRow);
-    }
-  
-    // 刪除所選擇的資料列
-    deleteSelectedRows() {
-      // 先過濾出所有未選中的資料列
-      this.deductions = this.deductions.filter(deduction => !this.selectedRows.has(deduction.serialNumber));
-      // 清空選中的資料列集合
-      this.selectedRows.clear();
-      // 顯示刪除提示訊息
-      this.messageService2.add({ severity: 'warn', summary: '刪除成功', detail: '已刪除選中的資料' });
-    }
-  
-    // 編輯行初始化
-    onRowEditInit(row: Deduction) {
-      // 當開始編輯時，將該行的 editing 狀態設置為 true
-      row.editing = true;
-      this.editingRows.add(row); // 加入到編輯行集合
-    }
-  
-    // 儲存編輯的資料
-    onRowEditSave(row: Deduction) {
-      // 更新月份字串
-      const month = row.YearMonth.getMonth() + 1;  // getMonth() 返回的月份從 0 開始，所以需要 +1
-      
-      row.editing = false; // 取消編輯後設置為非編輯狀態
-      this.editingRows.delete(row);
-      this.messageService2.add({ severity: 'success', summary: '保存成功', detail: '已成功儲存編輯的資料' });
-      console.log('儲存資料', this.deductions);
-    }
-  
-    // 取消編輯
-    onRowEditCancel(row: Deduction, index: number) {
-      row.editing = false; // 取消編輯後設置為非編輯狀態
-      this.editingRows.delete(row);
-      this.deductions[index] = { ...this.deductions[index] }; // 恢復原始資料
-    }
-  
-    onRowDelete(row: Deduction) {
-      this.deductions = this.deductions.filter(ded => ded !== row);
-      this.messageService2.add({ severity: 'warn', summary: '刪除成功', detail: '已刪除選中的資料' });
-    }
+  addNewRow() {
+    const newRow: Deduction = {
+      serialNumber: this.deductions.length + 1,
+      deductionCode: '',
+      deductionName: '',
+      YearMonth: new Date(2024, 0, 1),
+      unit: '',
+      unitPrice: 0,
+      quantity: 0,
+      amount: 0,
+      organization: 102220,
+      invoiceStatus: '未開立',
+      editing: true // 新增行直接進入編輯狀態
+    };
+    this.deductions.push(newRow);
+  }
+
+  // 刪除所選擇的資料列
+  deleteSelectedRows() {
+    // 先過濾出所有未選中的資料列
+    this.deductions = this.deductions.filter(deduction => !this.selectedRows.has(deduction.serialNumber));
+    // 清空選中的資料列集合
+    this.selectedRows.clear();
+    // 顯示刪除提示訊息
+    this.messageService2.add({ severity: 'warn', summary: '刪除成功', detail: '已刪除選中的資料' });
+  }
+
+  // 編輯行初始化
+  onRowEditInit(row: Deduction) {
+    // 當開始編輯時，將該行的 editing 狀態設置為 true
+    row.editing = true;
+    this.editingRows.add(row); // 加入到編輯行集合
+  }
+
+  // 儲存編輯的資料
+  onRowEditSave(row: Deduction) {
+    // 更新月份字串
+    const month = row.YearMonth.getMonth() + 1;  // getMonth() 返回的月份從 0 開始，所以需要 +1
+
+    row.editing = false; // 取消編輯後設置為非編輯狀態
+    this.editingRows.delete(row);
+    this.messageService2.add({ severity: 'success', summary: '保存成功', detail: '已成功儲存編輯的資料' });
+    console.log('儲存資料', this.deductions);
+  }
+
+  // 取消編輯
+  onRowEditCancel(row: Deduction, index: number) {
+    row.editing = false; // 取消編輯後設置為非編輯狀態
+    this.editingRows.delete(row);
+    this.deductions[index] = { ...this.deductions[index] }; // 恢復原始資料
+  }
+
+  onRowDelete(row: Deduction) {
+    this.deductions = this.deductions.filter(ded => ded !== row);
+    this.messageService2.add({ severity: 'warn', summary: '刪除成功', detail: '已刪除選中的資料' });
+  }
 }

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
@@ -48,7 +48,7 @@ export class CPM22020CRUComponent extends BasicCrupageComponent implements OnIni
         break;
     }
   }
-  marketingCampaignOptions: any []=[
+  marketingCampaignOptions: any[] = [
     { value: 1, label: '001' },
     { value: 2, label: '002' },
   ];
@@ -67,13 +67,13 @@ export class CPM22020CRUComponent extends BasicCrupageComponent implements OnIni
       lastYearCustomerCount: [], // 去年來客數
     });
   }
-  BDG(){};
+  BDG() { };
   // 非動態新增----------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    startDate: [,Validators.required], // 開始日期
-    endDate: [,Validators.required], // 結束日期
-    marketingCampaignCode: [,Validators.required], // 行銷檔期代號
-    campaignName: [,Validators.required], // 檔期名稱
+    startDate: [, Validators.required], // 開始日期
+    endDate: [, Validators.required], // 結束日期
+    marketingCampaignCode: [, Validators.required], // 行銷檔期代號
+    campaignName: [, Validators.required], // 檔期名稱
     campaignDays: [], // 檔期天數
     salesTargetAmount: [], // 營業目標金額
     lastYearStartDate: [], // 去年開始日期

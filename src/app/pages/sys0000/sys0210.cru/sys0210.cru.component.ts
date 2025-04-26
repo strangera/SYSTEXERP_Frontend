@@ -3,13 +3,13 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import {
-  
+
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 // 4-2-2-1角色基本資料維護
@@ -20,8 +20,7 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
 })
 export class SYS0210CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
 
   // 表單及狀態控制
   dataForm = this.formBuilder.group({
@@ -37,9 +36,7 @@ export class SYS0210CRUComponent
     private messageService: NotificationService,
     private authService: AuthService,
     private translate: TranslateService,
-  ) 
-  
-  {super();}
+  ) { super(); }
 
   ngOnInit(): void {
     this.ProgNo = '420002';

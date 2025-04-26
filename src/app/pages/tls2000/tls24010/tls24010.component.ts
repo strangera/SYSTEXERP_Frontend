@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { SupplementCategoryService } from '../../../service/basic/supplement-category.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
@@ -69,18 +69,18 @@ export class TLS24010Component implements OnInit {
     { field: 'repairDate', header: '補登日期', visible: true },
     { field: 'remark', header: '備註', visible: true }
   ];
- // 初始化表單
+  // 初始化表單
   queryForm = this.formBuilder.group({
-  supplementCategory: [, [Validators.required]],  // 補登類別
-  saleDateStart: [, [Validators.required]],  // 銷售日期起
-  saleDateEnd: [, [Validators.required]],  // 銷售日期迄
-  cashierCode: [],  // 收銀機號
-  counterCode: [, [Validators.required]],  // 專櫃編號
-  transactionSerial: [],  // 交易序號
-  invoiceCarrierType: [],  // 電子發票載具種類
-  visitorCount: [],  // 來客數
-  cashierNumber: [88888888]  // 收銀員編號
-});
+    supplementCategory: [, [Validators.required]],  // 補登類別
+    saleDateStart: [, [Validators.required]],  // 銷售日期起
+    saleDateEnd: [, [Validators.required]],  // 銷售日期迄
+    cashierCode: [],  // 收銀機號
+    counterCode: [, [Validators.required]],  // 專櫃編號
+    transactionSerial: [],  // 交易序號
+    invoiceCarrierType: [],  // 電子發票載具種類
+    visitorCount: [],  // 來客數
+    cashierNumber: [88888888]  // 收銀員編號
+  });
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
@@ -90,7 +90,7 @@ export class TLS24010Component implements OnInit {
     private floorService: FloorService,  // 收銀機號
     private counterCodeService: CounterCodeService,  // 專櫃編號
   ) {
-   
+
   }
 
   ngOnInit(): void {

@@ -2,7 +2,7 @@ import { Component, OnInit, } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -13,7 +13,7 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
   styleUrl: './sysb100.cru.component.scss'
 })
 //4.1.1.1 公司基本資料維護作業 CRU
-export class SYSB100CRUComponent extends BasicCrupageComponent implements OnInit{
+export class SYSB100CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     branchCode: ['', [Validators.required, Validators.maxLength(4)]], //分店代號
@@ -47,8 +47,8 @@ export class SYSB100CRUComponent extends BasicCrupageComponent implements OnInit
     private messageService: NotificationService,
     private authService: AuthService,
     private translate: TranslateService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -96,11 +96,11 @@ export class SYSB100CRUComponent extends BasicCrupageComponent implements OnInit
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }

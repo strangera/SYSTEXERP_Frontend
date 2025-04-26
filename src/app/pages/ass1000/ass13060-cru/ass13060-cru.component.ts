@@ -2,7 +2,7 @@ import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -16,7 +16,7 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
   templateUrl: './ass13060-cru.component.html',
   styleUrl: './ass13060-cru.component.scss'
 })
-export class ASS13060CRUComponent extends BasicCrupageComponent implements OnInit{
+export class ASS13060CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // ----------------------------------------------------------------
@@ -24,7 +24,7 @@ export class ASS13060CRUComponent extends BasicCrupageComponent implements OnIni
     userCode: [], // 申請人員編號
     organizationNumber: [], // 部門代號
     applicationDate: [], // 申請日期
-    reamrk: [, ], //固資重估說明
+    reamrk: [,], //固資重估說明
 
     items: this.formBuilder.array([
       this.createItem()
@@ -45,8 +45,8 @@ export class ASS13060CRUComponent extends BasicCrupageComponent implements OnIni
     //
     private userCodeService: UserCodeService,
     private organizationNumberService: OrganizationNumberService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -73,14 +73,14 @@ export class ASS13060CRUComponent extends BasicCrupageComponent implements OnIni
       // 創建
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
-        this.accordionTabCss= 'create-accordionTab';
+        this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
         this.showConfirm = this.canAdd();
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
-        this.accordionTabCss= 'edit-accordionTab';
+        this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
         this.showConfirm = this.canEdit();
         this.Edit(state.rowdata);
@@ -125,7 +125,7 @@ export class ASS13060CRUComponent extends BasicCrupageComponent implements OnIni
       totalDepreciation: [], // 累計折舊科目
       //
       usageUnit: [], // 使用單位
-      singleRemark: [, ], //單項說明
+      singleRemark: [,], //單項說明
     });
   }
   onRemoveItem(index: number) {
@@ -145,11 +145,11 @@ export class ASS13060CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

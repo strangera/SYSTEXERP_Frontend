@@ -2,10 +2,10 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 // Services for dropdowns
@@ -98,7 +98,7 @@ export class TLS27040Component {
     { field: 'modifier', header: '修改者', visible: true },
     { field: 'modificationDate', header: '修改日期', visible: true },
   ];
-  
+
 
   // 下拉選單選項
   salesStatusOptions: any[] = [];
@@ -122,7 +122,7 @@ export class TLS27040Component {
     private acquiringBankService: AcquiringBankService,
     private queryFilterService: QueryFilterService,
     private creditCardTransactionTypeService: CreditCardTransactionTypeService // Inject service for transaction type
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

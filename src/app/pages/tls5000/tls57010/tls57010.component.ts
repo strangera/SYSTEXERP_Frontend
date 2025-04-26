@@ -7,9 +7,9 @@ import { VendorService } from '../../../service/basic/vendor.service';
 import { ManagementIDService } from '../../../service/basic/management-id.service';
 import { PaperStatusService } from '../../../service/basic/paper-status.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 
@@ -59,7 +59,7 @@ export class TLS57010Component {
     { field: 'purchaseAmountGross', header: '定價(含稅)', visible: true },
     { field: 'quantityReceived', header: '已進量', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -70,7 +70,7 @@ export class TLS57010Component {
     private managementIDService: ManagementIDService,
     private paperStatusService: PaperStatusService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options

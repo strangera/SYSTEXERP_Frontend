@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -21,7 +21,7 @@ import { AssetsTypeService } from '../../../service/basic/assets-type.service';
   templateUrl: './ass13010.component.html',
   styleUrl: './ass13010.component.scss'
 })
-export class ASS13010Component extends BasicQpageComponent implements OnInit{
+export class ASS13010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     assetsCode: [, [this.validationService.numberValidator, Validators.maxLength(20)]], // 資產代號
@@ -62,13 +62,13 @@ export class ASS13010Component extends BasicQpageComponent implements OnInit{
     rentStatus: [[] as number[]], // 出借狀態
     //
     dispose_Manufacturers: [], // 處份廠商
-    dispose_Manufacturers_Summons: [,[Validators.maxLength(12)]], // 處份傳票編號
-    soldAmountFrom: [,[Validators.max(999999999999)]], // 變賣金額
-    soldAmountTo: [,[Validators.max(999999999999)]], // 變賣金額
+    dispose_Manufacturers_Summons: [, [Validators.maxLength(12)]], // 處份傳票編號
+    soldAmountFrom: [, [Validators.max(999999999999)]], // 變賣金額
+    soldAmountTo: [, [Validators.max(999999999999)]], // 變賣金額
     displayNumber: [], // 顯示筆數
     //
-    disposeRemark: [, ], // 處份說明(變賣或報廢)
-    remark: [, ], // 說明
+    disposeRemark: [,], // 處份說明(變賣或報廢)
+    remark: [,], // 說明
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -85,7 +85,7 @@ export class ASS13010Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '資產代號', visible: true },
     { field: 'col2', header: '品項編號', visible: true },
     { field: 'col3', header: '資產狀態', visible: true },
@@ -104,7 +104,7 @@ export class ASS13010Component extends BasicQpageComponent implements OnInit{
     { field: 'col12', header: '設備編號', visible: true },
     { field: 'col13', header: '折舊會計科目', visible: true },
     { field: 'col14', header: '累計折舊科目', visible: true },
-    
+
     { field: 'col15', header: '折舊年限', visible: true },
     { field: 'col16', header: '預留殘值', visible: true },
 
@@ -130,9 +130,9 @@ export class ASS13010Component extends BasicQpageComponent implements OnInit{
   ];
   // ----------------------------------------------------------------
   //
-  itemCodeOptions:any[] = [];
-  assetsStatusOptions:any[] = [];
-  assetsTypeOptions:any[] = [];
+  itemCodeOptions: any[] = [];
+  assetsStatusOptions: any[] = [];
+  assetsTypeOptions: any[] = [];
   orderNumberOptions: any[] = [
     { value: 1, label: '201410300001' },
     { value: 2, label: '201410300002' },
@@ -140,8 +140,8 @@ export class ASS13010Component extends BasicQpageComponent implements OnInit{
   ];
   supplierCodeOptions: any[] = [];
 
-  depreciationOptions:any[] = [];
-  applicantCodeOptions:any[] = [];
+  depreciationOptions: any[] = [];
+  applicantCodeOptions: any[] = [];
   rentStatusOptions: any[] = [
     { value: 1, label: '出借' },
     { value: 2, label: '部分歸還' },

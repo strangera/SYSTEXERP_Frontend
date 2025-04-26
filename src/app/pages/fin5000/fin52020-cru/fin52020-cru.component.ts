@@ -8,7 +8,7 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { VendorService } from '../../../service/basic/vendor.service';
@@ -25,8 +25,7 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class FIN52020CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
   ngOnInit(): void {
     // 初始化
     this.ProgNo = '150008';
@@ -89,7 +88,7 @@ export class FIN52020CRUComponent
       SMarginserialnumber: [],
       EMarginserialnumber: [],
       vendorCode: [],
-      Flippingstate: [1,Validators.required],
+      Flippingstate: [1, Validators.required],
       Checknumber: [],
       margintype: [],
       borrowloan: [],
@@ -138,10 +137,10 @@ export class FIN52020CRUComponent
   vendorOptions: any[] = [];
   FlippingstateOptions: any[] = [];
   margintypeOptions: any[] = [];
-  borrowloanOptions: any[] = [    { value: 1, label: '借' },
-    { value: 2, label: '貸' },];
-    typeOptions: any[] = [    { value: 1, label: '存入保證金' },
-      { value: 2, label: '存出保證金' },];
+  borrowloanOptions: any[] = [{ value: 1, label: '借' },
+  { value: 2, label: '貸' },];
+  typeOptions: any[] = [{ value: 1, label: '存入保證金' },
+  { value: 2, label: '存出保證金' },];
   // ----------------------------------------------------------------
   constructor(
     private router: Router,
@@ -149,10 +148,10 @@ export class FIN52020CRUComponent
     private messageService: NotificationService,
     private authService: AuthService,
     private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService:AnalysisdateCService,
+    private AnalysisdateCService: AnalysisdateCService,
     private vendorService: VendorService,
-    private flippingstateService:FlippingstateService,
-    private margintypeService:MargintypeService,
+    private flippingstateService: FlippingstateService,
+    private margintypeService: MargintypeService,
     private translate: TranslateService
   ) {
     super(); // 呼叫父類建構子

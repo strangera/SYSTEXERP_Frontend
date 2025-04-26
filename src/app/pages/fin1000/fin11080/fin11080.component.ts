@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -16,7 +16,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
 })
 
 //1.1.1.8 二電退貨發票號碼清空重新上送作業
-export class FIN11080Component extends BasicQpageComponent implements OnInit{
+export class FIN11080Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     salesDate: [, [Validators.required]], // 銷售日期
@@ -37,7 +37,7 @@ export class FIN11080Component extends BasicQpageComponent implements OnInit{
   data: any[] = [
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '銷售日期', visible: true },
     { field: 'col2', header: '收銀機代號', visible: true },
     { field: 'col3', header: '交易序號', visible: true },
@@ -46,7 +46,7 @@ export class FIN11080Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  regidterCodeOptions:any[]=[
+  regidterCodeOptions: any[] = [
     { value: 1, label: '000011/000001' },
     { value: 2, label: '000012/000001' },
     { value: 3, label: '000022/000002' },

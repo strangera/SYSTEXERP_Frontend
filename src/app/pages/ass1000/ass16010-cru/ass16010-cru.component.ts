@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
@@ -15,14 +15,13 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class ASS16010CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
   ngOnInit(): void {
     // 初始化
     this.ProgNo = '310040';
     // ----------------------------------------------------------------
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-     // 下拉選單--------------------------------------------------------
+    // 下拉選單--------------------------------------------------------
     // this.userCodeService.getUserCode().subscribe((data) => (this.founder = data)); 
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
@@ -75,11 +74,11 @@ export class ASS16010CRUComponent
   // Dropdown options
   whCategory: any[] = [
     { value: 1, label: '總公司' },
-    { value: 2, label: '測試' }, 
+    { value: 2, label: '測試' },
   ];
   invType: any[] = [
     { value: 1, label: '全盤(不分類)' },
-    { value: 2, label: '部份盤(以中分類)' }, 
+    { value: 2, label: '部份盤(以中分類)' },
   ];
   categoryOptions: any[] = [
     { value: 1, label: '裝潢工程' },
@@ -97,14 +96,14 @@ export class ASS16010CRUComponent
     { value: 13, label: '運輸及物流設備' },
     { value: 14, label: '其他財物用品' },
     { value: 15, label: '環境衛生及安全維護' },
-];
+  ];
   status: any[] = [
     { value: 1, label: '停用' },
     { value: 2, label: '手開' },
     { value: 3, label: '電腦' },
   ];
 
- 
+
   // ----------------------------------------------------------------
   constructor(
     private router: Router,

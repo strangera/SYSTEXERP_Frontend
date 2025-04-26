@@ -8,7 +8,7 @@ import { IssuanceTypeService } from '../../../service/basic/issuance-type.servic
 import { IssuanceNoteStatusService } from '../../../service/basic/issuance-note-status.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -21,7 +21,7 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
   styleUrl: './tls56020-cru.component.scss'
 })
 export class TLS56020CRUComponent extends BasicCrupageComponent
-implements OnInit{
+  implements OnInit {
   // ProgNo: string = '250033';
   // funInfo: FunsrightInfo = {};
   // // Permissions
@@ -34,18 +34,18 @@ implements OnInit{
   dataForm = this.formBuilder.group({
     issuanceNoteCode: [{ value: '自動編號', disabled: true }],
     generalCode: [],
-    warehouseCode: [,Validators.required],
-    brandCode: [,Validators.required],
+    warehouseCode: [, Validators.required],
+    brandCode: [, Validators.required],
     issuanceType: [],
     issuanceNoteStatus: [],
-    applicantCode: [,Validators.required],
+    applicantCode: [, Validators.required],
     approverCode: [],
     applicationDateFrom: [],
     applicationDateTo: [],
-    approvalDateFrom: [,Validators.required],
+    approvalDateFrom: [, Validators.required],
     approvalDateTo: [],
     remark: [],
-    organizationNumber: [,Validators.required],
+    organizationNumber: [, Validators.required],
     // ----------------------------------------------------------------
     items: this.formBuilder.array([this.createItem()]),
   });
@@ -62,7 +62,7 @@ implements OnInit{
   // showConfirm: boolean = false;//CRU
   // crudstatus: CRUDStatus = CRUDStatus.Read;//CRU
 
-// Table data
+  // Table data
 
   constructor(
     private router: Router,
@@ -132,7 +132,7 @@ implements OnInit{
     return this.formBuilder.group({
       mgname: [],
       price: [{ value: '自動帶入', disabled: true }],
-           stocknum: [{ value: '自動帶入', disabled: true }],
+      stocknum: [{ value: '自動帶入', disabled: true }],
       Receivequantity: [],
       discount2: [],
       barcode: [{ value: '自動帶入', disabled: true }],

@@ -3,7 +3,7 @@ import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -14,7 +14,7 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
   styleUrl: './sysbr00.cru.component.scss'
 })
 // 縣市區域資料維護作業 CRU
-export class SYSBR00CRUComponent extends BasicCrupageComponent implements OnInit{
+export class SYSBR00CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // SYS2000 地址/縣市主檔
@@ -35,8 +35,8 @@ export class SYSBR00CRUComponent extends BasicCrupageComponent implements OnInit
     private authService: AuthService,
     private translate: TranslateService,
     private validationService: ValidationService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -56,16 +56,16 @@ export class SYSBR00CRUComponent extends BasicCrupageComponent implements OnInit
       // 創建
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
-        this.accordionTabCss= 'create-accordionTab';
+        this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
         this.showConfirm = this.canAdd();
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
-        this.accordionTabCss= 'edit-accordionTab';
+        this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Create,  // 待調整: 為了套用新增模板，先套Create
-        this.showConfirm = this.canEdit();
+          this.showConfirm = this.canEdit();
         this.Edit(state.rowdata);
         break;
       // 讀檔
@@ -115,7 +115,7 @@ export class SYSBR00CRUComponent extends BasicCrupageComponent implements OnInit
         branchForm.patchValue(children);
         this.items.push(branchForm);
       });
-    }else{
+    } else {
       console.log('無子資料');
     }
   }
@@ -129,11 +129,11 @@ export class SYSBR00CRUComponent extends BasicCrupageComponent implements OnInit
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

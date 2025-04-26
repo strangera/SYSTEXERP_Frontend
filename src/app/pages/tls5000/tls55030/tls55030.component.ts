@@ -6,9 +6,9 @@ import { DiscountStatusService } from '../../../service/basic/discount-status.se
 import { PaperTypeService } from '../../../service/basic/paper-type.service';
 import { TaxableService } from '../../../service/basic/taxable.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { VendorService } from '../../../service/basic/vendor.service';
@@ -73,7 +73,7 @@ export class TLS55030Component {
     { field: 'status', header: '狀況', visible: true },
     { field: 'totalDiscountAmount', header: '總折讓金額', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -85,7 +85,7 @@ export class TLS55030Component {
     private authService: AuthService,
 
 
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options

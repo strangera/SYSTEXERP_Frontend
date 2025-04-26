@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -17,9 +17,9 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './ass11040.component.html',
   styleUrl: './ass11040.component.scss'
 })
-export class ASS11040Component extends BasicQpageComponent implements OnInit{
+export class ASS11040Component extends BasicQpageComponent implements OnInit {
   //
-  bigCategoryCodeOptions: any[]=[
+  bigCategoryCodeOptions: any[] = [
     { value: 1, label: 'A/裝潢工程' },
     { value: 2, label: 'B/其他工程' },
     { value: 3, label: 'C/電腦及電子零件產品' },
@@ -29,7 +29,7 @@ export class ASS11040Component extends BasicQpageComponent implements OnInit{
     { value: 7, label: 'G/辦公及營運庶務' },
     { value: 8, label: 'K/印刷品(非廣告行銷)' },
   ];
-  midCategoryCodeOptions: any[]=[
+  midCategoryCodeOptions: any[] = [
     { value: 23, label: '室內裝潢工程' },
     { value: 24, label: '室內裝潢備品' },
     { value: 21, label: '弱電系統' },
@@ -39,7 +39,7 @@ export class ASS11040Component extends BasicQpageComponent implements OnInit{
     { value: 25, label: '機電消防工程' },
     { value: 22, label: '電子產品及零件' },
   ];
-  itemCategoryOptions: any[]=[
+  itemCategoryOptions: any[] = [
     { value: 1, label: '資產' },
     { value: 2, label: '列管品' },
     { value: 3, label: '耗材' },
@@ -47,15 +47,15 @@ export class ASS11040Component extends BasicQpageComponent implements OnInit{
     { value: 5, label: '其他資產(無形)' },
     { value: 6, label: '不領用之耗材' },
   ];
-  itemUnitOptions: any[]=[];
-  packageUnitOptions: any[]=[
+  itemUnitOptions: any[] = [];
+  packageUnitOptions: any[] = [
     { value: 1, label: '箱' },
     { value: 2, label: '包' },
     { value: 3, label: '袋' },
     { value: 4, label: '束' },
     { value: 5, label: '盒' },
   ];
-  warrantyMethodOptions: any[]=[];
+  warrantyMethodOptions: any[] = [];
   //
   queryForm = this.formBuilder.group({
     itemCode: [, [Validators.maxLength(13)]], // 品項代碼
@@ -68,7 +68,7 @@ export class ASS11040Component extends BasicQpageComponent implements OnInit{
     packageUnit: [], // 包裝單位
     warrantyMethod: [], // 保固方式
     maintenanceMethod: [], // 保養方式
-    illustrate: [, ], // 說明
+    illustrate: [,], // 說明
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -85,7 +85,7 @@ export class ASS11040Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '品項代碼', visible: true },
     { field: 'col2', header: '品項名稱', visible: true },
     { field: 'col3', header: '大分類代碼', visible: true },

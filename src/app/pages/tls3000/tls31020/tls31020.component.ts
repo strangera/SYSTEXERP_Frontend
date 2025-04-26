@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -28,43 +28,43 @@ import { CooperationMethodService } from '../../../service/basic/cooperation-met
 
 export class TLS31020Component {
 
-    // 程式編號
-    ProgNo: string = '230002';
-    // 權限變數
-    funInfo: FunsrightInfo = {};
-    addPermission: HasPermissionsValue = {
-      progNo: this.ProgNo,
-      permission: PermissionsInfo.add,
-    };
-    queryPermission: HasPermissionsValue = {
-      progNo: this.ProgNo,
-      permission: PermissionsInfo.query,
-    };
-    editPermission: HasPermissionsValue = {
-      progNo: this.ProgNo,
-      permission: PermissionsInfo.edit,
-    };
+  // 程式編號
+  ProgNo: string = '230002';
+  // 權限變數
+  funInfo: FunsrightInfo = {};
+  addPermission: HasPermissionsValue = {
+    progNo: this.ProgNo,
+    permission: PermissionsInfo.add,
+  };
+  queryPermission: HasPermissionsValue = {
+    progNo: this.ProgNo,
+    permission: PermissionsInfo.query,
+  };
+  editPermission: HasPermissionsValue = {
+    progNo: this.ProgNo,
+    permission: PermissionsInfo.edit,
+  };
 
-      // 查詢表單
+  // 查詢表單
   loading: boolean = false;
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
     radiolist: [1, []], // 條件篩選, radioButton
     floor: [],  // 樓層
-    region:[], //區域
-    tax:[], //稅別
+    region: [], //區域
+    tax: [], //稅別
     type: [],
     organizationCode: [],  // 專櫃編號
     businessTypeCode: [],  // 業種
     commissionType: [], // 抽成方式
-    onedatedd:[],
-    onedateyy:[],
-    weeks:[],
-    radio1:[],
-    onedatemm:[],
-    halfyear:[],
-    startdate:[],enddate:[],
-    EventID:[],
+    onedatedd: [],
+    onedateyy: [],
+    weeks: [],
+    radio1: [],
+    onedatemm: [],
+    halfyear: [],
+    startdate: [], enddate: [],
+    EventID: [],
     counterCode: [],  // 專櫃編號
   });
 
@@ -95,118 +95,118 @@ export class TLS31020Component {
   commissionTypeOptions: any[] = [];
   TypeOptions: any[] = [];
   counterCodeOptions: any[] = [];
-  taxOptions: any[]=[];
+  taxOptions: any[] = [];
   operationsOptions: any[] = [];
-  selectedOption: string ='1'; // 預設選擇的欄位
+  selectedOption: string = '1'; // 預設選擇的欄位
   fileName = 'TableExport'; // 宣告 fileName 屬性
   // 表格資料
   data: any[] = [
     {
-        "floorName": "B1",
-        "BOTag": 17596000,
-        "salesPerformance": 14112426,
-        "achievementRate": "80.2%",
-        "targetRatio": "22.7%",
-        "performanceRatio": "20.7%",
-        "transactionCount": 49118,
-        "averageOrderValue": 287,
-        "area": 1779.9,
-        "areaEfficiency": 7929,
-        "salesPerformanceTemp": 453605,
-        "performanceRatioTemp": "3.2%",
-        "temporaryBoothRatio": "18.2%"
+      "floorName": "B1",
+      "BOTag": 17596000,
+      "salesPerformance": 14112426,
+      "achievementRate": "80.2%",
+      "targetRatio": "22.7%",
+      "performanceRatio": "20.7%",
+      "transactionCount": 49118,
+      "averageOrderValue": 287,
+      "area": 1779.9,
+      "areaEfficiency": 7929,
+      "salesPerformanceTemp": 453605,
+      "performanceRatioTemp": "3.2%",
+      "temporaryBoothRatio": "18.2%"
     },
     {
-        "floorName": "1F",
-        "BOTag": 9709000,
-        "salesPerformance": 8915524,
-        "achievementRate": "91.8%",
-        "targetRatio": "12.5%",
-        "performanceRatio": "13.1%",
-        "transactionCount": 9618,
-        "averageOrderValue": 927,
-        "area": 2618.03,
-        "areaEfficiency": 3405,
-        "salesPerformanceTemp": 32990,
-        "performanceRatioTemp": "0.4%",
-        "temporaryBoothRatio": "1.3%"
+      "floorName": "1F",
+      "BOTag": 9709000,
+      "salesPerformance": 8915524,
+      "achievementRate": "91.8%",
+      "targetRatio": "12.5%",
+      "performanceRatio": "13.1%",
+      "transactionCount": 9618,
+      "averageOrderValue": 927,
+      "area": 2618.03,
+      "areaEfficiency": 3405,
+      "salesPerformanceTemp": 32990,
+      "performanceRatioTemp": "0.4%",
+      "temporaryBoothRatio": "1.3%"
     },
     {
-        "floorName": "2F",
-        "BOTag": 9210000,
-        "salesPerformance": 10659746,
-        "achievementRate": "115.7%",
-        "targetRatio": "11.9%",
-        "performanceRatio": "15.6%",
-        "transactionCount": 9420,
-        "averageOrderValue": 1132,
-        "area": 2707.56,
-        "areaEfficiency": 3937,
-        "salesPerformanceTemp": 509195,
-        "performanceRatioTemp": "4.8%",
-        "temporaryBoothRatio": "20.4%"
+      "floorName": "2F",
+      "BOTag": 9210000,
+      "salesPerformance": 10659746,
+      "achievementRate": "115.7%",
+      "targetRatio": "11.9%",
+      "performanceRatio": "15.6%",
+      "transactionCount": 9420,
+      "averageOrderValue": 1132,
+      "area": 2707.56,
+      "areaEfficiency": 3937,
+      "salesPerformanceTemp": 509195,
+      "performanceRatioTemp": "4.8%",
+      "temporaryBoothRatio": "20.4%"
     },
     {
-        "floorName": "3F",
-        "BOTag": 17548800,
-        "salesPerformance": 12307554,
-        "achievementRate": "70.1%",
-        "targetRatio": "22.6%",
-        "performanceRatio": "18.0%",
-        "transactionCount": 8241,
-        "averageOrderValue": 1493,
-        "area": 2215.1,
-        "areaEfficiency": 5556,
-        "salesPerformanceTemp": 27329,
-        "performanceRatioTemp": "0.2%",
-        "temporaryBoothRatio": "1.1%"
+      "floorName": "3F",
+      "BOTag": 17548800,
+      "salesPerformance": 12307554,
+      "achievementRate": "70.1%",
+      "targetRatio": "22.6%",
+      "performanceRatio": "18.0%",
+      "transactionCount": 8241,
+      "averageOrderValue": 1493,
+      "area": 2215.1,
+      "areaEfficiency": 5556,
+      "salesPerformanceTemp": 27329,
+      "performanceRatioTemp": "0.2%",
+      "temporaryBoothRatio": "1.1%"
     },
     {
-        "floorName": "4F",
-        "BOTag": 9951000,
-        "salesPerformance": 11108366,
-        "achievementRate": "111.6%",
-        "targetRatio": "12.8%",
-        "performanceRatio": "16.3%",
-        "transactionCount": 10769,
-        "averageOrderValue": 1032,
-        "area": 2097.9,
-        "areaEfficiency": 5295,
-        "salesPerformanceTemp": 1074942,
-        "performanceRatioTemp": "9.7%",
-        "temporaryBoothRatio": "43.1%"
+      "floorName": "4F",
+      "BOTag": 9951000,
+      "salesPerformance": 11108366,
+      "achievementRate": "111.6%",
+      "targetRatio": "12.8%",
+      "performanceRatio": "16.3%",
+      "transactionCount": 10769,
+      "averageOrderValue": 1032,
+      "area": 2097.9,
+      "areaEfficiency": 5295,
+      "salesPerformanceTemp": 1074942,
+      "performanceRatioTemp": "9.7%",
+      "temporaryBoothRatio": "43.1%"
     },
     {
-        "floorName": "5F",
-        "BOTag": 11092370,
-        "salesPerformance": 9392435,
-        "achievementRate": "84.7%",
-        "targetRatio": "14.3%",
-        "performanceRatio": "13.8%",
-        "transactionCount": 14351,
-        "averageOrderValue": 654,
-        "area": 3594.1,
-        "areaEfficiency": 2613,
-        "salesPerformanceTemp": 0,
-        "performanceRatioTemp": "0.0%",
-        "temporaryBoothRatio": "0.0%"
+      "floorName": "5F",
+      "BOTag": 11092370,
+      "salesPerformance": 9392435,
+      "achievementRate": "84.7%",
+      "targetRatio": "14.3%",
+      "performanceRatio": "13.8%",
+      "transactionCount": 14351,
+      "averageOrderValue": 654,
+      "area": 3594.1,
+      "areaEfficiency": 2613,
+      "salesPerformanceTemp": 0,
+      "performanceRatioTemp": "0.0%",
+      "temporaryBoothRatio": "0.0%"
     },
     {
-        "floorName": "6F",
-        "BOTag": 2467630,
-        "salesPerformance": 1776299,
-        "achievementRate": "72.0%",
-        "targetRatio": "3.2%",
-        "performanceRatio": "2.6%",
-        "transactionCount": 4479,
-        "averageOrderValue": 397,
-        "area": 1444.7,
-        "areaEfficiency": 1230,
-        "salesPerformanceTemp": 398717,
-        "performanceRatioTemp": "22.4%",
-        "temporaryBoothRatio": "16.0%"
+      "floorName": "6F",
+      "BOTag": 2467630,
+      "salesPerformance": 1776299,
+      "achievementRate": "72.0%",
+      "targetRatio": "3.2%",
+      "performanceRatio": "2.6%",
+      "transactionCount": 4479,
+      "averageOrderValue": 397,
+      "area": 1444.7,
+      "areaEfficiency": 1230,
+      "salesPerformanceTemp": 398717,
+      "performanceRatioTemp": "22.4%",
+      "temporaryBoothRatio": "16.0%"
     }
-];
+  ];
   // data2: any[] = [];
   filteredData: any[] = [...this.data];
   // columns: any[] = [
@@ -315,11 +315,11 @@ export class TLS31020Component {
     private businessTypeCodeService: BusinessTypeCodeService,
     private organizationNumberService: OrganizationNumberService,
     private commissionTypeService: CommissionTypeService,
-    private TypeService:TypeService,
+    private TypeService: TypeService,
     private TaxableService: TaxableService,
     private cooperationMethodService: CooperationMethodService,
     private counterCodeService: CounterCodeService,  // 專櫃編號
-  ) {}
+  ) { }
 
 
   ngOnInit(): void {
@@ -351,12 +351,12 @@ export class TLS31020Component {
     });
     this.TaxableService.getSystemTypes().subscribe(data => {
       this.taxOptions = data;
-  });
+    });
 
-  this.counterCodeService.getCounterCodes().subscribe((data) => {
-    this.counterCodeOptions = data;
-  });
-}
+    this.counterCodeService.getCounterCodes().subscribe((data) => {
+      this.counterCodeOptions = data;
+    });
+  }
 
   canQuery(): boolean {
     return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
@@ -435,5 +435,5 @@ export class TLS31020Component {
 
   onSystemTypeChange(selectedValue: any): void {
     this.selectedOption = selectedValue
-   }
+  }
 }

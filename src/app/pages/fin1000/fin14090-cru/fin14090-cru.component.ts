@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -18,20 +18,20 @@ import { TaxTypeService } from '../../../service/basic/tax-type.service';
   templateUrl: './fin14090-cru.component.html',
   styleUrl: './fin14090-cru.component.scss'
 })
-export class FIN14090CRUComponent extends BasicCrupageComponent implements OnInit{
+export class FIN14090CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     wordTrack: ['', [Validators.maxLength(2)]], // 字軌
     invoiceNumber: [, [Validators.maxLength(8)]], // 發票號碼
-    invoiceDate: [,[Validators.required]], // 	發票日期
-    declareYm: [,[Validators.required]], // 	申報年月
+    invoiceDate: [, [Validators.required]], // 	發票日期
+    declareYm: [, [Validators.required]], // 	申報年月
     counterID: [, [Validators.maxLength(6)]], // 專櫃編號
     factoryID: [, [Validators.maxLength(10)]], // 廠客代號
     salesPersonUid: [, [Validators.required, Validators.maxLength(8)]], // 銷售人統一編號
     buyerPersonUid: [, [Validators.required, Validators.maxLength(8)]], // 買受人統一編號
     invoiveFormat: ['', [Validators.required, Validators.maxLength(2)]], // 發票格式
     totalPrice: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(8)]], // 發票總金額
-    taxType: [,[Validators.required]], // 課稅別
+    taxType: [, [Validators.required]], // 課稅別
     nonTaxPrice: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(8)]], // 發票未稅金額
     taxPrice: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(8)]], // 稅額
     certificateNumber: [, [Validators.maxLength(10)]], // 憑證單號
@@ -42,8 +42,8 @@ export class FIN14090CRUComponent extends BasicCrupageComponent implements OnIni
   //
   // ----------------------------------------------------------------
   //
-  taxTypeOptions:any[]=[];
-  assetsRemrkOptions:any[]=[
+  taxTypeOptions: any[] = [];
+  assetsRemrkOptions: any[] = [
     { value: 1, label: '固定資產' },
     { value: 2, label: '土地' },
   ];
@@ -57,8 +57,8 @@ export class FIN14090CRUComponent extends BasicCrupageComponent implements OnIni
     private validationService: ValidationService,
     //
     private taxTypeService: TaxTypeService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -117,11 +117,11 @@ export class FIN14090CRUComponent extends BasicCrupageComponent implements OnIni
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }

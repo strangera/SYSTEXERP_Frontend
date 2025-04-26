@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 
@@ -71,21 +71,21 @@ export class TLS23070Component {
     { field: 'externalDelivery', header: '外來提貨單(抵用券)', visible: true },
     { field: 'eventCoupon', header: '活動券(自營)', visible: true },
     { field: 'discountCoupon', header: '折價券現抵', visible: true },
-  { field: 'giftCardBalance', header: '禮券餘額代卡', visible: true },
-  { field: 'deliveryBalance', header: '提貨單餘代卡', visible: true },
-  { field: 'membershipDiscount', header: '會員折抵', visible: true },
-  { field: 'linePayParking', header: '[LINE PAY] 停車場', visible: true },
-  { field: 'linePay', header: 'LINE PAY', visible: true },
-  { field: 'appCoupon', header: 'APP抵用券', visible: true },
-  { field: 'appOrder', header: 'APP提貨單', visible: true },
-  { field: 'preOrderDeposit', header: '預售訂金', visible: true },
-  { field: 'preOrderReceipt', header: '預售實收結帳', visible: true },
-  { field: 'incomeReport', header: '溢收帳', visible: true },
-  { field: 'returnGoods', header: '退貨', visible: true },
-  { field: 'exchangeGoods', header: '換貨', visible: true },
-  { field: 'operation', header: '作廢', visible: true }
-];
-  
+    { field: 'giftCardBalance', header: '禮券餘額代卡', visible: true },
+    { field: 'deliveryBalance', header: '提貨單餘代卡', visible: true },
+    { field: 'membershipDiscount', header: '會員折抵', visible: true },
+    { field: 'linePayParking', header: '[LINE PAY] 停車場', visible: true },
+    { field: 'linePay', header: 'LINE PAY', visible: true },
+    { field: 'appCoupon', header: 'APP抵用券', visible: true },
+    { field: 'appOrder', header: 'APP提貨單', visible: true },
+    { field: 'preOrderDeposit', header: '預售訂金', visible: true },
+    { field: 'preOrderReceipt', header: '預售實收結帳', visible: true },
+    { field: 'incomeReport', header: '溢收帳', visible: true },
+    { field: 'returnGoods', header: '退貨', visible: true },
+    { field: 'exchangeGoods', header: '換貨', visible: true },
+    { field: 'operation', header: '作廢', visible: true }
+  ];
+
 
   constructor(
     private router: Router,
@@ -93,7 +93,7 @@ export class TLS23070Component {
     private messageService: NotificationService,
     private authService: AuthService,
     private validationService: ValidationService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

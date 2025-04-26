@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -23,7 +23,7 @@ export class TLS43010Component {
   addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
   queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
   editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
-  
+
   // 查詢
   // ----------------------------------------------------------------
   loading: boolean = false;
@@ -40,11 +40,11 @@ export class TLS43010Component {
     NOT_EndDate_To: [], // 有效結束日期時間
     NOT_File: ['', [Validators.maxLength(200)]], // 媒體檔案名稱
     // NOT_File            NVARCHAR(200)       NOT NULL,      /*媒體檔案名稱*/
-    NOT_Status: [,[Validators.maxLength(1)]], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
+    NOT_Status: [, [Validators.maxLength(1)]], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
     NOT_Priority: [, [Validators.maxLength(1)]], // 優先順序，預設值為0(在同一段時間的優先順序9-0, 9最優先)
 
-    NOT_Note: [ ,[Validators.maxLength(255)]], // 備註
-    NOT_PlayTime: [ ,[Validators.maxLength(6)]], // 媒體檔播放秒數，預設值為30
+    NOT_Note: [, [Validators.maxLength(255)]], // 備註
+    NOT_PlayTime: [, [Validators.maxLength(6)]], // 媒體檔播放秒數，預設值為30
     NOT_DtlLimit: [, [Validators.maxLength(1)]], // 是否限制播放條件，POS50012 0=不限制(預設值) 1=符合明細設定的機台才播放 2=不符合明細設定的機台才播放*
 
     // 以下可以不用顯示於查詢頁
@@ -58,14 +58,16 @@ export class TLS43010Component {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { NOT_No: 'no123', NOT_Date: '2024/08/08', NOT_BegDate: '2024/08/08 08:08' ,NOT_EndDate: '2024/08/08 09:09', NOT_File: '檔案名稱', NOT_Status: 0, NOT_Priority: 0, NOT_Note: 'remark1',
-      NOT_PlayTime: 30,NOT_DtlLimit: 0},
+    {
+      NOT_No: 'no123', NOT_Date: '2024/08/08', NOT_BegDate: '2024/08/08 08:08', NOT_EndDate: '2024/08/08 09:09', NOT_File: '檔案名稱', NOT_Status: 0, NOT_Priority: 0, NOT_Note: 'remark1',
+      NOT_PlayTime: 30, NOT_DtlLimit: 0
+    },
     //{ contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
     //{ contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'NOT_No', header: '通告編號', visible: true },
     { field: 'NOT_Date', header: '通告日期', visible: true },
     { field: 'NOT_BegDate', header: '有效開始日期時間', visible: true },
@@ -80,13 +82,13 @@ export class TLS43010Component {
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  NOT_Status_Options:any[] = [
+  NOT_Status_Options: any[] = [
     { value: 0, label: '未審核' },
     { value: 1, label: '已審核' },
     { value: 2, label: '已刪除' },
   ];
 
-  NOT_DtlLimit_Options:any[] = [
+  NOT_DtlLimit_Options: any[] = [
     { value: 0, label: '不限制' },
     { value: 1, label: '符合明細設定的機台才播放' },
     { value: 2, label: '不符合明細設定的機台才播放' },

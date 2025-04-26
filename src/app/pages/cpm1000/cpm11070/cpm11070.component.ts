@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm11070.component.html',
   styleUrl: './cpm11070.component.scss'
 })
-export class CPM11070Component extends BasicQpageComponent implements OnInit{
+export class CPM11070Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     counterBrand: [], // 專櫃品牌
@@ -31,17 +31,21 @@ export class CPM11070Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'counterNumber': '000001', 'counterBrand': '小騎士', 'vendorName': '騎士堡公司',
+    {
+      'counterNumber': '000001', 'counterBrand': '小騎士', 'vendorName': '騎士堡公司',
       'industryType': '娛樂', 'floor': 'B1',
       'area': 'A區', 'location': 'B1A01',
-      'graph': '觀看平面圖','operatingStatus': '營運中'},
-    { 'counterNumber': '000002', 'counterBrand': '霹靂布袋戲', 'vendorName': '大霹靂公司',
+      'graph': '觀看平面圖', 'operatingStatus': '營運中'
+    },
+    {
+      'counterNumber': '000002', 'counterBrand': '霹靂布袋戲', 'vendorName': '大霹靂公司',
       'industryType': '物販', 'floor': 'B1',
       'area': 'A區', 'location': 'B1A02A0',
-      'graph': '觀看平面圖','operatingStatus': '營運中'},
+      'graph': '觀看平面圖', 'operatingStatus': '營運中'
+    },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'counterNumber', header: '專櫃編號', visible: true },
     { field: 'counterBrand', header: '品牌 (專櫃名稱)', visible: true },
     { field: 'vendorName', header: '廠商名稱', visible: true },
@@ -52,10 +56,10 @@ export class CPM11070Component extends BasicQpageComponent implements OnInit{
 
     { field: 'area', header: '區域', visible: true },
     { field: 'location', header: '位置', visible: true },
-    
+
     { field: 'graph', header: '平面圖', visible: true },
     { field: 'operatingStatus', header: '營運狀態', visible: true },
-    
+
     // { field: 'col11', header: '廠商帳戶名稱', visible: true },
     // { field: 'col12', header: '付款期限', visible: true },
     // { field: 'col13', header: '票據抬頭', visible: true },

@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm12050.component.html',
   styleUrl: './cpm12050.component.scss'
 })
-export class CPM12050Component extends BasicQpageComponent implements OnInit{
+export class CPM12050Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     opinionCode: [], // 客戶意見編號
@@ -31,7 +31,7 @@ export class CPM12050Component extends BasicQpageComponent implements OnInit{
     email: ['', [Validators.maxLength(100)]], // 電子信箱
     pieces: [, [Validators.maxLength(20)]], // 件號
     //
-    emailContent: [, ], // 顧客意見內容
+    emailContent: [,], // 顧客意見內容
     //
     responsibleUnit: [], // 責任單位
     builder: ['', [Validators.maxLength(10)]], // 建檔人員
@@ -51,18 +51,21 @@ export class CPM12050Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'isdelete': false, 'opinionCode': 20190709001, 'id': '', 'emailContent': '內容1', 'receiveDate': '2019/07/09 12:40',
+    {
+      'isdelete': false, 'opinionCode': 20190709001, 'id': '', 'emailContent': '內容1', 'receiveDate': '2019/07/09 12:40',
       'builder': 'Call 小明', 'responsibleUnit': '營運部', 'handlingSituation': '結案', 'object': 'B1 湯姆熊',
     },
-    { 'isdelete': false, 'opinionCode': 20190709002, 'id': '', 'emailContent': '內容2', 'receiveDate': '2019/07/09 12:40',
+    {
+      'isdelete': false, 'opinionCode': 20190709002, 'id': '', 'emailContent': '內容2', 'receiveDate': '2019/07/09 12:40',
       'builder': 'Call 小明', 'responsibleUnit': '營運部', 'handlingSituation': '結案', 'object': 'B1 湯姆熊',
     },
-    { 'isdelete': true, 'opinionCode': 20190709003, 'id': '', 'emailContent': '內容3', 'receiveDate': '2019/07/09 12:40',
+    {
+      'isdelete': true, 'opinionCode': 20190709003, 'id': '', 'emailContent': '內容3', 'receiveDate': '2019/07/09 12:40',
       'builder': 'Call 小明', 'responsibleUnit': '營運部', 'handlingSituation': '處理中', 'object': '美食街三明治',
     },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'opinionCode', header: '客戶意見編號', visible: true },
     { field: 'id', header: '件號', visible: true },
     { field: 'emailContent', header: '顧客意見內容', visible: true },

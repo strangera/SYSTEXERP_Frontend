@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { BankAccountCodeService } from '../../../service/basic/bank-account-code.service';
@@ -16,7 +16,7 @@ import { BankAccountCodeService } from '../../../service/basic/bank-account-code
   templateUrl: './fin29100.component.html',
   styleUrl: './fin29100.component.scss'
 })
-export class FIN29100Component extends BasicQpageComponent implements OnInit{
+export class FIN29100Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     startdate: [, [Validators.required]], // 匯款/開票/調撥日期
@@ -41,7 +41,7 @@ export class FIN29100Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '型態', visible: true },
     { field: 'col2', header: '匯款/開票/調撥單號', visible: true },
     { field: 'col3', header: '匯款/開票/調撥日期', visible: true },

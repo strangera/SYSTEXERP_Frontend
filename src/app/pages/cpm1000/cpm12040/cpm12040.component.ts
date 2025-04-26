@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm12040.component.html',
   styleUrl: './cpm12040.component.scss'
 })
-export class CPM12040Component extends BasicQpageComponent implements OnInit{
+export class CPM12040Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     opinionCode: [], // 客戶意見來源編號
@@ -31,12 +31,12 @@ export class CPM12040Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'isdelete': false, 'opinionCode': 40682483, 'opinionName': '現場'},
-    { 'isdelete': false, 'opinionCode': 40682484, 'opinionName': '來電'},
-    { 'isdelete': true, 'opinionCode': 40682485, 'opinionName': '社群網站'},
+    { 'isdelete': false, 'opinionCode': 40682483, 'opinionName': '現場' },
+    { 'isdelete': false, 'opinionCode': 40682484, 'opinionName': '來電' },
+    { 'isdelete': true, 'opinionCode': 40682485, 'opinionName': '社群網站' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'opinionCode', header: '客戶意見來源編號', visible: true },
     { field: 'opinionName', header: '客戶意見來源名稱', visible: true },
     // 其他欄位

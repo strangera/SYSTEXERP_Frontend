@@ -5,10 +5,10 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { FileType } from '../../../shared/componentkit/file-upload/file-upload.component';
 
@@ -62,7 +62,7 @@ export class TLS27010Component {
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
@@ -150,5 +150,5 @@ export class TLS27010Component {
 
     }
   }
-  onInput(){}
+  onInput() { }
 }

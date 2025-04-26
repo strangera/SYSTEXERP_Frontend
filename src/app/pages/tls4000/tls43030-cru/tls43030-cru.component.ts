@@ -1,9 +1,9 @@
 import { Component, } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { NavigationExtras, Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 //
@@ -47,39 +47,39 @@ export class TLS43030CRUComponent {
     private validationService: ValidationService,
     //
     private messageTypeService: MessageTypeService,
-    ) {
+  ) {
   }
 
   ngOnInit(): void {
-      //
-      // ----------------------------------------------------------------
-      this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-      //
-      this.messageTypeService.getSystemTypes().subscribe(data => {
-        this.messageTypeOptions = data;
-      });
-      // ----------------------------------------------------------------
-      const state = this.router.lastSuccessfulNavigation?.extras.state as {
-        crudstatus: CRUDStatus,
-        rowdata: any,
-      };
+    //
+    // ----------------------------------------------------------------
+    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    //
+    this.messageTypeService.getSystemTypes().subscribe(data => {
+      this.messageTypeOptions = data;
+    });
+    // ----------------------------------------------------------------
+    const state = this.router.lastSuccessfulNavigation?.extras.state as {
+      crudstatus: CRUDStatus,
+      rowdata: any,
+    };
 
-      switch (state.crudstatus) {
-        case CRUDStatus.Create:
-          this.formTitle = '新增資料';
-          this.showConfirm = this.canAdd();
-          break;
-        case CRUDStatus.Edit:
-          console.log(state.rowdata);
-          this.formTitle = '編輯資料';
-          this.showConfirm = this.canEdit();
-          this.Edit(state.rowdata);
-          break;
-        case CRUDStatus.Read:
-          this.formTitle = '顯示資料';
-          this.Read(state.rowdata);
-          break;
-      }
+    switch (state.crudstatus) {
+      case CRUDStatus.Create:
+        this.formTitle = '新增資料';
+        this.showConfirm = this.canAdd();
+        break;
+      case CRUDStatus.Edit:
+        console.log(state.rowdata);
+        this.formTitle = '編輯資料';
+        this.showConfirm = this.canEdit();
+        this.Edit(state.rowdata);
+        break;
+      case CRUDStatus.Read:
+        this.formTitle = '顯示資料';
+        this.Read(state.rowdata);
+        break;
+    }
   }
   // ----------------------------------------------------------------
   get isFormEditable(): boolean {
@@ -103,11 +103,11 @@ export class TLS43030CRUComponent {
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }
@@ -138,8 +138,8 @@ export class TLS43030CRUComponent {
 
   onClearForm() {
     this.dataForm.reset();  // 重置表單
-  }  
-  
+  }
+
   onCancel() {
     this.router.navigate(['/TLS4000/TLS43030']);
   }

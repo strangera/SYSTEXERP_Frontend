@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Router, NavigationExtras } from '@angular/router';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -51,7 +51,7 @@ export class CPM24020Component extends BasicQpageComponent implements OnInit {
     this.ProgNo = '520018';
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
-   
+
   }
 
   onSubmit(frm: FormGroup): void {

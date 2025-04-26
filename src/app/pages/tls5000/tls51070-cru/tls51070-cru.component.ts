@@ -2,7 +2,7 @@ import { Component, OnInit, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -18,7 +18,7 @@ import { TransportationMethodService } from '../../../service/basic/transportati
   templateUrl: './tls51070-cru.component.html',
   styleUrl: './tls51070-cru.component.scss'
 })
-export class TLS51070CRUComponent extends BasicCrupageComponent implements OnInit{
+export class TLS51070CRUComponent extends BasicCrupageComponent implements OnInit {
   venderIDOptions: any[] = [];
   storageOptions: any[] = [];
   transportationOptions: any[] = [];
@@ -28,15 +28,15 @@ export class TLS51070CRUComponent extends BasicCrupageComponent implements OnIni
   ];
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    merchantID: [, [Validators.required, Validators.maxLength(32),this.validationService.numberValidator]], // 商品管理編號
+    merchantID: [, [Validators.required, Validators.maxLength(32), this.validationService.numberValidator]], // 商品管理編號
     merchantCName: ['', [Validators.required, Validators.maxLength(32)]], // 商品中文名稱
     merchantEName: ['', [Validators.maxLength(100)]], // 商品英文名稱
-    venderCode: [, [Validators.maxLength(30),this.validationService.numberValidator]], // 廠商貨號
-    internationalCode: [, [Validators.required, Validators.maxLength(20),this.validationService.numberValidator]], // 國際條碼
+    venderCode: [, [Validators.maxLength(30), this.validationService.numberValidator]], // 廠商貨號
+    internationalCode: [, [Validators.required, Validators.maxLength(20), this.validationService.numberValidator]], // 國際條碼
     lCategory: [, [Validators.required]], // 大分類代碼
     mCategory: [, [Validators.required]], // 中分類代碼
     sCategory: [, [Validators.required]], // 小分類代碼
-    illustrate: [, ], // 說明
+    illustrate: [,], // 說明
     // ----------------------------------------------------------------
     items: this.formBuilder.array([
       this.createItem()
@@ -54,8 +54,8 @@ export class TLS51070CRUComponent extends BasicCrupageComponent implements OnIni
     private bigCategoryCodeService: BigCategoryCodeService,
     private vendorService: VendorService,
     private transportationMethodService: TransportationMethodService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -118,7 +118,7 @@ export class TLS51070CRUComponent extends BasicCrupageComponent implements OnIni
     return this.formBuilder.group({
       venderID: [], // 廠商編號/名稱
       transportation: [], // 運輸方式
-      deliveryDays: [, [Validators.maxLength(3), ]], // 送貨天數
+      deliveryDays: [, [Validators.maxLength(3),]], // 送貨天數
       purchaseStatus: [], // 採購狀態
       restockingPrice: [], // 最後進價
       restockingDate: [], // 最後進貨日
@@ -142,11 +142,11 @@ export class TLS51070CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;
@@ -178,8 +178,8 @@ export class TLS51070CRUComponent extends BasicCrupageComponent implements OnIni
 
   onClearForm() {
     this.dataForm.reset();  // 重置表單
-  }  
-  
+  }
+
   onCancel() {
     this.router.navigate(['/TLS5000/TLS51070']);
   }

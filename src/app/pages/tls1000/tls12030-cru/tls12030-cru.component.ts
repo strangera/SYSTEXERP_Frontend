@@ -2,7 +2,7 @@ import { Component, OnInit, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -24,7 +24,7 @@ import { VendorService } from './../../../service/basic/vendor.service';
 })
 
 // 2.1.2.3 專櫃意向書維護CRU
-export class TLS12030CRUComponent extends BasicCrupageComponent implements OnInit{
+export class TLS12030CRUComponent extends BasicCrupageComponent implements OnInit {
   vendorUIDOptions: any[] = [];
   negotiatorOptions: any[] = [];
   industryCodeOptions: any[] = [];
@@ -41,20 +41,20 @@ export class TLS12030CRUComponent extends BasicCrupageComponent implements OnIni
     brandName: ['', [Validators.required, Validators.maxLength(50)]], // 品牌(專櫃名稱)
     vendorUID: [[] as number[], [Validators.required]], // 廠商統一編號
     versionNumber: [, [this.validationService.numberValidator, Validators.maxLength(10)]], // 版本編號
-    negotiator: [[] as number[], ], // 洽談者
-    industryCode: [[] as number[], ], // 業種
-    negotiationDate: [, ], // 洽談日期
-    businessType: [[] as number[], ], // 營業型態
+    negotiator: [[] as number[],], // 洽談者
+    industryCode: [[] as number[],], // 業種
+    negotiationDate: [,], // 洽談日期
+    businessType: [[] as number[],], // 營業型態
 
-    replyDate: [, ], // 回函日期
-    replyEndDate: [, ], // 回函截止日
-    contractStartDate: [, ], // 合約起始日
-    contractEndDate: [, ], // 合約截止日
+    replyDate: [,], // 回函日期
+    replyEndDate: [,], // 回函截止日
+    contractStartDate: [,], // 合約起始日
+    contractEndDate: [,], // 合約截止日
 
     cooperationMethod: [, [Validators.required]], // 配合方式
     willingnessLevel: [, [Validators.required]], // 意願等級
     margin: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 履約保證金
-    remark: [, ], // 備註
+    remark: [,], // 備註
     // ----------------------------------------------------------------
     items: this.formBuilder.array([
       this.createItem()
@@ -78,8 +78,8 @@ export class TLS12030CRUComponent extends BasicCrupageComponent implements OnIni
     private floorService: FloorService,
     private businessTypeService: BusinessTypeService,
     private willingnessLevelService: WillingnessLevelService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -183,11 +183,11 @@ export class TLS12030CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

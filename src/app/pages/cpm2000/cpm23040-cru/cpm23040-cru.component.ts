@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
@@ -17,8 +17,7 @@ import { OrganizationNumberService } from '../../../service/basic/organization-n
 })
 export class CPM23040CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
 
 
   ngOnInit(): void {
@@ -26,8 +25,8 @@ export class CPM23040CRUComponent
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.loadDropdownOptions();
 
-     // 根據CRUD狀態初始化表單
-     const state = this.router.lastSuccessfulNavigation?.extras.state as {
+    // 根據CRUD狀態初始化表單
+    const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus;
       rowdata: any;
     };
@@ -53,11 +52,11 @@ export class CPM23040CRUComponent
   }
 
   dataForm = this.formBuilder.group({
-    returnDate: [,Validators.required],
-    returnNumber: [,Validators.required],
-    marketingCampaignCode: [,Validators.required],
+    returnDate: [, Validators.required],
+    returnNumber: [, Validators.required],
+    marketingCampaignCode: [, Validators.required],
     campaignName: [],
-    returnPersonnel: [,Validators.required],
+    returnPersonnel: [, Validators.required],
     remarks: [],
     items: this.formBuilder.array([this.createItem()]),
   });
@@ -83,12 +82,12 @@ export class CPM23040CRUComponent
   // 動態新增表單項目
   createItem(): FormGroup {
     return this.formBuilder.group({
-      activityItemCode: [,Validators.required],
+      activityItemCode: [, Validators.required],
       activityItemName: [],
       itemNature: [],
       currentStock: [],
       returnableQuantity: [],
-      returnedQuantity: [,Validators.required],
+      returnedQuantity: [, Validators.required],
       remainingQuantity: [],
     });
   }

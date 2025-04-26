@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { VendorService } from '../../../service/basic/vendor.service';
@@ -17,7 +17,7 @@ import { VendorService } from '../../../service/basic/vendor.service';
   templateUrl: './fin29020.component.html',
   styleUrl: './fin29020.component.scss'
 })
-export class FIN29020Component extends BasicQpageComponent implements OnInit{
+export class FIN29020Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     transferDateFrom: [], // 匯款日期
@@ -42,7 +42,7 @@ export class FIN29020Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '匯款單號', visible: true },
     { field: 'col2', header: '銀行代號', visible: true },
     { field: 'col3', header: '匯款日期', visible: true },
@@ -69,7 +69,7 @@ export class FIN29020Component extends BasicQpageComponent implements OnInit{
     //
     private vendorService: VendorService,
     private bankAccountCodeService: BankAccountCodeService,
-    
+
   ) {
     super(); // 呼叫父類建構子
   }

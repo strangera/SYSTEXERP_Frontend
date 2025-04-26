@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -18,7 +18,7 @@ import { CounterCodeService } from './../../../service/basic/counter-code.servic
   templateUrl: './fin12030.component.html',
   styleUrl: './fin12030.component.scss'
 })
-export class FIN12030Component extends BasicQpageComponent implements OnInit{
+export class FIN12030Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     twodatemm: [], // 發票年月
@@ -49,7 +49,7 @@ export class FIN12030Component extends BasicQpageComponent implements OnInit{
   data: any[] = [
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '發票年月', visible: true },
     { field: 'col2', header: '申報年月', visible: true },
     { field: 'col3', header: '類別', visible: true },
@@ -67,9 +67,9 @@ export class FIN12030Component extends BasicQpageComponent implements OnInit{
   ];
   // ----------------------------------------------------------------
   //
-  invoiceTypeOptions:any[]=[];
-  registerIDOptions:any[]=[];
-  usageStatusOptions:any[]=[];
+  invoiceTypeOptions: any[] = [];
+  registerIDOptions: any[] = [];
+  usageStatusOptions: any[] = [];
 
   constructor(
     private router: Router,

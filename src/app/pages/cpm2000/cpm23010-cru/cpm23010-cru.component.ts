@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
@@ -17,17 +17,16 @@ import { OrganizationNumberService } from '../../../service/basic/organization-n
 })
 export class CPM23010CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
   // 表單
   dataForm = this.formBuilder.nonNullable.group({
-    applicationDate: [,Validators.required],
-    supplyManagementNumber: [,Validators.required],
-    supplyCondition: [,Validators.required],
-    marketingCampaignCode: [,Validators.required],
+    applicationDate: [, Validators.required],
+    supplyManagementNumber: [, Validators.required],
+    supplyCondition: [, Validators.required],
+    marketingCampaignCode: [, Validators.required],
     campaignName: [],
-    vendorCode: [,Validators.required],
-    applicant: [,Validators.required],
+    vendorCode: [, Validators.required],
+    applicant: [, Validators.required],
     remarks: [],
     items: this.formBuilder.array([this.createItem()]),
   });
@@ -135,7 +134,7 @@ export class CPM23010CRUComponent
   onAddItem(): void {
     this.items.push(this.createItem());
   }
-  trsData(){}
+  trsData() { }
   onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;

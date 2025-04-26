@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
@@ -14,7 +14,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm-lost-person.component.html',
   styleUrl: './cpm-lost-person.component.scss'
 })
-export class CpmLostPersonComponent extends BasicQpageComponent implements OnInit{
+export class CpmLostPersonComponent extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     //之後提供給 尋人廣播服務
@@ -32,11 +32,11 @@ export class CpmLostPersonComponent extends BasicQpageComponent implements OnIni
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'name': '吳XX', 'meetingPoint': '1F服務台', 'title': '先生', 'registerDate': '2018/07/08'},
-    { 'name': '盧XX', 'meetingPoint': '1F服務台', 'title': '小朋友', 'registerDate': '2018/07/08'},
+    { 'name': '吳XX', 'meetingPoint': '1F服務台', 'title': '先生', 'registerDate': '2018/07/08' },
+    { 'name': '盧XX', 'meetingPoint': '1F服務台', 'title': '小朋友', 'registerDate': '2018/07/08' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'name', header: '被尋人姓名', visible: true },
     { field: 'meetingPoint', header: '集合地點	', visible: true },
     { field: 'title', header: '被尋人稱謂', visible: true },

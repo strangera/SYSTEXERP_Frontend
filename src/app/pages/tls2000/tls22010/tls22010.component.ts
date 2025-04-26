@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { MachinedisplayService } from '../../../service/basic/machinedisplay.service';
@@ -89,7 +89,7 @@ export class TLS22010Component implements OnInit {
     private authService: AuthService,
     private floorService: FloorService,
     private machineDisplayService: MachinedisplayService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // 初始化權限

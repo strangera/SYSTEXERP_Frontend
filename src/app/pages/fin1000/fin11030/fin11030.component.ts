@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -16,7 +16,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
 })
 
 //1.1.1.3 銷項品項資料設定
-export class FIN11030Component extends BasicQpageComponent implements OnInit{
+export class FIN11030Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     itemSerialnumber: [, [Validators.maxLength(3)]], // 品項編號
@@ -34,7 +34,7 @@ export class FIN11030Component extends BasicQpageComponent implements OnInit{
   data: any[] = [
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '品項編號', visible: true },
     { field: 'col2', header: '品項名稱', visible: true },
     { field: 'col3', header: '使用別', visible: true },

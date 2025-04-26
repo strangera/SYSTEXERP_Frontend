@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { NavigationExtras, Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
@@ -142,7 +142,7 @@ export class SYSB400Component extends BasicQpageComponent implements OnInit {
       // console.log('查詢條件', this.queryForm.value);
       this.sysb400Service.querySYS3100(this.queryForm.value).subscribe((response) => {
         this.data = response.Data;
-        console.log('查詢結果',this.data);
+        console.log('查詢結果', this.data);
         // this.queryStateService.setQueryState(QUERY_STORAGE_KEY, form.value);
         this.loading = false;
       });

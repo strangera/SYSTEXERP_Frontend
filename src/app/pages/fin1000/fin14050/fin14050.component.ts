@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -17,7 +17,7 @@ import { ExportDeclarationCategoryService } from './../../../service/basic/expor
   templateUrl: './fin14050.component.html',
   styleUrl: './fin14050.component.scss'
 })
-export class FIN14050Component extends BasicQpageComponent implements OnInit{
+export class FIN14050Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     startserialinvoice: [, [this.validationService.numberValidator]], // 發票號碼
@@ -59,7 +59,7 @@ export class FIN14050Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'name', header: '發票號碼', visible: true },
     { field: 'age', header: '發票日期', visible: true },
     { field: 'email', header: '資料所屬年月', visible: true },

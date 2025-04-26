@@ -1,4 +1,4 @@
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
 import { CRUDStatus } from '../../enum/CRUDstatus';
 
 export class BasicCrupageComponent {
@@ -19,7 +19,7 @@ export class BasicCrupageComponent {
   // ----------------------------------------------------------------
   get isFormEditable(): boolean {
     return (this.crudstatus === CRUDStatus.Create && this.canAdd()) ||
-           (this.crudstatus === CRUDStatus.Edit && this.canEdit());
+      (this.crudstatus === CRUDStatus.Edit && this.canEdit());
   }
 
   get isFormCreateable(): boolean {

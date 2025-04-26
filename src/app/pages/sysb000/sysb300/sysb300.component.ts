@@ -5,7 +5,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { Sysb300Service } from '../../../service/sysb/sysb300.service';
 import { Sys300m } from '../sysb300m/sysb300m';
@@ -21,7 +21,7 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
     // SYS3000 組織階層設定檔
-    id:[],
+    id: [],
     level_id: ['', [Validators.maxLength(2)]], // 組織階層代碼
     level_name: ['', [Validators.maxLength(30)]], // 組織階層名稱
     p_level_id: [, [Validators.maxLength(2)]], // 上層組織階層代碼
@@ -86,7 +86,7 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
 
       this.sysb300Service.querySYS3000(query).subscribe((response) => {
         this.data = response.Data;
-        console.log('查詢結果',this.data);
+        console.log('查詢結果', this.data);
         // this.queryStateService.setQueryState(QUERY_STORAGE_KEY, form.value);
         this.loading = false;
       });

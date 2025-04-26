@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -46,11 +46,11 @@ export class TLS41040Component {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { SYS_StoreNo: 'store123', ECR_No: 'register123', ECR_SettleDD: '當天' ,ECR_SettleHHNN: '10:10'},
+    { SYS_StoreNo: 'store123', ECR_No: 'register123', ECR_SettleDD: '當天', ECR_SettleHHNN: '10:10' },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: false },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'ECR_SettleDD', header: '清機日期', visible: true },

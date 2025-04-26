@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -16,7 +16,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
 })
 
 //1.1.1.4 銷項品項資料設定
-export class FIN11040Component extends BasicQpageComponent implements OnInit{
+export class FIN11040Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     formatSerialnumber: [, [Validators.maxLength(2)]], // 格式代號
@@ -34,7 +34,7 @@ export class FIN11040Component extends BasicQpageComponent implements OnInit{
   data: any[] = [
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '格式代號', visible: true },
     { field: 'col2', header: '格式名稱', visible: true },
     // 其他欄位

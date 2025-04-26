@@ -10,11 +10,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { CommissionTypeService } from '../../../service/basic/commission-type.service';
@@ -48,9 +48,9 @@ export class TLS2E090Component {
     floor: [], // 樓層
     industry: [], // 業種 / 商品類別
     vendorInvoice: [[] as number[]], // 是否使用業主發票
-    showAccount: [, ], // 只顯示應付帳款小於0
-    showStock: [, ], // 只顯示進貨總額小於0
-    net: [, ], // 是否NET
+    showAccount: [,], // 只顯示應付帳款小於0
+    showStock: [,], // 只顯示進貨總額小於0
+    net: [,], // 是否NET
     payDay: [], // 結帳後n天付款
     category: [[] as number[]], // 類別
     order: [1, []], // 排序方式
@@ -65,7 +65,7 @@ export class TLS2E090Component {
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'contactPerson', header: '洽談者', visible: true },
     { field: 'contactDate', header: '洽談日', visible: true },
     { field: 'UID', header: '統編/廠商', visible: true },
@@ -95,7 +95,7 @@ export class TLS2E090Component {
     private authService: AuthService,
     private validationService: ValidationService,
     private settlementMethodService: SettlementMethodService,
-    private counterCodeService:CounterCodeService,
+    private counterCodeService: CounterCodeService,
     private commissionTypeService: CommissionTypeService,
     private floorService: FloorService,
     private organizationNumberService: OrganizationNumberService,

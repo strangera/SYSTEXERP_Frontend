@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -16,7 +16,7 @@ import { TaxTypeService } from './../../../service/basic/tax-type.service';
   templateUrl: './fin14080.component.html',
   styleUrl: './fin14080.component.scss'
 })
-export class FIN14080Component extends BasicQpageComponent implements OnInit{
+export class FIN14080Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     invoiceFormat: ['', [Validators.maxLength(2)]], // 發票格式
@@ -60,7 +60,7 @@ export class FIN14080Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '發票格式', visible: true },
     { field: 'col2', header: '字軌', visible: true },
     { field: 'col3', header: '發票號碼', visible: true },
@@ -85,18 +85,18 @@ export class FIN14080Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  usageOptions:any[]=[
+  usageOptions: any[] = [
     { value: 1, label: '營業用' },
     { value: 2, label: '共同使用' },
   ];
-  taxTypeOptions:any[]=[];
-  deductionCodeOptions:any[]=[
+  taxTypeOptions: any[] = [];
+  deductionCodeOptions: any[] = [
     { value: 1, label: '代表近項可扣抵之進貨及費用' },
     { value: 2, label: '代表近項可扣抵之固定資產' },
     { value: 3, label: '代表近項不可扣抵之進貨及費用' },
     { value: 4, label: '代表近項不可扣抵之固定資產' },
   ];
-  categoryOptions:any[]=[
+  categoryOptions: any[] = [
     { value: 1, label: '進貨及費用' },
     { value: 2, label: '固定資產' },
   ];

@@ -6,7 +6,7 @@ import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 import { FlippingstateService } from './../../../service/basic/flippingstate.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -24,7 +24,7 @@ export class FIN35070Component extends BasicQpageComponent implements OnInit {
     SMarginserialnumber: [],
     EMarginserialnumber: [],
     vendorCode: [],
-    Flippingstate: [,Validators.required],
+    Flippingstate: [, Validators.required],
   });
 
   // Dropdown options
@@ -63,7 +63,7 @@ export class FIN35070Component extends BasicQpageComponent implements OnInit {
     { field: 'organizationCode', header: '組織代號', visible: true },
     { field: 'guaranteeType', header: '保證金類型', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -71,9 +71,9 @@ export class FIN35070Component extends BasicQpageComponent implements OnInit {
     private notificationService: NotificationService,
     private authService: AuthService,
     private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService:AnalysisdateCService,
+    private AnalysisdateCService: AnalysisdateCService,
     private vendorService: VendorService,
-    private flippingstateService:FlippingstateService,
+    private flippingstateService: FlippingstateService,
   ) {
     super(); // 呼叫父類建構子
   }

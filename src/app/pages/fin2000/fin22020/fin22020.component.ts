@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -16,16 +16,16 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './fin22020.component.html',
   styleUrl: './fin22020.component.scss'
 })
-export class FIN22020Component extends BasicQpageComponent implements OnInit{
+export class FIN22020Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     requestSheet: [, [Validators.maxLength(13)]], // 請款單號
     payPeriod: [, [Validators.maxLength(2)]], // 付款期數
-    vendorCode:[], //廠商代號
-    startRequestAmount: [, [this.validationService.numberValidator,Validators.max(9999999999)]], // 請款金額
-    endRequestAmount: [, [this.validationService.numberValidator,Validators.max(9999999999)]], // 請款金額
-    startRequestDate:[], //請款日期
-    endRequestDate:[], //請款日期
+    vendorCode: [], //廠商代號
+    startRequestAmount: [, [this.validationService.numberValidator, Validators.max(9999999999)]], // 請款金額
+    endRequestAmount: [, [this.validationService.numberValidator, Validators.max(9999999999)]], // 請款金額
+    startRequestDate: [], //請款日期
+    endRequestDate: [], //請款日期
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -42,7 +42,7 @@ export class FIN22020Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '請款單號', visible: true },
     { field: 'col2', header: '付款期數', visible: true },
     { field: 'col3', header: '廠商代號', visible: true },
@@ -53,7 +53,7 @@ export class FIN22020Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  vendorCodeOptions:any[]=[];
+  vendorCodeOptions: any[] = [];
 
   constructor(
     private router: Router,

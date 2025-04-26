@@ -7,7 +7,7 @@ import { Component, OnInit, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -20,7 +20,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
   templateUrl: './tls12010-cru.component.html',
   styleUrl: './tls12010-cru.component.scss'
 })
-export class TLS12010CRUComponent extends BasicCrupageComponent implements OnInit{
+export class TLS12010CRUComponent extends BasicCrupageComponent implements OnInit {
   //
   contactPersonOptions: any[] = [];
   industryCodeOptions: any[] = [];
@@ -53,7 +53,7 @@ export class TLS12010CRUComponent extends BasicCrupageComponent implements OnIni
     businessStyle: [], // 經營方式
     requiredArea: [, [Validators.maxLength(8)]], // 需求面積
     origin: ['', [Validators.maxLength(20)]], // 商品出產地
-    remark: [, ], // 備註
+    remark: [,], // 備註
     // ----------------------------------------------------------------
     items: this.formBuilder.array([
       this.createItem()
@@ -72,8 +72,8 @@ export class TLS12010CRUComponent extends BasicCrupageComponent implements OnIni
     private vendorService: VendorService,
     private businessTypeCodeService: BusinessTypeCodeService,
     private managementMethodService: ManagementMethodService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -155,11 +155,11 @@ export class TLS12010CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

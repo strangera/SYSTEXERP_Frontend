@@ -6,11 +6,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -45,7 +45,7 @@ export class TLS11010Component {
     NET_SPACE: ['', [Validators.maxLength(3), Validators.maxLength(7)]], // 淨坪(簽約坪數)
     LOCATION_Status: [[] as number[]], // 使用狀態 0=空位 1=使用中 2=保留(不使用) 3=停用
     ORG_No: ['', [Validators.maxLength(6)]], // 組織代碼
-    
+
     Location_Purpose: ['', [Validators.maxLength(2)]], // 用途別(SYS1000.T117)
     X_coordinate: [, [Validators.maxLength(10)]], // X座標
     Y_coordinate: [, [Validators.maxLength(10)]], // X座標
@@ -62,27 +62,30 @@ export class TLS11010Component {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { LOCATION_No: 'B1A01', LOCATION_Name: 'B1A01',
-      BUILDING_NO: 1 ,FLOOR_NO: 'B1', AREA_NO: 'A', GROSS_SPACE: 100, NET_SPACE: 50,
-      LOCATION_Status: 1 ,Location_Purpose: '專門店', X_coordinate: 10,Y_coordinate: 10, Location_Remark: '備註',
+    {
+      LOCATION_No: 'B1A01', LOCATION_Name: 'B1A01',
+      BUILDING_NO: 1, FLOOR_NO: 'B1', AREA_NO: 'A', GROSS_SPACE: 100, NET_SPACE: 50,
+      LOCATION_Status: 1, Location_Purpose: '專門店', X_coordinate: 10, Y_coordinate: 10, Location_Remark: '備註',
     },
-    { LOCATION_No: 'B1A02', LOCATION_Name: 'B1A02',
-      BUILDING_NO: 1 ,FLOOR_NO: 'B1', AREA_NO: 'A',GROSS_SPACE: 100, NET_SPACE: 50,
-      LOCATION_Status: 2 ,Location_Purpose: 1, X_coordinate: 142.80,Y_coordinate: 42.5, Location_Remark: '備註',
+    {
+      LOCATION_No: 'B1A02', LOCATION_Name: 'B1A02',
+      BUILDING_NO: 1, FLOOR_NO: 'B1', AREA_NO: 'A', GROSS_SPACE: 100, NET_SPACE: 50,
+      LOCATION_Status: 2, Location_Purpose: 1, X_coordinate: 142.80, Y_coordinate: 42.5, Location_Remark: '備註',
     },
-    { LOCATION_No: 'B1A03', LOCATION_Name: 'B1A03',
-      BUILDING_NO: 1 ,FLOOR_NO: 'B1', AREA_NO: 'A',GROSS_SPACE: 100, NET_SPACE: 50,
-      LOCATION_Status: 1 ,Location_Purpose: 1, X_coordinate: 42.9,Y_coordinate: 42.5, Location_Remark: '備註',
+    {
+      LOCATION_No: 'B1A03', LOCATION_Name: 'B1A03',
+      BUILDING_NO: 1, FLOOR_NO: 'B1', AREA_NO: 'A', GROSS_SPACE: 100, NET_SPACE: 50,
+      LOCATION_Status: 1, Location_Purpose: 1, X_coordinate: 42.9, Y_coordinate: 42.5, Location_Remark: '備註',
     },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'BUILDING_NO', header: '館別', visible: true },
     { field: 'FLOOR_NO', header: '樓層', visible: true },
     { field: 'AREA_NO', header: '區域', visible: true },
     { field: 'LOCATION_No', header: '位置代碼', visible: true },
-//    { field: 'LOCATION_Name', header: '位置說明', visible: true },
+    //    { field: 'LOCATION_Name', header: '位置說明', visible: true },
 
     { field: 'GROSS_SPACE', header: '營業坪數', visible: true },
     { field: 'NET_SPACE', header: '簽約坪數', visible: true },

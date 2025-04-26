@@ -9,9 +9,9 @@ import { IssuanceTypeService } from '../../../service/basic/issuance-type.servic
 import { IssuanceNoteStatusService } from '../../../service/basic/issuance-note-status.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -24,7 +24,7 @@ import { TranslateService } from '@ngx-translate/core';
   templateUrl: './tls56070-cru.component.html',
   styleUrl: './tls56070-cru.component.scss'
 })
-export class TLS56070CRUComponent extends BasicCrupageComponent implements OnInit  {
+export class TLS56070CRUComponent extends BasicCrupageComponent implements OnInit {
 
 
   dataForm = this.formBuilder.group({
@@ -47,10 +47,10 @@ export class TLS56070CRUComponent extends BasicCrupageComponent implements OnIni
     quantity: [],
     vendorCode: [],
     transferReason: [],
-        // ----------------------------------------------------------------
-        items: this.formBuilder.array([
-          this.createItem()
-        ]),
+    // ----------------------------------------------------------------
+    items: this.formBuilder.array([
+      this.createItem()
+    ]),
   });
 
   // Dropdown options
@@ -63,7 +63,7 @@ export class TLS56070CRUComponent extends BasicCrupageComponent implements OnIni
   organizationNumberOptions: any[] = [];  // Updated dropdown for 部門編號
   transferReasonOptions: any[] = [];
   vendorOptions: any[] = [];
-// Table data
+  // Table data
 
 
   constructor(
@@ -83,7 +83,7 @@ export class TLS56070CRUComponent extends BasicCrupageComponent implements OnIni
     private translate: TranslateService,
   ) {
     super();  // 呼叫父類建構子
-}
+  }
 
   ngOnInit(): void {
     // Initialize dropdown options
@@ -140,7 +140,7 @@ export class TLS56070CRUComponent extends BasicCrupageComponent implements OnIni
       nowstock: [{ value: '自動帶入', disabled: true }],
       num: [],
       unit: [{ value: '自動帶入', disabled: true }],
-      remark: [],      
+      remark: [],
     });
   }
   onRemoveItem(index: number) {
@@ -160,11 +160,11 @@ export class TLS56070CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

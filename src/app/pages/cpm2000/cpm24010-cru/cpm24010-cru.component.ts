@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, FormControl, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
@@ -17,10 +17,10 @@ import { FloorService } from '../../../service/basic/floor.service';
 })
 export class CPM24010CRUComponent extends BasicCrupageComponent implements OnInit {
   dataForm = this.formBuilder.group({
-    startDate: [,Validators.required],
-    endDate: [,Validators.required],
-    marketingCampaignCode: [,Validators.required],
-    campaignName: [,Validators.required],
+    startDate: [, Validators.required],
+    endDate: [, Validators.required],
+    marketingCampaignCode: [, Validators.required],
+    campaignName: [, Validators.required],
     totalBudget: [],
     items: this.formBuilder.array([this.createItem()]),
   });
@@ -40,7 +40,7 @@ export class CPM24010CRUComponent extends BasicCrupageComponent implements OnIni
     private floorService: FloorService
   ) {
     super();
-    
+
   }
 
   ngOnInit(): void {
@@ -51,8 +51,8 @@ export class CPM24010CRUComponent extends BasicCrupageComponent implements OnIni
     // 下拉選單初始化
     this.loadDropdownOptions();
 
-     // 根據CRUD狀態初始化表單
-     const state = this.router.lastSuccessfulNavigation?.extras.state as {
+    // 根據CRUD狀態初始化表單
+    const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus;
       rowdata: any;
     };

@@ -7,11 +7,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
@@ -58,14 +58,14 @@ export class TLS13020Component {
   loading: boolean = false;
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
-    recruitmentCode: [,[Validators.maxLength(8)]],
+    recruitmentCode: [, [Validators.maxLength(8)]],
     businessTypeCode: [],
-    counterCode:[,[Validators.maxLength(6)]],
-    counterName: [,[Validators.maxLength(50)]],
+    counterCode: [, [Validators.maxLength(6)]],
+    counterName: [, [Validators.maxLength(50)]],
     vendorCode: [],
     locationCode: [],
-    startserial: [,[Validators.maxLength(8)]],
-    endserial: [,[Validators.maxLength(8)]],
+    startserial: [, [Validators.maxLength(8)]],
+    endserial: [, [Validators.maxLength(8)]],
     contractStatus: [],
     regionCode: [],
     floorCode: [],
@@ -126,7 +126,7 @@ export class TLS13020Component {
     { field: 'operationEndDate', header: '營運截止日', visible: true },
     { field: 'rentalNumber', header: '承租數', visible: true },
   ];
-  
+
   // 下拉選單選項
   businessTypeOptions: any[] = [];
   vendorOptions: any[] = [];
@@ -157,12 +157,12 @@ export class TLS13020Component {
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
     private authService: AuthService,
-    private businessTypeCodeService:BusinessTypeCodeService,
-    private vendorService:VendorService,
-    private locationService:LocationService,
-    private contractStatusService:ContractStatusService,
-    private regionCodeService:RegionCodeService,
-    private floorService:FloorService,
+    private businessTypeCodeService: BusinessTypeCodeService,
+    private vendorService: VendorService,
+    private locationService: LocationService,
+    private contractStatusService: ContractStatusService,
+    private regionCodeService: RegionCodeService,
+    private floorService: FloorService,
     private organizationService: OrganizationNumberService,
     private operationStatusService: OperationStatusService,
     private commissionCalculationService: CommissionCalculationService,
@@ -172,10 +172,10 @@ export class TLS13020Component {
     private settlementMethodService: SettlementMethodService,
     private paymentMethodService: PaymentMethod2Service,
     private cooperationMethodService: CooperationMethodService,
-    private whetherService:WhetherService,
-    private negotiatorService:UserCodeService,
-    private businessTypeService:BusinessTypeService,
-  ) {}
+    private whetherService: WhetherService,
+    private negotiatorService: UserCodeService,
+    private businessTypeService: BusinessTypeService,
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

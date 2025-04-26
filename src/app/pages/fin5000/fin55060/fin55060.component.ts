@@ -6,7 +6,7 @@ import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 import { FlippingstateService } from './../../../service/basic/flippingstate.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -20,7 +20,7 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
   templateUrl: './fin55060.component.html',
   styleUrl: './fin55060.component.scss'
 })
-export class FIN55060Component   extends BasicQpageComponent implements OnInit {
+export class FIN55060Component extends BasicQpageComponent implements OnInit {
   // Upload files
   fileType: FileType = FileType.PNG;
   uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
@@ -65,7 +65,7 @@ export class FIN55060Component   extends BasicQpageComponent implements OnInit {
     { value: 1, label: 'A4(直印)' },
     { value: 2, label: 'A4(橫印)' },
     { value: 3, label: '一般' },
-]
+  ]
   Subpoenatype2: any[] = [
     { value: 1, label: '贊助金傳票' },
     { value: 2, label: '電匯EDI傳票' },
@@ -78,26 +78,26 @@ export class FIN55060Component   extends BasicQpageComponent implements OnInit {
     { value: 9, label: '開票傳票' },
     { value: 10, label: '撤票沖轉票據傳票' },
   ];
-  
+
   Reportingmethod: any[] = [
     { value: 1, label: '交易記錄之會計科目' },
     { value: 2, label: '含無交易記錄之會計科目' },
   ];
   Printingmethod
-  : any[] = [
-    { value: 1, label: '分開列印' },
-    { value: 2, label: '合併列印' },
-  ];
+    : any[] = [
+      { value: 1, label: '分開列印' },
+      { value: 2, label: '合併列印' },
+    ];
   Postingmethod: any[] = [
     { value: 1, label: '依明細勾選' },
     { value: 2, label: '依過帳年月' },
   ];
   Printingcolumn
-  : any[] = [
-    { value: 1, label: '狀態' },
-    { value: 2, label: '活動' },
-    { value: 2, label: '立沖代號' },
-  ];
+    : any[] = [
+      { value: 1, label: '狀態' },
+      { value: 2, label: '活動' },
+      { value: 2, label: '立沖代號' },
+    ];
   activity: any[] = [
     { value: 1, label: '全部' },
     { value: 2, label: '會員紅利活動' },
@@ -183,8 +183,8 @@ export class FIN55060Component   extends BasicQpageComponent implements OnInit {
     { field: 'creditAmount', header: '貸方金額', visible: true },
     { field: 'voucherCode', header: '餘額', visible: true }
   ];
-  
-  
+
+
   // TypeScript Options
   AccountcodeOptions: any[] = [];
   constructor(
@@ -199,11 +199,11 @@ export class FIN55060Component   extends BasicQpageComponent implements OnInit {
     private organizationNumberService: OrganizationNumberService,
     private accountingaccountService: AccountingaccountService,
     private userCodeService: UserCodeService
-   
+
   ) {
     super(); // 呼叫父類建構子
   }
- 
+
   vendorOptions: any[] = [];
   displayOptions2: any[] = [];
   AnalysisdateCOptions: any[] = [];

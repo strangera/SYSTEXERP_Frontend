@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
@@ -15,8 +15,7 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class FIN62010CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
   ngOnInit(): void {
     // 初始化
     this.ProgNo = '160003';
@@ -104,9 +103,9 @@ export class FIN62010CRUComponent
     items: this.formBuilder.array([this.createItem()]),
   });
   // Dropdown options
-  founder: any[] = [  ];
+  founder: any[] = [];
   TOCBACOptions: any[] = [
-    
+
 
   ];
   TCBACOptions: any[] = [
@@ -114,9 +113,9 @@ export class FIN62010CRUComponent
 
   ];
   status: any[] = [
-    { value: 1, label: '停用'},
-    { value: 2, label: '手開'},
-    { value: 3, label: '電腦'},
+    { value: 1, label: '停用' },
+    { value: 2, label: '手開' },
+    { value: 3, label: '電腦' },
 
   ];
   Companybankcode: any[] = [

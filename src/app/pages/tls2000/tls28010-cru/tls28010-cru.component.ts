@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { CardTypeService } from '../../../service/basic/card-type.service';
 import { CardCategoryService } from '../../../service/basic/card-category.service';
 import { CashierCodeService } from '../../../service/basic/cashier-code.service';
@@ -19,7 +19,7 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
   templateUrl: './tls28010-cru.component.html',
   styleUrl: './tls28010-cru.component.scss',
 })
-export class TLS28010CRUComponent extends BasicCrupageComponent implements OnInit  {
+export class TLS28010CRUComponent extends BasicCrupageComponent implements OnInit {
   // ProgNo: string = '220044';
   // // 權限
   // funInfo: FunsrightInfo = {};
@@ -103,7 +103,8 @@ export class TLS28010CRUComponent extends BasicCrupageComponent implements OnIni
     private cardTypeService: CardTypeService,
     private cardCategoryService: CardCategoryService,
     private cashierCodeService: CashierCodeService
-  ) {super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {

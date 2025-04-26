@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './ass11010.component.html',
   styleUrl: './ass11010.component.scss'
 })
-export class ASS11010Component extends BasicQpageComponent implements OnInit{
+export class ASS11010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     bigCategoryCode: [, [Validators.maxLength(1)]], // 大分類代碼
@@ -31,12 +31,12 @@ export class ASS11010Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'bigCategoryCode': 'A', 'bigCategoryName': '裝潢工程'},
-    { 'bigCategoryCode': 'B', 'bigCategoryName': '其他工程'},
-    { 'bigCategoryCode': 'C', 'bigCategoryName': '電腦及電子零件產品'},
+    { 'bigCategoryCode': 'A', 'bigCategoryName': '裝潢工程' },
+    { 'bigCategoryCode': 'B', 'bigCategoryName': '其他工程' },
+    { 'bigCategoryCode': 'C', 'bigCategoryName': '電腦及電子零件產品' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'bigCategoryCode', header: '大分類代碼', visible: true },
     { field: 'bigCategoryName', header: '大分類名稱', visible: true },
   ];

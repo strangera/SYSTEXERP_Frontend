@@ -3,7 +3,7 @@ import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
@@ -14,7 +14,7 @@ import { TranslateService } from '@ngx-translate/core';
   templateUrl: './tls46030-cru.component.html',
   styleUrl: './tls46030-cru.component.scss'
 })
-export class TLS46030CRUComponent extends BasicCrupageComponent implements OnInit{
+export class TLS46030CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // 先設定主檔再設定明細檔
@@ -22,7 +22,7 @@ export class TLS46030CRUComponent extends BasicCrupageComponent implements OnIni
     // POS1004M_鍵盤設定主檔
     ECR_KBType: ['', [Validators.required, Validators.maxLength(6)]], // 鍵盤型態
     USR_Level: ['', [Validators.required, Validators.maxLength(6)]], // 鍵盤權限等級
-    ECR_KBDesc: [, ], // 鍵盤備註
+    ECR_KBDesc: [,], // 鍵盤備註
     //
     CRT_Date: [], // 建立日期
     CRT_USR_No: [, [Validators.maxLength(8)]], // 建立人員
@@ -45,8 +45,8 @@ export class TLS46030CRUComponent extends BasicCrupageComponent implements OnIni
     KB_Fonttyped: [[] as number[]], // 顯示字型(粗體/斜體/底線)
     KB_Style: ['', [Validators.required, Validators.maxLength(1)]], // 按鍵型狀
     KB_Switch: ['', [Validators.required, Validators.maxLength(1)]], // ON/OFF
-    KB_Width: [, [Validators.required, Validators.minLength(2),Validators.maxLength(10)]], // 寬度
-    KB_Height: [, [Validators.required, Validators.minLength(2),Validators.maxLength(10)]], // 高度
+    KB_Width: [, [Validators.required, Validators.minLength(2), Validators.maxLength(10)]], // 寬度
+    KB_Height: [, [Validators.required, Validators.minLength(2), Validators.maxLength(10)]], // 高度
     KB_Merge: ['', [Validators.required, Validators.maxLength(4)]], // 合併鍵的 按鍵代碼
     KB_Color: ['', [Validators.maxLength(30)]], // 顏色
     KB_FontColor: ['', [Validators.maxLength(30)]], // 字型顏色
@@ -91,8 +91,8 @@ export class TLS46030CRUComponent extends BasicCrupageComponent implements OnIni
     private validationService: ValidationService,
     private translate: TranslateService,
     //
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -112,14 +112,14 @@ export class TLS46030CRUComponent extends BasicCrupageComponent implements OnIni
       // 創建
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
-        this.accordionTabCss= 'create-accordionTab';
+        this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
         this.showConfirm = this.canAdd();
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
-        this.accordionTabCss= 'edit-accordionTab';
+        this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
         this.showConfirm = this.canEdit();
         this.Edit(state.rowdata);
@@ -166,11 +166,11 @@ export class TLS46030CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

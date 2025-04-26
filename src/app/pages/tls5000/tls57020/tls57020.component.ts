@@ -4,9 +4,9 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { VendorService } from '../../../service/basic/vendor.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 
@@ -32,27 +32,27 @@ export class TLS57020Component {
 
   // Dropdown options
   vendorOptions: any[] = [];
-    // Table data
-    data: any[] = [
+  // Table data
+  data: any[] = [
 
-    ];
-    filteredData: any[] = [...this.data];
-    columns: any[] = [
-      { field: 'documentType', header: '單據種類', visible: true },
-      { field: 'invoiceNumber', header: '發票收錄號碼', visible: true },
-      { field: 'documentDate', header: '單據日期', visible: true },
-      { field: 'totalInvoiceAmount', header: '發票總額', visible: true },
-      { field: 'amountExcludingTax', header: '未稅金額', visible: true },
-      { field: 'taxAmount', header: '稅額', visible: true },
-    ];
-    
+  ];
+  filteredData: any[] = [...this.data];
+  columns: any[] = [
+    { field: 'documentType', header: '單據種類', visible: true },
+    { field: 'invoiceNumber', header: '發票收錄號碼', visible: true },
+    { field: 'documentDate', header: '單據日期', visible: true },
+    { field: 'totalInvoiceAmount', header: '發票總額', visible: true },
+    { field: 'amountExcludingTax', header: '未稅金額', visible: true },
+    { field: 'taxAmount', header: '稅額', visible: true },
+  ];
+
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
     private notificationService: NotificationService,
     private vendorService: VendorService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options

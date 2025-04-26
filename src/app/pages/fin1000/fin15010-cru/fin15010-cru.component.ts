@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -17,11 +17,11 @@ import { ValidationService } from '../../../shared/service/validation.service';
   templateUrl: './fin15010-cru.component.html',
   styleUrl: './fin15010-cru.component.scss'
 })
-export class FIN15010CRUComponent extends BasicCrupageComponent implements OnInit{
+export class FIN15010CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    declareYm: [,[Validators.required]], // 	申報年月
-    declareType: [,[Validators.required]], // 	申報書種類
+    declareYm: [, [Validators.required]], // 	申報年月
+    declareType: [, [Validators.required]], // 	申報書種類
     import_Cost: [, [this.validationService.numberValidator, Validators.maxLength(10)]], // 進貨總金額之進貨及費用
     import_Assets: [, [this.validationService.numberValidator, Validators.maxLength(10)]], // 進貨總金額之固定資產
     import_NoTaxGoods: [, [this.validationService.numberValidator, Validators.maxLength(10)]], // 進口免稅貨物
@@ -30,7 +30,7 @@ export class FIN15010CRUComponent extends BasicCrupageComponent implements OnIni
   //
   // ----------------------------------------------------------------
   //
-  declareTypeOptions:any[]=[
+  declareTypeOptions: any[] = [
     { value: 1, label: 401 },
     { value: 2, label: 403 },
   ];
@@ -44,8 +44,8 @@ export class FIN15010CRUComponent extends BasicCrupageComponent implements OnIni
     private translate: TranslateService,
     //
     private validationService: ValidationService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -95,11 +95,11 @@ export class FIN15010CRUComponent extends BasicCrupageComponent implements OnIni
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }

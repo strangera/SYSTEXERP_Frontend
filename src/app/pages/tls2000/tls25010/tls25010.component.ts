@@ -5,10 +5,10 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
@@ -66,7 +66,7 @@ export class TLS25010Component {
     private messageService: NotificationService,
     private authService: AuthService,
     private violationCategoryService: ViolationCategoryService,  // 違規類別編號 service
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
@@ -128,7 +128,7 @@ export class TLS25010Component {
     if (this.canEdit()) {
       // 將違規類別資料存入 sessionStorage
       sessionStorage.setItem('violationCategoryData', JSON.stringify(data));
-  
+
       const extras: NavigationExtras = {
         state: {
           crudstatus: CRUDStatus.Edit
@@ -138,7 +138,7 @@ export class TLS25010Component {
       this.router.navigate(['TLS2000/TLS25010MOD'], extras);
     }
   }
-  
+
   onRowClick(data: any): void {
     const extras: NavigationExtras = {
       state: {

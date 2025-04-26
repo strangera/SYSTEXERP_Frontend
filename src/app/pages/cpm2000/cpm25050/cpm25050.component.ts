@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 
 // Services
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   styleUrls: ['./cpm25050.component.scss'],
 })
 export class CPM25050Component extends BasicQpageComponent implements OnInit {
-queryForm = this.formBuilder.group({
+  queryForm = this.formBuilder.group({
     startYear: [],
     endYear: [],
     startQuarter: [],
@@ -33,7 +33,7 @@ queryForm = this.formBuilder.group({
     { value: 3, label: '第三季' },
     { value: 4, label: '第四季' },
   ];
-  
+
   activityCategoryOptions = [
     { value: 1, label: '000001' },
     { value: 2, label: '000002' },
@@ -49,7 +49,7 @@ queryForm = this.formBuilder.group({
     private formBuilder: FormBuilder,
     private notificationService: NotificationService,
     private authService: AuthService,
-  
+
   ) {
     super(); // 呼叫父類建構子
   }

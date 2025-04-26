@@ -8,7 +8,7 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { VendorService } from '../../../service/basic/vendor.service';
@@ -27,8 +27,7 @@ import { AccountingaccountService } from '../../../service/basic/accountingaccou
 })
 export class FIN52030CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
   ngOnInit(): void {
     // 初始化
     this.ProgNo = '150009';
@@ -194,7 +193,7 @@ export class FIN52030CRUComponent
     { value: 8, label: '101500' },
     { value: 9, label: '101600' },
     { value: 10, label: '101700' },
-];
+  ];
   margintypeOptions: any[] = [];
   vendorCodeOptions: any[] = [
     { value: 1, label: '00000000-1' },
@@ -207,7 +206,7 @@ export class FIN52030CRUComponent
     { value: 8, label: '01052878-1' },
     { value: 9, label: '01508949-1' },
     { value: 10, label: '01515462-1' },
-];
+  ];
   borrowloanOptions: any[] = [
     { value: 1, label: '借' },
     { value: 2, label: '貸' },

@@ -3,11 +3,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -35,7 +35,7 @@ export class TLS46030Component {
     // POS1004M_鍵盤設定主檔
     ECR_KBType: ['', [Validators.required, Validators.maxLength(6)]], // 鍵盤型態
     USR_Level: ['', [Validators.required, Validators.maxLength(6)]], // 鍵盤權限等級
-    ECR_KBDesc: [, ], // 鍵盤備註
+    ECR_KBDesc: [,], // 鍵盤備註
 
     // 以下可以不用顯示於查詢頁
     CRT_Date: [], // 建立日期
@@ -48,27 +48,32 @@ export class TLS46030Component {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { ECR_KBType: '0', USR_Level: '0', KB_ScanCode: '0101', KB_Func: '3003',
+    {
+      ECR_KBType: '0', USR_Level: '0', KB_ScanCode: '0101', KB_Func: '3003',
       KB_Arg1: '0', KB_Arg2: '\N', KB_Arg3: '\N', KB_Display1: '結帳', KB_Display2: '\N',
       KB_Font: '細明體', KB_Size: 16, KB_Fonttyped: '101', KB_Style: '1', KB_Switch: 'Y',
       KB_Width: 100, KB_Height: 50, KB_Merge: '0101', KB_Color: 'RGB: 255, 90, 90', KB_FontColor: 'Blue',
     },
-    { ECR_KBType: '0', USR_Level: '0', KB_ScanCode: '0102', KB_Func: '3003',
+    {
+      ECR_KBType: '0', USR_Level: '0', KB_ScanCode: '0102', KB_Func: '3003',
       KB_Arg1: '1', KB_Arg2: '\N', KB_Arg3: '\N', KB_Display1: '商品', KB_Display2: '\N',
       KB_Font: '細明體', KB_Size: 16, KB_Fonttyped: 'YNN', KB_Style: '1', KB_Switch: 'Y',
       KB_Width: 100, KB_Height: 50, KB_Merge: '0102', KB_Color: 'RGB: 255, 180, 180', KB_FontColor: 'White',
     },
-    { ECR_KBType: '0', USR_Level: '0', KB_ScanCode: '0103', KB_Func: '3003',
+    {
+      ECR_KBType: '0', USR_Level: '0', KB_ScanCode: '0103', KB_Func: '3003',
       KB_Arg1: '2', KB_Arg2: '\N', KB_Arg3: '\N', KB_Display1: '付款', KB_Display2: '\N',
       KB_Font: '細明體', KB_Size: 16, KB_Fonttyped: 'YNN', KB_Style: '1', KB_Switch: 'Y',
       KB_Width: 100, KB_Height: 50, KB_Merge: '0103', KB_Color: 'RGB: 255, 180, 180', KB_FontColor: 'White',
     },
-    { ECR_KBType: '0', USR_Level: '0', KB_ScanCode: '0104', KB_Func: '3003',
+    {
+      ECR_KBType: '0', USR_Level: '0', KB_ScanCode: '0104', KB_Func: '3003',
       KB_Arg1: '3', KB_Arg2: '\N', KB_Arg3: '\N', KB_Display1: '管理', KB_Display2: '\N',
       KB_Font: '細明體', KB_Size: 16, KB_Fonttyped: 'YNN', KB_Style: '1', KB_Switch: 'Y',
       KB_Width: 100, KB_Height: 50, KB_Merge: '0104', KB_Color: 'RGB: 255, 180, 180', KB_FontColor: 'White',
     },
-    { ECR_KBType: '0', USR_Level: '0', KB_ScanCode: '0105', KB_Func: '1001',
+    {
+      ECR_KBType: '0', USR_Level: '0', KB_ScanCode: '0105', KB_Func: '1001',
       KB_Arg1: '\N', KB_Arg2: '\N', KB_Arg3: '\N', KB_Display1: '登出', KB_Display2: '\N',
       KB_Font: '細明體', KB_Size: 16, KB_Fonttyped: 'YNN', KB_Style: '1', KB_Switch: 'Y',
       KB_Width: 100, KB_Height: 50, KB_Merge: '0105', KB_Color: 'Navy', KB_FontColor: 'White',
@@ -76,7 +81,7 @@ export class TLS46030Component {
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'ECR_KBType', header: '鍵盤型態', visible: true },
     { field: 'USR_Level', header: '鍵盤權限等級', visible: true },
     // { field: 'ECR_KBDesc', header: '鍵盤備註', visible: true },

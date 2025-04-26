@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { MessageService } from 'primeng/api';
 
@@ -64,21 +64,23 @@ export class SYSBC00Component extends BasicQpageComponent implements OnInit {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { id:1, BNK_No: '0000022', Name: '中央銀行國庫局', BNK_ShortName: '中銀', Min_Length: 6, Max_Length: 6,
+    {
+      id: 1, BNK_No: '0000022', Name: '中央銀行國庫局', BNK_ShortName: '中銀', Min_Length: 6, Max_Length: 6,
       children: [
-        { id:1, BNK_BranchNo: '001', Name: '中央銀行國庫局 永康分行' },
-        { id:2, BNK_BranchNo: '002', Name: '中央銀行國庫局 鹽行分行' }
+        { id: 1, BNK_BranchNo: '001', Name: '中央銀行國庫局 永康分行' },
+        { id: 2, BNK_BranchNo: '002', Name: '中央銀行國庫局 鹽行分行' }
       ]
     },
-    { id:2, BNK_No: '0040037', Name: '台灣銀行',BNK_ShortName: '台銀', Min_Length: 14, Max_Length: 14,
+    {
+      id: 2, BNK_No: '0040037', Name: '台灣銀行', BNK_ShortName: '台銀', Min_Length: 14, Max_Length: 14,
       children: [
-        { id:3, BNK_BranchNo: '003', Name: '台灣銀行 永康分行' },
+        { id: 3, BNK_BranchNo: '003', Name: '台灣銀行 永康分行' },
       ]
     },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'BNK_No', header: '金資中心銀行代碼', visible: true },
     { field: 'Name', header: '銀行名稱', visible: true },
     { field: 'BNK_ShortName', header: '銀行簡稱', visible: true },
@@ -87,7 +89,7 @@ export class SYSBC00Component extends BasicQpageComponent implements OnInit {
     // 其他欄位
   ];
 
-  subColumns: any[]= [
+  subColumns: any[] = [
     { field: 'BNK_BranchNo', header: '銀行分行代號', visible: true },
     { field: 'Name', header: '銀行分行名稱', visible: true },
     // 其他子欄位
@@ -113,11 +115,11 @@ export class SYSBC00Component extends BasicQpageComponent implements OnInit {
 
     // 編輯列銀行資料
     this.deductions = [
-      { id: 1, BNK_No: '0000022', Name: '中央銀行國庫局',sub_BNK_No: '001', sub_Name:'台中分行', BNK_ShortName: '中銀', Min_Length: 6, Max_Length: 6},
-      { id: 2, BNK_No: '0000022', Name: '中央銀行國庫局',sub_BNK_No: '003', sub_Name:'高雄分行', BNK_ShortName: '中銀', Min_Length: 6, Max_Length: 6},
-      { id: 3, BNK_No: '0000022', Name: '中央銀行國庫局',sub_BNK_No: '004', sub_Name:'台南分行', BNK_ShortName: '中銀', Min_Length: 6, Max_Length: 6},
-      { id: 4, BNK_No: '0040037', Name: '台灣銀行',sub_BNK_No: '001', sub_Name:'桃園分行', BNK_ShortName: '台銀', Min_Length: 14, Max_Length: 14},
-      { id: 5, BNK_No: '0040037', Name: '台灣銀行',sub_BNK_No: '002', sub_Name:'彰化分行', BNK_ShortName: '台銀', Min_Length: 14, Max_Length: 14}
+      { id: 1, BNK_No: '0000022', Name: '中央銀行國庫局', sub_BNK_No: '001', sub_Name: '台中分行', BNK_ShortName: '中銀', Min_Length: 6, Max_Length: 6 },
+      { id: 2, BNK_No: '0000022', Name: '中央銀行國庫局', sub_BNK_No: '003', sub_Name: '高雄分行', BNK_ShortName: '中銀', Min_Length: 6, Max_Length: 6 },
+      { id: 3, BNK_No: '0000022', Name: '中央銀行國庫局', sub_BNK_No: '004', sub_Name: '台南分行', BNK_ShortName: '中銀', Min_Length: 6, Max_Length: 6 },
+      { id: 4, BNK_No: '0040037', Name: '台灣銀行', sub_BNK_No: '001', sub_Name: '桃園分行', BNK_ShortName: '台銀', Min_Length: 14, Max_Length: 14 },
+      { id: 5, BNK_No: '0040037', Name: '台灣銀行', sub_BNK_No: '002', sub_Name: '彰化分行', BNK_ShortName: '台銀', Min_Length: 14, Max_Length: 14 }
     ];
     // ----------------------------------------------------------------
   }
@@ -154,15 +156,15 @@ export class SYSBC00Component extends BasicQpageComponent implements OnInit {
   }
 
   addNewRow() {
-    const newRow: Bank = { 
-      id: this.deductions.length + 1, 
-      BNK_No: '', 
-      Name: '', 
-      BNK_ShortName: '', 
-      sub_BNK_No: '', 
-      sub_Name: '', 
-      Min_Length: 0, 
-      Max_Length: 0, 
+    const newRow: Bank = {
+      id: this.deductions.length + 1,
+      BNK_No: '',
+      Name: '',
+      BNK_ShortName: '',
+      sub_BNK_No: '',
+      sub_Name: '',
+      Min_Length: 0,
+      Max_Length: 0,
       editing: true // 新增行直接進入編輯狀態
     };
     this.deductions.push(newRow);
@@ -189,7 +191,7 @@ export class SYSBC00Component extends BasicQpageComponent implements OnInit {
   onRowEditSave(row: Bank) {
     // 更新月份字串
     // const month = row.YearMonth.getMonth() + 1;  // getMonth() 返回的月份從 0 開始，所以需要 +1
-    
+
     row.editing = false; // 取消編輯後設置為非編輯狀態
     this.editingRows.delete(row);
     this.messageService2.add({ severity: 'success', summary: '保存成功', detail: '已成功儲存編輯的資料' });

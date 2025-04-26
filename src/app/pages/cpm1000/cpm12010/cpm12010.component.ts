@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm12010.component.html',
   styleUrl: './cpm12010.component.scss'
 })
-export class CPM12010Component extends BasicQpageComponent implements OnInit{
+export class CPM12010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     opinionCode: [[] as number[]], // 客戶意見類別編號
@@ -31,12 +31,12 @@ export class CPM12010Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'isdelete': false, 'opinionCode': 'T001', 'categoryName': '意見反映'},
-    { 'isdelete': false, 'opinionCode': 'T002', 'categoryName': '廣告業務'},
-    { 'isdelete': false, 'opinionCode': 'T003', 'categoryName': '活動、場地洽談'},
+    { 'isdelete': false, 'opinionCode': 'T001', 'categoryName': '意見反映' },
+    { 'isdelete': false, 'opinionCode': 'T002', 'categoryName': '廣告業務' },
+    { 'isdelete': false, 'opinionCode': 'T003', 'categoryName': '活動、場地洽談' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'opinionCode', header: '客戶意見類別編號', visible: true },
     { field: 'categoryName', header: '類別名稱', visible: true },
     // 其他欄位

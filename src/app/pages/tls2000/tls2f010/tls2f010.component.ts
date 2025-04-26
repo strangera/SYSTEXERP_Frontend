@@ -7,11 +7,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -56,7 +56,7 @@ export class TLS2F010Component {
     transferStartdate: [], // 傳送日期
     transferEnddate: [], // 傳送日期
     builder: ['', [Validators.maxLength(10)]], // 建立者
-    usagec: [, ], // 是否貼現
+    usagec: [,], // 是否貼現
     buildStartdate: [], // 建立日期
     buildEnddate: [], // 建立日期
     floor: [], // 樓層
@@ -71,7 +71,7 @@ export class TLS2F010Component {
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'contactPerson', header: '專櫃編號', visible: true },
     { field: 'contactDate', header: '專櫃名稱', visible: true },
     { field: 'UID', header: '單據種類', visible: true },

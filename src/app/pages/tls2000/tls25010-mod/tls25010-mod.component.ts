@@ -5,10 +5,10 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
@@ -64,11 +64,11 @@ export class TLS25010ModComponent {
     private messageService: NotificationService,
     private authService: AuthService,
     private violationCategoryService: ViolationCategoryService // 違規類別編號 service
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-  
+
     // 從 sessionStorage 獲取資料
     const violationCategoryData = sessionStorage.getItem('violationCategoryData');
     if (violationCategoryData) {
@@ -76,14 +76,14 @@ export class TLS25010ModComponent {
       this.queryForm.controls['violationCategoryName'].setValue(data.violationCategoryName);
       this.queryForm.controls['violationCategoryCode'].setValue(data.violationCategoryCode);
     }
-  
+
     // 初始化其他資料
     this.violationCategoryService.getViolationCategories().subscribe((data) => {
       this.violationCategoryOptions = data;
     });
   }
-  
-  
+
+
 
   canQuery(): boolean {
     return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
@@ -159,5 +159,5 @@ export class TLS25010ModComponent {
     };
     this.router.navigate(['/demo/demoInputTableCRU'], extras);
   }
-  onSubmitMOD() {}
+  onSubmitMOD() { }
 }

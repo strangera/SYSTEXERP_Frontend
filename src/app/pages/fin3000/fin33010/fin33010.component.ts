@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,11 +15,11 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './fin33010.component.html',
   styleUrl: './fin33010.component.scss'
 })
-export class FIN33010Component extends BasicQpageComponent implements OnInit{
+export class FIN33010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     receive_ID: [, [Validators.required]], // 收款單號
-    summons_Date: [,[Validators.required]], // 傳票日期
+    summons_Date: [, [Validators.required]], // 傳票日期
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -36,7 +36,7 @@ export class FIN33010Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '序號', visible: true },
     { field: 'col2', header: '科目代號', visible: true },
     { field: 'col3', header: '科目名稱', visible: true },

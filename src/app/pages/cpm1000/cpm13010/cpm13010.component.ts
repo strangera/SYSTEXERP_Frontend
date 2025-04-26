@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm13010.component.html',
   styleUrl: './cpm13010.component.scss'
 })
-export class CPM13010Component extends BasicQpageComponent implements OnInit{
+export class CPM13010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     parkingCode: [, [Validators.required, Validators.maxLength(10)]], // 停車卡號
@@ -35,7 +35,7 @@ export class CPM13010Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '客戶意見類別代號', visible: true },
     { field: 'col2', header: '客戶意見類別名稱', visible: true },
     { field: 'col3', header: '總件數', visible: true },

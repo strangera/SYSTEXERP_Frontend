@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { UserCodeService } from '../../../service/basic/user-code.service';
@@ -17,7 +17,7 @@ import { LocationCodeService } from '../../../service/basic/locationcode.service
   templateUrl: './ass13100.component.html',
   styleUrl: './ass13100.component.scss'
 })
-export class ASS13100Component extends BasicQpageComponent implements OnInit{
+export class ASS13100Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     inventory_NumberFrom: [, [Validators.required, Validators.max(9999999999), this.validationService.numberValidator]], // 清點單號
@@ -28,7 +28,7 @@ export class ASS13100Component extends BasicQpageComponent implements OnInit{
     locationCode: [], // 位置代碼
     inventory_Status: [[] as number[]], // 清點單狀態
     inventory_DataStatus: [[] as number[]], // 清點狀態(資料)
-    remark: [, ], // 說明
+    remark: [,], // 說明
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -45,7 +45,7 @@ export class ASS13100Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '清點單號', visible: true },
     { field: 'col2', header: '清點日期', visible: true },
     { field: 'col3', header: '清點人代碼', visible: true },
@@ -64,7 +64,7 @@ export class ASS13100Component extends BasicQpageComponent implements OnInit{
     // { field: 'col14', header: '入帳日期', visible: true },
     // { field: 'col15', header: '條件篩選', visible: true },
     // { field: 'col16', header: '顯示筆數', visible: true },
-    
+
     // { field: 'col17', header: '報廢日期前之帳面價值', visible: true },
     // { field: 'col18', header: '報廢損失', visible: true },
 
@@ -81,13 +81,13 @@ export class ASS13100Component extends BasicQpageComponent implements OnInit{
   ];
   // ----------------------------------------------------------------
   //
-  
+
   userCodeOptions: any[] = [];
   locationCodeOptions: any[] = [];
   statusOptions: any[] = [
-      { value: 1, label: '清點中' },
-      { value: 2, label: '已結案' },
-    ];
+    { value: 1, label: '清點中' },
+    { value: 2, label: '已結案' },
+  ];
   dataStatusOptions: any[] = [
     { value: 1, label: '良好' },
     { value: 2, label: '損壞' },

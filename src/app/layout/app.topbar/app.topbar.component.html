@@ -1,6 +1,6 @@
 <div #appTopbarDiv class="layout-topbar justify-content-between flex-wrap lg:flex-nowrap">
   <a class="layout-topbar-logo" routerLink="/">
-    <img [src]="logo" alt="logo">
+    <img src="assets/layout/images/logo.png" alt="logo">
     <span class="min-w-max">{{'management-platform-title' | translate}}</span>
   </a>
   <!--手機-->
@@ -60,7 +60,7 @@
                   <th *ngIf="editingFavorites"
                     class="border-round-xl p-0 flex justify-content-between align-items-center">
                     <p-button class="w-full" styleClass="w-full border-round-lg" severity="danger" label="刪除我的最愛"
-                      icon="pi pi-trash" iconPos="right" (click)="editFavorites()"  />
+                      icon="pi pi-trash" iconPos="right" (click)="editFavorites()" />
                   </th>
                 </tr>
               </ng-template>

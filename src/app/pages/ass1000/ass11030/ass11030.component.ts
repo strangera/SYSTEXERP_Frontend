@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,9 +15,9 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './ass11030.component.html',
   styleUrl: './ass11030.component.scss'
 })
-export class ASS11030Component extends BasicQpageComponent implements OnInit{
+export class ASS11030Component extends BasicQpageComponent implements OnInit {
   //
-  bigCategoryCodeOptions: any[]=[
+  bigCategoryCodeOptions: any[] = [
     { value: 'A', label: 'A/裝潢工程' },
     { value: 'B', label: 'B/其他工程' },
     { value: 'C', label: 'C/電腦及電子零件產品' },
@@ -27,7 +27,7 @@ export class ASS11030Component extends BasicQpageComponent implements OnInit{
     { value: 'G', label: 'G/辦公及營運庶務' },
     { value: 'H', label: 'K/印刷品(非廣告行銷)' },
   ];
-  midCategoryCodeOptions: any[]=[
+  midCategoryCodeOptions: any[] = [
     { value: 23, label: '室內裝潢工程' },
     { value: 24, label: '室內裝潢備品' },
     { value: 21, label: '弱電系統' },
@@ -45,7 +45,7 @@ export class ASS11030Component extends BasicQpageComponent implements OnInit{
     midCategoryName: ['', [Validators.maxLength(40)]], // 中分類名稱
     bigCategoryCode: [], // 大分類代碼
     bigCategoryName: ['', [Validators.maxLength(40)]], // 大分類名稱
-    illustrate: [, ], // 說明
+    illustrate: [,], // 說明
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -61,7 +61,7 @@ export class ASS11030Component extends BasicQpageComponent implements OnInit{
     { 'smlCategoryCode': 24, 'smlCategoryName': '專櫃裝潢補貼款(分品牌)', 'midCategoryCode': 23, 'bigCategoryCode': 'B' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'smlCategoryCode', header: '小分類代碼', visible: true },
     { field: 'smlCategoryName', header: '小分類名稱', visible: true },
     { field: 'midCategoryCode', header: '中分類代碼', visible: true },

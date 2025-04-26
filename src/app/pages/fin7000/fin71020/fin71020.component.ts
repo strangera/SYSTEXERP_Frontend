@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -89,7 +89,7 @@ export class FIN71020Component extends BasicQpageComponent implements OnInit {
     { field: 'pettyCashAmount', header: '零用金額度', visible: true },
     { field: 'description', header: '說明', visible: true }
   ];
-  
+
 
   vendorOptions: any[] = [];
 
@@ -119,8 +119,8 @@ export class FIN71020Component extends BasicQpageComponent implements OnInit {
       this.vendorOptions = data;
     });
     this.userCodeService
-    .getUserCode()
-    .subscribe((data) => (this.usercode = data));
+      .getUserCode()
+      .subscribe((data) => (this.usercode = data));
   }
 
   onSubmit(frm: FormGroup) {

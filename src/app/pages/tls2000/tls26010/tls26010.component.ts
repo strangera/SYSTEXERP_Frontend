@@ -5,10 +5,10 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { CashierCodeService } from '../../../service/basic/cashier-code.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
@@ -65,7 +65,7 @@ export class TLS26010Component {
     { field: 'startDate', header: '起始日期', visible: true },
     { field: 'endDate', header: '截止日期', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -74,7 +74,7 @@ export class TLS26010Component {
     private authService: AuthService,
     private cashierCodeService: CashierCodeService,  // 收銀機號 service
     private counterCodeService: CounterCodeService,  // 專櫃編號 service
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

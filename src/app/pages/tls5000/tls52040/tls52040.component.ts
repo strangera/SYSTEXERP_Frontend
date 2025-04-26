@@ -9,9 +9,9 @@ import { BrandCodeService } from '../../../service/basic/brand-code.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { ManagementIDService } from '../../../service/basic/management-id.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { SystemTypeService } from '../../../service/basic/system-type.service';
@@ -80,7 +80,7 @@ export class TLS52040Component {
     { field: 'brandCode', header: '品牌編碼', visible: true },
     { field: 'refundOrderCode', header: '退貨單單號', visible: true },
   ];
-  
+
 
   systemTypeOptions: any[] = [];
 
@@ -97,10 +97,10 @@ export class TLS52040Component {
     private systemTypeService: SystemTypeService,
     private authService: AuthService,
 
-  ) {}
+  ) { }
 
   ngOnInit(): void {
-        //
+    //
     // ----------------------------------------------------------------
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //

@@ -4,9 +4,9 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 import { FloorService } from '../../../service/basic/floor.service';
@@ -56,7 +56,7 @@ export class TLS25030ModComponent implements OnInit, OnDestroy {
     violationDateStart: [],       // 違規日期
     issuingUnit: [],              // 開立人代號 / 名稱
     remarks: [],                  // 備註
-            
+
   });
 
   // 下拉選單選項
@@ -67,7 +67,7 @@ export class TLS25030ModComponent implements OnInit, OnDestroy {
   deductionItemOptions: any[] = [];
   organizationNumberOptions: any[] = [];
   monthlyDeduction: any[] = [{ value: 1, label: '是' },
-    { value: 2, label: '否' },];
+  { value: 2, label: '否' },];
 
   constructor(
     private router: Router,
@@ -80,18 +80,18 @@ export class TLS25030ModComponent implements OnInit, OnDestroy {
     private violationStatusService: ViolationStatusService,
     private deductionItemService: DeductionItemService,
     private organService: OrganizationNumberService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-  
+
     // 從 sessionStorage 讀取並填充表單
     const storedEditData = sessionStorage.getItem('editData');
     if (storedEditData) {
       const editData = JSON.parse(storedEditData);
       this.queryForm.patchValue(editData);
     }
-  
+
     // 加载选项数据
     this.counterCodeOptions = JSON.parse(sessionStorage.getItem('counterCodeOptions') || '[]');
     this.violationCategoryOptions = JSON.parse(sessionStorage.getItem('violationCategoryOptions') || '[]');
@@ -100,7 +100,7 @@ export class TLS25030ModComponent implements OnInit, OnDestroy {
     this.deductionItemOptions = JSON.parse(sessionStorage.getItem('deductionItemOptions') || '[]');
     this.organizationNumberOptions = JSON.parse(sessionStorage.getItem('organizationNumberOptions') || '[]');
   }
-  
+
   ngOnDestroy(): void {
     sessionStorage.removeItem('editData');
     sessionStorage.removeItem('queryFormData');
@@ -117,7 +117,7 @@ export class TLS25030ModComponent implements OnInit, OnDestroy {
       violationCategoryCode: data.violationCategory,
       deductionContent: data.deductionContent,
       amount: data.amount,
-    
+
       monthlyDeduction: data.monthlyDeduction,
       deductionDateStart: data.deductionDateStart,
       violationDateStart: data.violationDateStart,

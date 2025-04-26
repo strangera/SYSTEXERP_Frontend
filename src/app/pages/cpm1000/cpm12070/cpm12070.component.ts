@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm12070.component.html',
   styleUrl: './cpm12070.component.scss'
 })
-export class CPM12070Component extends BasicQpageComponent implements OnInit{
+export class CPM12070Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     opinionCategory: [[] as number[]], // 客戶意見類別
@@ -32,13 +32,17 @@ export class CPM12070Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'opinionCode': 'T001', 'opinionName': '意見反映', 'caseNumber': 1589,
-      'doneCase': 341, 'processingCase': 1248},
-      { 'opinionCode': 'T003', 'opinionName': '活動、場地洽談', 'caseNumber': 4,
-        'doneCase': 0, 'processingCase': 4},
+    {
+      'opinionCode': 'T001', 'opinionName': '意見反映', 'caseNumber': 1589,
+      'doneCase': 341, 'processingCase': 1248
+    },
+    {
+      'opinionCode': 'T003', 'opinionName': '活動、場地洽談', 'caseNumber': 4,
+      'doneCase': 0, 'processingCase': 4
+    },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'opinionCode', header: '客戶意見類別代號', visible: true },
     { field: 'opinionName', header: '客戶意見類別名稱', visible: true },
     { field: 'caseNumber', header: '總件數', visible: true },
@@ -56,8 +60,8 @@ export class CPM12070Component extends BasicQpageComponent implements OnInit{
     { value: 1, label: '意見反映' },
     { value: 2, label: '廣告業務' },
     { value: 3, label: '活動、場地洽談' },
-    { value: 4, label: '承租店櫃'},
-    { value: 5, label: '合作提案'},
+    { value: 4, label: '承租店櫃' },
+    { value: 5, label: '合作提案' },
   ];
 
   constructor(

@@ -5,10 +5,10 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -22,8 +22,7 @@ const now = new Date();
 })
 export class TLS25020CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
   // ProgNo: string = '220033';
 
   // // 權限變數
@@ -45,11 +44,11 @@ export class TLS25020CRUComponent
   loading: boolean = false;
   // submitted: boolean = false;
   dataForm = this.formBuilder.group({
-    violationCategoryId: [1,Validators.required], // 違規類別編號
-    violationNumber: [,Validators.required], // 違規編號
-    violationContent: [,Validators.required], // 違規內容
-    amountStart: [,Validators.required], // 金額起始
-    amountEnd: [,Validators.required], // 金額結束
+    violationCategoryId: [1, Validators.required], // 違規類別編號
+    violationNumber: [, Validators.required], // 違規編號
+    violationContent: [, Validators.required], // 違規內容
+    amountStart: [, Validators.required], // 金額起始
+    amountEnd: [, Validators.required], // 金額結束
     amountEditable: [], // 金額是否可修改
   });
 
@@ -160,8 +159,8 @@ export class TLS25020CRUComponent
 
   onClearForm() {
     this.dataForm.reset();  // 重置表單
-  }  
-  
+  }
+
   onCancel() {
     this.router.navigate(['TLS2000/TLS25020']);
   }

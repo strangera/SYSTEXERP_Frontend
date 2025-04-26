@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -37,7 +37,7 @@ export class TLS41020Component {
     EDC_BegDate_To: [], // 啟用日期
     EDC_EdnDate_From: [], // 停用日期
     EDC_EdnDate_To: [], // 停用日期
-    EDC_Status: [[] as number[],[Validators.maxLength(2)]], // 信用卡刷卡機狀態 A=啟用 C=停用
+    EDC_Status: [[] as number[], [Validators.maxLength(2)]], // 信用卡刷卡機狀態 A=啟用 C=停用
     ECR_TLT_No: [, [Validators.maxLength(20)]], // 機台所屬專櫃編號
     ECR_TLT_Name: ['', [Validators.maxLength(60)]], // 機台所屬專櫃名稱
     //
@@ -59,13 +59,15 @@ export class TLS41020Component {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { SYS_StoreNo: 'strore123', ECR_No: 'register123', EDC_No: 'edc123' ,
+    {
+      SYS_StoreNo: 'strore123', ECR_No: 'register123', EDC_No: 'edc123',
       EDC_BegDate: '2024/01/01', EDC_EdnDate: '2024/02/02', EDC_Status: 'A',
-      ECR_TLT_No: 'counter123', ECR_TLT_Name: '測試專櫃', EDC_IP1: 'EDCcasher123'},
+      ECR_TLT_No: 'counter123', ECR_TLT_Name: '測試專櫃', EDC_IP1: 'EDCcasher123'
+    },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'EDC_No', header: '信用卡刷卡機代碼', visible: true },

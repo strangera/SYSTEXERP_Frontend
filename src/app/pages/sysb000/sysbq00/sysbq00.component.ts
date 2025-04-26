@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { SystemTypeDetailService } from '../../../service/basic/system-type-detail.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
@@ -27,14 +27,14 @@ export class SYSBQ00Component extends BasicQpageComponent implements OnInit {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { isdelete:true, systemType: 'SYSA000', jobCode: 'SYSA310', signatureFieldName: '廠商名稱', status: '啟用', order: 1, column: 1, showLoginUser: '否'},
-    { isdelete:true, systemType: 'SYSA000', jobCode: 'SYSA310', signatureFieldName: '業主:南紡夢時代', status: '啟用', order: 6, column: 1, showLoginUser: '否'},
-    { isdelete:true, systemType: 'SYSA000', jobCode: 'SYSA310', signatureFieldName: '經辦', status: '啟用', order: 25, column: 13, showLoginUser: '否'},
-    { isdelete:true, systemType: 'SYSA000', jobCode: 'SYSA310', signatureFieldName: 'Team主管', status: '啟用', order: 35, column: 13, showLoginUser: '否'},
+    { isdelete: true, systemType: 'SYSA000', jobCode: 'SYSA310', signatureFieldName: '廠商名稱', status: '啟用', order: 1, column: 1, showLoginUser: '否' },
+    { isdelete: true, systemType: 'SYSA000', jobCode: 'SYSA310', signatureFieldName: '業主:南紡夢時代', status: '啟用', order: 6, column: 1, showLoginUser: '否' },
+    { isdelete: true, systemType: 'SYSA000', jobCode: 'SYSA310', signatureFieldName: '經辦', status: '啟用', order: 25, column: 13, showLoginUser: '否' },
+    { isdelete: true, systemType: 'SYSA000', jobCode: 'SYSA310', signatureFieldName: 'Team主管', status: '啟用', order: 35, column: 13, showLoginUser: '否' },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'systemType', header: '系統別', visible: true },
     { field: 'jobCode', header: '作業代碼', visible: true },
     { field: 'signatureFieldName', header: '簽核欄名稱', visible: true },

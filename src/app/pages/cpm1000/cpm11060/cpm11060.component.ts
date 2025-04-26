@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
@@ -14,7 +14,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm11060.component.html',
   styleUrl: './cpm11060.component.scss'
 })
-export class CPM11060Component extends BasicQpageComponent implements OnInit{
+export class CPM11060Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     //之後提供給 尋人廣播服務
@@ -32,12 +32,12 @@ export class CPM11060Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'col1': '尋人', 'col2': '尋人', 'col3': '被尋人 鄭XX小朋友 請於1F服務台集合', 'col4': '180708681', 'col5': '2018/07/08', 'col6': '鄭XX', 'col7': '小朋友', 'col8': '1F服務台', 'col9': '', 'col10': ''},
-    { 'col1': '拾獲', 'col2': '證件/信用卡', 'col3': '信用卡末碼1234', 'col4': '180708682', 'col5': '2018/07/08', 'col6': '', 'col7': '', 'col8': '', 'col9': '', 'col10': ''},
-    { 'col1': '拾獲', 'col2': '衣物', 'col3': '紅色衣物', 'col4': '180708683', 'col5': '2018/07/08', 'col6': '', 'col7': '', 'col8': '', 'col9': '', 'col10': ''},
+    { 'col1': '尋人', 'col2': '尋人', 'col3': '被尋人 鄭XX小朋友 請於1F服務台集合', 'col4': '180708681', 'col5': '2018/07/08', 'col6': '鄭XX', 'col7': '小朋友', 'col8': '1F服務台', 'col9': '', 'col10': '' },
+    { 'col1': '拾獲', 'col2': '證件/信用卡', 'col3': '信用卡末碼1234', 'col4': '180708682', 'col5': '2018/07/08', 'col6': '', 'col7': '', 'col8': '', 'col9': '', 'col10': '' },
+    { 'col1': '拾獲', 'col2': '衣物', 'col3': '紅色衣物', 'col4': '180708683', 'col5': '2018/07/08', 'col6': '', 'col7': '', 'col8': '', 'col9': '', 'col10': '' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '失物類別', visible: true },
     { field: 'col2', header: '類別	', visible: true },
     { field: 'col3', header: '敘述', visible: true },

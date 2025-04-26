@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm11050.component.html',
   styleUrl: './cpm11050.component.scss'
 })
-export class CPM11050Component extends BasicQpageComponent implements OnInit{
+export class CPM11050Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     recordCode: [, [Validators.maxLength(10)]], // 記錄編號
@@ -36,7 +36,7 @@ export class CPM11050Component extends BasicQpageComponent implements OnInit{
     objectType: [[] as number[]], // 物品類別
     lostStatus: [[] as number[]], // 失物狀態
     //
-    objectDescription: [, ], // 物品敘述
+    objectDescription: [,], // 物品敘述
     //
     location: ['', [Validators.maxLength(100)]], // 地點
     serviceStaff: ['', [Validators.maxLength(10)]], // 服務人員
@@ -68,24 +68,27 @@ export class CPM11050Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { isdelete: true, 'objectType': '其他', 'objectDescription': '黑色直立雨傘', 'recordCode': 190710961,
+    {
+      isdelete: true, 'objectType': '其他', 'objectDescription': '黑色直立雨傘', 'recordCode': 190710961,
       'registerDate': '2019/7/10', 'notificationDate': '', 'pickUpDate': '', 'transferDate': '',
       'lostType': '遺失', 'lostStatus': '未通知', 'location': '1F', 'serviceStaff': '任先生', 'finderName': '宋小姐',
       'nightPhone': '', 'dayPhone': '', 'cellphone': '0900000000', 'transferOut': '',
-     },
-     { isdelete: true, 'objectType': '手機', 'objectDescription': '黑色手機', 'recordCode': 190710942,
+    },
+    {
+      isdelete: true, 'objectType': '手機', 'objectDescription': '黑色手機', 'recordCode': 190710942,
       'registerDate': '2019/7/10', 'notificationDate': '', 'pickUpDate': '', 'transferDate': '',
       'lostType': '遺失', 'lostStatus': '未通知', 'location': '5F', 'serviceStaff': '瑜小姐', 'finderName': '王小姐',
       'nightPhone': '', 'dayPhone': '', 'cellphone': 'X', 'transferOut': '',
-     },
-     { isdelete: false, 'objectType': '其他', 'objectDescription': '紙袋', 'recordCode': 190710901,
+    },
+    {
+      isdelete: false, 'objectType': '其他', 'objectDescription': '紙袋', 'recordCode': 190710901,
       'registerDate': '2019/7/10', 'notificationDate': '', 'pickUpDate': '2019/7/10', 'transferDate': '',
       'lostType': '遺失', 'lostStatus': '已領回', 'location': '全館', 'serviceStaff': '黃小姐', 'finderName': '邱小姐',
       'nightPhone': '', 'dayPhone': '', 'cellphone': '0900000000', 'transferOut': 'X',
-     },
+    },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'objectType', header: '物品類別', visible: true },
     { field: 'objectDescription', header: '物品敘述', visible: true },
     { field: 'recordCode', header: '紀錄編號', visible: true },

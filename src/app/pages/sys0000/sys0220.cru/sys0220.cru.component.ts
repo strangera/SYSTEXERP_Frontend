@@ -8,7 +8,7 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -96,9 +96,9 @@ export class SYS0220CRUComponent extends BasicCrupageComponent implements OnInit
     { "key": "72", "label": "財務T(財務T)" },
     { "key": "73", "label": "財-資材高階(資材一)" },
     { "key": "74", "label": "財-資材低階(資材二)" }
-];
+  ];
 
-selectedNodes: TreeNode[] = [];
+  selectedNodes: TreeNode[] = [];
   // 表單初始化
   dataForm = this.formBuilder.nonNullable.group({
     userId: [''], // 使用者編號
@@ -187,7 +187,7 @@ selectedNodes: TreeNode[] = [];
     { "roleCode": "財務T", "roleName": "財務T", "roleDescription": "財務T" },
     { "roleCode": "資材一", "roleName": "財-資材高階", "roleDescription": "霜,真" },
     { "roleCode": "資材二", "roleName": "財-資材低階", "roleDescription": "邑,裴" }
-];
+  ];
 
   constructor(
     private router: Router,

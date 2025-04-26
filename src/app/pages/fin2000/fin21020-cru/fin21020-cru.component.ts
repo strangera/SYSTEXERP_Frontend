@@ -2,7 +2,7 @@ import { Component, OnInit, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -15,15 +15,15 @@ import { BankAccountCodeService } from '../../../service/basic/bank-account-code
   templateUrl: './fin21020-cru.component.html',
   styleUrl: './fin21020-cru.component.scss'
 })
-export class FIN21020CRUComponent extends BasicCrupageComponent implements OnInit{
+export class FIN21020CRUComponent extends BasicCrupageComponent implements OnInit {
   //
-  bankCodeOptions:any[]=[];
-  depositCodeOptions:any[]=[];
-  needPayTicketOptions:any[]=[];
+  bankCodeOptions: any[] = [];
+  depositCodeOptions: any[] = [];
+  needPayTicketOptions: any[] = [];
 
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    companyBankCode: [,[Validators.required]], // 公司銀行科目代號
+    companyBankCode: [, [Validators.required]], // 公司銀行科目代號
     // ----------------------------------------------------------------
     items: this.formBuilder.array([
       this.createItem()
@@ -39,8 +39,8 @@ export class FIN21020CRUComponent extends BasicCrupageComponent implements OnIni
     private validationService: ValidationService,
     //
     private bankAccountCodeService: BankAccountCodeService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -117,11 +117,11 @@ export class FIN21020CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

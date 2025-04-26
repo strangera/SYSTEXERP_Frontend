@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,13 +15,13 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './fin29050.component.html',
   styleUrl: './fin29050.component.scss'
 })
-export class FIN29050Component extends BasicQpageComponent implements OnInit{
+export class FIN29050Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     startFactoryID: [, [this.validationService.numberValidator, Validators.max(99999999999999)]], // 廠商代號
     endFactoryID: [, [this.validationService.numberValidator, Validators.max(99999999999999)]], // 廠商代號
-    startBillDate:[], //立帳日期
-    endBillDate:[], //立帳日期
+    startBillDate: [], //立帳日期
+    endBillDate: [], //立帳日期
     startShouldPay: [, [this.validationService.numberValidator, Validators.max(9999999999)]], // 應付金額
     endShouldPay: [, [this.validationService.numberValidator, Validators.max(9999999999)]], // 應付金額
     startSubjectID: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 科目代號
@@ -44,7 +44,7 @@ export class FIN29050Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '廠客代號', visible: true },
     { field: 'col2', header: '廠客名稱', visible: true },
     { field: 'col3', header: '摘要', visible: true },

@@ -5,10 +5,10 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -57,15 +57,15 @@ export class TLS26040Component {
 
   // 表格資料
   data: any[] = [
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '002301', categoryCode: '000230', batch: '20150423001', transactionSerial: '002351', amount: 1422,isdelete:true },
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '003431', categoryCode: '000343', batch: '20150423001', transactionSerial: '001925', amount: 5175,isdelete:true },
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '003431', categoryCode: '000343', batch: '20150423001', transactionSerial: '001926', amount: 1880,isdelete:true },
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '000601', categoryCode: '000060', batch: '20150423001', transactionSerial: '000295', amount: 20462,isdelete:true },
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '002351', categoryCode: '000235', batch: '20150423001', transactionSerial: '000307', amount: 2124,isdelete:true },
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '002911', categoryCode: '000291', batch: '20150423001', transactionSerial: '000715', amount: 6792 ,isdelete:true},
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '002311', categoryCode: '000231', batch: '20150423001', transactionSerial: '011248', amount: 1350 ,isdelete:true},
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '002311', categoryCode: '000231', batch: '20150423001', transactionSerial: '011249', amount: 400,isdelete:true },
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '000731', categoryCode: '000073', batch: '20150423001', transactionSerial: '001928', amount: 3411 ,isdelete:true}
+    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '002301', categoryCode: '000230', batch: '20150423001', transactionSerial: '002351', amount: 1422, isdelete: true },
+    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '003431', categoryCode: '000343', batch: '20150423001', transactionSerial: '001925', amount: 5175, isdelete: true },
+    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '003431', categoryCode: '000343', batch: '20150423001', transactionSerial: '001926', amount: 1880, isdelete: true },
+    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '000601', categoryCode: '000060', batch: '20150423001', transactionSerial: '000295', amount: 20462, isdelete: true },
+    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '002351', categoryCode: '000235', batch: '20150423001', transactionSerial: '000307', amount: 2124, isdelete: true },
+    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '002911', categoryCode: '000291', batch: '20150423001', transactionSerial: '000715', amount: 6792, isdelete: true },
+    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '002311', categoryCode: '000231', batch: '20150423001', transactionSerial: '011248', amount: 1350, isdelete: true },
+    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '002311', categoryCode: '000231', batch: '20150423001', transactionSerial: '011249', amount: 400, isdelete: true },
+    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '000731', categoryCode: '000073', batch: '20150423001', transactionSerial: '001928', amount: 3411, isdelete: true }
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
@@ -84,7 +84,7 @@ export class TLS26040Component {
     private messageService: NotificationService,
     private authService: AuthService,
     private floorService: FloorService,  // 樓層 service
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
@@ -167,7 +167,7 @@ export class TLS26040Component {
     };
     this.router.navigate(['TLS2000/TLS26040CRU'], extras);
   }
-  onRE(){
+  onRE() {
     this.router.navigate(['TLS2000/TLS26040MOD']);
   }
 }

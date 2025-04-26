@@ -4,7 +4,7 @@ import { Table, TableLazyLoadEvent, TablePageEvent, TableRowUnSelectEvent } from
 import { SortMeta } from 'primeng/api';
 import { AddButton, Column, FieldChangeEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
 import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
-import { NotificationService } from '../../service/notification.service';
+import { NotificationService } from '../../component/notification-message/notification.service';
 import { QueryStateService } from '../../service/query-state.service';
 import { ReportHead } from '../../models/ReportHead';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';

@@ -2,7 +2,7 @@ import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -14,35 +14,35 @@ import { ValidationService } from '../../../shared/service/validation.service';
   styleUrl: './cpm11050-lost.component.scss'
 })
 // 5.1.1.5 遺失/拾獲管理作業 CRU - 新增遺失
-export class Cpm11050LostComponent extends BasicCrupageComponent implements OnInit{
+export class Cpm11050LostComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     recordCode: [, [Validators.maxLength(8)]], // 記錄編號
     // registerCode: [, [Validators.maxLength(9)]], // 登錄編號
-    registerDate: [,[Validators.required]], // 登錄日期
+    registerDate: [, [Validators.required]], // 登錄日期
     lostStatus: [], // 失物狀態
-    lossDate: [,[Validators.required]], // 遺失日期
+    lossDate: [, [Validators.required]], // 遺失日期
     location: ['', [Validators.maxLength(100)]], // 地點
     //
     transferDate: [], // 轉出日期
     register: ['', [Validators.required]], // 登錄者
-    objectType: [,[Validators.required]], // 物品類別
+    objectType: [, [Validators.required]], // 物品類別
     serviceStaff: ['', [Validators.required, Validators.maxLength(10)]], // 服務人員
     notificationDate: [], // 通知日期
     broadcastStatus: [2, []], // 是否廣播
     //
-    objectDescription: [, ], // 物品敘述
+    objectDescription: [,], // 物品敘述
     //領回資訊
-    receiverDate:[], //領回日期
-    receiverName:[, [Validators.maxLength(20)]], // 領回者姓名
+    receiverDate: [], //領回日期
+    receiverName: [, [Validators.maxLength(20)]], // 領回者姓名
     receiverPhone: ['', [Validators.maxLength(100)]], // 領回人聯絡電話
-    helperName:[, [Validators.maxLength(20)]], // 協助顧客領回處理人員
+    helperName: [, [Validators.maxLength(20)]], // 協助顧客領回處理人員
     //--
     //遺失者基本資料
     //--
     reporterName: ['', [Validators.required, Validators.maxLength(20)]], // 報失者/拾獲者姓名
     reporterIdentity: [], // 報失者/拾獲者身分別
-    reporterGender: [,[Validators.required]], // 	報失者/拾獲者性別
+    reporterGender: [, [Validators.required]], // 	報失者/拾獲者性別
     dayPhone: [, [Validators.maxLength(20)]], // 電話(日)
     nightPhone: [, [Validators.maxLength(20)]], // 電話(夜)
     cellphone: [, [Validators.maxLength(20)]], // 手機
@@ -87,8 +87,8 @@ export class Cpm11050LostComponent extends BasicCrupageComponent implements OnIn
     private translate: TranslateService,
     private validationService: ValidationService,
     //
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -108,14 +108,14 @@ export class Cpm11050LostComponent extends BasicCrupageComponent implements OnIn
       // 創建
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
-        this.accordionTabCss= 'create-accordionTab';
+        this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
         this.showConfirm = this.canAdd();
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
-        this.accordionTabCss= 'edit-accordionTab';
+        this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
         this.showConfirm = this.canEdit();
         this.Edit(state.rowdata);
@@ -163,11 +163,11 @@ export class Cpm11050LostComponent extends BasicCrupageComponent implements OnIn
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

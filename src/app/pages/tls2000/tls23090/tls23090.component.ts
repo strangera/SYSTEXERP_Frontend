@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { CardTypeService } from '../../../service/basic/card-type.service';
 
@@ -69,7 +69,7 @@ export class TLS23090Component {
 
   // 切換的報表列定義
   reportColumns: any[] = [
-    
+
     { field: 'salesDate', header: '銷售日期', visible: true },
     { field: 'cashierMachine', header: '收銀機', visible: true },
     { field: 'franchiseNumberName', header: '專櫃編號/名稱', visible: true },
@@ -100,7 +100,7 @@ export class TLS23090Component {
     private messageService: NotificationService,
     private authService: AuthService,
     private cardTypeService: CardTypeService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

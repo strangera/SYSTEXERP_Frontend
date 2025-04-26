@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 const day = new Date();
 @Component({
@@ -57,7 +57,7 @@ export class TLS13050Component {
     { field: 'salesToDate', header: '至當前月份止銷售額', visible: true },
     { field: 'percentage', header: '比率 (%)', visible: true },
   ];
-  
+
   // 下拉选单选项
 
 
@@ -67,7 +67,7 @@ export class TLS13050Component {
     private authService: AuthService,
     private messageService: NotificationService,
 
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

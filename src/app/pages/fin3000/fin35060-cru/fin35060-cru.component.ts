@@ -2,7 +2,7 @@ import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -12,7 +12,7 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
   templateUrl: './fin35060-cru.component.html',
   styleUrl: './fin35060-cru.component.scss'
 })
-export class FIN35060CRUComponent extends BasicCrupageComponent implements OnInit  {
+export class FIN35060CRUComponent extends BasicCrupageComponent implements OnInit {
   CashRegisterTypeItems: any[] = [
     { label: '業主', value: '1' },
     { label: '非業主', value: '2' },
@@ -69,23 +69,23 @@ export class FIN35060CRUComponent extends BasicCrupageComponent implements OnIni
       this.createItem()
     ]),
   });
-   // Dropdown options
-   debitAccount: any[] = [
+  // Dropdown options
+  debitAccount: any[] = [
     { value: 1, label: '110302' },
-   
-   
+
+
   ];
-   creditAccount: any[] = [
+  creditAccount: any[] = [
     { value: 1, label: '110301' },
     { value: 2, label: '110302' },
-   
+
   ];
-   isPostVoucher: any[] = [
+  isPostVoucher: any[] = [
     { value: 1, label: '是' },
     { value: 2, label: '否' },
-   
+
   ];
-   vendorCodeOptions: any[] = [
+  vendorCodeOptions: any[] = [
     { value: 1, label: '00000000-1' },
     { value: 2, label: '00000000-2' },
     { value: 3, label: '00000000-3' },
@@ -150,8 +150,8 @@ export class FIN35060CRUComponent extends BasicCrupageComponent implements OnIni
     private messageService: NotificationService,
     private authService: AuthService,
     private translate: TranslateService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -171,14 +171,14 @@ export class FIN35060CRUComponent extends BasicCrupageComponent implements OnIni
       // 創建
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
-        this.accordionTabCss= 'create-accordionTab';
+        this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
         this.showConfirm = this.canAdd();
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
-        this.accordionTabCss= 'edit-accordionTab';
+        this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
         this.showConfirm = this.canEdit();
         this.Edit(state.rowdata);
@@ -234,11 +234,11 @@ export class FIN35060CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

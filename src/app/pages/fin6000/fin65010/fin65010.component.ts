@@ -6,7 +6,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -18,9 +18,9 @@ import { VendorService } from '../../../service/basic/vendor.service';
   templateUrl: './fin65010.component.html',
   styleUrl: './fin65010.component.scss'
 })
-export class FIN65010Component extends BasicQpageComponent implements OnInit  {
+export class FIN65010Component extends BasicQpageComponent implements OnInit {
 
-  
+
 
   queryForm = this.formBuilder.group({
     startdate: [],
@@ -42,18 +42,18 @@ export class FIN65010Component extends BasicQpageComponent implements OnInit  {
 
   // Dropdown options
   statusOptions: any[] = [
-    { value: 1, label: '未異動'},
-    { value: 2, label: '到期'},
-    { value: 3, label: '兌現'},
+    { value: 1, label: '未異動' },
+    { value: 2, label: '到期' },
+    { value: 3, label: '兌現' },
   ];
   FNCCodeOptions: any[] = [];
   AccountcodeOptions: any[] = [];
   displayOptions: any[] = [];
   displayOptions2: any[] = [];
   Billingordernumber: any[] = [
-    { value: 1, label: 'B20150208001'},
-    { value: 2, label: 'B20150208002'},
-    { value: 3, label: 'B20150410001'},
+    { value: 1, label: 'B20150208001' },
+    { value: 2, label: 'B20150208002' },
+    { value: 3, label: 'B20150410001' },
   ];
   // Table data
   data: any[] = [
@@ -64,8 +64,8 @@ export class FIN65010Component extends BasicQpageComponent implements OnInit  {
     { field: 'signColumn', header: '簽收欄', visible: true }, // 新增簽收欄
     { field: 'ticketDetails', header: '票據明細', visible: true } // 新增票據明細
   ];
-  
-  
+
+
   vendorOptions: any[] = [];
 
   constructor(
@@ -73,7 +73,7 @@ export class FIN65010Component extends BasicQpageComponent implements OnInit  {
     private formBuilder: FormBuilder,
     private notificationService: NotificationService,
     private authService: AuthService,
-    private IfdisplayService:IfdisplayService,
+    private IfdisplayService: IfdisplayService,
     private vendorService: VendorService,
   ) {
     super(); // 呼叫父類建構子

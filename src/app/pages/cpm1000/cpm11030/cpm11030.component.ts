@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm11030.component.html',
   styleUrl: './cpm11030.component.scss'
 })
-export class CPM11030Component extends BasicQpageComponent implements OnInit{
+export class CPM11030Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     recordCode: [, [Validators.maxLength(14)]], // 記錄編號
@@ -47,11 +47,11 @@ export class CPM11030Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'recordCode', header: '記錄編號', visible: true },
     { field: 'borrowDate', header: '出借日期', visible: true },
     { field: 'name', header: '姓名', visible: true },
-    
+
     { field: 'phone', header: '連絡電話', visible: true },
     { field: 'staffName', header: '出借處理人員', visible: true },
     { field: 'paperType', header: '證件類型', visible: true },
@@ -68,7 +68,7 @@ export class CPM11030Component extends BasicQpageComponent implements OnInit{
     { value: 4, label: '護照' },
     { value: 5, label: '其他' },
   ]
-  
+
   equipmentNameOptions: any[] = [
     { value: 1, label: '奇哥Joie輕便娃娃車' },
     { value: 2, label: '愛心輪椅' },

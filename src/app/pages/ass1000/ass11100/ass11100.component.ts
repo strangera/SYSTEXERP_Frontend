@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -16,13 +16,13 @@ import { OrganizationNumberService } from '../../../service/basic/organization-n
   templateUrl: './ass11100.component.html',
   styleUrl: './ass11100.component.scss'
 })
-export class ASS11100Component extends BasicQpageComponent implements OnInit{
+export class ASS11100Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     storageType: [, [Validators.maxLength(10)]], // 倉別
     storageName: ['', [Validators.maxLength(40)]], // 倉別名稱
     organizationNumber: [], // 部門代號
-    remark: [, ], // 備註
+    remark: [,], // 備註
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -39,7 +39,7 @@ export class ASS11100Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '倉別', visible: true },
     { field: 'col2', header: '倉別名稱', visible: true },
     { field: 'col3', header: '部門代號', visible: true },
@@ -75,7 +75,7 @@ export class ASS11100Component extends BasicQpageComponent implements OnInit{
   // ----------------------------------------------------------------
   //
   organizationNumberOptions: any[] = [];
-  
+
   //
   constructor(
     private router: Router,
@@ -84,7 +84,7 @@ export class ASS11100Component extends BasicQpageComponent implements OnInit{
     private authService: AuthService,
     private validationService: ValidationService,
     //
-    private organizationNumberService:OrganizationNumberService
+    private organizationNumberService: OrganizationNumberService
   ) {
     super(); // 呼叫父類建構子
   }

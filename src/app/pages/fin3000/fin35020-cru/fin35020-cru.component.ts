@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -12,7 +12,7 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
   templateUrl: './fin35020-cru.component.html',
   styleUrls: ['./fin35020-cru.component.scss']
 })
-export class FIN35020CRUComponent extends BasicCrupageComponent implements OnInit  {
+export class FIN35020CRUComponent extends BasicCrupageComponent implements OnInit {
 
   // 下拉選項等變數
   debitAccountOptions: any[] = [{ value: 1, label: '110302' }];
@@ -23,7 +23,7 @@ export class FIN35020CRUComponent extends BasicCrupageComponent implements OnIni
   statusOptions: any[] = [{ value: 1, label: '建立' }];
   organizationCodeOptions: any[] = [{ value: 1, label: '全公司' }];
   targetCodeOptions: any[] = [{ value: 1, label: '臺南紡織股份有限公司' }];
-  
+
   // 表單定義
   dataForm = this.formBuilder.nonNullable.group({
     voucherNumber: [''], // 傳票編號
@@ -143,12 +143,12 @@ export class FIN35020CRUComponent extends BasicCrupageComponent implements OnIni
   onCancel() {
     this.router.navigate(['/demo/demofin35020']);
   }
-  
+
   // 表單提交
   submitForm(frm: FormGroup) {
     this.onSubmit(frm);
   }
-  
+
   // 讀取數據並填充表單
   Edit(rowdata: any) {
     this.dataForm.patchValue(rowdata);

@@ -1,13 +1,13 @@
 // 點單開立
 import { Component, OnInit } from '@angular/core';
-import {  FormArray, FormBuilder,  FormControl,  FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 
 // Services
 import { WarehouseService } from '../../../service/basic/warehouse.service';
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
 import { InventoryStatusService } from '../../../service/basic/inventory-status.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -18,7 +18,7 @@ import { Router } from '@angular/router';
   templateUrl: './tls53010-cru.component.html',
   styleUrl: './tls53010-cru.component.scss'
 })
-export class TLS53010CRUComponent  extends BasicCrupageComponent implements OnInit{
+export class TLS53010CRUComponent extends BasicCrupageComponent implements OnInit {
 
 
 
@@ -30,10 +30,10 @@ export class TLS53010CRUComponent  extends BasicCrupageComponent implements OnIn
     inventoryDateTo: [],
     inventoryStatus: [null, Validators.required],
     Description: [],
-        // ----------------------------------------------------------------
-        items: this.formBuilder.array([
-          this.createItem()
-        ]),
+    // ----------------------------------------------------------------
+    items: this.formBuilder.array([
+      this.createItem()
+    ]),
   });
 
   // Dropdown options
@@ -56,7 +56,7 @@ export class TLS53010CRUComponent  extends BasicCrupageComponent implements OnIn
     private messageService: NotificationService,
   ) {
     super();  // 呼叫父類建構子
-}
+  }
 
   ngOnInit(): void {
     this.ProgNo = '250021';
@@ -104,7 +104,7 @@ export class TLS53010CRUComponent  extends BasicCrupageComponent implements OnIn
       mgname: [],
       barcode: [{ value: '自動帶入', disabled: true }],
       vendorCode: [{ value: '自動帶入', disabled: true }],
-      remark: [],      
+      remark: [],
     });
   }
 
@@ -121,11 +121,11 @@ export class TLS53010CRUComponent  extends BasicCrupageComponent implements OnIn
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;
@@ -158,6 +158,6 @@ export class TLS53010CRUComponent  extends BasicCrupageComponent implements OnIn
   onCancel() {
     this.router.navigate(['/TLS5000/TLS53010']);
   }
-  switchloadbtn1() {}
-  switchloadbtn2() {}
+  switchloadbtn1() { }
+  switchloadbtn2() { }
 }

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Router, NavigationExtras } from '@angular/router';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -19,7 +19,7 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
 })
 // 活動用品入庫作業
 export class CPM23020Component extends BasicQpageComponent implements OnInit {
-  
+
   queryForm = this.formBuilder.group({
     eventStartDate: [], // 活動開始日期
     eventEndDate: [], // 活動結束日期

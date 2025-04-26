@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -49,7 +49,7 @@ export class FIN72010Component extends BasicQpageComponent implements OnInit {
     ePetty: [],
   });
   // Table data
-  data: any[] = [ 
+  data: any[] = [
     { pettyCashNumber: 'C201407170001', applicant: '2014000044-王小明', applicantOrg: '104200-營運部', custodian: '2014000044-王小明', custodianOrg: '101300-營企Team(停用)', status: '撥補', isdelete: false },
     { pettyCashNumber: 'C201407170002', applicant: '2014000055-李佳佳', applicantOrg: '104200-營運部', custodian: '2014000055-李佳佳', custodianOrg: '101100-行政Team(停用)', status: '撥補', isdelete: false },
     { pettyCashNumber: 'C201407170003', applicant: '2014000011-張志明', applicantOrg: '104200-營運部', custodian: '2014000011-張志明', custodianOrg: '105200-行政Team', status: '撥補', isdelete: false },
@@ -64,7 +64,7 @@ export class FIN72010Component extends BasicQpageComponent implements OnInit {
     { pettyCashNumber: 'C201408140002', applicant: '2014000055-李佳佳', applicantOrg: '104200-營運部', custodian: '2014000055-李佳佳', custodianOrg: '101100-行政Team(停用)', status: '撥補', isdelete: false },
     { pettyCashNumber: 'C201410150002', applicant: '2014000017-蔡依林', applicantOrg: '104200-營運部', custodian: '2014000017-蔡依林', custodianOrg: '105200-行政Team', status: '撥補', isdelete: false }
   ];
-  
+
   filteredData: any[] = [...this.data];
   columns: any[] = [
     { field: 'pettyCashNumber', header: '零用金單號', visible: true },
@@ -76,16 +76,16 @@ export class FIN72010Component extends BasicQpageComponent implements OnInit {
   ];
 
   // Dropdown options
-  PettyCashOrderNumber: any[] = [    { value: 201407170001, label: 'C201407170001' },
-    { value: 201407170002, label: 'C201407170002' },
-    { value: 201407170003, label: 'C201407170003' },
-    { value: 201407170004, label: 'C201407170004' },
-    { value: 201407210001, label: 'C201407210001' },
-    { value: 201407210002, label: 'C201407210002' },
-    { value: 201407280001, label: 'C201407280001' },
-    { value: 201407280002, label: 'C201407280002' },
-    { value: 201407280003, label: 'C201407280003' },
-    { value: 201407290002, label: 'C201407290002' },];
+  PettyCashOrderNumber: any[] = [{ value: 201407170001, label: 'C201407170001' },
+  { value: 201407170002, label: 'C201407170002' },
+  { value: 201407170003, label: 'C201407170003' },
+  { value: 201407170004, label: 'C201407170004' },
+  { value: 201407210001, label: 'C201407210001' },
+  { value: 201407210002, label: 'C201407210002' },
+  { value: 201407280001, label: 'C201407280001' },
+  { value: 201407280002, label: 'C201407280002' },
+  { value: 201407280003, label: 'C201407280003' },
+  { value: 201407290002, label: 'C201407290002' },];
   usercode: any[] = [];
   Feespayable: any[] = [
     { value: 210101, label: '銀行短期借款' },
@@ -126,14 +126,14 @@ export class FIN72010Component extends BasicQpageComponent implements OnInit {
     { value: 2, label: 'B20150208002' },
     { value: 3, label: 'B20150410001' },
   ];
-  
-  
-  
+
+
+
 
   vendorOptions: any[] = [];
   counterCodeOptions: any[] = [];
   violationCategoryOptions: any[] = [];
-  floorOptions: any[] = []; 
+  floorOptions: any[] = [];
   deductionItemOptions: any[] = [];
   organizationNumberOptions: any[] = [];
 
@@ -150,7 +150,7 @@ export class FIN72010Component extends BasicQpageComponent implements OnInit {
     private violationCategoryService: ViolationCategoryService,  // 違規類別編號 service
     private floorService: FloorService,  // 樓層 service
     private deductionItemService: DeductionItemService,  // 扣款項目 service
-    private OrganizationNumberService:OrganizationNumberService
+    private OrganizationNumberService: OrganizationNumberService
   ) {
     super(); // 呼叫父類建構子
   }
@@ -169,8 +169,8 @@ export class FIN72010Component extends BasicQpageComponent implements OnInit {
       this.vendorOptions = data;
     });
     this.userCodeService
-    .getUserCode()
-    .subscribe((data) => (this.usercode = data));
+      .getUserCode()
+      .subscribe((data) => (this.usercode = data));
     this.counterCodeService.getCounterCodes().subscribe((data) => {
       this.counterCodeOptions = data;
     });

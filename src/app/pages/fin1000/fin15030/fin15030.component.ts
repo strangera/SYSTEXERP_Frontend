@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './fin15030.component.html',
   styleUrl: './fin15030.component.scss'
 })
-export class FIN15030Component extends BasicQpageComponent implements OnInit{
+export class FIN15030Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     declareType: [, [Validators.required]], // 	申報書種類
@@ -37,7 +37,7 @@ export class FIN15030Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '申報年月', visible: true },
     { field: 'col2', header: '申報書種類', visible: true },
     { field: 'col3', header: '進貨總金額之進貨及費用', visible: true },
@@ -49,12 +49,12 @@ export class FIN15030Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  declareTypeOptions:any[]=[
+  declareTypeOptions: any[] = [
     { value: 1, label: 401 },
     { value: 2, label: 403 },
   ];
 
-  taxNumberOptions:any[]=[
+  taxNumberOptions: any[] = [
     { value: 1, label: 701702007 },
     { value: 2, label: 703902223 },
   ];

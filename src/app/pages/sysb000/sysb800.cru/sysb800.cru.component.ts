@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -15,12 +15,12 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
   styleUrl: './sysb800.cru.component.scss'
 })
 // 業種基本資料維護作業 CRU
-export class SYSB800CRUComponent extends BasicCrupageComponent implements OnInit{
+export class SYSB800CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     industryCode: [, [Validators.required, Validators.maxLength(2)]], // 業種代號
     industryName: ['', [Validators.required, Validators.maxLength(40)]], // 業種名稱
-    remark: [, ], // 備註
+    remark: [,], // 備註
   });
   //
   // upperLevelOrgOptions: any[]=[];
@@ -32,8 +32,8 @@ export class SYSB800CRUComponent extends BasicCrupageComponent implements OnInit
     private authService: AuthService,
     private translate: TranslateService,
     //
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -78,11 +78,11 @@ export class SYSB800CRUComponent extends BasicCrupageComponent implements OnInit
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }

@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
@@ -62,7 +62,7 @@ export class TLS2A020Component {
     { field: 'systemAmount', header: '系統金額', visible: true },
     { field: 'receiptAmount', header: '貨收金額', visible: true },
   ];
-  
+
   // 下拉選單選項
   floorOptions: any[] = [];
 
@@ -73,7 +73,7 @@ export class TLS2A020Component {
     private authService: AuthService,
     private floorService: FloorService,
     private validationService: ValidationService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

@@ -3,11 +3,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -29,11 +29,11 @@ export class TLS51030Component {
   loading: boolean = false;
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
-    mCode: [, [Validators.maxLength(3),this.validationService.numberValidator]], // Input serial number
+    mCode: [, [Validators.maxLength(3), this.validationService.numberValidator]], // Input serial number
     mName: ['', [Validators.maxLength(32)]], // Input Text
     bigCategory: [], // DropDown
     middleCategory: [], // DropDown
-    editortext: [, ], // editor text
+    editortext: [,], // editor text
   });
   // 表格
   // ----------------------------------------------------------------
@@ -44,7 +44,7 @@ export class TLS51030Component {
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'contactPerson', header: '小分類代碼', visible: true },
     { field: 'contactDate', header: '小分類名稱', visible: true },
     { field: 'UID', header: '中分類代碼', visible: true },

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { LayoutService } from '../../../shared/service/layout.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { UserInfo } from '../../../models/system/userInfo';
+import { UserInfo } from '../../../shared/models/system/userInfo';
 import { forkJoin, Subscription } from 'rxjs';
 import { MenuItem } from 'primeng/api';
 import { Router } from '@angular/router';
@@ -9,7 +9,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiItem, SsoDashboardService } from './sso-dashboard.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { EncryptionService } from '../../../shared/service/encryption.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { Sys1000Service } from '../../../service/SYS100/sys1000.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 
@@ -135,7 +135,7 @@ export class SsoDashboardComponent implements OnInit {
         New_password: this.encryptionService.getPassword(this.data?.user_No || '', frm.value.newPassword),
         PwdExpireDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 密碼到期日設為90天後
       };
-  
+
       this.userCodeService.changePassword(query).subscribe({
         next: () => {
           this.messageService.successBubble('密碼修改成功');

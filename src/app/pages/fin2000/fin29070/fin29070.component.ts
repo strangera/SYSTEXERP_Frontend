@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { VendorService } from '../../../service/basic/vendor.service';
@@ -16,12 +16,12 @@ import { VendorService } from '../../../service/basic/vendor.service';
   templateUrl: './fin29070.component.html',
   styleUrl: './fin29070.component.scss'
 })
-export class FIN29070Component extends BasicQpageComponent implements OnInit{
+export class FIN29070Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     factoryID: [, [Validators.required]], // 廠商代號
-    startBillDate:[, [Validators.required]], //立帳日期
-    endBillDate:[, [Validators.required]], //立帳日期
+    startBillDate: [, [Validators.required]], //立帳日期
+    endBillDate: [, [Validators.required]], //立帳日期
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -38,7 +38,7 @@ export class FIN29070Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '廠商代號', visible: true },
     { field: 'col2', header: '廠商名稱	', visible: true },
     { field: 'col3', header: '應付帳款單號', visible: true },

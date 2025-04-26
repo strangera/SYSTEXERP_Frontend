@@ -2,7 +2,7 @@ import { Component, OnInit, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -16,7 +16,7 @@ import { UserStatusService } from '../../../service/basic/user-status.service';
   styleUrl: './sysbp00.cru.component.scss'
 })
 // 參數資料設定維護 CRU
-export class SYSBP00CRUComponent extends BasicCrupageComponent implements OnInit{
+export class SYSBP00CRUComponent extends BasicCrupageComponent implements OnInit {
   //
   codeStatusOptions: any[] = [];
   // ----------------------------------------------------------------
@@ -40,8 +40,8 @@ export class SYSBP00CRUComponent extends BasicCrupageComponent implements OnInit
     private validationService: ValidationService,
     //
     private userStatusService: UserStatusService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -115,11 +115,11 @@ export class SYSBP00CRUComponent extends BasicCrupageComponent implements OnInit
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

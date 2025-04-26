@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm21010.component.html',
   styleUrl: './cpm21010.component.scss'
 })
-export class CPM21010Component extends BasicQpageComponent implements OnInit{
+export class CPM21010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     areaNumber: [, [Validators.maxLength(1)]], // 區域別編號
@@ -36,7 +36,7 @@ export class CPM21010Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '區域別編號', visible: true },
     { field: 'col2', header: '區域別名稱', visible: true },
     // { field: 'col3', header: '總件數', visible: true },

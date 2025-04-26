@@ -5,9 +5,9 @@ import { NavigationExtras, Router } from '@angular/router';
 import { JournalTypeService } from '../../../service/basic/journal-type.service';
 import { VoucherStatusService } from '../../../service/basic/voucher-status.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 
@@ -52,7 +52,7 @@ export class TLS55060Component {
     { field: 'voucherSummary', header: '傳票摘要', visible: true },
     { field: 'settlementNumber', header: '結帳單號', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -61,7 +61,7 @@ export class TLS55060Component {
     private journalTypeService: JournalTypeService,
     private voucherStatusService: VoucherStatusService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options

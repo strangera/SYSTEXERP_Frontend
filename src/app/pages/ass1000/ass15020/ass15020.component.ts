@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -20,7 +20,7 @@ import { AssetStatusService } from '../../../service/basic/asset-status.service'
   templateUrl: './ass15020.component.html',
   styleUrl: './ass15020.component.scss'
 })
-export class ASS15020Component extends BasicQpageComponent implements OnInit{
+export class ASS15020Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     keepingDepartment: [], // 保管部門
@@ -51,13 +51,13 @@ export class ASS15020Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '資產代號', visible: true },
     { field: 'col2', header: '財產名稱', visible: true },
     { field: 'col3', header: '設備編號', visible: true },
     { field: 'col4', header: '購入日期', visible: true },
     { field: 'col5', header: '資產狀態', visible: true },
-    
+
     { field: 'col6', header: '保管單位', visible: true },
     { field: 'col7', header: '保管人', visible: true },
     { field: 'col8', header: '使用單位', visible: true },
@@ -71,7 +71,7 @@ export class ASS15020Component extends BasicQpageComponent implements OnInit{
     // { field: 'col14', header: '入帳日期', visible: true },
     // { field: 'col15', header: '條件篩選', visible: true },
     // { field: 'col16', header: '顯示筆數', visible: true },
-    
+
     // { field: 'col17', header: '報廢日期前之帳面價值', visible: true },
     // { field: 'col18', header: '報廢損失', visible: true },
 
@@ -98,19 +98,19 @@ export class ASS15020Component extends BasicQpageComponent implements OnInit{
   //   { value: 7, label: 'G/辦公及營運庶務' },
   //   { value: 8, label: 'K/印刷品(非廣告行銷)' },
   // ];
-  keepingDepartmentOptions: any[]=[];
-  keepingPersonOptions: any[]=[];
-  propertyCodeOptions: any[]=[
+  keepingDepartmentOptions: any[] = [];
+  keepingPersonOptions: any[] = [];
+  propertyCodeOptions: any[] = [
     { value: 1, label: '1A23230000001000001' },
     { value: 2, label: '1A23230000002000001' },
     { value: 3, label: '1A23230000003000001' },
     { value: 4, label: '1A23230000004000001' },
     { value: 5, label: '1A23230000005000001' },
   ];
-  itemCodeOptions:any[] = [];
+  itemCodeOptions: any[] = [];
   propertyTypeOptions: any[] = [];
   assetsStatusOptions: any[] = [];
-  groupingOptions: any[]=[
+  groupingOptions: any[] = [
     { value: 1, label: '保管部門' },
     { value: 2, label: '保管人員' },
     { value: 3, label: '品項編號' },

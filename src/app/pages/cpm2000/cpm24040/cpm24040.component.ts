@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { Router, NavigationExtras } from '@angular/router';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -14,7 +14,7 @@ import { LocationCodeService } from '../../../service/basic/locationcode.service
   styleUrls: ['./cpm24040.component.scss'],
 })
 export class CPM24040Component extends BasicQpageComponent implements OnInit {
-  queryForm= this.formBuilder.group({
+  queryForm = this.formBuilder.group({
     startVoucherDate: [], // 傳票日期-開始
     endVoucherDate: [], // 傳票日期-結束
     marketingCampaignCode: [], // 行銷檔期代號

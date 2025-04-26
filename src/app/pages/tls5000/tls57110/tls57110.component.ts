@@ -6,9 +6,9 @@ import { DisplayModeService } from '../../../service/basic/display-mode.service'
 import { WarehouseService } from '../../../service/basic/warehouse.service';
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 
@@ -61,7 +61,7 @@ export class TLS57110Component {
     { field: 'peerTransferOut', header: '同業調出量', visible: true },
     { field: 'endingInventory', header: '期末存貨', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -71,7 +71,7 @@ export class TLS57110Component {
     private warehouseService: WarehouseService,
     private brandCodeService: BrandCodeService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options

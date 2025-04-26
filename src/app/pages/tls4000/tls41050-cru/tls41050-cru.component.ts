@@ -2,7 +2,7 @@ import { Component, OnInit, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -15,22 +15,22 @@ import { ValidationService } from '../../../shared/service/validation.service';
   templateUrl: './tls41050-cru.component.html',
   styleUrl: './tls41050-cru.component.scss'
 })
-export class TLS41050CRUComponent extends BasicCrupageComponent implements OnInit{
+export class TLS41050CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // POS5001_通告檔
     // ID                  NUMERIC(19,0) IDENTITY(1,1) NOT NULL
     STO_No: ['', [Validators.required, Validators.maxLength(10)]], // 門市店號
-    NOT_DateTime: [,[Validators.required]], // 通告產生時間
-    NOT_Type: ['000000',[Validators.required, Validators.maxLength(6)]], // 通告顯示種類，固定為000000
+    NOT_DateTime: [, [Validators.required]], // 通告產生時間
+    NOT_Type: ['000000', [Validators.required, Validators.maxLength(6)]], // 通告顯示種類，固定為000000
     /*  101=即時顯示通告   102=暫停時顯示通告 103=功能鍵顯示通告 104=客戶顯示器顯示通告 105=銷貨明細表列印訊息 */
 
     //
     ECR_No: ['XXXXXX', [Validators.required, Validators.maxLength(6)]], // 收銀機號，固定為XXXXXX
-    NOT_BegDateTime: [,[Validators.required]], // 結束時間
-    NOT_EndDateTime: [,[Validators.required]], // 結束時間
-    NOT_Desc: [,[Validators.maxLength(255)]], // 通告內容
-    NOT_Status: ['A',[Validators.maxLength(2)]], // 通告狀態 A=已生效(預設值) D=已刪除
+    NOT_BegDateTime: [, [Validators.required]], // 結束時間
+    NOT_EndDateTime: [, [Validators.required]], // 結束時間
+    NOT_Desc: [, [Validators.maxLength(255)]], // 通告內容
+    NOT_Status: ['A', [Validators.maxLength(2)]], // 通告狀態 A=已生效(預設值) D=已刪除
     NOT_Remark: ['', [Validators.maxLength(60)]], // 通告備註
 
     NOT_DispRt: [0, [Validators.maxLength(0)]], // 即時顯示 Y/N，預設N
@@ -76,8 +76,8 @@ export class TLS41050CRUComponent extends BasicCrupageComponent implements OnIni
     private translate: TranslateService,
     private validationService: ValidationService,
     //
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -139,15 +139,15 @@ export class TLS41050CRUComponent extends BasicCrupageComponent implements OnIni
 
       // INDEX IDX_POS5001_MST ON POS5001 (STO_No, NOT_DateTime, NOT_Type, ECR_No);
 
-      NOT_SeqNo: [, [this.validationService.numberValidator,Validators.required, Validators.maxLength(6)]], // 通告序號
+      NOT_SeqNo: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(6)]], // 通告序號
       TLT_No: ['', [Validators.maxLength(8)]], // 專櫃編號
 
-      ECR_Type:['',[Validators.maxLength(2)]], // 機台類型 POS1002.ECR_Type
-      ECR_GrpNo:['',[Validators.maxLength(20)]], // 機台群組編號
-      
-      BUILDING_No:['',[Validators.maxLength(2)]], // 館別
-      FLOOR_No:['',[Validators.maxLength(2)]], // 樓層代碼
-      AREA_No:['',[Validators.maxLength(2)]], // 區域代碼
+      ECR_Type: ['', [Validators.maxLength(2)]], // 機台類型 POS1002.ECR_Type
+      ECR_GrpNo: ['', [Validators.maxLength(20)]], // 機台群組編號
+
+      BUILDING_No: ['', [Validators.maxLength(2)]], // 館別
+      FLOOR_No: ['', [Validators.maxLength(2)]], // 樓層代碼
+      AREA_No: ['', [Validators.maxLength(2)]], // 區域代碼
 
       // 以下可以不用顯示於查詢頁
       CRT_Date: [], // 建立日期
@@ -174,7 +174,7 @@ export class TLS41050CRUComponent extends BasicCrupageComponent implements OnIni
         branchForm.patchValue(children);
         this.items.push(branchForm);
       });
-    }else{
+    } else {
       console.log('無子資料');
     }
   }
@@ -188,11 +188,11 @@ export class TLS41050CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;
@@ -224,8 +224,8 @@ export class TLS41050CRUComponent extends BasicCrupageComponent implements OnIni
 
   onClearForm() {
     this.dataForm.reset();  // 重置表單
-  }  
-  
+  }
+
   onCancel() {
     this.router.navigate(['/TLS4000/TLS41050']);
   }
