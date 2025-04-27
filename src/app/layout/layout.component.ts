@@ -5,7 +5,7 @@ import { UserInfo } from '../shared/models/system/userInfo';
 import { AuthService } from '../service/system/auth.service';
 import { AppMenulistComponent } from './app.menulist/app.menulist.component';
 import { AppTopbarComponent } from './app.topbar/app.topbar.component';
-import { LayoutService } from '../shared/service/layout.service';
+import { LayoutService } from './layout.service';
 import { computed } from '@angular/core';
 
 interface TabItem {

@@ -1,7 +1,7 @@
 import { Router } from '@angular/router';
 import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild, ViewEncapsulation } from '@angular/core';
 import { MenuItem } from 'primeng/api';
-import { LayoutService } from '../../shared/service/layout.service';
+import { LayoutService } from '../layout.service';
 import { AuthService } from '../../service/system/auth.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { UserInfo } from '../../shared/models/system/userInfo';

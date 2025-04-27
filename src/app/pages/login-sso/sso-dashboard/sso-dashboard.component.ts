@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { LayoutService } from '../../../shared/service/layout.service';
+import { LayoutService } from '../../../layout/layout.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { UserInfo } from '../../../shared/models/system/userInfo';
 import { forkJoin, Subscription } from 'rxjs';
@@ -147,21 +147,6 @@ export class SsoDashboardComponent implements OnInit {
           this.messageService.errorBubble('密碼修改失敗，請稍後再試。');
         }
       });
-    }
-  }
-  get containerClass() {
-    return {
-      'layout-theme-light': this.layoutService.config().colorScheme === 'light',
-      'layout-theme-dark': this.layoutService.config().colorScheme === 'dark',
-      'dark-theme': this.layoutService.config().colorScheme === 'dark', // 添加 dark-theme class
-      'light-theme': this.layoutService.config().colorScheme === 'light', // 添加 light-theme class (可選，因為預設是 light)
-      'layout-overlay': this.layoutService.config().menuMode === 'overlay',
-      'layout-static': this.layoutService.config().menuMode === 'static',
-      'layout-static-inactive': this.layoutService.state.staticMenuDesktopInactive && this.layoutService.config().menuMode === 'static',
-      'layout-overlay-active': this.layoutService.state.overlayMenuActive,
-      'layout-mobile-active': this.layoutService.state.staticMenuMobileActive,
-      'p-input-filled': this.layoutService.config().inputStyle === 'filled',
-      'p-ripple-disabled': !this.layoutService.config().ripple
     }
   }
 }

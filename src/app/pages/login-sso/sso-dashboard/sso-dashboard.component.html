@@ -1,4 +1,4 @@
-<div class="layout-wrapper" [ngClass]="containerClass" *ngIf="user">
+<div class="layout-wrapper" *ngIf="user">
   <div #appTopbarDiv class="layout-topbar justify-content-between flex-wrap lg:flex-nowrap">
     <a class="layout-topbar-logo" routerLink="/">
       <img [src]="logo" alt="logo">
@@ -10,7 +10,7 @@
       <i class="pi pi-ellipsis-v"></i>
     </button>
     <div #topbarmenu class="layout-topbar-menu lg:flex lg:flex-column justify-content-center align-items-end"
-    [ngClass]="{'layout-topbar-menu-mobile-active': layoutService.state.profileSidebarVisible}">
+      [ngClass]="{'layout-topbar-menu-mobile-active': layoutService.state.profileSidebarVisible}">
       <div class="flex flex-row align-items-center justify-content-center col-flex">
         <div class="text-center ml-1 block" [ngStyle]="{'color': 'rgb(146, 60, 60)'}">
           <button type="button" class="layout-topbar-button p-link min-w-max" pTooltip="個人資料"
@@ -59,8 +59,8 @@
           </ng-template>
           <ng-template pTemplate="footer">
             <div class="flex gap-3 mt-1 w-full">
-              <p-button type="button" class="w-full" styleClass="w-full" label="前往入口"
-                (click)="navigateToUrl(item)" icon="pi pi-external-link"></p-button>
+              <p-button type="button" class="w-full" styleClass="w-full" label="前往入口" (click)="navigateToUrl(item)"
+                icon="pi pi-external-link"></p-button>
             </div>
           </ng-template>
         </p-card>
