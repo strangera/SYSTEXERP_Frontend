@@ -147,7 +147,8 @@ export class AppTopbarComponent implements OnInit {
   initFavorites(event?: any) {
     if (this.favorite) { this.favorite.toggle(event) }
     this.selectedFavorites = [];
-    this.authService.getFavorites().subscribe({
+    console.log(this.data);
+    this.authService.getFavorites(this.data?.user_No).subscribe({
       next: (response: { prog_no: string }[]) => { // 指明 response 的結構
         const favoritesWithDetails: FunsrightInfo[] = [];
         response.forEach(fav => {

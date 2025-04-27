@@ -214,10 +214,10 @@ export class AuthService {
     }
   }
 
-  getFavorites(): Observable<any> {
-    return this.http.get<any>(`/assets/service/User/userFavorite.json`).pipe(
+  getFavorites(user_No?: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/User/GetUserFavorite`, { user_No: user_No }).pipe(
       map((response: any) => {
-        sessionStorage.setItem('Favorites', JSON.stringify(response.favorite_items));
+        sessionStorage.setItem('Favorites', JSON.stringify(response.Data));
         return response;
       }));
   }
