@@ -72,6 +72,7 @@ export class AppTopbarComponent implements OnInit {
     });
     this.userSubscription = this.authService.user.subscribe((userInfo: UserInfo | null) => {
       this.data = userInfo;
+      this.initFavorites();
     });
 
     this.timerSubscription = interval(500).subscribe(() => {
@@ -145,43 +146,66 @@ export class AppTopbarComponent implements OnInit {
   }
 
   initFavorites(event?: any) {
-    if (this.favorite) { this.favorite.toggle(event) }
-    this.selectedFavorites = [];
-    console.log(this.data);
+    if (this.favorite && event) {
+      this.favorite.toggle(event)
+      this.editingFavorites = false; // 取消編輯狀態
+      this.selectedFavorites = [];
+    }
+    if (this.data?.user_No === undefined || !this.funRightsInfo.length) return;
     this.authService.getFavorites(this.data?.user_No).subscribe({
-      next: (response: { prog_no: string }[]) => { // 指明 response 的結構
+      next: (response) => { // 指明 response 的結構
         const favoritesWithDetails: FunsrightInfo[] = [];
-        response.forEach(fav => {
-          const matchingFunRight = this.funRightsInfo.find(item => item.prog_no === fav.prog_no);
-          if (matchingFunRight) {
-            favoritesWithDetails.push(matchingFunRight);
-          } else {
-            console.warn(`找不到 prog_no: ${fav.prog_no} 對應的功能權限資訊。`);
-          }
+        if (response.Data.length === 0) { this.Favorites = []; return; }
+        response.Data.forEach((fav: any) => {
+          const matchingFunRight = this.funRightsInfo.find(item => item.prog_no === fav.PROG_No);
+          if (matchingFunRight) favoritesWithDetails.push(matchingFunRight);
         });
-        sessionStorage.setItem('Favorites', JSON.stringify(response));
+        sessionStorage.setItem('Favorites', JSON.stringify(response.Data));
         this.Favorites = favoritesWithDetails.map(item => ({
+          ...item,
           label: item.prog_no + ' ' + item.prog_name,
           path: item.path,
         }));
-      },
-      error: error => { console.error('Error fetching favorites:', error); }
+      }, error: error => { console.error('Error fetching favorites:', error); }
     });
   }
 
   deleteSelectedFavorites() {
-    // 打刪除API
-    // ...
-    // 初始化最愛功能
-    this.initFavorites();
+    if (this.selectedFavorites && this.selectedFavorites.length > 0 && this.Favorites) {
+      const remainingFavorites = this.Favorites.filter(favorite =>
+        !this.selectedFavorites.some(selected => selected['prog_no'] === favorite['prog_no'])
+      );
+      const body = remainingFavorites.map((favorite, index) => ({
+        USER_No: this.data?.user_No,
+        PROG_No: favorite['prog_no'],
+        FVT_SeqNo: index + 1,
+      }));
+      this.authService.UpdateUserFavorite(body).subscribe({
+        next: () => {
+          this.editingFavorites = false; // 取消編輯狀態
+          this.selectedFavorites = []; // 清空已選中的項目
+          this.initFavorites(); // 重新初始化最愛功能
+        },
+        error: error => {
+          console.error('Error deleting favorites:', error);
+        }
+      });
+    } else {
+      this.editingFavorites = false; // 取消編輯狀態
+      this.selectedFavorites = []; // 清空已選中的項目
+    }
   }
 
   onRowReorder(event: TableRowReorderEvent) {
-    console.log('Row reordered:', event);
-    console.log('New order:', this.selectedFavorites);
-
-    // 初始化最愛功能
-    this.initFavorites();
+    const body = this.Favorites.map((favorite, index) => ({
+      USER_No: this.data?.user_No,
+      PROG_No: favorite['prog_no'],
+      FVT_SeqNo: index + 1, // 根據目前的順序生成 FVT_SeqNo
+    }))
+    this.authService.UpdateUserFavorite(body).subscribe({
+      next: () => {
+        this.initFavorites();
+      }, error: error => { console.error('Error fetching favorites:', error); }
+    });
   }
-
 }

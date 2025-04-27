@@ -221,6 +221,9 @@ export class AuthService {
         return response;
       }));
   }
+  UpdateUserFavorite(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/User/UpdateUserFavorite`, { Favorites: body });
+  }
 
   getFunRightsInfo(): Observable<any> {
     return this.http.get<any>(`assets/service/User/userLogin.json`).pipe(
