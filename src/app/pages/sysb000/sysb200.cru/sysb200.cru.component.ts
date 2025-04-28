@@ -8,13 +8,13 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 //
 import { MessageService } from 'primeng/api';
-import { SYS1000Response } from '../../../models/SYS1000';
+import { SYS1000Response } from '../../../shared/models/SYS/SYS1000';
 
 @Component({
   selector: 'app-sysb200.cru',

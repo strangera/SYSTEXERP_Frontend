@@ -4,6 +4,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { FileType } from '../../../shared/componentkit/file-upload/file-upload.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-input.table',
@@ -67,7 +68,7 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     { 'name': 'Emily', 'isdelete': true, 'age': 24, 'email': 'emily82@example.com', 'city': 'New Taipei' },
     { 'name': 'Sarah', 'isdelete': false, 'age': 23, 'email': 'sarah51@example.com', 'city': 'Tainan' },
   ];
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'name', header: 'Name', visible: true },
     { field: 'age', header: 'Age', visible: true },
     { field: 'email', header: 'Email', visible: true },

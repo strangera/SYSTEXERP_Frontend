@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -19,7 +19,7 @@ import { ViolationStatusService } from '../../../service/basic/violation-status.
   templateUrl: './fin32010.component.html',
   styleUrl: './fin32010.component.scss'
 })
-export class FIN32010Component extends BasicQpageComponent implements OnInit{
+export class FIN32010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     receiveID: [, [Validators.maxLength(14)]], // 應收ID
@@ -62,7 +62,7 @@ export class FIN32010Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '應收ID', visible: true },
     { field: 'col2', header: '應收金額', visible: true },
     { field: 'col3', header: '沖帳金額', visible: true },
@@ -77,7 +77,7 @@ export class FIN32010Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  organizationCodeOptions:any[]=[];
+  organizationCodeOptions: any[] = [];
   factoryIDOptions: any[] = [];
   accountingCodeOptions: any[] = [];
   subpoenaTypeOptions: any[] = [

@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -19,11 +19,11 @@ import { PostageChargeService } from './../../../service/basic/postage-charge.se
   templateUrl: './ass11040-cru.component.html',
   styleUrl: './ass11040-cru.component.scss'
 })
-export class ASS11040CRUComponent extends BasicCrupageComponent implements OnInit{
+export class ASS11040CRUComponent extends BasicCrupageComponent implements OnInit {
   //
-  warrantyMethodOptions: any[]=[];
+  warrantyMethodOptions: any[] = [];
 
-  bigCategoryCodeOptions: any[]=[
+  bigCategoryCodeOptions: any[] = [
     { value: 1, label: 'A/裝潢工程' },
     { value: 2, label: 'B/其他工程' },
     { value: 3, label: 'C/電腦及電子零件產品' },
@@ -33,7 +33,7 @@ export class ASS11040CRUComponent extends BasicCrupageComponent implements OnIni
     { value: 7, label: 'G/辦公及營運庶務' },
     { value: 8, label: 'K/印刷品(非廣告行銷)' },
   ];
-  midCategoryCodeOptions: any[]=[
+  midCategoryCodeOptions: any[] = [
     { value: 23, label: '室內裝潢工程' },
     { value: 24, label: '室內裝潢備品' },
     { value: 21, label: '弱電系統' },
@@ -43,8 +43,8 @@ export class ASS11040CRUComponent extends BasicCrupageComponent implements OnIni
     { value: 25, label: '機電消防工程' },
     { value: 22, label: '電子產品及零件' },
   ];
-  
-  itemCategoryOptions: any[]=[
+
+  itemCategoryOptions: any[] = [
     { value: 1, label: '資產' },
     { value: 2, label: '列管品' },
     { value: 3, label: '耗材' },
@@ -52,8 +52,8 @@ export class ASS11040CRUComponent extends BasicCrupageComponent implements OnIni
     { value: 5, label: '其他資產(無形)' },
     { value: 6, label: '不領用之耗材' },
   ];
-  itemUnitOptions: any[]=[];
-  packageUnitOptions: any[]=[
+  itemUnitOptions: any[] = [];
+  packageUnitOptions: any[] = [
     { value: 1, label: '箱' },
     { value: 2, label: '包' },
     { value: 3, label: '袋' },
@@ -72,7 +72,7 @@ export class ASS11040CRUComponent extends BasicCrupageComponent implements OnIni
     packageUnit: [], // 包裝單位
     warrantyMethod: [], // 保固方式
     maintenanceMethod: [], // 保養方式
-    illustrate: [, ], // 說明
+    illustrate: [,], // 說明
   });
   //
   // ----------------------------------------------------------------
@@ -89,8 +89,8 @@ export class ASS11040CRUComponent extends BasicCrupageComponent implements OnIni
     //
     private postageChargeService: PostageChargeService,
     private itemUnitService: ItemUnitService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -147,11 +147,11 @@ export class ASS11040CRUComponent extends BasicCrupageComponent implements OnIni
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }

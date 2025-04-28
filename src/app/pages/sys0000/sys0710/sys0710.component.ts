@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { RoleCodeService } from '../../../service/basic/role-code.service';
@@ -21,7 +21,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   styleUrl: './sys0710.component.scss',
 })
 // 使用者系統權限列表
-export class SYS0710Component  extends BasicQpageComponent implements OnInit {
+export class SYS0710Component extends BasicQpageComponent implements OnInit {
   // 查詢
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({

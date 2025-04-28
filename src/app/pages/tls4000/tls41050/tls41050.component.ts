@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -38,7 +38,7 @@ export class TLS41050Component {
     ECR_No: [, [Validators.maxLength(6)]], // 收銀機號，固定為XXXXXX
     NOT_BegDateTime: [], // 開始時間
     NOT_EndDateTime: [], // 結束時間
-    NOT_Desc: [,[Validators.maxLength(255)]], // 通告內容
+    NOT_Desc: [, [Validators.maxLength(255)]], // 通告內容
     NOT_Status: [[] as number[]], // 通告狀態 A=已生效(預設值) D=已刪除
     NOT_Remark: ['', [Validators.maxLength(60)]], // 通告備註
 
@@ -53,37 +53,44 @@ export class TLS41050Component {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { id:1, STO_No: 'store1', NOT_DateTime: '2024/08/08 08:08', NOT_Type: 101 ,ECR_No: 123, NOT_BegDateTime: '2024/08/08 08:08', NOT_EndDateTime: '2024/09/09 08:08',
+    {
+      id: 1, STO_No: 'store1', NOT_DateTime: '2024/08/08 08:08', NOT_Type: 101, ECR_No: 123, NOT_BegDateTime: '2024/08/08 08:08', NOT_EndDateTime: '2024/09/09 08:08',
       NOT_Desc: '通告內容', NOT_Status: 'A', NOT_Remark: '通告備註',
-    
+
       children: [
-        { id:1, NOT_SeqNo: 123, TLT_No: 'counter1',
+        {
+          id: 1, NOT_SeqNo: 123, TLT_No: 'counter1',
           ECR_Type: '', ECR_GrpNo: 'machineGroup1',
           BUILDING_No: 'building1', FLOOR_No: '1F', AREA_No: 'area1',
-         },
-         { id:2, NOT_SeqNo: 456, TLT_No: 'counter2', ECR_Type: '',
+        },
+        {
+          id: 2, NOT_SeqNo: 456, TLT_No: 'counter2', ECR_Type: '',
           ECR_GrpNo: 'machineGroup2',
           BUILDING_No: 'building2', FLOOR_No: '', AREA_No: 'area1',
-         },
-      ]},
-      { id:2, STO_No: 'store2', NOT_DateTime: '2024/08/08 08:08', NOT_Type: 101 ,ECR_No: 123, NOT_BegDateTime: '2024/08/08 08:08', NOT_EndDateTime: '2024/09/09 08:08',
-        NOT_Desc: '通告內容', NOT_Status: 'A', NOT_Remark: '通告備註',
-      
-        children: [
-          { id:3, NOT_SeqNo: 789, TLT_No: 'counter3',
-            ECR_Type: '', ECR_GrpNo: 'machineGroup3',
-            BUILDING_No: 'building1', FLOOR_No: '', AREA_No: 'area2',
-           },
-        ]},
+        },
+      ]
+    },
+    {
+      id: 2, STO_No: 'store2', NOT_DateTime: '2024/08/08 08:08', NOT_Type: 101, ECR_No: 123, NOT_BegDateTime: '2024/08/08 08:08', NOT_EndDateTime: '2024/09/09 08:08',
+      NOT_Desc: '通告內容', NOT_Status: 'A', NOT_Remark: '通告備註',
+
+      children: [
+        {
+          id: 3, NOT_SeqNo: 789, TLT_No: 'counter3',
+          ECR_Type: '', ECR_GrpNo: 'machineGroup3',
+          BUILDING_No: 'building1', FLOOR_No: '', AREA_No: 'area2',
+        },
+      ]
+    },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     // { field: 'ECR_No', header: '收銀機號', visible: true },
     // { field: 'STO_No', header: '門市店號', visible: false },
     { field: 'NOT_DateTime', header: '通告產生時間', visible: true },
     { field: 'NOT_Type', header: '通告顯示種類', visible: true },
-    
+
     { field: 'NOT_BegDateTime', header: '開始時間', visible: true },
     { field: 'NOT_EndDateTime', header: '結束時間', visible: true },
 
@@ -93,7 +100,7 @@ export class TLS41050Component {
     // 其他欄位
   ];
 
-  subColumns: any[]= [
+  subColumns: any[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'NOT_SeqNo', header: '通告序號', visible: true },
     { field: 'TLT_No', header: '專櫃編號', visible: true },
@@ -183,7 +190,7 @@ export class TLS41050Component {
     if (this.canEdit()) {
       this.navigateWithState(CRUDStatus.Edit, data);
     }
-    
+
   }
 
   onDetail(data: any) {

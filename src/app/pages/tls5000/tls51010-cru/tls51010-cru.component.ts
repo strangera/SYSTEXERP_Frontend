@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { NavigationExtras, Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
@@ -117,7 +117,7 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         case CRUDStatus.Create:
           if (this.canAdd()) {
             // 待實現：調用 API 進行新增
-            this.apiService.insertPOS2003(frm.value).subscribe((response: any) => {
+            this.apiService.insertTLS51010(frm.value).subscribe((response: any) => {
               this.messageService.successBubble('新增成功');
               this.onCancel(); // 新增成功後返回查詢頁面
             });
@@ -126,7 +126,7 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             // 待實現：調用 API 進行更新
-            this.apiService.updatePOS2003(frm.value).subscribe((response: any) => {
+            this.apiService.updateTLS51010(frm.value).subscribe((response: any) => {
               this.messageService.successBubble('更新成功');
               this.onCancel(); // 更新成功後返回查詢頁面
             });

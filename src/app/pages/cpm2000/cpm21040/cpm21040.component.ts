@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm21040.component.html',
   styleUrl: './cpm21040.component.scss'
 })
-export class CPM21040Component extends BasicQpageComponent implements OnInit{
+export class CPM21040Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     equipmentCode: [], // 設備類別代號
@@ -36,7 +36,7 @@ export class CPM21040Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '設備類別代號', visible: true },
     { field: 'col2', header: '設備類別名稱', visible: true },
     // { field: 'col3', header: '總件數', visible: true },
@@ -50,7 +50,7 @@ export class CPM21040Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  equipmentCodeOptions:any[] = [
+  equipmentCodeOptions: any[] = [
     { value: 1, label: '行銷贈品(全)' },
     { value: 2, label: '硬體設備(行銷部)' },
     { value: 3, label: '服務點位設備(客服)' },

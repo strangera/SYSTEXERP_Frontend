@@ -6,9 +6,9 @@ import { DisplayModeService } from '../../../service/basic/display-mode.service'
 import { WarehouseService } from '../../../service/basic/warehouse.service';
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 
@@ -59,7 +59,7 @@ export class TLS57130Component {
     { field: 'salesAmountSummary', header: '銷售金額/小計(數量*單價)', visible: true },
     { field: 'amountRanking', header: '金額排名', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -69,7 +69,7 @@ export class TLS57130Component {
     private warehouseService: WarehouseService,
     private brandCodeService: BrandCodeService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options

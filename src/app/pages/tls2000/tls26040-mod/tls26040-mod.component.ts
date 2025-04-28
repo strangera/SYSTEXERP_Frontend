@@ -5,10 +5,10 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -52,8 +52,8 @@ export class TLS26040ModComponent implements OnInit {
 
   // 表格資料
   data: any[] = [
-    { preSaleDate: '2024-10-01', accountDate: '2024-10-02', cashRegisterCode: '001', categoryCode: 'A1', batchNumber: 'B001', transactionSerial: 'T001', amount: 1000,'isdelete': true, },
-    { preSaleDate: '2024-10-02', accountDate: '2024-10-03', cashRegisterCode: '002', categoryCode: 'A2', batchNumber: 'B002', transactionSerial: 'T002', amount: 2000,'isdelete': true, },
+    { preSaleDate: '2024-10-01', accountDate: '2024-10-02', cashRegisterCode: '001', categoryCode: 'A1', batchNumber: 'B001', transactionSerial: 'T001', amount: 1000, 'isdelete': true, },
+    { preSaleDate: '2024-10-02', accountDate: '2024-10-03', cashRegisterCode: '002', categoryCode: 'A2', batchNumber: 'B002', transactionSerial: 'T002', amount: 2000, 'isdelete': true, },
     // 其他測試資料
   ];
   filteredData: any[] = [...this.data];
@@ -73,7 +73,7 @@ export class TLS26040ModComponent implements OnInit {
     private messageService: NotificationService,
     private authService: AuthService,
     private floorService: FloorService,  // 樓層 service
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
@@ -156,5 +156,5 @@ export class TLS26040ModComponent implements OnInit {
     };
     this.router.navigate(['TLS2000/TLS26040CRU'], extras);
   }
-  onRefresh(){}
+  onRefresh() { }
 }

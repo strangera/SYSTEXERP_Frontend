@@ -7,7 +7,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -18,7 +18,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './fin21010.component.html',
   styleUrl: './fin21010.component.scss'
 })
-export class FIN21010Component extends BasicQpageComponent implements OnInit{
+export class FIN21010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     companyBankCode: [], // 公司銀行科目代號
@@ -46,7 +46,7 @@ export class FIN21010Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '公司銀行科目代號', visible: true },
     { field: 'col2', header: '公司銀行科目名稱', visible: true },
     { field: 'col3', header: '全省銀行代號', visible: true },
@@ -59,9 +59,9 @@ export class FIN21010Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  bankCodeOptions:any[]=[];
-  depositCodeOptions:any[]=[];
-  needPayTicketOptions:any[]=[];
+  bankCodeOptions: any[] = [];
+  depositCodeOptions: any[] = [];
+  needPayTicketOptions: any[] = [];
 
   constructor(
     private router: Router,

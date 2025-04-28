@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,13 +15,13 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './ass15050.component.html',
   styleUrl: './ass15050.component.scss'
 })
-export class ASS15050Component extends BasicQpageComponent implements OnInit{
+export class ASS15050Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     accountcode: [], // 會計科目代碼
-    depreciationYYmmFrom: [,[Validators.required]], // 折舊年限
-    depreciationYYmmTo: [,[Validators.required]], // 折舊年限
-    paperType: [,[Validators.required]], // 報表型式
+    depreciationYYmmFrom: [, [Validators.required]], // 折舊年限
+    depreciationYYmmTo: [, [Validators.required]], // 折舊年限
+    paperType: [, [Validators.required]], // 報表型式
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -38,7 +38,7 @@ export class ASS15050Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '會計科目編號/名稱', visible: true },
     { field: 'col2', header: '累計折舊金額', visible: true },
 
@@ -59,7 +59,7 @@ export class ASS15050Component extends BasicQpageComponent implements OnInit{
     // { field: 'col14', header: '入帳日期', visible: true },
     // { field: 'col15', header: '條件篩選', visible: true },
     // { field: 'col16', header: '顯示筆數', visible: true },
-    
+
     // { field: 'col17', header: '報廢日期前之帳面價值', visible: true },
     // { field: 'col18', header: '報廢損失', visible: true },
 

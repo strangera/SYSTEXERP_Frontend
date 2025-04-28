@@ -1,28 +1,48 @@
-import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { MenuItem } from 'primeng/api';
+import { UserInfo } from '../../models/system/userInfo';
+import { Subscription } from 'rxjs';
+import { AuthService } from '../../../service/system/auth.service';
+import { FunsrightInfo } from '../../models/system/funsrightInfo';
+import { NotificationService } from '../notification-message/notification.service';
 
+interface Favorite {
+  USER_No: string,
+  PROG_No: string,
+  FVT_SeqNo: number,
+}
 @Component({
   selector: 'app-menubar',
   templateUrl: './menubar.component.html',
   styleUrl: './menubar.component.scss',
   encapsulation: ViewEncapsulation.None,
 })
-export class MenubarComponent implements OnInit {
+export class MenubarComponent implements OnInit, OnDestroy {
   @Input() ProgNo: string = '';
   home: any;
   breadcrumbItems: MenuItem[] = [];
   menu: string[] = [];
 
   isFavorite: boolean = false;
+  // 使用者選單
+  private userSubscription: Subscription | undefined; // 使用者訂閱
+  data: UserInfo | null = null;              // 使用者資料
+  private menuUpdatedSubscription: Subscription | undefined;
+  funRightsInfo: FunsrightInfo[] = []; // 功能權限資訊
 
-  constructor() { }
+  constructor(
+    private authService: AuthService,
+    private messageService: NotificationService
+  ) { }
 
   ngOnInit(): void {
     this.home = { icon: 'pi pi-home', routerLink: '/dashboard' };
     this.breadcrumbItems = [];
-    const funs = sessionStorage.getItem("FunRightsInfo");
-    if (funs) {
-      this.getMenuName(JSON.parse(funs), this.ProgNo);
+    this.userSubscription = this.authService.user.subscribe((userInfo: UserInfo | null) => {
+      this.data = userInfo;
+    });
+    this.menuUpdatedSubscription = this.authService.menuUpdated.subscribe((newData: FunsrightInfo[]) => {
+      this.getMenuName(newData, this.ProgNo);
       this.isFavorite = this.checkIfFavorite(this.ProgNo); // 檢查是否已經加入我的最愛
       for (let i = this.menu.length - 1; i >= 0; i--) {
         if (this.menu[i]) {
@@ -33,11 +53,11 @@ export class MenubarComponent implements OnInit {
           });
         }
       }
-    }
+    });
   }
 
   getMenuName(funs: any[], progNo: string) {
-    var prog = funs.filter(x => x.prog_no == progNo && x.enable_fg == "1" && x.show_fg == "1");
+    const prog = funs.filter(x => x.prog_no == progNo && x.enable_fg == "1" && x.show_fg == "1");
     if (prog[0].parent_id != "0") {
       this.menu.push(prog[0].prog_name);
       this.getMenuName(funs, prog[0].parent_id)
@@ -47,34 +67,33 @@ export class MenubarComponent implements OnInit {
   }
 
   checkIfFavorite(progNo: string): boolean {
-    const favorites: { prog_no: string }[] = JSON.parse(sessionStorage.getItem('Favorites') || '[]');
-    return favorites.some(favorite => favorite.prog_no === progNo);
+    const favorites: Favorite[] = JSON.parse(sessionStorage.getItem('Favorites') || '[]');
+    return favorites.some(favorite => favorite.PROG_No === progNo);
   }
 
   toggleFavorite() {
     this.isFavorite = !this.isFavorite;
-    const favorites: { prog_no: string }[] = JSON.parse(sessionStorage.getItem('Favorites') || '[]');
-    const currentFavorite = { prog_no: this.ProgNo };
-    if (this.isFavorite) {
-      if (!favorites.some(fav => fav.prog_no === this.ProgNo)) {
-        favorites.push(currentFavorite);
-      } else {
-        this.isFavorite = true;
-      }
+    const favorites: Favorite[] = JSON.parse(sessionStorage.getItem('Favorites') || '[]');
+    if (this.isFavorite && !favorites.some(fav => fav.PROG_No === this.ProgNo)) {
+      const currentFavorite: Favorite = { PROG_No: this.ProgNo, USER_No: this.data?.user_No || '', FVT_SeqNo: favorites.length + 1 };
+      favorites.push(currentFavorite);
     } else {
-      const index = favorites.findIndex(fav => fav.prog_no === this.ProgNo);
-      if (index > -1) {
-        favorites.splice(index, 1);
+      const index = favorites.findIndex(fav => fav.PROG_No === this.ProgNo);
+      if (index > -1) favorites.splice(index, 1)
+      for (let i = index; i < favorites.length; i++) {
+        favorites[i].FVT_SeqNo = i + 1;
       }
     }
-
-    sessionStorage.setItem('Favorites', JSON.stringify(favorites));
-    this.updateBreadcrumbStyle();
+    this.authService.UpdateUserFavorite(favorites).subscribe({
+      next: (response) => {
+        this.messageService.successBubble('我的最愛已更新', response.Message);
+        sessionStorage.setItem('Favorites', JSON.stringify(favorites));
+      }, error: error => { console.error('Error fetching favorites:', error); }
+    });
   }
 
-  updateBreadcrumbStyle() {
-    this.breadcrumbItems = this.breadcrumbItems.map(item => ({
-      ...item,
-    }));
+  ngOnDestroy() {
+    this.userSubscription?.unsubscribe();
+    this.menuUpdatedSubscription?.unsubscribe();
   }
 }

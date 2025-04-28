@@ -5,10 +5,10 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { FileType } from '../../../shared/componentkit/file-upload/file-upload.component';
 @Component({
@@ -17,9 +17,9 @@ import { FileType } from '../../../shared/componentkit/file-upload/file-upload.c
   styleUrl: './tls52060.component.scss'
 })
 export class TLS52060Component {
-    // Upload files
-    fileType: FileType = FileType.PNG;
-    uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
+  // Upload files
+  fileType: FileType = FileType.PNG;
+  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
   ProgNo: string = '250019';
   // 權限變數
   funInfo: FunsrightInfo = {};
@@ -60,7 +60,7 @@ export class TLS52060Component {
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

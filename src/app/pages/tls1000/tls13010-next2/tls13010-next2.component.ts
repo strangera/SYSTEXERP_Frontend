@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, FormControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
-import { PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 
 interface InventoryItem {
@@ -227,7 +227,7 @@ export class TLS13010Next2Component extends BasicCrupageComponent implements OnI
   onCancelInner(index: number): void {
     const contractStartDate = this.inventoryItems[0]?.contractStartDate || '';
     const contractEndDate = this.inventoryItems[0]?.contractEndDate || '';
-  
+
     // 保留合約起迄日，重置其他欄位
     this.getDiscountSettingItems(index).controls.forEach(control => {
       control.get('selected')?.setValue(false);
@@ -236,13 +236,13 @@ export class TLS13010Next2Component extends BasicCrupageComponent implements OnI
       control.get('endDate')?.setValue(contractEndDate); // 保留預設值
       control.get('rate')?.setValue('');
     });
-  
+
     this.getAnnualPerformanceItems(index).controls.forEach(control => {
       control.get('selected')?.setValue(false);
       control.get('discountAmount')?.setValue('');
       control.get('rate')?.setValue('');
     });
-  
+
     this.getDiscountLevelItems(index).controls.forEach(control => {
       control.get('selected')?.setValue(false);
       control.get('discountType')?.setValue('');
@@ -250,15 +250,15 @@ export class TLS13010Next2Component extends BasicCrupageComponent implements OnI
       control.get('endAmount')?.setValue('');
       control.get('rate')?.setValue('');
     });
-  
+
     // 清除設定摘要內容
     this.getFormControl(index, 'discountSummary').setValue('');
   }
-  
+
   onClear(index: number): void {
     const contractStartDate = this.inventoryItems[0]?.contractStartDate || '';
     const contractEndDate = this.inventoryItems[0]?.contractEndDate || '';
-  
+
     // 保留合約起迄日，清除其他內容
     const discountSettingItems = this.getDiscountSettingItems(index);
     while (discountSettingItems.length < 10) {
@@ -271,7 +271,7 @@ export class TLS13010Next2Component extends BasicCrupageComponent implements OnI
       control.get('endDate')?.setValue(contractEndDate); // 保留預設值
       control.get('rate')?.setValue('');
     });
-  
+
     const annualPerformanceItems = this.getAnnualPerformanceItems(index);
     while (annualPerformanceItems.length < 10) {
       annualPerformanceItems.push(this.createAnnualPerformanceItem());
@@ -281,7 +281,7 @@ export class TLS13010Next2Component extends BasicCrupageComponent implements OnI
       control.get('discountAmount')?.setValue('');
       control.get('rate')?.setValue('');
     });
-  
+
     const discountLevelItems = this.getDiscountLevelItems(index);
     while (discountLevelItems.length < 10) {
       discountLevelItems.push(this.createDiscountLevelItem());

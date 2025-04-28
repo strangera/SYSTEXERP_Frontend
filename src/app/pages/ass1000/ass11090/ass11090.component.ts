@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -16,7 +16,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './ass11090.component.html',
   styleUrl: './ass11090.component.scss'
 })
-export class ASS11090Component extends BasicQpageComponent implements OnInit{
+export class ASS11090Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     bigCategoryCode: [], // 大分類代碼
@@ -40,7 +40,7 @@ export class ASS11090Component extends BasicQpageComponent implements OnInit{
     //
     depreciationLife: [, [Validators.maxLength(2)]], // 折舊年限
     //
-    remark: [, ], // 說明
+    remark: [,], // 說明
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -52,7 +52,8 @@ export class ASS11090Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'bigCategoryCode': 'A', 'bigCategoryName': '裝潢工程', 'midCategoryCode': 23, 'midCategoryName': '室內裝潢工程',
+    {
+      'bigCategoryCode': 'A', 'bigCategoryName': '裝潢工程', 'midCategoryCode': 23, 'midCategoryName': '室內裝潢工程',
       'accounting_Borrow': '裝潢設備', 'accounting_Credit': '應負費用-固資', 'tax_Borrow': '進項稅額-固資及費用', 'cost': '-',
       'depreciation': '折舊-裝潢設備', 'totalDepreciation': '累計折舊-裝潢設備', 'depreciationLife': 5, 'remark': '',
     },
@@ -60,7 +61,7 @@ export class ASS11090Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'bigCategoryCode', header: '大分類代碼', visible: true },
     { field: 'bigCategoryName', header: '大分類名稱', visible: true },
     { field: 'midCategoryCode', header: '中分類代碼', visible: true },
@@ -95,7 +96,7 @@ export class ASS11090Component extends BasicQpageComponent implements OnInit{
   ];
   // ----------------------------------------------------------------
   //
-  bigCategoryCodeOptions: any[]=[
+  bigCategoryCodeOptions: any[] = [
     { value: 1, label: 'A/裝潢工程' },
     { value: 2, label: 'B/其他工程' },
     { value: 3, label: 'C/電腦及電子零件產品' },
@@ -106,7 +107,7 @@ export class ASS11090Component extends BasicQpageComponent implements OnInit{
     { value: 8, label: 'K/印刷品(非廣告行銷)' },
   ];
   //
-  midCategoryCodeOptions: any[]=[
+  midCategoryCodeOptions: any[] = [
     { value: 23, label: '室內裝潢工程' },
     { value: 24, label: '室內裝潢備品' },
     { value: 21, label: '弱電系統' },
@@ -117,7 +118,7 @@ export class ASS11090Component extends BasicQpageComponent implements OnInit{
     { value: 22, label: '電子產品及零件' },
   ];
 
-  accounting_Borrow_Options: any[]=[
+  accounting_Borrow_Options: any[] = [
     { value: 1, label: '150101/土地' },
     { value: 2, label: '151101/房屋' },
     { value: 3, label: '151201/累積折舊_房屋' },
@@ -126,7 +127,7 @@ export class ASS11090Component extends BasicQpageComponent implements OnInit{
     { value: 6, label: '153101/運輸設備' },
   ];
 
-  accounting_Credit_Options: any[]=[
+  accounting_Credit_Options: any[] = [
     { value: 1, label: '213101/應負帳款_專櫃' },
     { value: 2, label: '213102/應負帳款_自營' },
     { value: 3, label: '213103/應負帳款_固資及費用' },
@@ -134,7 +135,7 @@ export class ASS11090Component extends BasicQpageComponent implements OnInit{
     { value: 5, label: '213105/應負帳款_品牌' },
   ];
 
-  tax_Borrow_Options: any[]=[
+  tax_Borrow_Options: any[] = [
     { value: 1, label: '123201/進項稅額_專櫃' },
     { value: 2, label: '213102/進項稅額_自營' },
     { value: 3, label: '213103/進項稅額_固資及費用' },
@@ -142,8 +143,8 @@ export class ASS11090Component extends BasicQpageComponent implements OnInit{
     { value: 5, label: '213105/進項稅額_品牌' },
   ];
 
-  costOptions: any[]=[];
-  
+  costOptions: any[] = [];
+
   //
   constructor(
     private router: Router,

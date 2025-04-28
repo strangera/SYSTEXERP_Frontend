@@ -47,7 +47,7 @@
           <app-calendar-range calendarType="dateYearRange" class="col-12 md:col-6 lg:col-5" label="年"
             [startControl]="queryForm.controls.starttime" [endControl]="queryForm.controls.endtime"
             [submitted]="submitted" />
-          <app-radiobutton class="col-12 md:col-4 lg:col-4" label="radio多選" groupname="systemtyperadio"
+          <app-radiobutton class="col-12" label="radio多選" groupname="systemtyperadio"
             [control]="queryForm.controls.radiolist" [options]="systemTypeOptions" [submitted]="submitted"
             (valueChange)="onSystemTypeChange($event)" />
           <app-editor-text class="col-12" label="編輯器" controlName="editortext" [control]="queryForm.controls.editortext"

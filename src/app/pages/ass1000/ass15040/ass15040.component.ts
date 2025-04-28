@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -17,10 +17,10 @@ import { ItemCodeService } from '../../../service/basic/item-code.service';
   templateUrl: './ass15040.component.html',
   styleUrl: './ass15040.component.scss'
 })
-export class ASS15040Component extends BasicQpageComponent implements OnInit{
+export class ASS15040Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
-    baseYYMM: [,[Validators.required]], // 基準日
+    baseYYMM: [, [Validators.required]], // 基準日
     //
     keeperUnit: [], // 保管單位
     accountcode: [], // 會計科目代碼
@@ -41,7 +41,7 @@ export class ASS15040Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '財產編號', visible: true },
     { field: 'col2', header: '品項編號', visible: true },
     { field: 'col3', header: '品項名稱', visible: true },
@@ -62,7 +62,7 @@ export class ASS15040Component extends BasicQpageComponent implements OnInit{
     // { field: 'col14', header: '入帳日期', visible: true },
     // { field: 'col15', header: '條件篩選', visible: true },
     // { field: 'col16', header: '顯示筆數', visible: true },
-    
+
     // { field: 'col17', header: '報廢日期前之帳面價值', visible: true },
     // { field: 'col18', header: '報廢損失', visible: true },
 
@@ -91,7 +91,7 @@ export class ASS15040Component extends BasicQpageComponent implements OnInit{
     { value: 9, label: '1522' },
     { value: 10, label: '152201' },
   ];
-  itemCodeOptions:any[] = [];
+  itemCodeOptions: any[] = [];
 
   //
   constructor(

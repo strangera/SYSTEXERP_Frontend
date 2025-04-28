@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { CashierCodeService } from '../../../service/basic/cashier-code.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
@@ -19,7 +19,7 @@ export class TLS24070Component extends BasicQpageComponent implements OnInit {
     cashierCode: ['', Validators.required],
     startSerialNumber: ['', Validators.required],
     endSerialNumber: ['', Validators.required],
-    invoiceNumber: ['', Validators.required,Validators.maxLength(20)],
+    invoiceNumber: ['', Validators.required, Validators.maxLength(20)],
     selectedGroup: ['group1'], // Set default group
     test: ['', Validators.required]
   });
@@ -81,7 +81,7 @@ export class TLS24070Component extends BasicQpageComponent implements OnInit {
   disableFieldsForGroup2() {
     const invoiceNumberControl = this.queryForm.get('invoiceNumber');
     if (invoiceNumberControl) {
-        invoiceNumberControl.disable();
+      invoiceNumberControl.disable();
     }
   }
 
@@ -90,9 +90,9 @@ export class TLS24070Component extends BasicQpageComponent implements OnInit {
     if (selectedGroupControl) {
       selectedGroupControl.setValue(group);
     }
-  
+
     const controlsToDisable = ['saleDateStart', 'saleDateEnd', 'cashierCode', 'startSerialNumber', 'endSerialNumber'];
-    
+
     if (group === 'group1') {
       controlsToDisable.forEach(controlName => {
         const control = this.queryForm.get(controlName);
@@ -113,7 +113,7 @@ export class TLS24070Component extends BasicQpageComponent implements OnInit {
       this.safeEnable('test');
     }
   }
-  
+
   // Helper methods to safely enable or disable controls
   private safeEnable(controlName: string): void {
     const control = this.queryForm.get(controlName);
@@ -121,7 +121,7 @@ export class TLS24070Component extends BasicQpageComponent implements OnInit {
       control.enable();
     }
   }
-  
+
   private safeDisable(controlName: string): void {
     const control = this.queryForm.get(controlName);
     if (control) {

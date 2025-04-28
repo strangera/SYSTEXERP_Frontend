@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm21020.component.html',
   styleUrl: './cpm21020.component.scss'
 })
-export class CPM21020Component extends BasicQpageComponent implements OnInit{
+export class CPM21020Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     vendorId: [, [Validators.maxLength(12)]], // 廠商編號
@@ -36,7 +36,7 @@ export class CPM21020Component extends BasicQpageComponent implements OnInit{
     companyPhone: [, [Validators.maxLength(15)]], // 公司登記電話
     companyFax: [, [Validators.maxLength(15)]], // 公司傳真
     //
-    remark: [, ], // 附註
+    remark: [,], // 附註
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -53,7 +53,7 @@ export class CPM21020Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '廠商編號', visible: true },
     { field: 'col2', header: '廠商統一編號', visible: true },
     { field: 'col3', header: '廠商名稱(中文)', visible: true },

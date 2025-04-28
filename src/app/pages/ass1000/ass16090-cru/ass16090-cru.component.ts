@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
@@ -17,16 +17,15 @@ import { OrganizationNumberService } from '../../../service/basic/organization-n
 })
 export class ASS16090CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
   ngOnInit(): void {
     // 網站導覽設定
     this.ProgNo = '310048';
     // ----------------------------------------------------------------
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-     // 下拉選單--------------------------------------------------------
-     this.userCodeService.getUserCode().subscribe((data) => (this.Applicantcode = data));
-     this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.Departmentcode = data));
+    // 下拉選單--------------------------------------------------------
+    this.userCodeService.getUserCode().subscribe((data) => (this.Applicantcode = data));
+    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.Departmentcode = data));
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus;
@@ -77,12 +76,12 @@ export class ASS16090CRUComponent
     Applicantcode: [],
     Departmentcode: [],
     rtnDate: [],
-    retExp : [],
+    retExp: [],
     // ----------------------------------------------------------------
     items: this.formBuilder.array([this.createItem()]),
   });
   // Dropdown options
-  Kurabe: any[] =[
+  Kurabe: any[] = [
     { value: 1, label: '001' },
     { value: 2, label: '002' },
   ];
@@ -99,7 +98,7 @@ export class ASS16090CRUComponent
     { value: 8, label: '3A24210000008' },
     { value: 9, label: '3A24210000009' },
     { value: 10, label: '3A24210000010' },
-];
+  ];
 
 
 
@@ -110,8 +109,8 @@ export class ASS16090CRUComponent
     private messageService: NotificationService,
     private authService: AuthService,
     private translate: TranslateService,
-    private userCodeService:UserCodeService,
-    private organizationNumberService:OrganizationNumberService,
+    private userCodeService: UserCodeService,
+    private organizationNumberService: OrganizationNumberService,
 
   ) {
     super(); // 呼叫父類建構子

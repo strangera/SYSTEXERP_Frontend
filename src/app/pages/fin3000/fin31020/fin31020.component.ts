@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './fin31020.component.html',
   styleUrl: './fin31020.component.scss'
 })
-export class FIN31020Component extends BasicQpageComponent implements OnInit{
+export class FIN31020Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     adjustID: [, [Validators.maxLength(8)]], // 調整科目代號
@@ -37,14 +37,14 @@ export class FIN31020Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '調整科目代號', visible: true },
     { field: 'col2', header: '加減項', visible: true },
     { field: 'col3', header: '備註', visible: true },
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  minusOption:any[] = [
+  minusOption: any[] = [
     { value: 1, label: '加項' },
     { value: 2, label: '減項' },
   ];

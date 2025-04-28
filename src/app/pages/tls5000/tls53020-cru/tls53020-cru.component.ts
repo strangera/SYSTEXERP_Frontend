@@ -6,7 +6,7 @@ import { WarehouseService } from '../../../service/basic/warehouse.service';
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
 import { InventoryStatusService } from '../../../service/basic/inventory-status.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { InventoryCategoryService } from '../../../service/basic/inventory-category.service';
@@ -36,10 +36,10 @@ export class TLS53020CRUComponent extends BasicCrupageComponent implements OnIni
     inventoryStatus: [null, Validators.required],
     Description: [],
     inventoryCategory: [, Validators.required],
-            // ----------------------------------------------------------------
-            items: this.formBuilder.array([
-              this.createItem()
-            ]),
+    // ----------------------------------------------------------------
+    items: this.formBuilder.array([
+      this.createItem()
+    ]),
   });
 
   // Dropdown options
@@ -64,9 +64,9 @@ export class TLS53020CRUComponent extends BasicCrupageComponent implements OnIni
     private inventoryCategoryService: InventoryCategoryService,
     private translate: TranslateService,
     private messageService: NotificationService,
-  )  {
+  ) {
     super();  // 呼叫父類建構子
-}
+  }
 
   ngOnInit(): void {
     this.ProgNo = '250022';
@@ -98,75 +98,75 @@ export class TLS53020CRUComponent extends BasicCrupageComponent implements OnIni
         break;
     }//CRU
   }
- // ----------------------------------------------------------------
- get items(): FormArray {
-  return this.dataForm.get('items') as FormArray;
-}
+  // ----------------------------------------------------------------
+  get items(): FormArray {
+    return this.dataForm.get('items') as FormArray;
+  }
 
-getFormControl(index: number, controlName: string): FormControl {
-  return this.items.at(index).get(controlName) as FormControl;
-}
-onRemoveItem(index: number) {
-  this.items.removeAt(index);
-}
+  getFormControl(index: number, controlName: string): FormControl {
+    return this.items.at(index).get(controlName) as FormControl;
+  }
+  onRemoveItem(index: number) {
+    this.items.removeAt(index);
+  }
 
-createItem(): FormGroup {
-  return this.formBuilder.group({
-    mgname: [],
-    barcode: [{ value: '自動帶入', disabled: true }],
-    vendorCode: [{ value: '自動帶入', disabled: true }],
-    remark: [],      
-  });
-}
+  createItem(): FormGroup {
+    return this.formBuilder.group({
+      mgname: [],
+      barcode: [{ value: '自動帶入', disabled: true }],
+      vendorCode: [{ value: '自動帶入', disabled: true }],
+      remark: [],
+    });
+  }
 
-Edit(rowdata: any) {
-  this.dataForm.patchValue(rowdata);
-}
+  Edit(rowdata: any) {
+    this.dataForm.patchValue(rowdata);
+  }
 
-Read(rowdata: any) {
-  this.dataForm.patchValue(rowdata);
-  this.dataForm.disable();
-}
+  Read(rowdata: any) {
+    this.dataForm.patchValue(rowdata);
+    this.dataForm.disable();
+  }
 
-onAddItem(): void {
-  this.items.push(this.createItem());
-}
+  onAddItem(): void {
+    this.items.push(this.createItem());
+  }
 
-onSubmit(frm: FormGroup){
-  this.messageService.blockUi();
-  this.submitted = true;
+  onSubmit(frm: FormGroup) {
+    this.messageService.blockUi();
+    this.submitted = true;
 
-  if (this.dataForm.invalid){
-    this.messageService.errorBubble(this.translate.instant('form_error_message'));
+    if (this.dataForm.invalid) {
+      this.messageService.errorBubble(this.translate.instant('form_error_message'));
+      this.messageService.unblockUi();
+      return;
+    }
+
+    switch (this.crudstatus) {
+      case CRUDStatus.Create:
+        if (this.canAdd()) {
+          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
+          this.messageService.successBubble(this.translate.instant('success_message'));
+        }
+        break;
+      case CRUDStatus.Edit:
+        if (this.canEdit()) {
+          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
+          this.messageService.successBubble(this.translate.instant('updated-successfully'));
+        }
+        break;
+    }
+
     this.messageService.unblockUi();
-    return;
+    this.submitted = false;
   }
 
-  switch (this.crudstatus) {
-    case CRUDStatus.Create:
-      if (this.canAdd()) {
-        // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-        this.messageService.successBubble(this.translate.instant('success_message'));
-      }
-      break;
-    case CRUDStatus.Edit:
-      if (this.canEdit()) {
-        // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-        this.messageService.successBubble(this.translate.instant('updated-successfully'));
-      }
-      break;
+  submitForm(frm: FormGroup) {
+    this.onSubmit(frm);
   }
 
-  this.messageService.unblockUi();
-  this.submitted = false;
-}
-
-submitForm(frm: FormGroup) {
-  this.onSubmit(frm);
-}
-
-onCancel() {
-  this.router.navigate(['/TLS5000/TLS53020']);
-}
+  onCancel() {
+    this.router.navigate(['/TLS5000/TLS53020']);
+  }
 
 }

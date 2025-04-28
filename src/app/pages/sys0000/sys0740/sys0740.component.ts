@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { SystemTypeDetailService } from '../../../service/basic/system-type-detail.service';
 
@@ -61,7 +61,7 @@ export class SYS0740Component {
     { field: 'roleCode', header: '角色代碼', visible: true },
     { field: 'roleName', header: '角色名稱', visible: true },
   ];
-  
+
   // Options
   systemTypeDetailOptions: any[] = [];
 
@@ -71,7 +71,7 @@ export class SYS0740Component {
     private messageService: NotificationService,
     private authService: AuthService,
     private systemTypeDetailService: SystemTypeDetailService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

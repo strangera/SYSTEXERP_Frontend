@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -30,7 +30,7 @@ export class TLS2J050Component {
   queryForm = this.formBuilder.group({
     onedatedd: [, [Validators.required]], // 換開日期
     invoice: ['', [Validators.maxLength(10)]], // 三聯式發票號碼
-    serialnumber: [, [Validators.maxLength(8),this.validationService.numberValidator]], // 買受人統一編號
+    serialnumber: [, [Validators.maxLength(8), this.validationService.numberValidator]], // 買受人統一編號
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
   });
   // 表格
@@ -42,7 +42,7 @@ export class TLS2J050Component {
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'contactPerson', header: '洽談者', visible: true },
     { field: 'contactDate', header: '洽談日', visible: true },
     { field: 'UID', header: '統編/廠商', visible: true },

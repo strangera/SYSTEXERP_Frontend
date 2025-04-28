@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
 @Component({
@@ -23,14 +23,14 @@ export class SYSB500Component extends BasicQpageComponent implements OnInit {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { isdelete:false, areaNumber: 'A', areaName: 'A區'},
-    { isdelete:false, areaNumber: 'B', areaName: 'B區'},
-    { isdelete:false, areaNumber: 'C', areaName: 'C區'},
-    { isdelete:false, areaNumber: 'D', areaName: 'D區'},
+    { isdelete: false, areaNumber: 'A', areaName: 'A區' },
+    { isdelete: false, areaNumber: 'B', areaName: 'B區' },
+    { isdelete: false, areaNumber: 'C', areaName: 'C區' },
+    { isdelete: false, areaNumber: 'D', areaName: 'D區' },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'areaNumber', header: '區域別編號', visible: true },
     { field: 'areaName', header: '區域別名稱', visible: true },
     // 其他欄位

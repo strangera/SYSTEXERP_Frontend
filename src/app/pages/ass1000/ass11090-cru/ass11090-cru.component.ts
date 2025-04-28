@@ -3,7 +3,7 @@ import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -17,9 +17,9 @@ import { NeedPayTicketService } from '../../../service/basic/need-pay-ticket.ser
   templateUrl: './ass11090-cru.component.html',
   styleUrl: './ass11090-cru.component.scss'
 })
-export class ASS11090CRUComponent extends BasicCrupageComponent implements OnInit{
+export class ASS11090CRUComponent extends BasicCrupageComponent implements OnInit {
   //
-  bigCategoryCodeOptions: any[]=[
+  bigCategoryCodeOptions: any[] = [
     { value: 1, label: 'A/裝潢工程' },
     { value: 2, label: 'B/其他工程' },
     { value: 3, label: 'C/電腦及電子零件產品' },
@@ -30,7 +30,7 @@ export class ASS11090CRUComponent extends BasicCrupageComponent implements OnIni
     { value: 8, label: 'K/印刷品(非廣告行銷)' },
   ];
   //
-  midCategoryCodeOptions: any[]=[
+  midCategoryCodeOptions: any[] = [
     { value: 23, label: '室內裝潢工程' },
     { value: 24, label: '室內裝潢備品' },
     { value: 21, label: '弱電系統' },
@@ -41,7 +41,7 @@ export class ASS11090CRUComponent extends BasicCrupageComponent implements OnIni
     { value: 22, label: '電子產品及零件' },
   ];
 
-  accounting_Borrow_Options: any[]=[
+  accounting_Borrow_Options: any[] = [
     { value: 1, label: '150101/土地' },
     { value: 2, label: '151101/房屋' },
     { value: 3, label: '151201/累積折舊_房屋' },
@@ -50,7 +50,7 @@ export class ASS11090CRUComponent extends BasicCrupageComponent implements OnIni
     { value: 6, label: '153101/運輸設備' },
   ];
 
-  accounting_Credit_Options: any[]=[
+  accounting_Credit_Options: any[] = [
     { value: 1, label: '213101/應負帳款_專櫃' },
     { value: 2, label: '213102/應負帳款_自營' },
     { value: 3, label: '213103/應負帳款_固資及費用' },
@@ -58,7 +58,7 @@ export class ASS11090CRUComponent extends BasicCrupageComponent implements OnIni
     { value: 5, label: '213105/應負帳款_品牌' },
   ];
 
-  tax_Borrow_Options: any[]=[
+  tax_Borrow_Options: any[] = [
     { value: 1, label: '123201/進項稅額_專櫃' },
     { value: 2, label: '213102/進項稅額_自營' },
     { value: 3, label: '213103/進項稅額_固資及費用' },
@@ -66,19 +66,19 @@ export class ASS11090CRUComponent extends BasicCrupageComponent implements OnIni
     { value: 5, label: '213105/進項稅額_品牌' },
   ];
 
-  costOptions: any[]=[];
-  organizationOptions: any[]=[];
+  costOptions: any[] = [];
+  organizationOptions: any[] = [];
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    bigCategoryCode: [,[Validators.required]], // 大分類代碼
+    bigCategoryCode: [, [Validators.required]], // 大分類代碼
     bigCategoryName: ['', [Validators.required, Validators.maxLength(32)]], // 大分類名稱
-    midCategoryCode: [,[Validators.required]], // 中分類代碼
+    midCategoryCode: [, [Validators.required]], // 中分類代碼
     midCategoryName: ['', [Validators.required, Validators.maxLength(32)]], // 中分類名稱
     // 採買入帳科目
-    accounting_Borrow: [,[Validators.required]], // 所屬會計科目(借)
+    accounting_Borrow: [, [Validators.required]], // 所屬會計科目(借)
     accountName_accBorrow: ['', [Validators.maxLength(40)]], // 會計科目名稱_所屬會計科目(借)
     //
-    accounting_Credit: [,[Validators.required]], // 所屬會計科目(貸)
+    accounting_Credit: [, [Validators.required]], // 所屬會計科目(貸)
     accountName_accCredit: ['', [Validators.maxLength(40)]], // 會計科目名稱_所屬會計科目(貸)
     tax_Borrow: [], // 進項稅額科目(借)
     accountName_taxBorrow: ['', [Validators.maxLength(40)]], // 會計科目名稱_進項稅額科目(借)
@@ -92,7 +92,7 @@ export class ASS11090CRUComponent extends BasicCrupageComponent implements OnIni
     //
     depreciationLife: [, [Validators.maxLength(2)]], // 折舊年限
     //
-    remark: [, ], // 說明
+    remark: [,], // 說明
     // ----------------------------------------------------------------
     items: this.formBuilder.array([
       this.createItem()
@@ -109,8 +109,8 @@ export class ASS11090CRUComponent extends BasicCrupageComponent implements OnIni
     //
     private needPayTicketService: NeedPayTicketService,
     private organizationNumberService: OrganizationNumberService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -137,14 +137,14 @@ export class ASS11090CRUComponent extends BasicCrupageComponent implements OnIni
       // 創建
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
-        this.accordionTabCss= 'create-accordionTab';
+        this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
         this.showConfirm = this.canAdd();
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
-        this.accordionTabCss= 'edit-accordionTab';
+        this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
         this.showConfirm = this.canEdit();
         this.Edit(state.rowdata);
@@ -171,10 +171,10 @@ export class ASS11090CRUComponent extends BasicCrupageComponent implements OnIni
   // ----------------------------------------------------------------
   createItem(): FormGroup {
     return this.formBuilder.group({
-      accountingName: [,[Validators.required]], // 會計科目(借)
-      subjectName: [,[Validators.required]], // 科目名稱
-      organizationCode:['', [Validators.required, Validators.maxLength(6)]], //組織代號
-      organizationName: [,[Validators.required]], // 科目名稱
+      accountingName: [, [Validators.required]], // 會計科目(借)
+      subjectName: [, [Validators.required]], // 科目名稱
+      organizationCode: ['', [Validators.required, Validators.maxLength(6)]], //組織代號
+      organizationName: [, [Validators.required]], // 科目名稱
     });
   }
   onRemoveItem(index: number) {
@@ -194,11 +194,11 @@ export class ASS11090CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

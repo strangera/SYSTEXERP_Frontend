@@ -6,7 +6,7 @@ import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 import { FlippingstateService } from './../../../service/basic/flippingstate.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -20,7 +20,7 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
   templateUrl: './fin55130.component.html',
   styleUrl: './fin55130.component.scss'
 })
-export class FIN55130Component   extends BasicQpageComponent implements OnInit {
+export class FIN55130Component extends BasicQpageComponent implements OnInit {
   // Upload files
   fileType: FileType = FileType.PNG;
   uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
@@ -69,14 +69,14 @@ export class FIN55130Component   extends BasicQpageComponent implements OnInit {
     { value: 1, label: 'A4(直印)' },
     { value: 2, label: 'A4(橫印)' },
     { value: 3, label: '一般' },
-];
-category
-: any[] = [
-  { value: 1, label: '統制' },
-  { value: 2, label: '明細' },
-  { value: 3, label: '彙總' },
+  ];
+  category
+    : any[] = [
+      { value: 1, label: '統制' },
+      { value: 2, label: '明細' },
+      { value: 3, label: '彙總' },
 
-];
+    ];
   Subpoenatype2: any[] = [
     { value: 1, label: '贊助金傳票' },
     { value: 2, label: '電匯EDI傳票' },
@@ -95,20 +95,20 @@ category
     { value: 2, label: '含無交易記錄之會計科目' },
   ];
   Printingmethod
-  : any[] = [
-    { value: 1, label: '分開列印' },
-    { value: 2, label: '合併列印' },
-  ];
+    : any[] = [
+      { value: 1, label: '分開列印' },
+      { value: 2, label: '合併列印' },
+    ];
   Postingmethod: any[] = [
     { value: 1, label: '依明細勾選' },
     { value: 2, label: '依過帳年月' },
   ];
   Printingcolumn
-  : any[] = [
-    { value: 1, label: '狀態' },
-    { value: 2, label: '活動' },
-    { value: 2, label: '立沖代號' },
-  ];
+    : any[] = [
+      { value: 1, label: '狀態' },
+      { value: 2, label: '活動' },
+      { value: 2, label: '立沖代號' },
+    ];
   activity: any[] = [
     { value: 1, label: '全部' },
     { value: 2, label: '會員紅利活動' },
@@ -179,18 +179,18 @@ category
     { value: 3, label: '96978370_統正開發股份有限公司' },
   ];
   Accountcode
-  : any[] = [
-    { value: 1, label: '資產' },
-    { value: 2, label: '負債' },
-    { value: 3, label: '股東權益' },
-    { value: 4, label: '營業收入' },
-  ];
+    : any[] = [
+      { value: 1, label: '資產' },
+      { value: 2, label: '負債' },
+      { value: 3, label: '股東權益' },
+      { value: 4, label: '營業收入' },
+    ];
   display
-: any[] = [
-  { value: 1, label: '顯示' },
-  { value: 2, label: '不顯示' },
+    : any[] = [
+      { value: 1, label: '顯示' },
+      { value: 2, label: '不顯示' },
 
-]
+    ]
   // Table data
   data: any[] = [
 

@@ -2,7 +2,7 @@ import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -20,13 +20,13 @@ import { ItemCodeService } from '../../../service/basic/item-code.service';
   templateUrl: './ass12050-cru.component.html',
   styleUrl: './ass12050-cru.component.scss'
 })
-export class ASS12050CRUComponent extends BasicCrupageComponent implements OnInit{
-  itemCodeOptions:any[] = [];
-  applicantCodeOptions:any[] = [];
+export class ASS12050CRUComponent extends BasicCrupageComponent implements OnInit {
+  itemCodeOptions: any[] = [];
+  applicantCodeOptions: any[] = [];
   organizationNumberOptions: any[] = [];
   supplierCodeOptions: any[] = [];
   paperStatusOptions: any[] = [];
-  storageOptions:any[] = [
+  storageOptions: any[] = [
     { value: 1, label: '總公司' },
     { value: 2, label: '測試' },
   ];
@@ -46,16 +46,16 @@ export class ASS12050CRUComponent extends BasicCrupageComponent implements OnIni
     //
     itemCode: [], // 品項編號
     unit: [''], // 單位
-    requestNumber: [,[Validators.maxLength(8)]], // 申請數量
-    should_checktNumber: [,[Validators.maxLength(8)]], // 應驗數量
-    checktNumber: [,[Validators.maxLength(8)]], // 驗收數量
-    singlePrice: [,[Validators.maxLength(8)]], // 單價(未稅)
-    adjustPrice: [,[Validators.maxLength(8)]], // 調整單價(未稅)
-    totalPrice: [,[Validators.maxLength(8)]], // 總金額
+    requestNumber: [, [Validators.maxLength(8)]], // 申請數量
+    should_checktNumber: [, [Validators.maxLength(8)]], // 應驗數量
+    checktNumber: [, [Validators.maxLength(8)]], // 驗收數量
+    singlePrice: [, [Validators.maxLength(8)]], // 單價(未稅)
+    adjustPrice: [, [Validators.maxLength(8)]], // 調整單價(未稅)
+    totalPrice: [, [Validators.maxLength(8)]], // 總金額
 
-    branch: ['',[Validators.maxLength(4)]], // 分店	
-    storage: ['',[Validators.maxLength(4)]], // 倉別
-    department:[''], //委託部門
+    branch: ['', [Validators.maxLength(4)]], // 分店	
+    storage: ['', [Validators.maxLength(4)]], // 倉別
+    department: [''], //委託部門
     // ----------------------------------------------------------------
     items: this.formBuilder.array([
       this.createItem()
@@ -75,8 +75,8 @@ export class ASS12050CRUComponent extends BasicCrupageComponent implements OnIni
     private organizationNumberService: OrganizationNumberService,
     private vendorService: VendorService,
     private paperStatusService: PaperStatusService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -115,14 +115,14 @@ export class ASS12050CRUComponent extends BasicCrupageComponent implements OnIni
       // 創建
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
-        this.accordionTabCss= 'create-accordionTab';
+        this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
         this.showConfirm = this.canAdd();
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
-        this.accordionTabCss= 'edit-accordionTab';
+        this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
         this.showConfirm = this.canEdit();
         this.Edit(state.rowdata);
@@ -169,11 +169,11 @@ export class ASS12050CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

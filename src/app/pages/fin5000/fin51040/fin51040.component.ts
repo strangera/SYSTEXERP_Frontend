@@ -6,7 +6,7 @@ import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 import { FlippingstateService } from './../../../service/basic/flippingstate.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -114,7 +114,7 @@ export class FIN51040Component extends BasicQpageComponent implements OnInit {
     { field: 'voucherStatus', header: '傳票狀態', visible: true },
     { field: 'voucherNumber', header: '傳票編號', visible: true },
     { field: 'voucherSummary', header: '傳票摘要', visible: true },
-    
+
     // Debit Section
     { field: 'debitRecoveryPayable', header: '借方 - 應收帳款-有價券(含稅)', visible: true },
     { field: 'debitPreIncomeGoodsVoucher', header: '借方 - 預收款項-商品提貨單', visible: true },
@@ -123,7 +123,7 @@ export class FIN51040Component extends BasicQpageComponent implements OnInit {
     { field: 'debitSalesTax', header: '借方 - 銷項稅額-有價券', visible: true },
     { field: 'debitSalesDiscount', header: '借方 - 銷售折讓-商品損壞單據折扣', visible: true },
     { field: 'debitTotal', header: '借方合計', visible: true },
-    
+
     // Credit Section
     { field: 'creditRecoveryPayable', header: '貸方 - 應付帳款-有價券(含稅)', visible: true },
     { field: 'creditPreExpenseGoodsVoucher', header: '貸方 - 預收款項-商品提貨單', visible: true },

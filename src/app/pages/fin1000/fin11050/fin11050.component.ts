@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -18,7 +18,7 @@ import { QueryConditionService } from './../../../service/basic/query-condition.
 })
 
 //1.1.1.5 二聯式電子發票上送狀況表
-export class FIN11050Component extends BasicQpageComponent implements OnInit{
+export class FIN11050Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     salesStartdate: [, [Validators.required]], // 銷售日期
@@ -44,7 +44,7 @@ export class FIN11050Component extends BasicQpageComponent implements OnInit{
   data: any[] = [
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '交易日', visible: true },
     { field: 'col2', header: '發票日期', visible: true },
     { field: 'col3', header: '上傳日期', visible: true },
@@ -59,8 +59,8 @@ export class FIN11050Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  queryOptions:any[]=[];
-  whetherOptions:any[]=[];
+  queryOptions: any[] = [];
+  whetherOptions: any[] = [];
 
   constructor(
     private router: Router,

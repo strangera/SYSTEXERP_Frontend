@@ -5,7 +5,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { UserTypeService } from '../../../service/basic/user-type.service';
 import { UserStatusService } from '../../../service/basic/user-status.service';

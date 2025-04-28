@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { VendorService } from '../../../service/basic/vendor.service';
@@ -18,7 +18,7 @@ import { PaymentMethodService } from '../../../service/basic/payment-method.serv
   templateUrl: './ass11070.component.html',
   styleUrl: './ass11070.component.scss'
 })
-export class ASS11070Component extends BasicQpageComponent implements OnInit{
+export class ASS11070Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     startdate: [], // 建檔日期
@@ -44,7 +44,7 @@ export class ASS11070Component extends BasicQpageComponent implements OnInit{
     endserialticket: [, [this.validationService.numberValidator]], // 票期
     services: ['', [Validators.maxLength(100)]], // 服務項目
     //
-    remark: [, ], // 備註
+    remark: [,], // 備註
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -56,16 +56,17 @@ export class ASS11070Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'startdate': '2024/01/01', 'receptionPerson': 1, 'vendorUID': 1, 'vendorCName': 'A廠商', 'vendorEName': 'A manufactory',
+    {
+      'startdate': '2024/01/01', 'receptionPerson': 1, 'vendorUID': 1, 'vendorCName': 'A廠商', 'vendorEName': 'A manufactory',
       'contactPerson': 'B先生', 'contactTitle': 'B職稱', 'contactPhone': '062000000', 'contactCellphone': '0911111111', 'contactEmail': 'abc@gmail.com',
       'contactFax': '111111111', 'companyResponsibility': 'C負責人', 'companyAddress': 'C地址', 'paymentMethod': 2, 'bussinessModel': 2,
       'startserialticket': 100, 'remark': 'G',
-     },
+    },
     // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'startdate', header: '建檔日期', visible: true },
     { field: 'receptionPerson', header: '接洽人員', visible: false },
     { field: 'vendorUID', header: '廠商統一編號', visible: true },
@@ -111,7 +112,7 @@ export class ASS11070Component extends BasicQpageComponent implements OnInit{
     { value: 4, label: '零售連鎖' },
     { value: 5, label: '零售一般' },
   ];
-  paymentMethodOptions:any[]=[];
+  paymentMethodOptions: any[] = [];
   //
   constructor(
     private router: Router,

@@ -5,10 +5,10 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
@@ -68,7 +68,7 @@ export class TLS25020Component {
     { field: 'amount', header: '金額', visible: true },
     { field: 'isAmountEditable', header: '金額是否可修改', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -77,7 +77,7 @@ export class TLS25020Component {
     private authService: AuthService,
     private violationCategoryService: ViolationCategoryService,  // 違規類別編號 service
     private whetherService: WhetherService,  // 金額是否可修改 service
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
@@ -149,11 +149,11 @@ export class TLS25020Component {
         amountEditable: data.isAmountEditable === '是',
       };
       sessionStorage.setItem('violationCategoryData', JSON.stringify(violationData));
-  
+
       // 儲存下拉選項到 sessionStorage
       sessionStorage.setItem('violationCategoryOptions', JSON.stringify(this.violationCategoryOptions));
       sessionStorage.setItem('whetherOptions', JSON.stringify(this.whetherOptions));
-  
+
       const extras: NavigationExtras = {
         state: {
           crudstatus: CRUDStatus.Edit
@@ -163,8 +163,8 @@ export class TLS25020Component {
       this.router.navigate(['TLS2000/TLS25020MOD'], extras);
     }
   }
-  
-  
+
+
 
   onDetail(data: any) {
     let extras: NavigationExtras = {

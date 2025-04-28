@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { MessageService } from 'primeng/api';
@@ -14,7 +14,7 @@ import { MessageService } from 'primeng/api';
   templateUrl: './bankdemo.component.html',
   styleUrl: './bankdemo.component.scss'
 })
-export class BankdemoComponent extends BasicQpageComponent implements OnInit{
+export class BankdemoComponent extends BasicQpageComponent implements OnInit {
   // --editTable object---
   editingRows: Set<any> = new Set(); // 用來追蹤哪些列正在編輯
   selectedRows: Set<number> = new Set<number>(); // 追蹤被選取的資料列
@@ -44,21 +44,23 @@ export class BankdemoComponent extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { id:1, BNK_No: '0000022', Name: '中央銀行國庫局', BNK_ShortName: '中銀', Min_Length: 6, Max_Length: 6,
+    {
+      id: 1, BNK_No: '0000022', Name: '中央銀行國庫局', BNK_ShortName: '中銀', Min_Length: 6, Max_Length: 6,
       children: [
-        { id:1, BNK_BranchNo: '001', Name: '中央銀行國庫局 永康分行' },
-        { id:2, BNK_BranchNo: '002', Name: '中央銀行國庫局 鹽行分行' }
+        { id: 1, BNK_BranchNo: '001', Name: '中央銀行國庫局 永康分行' },
+        { id: 2, BNK_BranchNo: '002', Name: '中央銀行國庫局 鹽行分行' }
       ]
     },
-    { id:2, BNK_No: '0040037', Name: '台灣銀行',BNK_ShortName: '台銀', Min_Length: 14, Max_Length: 14,
+    {
+      id: 2, BNK_No: '0040037', Name: '台灣銀行', BNK_ShortName: '台銀', Min_Length: 14, Max_Length: 14,
       children: [
-        { id:3, BNK_BranchNo: '003', Name: '台灣銀行 永康分行' },
+        { id: 3, BNK_BranchNo: '003', Name: '台灣銀行 永康分行' },
       ]
     },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'BNK_No', header: '金資中心銀行代碼', visible: true },
     { field: 'Name', header: '銀行名稱', visible: true },
     { field: 'BNK_ShortName', header: '銀行簡稱', visible: true },
@@ -67,7 +69,7 @@ export class BankdemoComponent extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
 
-  subColumns: any[]= [
+  subColumns: any[] = [
     { field: 'BNK_BranchNo', header: '銀行分行代號', visible: true },
     { field: 'Name', header: '銀行分行名稱', visible: true },
     // 其他子欄位
@@ -75,10 +77,10 @@ export class BankdemoComponent extends BasicQpageComponent implements OnInit{
 
   // 模擬的資料
   Data: any[] = [
-    { id:1, main_No: '0000022', main_Name: '中央銀行國庫局', main_ShortName: '中銀', sub_No: '101', sub_Name: '中央銀行國庫局 A分行'},
-    { id:2, main_No: '0000022', main_Name: '中央銀行國庫局', main_ShortName: '中銀', sub_No: '102', sub_Name: '中央銀行國庫局 B分行'},
-    { id:3, main_No: '0040037', main_Name: '台灣銀行',main_ShortName: '台銀', sub_No: '201', sub_Name: '台灣銀行 C分行'},
-    { id:4, main_No: '0040037', main_Name: '台灣銀行',main_ShortName: '台銀', sub_No: '202', sub_Name: '台灣銀行 D分行'},
+    { id: 1, main_No: '0000022', main_Name: '中央銀行國庫局', main_ShortName: '中銀', sub_No: '101', sub_Name: '中央銀行國庫局 A分行' },
+    { id: 2, main_No: '0000022', main_Name: '中央銀行國庫局', main_ShortName: '中銀', sub_No: '102', sub_Name: '中央銀行國庫局 B分行' },
+    { id: 3, main_No: '0040037', main_Name: '台灣銀行', main_ShortName: '台銀', sub_No: '201', sub_Name: '台灣銀行 C分行' },
+    { id: 4, main_No: '0040037', main_Name: '台灣銀行', main_ShortName: '台銀', sub_No: '202', sub_Name: '台灣銀行 D分行' },
   ];
 
   tableColumns = [
@@ -92,7 +94,7 @@ export class BankdemoComponent extends BasicQpageComponent implements OnInit{
     { id: 2, code: '0040037', name: '台灣銀行' },
   ];
 
-  subtableData:any[] = [];
+  subtableData: any[] = [];
   isRequired = false;
   // ----------------------------------------------------------------
 
@@ -120,7 +122,7 @@ export class BankdemoComponent extends BasicQpageComponent implements OnInit{
       //清空子項目
       this.subtableData = [];
       this.queryForm.controls['chooseSub'].setValue(null);
-      console.log('chooseSub',this.queryForm.controls['chooseSub'].value);
+      console.log('chooseSub', this.queryForm.controls['chooseSub'].value);
 
       this.updateTableData(value);
       this.cd.detectChanges(); // 手動觸發變更檢測
@@ -143,7 +145,7 @@ export class BankdemoComponent extends BasicQpageComponent implements OnInit{
       this.subtableData = []; // 預設空陣列
     }
   }
-  
+
   onSubmit(frm: FormGroup) {
     console.log(frm.value);
     this.submitted = true;

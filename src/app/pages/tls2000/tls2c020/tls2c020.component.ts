@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -29,7 +29,7 @@ export class TLS2C020Component {
   queryForm = this.formBuilder.group({
     onedatedd: [], // 日期
     casherID: ['', [Validators.maxLength(6)]], // 收銀機代碼
-    duplicateCheck: [, ], // 是否檢核發票重複
+    duplicateCheck: [,], // 是否檢核發票重複
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
   });
   // 表格
@@ -41,7 +41,7 @@ export class TLS2C020Component {
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'contactPerson', header: '(1) 檢查收銀機對帳查詢是否有不平的資料  。', visible: true },
     { field: 'contactDate', header: '(2) 檢查發票金額是否為應稅金額 + 免稅金額的加總。(不含訂金)', visible: true },
     { field: 'UID', header: '(5) 檢查發票金額 01 -> 金額等於大於 0，03 -> 金額小於等於 0。', visible: true },

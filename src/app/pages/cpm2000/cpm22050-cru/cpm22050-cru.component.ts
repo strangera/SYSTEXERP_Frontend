@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
@@ -18,13 +18,13 @@ export class CPM22050CRUComponent extends BasicCrupageComponent implements OnIni
 
   // 非動態新增 ----------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    startDate: [,Validators.required],
-    endDate: [,Validators.required],
-    marketingCampaignCode: [,Validators.required],
-    campaignName: [,Validators.required],
-    activityOwner: [,Validators.required],
+    startDate: [, Validators.required],
+    endDate: [, Validators.required],
+    marketingCampaignCode: [, Validators.required],
+    campaignName: [, Validators.required],
+    activityOwner: [, Validators.required],
     activityCategory: [],
-    activityCode: [,Validators.required],
+    activityCode: [, Validators.required],
     activityDescription: [],
     items: this.formBuilder.array([this.createItem()]),
   });
@@ -85,16 +85,16 @@ export class CPM22050CRUComponent extends BasicCrupageComponent implements OnIni
   // 動態新增----------------------------------------------------------
   createItem(): FormGroup {
     return this.formBuilder.group({
-      equipmentCategoryCode: [,Validators.required],
-      activityItemCode: [,Validators.required],
-      activityItemName: [,Validators.required],
+      equipmentCategoryCode: [, Validators.required],
+      activityItemCode: [, Validators.required],
+      activityItemName: [, Validators.required],
       applicationStatus: [],
-      usageStartDate: [,Validators.required],
+      usageStartDate: [, Validators.required],
       usageStartTime: [],
-      usageEndDate: [,Validators.required],
+      usageEndDate: [, Validators.required],
       usageEndTime: [],
-      expectedQuantity: [,Validators.required],
-      currentStock: [,Validators.required],
+      expectedQuantity: [, Validators.required],
+      currentStock: [, Validators.required],
       usageLocation: [],
       remarks: [],
     });

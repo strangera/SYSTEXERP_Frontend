@@ -6,7 +6,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -45,8 +45,8 @@ export class CPM21050Component extends BasicQpageComponent implements OnInit {
     { value: 3, label: '一般' },
   ];
   Departmentcode: any[] = [];
-  floor: any[]= [];
-  location: any[]= [];
+  floor: any[] = [];
+  location: any[] = [];
 
   // Data for table
   data: any[] = [];
@@ -63,7 +63,7 @@ export class CPM21050Component extends BasicQpageComponent implements OnInit {
     { field: 'storageLocation', header: '存放地點', visible: true },
     { field: 'custodian', header: '保管人', visible: true },
     { field: 'CurrentInventoryQuantity', header: '目前庫存量', visible: true },
-  
+
   ];
 
   constructor(

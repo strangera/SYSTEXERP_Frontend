@@ -7,11 +7,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { SupplementCategoryService } from '../../../service/basic/supplement-category.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
@@ -88,7 +88,7 @@ export class TLS24010ModComponent {
     private supplementCategoryService: SupplementCategoryService,
     private floorService: FloorService,  // 收銀機號
     private counterCodeService: CounterCodeService,  // 專櫃編號
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

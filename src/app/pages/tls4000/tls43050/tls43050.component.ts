@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { ApprovalStatusService } from '../../../service/basic/approval-status.service';
@@ -29,12 +29,12 @@ export class TLS43050Component {
   loading: boolean = false;
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
-    messageCode: [, [Validators.maxLength(13),this.validationService.numberValidator]], // Input serial number
-    registerCode: [, [Validators.maxLength(6),this.validationService.numberValidator]], // Input serial number
-    groupCode: [, [Validators.maxLength(3),this.validationService.numberValidator]], // Input serial number
+    messageCode: [, [Validators.maxLength(13), this.validationService.numberValidator]], // Input serial number
+    registerCode: [, [Validators.maxLength(6), this.validationService.numberValidator]], // Input serial number
+    groupCode: [, [Validators.maxLength(3), this.validationService.numberValidator]], // Input serial number
     status: [], // DropDown
-    loginID: [, [Validators.maxLength(7),this.validationService.numberValidator]], // Input serial number
-    approverID: [, [Validators.maxLength(7),this.validationService.numberValidator]], // Input serial number
+    loginID: [, [Validators.maxLength(7), this.validationService.numberValidator]], // Input serial number
+    approverID: [, [Validators.maxLength(7), this.validationService.numberValidator]], // Input serial number
     mMessage: ['', [Validators.maxLength(60)]], // Input Text
     dMessage: ['', [Validators.maxLength(60)]], // Input Text
     startdate: [], // 日期限制 (start-end datetime yyyy/mm/dd)
@@ -49,7 +49,7 @@ export class TLS43050Component {
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'contactPerson', header: '訊息案號代碼', visible: true },
     { field: 'contactDate', header: '收銀機代碼', visible: true },
     { field: 'UID', header: '群組代碼', visible: true },

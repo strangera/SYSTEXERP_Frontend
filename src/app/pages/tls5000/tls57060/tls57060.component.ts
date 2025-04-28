@@ -5,9 +5,9 @@ import { NavigationExtras, Router } from '@angular/router';
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
 import { ManagementIDService } from '../../../service/basic/management-id.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { DisplayModeService } from '../../../service/basic/display-mode.service';
@@ -65,7 +65,7 @@ export class TLS57060Component {
     private managementIDService: ManagementIDService,
     private authService: AuthService,
     private displayModeService: DisplayModeService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options

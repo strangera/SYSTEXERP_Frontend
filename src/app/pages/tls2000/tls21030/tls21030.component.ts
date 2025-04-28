@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { VoucherTypeService } from '../../../service/basic/voucher-type.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
@@ -52,12 +52,12 @@ export class TLS21030Component {
 
   // 表格資料
   data: any[] = [
- 
+
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
-  
+
     { field: 'settlementMethod', header: '結帳方式', visible: true },
     { field: 'account', header: '帳次', visible: true },
     { field: 'useBizReceipt', header: '是否使用業主發票', visible: true },
@@ -65,7 +65,7 @@ export class TLS21030Component {
     { field: 'remark2', header: '說明2', visible: true },
     { field: 'remark3', header: '說明3', visible: true }
   ];
-  
+
 
   // 下拉選單選項
   settlementMethodOptions: any[] = [];
@@ -77,10 +77,10 @@ export class TLS21030Component {
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
     private authService: AuthService,
-    private settlementMethodService:SettlementMethodService,
-    private accountingPeriodService:AccountingPeriodService,
-    private whetherService:WhetherService,
-  ) {}
+    private settlementMethodService: SettlementMethodService,
+    private accountingPeriodService: AccountingPeriodService,
+    private whetherService: WhetherService,
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

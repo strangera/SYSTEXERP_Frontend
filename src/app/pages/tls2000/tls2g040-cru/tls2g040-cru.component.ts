@@ -5,7 +5,7 @@ import {
   Validators,
   FormControl,
 } from '@angular/forms';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
@@ -16,8 +16,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
 })
 export class TLS2G040CRUComponent
   extends BasicQpageComponent
-  implements OnInit
-{
+  implements OnInit {
   // 定義表單
   queryForm = this.formBuilder.group({
     industryCode: ['', [Validators.required, Validators.maxLength(100)]],
@@ -31,7 +30,7 @@ export class TLS2G040CRUComponent
 
   // 定義表格欄位
   columns: any[] = [
- 
+
     { field: 'industryCode', header: '業種類別代碼', visible: true },
     { field: 'industryName', header: '業種類別名稱', visible: true },
     { field: 'productCode', header: '商品類別代碼', visible: true },

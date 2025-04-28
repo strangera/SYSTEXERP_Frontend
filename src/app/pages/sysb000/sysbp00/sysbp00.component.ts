@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { SystemTypeDetailService } from '../../../service/basic/system-type-detail.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
@@ -25,14 +25,14 @@ export class SYSBP00Component extends BasicQpageComponent implements OnInit {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { isdelete:true, parameterTitle: 'DEFA_FLAG', parameterInfo: '款類類別', readOnly: '否', systemType: 'SYS2000'},
-    { isdelete:true, parameterTitle: 'COND', parameterInfo: '未繳單據狀況', readOnly: '否', systemType: 'SYS2000'},
-    { isdelete:true, parameterTitle: 'PROG_TYPE', parameterInfo: '作業類型', readOnly: '否', systemType: ''},
-    { isdelete:true, parameterTitle: 'BUT_MSG', parameterInfo: '訊息型態', readOnly: '否', systemType: 'SYS6000'},
+    { isdelete: true, parameterTitle: 'DEFA_FLAG', parameterInfo: '款類類別', readOnly: '否', systemType: 'SYS2000' },
+    { isdelete: true, parameterTitle: 'COND', parameterInfo: '未繳單據狀況', readOnly: '否', systemType: 'SYS2000' },
+    { isdelete: true, parameterTitle: 'PROG_TYPE', parameterInfo: '作業類型', readOnly: '否', systemType: '' },
+    { isdelete: true, parameterTitle: 'BUT_MSG', parameterInfo: '訊息型態', readOnly: '否', systemType: 'SYS6000' },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'parameterTitle', header: '參數標題', visible: true },
     { field: 'parameterInfo', header: '參數說明', visible: true },
     { field: 'readOnly', header: '是否唯獨', visible: true },

@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,10 +15,10 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './fin16090.component.html',
   styleUrl: './fin16090.component.scss'
 })
-export class FIN16090Component extends BasicQpageComponent implements OnInit{
+export class FIN16090Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
-    declareYm: [,[Validators.required]], // 申報年月
+    declareYm: [, [Validators.required]], // 申報年月
     taxNumber: [, [Validators.required]], // 稅籍編號
   });
   // 下拉資料多個呈現
@@ -36,7 +36,7 @@ export class FIN16090Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: ' 統一編號', visible: true },
     { field: 'col2', header: '營業人名稱', visible: true },
     { field: 'col3', header: '稅籍編號', visible: true },
@@ -51,7 +51,7 @@ export class FIN16090Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  taxNumberOptions:any[]=[
+  taxNumberOptions: any[] = [
     { value: 1, label: 701702007 },
     { value: 2, label: 703902223 },
   ];

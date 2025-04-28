@@ -8,7 +8,7 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { VendorService } from '../../../service/basic/vendor.service';
@@ -27,8 +27,7 @@ import { AccountingaccountService } from '../../../service/basic/accountingaccou
 })
 export class FIN52050CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
   ngOnInit(): void {
     // 初始化
     this.ProgNo = '150011';
@@ -182,7 +181,7 @@ export class FIN52050CRUComponent
     { value: 9, label: '110210' },
     { value: 10, label: '110220' },
   ];
-unifiedNumberOptions: any[] = [
+  unifiedNumberOptions: any[] = [
     { value: 1, label: '00000000' },
     { value: 2, label: '00000000' },
     { value: 3, label: '00000000' },
@@ -192,7 +191,7 @@ unifiedNumberOptions: any[] = [
     { value: 7, label: '00852492' },
     { value: 8, label: '01052878' },
     { value: 9, label: '01508949' },
-];
+  ];
   SubpoenatypeOptions: any[] = [
     { value: 1, label: '現金收入傳票' },
     { value: 2, label: '現金支出傳票' },
@@ -209,7 +208,7 @@ unifiedNumberOptions: any[] = [
     { value: 8, label: '101500' },
     { value: 9, label: '101600' },
     { value: 10, label: '101700' },
-];
+  ];
   margintypeOptions: any[] = [];
   vendorCodeOptions: any[] = [
     { value: 1, label: '00000000-1' },
@@ -222,7 +221,7 @@ unifiedNumberOptions: any[] = [
     { value: 8, label: '01052878-1' },
     { value: 9, label: '01508949-1' },
     { value: 10, label: '01515462-1' },
-];
+  ];
   borrowloanOptions: any[] = [
     { value: 1, label: '借' },
     { value: 2, label: '貸' },

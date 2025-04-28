@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { VendorService } from '../../../service/basic/vendor.service';
@@ -110,19 +110,19 @@ export class TLS13070Component {
   paymentMethodOptions: any[] = [];
   cooperationMethodOptions: any[] = [];
   whetherOptions: any[] = [];
-    // 表格数据
-    data: any[] = [
-      { name: 'John', age: 25, email: 'john@example.com' },
-      { name: 'Jane', age: 30, email: 'jane@example.com' },
-      // 其他数据
-    ];
-    filteredData: any[] = [...this.data];
-    columns: any[] = [
-      { field: 'name', header: 'name', visible: true },
-      { field: 'age', header: 'age', visible: true },
-      { field: 'email', header: 'email', visible: true },
-      // 其他列
-    ];
+  // 表格数据
+  data: any[] = [
+    { name: 'John', age: 25, email: 'john@example.com' },
+    { name: 'Jane', age: 30, email: 'jane@example.com' },
+    // 其他数据
+  ];
+  filteredData: any[] = [...this.data];
+  columns: any[] = [
+    { field: 'name', header: 'name', visible: true },
+    { field: 'age', header: 'age', visible: true },
+    { field: 'email', header: 'email', visible: true },
+    // 其他列
+  ];
 
   constructor(
     private router: Router,
@@ -147,7 +147,7 @@ export class TLS13070Component {
     private whetherService: WhetherService,
     private negotiatorService: UserCodeService,
     private businessTypeService: BusinessTypeService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

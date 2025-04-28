@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { ItemCodeService } from '../../../service/basic/item-code.service';
@@ -18,7 +18,7 @@ import { OrganizationNumberService } from '../../../service/basic/organization-n
   templateUrl: './ass13040.component.html',
   styleUrl: './ass13040.component.scss'
 })
-export class ASS13040Component extends BasicQpageComponent implements OnInit{
+export class ASS13040Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     scrapCode: [, [Validators.maxLength(10)]], // 商品報廢單編號
@@ -44,7 +44,7 @@ export class ASS13040Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '商品報廢單編號', visible: true },
     { field: 'col2', header: '商品管理編號', visible: true },
     { field: 'col3', header: '報廢人員編號', visible: true },
@@ -60,7 +60,7 @@ export class ASS13040Component extends BasicQpageComponent implements OnInit{
     // { field: 'col12', header: '供應商編號', visible: true },
     // { field: 'col13', header: '購入金額', visible: true },
     // { field: 'col14', header: '驗收單號', visible: true },
-    
+
     // { field: 'col15', header: '報廢資產日期', visible: true },
     // { field: 'col16', header: '報廢日期前已提列折舊', visible: true },
     // { field: 'col17', header: '報廢日期前之帳面價值', visible: true },

@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -32,7 +32,7 @@ export class TLS41060Component {
     SYS_StoreNo: [, [Validators.maxLength(10)]], // 收銀機所屬門市店號
     ECR_No: [, [Validators.maxLength(6)]], // 收銀機號
     ECR_Name: ['', [Validators.maxLength(20)]], // 收銀機名稱
-    ECR_Type: [,[Validators.maxLength(2)]], // 機台類型
+    ECR_Type: [, [Validators.maxLength(2)]], // 機台類型
 
     // 必須新增 機台後才能執行此修改作業(電子發票才會做此修改)
     ECR_GUI_PeriodQty: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 每期發票預設配號量，預設值為50，設定值必須為50的倍數
@@ -41,11 +41,11 @@ export class TLS41060Component {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { ECR_No: 'register123', ECR_Name: '收銀機名稱' ,ECR_Type: 1, ECR_GUI_PeriodQty: 50,ECR_GUI_MinQty: 50},
+    { ECR_No: 'register123', ECR_Name: '收銀機名稱', ECR_Type: 1, ECR_GUI_PeriodQty: 50, ECR_GUI_MinQty: 50 },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     // { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'ECR_Name', header: '收銀機名稱', visible: true },
@@ -63,8 +63,8 @@ export class TLS41060Component {
   ];
   ECR_GUI_Type_Option: any[] = [
     { value: 0, label: '不開發票' },
-    { value: 3, label: '二聯式收銀機發票'},
-    { value: 7, label: '電子發票(預設值)'},
+    { value: 3, label: '二聯式收銀機發票' },
+    { value: 7, label: '電子發票(預設值)' },
   ];
 
   constructor(

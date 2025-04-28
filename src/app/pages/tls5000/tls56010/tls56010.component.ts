@@ -8,9 +8,9 @@ import { SmallCategoryService } from '../../../service/basic/small-category.serv
 import { ManagementIDService } from '../../../service/basic/management-id.service';
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 
@@ -59,7 +59,7 @@ export class TLS56010Component {
     { field: 'itemPrice', header: '售價', visible: true },
     { field: 'brand', header: '品牌', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -71,7 +71,7 @@ export class TLS56010Component {
     private managementIdService: ManagementIDService,
     private brandCodeService: BrandCodeService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options

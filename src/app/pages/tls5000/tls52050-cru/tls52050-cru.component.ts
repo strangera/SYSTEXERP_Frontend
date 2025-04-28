@@ -5,7 +5,7 @@ import { VendorService } from '../../../service/basic/vendor.service';
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
@@ -17,8 +17,8 @@ import { Router } from '@angular/router';
   templateUrl: './tls52050-cru.component.html',
   styleUrl: './tls52050-cru.component.scss'
 })
-export class TLS52050CRUComponent extends BasicCrupageComponent implements OnInit{
-  
+export class TLS52050CRUComponent extends BasicCrupageComponent implements OnInit {
+
   // ProgNo: string = '250018';
   // funInfo: FunsrightInfo = {};
   // // Permissions
@@ -30,8 +30,8 @@ export class TLS52050CRUComponent extends BasicCrupageComponent implements OnIni
 
   dataForm = this.formBuilder.group({
     priceChangeOrderNumber: [{ value: '自動編號', disabled: true }],  // 變價單號
-    brandCode: [,Validators.required],
-    vendorCode: [,Validators.required],
+    brandCode: [, Validators.required],
+    vendorCode: [, Validators.required],
     priceChangeDescription: [],
     startDate: [],
     applicationDate: [],
@@ -40,10 +40,10 @@ export class TLS52050CRUComponent extends BasicCrupageComponent implements OnIni
     costPriceAdjustment: [],
     salePriceDiscount: [],
     salePriceAdjustment: [],
-        // ----------------------------------------------------------------
-        items: this.formBuilder.array([
-          this.createItem()
-        ]),
+    // ----------------------------------------------------------------
+    items: this.formBuilder.array([
+      this.createItem()
+    ]),
   });
 
   // Dropdown options
@@ -83,8 +83,8 @@ export class TLS52050CRUComponent extends BasicCrupageComponent implements OnIni
     private translate: TranslateService,
   ) {
     super();  // 呼叫父類建構子
-}
-  
+  }
+
   ngOnInit(): void {
     this.ProgNo = '250018';
     // Initialize dropdown options
@@ -117,7 +117,7 @@ export class TLS52050CRUComponent extends BasicCrupageComponent implements OnIni
         this.crudstatus = CRUDStatus.Read;
         this.Read(state.rowdata);
         break;
-    
+
     }//CRU
   }
 
@@ -163,11 +163,11 @@ export class TLS52050CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;
@@ -200,5 +200,5 @@ export class TLS52050CRUComponent extends BasicCrupageComponent implements OnIni
     this.router.navigate(['TLS5000/TLS52050']);
   }
 
-  
+
 }

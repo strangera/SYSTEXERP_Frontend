@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { VendorService } from '../../../service/basic/vendor.service';
@@ -17,7 +17,7 @@ import { PaperTypeService } from '../../../service/basic/paper-type.service';
   templateUrl: './ass14010.component.html',
   styleUrl: './ass14010.component.scss'
 })
-export class ASS14010Component extends BasicQpageComponent implements OnInit{
+export class ASS14010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     invoiceNumber: [, [this.validationService.numberValidator, Validators.maxLength(16)]], // 發票/收據號碼
@@ -39,12 +39,13 @@ export class ASS14010Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'invoiceNumber': 'CG12345678', 'orderNumber': '2014030001', 'maintenanceNumber': 'I0000001', 'supplierCode': '03550014-1/A公司',
+    {
+      'invoiceNumber': 'CG12345678', 'orderNumber': '2014030001', 'maintenanceNumber': 'I0000001', 'supplierCode': '03550014-1/A公司',
       'requestType': '發票', 'invoiceFormat': 21, 'taxType': '應稅',
       'noTaxAmount': 65400, 'taxAmount': 3270, 'totalAmount': 658670, 'deductionsType': '代表近項可扣抵之進貨及費用',
-     },
+    },
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'invoiceNumber', header: '發票/收據號碼', visible: true },
     { field: 'orderNumber', header: '驗收單號', visible: true },
     { field: 'maintenanceNumber', header: '發票維護單號', visible: true },
@@ -61,7 +62,7 @@ export class ASS14010Component extends BasicQpageComponent implements OnInit{
 
   supplierCodeOptions: any[] = [];
   requestTypeOptions: any[] = [];
-  invoiceFormatOptions:any[]=[
+  invoiceFormatOptions: any[] = [
     { value: 1, label: '21/進項三聯式、電子計算機統一發票' },
     { value: 2, label: '22/進項二聯式收銀機統一發票、載有稅額之其他憑證' },
     { value: 3, label: '25/進向三連式收銀機統一發票及一般稅額計算之電子發票' },
@@ -69,11 +70,11 @@ export class ASS14010Component extends BasicQpageComponent implements OnInit{
     { value: 5, label: '27/彙總登陸每張稅額五百元以下之盡項二聯式收銀雞統一發票、載有稅額之其他憑證' },
     { value: 6, label: '28/進項海關代徵營業稅繳納證' },
   ];
-  taxTypeOptions:any[]=[
+  taxTypeOptions: any[] = [
     { value: 1, label: '應稅' },
     { value: 2, label: '免稅' },
   ];
-  deductionsTypeOptions:any[]=[
+  deductionsTypeOptions: any[] = [
     { value: 1, label: '代表近項可扣抵之進貨及費用' },
     { value: 2, label: '代表近項可扣抵之固定資產' },
     { value: 3, label: '代表近項不可扣抵之進貨及費用' },

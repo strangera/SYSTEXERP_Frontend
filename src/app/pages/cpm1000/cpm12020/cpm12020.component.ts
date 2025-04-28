@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm12020.component.html',
   styleUrl: './cpm12020.component.scss'
 })
-export class CPM12020Component extends BasicQpageComponent implements OnInit{
+export class CPM12020Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     opinionCode: [[] as number[]], // 顧客意見責任單位編號
@@ -31,14 +31,14 @@ export class CPM12020Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'isdelete': false, 'opinionCode': 'X001', 'unitName': '營運部'},
-    { 'isdelete': false, 'opinionCode': 'X002', 'unitName': '行銷部'},
-    { 'isdelete': false, 'opinionCode': 'X003', 'unitName': '管理部'},
+    { 'isdelete': false, 'opinionCode': 'X001', 'unitName': '營運部' },
+    { 'isdelete': false, 'opinionCode': 'X002', 'unitName': '行銷部' },
+    { 'isdelete': false, 'opinionCode': 'X003', 'unitName': '管理部' },
     // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'opinionCode', header: '顧客意見責任單位編號', visible: true },
     { field: 'unitName', header: '責任單位名稱類別名稱', visible: true },
 
@@ -50,7 +50,7 @@ export class CPM12020Component extends BasicQpageComponent implements OnInit{
     // { field: 'col8', header: '證件編號', visible: true },
     // { field: 'col9', header: '出借狀態', visible: true },
     // { field: 'col10', header: '備註', visible: true },
-    
+
     // { field: 'col11', header: '廠商帳戶名稱', visible: true },
     // { field: 'col12', header: '付款期限', visible: true },
     // { field: 'col13', header: '票據抬頭', visible: true },

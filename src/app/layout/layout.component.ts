@@ -1,17 +1,11 @@
 import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, Renderer2, Type, ViewChild } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { Subscription, filter } from 'rxjs';
-// Api
-import { UserInfo } from '../models/system/userInfo';
+import { UserInfo } from '../shared/models/system/userInfo';
 import { AuthService } from '../service/system/auth.service';
-// Component
 import { AppMenulistComponent } from './app.menulist/app.menulist.component';
 import { AppTopbarComponent } from './app.topbar/app.topbar.component';
-// shared
-import { LayoutService } from '../shared/service/layout.service';
-// Tab Component
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { FunsrightInfo } from '../models/system/funsrightInfo';
+import { LayoutService } from './layout.service';
 import { computed } from '@angular/core';
 
 interface TabItem {
@@ -31,10 +25,10 @@ interface AddTabItem {
 })
 export class LayoutComponent implements AfterViewInit, OnDestroy {
   @ViewChild(AppMenulistComponent) appSidebar!: AppMenulistComponent;
-  selectedTopMenuProgNo: string | null = null;
   @ViewChild(AppTopbarComponent) appTopbar!: AppTopbarComponent;
   @ViewChild('layoutMainContainer', { static: false }) layoutMainContainer!: ElementRef;
   @ViewChild('searchInput') searchInput!: ElementRef;
+  selectedTopMenuProgNo: string | null = null;
   tabs: TabItem[] = [];
   activeIndex = 2;
   menuOutsideClickListener: (() => void) | null = null;
@@ -46,8 +40,7 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
     private router: Router,
     private layoutService: LayoutService,
     private authService: AuthService,
-    public renderer: Renderer2,
-    private formBuilder: FormBuilder
+    public renderer: Renderer2
   ) {
     this.subscriptions.push(this.authService.user.subscribe(x => this.user = x));
   }
@@ -76,8 +69,6 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
         this.adjustMainContainerPadding(); // 確保在初始載入後也調整一次
       } else if (Date.now() - startTime < checkTimeout) {
         requestAnimationFrame(checkElements);
-      } else {
-        // console.error('Failed to initialize elements within timeout.');
       }
     };
 
@@ -88,19 +79,12 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
     const sidebarElement = this.appSidebar?.el?.nativeElement;
     const menuButtonElement = this.appTopbar?.menuButton?.nativeElement;
     const searchInputElement = this.searchInput?.nativeElement;
-
-    if (!sidebarElement || !menuButtonElement || !searchInputElement) {
-      console.error('One or more menu related elements are not initialized');
-      return;
-    }
-
+    if (!sidebarElement || !menuButtonElement || !searchInputElement) return;
     this.clearMenuOutsideClickListener();
-
     this.menuOutsideClickListener = this.createOutsideClickListener(
       [sidebarElement, menuButtonElement, searchInputElement],
       this.hideMenu.bind(this)
     );
-
     if (this.layoutService.state.staticMenuMobileActive) {
       this.toggleBodyScroll(false);
     }
@@ -111,10 +95,7 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
       const isOutsideClicked = elements.every(
         element => !element.contains(event.target as HTMLElement)
       );
-
-      if (isOutsideClicked) {
-        callback();
-      }
+      if (isOutsideClicked) callback();
     });
   }
 
@@ -171,69 +152,24 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
   private delayAction(callback: () => void, delay = 10): void {
     setTimeout(callback, delay);
   }
-
   onAddTab(item: AddTabItem) {
     const existingTabIndex = this.tabs.findIndex(tab => tab.component === item.prog_no);
     if (existingTabIndex !== -1) {
       this.delayAction(() => (this.activeIndex = existingTabIndex));
       return;
     }
-
     const component = item.prog_no;
     if (component) {
       this.tabs.push({ title: item.label, component });
       this.delayAction(() => (this.activeIndex = this.tabs.length - 1));
     }
   }
-
   onTabClose(index: number) {
     this.tabs.splice(index, 1);
     if (this.activeIndex >= this.tabs.length) {
       this.activeIndex = this.tabs.length - 1;
     }
   }
-
-  queryForm = this.formBuilder.nonNullable.group({
-    query_data: ['']
-  });
-
-  onSubmit(frm: FormGroup) {
-    const funRightsInfo = sessionStorage.getItem("FunRightsInfo");
-    if (!funRightsInfo || !frm.controls["query_data"].value) {
-      console.log("Please enter a search query.");
-      return;
-    }
-
-    let menuData: FunsrightInfo[];
-    try {
-      menuData = JSON.parse(funRightsInfo);
-    } catch (error) {
-      console.error("Failed to parse menu data. Please refresh the page.", error);
-      return;
-    }
-
-    const query = frm.controls["query_data"].value.toLowerCase();
-
-    const findItems = menuData.filter(item =>
-      item.prog_name?.toLowerCase().includes(query) ||
-      item.prog_no?.toLowerCase() === query
-    );
-    console.log("Found items:", findItems);
-
-    const matchedItem = findItems.find(item => item.path !== '');
-    if (matchedItem) {
-      this.router.navigate([matchedItem.path]);
-      this.queryForm.reset();
-    } else {
-      console.log("No matching item found.");
-    }
-  }
-
-  onMaskClick() {
-    this.hideMenu();
-  }
-
-  onToggleTheme() {
-    this.layoutService.toggleColorScheme();
-  }
+  onMaskClick() { this.hideMenu(); }
+  onToggleTheme() { this.layoutService.toggleColorScheme(); }
 }

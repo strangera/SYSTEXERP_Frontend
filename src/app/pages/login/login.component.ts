@@ -5,8 +5,8 @@ import { registerLocaleData } from '@angular/common';
 import zhHant from '@angular/common/locales/zh-Hant';
 import { AuthService } from '../../service/system/auth.service';
 import { CommonService } from '../../shared/service/common.service';
-import { userLogin } from '../../models/system/userLogin';
-import { NotificationService } from '../../shared/service/notification.service';
+import { userLogin } from '../../shared/models/system/userLogin';
+import { NotificationService } from '../../shared/component/notification-message/notification.service';
 
 registerLocaleData(zhHant, 'zh-tw');
 

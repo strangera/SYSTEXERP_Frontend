@@ -5,7 +5,7 @@ import { NavigationExtras, Router } from '@angular/router';
 import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -23,17 +23,17 @@ export class FIN64010Component extends BasicQpageComponent implements OnInit {
     bankAccountCode: [], // 銀行代號
     customerBankAccount: [], // 客戶銀行帳號
     issueDateStart: [], // 託收日
-    issueDateEnd: [], 
+    issueDateEnd: [],
     dueDateStart: [], // 收票日
-    dueDateEnd: [], 
+    dueDateEnd: [],
     expiryDateStart: [], // 到期日
-    expiryDateEnd: [], 
+    expiryDateEnd: [],
     expectedCashDateStart: [], // 預兌日
-    expectedCashDateEnd: [], 
+    expectedCashDateEnd: [],
     cashDateStart: [], // 兌現日
-    cashDateEnd: [], 
+    cashDateEnd: [],
     amountStart: [], // 票面金額
-    amountEnd: [], 
+    amountEnd: [],
     billTitle: [], // 收款單號
     billType: [], // 票據種類
     isCustomerBill: [], // 是否客票

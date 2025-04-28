@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { PaymentToolTypeService } from '../../../service/basic/payment-tool-type.service';
@@ -54,7 +54,7 @@ export class TLS27050Component {
     { field: 'cashRegisterStatus', header: '收銀機狀況', visible: true },
     { field: 'amount', header: '金額', visible: true },
   ];
-  
+
 
   // 下拉選單選項
   paymentToolTypeOptions: any[] = [];
@@ -66,7 +66,7 @@ export class TLS27050Component {
     private authService: AuthService,
     private validationService: ValidationService,
     private paymentToolTypeService: PaymentToolTypeService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

@@ -8,7 +8,7 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { VendorService } from '../../../service/basic/vendor.service';
@@ -25,8 +25,7 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class FIN35050CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
 
 
 
@@ -134,7 +133,7 @@ export class FIN35050CRUComponent
 
 
 
-    
+
   }
 
   // 新增明細項目

@@ -6,7 +6,7 @@ import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 import { FlippingstateService } from './../../../service/basic/flippingstate.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -138,7 +138,7 @@ export class FIN53010Component extends BasicQpageComponent implements OnInit {
     { field: 'invoiceAmount', header: '傳票金額', visible: true },
     { field: 'detailCount', header: '明細筆數', visible: true }
   ];
-  
+
   // TypeScript Options
 
   constructor(

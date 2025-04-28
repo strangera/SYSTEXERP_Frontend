@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm12060.component.html',
   styleUrl: './cpm12060.component.scss'
 })
-export class CPM12060Component extends BasicQpageComponent implements OnInit{
+export class CPM12060Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     receiveDateFrom: [], // 接件日期
@@ -34,11 +34,13 @@ export class CPM12060Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'customerCode': 2014123001, 'customerName': '陳小姐', 'gender': '女'
-      , 'receiveDate': '2014/12/28',  'notificationDate': '', 'handler': '', 'handlingSituation': '已建單', 'closeCase': '未結案'},
+    {
+      'customerCode': 2014123001, 'customerName': '陳小姐', 'gender': '女'
+      , 'receiveDate': '2014/12/28', 'notificationDate': '', 'handler': '', 'handlingSituation': '已建單', 'closeCase': '未結案'
+    },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'customerCode', header: '客戶意見編號', visible: true },
     { field: 'customerName', header: '客戶名稱', visible: true },
     { field: 'gender', header: '性別', visible: true },
@@ -50,7 +52,7 @@ export class CPM12060Component extends BasicQpageComponent implements OnInit{
     { field: 'closeCase', header: '是否結案', visible: true },
     // { field: 'col9', header: '電子信箱', visible: true },
     // { field: 'col10', header: '顧客意見內容', visible: true },
-    
+
     // { field: 'col11', header: '建檔人員', visible: true },
     // { field: 'col12', header: '處理紀錄', visible: true },
     // { field: 'col13', header: '處理日期時間', visible: true },

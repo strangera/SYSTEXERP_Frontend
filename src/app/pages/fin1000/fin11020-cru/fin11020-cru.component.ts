@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -19,7 +19,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
   templateUrl: './fin11020-cru.component.html',
   styleUrl: './fin11020-cru.component.scss'
 })
-export class FIN11020CRUComponent extends BasicCrupageComponent implements OnInit{
+export class FIN11020CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     onedatemm: [, [Validators.required]], // 發票年月
@@ -28,7 +28,7 @@ export class FIN11020CRUComponent extends BasicCrupageComponent implements OnIni
     endserialticket: [, [this.validationService.numberValidator, Validators.max(99999999), Validators.required]], // 發票號碼(迄)
     invoiceCategory: [, [Validators.required]], // 類別
     viceTicket: [], // 有無副聯
-    declareYm: [,[Validators.required]], // 申報年月
+    declareYm: [, [Validators.required]], // 申報年月
     rollNumber: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 卷數
   });
   //
@@ -45,8 +45,8 @@ export class FIN11020CRUComponent extends BasicCrupageComponent implements OnIni
     private validationService: ValidationService,
     private allInvoiceCategoryService: AllInvoiceCategoryService,
     private whetherService: WhetherService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -103,11 +103,11 @@ export class FIN11020CRUComponent extends BasicCrupageComponent implements OnIni
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }

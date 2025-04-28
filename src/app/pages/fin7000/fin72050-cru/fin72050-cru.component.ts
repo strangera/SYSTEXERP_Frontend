@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
@@ -25,8 +25,7 @@ import { OrganizationNumberService } from './../../../service/basic/organization
 })
 export class FIN72050CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
   ngOnInit(): void {
     // 初始化
     this.ProgNo = '170007';
@@ -127,15 +126,15 @@ export class FIN72050CRUComponent
       invoiceAmtExclTax: [],
       ITA: [],
       deductionCode: [],
-      totalSheetCount : [],
-      invDate : [],
-      custodian : [],
+      totalSheetCount: [],
+      invDate: [],
+      custodian: [],
     });
   }
 
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    invDate : [],
+    invDate: [],
     invoicePurpose: [],
     Subpoenanumber: [],
     Subpoenatype: [],
@@ -191,8 +190,8 @@ export class FIN72050CRUComponent
     invoiceAmtExclTax: [],
     ITA: [],
     deductionCode: [],
-    totalSheetCount : [],
-    custodian : [],
+    totalSheetCount: [],
+    custodian: [],
     // ----------------------------------------------------------------
     items: this.formBuilder.array([this.createItem()]),
   });
@@ -220,14 +219,14 @@ export class FIN72050CRUComponent
 
   ];
   Invoiceformat
-  : any[] = [
-    { value: 1, label: '21' },
-    { value: 2, label: '22' },
-    { value: 3, label: '25' },
-    { value: 4, label: '26' },
-    { value: 5, label: '27' },
+    : any[] = [
+      { value: 1, label: '21' },
+      { value: 2, label: '22' },
+      { value: 3, label: '25' },
+      { value: 4, label: '26' },
+      { value: 5, label: '27' },
 
-  ];
+    ];
   ExpenseAccount: any[] = [
     { value: 1, label: '610101' },
     { value: 2, label: '610102' },

@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { TaxTypeService } from '../../../service/basic/tax-type.service';
@@ -18,7 +18,7 @@ import { TaxTypeService } from '../../../service/basic/tax-type.service';
   templateUrl: './fin16050.component.html',
   styleUrl: './fin16050.component.scss'
 })
-export class FIN16050Component extends BasicQpageComponent implements OnInit{
+export class FIN16050Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     invoiceDateFrom: [], // 	發票日期
@@ -58,7 +58,7 @@ export class FIN16050Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '格式代號', visible: true },
     { field: 'col2', header: '字軌', visible: true },
     { field: 'col3', header: '發票號碼', visible: true },
@@ -78,23 +78,23 @@ export class FIN16050Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  invoiceFormatOptions:any[]=[
+  invoiceFormatOptions: any[] = [
     { value: 1, label: 31 },
     { value: 2, label: 32 },
     { value: 3, label: 33 },
   ];
-  assetsOptions:any[]=[
+  assetsOptions: any[] = [
     { value: 1, label: '固定資產' },
     { value: 2, label: '土地' },
   ];
-  dateTypeOptions:any[]=[
+  dateTypeOptions: any[] = [
     { value: 1, label: '例行資料' },
     { value: 2, label: '申報資料' },
     { value: 3, label: '歷史資料' },
   ];
-  taxTypeOptions:any[]=[];
-  systemCategoryOptions:any[]=[];
-  whetherOptions:any[]=[];
+  taxTypeOptions: any[] = [];
+  systemCategoryOptions: any[] = [];
+  whetherOptions: any[] = [];
 
   constructor(
     private router: Router,

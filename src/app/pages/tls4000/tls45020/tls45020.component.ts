@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -61,7 +61,8 @@ export class TLS45020Component {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { ECR_SchNo: 'schedule123', ECR_SchDate: '2024/08/08', ECR_SchStatus: 'A' ,SYS_StoreNo: 'store123', ECR_No: 'ecr123',
+    {
+      ECR_SchNo: 'schedule123', ECR_SchDate: '2024/08/08', ECR_SchStatus: 'A', SYS_StoreNo: 'store123', ECR_No: 'ecr123',
       ORG_ECR_TLT_No: '123', ECR_TLT_No: '456',
       ORG_ECR_USR_No: '123', ECR_USR_No: '456',
       ORG_ECR_TmplNo: '123', ECR_TmplNo: '456',
@@ -71,7 +72,7 @@ export class TLS45020Component {
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'ECR_SchNo', header: '排程編號', visible: true },
     { field: 'ECR_SchDate', header: '設定啟用日期', visible: true },
     { field: 'ECR_SchStatus', header: '排程狀態', visible: true },

@@ -4,10 +4,10 @@ import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
 import {
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
@@ -20,7 +20,7 @@ const now = new Date();
   templateUrl: './tls25010-cru.component.html',
   styleUrl: './tls25010-cru.component.scss'
 })
-export class TLS25010CRUComponent extends BasicCrupageComponent implements OnInit  {
+export class TLS25010CRUComponent extends BasicCrupageComponent implements OnInit {
 
   // ProgNo: string = '220032';
 
@@ -43,8 +43,8 @@ export class TLS25010CRUComponent extends BasicCrupageComponent implements OnIni
   loading: boolean = false;
   // submitted: boolean = false;
   dataForm = this.formBuilder.group({
-    violationCategory: [1,Validators.required],  // 違規類別編號
-    violationCategoryName: [,Validators.required],  // 違規類別名稱
+    violationCategory: [1, Validators.required],  // 違規類別編號
+    violationCategoryName: [, Validators.required],  // 違規類別名稱
   });
 
   // 下拉選單選項
@@ -60,20 +60,20 @@ export class TLS25010CRUComponent extends BasicCrupageComponent implements OnIni
     private violationCategoryService: ViolationCategoryService,  // 違規類別編號 service
   ) {
     super();  // 呼叫父類建構子
-}
+  }
 
   ngOnInit(): void {
-    this.ProgNo='220032';
+    this.ProgNo = '220032';
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
     this.violationCategoryService.getViolationCategories().subscribe((data) => {
       this.violationCategoryOptions = data;
     });
-        // ----------------------------------------------------------------
-        const state = this.router.lastSuccessfulNavigation?.extras.state as {
-          crudstatus: CRUDStatus,
-          rowdata: any,
-        };
+    // ----------------------------------------------------------------
+    const state = this.router.lastSuccessfulNavigation?.extras.state as {
+      crudstatus: CRUDStatus,
+      rowdata: any,
+    };
 
     switch (state.crudstatus) {
       // 創建

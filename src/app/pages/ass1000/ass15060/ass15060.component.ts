@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -42,7 +42,7 @@ export class ASS15060Component extends BasicQpageComponent implements OnInit {
     { field: 'initiator', header: '異動者', visible: true },
     { field: 'changeTime', header: '異動時間', visible: true },
   ];
-  
+
 
   // Dropdown options
 
@@ -99,26 +99,26 @@ export class ASS15060Component extends BasicQpageComponent implements OnInit {
     { value: 7, label: '1A232400000010000001' },
     { value: 8, label: '1A232400000040000001' },
     { value: 9, label: '1A232400000060000001' },
-];
-propertytype
-: any[] = [
-  { value: 1, label: '資產' },
-  { value: 2, label: '列管品' },
-];
-Itemnumber
-: any[] = [
+  ];
+  propertytype
+    : any[] = [
+      { value: 1, label: '資產' },
+      { value: 2, label: '列管品' },
+    ];
+  Itemnumber
+    : any[] = [
 
-    { value: 1, label: '3A24210000001' },
-    { value: 2, label: '3A24210000002' },
-    { value: 3, label: '3A24210000003' },
-    { value: 4, label: '3A24210000004' },
-    { value: 5, label: '3A24210000005' },
-    { value: 6, label: '3A24210000006' },
-    { value: 7, label: '3A24210000007' },
-    { value: 8, label: '3A24210000008' },
-    { value: 9, label: '3A24210000009' },
-    { value: 10, label: '3A24210000010' },
-];
+      { value: 1, label: '3A24210000001' },
+      { value: 2, label: '3A24210000002' },
+      { value: 3, label: '3A24210000003' },
+      { value: 4, label: '3A24210000004' },
+      { value: 5, label: '3A24210000005' },
+      { value: 6, label: '3A24210000006' },
+      { value: 7, label: '3A24210000007' },
+      { value: 8, label: '3A24210000008' },
+      { value: 9, label: '3A24210000009' },
+      { value: 10, label: '3A24210000010' },
+    ];
 
 
 

@@ -6,11 +6,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { SystemTypeService } from '../../../service/basic/system-type.service';
 import { TypeService } from '../../../service/basic/type.service';
@@ -47,7 +47,7 @@ export class TLS23050Component {
     saleDateEnd: [, [Validators.required]], // 銷售日期迄
     type: [], // 類型
     cashierCode: [], // 收銀機代號
-    Floor:[],
+    Floor: [],
 
   });
 
@@ -94,8 +94,8 @@ export class TLS23050Component {
     { field: 'return', header: '退貨', visible: true },
     { field: 'exchangeProcessing', header: '換貨作廢', visible: true }
   ];
-  
-  
+
+
   systemTypeOptions: any[] = [];
   typeOptions: any[] = [];
   FloorOptions: any[] = [];
@@ -108,8 +108,8 @@ export class TLS23050Component {
 
     private systemTypeService: SystemTypeService,
     private typeService: TypeService,
-    private FloorService:FloorService,
-  ) {}
+    private FloorService: FloorService,
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

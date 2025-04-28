@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { PurchaseTypeService } from '../../../service/basic/purchase-type.service';
@@ -18,7 +18,7 @@ import { OrganizationNumberService } from '../../../service/basic/organization-n
   templateUrl: './ass13070.component.html',
   styleUrl: './ass13070.component.scss'
 })
-export class ASS13070Component extends BasicQpageComponent implements OnInit{
+export class ASS13070Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     purchaseType: [[] as number[]], // 進貨類型
@@ -42,15 +42,16 @@ export class ASS13070Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'propertyType': '資產', 'purchaseNumber': 20150128003, 'propertyCode': '1C263800000010000142', 'itemCode': '桌上型電腦 ',
-      'purchaseDateFrom': '2024/06/13', 'purchaseAmount': 18950 , 'keeperUnit': '會員Team', 'keeper': '朱先生',
-      'user': '會員Team','userUnit': '朱先生',
-     },
+    {
+      'propertyType': '資產', 'purchaseNumber': 20150128003, 'propertyCode': '1C263800000010000142', 'itemCode': '桌上型電腦 ',
+      'purchaseDateFrom': '2024/06/13', 'purchaseAmount': 18950, 'keeperUnit': '會員Team', 'keeper': '朱先生',
+      'user': '會員Team', 'userUnit': '朱先生',
+    },
     // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'propertyType', header: '財產類型', visible: true },
     { field: 'purchaseNumber', header: '進貨單號', visible: true },
     { field: 'propertyCode', header: '財產編號', visible: true },

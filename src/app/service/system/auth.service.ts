@@ -4,11 +4,11 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { EncryptionService } from '../../shared/service/encryption.service';
 import { catchError, map } from 'rxjs/operators';
-import { userLogin } from '../../models/system/userLogin';
+import { userLogin } from '../../shared/models/system/userLogin';
 import { environment } from '../../../environments/environment';
-import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
-import { UserInfo } from '../../models/system/userInfo';
-import { NotificationService } from '../../shared/service/notification.service';
+import { FunsrightInfo, PermissionsInfo } from '../../shared/models/system/funsrightInfo';
+import { UserInfo } from '../../shared/models/system/userInfo';
+import { NotificationService } from '../../shared/component/notification-message/notification.service';
 
 export interface ApiResponse<T> {
   Status: string;
@@ -31,6 +31,11 @@ export class AuthService {
   private apiUrl: string = environment.ApiUrl;
   private userSubject: BehaviorSubject<UserInfo | null>;
   public user: Observable<UserInfo | null>;
+  private _menuUpdated = new BehaviorSubject<any[]>([]);
+  menuUpdated = this._menuUpdated.asObservable();
+  updateMenu(newData: any[]): void {
+    this._menuUpdated.next(newData);
+  }
 
   constructor(
     private router: Router,
@@ -41,17 +46,19 @@ export class AuthService {
     const userStorage: any = sessionStorage.getItem('UserInfo');
     this.userSubject = new BehaviorSubject(JSON.parse(userStorage));
     this.user = this.userSubject.asObservable();
+    // 檢查 sessionStorage 中是否有已儲存的權限資料
+    const storedFunRightsInfo = sessionStorage.getItem('FunRightsInfo');
+    if (storedFunRightsInfo) {
+      const parsedFunRightsInfo = JSON.parse(storedFunRightsInfo) as FunsrightInfo[];
+      this._menuUpdated.next(parsedFunRightsInfo); // 使用儲存的資料更新選單
+    }
   }
-
   public get currentUserValue(): UserInfo | null {
-    // 獲取存儲的 JWT Token
-    return this.userSubject.value;
+    return this.userSubject.value; // 獲取存儲的 JWT Token
   }
-
   login(data: userLogin): Observable<ApiResponse<UserInfo>> {
     data.password = this.encrypt.getPassword(data.code as string, data.password as string);
     const url = `${this.apiUrl}/User/userLogin`;
-
     return this.http.post<ApiResponse<UserInfo>>(url, data).pipe(
       map((response: ApiResponse<UserInfo>) => {
         if (response.Status === '0000') {
@@ -69,7 +76,6 @@ export class AuthService {
       })
     );
   }
-
   // login(data: userLogin): Observable<UserInfo> {
   //   const now = this.commService.getNOW();
   //   const key = `${data.code?.toLowerCase()}${now.utc_nowtime}${environment.PasswordKey}`.substring(0, 16);
@@ -208,12 +214,15 @@ export class AuthService {
     }
   }
 
-  getFavorites(): Observable<any> {
-    return this.http.get<any>(`/assets/service/User/userFavorite.json`).pipe(
+  getFavorites(user_No?: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/User/GetUserFavorite`, { user_No: user_No }).pipe(
       map((response: any) => {
-        sessionStorage.setItem('Favorites', JSON.stringify(response.favorite_items));
+        sessionStorage.setItem('Favorites', JSON.stringify(response.Data));
         return response;
       }));
+  }
+  UpdateUserFavorite(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/User/UpdateUserFavorite`, { Favorites: body });
   }
 
   getFunRightsInfo(): Observable<any> {
@@ -221,8 +230,8 @@ export class AuthService {
       map((response: any) => {
         if (response && response.funright_info) {
           sessionStorage.setItem('FunRightsInfo', JSON.stringify(response.funright_info));
+          this._menuUpdated.next(response.funright_info);
           sessionStorage.setItem('AuthorizeInfo', JSON.stringify(response.authorize_info));
-          console.log('FunRightsInfo saved to sessionStorage successfully (mock data)');
         } else {
           console.error('funright_info not found in mock data');
         }

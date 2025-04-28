@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './fin31010.component.html',
   styleUrl: './fin31010.component.scss'
 })
-export class FIN31010Component extends BasicQpageComponent implements OnInit{
+export class FIN31010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     receiveID: [, [Validators.maxLength(2)]], // 收款項目代號
@@ -38,7 +38,7 @@ export class FIN31010Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '收款項目代號', visible: true },
     { field: 'col2', header: '收款項目名稱', visible: true },
     { field: 'col3', header: '會計科目代號', visible: true },

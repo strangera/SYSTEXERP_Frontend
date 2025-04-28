@@ -1,12 +1,13 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { FormArray, FormBuilder,
+import {
+  FormArray, FormBuilder,
   FormControl,
   FormGroup,
   Validators,
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -25,8 +26,7 @@ interface Column {
   styleUrl: './sys0230.cru.component.scss',
 })
 // 角色之使用者設定維護 CRU
-export class SYS0230CRUComponent extends BasicCrupageComponent implements OnInit
-{
+export class SYS0230CRUComponent extends BasicCrupageComponent implements OnInit {
 
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
@@ -178,64 +178,64 @@ export class SYS0230CRUComponent extends BasicCrupageComponent implements OnInit
   // demo
   // ----------------------------------------------------------------
   files: TreeNode[] = [
-            {
-                key: '0',
-                data: {
-                    name: '全公司',
-                    code: '100000',
-                    count: '0(3)'
-                },
-                children: [
-                    {
-                        key: '0-0',
-                        data: {
-                            name: '阮湘晴',
-                            code: '	0900000001',
-                        },
-                    },
-                    {
-                        key: '0-1',
-                        data: {
-                            name: 'sandy',
-                            code: 'sandy',
+    {
+      key: '0',
+      data: {
+        name: '全公司',
+        code: '100000',
+        count: '0(3)'
+      },
+      children: [
+        {
+          key: '0-0',
+          data: {
+            name: '阮湘晴',
+            code: '	0900000001',
+          },
+        },
+        {
+          key: '0-1',
+          data: {
+            name: 'sandy',
+            code: 'sandy',
 
-                        }
-                    },
-                    {
-                        key: '0-2',
-                        data: {
-                            name: '李律民',
-                            code: 'turn000001',
+          }
+        },
+        {
+          key: '0-2',
+          data: {
+            name: '李律民',
+            code: 'turn000001',
 
-                        }
-                    }
-                ]
-            },
-            {
-                key: '1',
-                data: {
-                    name: '行政服務部',
-                    code: '107000',
-                    count: '0(2)'
-                },
-                children: [
-                    {
-                        key: '1-0',
-                        data: {
-                            name: '林東賢',
-                            code: '2014000138',
-                        }
-                    },
-                    {
-                        key: '1-1',
-                        data: {
-                            name: '	陳秋莉',
-                            code: '	2015000184',
-                        }
-                    }
-                ]
-            },
-        ];
+          }
+        }
+      ]
+    },
+    {
+      key: '1',
+      data: {
+        name: '行政服務部',
+        code: '107000',
+        count: '0(2)'
+      },
+      children: [
+        {
+          key: '1-0',
+          data: {
+            name: '林東賢',
+            code: '2014000138',
+          }
+        },
+        {
+          key: '1-1',
+          data: {
+            name: '	陳秋莉',
+            code: '	2015000184',
+          }
+        }
+      ]
+    },
+  ];
 
   selectionKeys = {}; /* {
     '0-0': {

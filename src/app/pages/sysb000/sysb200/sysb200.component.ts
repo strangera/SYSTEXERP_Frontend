@@ -4,12 +4,12 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ApprovalStatusService } from '../../../service/basic/approval-status.service';
 import { SystemTypeService } from '../../../service/basic/system-type.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { SYS1000Response } from '../../../models/SYS1000';
+import { SYS1000Response } from '../../../shared/models/SYS/SYS1000';
 
 @Component({
   selector: 'app-sysb200',

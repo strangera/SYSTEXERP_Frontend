@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -36,28 +36,30 @@ export class SYSBR00Component {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { id:1, city_no: 1, city_name: '臺北市', city_group: 12,
+    {
+      id: 1, city_no: 1, city_name: '臺北市', city_group: 12,
       children: [
-        { id:1, area_no: '63', post_no: '6301',area_name: '松山區' },
-        { id:2, area_no: '63', post_no: '6302',area_name: '信義區' },
-        { id:3, area_no: '63', post_no: '6303',area_name: '大安區' }
+        { id: 1, area_no: '63', post_no: '6301', area_name: '松山區' },
+        { id: 2, area_no: '63', post_no: '6302', area_name: '信義區' },
+        { id: 3, area_no: '63', post_no: '6303', area_name: '大安區' }
       ],
     },
-    { id:2, city_no: 9, city_name: '台中市', city_group: 29,
+    {
+      id: 2, city_no: 9, city_name: '台中市', city_group: 29,
       children: [
-        { id:4, area_no: '66', post_no: '6601',area_name: '中區' },
+        { id: 4, area_no: '66', post_no: '6601', area_name: '中區' },
       ]
     }
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'city_no', header: '縣市代碼', visible: true },
     { field: 'city_name', header: '縣市名稱', visible: true },
     { field: 'city_group', header: '區域', visible: true },
     // 其他欄位
   ];
-  subColumns: any[]= [
+  subColumns: any[] = [
     { field: 'area_no', header: '鄉鎮區代碼', visible: true },
     { field: 'post_no', header: '郵遞區號', visible: true },
     { field: 'area_name', header: '鄉鎮區名稱', visible: true },

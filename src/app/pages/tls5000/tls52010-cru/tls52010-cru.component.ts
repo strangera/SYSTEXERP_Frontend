@@ -2,7 +2,7 @@ import { Component, OnInit, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -19,11 +19,11 @@ import { BigCategoryCodeService } from './../../../service/basic/big-category-co
   templateUrl: './tls52010-cru.component.html',
   styleUrl: './tls52010-cru.component.scss'
 })
-export class TLS52010CRUComponent extends BasicCrupageComponent implements OnInit{
-  storageOptions:any[] = [];
-  managementIDOptions:any[] = [];
-  brandIDOptions:any[] = [];
-  vendorIDOptions:any[] = [];
+export class TLS52010CRUComponent extends BasicCrupageComponent implements OnInit {
+  storageOptions: any[] = [];
+  managementIDOptions: any[] = [];
+  brandIDOptions: any[] = [];
+  vendorIDOptions: any[] = [];
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     purchaseOrder: [, [this.validationService.numberValidator]], // 採購單號
@@ -36,7 +36,7 @@ export class TLS52010CRUComponent extends BasicCrupageComponent implements OnIni
     tax: [0, [this.validationService.numberValidator]], // 稅額
     totalCost: [0, [this.validationService.numberValidator]], // 合計金額
     totalSales: [0, [this.validationService.numberValidator]], // 售價總計
-    editortext: [, ], // 採購單說明
+    editortext: [,], // 採購單說明
     // ----------------------------------------------------------------
     items: this.formBuilder.array([
       this.createItem()
@@ -55,8 +55,8 @@ export class TLS52010CRUComponent extends BasicCrupageComponent implements OnIni
     private managementIDService: ManagementIDService,
     private brandCodeService: BrandCodeService,
     private vendorService: VendorService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -151,11 +151,11 @@ export class TLS52010CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;
@@ -187,8 +187,8 @@ export class TLS52010CRUComponent extends BasicCrupageComponent implements OnIni
 
   onClearForm() {
     this.dataForm.reset();  // 重置表單
-  }  
-  
+  }
+
   onCancel() {
     this.router.navigate(['/TLS5000/TLS52010']);
   }

@@ -10,23 +10,23 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
           <div class="grid p-fluid">
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="中分類代碼" controlName="mCode" [control]="dataForm.controls.mCode"
+              <app-input-text label="中分類代碼" controlName="CAT_MNo" [control]="dataForm.controls.CAT_MNo"
                 [submitted]="submitted">
               </app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="中分類名稱" controlName="mName" [control]="dataForm.controls.mName"
+              <app-input-text label="中分類名稱" controlName="CAT_MName" [control]="dataForm.controls.CAT_MName"
                 [submitted]="submitted">
               </app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="大分類代碼" controlName="bigCategory" [options]="bigCategoryOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.bigCategory" [submitted]="submitted">
+              <app-dropdown label="大分類代碼" controlName="CAT_LNo" [options]="bigCategoryOptions" optionLabel="label"
+                optionValue="value" [control]="dataForm.controls.CAT_LNo" [submitted]="submitted">
               </app-dropdown>
             </div>
           </div>
           <hr>
-          <app-editor-text label="說明" controlName="editortext" [control]="dataForm.controls.editortext"
+          <app-editor-text label="說明" controlName="CAT_MRemark" [control]="dataForm.controls.CAT_MRemark"
             [style]="{ height: '100px' }" [submitted]="submitted">
           </app-editor-text>
           <hr>
@@ -34,7 +34,7 @@
         <div class="col pt-4">
           <div class="grid justify-content-end">
             <app-button btnType="cancel" (click)="onCancel()"></app-button>
-            <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
+            <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="!isFormReadable"></app-button>
           </div>
         </div>
       </p-panel>

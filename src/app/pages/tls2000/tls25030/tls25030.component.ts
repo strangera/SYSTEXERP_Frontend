@@ -6,10 +6,10 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 import { FloorService } from '../../../service/basic/floor.service';
@@ -77,14 +77,16 @@ export class TLS25030Component {
 
   // 表格資料
   data: any[] = [
-    {  'documentNumber': '2405080001', 'counterNumber': '000231', 
-      'isdelete': true, 'counterName': 'NIKE', 
+    {
+      'documentNumber': '2405080001', 'counterNumber': '000231',
+      'isdelete': true, 'counterName': 'NIKE',
       'deductionDate': '2024/05/08', 'violationCategoryCode': 'F',
-      'deductionItem': '01', 
+      'deductionItem': '01',
       'amount': '200 	', 'issuingUnit': '101700 / 品牌代理小組(停用)',
-      'violationDateStart': '2024/05/08', 'creator': 'xcom', 
-    'maintenanceDate': '2024/5/8', 'status': '建立', 
-  'remarks': 'test' },
+      'violationDateStart': '2024/05/08', 'creator': 'xcom',
+      'maintenanceDate': '2024/5/8', 'status': '建立',
+      'remarks': 'test'
+    },
 
   ];
   filteredData: any[] = [...this.data];
@@ -103,7 +105,7 @@ export class TLS25030Component {
     { field: 'status', header: '狀態', visible: true },
     { field: 'remarks', header: '備註', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -115,8 +117,8 @@ export class TLS25030Component {
     private floorService: FloorService,  // 樓層 service
     private violationStatusService: ViolationStatusService,  // 狀態 service
     private deductionItemService: DeductionItemService,  // 扣款項目 service
-    private OrganizationNumberService:OrganizationNumberService
-  ) {}
+    private OrganizationNumberService: OrganizationNumberService
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
@@ -209,7 +211,7 @@ export class TLS25030Component {
         creator: data.creator,
         maintenanceDate: data.maintenanceDate,
         status: data.status,
-        remarks:data.remarks
+        remarks: data.remarks
 
 
 
@@ -228,12 +230,12 @@ export class TLS25030Component {
       this.router.navigate(['TLS2000/TLS25030MOD'], extras);
     }
   }
-  
+
   onDetail(data: any) {
     // Store data in session storage
     sessionStorage.setItem('detailData', JSON.stringify(data));
     sessionStorage.setItem('queryFormData', JSON.stringify(this.queryForm.value));
-    
+
     let extras: NavigationExtras = {
       state: {
         crudstatus: 'Read'

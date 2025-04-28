@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -18,7 +18,7 @@ import { TransportationMethodService } from '../../../service/basic/transportati
   templateUrl: './ass11060-cru.component.html',
   styleUrl: './ass11060-cru.component.scss'
 })
-export class ASS11060CRUComponent extends BasicCrupageComponent implements OnInit{
+export class ASS11060CRUComponent extends BasicCrupageComponent implements OnInit {
   //
   deliveryMethodOptions: any[] = [];
   returnMethodOptions: any[] = [
@@ -61,7 +61,7 @@ export class ASS11060CRUComponent extends BasicCrupageComponent implements OnIni
     //
     deliveryDate: [, [Validators.maxLength(8)]], // 廠商送貨期限
     //
-    remark: [, ], // 附註
+    remark: [,], // 附註
   });
   //
   // ----------------------------------------------------------------
@@ -76,8 +76,8 @@ export class ASS11060CRUComponent extends BasicCrupageComponent implements OnIni
     private validationService: ValidationService,
     //
     private transportationMethodService: TransportationMethodService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -130,11 +130,11 @@ export class ASS11060CRUComponent extends BasicCrupageComponent implements OnIni
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }

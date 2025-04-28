@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -17,7 +17,7 @@ import { UsageTypeService } from './../../../service/basic/usage-type.service';
 })
 
 //1.1.2.1 電子式發票各系統配號維護
-export class FIN12010Component extends BasicQpageComponent implements OnInit{
+export class FIN12010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     twodatemm: [], // 發票年月
@@ -39,7 +39,7 @@ export class FIN12010Component extends BasicQpageComponent implements OnInit{
   data: any[] = [
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '發票年月', visible: true },
     { field: 'col2', header: '字軌', visible: true },
     { field: 'col3', header: '發票號碼(起)', visible: true },
@@ -51,8 +51,8 @@ export class FIN12010Component extends BasicQpageComponent implements OnInit{
   ];
   // ----------------------------------------------------------------
   //
-  usageTypeOptions:any[]=[];
-  usageStatusOptions:any[]=[
+  usageTypeOptions: any[] = [];
+  usageStatusOptions: any[] = [
     { value: 1, label: '使用完' },
     { value: 2, label: '未使用完' },
   ];

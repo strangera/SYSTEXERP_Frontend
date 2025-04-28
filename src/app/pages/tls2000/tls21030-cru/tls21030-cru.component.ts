@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
 import { AccountingPeriodService } from '../../../service/basic/accounting-period.service';
@@ -41,9 +41,9 @@ export class TLS21030CRUComponent {
   loading: boolean = false;
   submitted: boolean = false;
   dataForm = this.formBuilder.group({
-    settlementMethod: [1,Validators.required],       // 結帳方式
-    accountingPeriod: [1,Validators.required],       // 帳次
-    useOwnerInvoice: [1,Validators.required],        // 是否使用業主發票
+    settlementMethod: [1, Validators.required],       // 結帳方式
+    accountingPeriod: [1, Validators.required],       // 帳次
+    useOwnerInvoice: [1, Validators.required],        // 是否使用業主發票
     description1: [],           // 說明1
     description2: [],           // 說明2
     description3: [],           // 說明3
@@ -63,10 +63,10 @@ export class TLS21030CRUComponent {
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
     private authService: AuthService,
-    private settlementMethodService:SettlementMethodService,
-    private accountingPeriodService:AccountingPeriodService,
-    private whetherService:WhetherService,
-  ) {}
+    private settlementMethodService: SettlementMethodService,
+    private accountingPeriodService: AccountingPeriodService,
+    private whetherService: WhetherService,
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

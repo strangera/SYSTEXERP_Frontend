@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -18,21 +18,21 @@ import { VendorService } from '../../../service/basic/vendor.service';
   templateUrl: './fin22010-cru.component.html',
   styleUrl: './fin22010-cru.component.scss'
 })
-export class FIN22010CRUComponent extends BasicCrupageComponent implements OnInit{
+export class FIN22010CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     requestSheet: [, [Validators.required, Validators.maxLength(13)]], // 請款單號
-    requestDate:[,[Validators.required]], //請款日期
+    requestDate: [, [Validators.required]], //請款日期
     requestPerson: ['', [Validators.required]], // 請款人
     payPeriod: [, [Validators.required, Validators.maxLength(2)]], // 付款期數
-    vendorCode:[,[Validators.required]], //廠商代號
-    requestAmount: [, [this.validationService.numberValidator,Validators.required, Validators.maxLength(10)]], // 請款金額
+    vendorCode: [, [Validators.required]], //廠商代號
+    requestAmount: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(10)]], // 請款金額
     remark: ['', [Validators.maxLength(50)]], // 備註
   });
   //
   // ----------------------------------------------------------------
   //
-  vendorCodeOptions:any[]=[];
+  vendorCodeOptions: any[] = [];
 
   constructor(
     private router: Router,
@@ -43,8 +43,8 @@ export class FIN22010CRUComponent extends BasicCrupageComponent implements OnIni
     private validationService: ValidationService,
     //
     private vendorService: VendorService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -97,11 +97,11 @@ export class FIN22010CRUComponent extends BasicCrupageComponent implements OnIni
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }

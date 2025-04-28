@@ -2,7 +2,7 @@ import { Component, OnInit, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -15,18 +15,18 @@ import { TaxTypeService } from '../../../service/basic/tax-type.service';
   templateUrl: './fin14040-cru.component.html',
   styleUrl: './fin14040-cru.component.scss'
 })
-export class FIN14040CRUComponent extends BasicCrupageComponent implements OnInit{
+export class FIN14040CRUComponent extends BasicCrupageComponent implements OnInit {
   //
-  invoiceFormatOptions:any[]=[
+  invoiceFormatOptions: any[] = [
     { value: 1, label: 31 },
     { value: 2, label: 32 },
     { value: 3, label: 33 },
   ];
-  categoryOptions:any[]=[
+  categoryOptions: any[] = [
     { value: 1, label: '退出' },
     { value: 2, label: '折讓' },
   ];
-  taxTypeOptions:any[]=[];
+  taxTypeOptions: any[] = [];
 
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
@@ -35,8 +35,8 @@ export class FIN14040CRUComponent extends BasicCrupageComponent implements OnIni
     invoiceTicket: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(8)]], // 發票號碼
     invoiceDate: [], // 發票日期
     returnDate: [], // 退出/折讓日期
-    invoiceFormat: [,[Validators.required]], // 發票格式
-    onedatemm: [,[Validators.required]], // 申報年月
+    invoiceFormat: [, [Validators.required]], // 發票格式
+    onedatemm: [, [Validators.required]], // 申報年月
     usage: [], // 區別
     taxType: [, [Validators.required]], // 課稅別
     salesAmount: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 銷售額
@@ -63,8 +63,8 @@ export class FIN14040CRUComponent extends BasicCrupageComponent implements OnIni
     private validationService: ValidationService,
     //
     private taxTypeService: TaxTypeService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -140,11 +140,11 @@ export class FIN14040CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

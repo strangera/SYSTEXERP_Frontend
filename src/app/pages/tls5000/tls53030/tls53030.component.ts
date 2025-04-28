@@ -7,9 +7,9 @@ import { BrandCodeService } from '../../../service/basic/brand-code.service';
 import { InventoryCategoryService } from '../../../service/basic/inventory-category.service';
 import { StorageInventoryStatusService } from '../../../service/basic/storage-inventory-status.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 
@@ -68,7 +68,7 @@ export class TLS53030Component {
     private inventoryCategoryService: InventoryCategoryService,
     private storageInventoryStatusService: StorageInventoryStatusService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options
@@ -112,7 +112,7 @@ export class TLS53030Component {
 
   onClearForm() {
     this.queryForm.reset();  // 重置表單
-    }
+  }
 
   onCreate() {
     if (this.canAdd()) {

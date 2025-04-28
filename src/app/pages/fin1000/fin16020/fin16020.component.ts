@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -16,7 +16,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './fin16020.component.html',
   styleUrl: './fin16020.component.scss'
 })
-export class FIN16020Component extends BasicQpageComponent implements OnInit{
+export class FIN16020Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     returnNumberFrom: [, [this.validationService.numberValidator, Validators.maxLength(99999999999)]], // 退出/折讓單號
@@ -54,7 +54,7 @@ export class FIN16020Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '發票格式', visible: true },
     { field: 'col2', header: '退出/折讓單號', visible: true },
     { field: 'col3', header: '字軌', visible: true },
@@ -72,25 +72,25 @@ export class FIN16020Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  invoiceFormatOptions:any[]=[
+  invoiceFormatOptions: any[] = [
     { value: 1, label: 21 },
     { value: 2, label: 22 },
     { value: 3, label: 23 },
   ];
-  categoryOptions:any[]=[
+  categoryOptions: any[] = [
     { value: 1, label: '退出' },
     { value: 2, label: '折讓' },
   ];
-  usageOptions:any[]=[
+  usageOptions: any[] = [
     { value: 1, label: '營業用' },
     { value: 2, label: '共同使用' },
   ];
-  dateTypeOptions:any[]=[
+  dateTypeOptions: any[] = [
     { value: 1, label: '例行資料' },
     { value: 2, label: '申報資料' },
     { value: 3, label: '歷史資料' },
   ];
-  systemCategoryOptions:any[]=[];
+  systemCategoryOptions: any[] = [];
 
   constructor(
     private router: Router,

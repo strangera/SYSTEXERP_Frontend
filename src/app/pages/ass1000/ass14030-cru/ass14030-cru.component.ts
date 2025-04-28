@@ -4,7 +4,7 @@ import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -16,20 +16,20 @@ import { ValidationService } from '../../../shared/service/validation.service';
   templateUrl: './ass14030-cru.component.html',
   styleUrl: './ass14030-cru.component.scss'
 })
-export class ASS14030CRUComponent extends BasicCrupageComponent implements OnInit{
+export class ASS14030CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // ----------------------------------------------------------------
     subpoenaNumber: [], // 傳票編號
     subpoenaType: [], // 傳票種類
     type: [''], // 傳票型態
-    subpoenaSummary: ['',[Validators.maxLength(50)]], // 傳票摘要
+    subpoenaSummary: ['', [Validators.maxLength(50)]], // 傳票摘要
     subpoenaDate: [], // 傳票日期
     subpoenaStatus: [[] as number[]], // 傳票狀態
-    checkoutNumber: [, [Validators.maxLength(12),this.validationService.numberValidator]], // 結帳單號
-    builder: ['',[Validators.maxLength(10)]], // 建立者
+    checkoutNumber: [, [Validators.maxLength(12), this.validationService.numberValidator]], // 結帳單號
+    builder: ['', [Validators.maxLength(10)]], // 建立者
     buildDate: [], // 建立日
-    modifier: ['',[Validators.maxLength(10)]], // 修改者
+    modifier: ['', [Validators.maxLength(10)]], // 修改者
     modifyDate: [], // 修改日
 
     items: this.formBuilder.array([
@@ -69,8 +69,8 @@ export class ASS14030CRUComponent extends BasicCrupageComponent implements OnIni
     //
     private needPayTicketService: NeedPayTicketService,
     private organizationNumberService: OrganizationNumberService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -97,14 +97,14 @@ export class ASS14030CRUComponent extends BasicCrupageComponent implements OnIni
       // 創建
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
-        this.accordionTabCss= 'create-accordionTab';
+        this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
         this.showConfirm = this.canAdd();
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
-        this.accordionTabCss= 'edit-accordionTab';
+        this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
         this.showConfirm = this.canEdit();
         this.Edit(state.rowdata);
@@ -131,16 +131,16 @@ export class ASS14030CRUComponent extends BasicCrupageComponent implements OnIni
   // ----------------------------------------------------------------
   createItem(): FormGroup {
     return this.formBuilder.group({
-      subjectCode: [,[Validators.required]], // 科目代號
+      subjectCode: [, [Validators.required]], // 科目代號
       vendorCode: [''], // 廠商代號
       summary: [''], // 摘要
-      debitAmount: [,[Validators.required, Validators.maxLength(15)]], // 借方金額
-      creditAmount: [,[Validators.required, Validators.maxLength(15)]], // 貸方金額
-      organizationCode: [,[Validators.required, Validators.maxLength(6)]], // 組織代號
+      debitAmount: [, [Validators.required, Validators.maxLength(15)]], // 借方金額
+      creditAmount: [, [Validators.required, Validators.maxLength(15)]], // 貸方金額
+      organizationCode: [, [Validators.required, Validators.maxLength(6)]], // 組織代號
       eventCode: [], // 活動代號
-      flushCode: [,[Validators.maxLength(20)]], // 立沖代號
-      objectCode: [,[Validators.maxLength(30)]], // 對像別編號
-      objectKey: [,[Validators.maxLength(30)]], // 對帳KEY值
+      flushCode: [, [Validators.maxLength(20)]], // 立沖代號
+      objectCode: [, [Validators.maxLength(30)]], // 對像別編號
+      objectKey: [, [Validators.maxLength(30)]], // 對帳KEY值
     });
   }
   onRemoveItem(index: number) {
@@ -160,11 +160,11 @@ export class ASS14030CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

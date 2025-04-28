@@ -1,6 +1,6 @@
 <div #appTopbarDiv class="layout-topbar justify-content-between flex-wrap lg:flex-nowrap">
   <a class="layout-topbar-logo" routerLink="/">
-    <img [src]="logo" alt="logo">
+    <img src="assets/layout/images/logo.png" alt="logo">
     <span class="min-w-max">{{'management-platform-title' | translate}}</span>
   </a>
   <!--手機-->
@@ -42,15 +42,15 @@
         <i class="pi pi-star text-2xl"></i>
         <i class="absolute pi pi pi-star-fill text-yellow-400 p-1" style="font-size: 16px;top: 2px;"></i>
       </button>
-      <p-overlayPanel #op styleClass="border-round-xl select-none" appendTo="body">
-        <div class="flex flex-column gap-1 max-w-max">
+      <p-overlayPanel #op styleClass="select-none">
+        <div class="flex flex-column gap-1">
           <div class="flex flex-column">
             <p-table [value]="Favorites" selectionMode="multiple" [(selection)]="selectedFavorites"
               [reorderableColumns]="editingFavorites" (onRowReorder)="onRowReorder($event)" dataKey="label">
               <ng-template pTemplate="header">
                 <tr>
-                  <th *ngIf="editingFavorites"><p-tableHeaderCheckbox /></th>
-                  <th *ngIf="editingFavorites" class="text-center">排序</th>
+                  <th *ngIf="editingFavorites" class="text-center bg-white"><p-tableHeaderCheckbox /></th>
+                  <th *ngIf="editingFavorites" class="text-center bg-white">排序</th>
                   <th *ngIf="!editingFavorites"
                     class="border-round-xl p-0 flex justify-content-between align-items-center">
                     <p-button class="w-full opacity-100" styleClass="w-full border-round-lg opacity-100" label="我的最愛"
@@ -60,19 +60,19 @@
                   <th *ngIf="editingFavorites"
                     class="border-round-xl p-0 flex justify-content-between align-items-center">
                     <p-button class="w-full" styleClass="w-full border-round-lg" severity="danger" label="刪除我的最愛"
-                      icon="pi pi-trash" iconPos="right" (click)="editFavorites()"  />
+                      icon="pi pi-trash" iconPos="right" (click)="deleteSelectedFavorites()" />
                   </th>
                 </tr>
               </ng-template>
               <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
                 <tr [pSelectableRow]="item" [pSelectableRowIndex]="rowIndex" [pReorderableRow]="rowIndex">
-                  <td *ngIf="editingFavorites">
+                  <td *ngIf="editingFavorites" class="text-center">
                     <p-tableCheckbox [value]="item" class="pointer-events-none" />
                   </td>
                   <td *ngIf="editingFavorites" class="text-center">
                     <span class="pi pi-bars" pReorderableRowHandle></span>
                   </td>
-                  <td class="p-2">
+                  <td class="p-2 text-center">
                     <span *ngIf="!editingFavorites" (click)="onFavoriteItemClick(item)"
                       class="min-w-max p-2">{{item.label}}</span>
                     <span *ngIf="editingFavorites" class="min-w-max p-2">{{item.label}}</span>

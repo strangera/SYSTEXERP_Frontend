@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { ErrorHandlerService } from '../../shared/service/error-handler.service';
 import { catchError, Observable, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { SYS1000, SYS1000Response } from '../../models/SYS1000';
+import { SYS1000, SYS1000Response } from '../../shared/models/SYS/SYS1000';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +13,7 @@ export class Sys1000Service {
 
   // 下拉選單
   options: SYS1000Response[] = [
-    { id: 1, SYS_Type: 'T111', SYS_Code: '0',  SYS_Name: '即期', },
+    { id: 1, SYS_Type: 'T111', SYS_Code: '0', SYS_Name: '即期', },
     { id: 2, SYS_Type: 'T111', SYS_Code: '15', SYS_Name: '15天', },
     { id: 3, SYS_Type: 'T111', SYS_Code: '30', SYS_Name: '30天', },
     { id: 4, SYS_Type: 'T111', SYS_Code: '45', SYS_Name: '45天', },
@@ -28,10 +28,10 @@ export class Sys1000Service {
   getData(): Observable<SYS1000Response[]> {
     return of(this.options).pipe(
       tap(data => {
-        console.debug('取得的下拉選單數據:', data);
+        // console.debug('取得的下拉選單數據:', data);
       }),
       catchError((error: HttpErrorResponse) => {
-        console.error('獲取下拉選單數據失敗:', error);
+        // console.error('獲取下拉選單數據失敗:', error);
         return this.errorHandler.handleError(error);  // 使用錯誤處理服務來處理錯誤
       })
     );

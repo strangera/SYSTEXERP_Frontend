@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,10 +15,10 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './fin29120.component.html',
   styleUrl: './fin29120.component.scss'
 })
-export class FIN29120Component extends BasicQpageComponent implements OnInit{
+export class FIN29120Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
-    onedatemm: [,[ Validators.required]], // 申報年月
+    onedatemm: [, [Validators.required]], // 申報年月
     track: ['', [Validators.maxLength(2)]], // 字軌
     startFactoryID: [, [this.validationService.numberValidator, Validators.max(99999999999999)]], // 廠客代號
     endFactoryID: [, [this.validationService.numberValidator, Validators.max(99999999999999)]], // 廠客代號
@@ -40,7 +40,7 @@ export class FIN29120Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '傳票號碼', visible: true },
     { field: 'col2', header: '廠商統編', visible: true },
     { field: 'col3', header: '應付ID', visible: true },

@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -17,7 +17,7 @@ import { OrganizationNumberService } from '../../../service/basic/organization-n
   templateUrl: './cpm21030.component.html',
   styleUrl: './cpm21030.component.scss'
 })
-export class CPM21030Component extends BasicQpageComponent implements OnInit{
+export class CPM21030Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     filedCode: [], // 場地代號
@@ -30,7 +30,7 @@ export class CPM21030Component extends BasicQpageComponent implements OnInit{
     //
     capacity: [], // 可容納人數
     fieldStatus: [[] as number[]], // 場地狀況
-    remark: [, ], // 備註
+    remark: [,], // 備註
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -47,7 +47,7 @@ export class CPM21030Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '場地代號', visible: true },
     { field: 'col2', header: '場地名稱', visible: true },
     // { field: 'col3', header: '區域', visible: true },
@@ -81,7 +81,7 @@ export class CPM21030Component extends BasicQpageComponent implements OnInit{
     private authService: AuthService,
     private validationService: ValidationService,
     //
-    private organizationNumberService:OrganizationNumberService,
+    private organizationNumberService: OrganizationNumberService,
     private userStatusService: UserStatusService,
   ) {
     super(); // 呼叫父類建構子

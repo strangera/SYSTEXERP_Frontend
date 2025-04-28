@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,12 +15,12 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './fin13010.component.html',
   styleUrl: './fin13010.component.scss'
 })
-export class FIN13010Component extends BasicQpageComponent implements OnInit{
+export class FIN13010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
-    onedatemm: [,[Validators.required]], // 申報年月
-    startSalesDate: [,[Validators.required]], // 領用日期
-    endSalesDate: [,[Validators.required]], // 領用日期
+    onedatemm: [, [Validators.required]], // 申報年月
+    startSalesDate: [, [Validators.required]], // 領用日期
+    endSalesDate: [, [Validators.required]], // 領用日期
     taxNumber: [, [Validators.required]], // 稅籍編號
   });
   // 下拉資料多個呈現
@@ -35,7 +35,7 @@ export class FIN13010Component extends BasicQpageComponent implements OnInit{
   data: any[] = [
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '發票年月', visible: true },
     { field: 'col2', header: '申報年月', visible: true },
     { field: 'col3', header: '類別', visible: true },
@@ -53,7 +53,7 @@ export class FIN13010Component extends BasicQpageComponent implements OnInit{
   ];
   // ----------------------------------------------------------------
   //
-  taxNumberOptions:any[]=[
+  taxNumberOptions: any[] = [
     { value: 1, label: '701702007' },
     { value: 2, label: '703902223' },
   ];

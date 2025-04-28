@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -28,40 +28,40 @@ import { CooperationMethodService } from '../../../service/basic/cooperation-met
 
 export class TLS31080Component {
 
-    // 程式編號
-    ProgNo: string = '230008';
-    // 權限變數
-    funInfo: FunsrightInfo = {};
-    addPermission: HasPermissionsValue = {
-      progNo: this.ProgNo,
-      permission: PermissionsInfo.add,
-    };
-    queryPermission: HasPermissionsValue = {
-      progNo: this.ProgNo,
-      permission: PermissionsInfo.query,
-    };
-    editPermission: HasPermissionsValue = {
-      progNo: this.ProgNo,
-      permission: PermissionsInfo.edit,
-    };
+  // 程式編號
+  ProgNo: string = '230008';
+  // 權限變數
+  funInfo: FunsrightInfo = {};
+  addPermission: HasPermissionsValue = {
+    progNo: this.ProgNo,
+    permission: PermissionsInfo.add,
+  };
+  queryPermission: HasPermissionsValue = {
+    progNo: this.ProgNo,
+    permission: PermissionsInfo.query,
+  };
+  editPermission: HasPermissionsValue = {
+    progNo: this.ProgNo,
+    permission: PermissionsInfo.edit,
+  };
 
-      // 查詢表單
+  // 查詢表單
   loading: boolean = false;
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
     radiolist: [1, []], // 條件篩選, radioButton
     floor: [],  // 樓層
-    region:[], //區域
-    tax:[], //稅別
+    region: [], //區域
+    tax: [], //稅別
     type: [],
     organizationCode: [],  // 專櫃編號
     businessTypeCode: [],  // 業種
     commissionType: [], // 抽成方式
-    onedatedd:[],
-    onedateyy:[],
-    radio1:[],
-    onedatemm:[],
-    startdatetime:[],enddatetime:[],
+    onedatedd: [],
+    onedateyy: [],
+    radio1: [],
+    onedatemm: [],
+    startdatetime: [], enddatetime: [],
     counterCode: [],  // 專櫃編號
   });
 
@@ -80,9 +80,9 @@ export class TLS31080Component {
   commissionTypeOptions: any[] = [];
   TypeOptions: any[] = [];
   counterCodeOptions: any[] = [];
-  taxOptions: any[]=[];
+  taxOptions: any[] = [];
   operationsOptions: any[] = [];
-  selectedOption: string ='1'; // 預設選擇的欄位
+  selectedOption: string = '1'; // 預設選擇的欄位
 
   // 表格資料
   data: any[] = [];
@@ -116,11 +116,11 @@ export class TLS31080Component {
     private businessTypeCodeService: BusinessTypeCodeService,
     private organizationNumberService: OrganizationNumberService,
     private commissionTypeService: CommissionTypeService,
-    private TypeService:TypeService,
+    private TypeService: TypeService,
     private TaxableService: TaxableService,
     private cooperationMethodService: CooperationMethodService,
     private counterCodeService: CounterCodeService,  // 專櫃編號
-  ) {}
+  ) { }
 
 
   ngOnInit(): void {
@@ -152,12 +152,12 @@ export class TLS31080Component {
     });
     this.TaxableService.getSystemTypes().subscribe(data => {
       this.taxOptions = data;
-  });
+    });
 
-  this.counterCodeService.getCounterCodes().subscribe((data) => {
-    this.counterCodeOptions = data;
-  });
-}
+    this.counterCodeService.getCounterCodes().subscribe((data) => {
+      this.counterCodeOptions = data;
+    });
+  }
 
   canQuery(): boolean {
     return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
@@ -236,5 +236,5 @@ export class TLS31080Component {
 
   onSystemTypeChange(selectedValue: any): void {
     this.selectedOption = selectedValue
-   }
+  }
 }

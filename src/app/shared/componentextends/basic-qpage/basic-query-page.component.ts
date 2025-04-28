@@ -3,13 +3,13 @@
 import { HasPermissionsValue } from '../../directive/has-permission.directive';
 import { NavigationExtras, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { NotificationService } from '../../service/notification.service';
+import { NotificationService } from '../../component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { QueryStateService } from '../../service/query-state.service';
 import { take } from 'rxjs';
-import { UserInfo } from '../../../models/system/userInfo';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { UserInfo } from '../../models/system/userInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { CRUDStatus } from '../../enum/CRUDstatus';
 

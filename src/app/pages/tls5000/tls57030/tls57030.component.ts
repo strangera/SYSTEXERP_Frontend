@@ -7,9 +7,9 @@ import { WarehouseService } from '../../../service/basic/warehouse.service';
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
 import { ManagementIDService } from '../../../service/basic/management-id.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 
@@ -46,28 +46,28 @@ export class TLS57030Component {
   managementIDOptions: any[] = [];
   stockRangeOptions: any[] = [];
 
-      // Table data
-      data: any[] = [
+  // Table data
+  data: any[] = [
 
-      ];
-      filteredData: any[] = [...this.data];
-      columns: any[] = [
-        { field: 'brandName', header: '品牌名稱', visible: true },
-        { field: 'warehouse', header: '倉別', visible: true },
-        { field: 'managementID', header: '管理編號', visible: true },
-        { field: 'productName', header: '商品名稱', visible: true },
-        { field: 'barcode', header: '國際條碼', visible: true },
-        { field: 'vendorCode', header: '廠商代號', visible: true },
-        { field: 'bigCategory', header: '大分類', visible: true },
-        { field: 'midCategory', header: '中分類', visible: true },
-        { field: 'smallCategory', header: '小分類', visible: true },
-        { field: 'purchasePriceExclTax', header: '進價(未稅)', visible: true },
-        { field: 'sellingPriceInclTax', header: '售價(含稅)', visible: true },
-        { field: 'totalQuantity', header: '數量合計', visible: true },
-        { field: 'totalPurchaseExclTax', header: '合計進價(未稅)', visible: true },
-        { field: 'totalSellingInclTax', header: '合計售價(含稅)', visible: true },
-      ];
-      
+  ];
+  filteredData: any[] = [...this.data];
+  columns: any[] = [
+    { field: 'brandName', header: '品牌名稱', visible: true },
+    { field: 'warehouse', header: '倉別', visible: true },
+    { field: 'managementID', header: '管理編號', visible: true },
+    { field: 'productName', header: '商品名稱', visible: true },
+    { field: 'barcode', header: '國際條碼', visible: true },
+    { field: 'vendorCode', header: '廠商代號', visible: true },
+    { field: 'bigCategory', header: '大分類', visible: true },
+    { field: 'midCategory', header: '中分類', visible: true },
+    { field: 'smallCategory', header: '小分類', visible: true },
+    { field: 'purchasePriceExclTax', header: '進價(未稅)', visible: true },
+    { field: 'sellingPriceInclTax', header: '售價(含稅)', visible: true },
+    { field: 'totalQuantity', header: '數量合計', visible: true },
+    { field: 'totalPurchaseExclTax', header: '合計進價(未稅)', visible: true },
+    { field: 'totalSellingInclTax', header: '合計售價(含稅)', visible: true },
+  ];
+
 
   constructor(
     private router: Router,
@@ -77,8 +77,8 @@ export class TLS57030Component {
     private brandCodeService: BrandCodeService,
     private managementIDService: ManagementIDService,
     private authService: AuthService,
-    private stockRangeService:StockRangeService
-  ) {}
+    private stockRangeService: StockRangeService
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options
@@ -87,7 +87,8 @@ export class TLS57030Component {
     this.brandCodeService.getSystemTypes().subscribe((data) => (this.brandCodeOptions = data));
     this.managementIDService.getSystemTypes().subscribe((data) => (this.managementIDOptions = data));
 
-    this.stockRangeService.getStockRangeOptions().subscribe((data) => (this.stockRangeOptions = data));}
+    this.stockRangeService.getStockRangeOptions().subscribe((data) => (this.stockRangeOptions = data));
+  }
 
   canQuery(): boolean {
     return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;

@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { VendorService } from '../../../service/basic/vendor.service';
@@ -17,7 +17,7 @@ import { VendorService } from '../../../service/basic/vendor.service';
   templateUrl: './fin24020.component.html',
   styleUrl: './fin24020.component.scss'
 })
-export class FIN24020Component extends BasicQpageComponent implements OnInit{
+export class FIN24020Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     shouldPayID: [, [Validators.maxLength(14)]], // 應付ID
@@ -46,7 +46,7 @@ export class FIN24020Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '應付ID', visible: true },
     { field: 'col2', header: '廠客代號', visible: true },
     { field: 'col3', header: '年月', visible: true },
@@ -69,7 +69,7 @@ export class FIN24020Component extends BasicQpageComponent implements OnInit{
     private validationService: ValidationService,
     //
     private vendorService: VendorService,
-    private whetherService:WhetherService,
+    private whetherService: WhetherService,
   ) {
     super(); // 呼叫父類建構子
   }

@@ -1,6 +1,5 @@
 import { animate, state, style, transition, trigger } from "@angular/animations";
-import { NotificationService } from "../../service/notification.service";
-import { formatDateTime } from "../../models/base/format-data.model";
+import { NotificationService } from "../../component/notification-message/notification.service";
 export interface Column {
   field: string;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
@@ -81,3 +80,21 @@ export function validateRowData(rowData: any, columns: Column[], data: any, mess
     }))
   );
 }
+
+// yyyy-MM-dd
+export const formatDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+};
+// yyy-mm-dd hh:mm:ss
+export const formatDateTime = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(date);
+};
+// 000,000,000
+export const formatNumber = (number: number | string): string => {
+  if (!number) return '0';
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};

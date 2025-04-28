@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm13050.component.html',
   styleUrl: './cpm13050.component.scss'
 })
-export class CPM13050Component extends BasicQpageComponent implements OnInit{
+export class CPM13050Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     creditHours: [, [Validators.maxLength(10)]], // 折抵時數
@@ -31,12 +31,12 @@ export class CPM13050Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'isdelete': true, 'creditHours': 0.5, 'creditAmount': 500},
-    { 'isdelete': true, 'creditHours': 1, 'creditAmount': 1000},
-    { 'isdelete': true, 'creditHours': 1.5, 'creditAmount': 1500}
+    { 'isdelete': true, 'creditHours': 0.5, 'creditAmount': 500 },
+    { 'isdelete': true, 'creditHours': 1, 'creditAmount': 1000 },
+    { 'isdelete': true, 'creditHours': 1.5, 'creditAmount': 1500 }
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'creditHours', header: '折抵時數', visible: true },
     { field: 'creditAmount', header: '折抵金額', visible: true },
     // 其他欄位

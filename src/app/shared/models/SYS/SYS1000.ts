@@ -1,6 +1,6 @@
 export interface SYS1000 {
-  id? : number;
-  SYS_Type? : string;
+  id?: number;
+  SYS_Type?: string;
   SYS_Code?: string;
   SYS_Name?: string;
   CRT_Date: Date;
@@ -10,8 +10,8 @@ export interface SYS1000 {
 }
 
 export interface SYS1000Response {
-  id? : number;
-  SYS_Type? : string;
+  id?: number;
+  SYS_Type?: string;
   SYS_Code?: string;
   SYS_Name?: string;
 }

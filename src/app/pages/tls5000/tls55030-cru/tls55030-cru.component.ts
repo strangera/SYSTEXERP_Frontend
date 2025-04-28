@@ -9,9 +9,9 @@ import { SalesLocationService } from '../../../service/basic/sales-location.serv
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
 import { TransactionTypeService } from '../../../service/basic/transaction-type.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { UserCodeService } from '../../../service/basic/user-code.service';
@@ -68,101 +68,101 @@ export class TLS55030CRUComponent {
   crudstatus: CRUDStatus = CRUDStatus.Read;//CRU
   vendorOptions: any[] = [];
   // 表格資料2
-data2: any[] = [
-  {
-    sequenceNumber: 1,
-    isNew: '是',
-    transactionType: '單據別1',
-    documentNumber: 'DOC123456',
-    vendorCode: 'VND001',
-    warehouseCode: 'WHS01',
-    amountBeforeTax: 900,
-    taxAmount: 100,
-    totalAmount: 1000
-  },
-  {
-    sequenceNumber: 2,
-    isNew: '否',
-    transactionType: '單據別2',
-    documentNumber: 'DOC654321',
-    vendorCode: 'VND002',
-    warehouseCode: 'WHS02',
-    amountBeforeTax: 1800,
-    taxAmount: 200,
-    totalAmount: 2000
-  },
-  // 其他資料
-];
+  data2: any[] = [
+    {
+      sequenceNumber: 1,
+      isNew: '是',
+      transactionType: '單據別1',
+      documentNumber: 'DOC123456',
+      vendorCode: 'VND001',
+      warehouseCode: 'WHS01',
+      amountBeforeTax: 900,
+      taxAmount: 100,
+      totalAmount: 1000
+    },
+    {
+      sequenceNumber: 2,
+      isNew: '否',
+      transactionType: '單據別2',
+      documentNumber: 'DOC654321',
+      vendorCode: 'VND002',
+      warehouseCode: 'WHS02',
+      amountBeforeTax: 1800,
+      taxAmount: 200,
+      totalAmount: 2000
+    },
+    // 其他資料
+  ];
 
-filteredData2: any[] = [...this.data2];
+  filteredData2: any[] = [...this.data2];
 
-columns2: any[] = [
-  { field: 'sequenceNumber', header: '序號', visible: true },
-  { field: 'isNew', header: '新舊', visible: true },
-  { field: 'transactionType', header: '單據別', visible: true },
-  { field: 'documentNumber', header: '單號', visible: true },
-  { field: 'vendorCode', header: '廠商編號', visible: true },
-  { field: 'warehouseCode', header: '倉別', visible: true },
-  { field: 'amountBeforeTax', header: '未稅金額', visible: true },
-  { field: 'taxAmount', header: '稅額', visible: true },
-  { field: 'totalAmount', header: '應稅金額', visible: true }
-];
-
-
-// 表格資料
-data: any[] = [
-  {
-    sequenceNumber: 1,
-    isNew: '是',
-    transactionType: '單據別1',
-    invoiceNumber: 'INV123456',
-    invoiceDate: '2023-08-01',
-    taxType: '課稅別1',
-    invoicePurpose: '用途1',
-    invoiceAmount: 1000,
-    invoiceFormat: '格式1',
-    discountAmount: 100,
-    totalDiscountAmount: 200,
-    amountBeforeTax: 900,
-    taxAmount: 100
-  },
-  {
-    sequenceNumber: 2,
-    isNew: '否',
-    transactionType: '單據別2',
-    invoiceNumber: 'INV654321',
-    invoiceDate: '2023-08-02',
-    taxType: '課稅別2',
-    invoicePurpose: '用途2',
-    invoiceAmount: 2000,
-    invoiceFormat: '格式2',
-    discountAmount: 200,
-    totalDiscountAmount: 300,
-    amountBeforeTax: 1800,
-    taxAmount: 200
-  },
-  // 其他資料
-];
+  columns2: any[] = [
+    { field: 'sequenceNumber', header: '序號', visible: true },
+    { field: 'isNew', header: '新舊', visible: true },
+    { field: 'transactionType', header: '單據別', visible: true },
+    { field: 'documentNumber', header: '單號', visible: true },
+    { field: 'vendorCode', header: '廠商編號', visible: true },
+    { field: 'warehouseCode', header: '倉別', visible: true },
+    { field: 'amountBeforeTax', header: '未稅金額', visible: true },
+    { field: 'taxAmount', header: '稅額', visible: true },
+    { field: 'totalAmount', header: '應稅金額', visible: true }
+  ];
 
 
+  // 表格資料
+  data: any[] = [
+    {
+      sequenceNumber: 1,
+      isNew: '是',
+      transactionType: '單據別1',
+      invoiceNumber: 'INV123456',
+      invoiceDate: '2023-08-01',
+      taxType: '課稅別1',
+      invoicePurpose: '用途1',
+      invoiceAmount: 1000,
+      invoiceFormat: '格式1',
+      discountAmount: 100,
+      totalDiscountAmount: 200,
+      amountBeforeTax: 900,
+      taxAmount: 100
+    },
+    {
+      sequenceNumber: 2,
+      isNew: '否',
+      transactionType: '單據別2',
+      invoiceNumber: 'INV654321',
+      invoiceDate: '2023-08-02',
+      taxType: '課稅別2',
+      invoicePurpose: '用途2',
+      invoiceAmount: 2000,
+      invoiceFormat: '格式2',
+      discountAmount: 200,
+      totalDiscountAmount: 300,
+      amountBeforeTax: 1800,
+      taxAmount: 200
+    },
+    // 其他資料
+  ];
 
-filteredData: any[] = [...this.data];
 
-columns: any[] = [
-  { field: 'sequenceNumber', header: '序號', visible: true },
-  { field: 'isNew', header: '新舊', visible: true },
-  { field: 'transactionType', header: '單據別', visible: true },
-  { field: 'invoiceNumber', header: '發票/收據編號', visible: true },
-  { field: 'invoiceDate', header: '發票/收據日期', visible: true },
-  { field: 'taxType', header: '課稅別', visible: true },
-  { field: 'invoicePurpose', header: '發票用途', visible: true },
-  { field: 'invoiceAmount', header: '發票金額', visible: true },
-  { field: 'invoiceFormat', header: '發票格式', visible: true },
-  { field: 'discountAmount', header: '已折扣金額', visible: true },
-  { field: 'totalDiscountAmount', header: '折扣金額', visible: true },
-  { field: 'amountBeforeTax', header: '未稅金額', visible: true },
-  { field: 'taxAmount', header: '稅額', visible: true }
-];
+
+  filteredData: any[] = [...this.data];
+
+  columns: any[] = [
+    { field: 'sequenceNumber', header: '序號', visible: true },
+    { field: 'isNew', header: '新舊', visible: true },
+    { field: 'transactionType', header: '單據別', visible: true },
+    { field: 'invoiceNumber', header: '發票/收據編號', visible: true },
+    { field: 'invoiceDate', header: '發票/收據日期', visible: true },
+    { field: 'taxType', header: '課稅別', visible: true },
+    { field: 'invoicePurpose', header: '發票用途', visible: true },
+    { field: 'invoiceAmount', header: '發票金額', visible: true },
+    { field: 'invoiceFormat', header: '發票格式', visible: true },
+    { field: 'discountAmount', header: '已折扣金額', visible: true },
+    { field: 'totalDiscountAmount', header: '折扣金額', visible: true },
+    { field: 'amountBeforeTax', header: '未稅金額', visible: true },
+    { field: 'taxAmount', header: '稅額', visible: true }
+  ];
 
 
   constructor(
@@ -179,7 +179,7 @@ columns: any[] = [
     private userCodeService: UserCodeService,
     private vendorService: VendorService,
 
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options

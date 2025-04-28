@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -16,10 +16,10 @@ import { CounterCodeService } from './../../../service/basic/counter-code.servic
   templateUrl: './fin12020.component.html',
   styleUrl: './fin12020.component.scss'
 })
-export class FIN12020Component extends BasicQpageComponent implements OnInit{
+export class FIN12020Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
-    twodatemm: [,[Validators.required]], // 發票年月
+    twodatemm: [, [Validators.required]], // 發票年月
     wordTrack: ['', [Validators.required, Validators.maxLength(2)]], // 字軌
     registerID: [, [Validators.required]], // 收銀機代號
     serialInvoice: [, [Validators.required, Validators.maxLength(8)]], // 發票號碼
@@ -40,7 +40,7 @@ export class FIN12020Component extends BasicQpageComponent implements OnInit{
   data: any[] = [
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '發票年月', visible: true },
     { field: 'col2', header: '字軌', visible: true },
     { field: 'col3', header: '發票號碼(起)', visible: true },
@@ -52,11 +52,11 @@ export class FIN12020Component extends BasicQpageComponent implements OnInit{
   ];
   // ----------------------------------------------------------------
   //
-  usageStatusOptions:any[]=[
+  usageStatusOptions: any[] = [
     { value: 1, label: '已使用繳回發票' },
     { value: 2, label: '空白已繳回發票' },
   ];
-  registerIDOptions:any[]=[];
+  registerIDOptions: any[] = [];
 
   constructor(
     private router: Router,

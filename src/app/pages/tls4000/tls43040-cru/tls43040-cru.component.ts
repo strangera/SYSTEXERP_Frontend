@@ -3,7 +3,7 @@ import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -15,9 +15,9 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
   templateUrl: './tls43040-cru.component.html',
   styleUrl: './tls43040-cru.component.scss'
 })
-export class TLS43040CRUComponent extends BasicCrupageComponent implements OnInit{
+export class TLS43040CRUComponent extends BasicCrupageComponent implements OnInit {
 
-  ECR_DtlLimit_Options:any[] = [
+  ECR_DtlLimit_Options: any[] = [
     { value: 0, label: '不限制' },
     { value: 1, label: '符合明細設定的機台才列入群組' },
     { value: 2, label: '不符合明細設定的機台才列入群組' },
@@ -52,8 +52,8 @@ export class TLS43040CRUComponent extends BasicCrupageComponent implements OnIni
     private authService: AuthService,
     private translate: TranslateService,
     private validationService: ValidationService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -73,14 +73,14 @@ export class TLS43040CRUComponent extends BasicCrupageComponent implements OnIni
       // 創建
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
-        this.accordionTabCss= 'create-accordionTab';
+        this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
         this.showConfirm = this.canAdd();
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
-        this.accordionTabCss= 'edit-accordionTab';
+        this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
         this.showConfirm = this.canEdit();
         this.Edit(state.rowdata);
@@ -95,7 +95,7 @@ export class TLS43040CRUComponent extends BasicCrupageComponent implements OnIni
 
     console.log(this.accordionTabCss);
 
-    
+
   }
 
   // ----------------------------------------------------------------
@@ -119,7 +119,7 @@ export class TLS43040CRUComponent extends BasicCrupageComponent implements OnIni
       ECR_No: ['', [Validators.maxLength(6)]], // 收銀機號 POS1002.ECR_No
       ECR_Type: ['', [Validators.maxLength(2)]], // 機台類型 POS1002.ECR_Type
       TLT_No: ['', [Validators.maxLength(8)]], // 專櫃編號
-      
+
       BUILDING_No: ['', [Validators.maxLength(2)]], // 館別
       FLOOR_No: ['', [Validators.maxLength(2)]], // 樓層代碼
       AREA_No: ['', [Validators.maxLength(2)]], // 區域代碼
@@ -150,11 +150,11 @@ export class TLS43040CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

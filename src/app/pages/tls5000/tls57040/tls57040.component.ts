@@ -8,9 +8,9 @@ import { BigCategoryService } from '../../../service/basic/big-category.service'
 import { MidCategoryService } from '../../../service/basic/mid-category.service';
 import { SmallCategoryService } from '../../../service/basic/small-category.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 
@@ -64,25 +64,25 @@ export class TLS57040Component {
     private midCategoryService: MidCategoryService,
     private smallCategoryService: SmallCategoryService,
     private authService: AuthService,
-  ) {}
-    // Table data
-    data: any[] = [
-      { name: 'John', age: 25, email: 'john@example.com' },
-      { name: 'Jane', age: 30, email: 'jane@example.com' },
-      // Other data
-    ];
-    filteredData: any[] = [...this.data];
-    columns: any[] = [
-      { field: 'brand', header: '品牌', visible: true },
-      { field: 'managementID', header: '管理編號', visible: true },
-      { field: 'barcode', header: '國際條碼', visible: true },
-      { field: 'vendorCode', header: '廠商代號', visible: true },
-      { field: 'productName', header: '品名', visible: true },
-      { field: 'specificationDescription', header: '規格說明', visible: true },
-      { field: 'inventoryQuantity', header: '庫存數', visible: true },
-      { field: 'sellingPrice', header: '售價', visible: true },
-    ];
-    
+  ) { }
+  // Table data
+  data: any[] = [
+    { name: 'John', age: 25, email: 'john@example.com' },
+    { name: 'Jane', age: 30, email: 'jane@example.com' },
+    // Other data
+  ];
+  filteredData: any[] = [...this.data];
+  columns: any[] = [
+    { field: 'brand', header: '品牌', visible: true },
+    { field: 'managementID', header: '管理編號', visible: true },
+    { field: 'barcode', header: '國際條碼', visible: true },
+    { field: 'vendorCode', header: '廠商代號', visible: true },
+    { field: 'productName', header: '品名', visible: true },
+    { field: 'specificationDescription', header: '規格說明', visible: true },
+    { field: 'inventoryQuantity', header: '庫存數', visible: true },
+    { field: 'sellingPrice', header: '售價', visible: true },
+  ];
+
   ngOnInit(): void {
     // Initialize dropdown options
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

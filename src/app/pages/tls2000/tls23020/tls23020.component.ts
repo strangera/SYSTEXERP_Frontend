@@ -3,11 +3,11 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { SystemTypeService } from '../../../service/basic/system-type.service';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { TaxableService } from '../../../service/basic/taxable.service';
 import { DiscountService } from '../../../service/basic/discount.service';
 import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
@@ -86,15 +86,15 @@ export class TLS23020Component {
     { field: 'itemCode', header: '單品編號', visible: true },
     { field: 'status', header: '狀態', visible: true },
   ];
-  
+
   systemTypeOptions: any[] = [];
   taxableOptions: any[] = [];
   discountOptions: any[] = [];
   deductionbigCategoryOptions: any[] = [];
   whetherOptions: any[] = [];
-  checkTotalAmount: any[] = [    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-    ];
+  checkTotalAmount: any[] = [{ value: 1, label: '是' },
+  { value: 2, label: '否' },
+  ];
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
@@ -102,11 +102,11 @@ export class TLS23020Component {
     private authService: AuthService,
     private validationService: ValidationService,
     private systemTypeService: SystemTypeService,
-    private taxableService:TaxableService,
+    private taxableService: TaxableService,
     private discountService: DiscountService,
-    private deductionbigCategoryService:DeductionbigCategoryService,
-    private whetherService:WhetherService,
-  ) {}
+    private deductionbigCategoryService: DeductionbigCategoryService,
+    private whetherService: WhetherService,
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

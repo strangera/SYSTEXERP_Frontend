@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './fin14030.component.html',
   styleUrl: './fin14030.component.scss'
 })
-export class FIN14030Component extends BasicQpageComponent implements OnInit{
+export class FIN14030Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     startserialticket: [, [this.validationService.numberValidator, Validators.maxLength(11)]], // 傳票號碼
@@ -35,7 +35,7 @@ export class FIN14030Component extends BasicQpageComponent implements OnInit{
   data: any[] = [
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '傳票編號', visible: true },
     { field: 'col2', header: '傳票日期', visible: true },
     { field: 'col3', header: '審核狀態', visible: true },
@@ -43,7 +43,7 @@ export class FIN14030Component extends BasicQpageComponent implements OnInit{
   ];
   // ----------------------------------------------------------------
   //
-  invoiceFormatOptions:any[]=[
+  invoiceFormatOptions: any[] = [
     { value: 1, label: 21 },
     { value: 2, label: 22 },
     { value: 3, label: 23 },

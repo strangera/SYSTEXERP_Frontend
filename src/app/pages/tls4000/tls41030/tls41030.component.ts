@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -57,17 +57,19 @@ export class TLS41030Component {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { USR_No: '920019', USR_Name: '朱小姐',USR_Passwd: '920019', USR_Level: 'XXXXXX' ,USR_Auth: 0,
-      USR_JobStatus: 'J',USR_Class: 'R', USR_RegType: 1, USR_TLT_No: '', USR_TLT_Name: '',
-      USR_TitleName: '',USR_OnJobDate: '2010/07/03 00:00:00.000', USR_QuitDate: '2026/03/31 00:00:00.000'
+    {
+      USR_No: '920019', USR_Name: '朱小姐', USR_Passwd: '920019', USR_Level: 'XXXXXX', USR_Auth: 0,
+      USR_JobStatus: 'J', USR_Class: 'R', USR_RegType: 1, USR_TLT_No: '', USR_TLT_Name: '',
+      USR_TitleName: '', USR_OnJobDate: '2010/07/03 00:00:00.000', USR_QuitDate: '2026/03/31 00:00:00.000'
     },
-    { USR_No: '920020', USR_Name: '梁先生',USR_Passwd: '920020', USR_Level: 'XXXXXX' ,USR_Auth: 0,
-      USR_JobStatus: 'J',USR_Class: 'R', USR_RegType: 1, USR_TLT_No: '', USR_TLT_Name: '',
-      USR_TitleName: '',USR_OnJobDate: '2014/02/05 00:00:00.000', USR_QuitDate: ' 2025/06/30 00:00:00.000'
+    {
+      USR_No: '920020', USR_Name: '梁先生', USR_Passwd: '920020', USR_Level: 'XXXXXX', USR_Auth: 0,
+      USR_JobStatus: 'J', USR_Class: 'R', USR_RegType: 1, USR_TLT_No: '', USR_TLT_Name: '',
+      USR_TitleName: '', USR_OnJobDate: '2014/02/05 00:00:00.000', USR_QuitDate: ' 2025/06/30 00:00:00.000'
     },
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'USR_No', header: '收銀員編號', visible: true },
     { field: 'USR_Name', header: '收銀員姓名', visible: true },
     { field: 'USR_Passwd', header: '密碼', visible: true },

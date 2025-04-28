@@ -5,10 +5,10 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
@@ -67,7 +67,7 @@ export class TLS25020ModComponent {
     { field: 'amount', header: '金額', visible: true },
     { field: 'isAmountEditable', header: '金額是否可修改', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -76,12 +76,12 @@ export class TLS25020ModComponent {
     private authService: AuthService,
     private violationCategoryService: ViolationCategoryService,  // 違規類別編號 service
     private whetherService: WhetherService,  // 金額是否可修改 service
-  ) {}
+  ) { }
 
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-  
+
     // 從 sessionStorage 讀取並填充表單
     const violationCategoryData = sessionStorage.getItem('violationCategoryData');
     if (violationCategoryData) {
@@ -92,16 +92,16 @@ export class TLS25020ModComponent {
       this.queryForm.controls['amount'].setValue(data.amountStart);
       this.queryForm.controls['amountEditable'].setValue(data.amountEditable);
     }
-  
+
     // 加載選項
     this.loadViolationCategoryOptions();
     this.loadWhetherOptions();
   }
-  
+
   // 加載違規類別選項
   loadViolationCategoryOptions(): void {
     const violationCategoryOptions = sessionStorage.getItem('violationCategoryOptions');
-    
+
     if (violationCategoryOptions) {
       this.violationCategoryOptions = JSON.parse(violationCategoryOptions);
     } else {
@@ -111,11 +111,11 @@ export class TLS25020ModComponent {
       });
     }
   }
-  
+
   // 加載是否選項
   loadWhetherOptions(): void {
     const whetherOptions = sessionStorage.getItem('whetherOptions');
-    
+
     if (whetherOptions) {
       this.whetherOptions = JSON.parse(whetherOptions);
     } else {
@@ -125,10 +125,10 @@ export class TLS25020ModComponent {
       });
     }
   }
-  
 
-  
-  
+
+
+
 
   canQuery(): boolean {
     return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;

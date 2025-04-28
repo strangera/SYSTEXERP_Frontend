@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -18,7 +18,7 @@ import { UsageTypeService } from '../../../service/basic/usage-type.service';
   templateUrl: './fin12010-cru.component.html',
   styleUrl: './fin12010-cru.component.scss'
 })
-export class FIN12010CRUComponent extends BasicCrupageComponent implements OnInit{
+export class FIN12010CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     twodatemm: [, [Validators.required]], // 發票年月
@@ -28,7 +28,7 @@ export class FIN12010CRUComponent extends BasicCrupageComponent implements OnIni
     usageType: [[] as number[], [Validators.required,]], // 使用別
   });
   //
-  usageTypeOptions:any[]=[];
+  usageTypeOptions: any[] = [];
   // ----------------------------------------------------------------
   constructor(
     private router: Router,
@@ -39,8 +39,8 @@ export class FIN12010CRUComponent extends BasicCrupageComponent implements OnIni
     //
     private validationService: ValidationService,
     private usageTypeService: UsageTypeService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -93,11 +93,11 @@ export class FIN12010CRUComponent extends BasicCrupageComponent implements OnIni
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }

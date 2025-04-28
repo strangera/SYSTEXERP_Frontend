@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -20,7 +20,7 @@ import { NeedPayTicketService } from '../../../service/basic/need-pay-ticket.ser
   templateUrl: './fin21010-cru.component.html',
   styleUrl: './fin21010-cru.component.scss'
 })
-export class FIN21010CRUComponent extends BasicCrupageComponent implements OnInit{
+export class FIN21010CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     companyBankCode: [, [Validators.required]], // 公司銀行科目代號
@@ -36,9 +36,9 @@ export class FIN21010CRUComponent extends BasicCrupageComponent implements OnIni
   //
   // ----------------------------------------------------------------
   //
-  bankCodeOptions:any[]=[];
-  depositCodeOptions:any[]=[];
-  needPayTicketOptions:any[]=[];
+  bankCodeOptions: any[] = [];
+  depositCodeOptions: any[] = [];
+  needPayTicketOptions: any[] = [];
 
   constructor(
     private router: Router,
@@ -51,8 +51,8 @@ export class FIN21010CRUComponent extends BasicCrupageComponent implements OnIni
     private bankAccountCodeService: BankAccountCodeService,
     private depositCodeService: DepositCodeService,
     private needPayTicketService: NeedPayTicketService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -118,11 +118,11 @@ export class FIN21010CRUComponent extends BasicCrupageComponent implements OnIni
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }

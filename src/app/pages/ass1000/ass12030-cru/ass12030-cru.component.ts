@@ -4,7 +4,7 @@ import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -19,15 +19,15 @@ import { PaperStatusService } from '../../../service/basic/paper-status.service'
   templateUrl: './ass12030-cru.component.html',
   styleUrl: './ass12030-cru.component.scss'
 })
-export class ASS12030CRUComponent extends BasicCrupageComponent implements OnInit{
+export class ASS12030CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // ----------------------------------------------------------------
-    caseDescription: [, ], // 採購案說明 *
-    applicantCode: [,[Validators.required]], // 申請人編號
-    organizationNumber: [,[Validators.required]], // 部門代號
-    applicationDate: [,[Validators.required]], // 申請日期
-    supplierCode: [,[Validators.required]], // 	供應商編號
+    caseDescription: [,], // 採購案說明 *
+    applicantCode: [, [Validators.required]], // 申請人編號
+    organizationNumber: [, [Validators.required]], // 部門代號
+    applicationDate: [, [Validators.required]], // 申請日期
+    supplierCode: [, [Validators.required]], // 	供應商編號
     expendType: [], // 支出類型 *
     taxAmount: [, [Validators.maxLength(8)]], // 稅額
     noTaxAmount: [, [Validators.maxLength(8)]], // 未稅總金額
@@ -38,7 +38,7 @@ export class ASS12030CRUComponent extends BasicCrupageComponent implements OnIni
     // reviewDateTo: [], // 審核日期
     // checkoutDateFrom: [], // 結帳日期
     // checkoutDateTo: [], // 結帳日期
-    
+
     // printNumber: [, [Validators.required, Validators.maxLength(3)]], // 項次列印筆數
 
     items: this.formBuilder.array([
@@ -46,15 +46,15 @@ export class ASS12030CRUComponent extends BasicCrupageComponent implements OnIni
     ]),
   });
   // ----------------------------------------------------------------
-  applicantCodeOptions:any[] = [];
+  applicantCodeOptions: any[] = [];
   organizationNumberOptions: any[] = [];
   supplierCodeOptions: any[] = [];
   paperStatusOptions: any[] = [];
-  storageOptions:any[] = [
+  storageOptions: any[] = [
     { value: 1, label: '總公司' },
     { value: 2, label: '測試' },
   ];
-  expendTypeOptions:any[] = [
+  expendTypeOptions: any[] = [
     { value: 1, label: '事務性支出(有合約)' },
     { value: 2, label: '事務性支出(無合約)' },
     { value: 3, label: '資本支出' },
@@ -75,8 +75,8 @@ export class ASS12030CRUComponent extends BasicCrupageComponent implements OnIni
     private vendorService: VendorService,
     private paperStatusService: PaperStatusService,
     private taxableService: TaxableService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -115,14 +115,14 @@ export class ASS12030CRUComponent extends BasicCrupageComponent implements OnIni
       // 創建
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
-        this.accordionTabCss= 'create-accordionTab';
+        this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
         this.showConfirm = this.canAdd();
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
-        this.accordionTabCss= 'edit-accordionTab';
+        this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
         this.showConfirm = this.canEdit();
         this.Edit(state.rowdata);
@@ -149,19 +149,19 @@ export class ASS12030CRUComponent extends BasicCrupageComponent implements OnIni
   // ----------------------------------------------------------------
   createItem(): FormGroup {
     return this.formBuilder.group({
-      itemCode: [,[Validators.required]], // 品項編號
-      queryCode: [,[Validators.required]], // 詢價單號
-      taxType: [,[Validators.required]], // 稅別
+      itemCode: [, [Validators.required]], // 品項編號
+      queryCode: [, [Validators.required]], // 詢價單號
+      taxType: [, [Validators.required]], // 稅別
 
-      queryNumber: [,[this.validationService.numberValidator, Validators.required, Validators.maxLength(5)]], // 詢價數量
-      number: [,[this.validationService.numberValidator, Validators.required, Validators.maxLength(5)]], // 數量
-      singlePrice: [,[this.validationService.numberValidator, Validators.required]], // 單價(未稅)
-      purchasePrice: [,[this.validationService.numberValidator, Validators.required]], // 最近採購單價
-      totalPrice: [,[this.validationService.numberValidator, Validators.required]], // 總金額
+      queryNumber: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(5)]], // 詢價數量
+      number: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(5)]], // 數量
+      singlePrice: [, [this.validationService.numberValidator, Validators.required]], // 單價(未稅)
+      purchasePrice: [, [this.validationService.numberValidator, Validators.required]], // 最近採購單價
+      totalPrice: [, [this.validationService.numberValidator, Validators.required]], // 總金額
 
-      storage: [,[Validators.required]], // 倉別
-      department: [,[Validators.required]], // 委託部門
-      singleRemark: [, ], // 說明
+      storage: [, [Validators.required]], // 倉別
+      department: [, [Validators.required]], // 委託部門
+      singleRemark: [,], // 說明
     });
   }
   onRemoveItem(index: number) {
@@ -181,11 +181,11 @@ export class ASS12030CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

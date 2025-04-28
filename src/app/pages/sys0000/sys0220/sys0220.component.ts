@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { UserCodeService } from '../../../service/basic/user-code.service';
@@ -320,7 +320,7 @@ export class SYS0220Component extends BasicQpageComponent {
 
   filteredData: any[] = [...this.data];
   columns: any[] = [
-    { field: 'code', header: '使用者代碼' , visible: true},
+    { field: 'code', header: '使用者代碼', visible: true },
     { field: 'name', header: '使用者名稱', visible: true },
     { field: 'companyCode', header: '組織代碼', visible: true },
     { field: 'companyName', header: '組織名稱', visible: true },

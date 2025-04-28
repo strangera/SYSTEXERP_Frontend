@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { SupplementCategoryService } from '../../../service/basic/supplement-category.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
@@ -61,15 +61,15 @@ export class TLS24060Component {
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
-{ field: 'saleDate', header: '銷售日期', visible: true },
-{ field: 'cashRegisterCode', header: '收銀機代號', visible: true },
-{ field: 'transactionNumber', header: '交易序號', visible: true },
-{ field: 'counterCodeName', header: '專櫃編號/名稱', visible: true },
-{ field: 'invoicePrefix', header: '發票字軌', visible: true },
-{ field: 'invoiceStartNumber', header: '發票起始號碼', visible: true },
-{ field: 'invoiceEndNumber', header: '發票終止號碼', visible: true },
-{ field: 'invoiceAmount', header: '發票金額', visible: true },
-{ field: 'transactionType', header: '交易型態', visible: true },
+    { field: 'saleDate', header: '銷售日期', visible: true },
+    { field: 'cashRegisterCode', header: '收銀機代號', visible: true },
+    { field: 'transactionNumber', header: '交易序號', visible: true },
+    { field: 'counterCodeName', header: '專櫃編號/名稱', visible: true },
+    { field: 'invoicePrefix', header: '發票字軌', visible: true },
+    { field: 'invoiceStartNumber', header: '發票起始號碼', visible: true },
+    { field: 'invoiceEndNumber', header: '發票終止號碼', visible: true },
+    { field: 'invoiceAmount', header: '發票金額', visible: true },
+    { field: 'transactionType', header: '交易型態', visible: true },
 
   ];
 
@@ -81,7 +81,7 @@ export class TLS24060Component {
     private supplementCategoryService: SupplementCategoryService,  // 補登類別 service
     private floorService: FloorService,  // 收銀機號 service
     private counterCodeService: CounterCodeService,  // 專櫃編號 service
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

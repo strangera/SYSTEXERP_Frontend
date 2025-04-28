@@ -3,7 +3,7 @@ import { Component, OnInit, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -15,7 +15,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
   templateUrl: './fin32030-cru.component.html',
   styleUrl: './fin32030-cru.component.scss'
 })
-export class FIN32030CRUComponent extends BasicCrupageComponent implements OnInit{
+export class FIN32030CRUComponent extends BasicCrupageComponent implements OnInit {
   //
   salesCodeOptions: any[] = [
     { value: 1, label: '001/阮湘晴' },
@@ -25,7 +25,7 @@ export class FIN32030CRUComponent extends BasicCrupageComponent implements OnIni
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     receive_ID: [, [Validators.required, Validators.maxLength(12)]], // 收款單號
-    receive_Date: [,[Validators.required]], // 收款日期
+    receive_Date: [, [Validators.required]], // 收款日期
     salesperson_Code: [], // 業務員代號
     remark: ['', [Validators.maxLength(50)]], // 備註
     // ----------------------------------------------------------------
@@ -43,8 +43,8 @@ export class FIN32030CRUComponent extends BasicCrupageComponent implements OnIni
     private validationService: ValidationService,
     //
     private receiveItemService: ReceiveItemService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -97,9 +97,9 @@ export class FIN32030CRUComponent extends BasicCrupageComponent implements OnIni
   // ----------------------------------------------------------------
   createItem(): FormGroup {
     return this.formBuilder.group({
-      receiveName: [,[Validators.required]], // 收款項目
-      receiveAmount: [,[Validators.required, Validators.maxLength(30)]], // 收款金額
-      remark: ['',[ Validators.maxLength(40)]], // 備註
+      receiveName: [, [Validators.required]], // 收款項目
+      receiveAmount: [, [Validators.required, Validators.maxLength(30)]], // 收款金額
+      remark: ['', [Validators.maxLength(40)]], // 備註
       offsetCode: [, [Validators.maxLength(14)]], // 沖帳代號
     });
   }
@@ -120,11 +120,11 @@ export class FIN32030CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -28,7 +28,7 @@ export class TLS45010Component {
   loading: boolean = false;
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
-    groupCode: [, [Validators.maxLength(3),this.validationService.numberValidator]], // 群組代碼
+    groupCode: [, [Validators.maxLength(3), this.validationService.numberValidator]], // 群組代碼
     groupName: ['', [Validators.maxLength(30)]], // 群組名稱
     groupRemark: ['', [Validators.maxLength(100)]], // 群組備註
   });
@@ -41,7 +41,7 @@ export class TLS45010Component {
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'contactPerson', header: '群組代碼', visible: true },
     { field: 'contactDate', header: '群組名稱', visible: true },
     { field: 'UID', header: '群組備註', visible: true },

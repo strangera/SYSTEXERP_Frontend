@@ -5,7 +5,7 @@ import { NavigationExtras, Router } from '@angular/router';
 import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -154,7 +154,7 @@ export class FIN35060Component extends BasicQpageComponent implements OnInit {
     },
     { field: 'organizationCode', header: '組織代號', visible: true },
     { field: 'guaranteeCategory', header: '保證金類型', visible: true },
-   
+
   ];
 
   constructor(

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { NotificationService } from '../../service/notification.service';
+import { NotificationService } from './notification.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 @Component({

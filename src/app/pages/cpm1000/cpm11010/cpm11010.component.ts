@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { FloorService } from '../../../service/basic/floor.service';
@@ -18,7 +18,7 @@ import { LocationService } from '../../../service/basic/location.service';
   templateUrl: './cpm11010.component.html',
   styleUrl: './cpm11010.component.scss'
 })
-export class CPM11010Component extends BasicQpageComponent implements OnInit{
+export class CPM11010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     BUILDING_NO: [, [Validators.maxLength(2)]], // 館別(sys3800)
@@ -37,13 +37,13 @@ export class CPM11010Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { isdelete: false, 'floor': '1F', 'regionCode': 'A區', 'positionNumber': '11A001','BUILDING_NO': 1, 'counterName': '服務諮詢台' },
-    { isdelete: false, 'floor': '2F', 'regionCode': 'A區', 'positionNumber': '12A001','BUILDING_NO': 1, 'counterName': 'VIP室' },
-    { isdelete: true, 'floor': '3F', 'regionCode': 'A區', 'positionNumber': '12D001','BUILDING_NO': 2, 'counterName': '總機' },
-    { isdelete: true, 'floor': '5F', 'regionCode': 'A區', 'positionNumber': '15A001','BUILDING_NO': 2, 'counterName': '顧客服務中心' },
+    { isdelete: false, 'floor': '1F', 'regionCode': 'A區', 'positionNumber': '11A001', 'BUILDING_NO': 1, 'counterName': '服務諮詢台' },
+    { isdelete: false, 'floor': '2F', 'regionCode': 'A區', 'positionNumber': '12A001', 'BUILDING_NO': 1, 'counterName': 'VIP室' },
+    { isdelete: true, 'floor': '3F', 'regionCode': 'A區', 'positionNumber': '12D001', 'BUILDING_NO': 2, 'counterName': '總機' },
+    { isdelete: true, 'floor': '5F', 'regionCode': 'A區', 'positionNumber': '15A001', 'BUILDING_NO': 2, 'counterName': '顧客服務中心' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'BUILDING_NO', header: '館別', visible: true },
     { field: 'floor', header: '營業樓層', visible: true },
     { field: 'regionCode', header: '營業區域', visible: true },
