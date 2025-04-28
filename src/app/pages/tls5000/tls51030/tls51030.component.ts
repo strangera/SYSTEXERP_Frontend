@@ -11,6 +11,8 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
 import { debounceTime } from 'rxjs';
+import { SortMeta } from 'primeng/api';
+import { TableLazyLoadEvent } from 'primeng/table';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -38,12 +40,15 @@ const storageKey = 'TLS51030';
   styleUrl: './tls51030.component.scss'
 })
 export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> {
-  queryForm = this.formBuilder.group({
+  queryForm = this.formBuilder.nonNullable.group({
     CAT_SNo: ['', [Validators.maxLength(3), this.validationService.numberValidator]], // Input serial number
     CAT_SName: ['', [Validators.maxLength(32)]], // Input Text
     CAT_LNo: [''], // DropDown
     CAT_MNo: [''], // DropDown
-    editortext: [''], // editor text
+    // editortext: [''], // editor text
+    pageSize: [10],
+    pageIndex: [0],
+    SortBy: [[{ field: 'CAT_SNo', order: 1 }] as SortMeta[]],
   });
   // 表格
   // ----------------------------------------------------------------
@@ -57,13 +62,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> {
     { field: 'CAT_SRemark', header: '說明', visible: true },
     // 其他欄位
   ];
-  // 分頁和排序參數
-  pageSize: number = 10;
-  pageIndex: number = 0;
   totalRecords: number = 0;
-  lastQueryParams: any = null;
-  sortField: string = 'CAT_SNo';
-  sortOrder: number = 1;
   // 多選項目
   selectedItems: CategoryItem[] = [];
   // ----------------------------------------------------------------
@@ -86,10 +85,18 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> {
 
     this.handleQueryRestore(this.queryForm, storageKey, (form) => this.onSubmit(form));
 
-    this.bigCategoryCodeService.getSystemTypes().subscribe(data => {
-      this.bigCategoryOptions = data;
-      this.middleCategoryOptions = data;
+    // 獲取大分類代碼
+    this.bigCategoryCodeService.getSystemTypes().subscribe({
+      next: (response) => {
+        this.bigCategoryOptions = response;
+        console.log('大分類代碼:', response);
+      },
+      error: (error) => {
+        console.error('獲取大分類代碼失敗:', error);
+        this.messageService.errorBubble('無法載入大分類代碼，請稍後重試');
+      }
     });
+
     // 監聽表單變化，延遲儲存有效值
     this.queryForm.valueChanges
       .pipe(debounceTime(500)) // 延遲 500ms 減少頻繁儲存
@@ -100,25 +107,11 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> {
       });
   }
 
-
   // ----------------------------------------------------------------
   onSubmit(frm: FormGroup): void {
     console.log('Form value:', frm.value);
     this.handleSubmit(frm, () => {
-      const queryParams = {
-        CAT_LNo: frm.value.CAT_LNo || '',
-        CAT_LName: frm.value.CAT_LName || '',
-        CAT_SNo: frm.value.CAT_SNo || '',
-        CAT_SName: frm.value.CAT_SName || '',
-        CAT_MNo: frm.value.CAT_MNo || '',
-
-        PageSize: this.pageSize,
-        PageIndex: '1',
-        SortBy: [{ field: this.sortField || 'CAT_MNo', order: this.sortOrder || 1 }]
-      };
-      console.log('Query params:', queryParams);
-
-      this.apiService.queryTLS51030(queryParams).subscribe({
+      this.apiService.queryTLS51030(frm.value).subscribe({
         next: (response: any) => {
           console.log('API response:', response);
           if (response.Status === '0000') {
@@ -194,22 +187,24 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> {
 
   onSubmitQuery(frm: FormGroup) {
     console.log('onSubmitQuery triggered');
-    this.pageIndex = 0;
-    this.onSubmit(frm);
     this.onSubmit(frm);
   }
 
   onClearForm(): void {
     this.queryForm.reset();
-    this.pageIndex = 0;
     this.data = [];
     this.filteredData = [];
-    this.lastQueryParams = null;
     this.totalRecords = 0;
-    this.sortField = 'CAT_SNo';
-    this.sortOrder = 1;
     // 清空儲存的查詢狀態
     this.queryStateService.clearQueryState(storageKey);
   }
 
+  loadData(event: TableLazyLoadEvent) {
+    const form = this.queryForm.value;
+    if (this.totalRecords === 0) { return; }
+    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+    form.pageIndex = (event.first ?? 0) / form.pageSize;
+    form.SortBy = event.multiSortMeta ?? [{ field: 'CAT_MNo', order: 1 }];
+    this.onSubmit(this.queryForm);
+  }
 }
