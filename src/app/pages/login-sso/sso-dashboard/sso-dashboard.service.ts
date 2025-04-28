@@ -60,15 +60,13 @@ export class SsoDashboardService {
       },
     ];
 
-    console.log('模擬SSO資料:', this.checkAndNavigate());
-
     // 在呼叫模擬 API 回應前，先執行檢查邏輯
     return this.checkAndNavigate().pipe(
       switchMap(() => {
         // 如果檢查成功，返回資料
         return of(mockData).pipe(delay(1000)); // 模擬 1 秒的延遲
       }),
-      catchError((err) => {
+      catchError(() => {
         alert('無法取得使用者資訊，請稍後再試。');
         return of([
           {
