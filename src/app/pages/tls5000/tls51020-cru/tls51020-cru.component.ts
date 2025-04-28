@@ -53,6 +53,7 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.initializePage('250002', this.dataForm);
     this.bigCategoryCodeService.getSystemTypes().subscribe(data => {
       this.bigCategoryOptions = data;
+      console.log('bigCategoryOptions:', this.bigCategoryOptions); // 調試用
     });
   }
 

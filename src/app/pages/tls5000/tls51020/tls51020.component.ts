@@ -97,6 +97,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
     this.bigCategoryCodeService.getSystemTypes().subscribe(data => {
       this.bigCategoryOptions = data;
     });
+    console.log('bigCategoryOptions:', this.bigCategoryOptions); // 調試用
 
     // 恢復查詢狀態並自動查詢
     this.handleQueryRestore(this.queryForm, storageKey, (form) => this.onSubmit(form));

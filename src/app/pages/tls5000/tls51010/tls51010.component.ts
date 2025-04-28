@@ -5,6 +5,8 @@ import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableLazyLoadEvent } from 'primeng/table';
+import { SortMeta } from 'primeng/api';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -42,9 +44,13 @@ const storageKey = 'TLS51010';
 })
 export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
   // 查詢表單：包含大分類代碼和名稱
-  queryForm = this.formBuilder.group({
+  queryForm = this.formBuilder.nonNullable.group({
     CAT_LNo: ['', [Validators.maxLength(2), this.validationService.numberValidator]],
-    CAT_LName: ['', [Validators.maxLength(32)]]
+    CAT_LName: ['', [Validators.maxLength(32)]],
+    //分頁查詢
+    pageSize: [10],
+    pageIndex: [0],
+    SortBy: [[{ field: 'CAT_LNo', order: 1 }] as SortMeta[]],
   });
 
   // 表格數據和篩選數據
@@ -58,13 +64,13 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
     { field: 'CAT_LRemark', header: '備註', visible: true }
   ];
 
-  // 分頁和排序參數
-  pageSize: number = 10;
-  pageIndex: number = 0;
+  // // 分頁和排序參數
+  // pageSize: number = 10;
+  // pageIndex: number = 0;
   totalRecords: number = 0;
-  lastQueryParams: any = null;
-  sortField: string = 'CAT_LNo';
-  sortOrder: number = 1;
+  // lastQueryParams: any = null;
+  // sortField: string = 'CAT_LNo';
+  // sortOrder: number = 1;
 
   // 多選項目
   selectedItems: CategoryItem[] = [];
@@ -101,16 +107,8 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
   onSubmit(frm: FormGroup): void {
     console.log('Form value:', frm.value);
     this.handleSubmit(frm, () => {
-      const queryParams = {
-        CAT_LNo: frm.value.CAT_LNo || '',
-        CAT_LName: frm.value.CAT_LName || '',
-        PageSize: this.pageSize,
-        PageIndex: '1',
-        SortBy: [{ field: this.sortField || 'CAT_LNo', order: this.sortOrder || 1 }]
-      };
-      console.log('Query params:', queryParams);
 
-      this.apiService.queryTLS51010(queryParams).subscribe({
+      this.apiService.queryTLS51010(frm.value).subscribe({
         next: (response: any) => {
           console.log('API response:', response);
           if (response.Status === '0000') {
@@ -140,37 +138,23 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
   // 查詢按鈕：重置分頁並提交查詢
   onSubmitQuery(frm: FormGroup): void {
     console.log('onSubmitQuery triggered');
-    this.pageIndex = 0;
     this.onSubmit(frm);
   }
 
   // 清空表單：重置表單和表格狀態
   onClearForm(): void {
     this.queryForm.reset();
-    this.pageIndex = 0;
+    // this.pageIndex = 0;
     this.data = [];
     this.filteredData = [];
-    this.lastQueryParams = null;
+    // this.lastQueryParams = null;
     this.totalRecords = 0;
-    this.sortField = 'CAT_LNo';
-    this.sortOrder = 1;
+    // this.sortField = 'CAT_LNo';
+    // this.sortOrder = 1;
     // 清空儲存的查詢狀態
     this.queryStateService.clearQueryState(storageKey);
   }
 
-  // 分頁變更：更新分頁參數並重新查詢
-  onPageChange(event: any): void {
-    this.pageIndex = event.page;
-    this.pageSize = event.rows;
-    this.onSubmit(this.queryForm);
-  }
-
-  // 排序變更：更新排序參數並重新查詢
-  onSort(event: any): void {
-    this.sortField = event.field;
-    this.sortOrder = event.order;
-    this.onSubmit(this.queryForm);
-  }
 
   // 刪除項目：支援單個或多個項目刪除
   //TODO:看未來刪除API是否支援多id再來看看是否需要更改
@@ -219,5 +203,14 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
     });
 
     this.selectedItems = [];
+  }
+
+  loadData(event: TableLazyLoadEvent) {
+    const form = this.queryForm.value;
+    if (this.totalRecords === 0) { return; }
+    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+    form.pageIndex = (event.first ?? 0) / form.pageSize;
+    form.SortBy = event.multiSortMeta ?? [{ field: 'CAT_LNo', order: 1 }];
+    this.onSubmit(this.queryForm);
   }
 }
