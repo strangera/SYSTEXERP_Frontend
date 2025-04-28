@@ -5,18 +5,22 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { NotificationService } from '../../../shared/service/notification.service';
+// import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { Sysb300Service } from '../../../service/sysb/sysb300.service';
-import { Sys300m } from '../sysb300m/sysb300m';
+import { option, Sys300m } from '../sysb300m/sysb300m';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
 @Component({
   selector: 'app-sysb300',
   templateUrl: './sysb300.component.html',
-  styleUrl: './sysb300.component.scss'
+  styleUrl: './sysb300.component.scss',
 })
 // 組織階層設定作業
-export class SYSB300Component extends BasicQpageComponent implements OnInit {
+export class SYSB300Component
+  extends BasicQueryPageComponent<Sys300m>
+  implements OnInit
+{
   // 查詢
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
@@ -45,28 +49,24 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  upgroup_Options: any[] = [
-    { value: "", label: '全公司' },
-    { value: "10", label: '室/部' },
-    { value: "20", label: 'Team' },
-    { value: "30", label: '樓/組' },
-  ];
+  upgroup_Options: option[] = [];
 
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private sysb300Service: Sysb300Service,
-  ) {
+  constructor(private sysb300Service: Sysb300Service) {
     super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '410003';
+    // this.ProgNo = '410003';
+    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
+    // 新增：在 ngOnInit 中調用 initializePage 設置 ProgNo 和 cruPage
+    this.initializePage('410003', '/SYSB000/SYSB300CRU');
+
+    // 新增：調試權限數據
+    console.log('funInfo:', this.funInfo);
+    console.log('queryPermission:', this.queryPermission);
     //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
+    this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
@@ -75,11 +75,11 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
     this.loading = true;
     this.messageService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
+    if (frm.valid) {
       const query = {
-        "level_id": this.queryForm.value.level_id,
-        "level_name": this.queryForm.value.level_name,
-        "p_level_id": this.queryForm.value.p_level_id,
+        level_id: this.queryForm.value.level_id,
+        level_name: this.queryForm.value.level_name,
+        p_level_id: this.queryForm.value.p_level_id,
       };
 
       console.log('查詢條件', query);
@@ -99,49 +99,23 @@ export class SYSB300Component extends BasicQpageComponent implements OnInit {
   }
 
   onClearForm() {
-    this.queryForm.reset();  // 重置表單
+    this.queryForm.reset(); // 重置表單
   }
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
+  loadOptions() {
+    {
+      const query = {
+        level_id: '',
+        level_name: '',
+        p_level_id: '',
       };
 
-      //console.log("extra", extras);
-      this.router.navigate(['/SYSB000/SYSB300CRU'], extras);
+      this.sysb300Service.querySYS3000(query).subscribe((response) => {
+        this.upgroup_Options = response.Data.map((item: any) => ({
+          value: item.level_id,
+          label: item.level_name,
+        }));
+      });
     }
-  }
-
-  onEdit(data: Sys300m) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      this.router.navigate(['/SYSB000/SYSB300CRU'], extras);
-    }
-  }
-
-  onDetail(data: Sys300m) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
-    };
-
-    this.router.navigate(['/SYSB000/SYSB300CRU'], extras);
   }
 }

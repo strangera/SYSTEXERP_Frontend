@@ -16,7 +16,7 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
 @Component({
   selector: 'app-sso-dashboard',
   templateUrl: './sso-dashboard.component.html',
-  styleUrl: './sso-dashboard.component.scss'
+  styleUrl: './sso-dashboard.component.scss',
 })
 export class SsoDashboardComponent implements OnInit {
   logo = 'assets/layout/images/logo.png';
@@ -35,8 +35,9 @@ export class SsoDashboardComponent implements OnInit {
     newPassword: ['', [Validators.required]],
     // newPassword: ['', [Validators.required, this.validationService.passwordStrengthValidator()]],
     confirmPassword: ['', [Validators.required]],
-  });// }, { validators: this.validationService.passwordsMatchValidator('newPassword', 'confirmPassword') });
-  strongRegex = '^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>\-_+=`~[\]\\;\']).{4,8}$';
+  }); // }, { validators: this.validationService.passwordsMatchValidator('newPassword', 'confirmPassword') });
+  strongRegex =
+    '^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>-_+=`~[]\\;\']).{4,8}$';
   formButtonLoading = false; // 控制按鈕的載入狀態
 
   constructor(
@@ -51,29 +52,55 @@ export class SsoDashboardComponent implements OnInit {
     private messageService: NotificationService,
     private userCodeService: UserCodeService,
   ) {
-    this.subscriptions.push(this.authService.user.subscribe(x => this.user = x));
+    this.subscriptions.push(
+      this.authService.user.subscribe((x) => (this.user = x)),
+    );
   }
   ngOnInit() {
     this.items = [
       {
         label: '個人資料',
         items: [
-          { label: '修改使用者密碼', icon: 'pi pi-pen-to-square', command: () => { this.visible = true; this.form.reset() } },
-          { label: '登出', icon: 'pi pi-sign-out', command: () => this.authService.logout() }
-        ]
+          {
+            label: '修改使用者密碼',
+            icon: 'pi pi-pen-to-square',
+            command: () => {
+              this.visible = true;
+              this.form.reset();
+            },
+          },
+          {
+            label: '登出',
+            icon: 'pi pi-sign-out',
+            command: () => this.authService.logout(),
+          },
+        ],
       },
     ];
     try {
       const userInfo = sessionStorage.getItem('UserInfo');
-      this.data = userInfo ? JSON.parse(userInfo) : null
+      this.data = userInfo ? JSON.parse(userInfo) : null;
     } catch (error) {
-      console.error("Failed to parse UserInfo:", error);
+      console.error('Failed to parse UserInfo:', error);
     }
     this.fetchUrlList();
 
-    const time = JSON.parse(sessionStorage.getItem('UserInfo') || '{}').USER_PwdExpireDate;
+    this.form.get('newPassword')?.valueChanges.subscribe(() => {
+      this.form.get('confirmPassword')?.updateValueAndValidity();
+    });
+
+    this.form.get('confirmPassword')?.valueChanges.subscribe(() => {
+      this.form.get('confirmPassword')?.updateValueAndValidity();
+    });
+
+    const time = JSON.parse(
+      sessionStorage.getItem('UserInfo') || '{}',
+    ).USER_PwdExpireDate;
     if (time <= new Date().toISOString()) {
-      this.messageService.warnBubble('為維護帳號安全，您的密碼已超過 90 天未變更，為保障帳戶安全，請立即設定新密碼後再登入系統。', '建議您定期更換密碼');
+      this.messageService.warnBubble(
+        '為維護帳號安全，您的密碼已超過 90 天未變更，為保障帳戶安全，請立即設定新密碼後再登入系統。',
+        '建議您定期更換密碼',
+      );
       this.visible = true;
     }
   }
@@ -88,7 +115,7 @@ export class SsoDashboardComponent implements OnInit {
         this.errorMessage = '無法載入 URL 清單。請稍後再試。';
         this.loading = false;
         console.error('API 錯誤:', error);
-      }
+      },
     });
   }
 
@@ -97,10 +124,13 @@ export class SsoDashboardComponent implements OnInit {
       this.loading = true; // 開始載入，顯示 loading 效果 (如果需要)
       forkJoin([
         this.authService.getFunRightsInfo(),
-        this.sys1000Service.getData()
+        this.sys1000Service.getData(),
       ]).subscribe({
         next: ([sys1000Response]) => {
-          sessionStorage.setItem('SYSTEMSetting', JSON.stringify(sys1000Response));
+          sessionStorage.setItem(
+            'SYSTEMSetting',
+            JSON.stringify(sys1000Response),
+          );
           this.loading = false; // 停止載入
           this.router.navigate([item.routerLink]); // 切換路由
         },
@@ -110,7 +140,7 @@ export class SsoDashboardComponent implements OnInit {
           this.loading = false; // 停止載入
           this.errorMessage = '載入資料失敗，無法導航。'; // 顯示錯誤訊息 (如果需要)
           // 可以在這裡處理錯誤，例如顯示錯誤訊息給使用者
-        }
+        },
       });
     } else if (item.url) {
       window.open(item.url, '_blank');
@@ -131,9 +161,17 @@ export class SsoDashboardComponent implements OnInit {
 
       const query = {
         User_No: this.data?.user_No || '',
-        Old_password: this.encryptionService.getPassword(this.data?.user_No || '', frm.value.oldPassword),
-        New_password: this.encryptionService.getPassword(this.data?.user_No || '', frm.value.newPassword),
-        PwdExpireDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 密碼到期日設為90天後
+        Old_password: this.encryptionService.getPassword(
+          this.data?.user_No || '',
+          frm.value.oldPassword,
+        ),
+        New_password: this.encryptionService.getPassword(
+          this.data?.user_No || '',
+          frm.value.newPassword,
+        ),
+        PwdExpireDate: new Date(
+          Date.now() + 90 * 24 * 60 * 60 * 1000,
+        ).toISOString(), // 密碼到期日設為90天後
       };
 
       this.userCodeService.changePassword(query).subscribe({
@@ -145,9 +183,25 @@ export class SsoDashboardComponent implements OnInit {
         error: (error) => {
           console.error('密碼修改失敗:', error);
           this.messageService.errorBubble('密碼修改失敗，請稍後再試。');
-        }
+        },
       });
     }
   }
+  get containerClass() {
+    return {
+      'layout-theme-light': this.layoutService.config().colorScheme === 'light',
+      'layout-theme-dark': this.layoutService.config().colorScheme === 'dark',
+      'dark-theme': this.layoutService.config().colorScheme === 'dark', // 添加 dark-theme class
+      'light-theme': this.layoutService.config().colorScheme === 'light', // 添加 light-theme class (可選，因為預設是 light)
+      'layout-overlay': this.layoutService.config().menuMode === 'overlay',
+      'layout-static': this.layoutService.config().menuMode === 'static',
+      'layout-static-inactive':
+        this.layoutService.state.staticMenuDesktopInactive &&
+        this.layoutService.config().menuMode === 'static',
+      'layout-overlay-active': this.layoutService.state.overlayMenuActive,
+      'layout-mobile-active': this.layoutService.state.staticMenuMobileActive,
+      'p-input-filled': this.layoutService.config().inputStyle === 'filled',
+      'p-ripple-disabled': !this.layoutService.config().ripple,
+    };
+  }
 }
-
