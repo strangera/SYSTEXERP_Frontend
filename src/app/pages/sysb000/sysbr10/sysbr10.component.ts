@@ -6,11 +6,11 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
@@ -40,20 +40,20 @@ export class SYSBR10Component extends BasicQpageComponent implements OnInit {
     ANS_Role: [[] as number[]], // 公告角色Y/N
     group_no: [[] as number[]], // 階層代碼
     section_no: [[] as number[]], // 組織代碼
-    ANS_Desc: [, ], // 公告內容
+    ANS_Desc: [,], // 公告內容
 
     Crt_DateTime: [], // 建檔日期時間 //不顯示於主畫面
   });
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { isdelete:true,ANS_Type: 1, ANS_BegDateTime: '2024/01/01 01:01', ANS_EndDateTime: '2024/01/04 01:01' ,ANS_Role: [1,0],group_no: [1,2], section_no: [1,2], ANS_Desc: 'content1'},
-    { isdelete:true,ANS_Type: 1, ANS_BegDateTime: '2024/01/01 01:01', ANS_EndDateTime: '2024/01/04 01:01' ,ANS_Role: [1],group_no: [1], section_no: [1,2], ANS_Desc: 'content2'},
-    { isdelete:true,ANS_Type: 1, ANS_BegDateTime: '2024/03/06 01:01', ANS_EndDateTime: '2024/03/09 01:01' ,ANS_Role: [1],group_no: [2], section_no: [1], ANS_Desc: 'content3'},
+    { isdelete: true, ANS_Type: 1, ANS_BegDateTime: '2024/01/01 01:01', ANS_EndDateTime: '2024/01/04 01:01', ANS_Role: [1, 0], group_no: [1, 2], section_no: [1, 2], ANS_Desc: 'content1' },
+    { isdelete: true, ANS_Type: 1, ANS_BegDateTime: '2024/01/01 01:01', ANS_EndDateTime: '2024/01/04 01:01', ANS_Role: [1], group_no: [1], section_no: [1, 2], ANS_Desc: 'content2' },
+    { isdelete: true, ANS_Type: 1, ANS_BegDateTime: '2024/03/06 01:01', ANS_EndDateTime: '2024/03/09 01:01', ANS_Role: [1], group_no: [2], section_no: [1], ANS_Desc: 'content3' },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'ANS_Type', header: '公告類別', visible: true },
     { field: 'ANS_BegDateTime', header: '有效開始日期時間', visible: true },
     { field: 'ANS_EndDateTime', header: '有效結束日期時間', visible: true },

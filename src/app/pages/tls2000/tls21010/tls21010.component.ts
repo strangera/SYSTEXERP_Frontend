@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 
 @Component({
@@ -60,14 +60,14 @@ export class TLS21010Component {
     { field: 'isSelfPaidDeduction', header: '是否區分關系人', visible: true },
     { field: 'description', header: '摘要', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

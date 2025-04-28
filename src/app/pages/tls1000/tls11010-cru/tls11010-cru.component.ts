@@ -5,10 +5,10 @@ import { FloorService } from './../../../service/basic/floor.service';
 // --Commonly used imports--
 import { Component, OnInit, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { NavigationExtras, Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { UserStatusService } from '../../../service/basic/user-status.service';
@@ -22,7 +22,7 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
   styleUrl: './tls11010-cru.component.scss'
 })
 // 2.1.1.1 專櫃位置資料維護 CRU
-export class TLS11010CRUComponent extends BasicCrupageComponent implements OnInit{
+export class TLS11010CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // POS2002_店位基本資料檔
@@ -38,7 +38,7 @@ export class TLS11010CRUComponent extends BasicCrupageComponent implements OnIni
     NET_SPACE: ['', [Validators.maxLength(3), Validators.maxLength(7)]], // 淨坪(簽約坪數)
     LOCATION_Status: [[] as number[]], // 使用狀態 0=空位 1=使用中 2=保留(不使用) 3=停用
     ORG_No: ['', [Validators.maxLength(6)]], // 組織代碼
-    
+
     Location_Purpose: ['', [Validators.maxLength(2)]], // 用途別(SYS1000.T117)
     X_coordinate: [, [Validators.maxLength(10)]], // X座標
     Y_coordinate: [, [Validators.maxLength(10)]], // X座標
@@ -83,8 +83,8 @@ export class TLS11010CRUComponent extends BasicCrupageComponent implements OnIni
     private usageService: UsageService,
     private userStatusService: UserStatusService,
     private translate: TranslateService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -183,11 +183,11 @@ export class TLS11010CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

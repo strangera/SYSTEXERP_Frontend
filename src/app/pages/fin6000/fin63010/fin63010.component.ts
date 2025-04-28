@@ -7,7 +7,7 @@ import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 import { FlippingstateService } from './../../../service/basic/flippingstate.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -21,7 +21,7 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
   templateUrl: './fin63010.component.html',
   styleUrl: './fin63010.component.scss'
 })
-export class FIN63010Component   extends BasicQpageComponent implements OnInit {
+export class FIN63010Component extends BasicQpageComponent implements OnInit {
   // Upload files
   fileType: FileType = FileType.PNG;
   uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
@@ -43,15 +43,15 @@ export class FIN63010Component   extends BasicQpageComponent implements OnInit {
     SInvoicingday: [],
     EInvoicingday: [],
 
-    
+
   });
 
   // Dropdown options
   Billingordernumber: any[] = [];
   statusOptions: any[] = [
-    { value: 1, label: '停用'},
-    { value: 2, label: '手開'},
-    { value: 3, label: '電腦'},
+    { value: 1, label: '停用' },
+    { value: 2, label: '手開' },
+    { value: 3, label: '電腦' },
   ];
 
 
@@ -61,7 +61,7 @@ export class FIN63010Component   extends BasicQpageComponent implements OnInit {
     { value: 1, label: '是' },
     { value: 2, label: '否' },
   ];
-  bankOptions : any[] = [
+  bankOptions: any[] = [
     { value: 110301, label: '銀行存款-兆豐銀行(活)' },
     { value: 110302, label: '銀行存款-台新銀行(活)' },
     { value: 110303, label: '銀行存款-中國信託(活)' },
@@ -72,7 +72,7 @@ export class FIN63010Component   extends BasicQpageComponent implements OnInit {
     { value: 110397, label: '銀行存款-定存-合庫' },
     { value: 110398, label: '銀行存款-定存-玉山' },
     { value: 110399, label: '銀行存款-定存-兆豐' },
-];
+  ];
   typeOptions: any[] = [
     { value: 1, label: '統制' },
     { value: 2, label: '明細' },
@@ -88,11 +88,11 @@ export class FIN63010Component   extends BasicQpageComponent implements OnInit {
 
 
   display
-: any[] = [
-  { value: 1, label: '顯示' },
-  { value: 2, label: '不顯示' },
-  
-]
+    : any[] = [
+      { value: 1, label: '顯示' },
+      { value: 2, label: '不顯示' },
+
+    ]
   // Table data
   data: any[] = [
 
@@ -107,10 +107,10 @@ export class FIN63010Component   extends BasicQpageComponent implements OnInit {
     { field: 'faceAmount', header: '票面金額', visible: true },
     { field: 'payingBank', header: '付款銀行', visible: true }
   ];
-  
-  
-  
-  
+
+
+
+
   // TypeScript Options
   AccountcodeOptions: any[] = [];
   constructor(
@@ -125,11 +125,11 @@ export class FIN63010Component   extends BasicQpageComponent implements OnInit {
     private organizationNumberService: OrganizationNumberService,
     private accountingaccountService: AccountingaccountService,
     private userCodeService: UserCodeService
-   
+
   ) {
     super(); // 呼叫父類建構子
   }
- 
+
   vendorOptions: any[] = [];
   displayOptions2: any[] = [];
   AnalysisdateCOptions: any[] = [];

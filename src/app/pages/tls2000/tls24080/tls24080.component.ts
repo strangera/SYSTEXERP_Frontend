@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ReportTypeService } from '../../../service/basic/report-type.service'; // 報表型態 service
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 
@@ -68,7 +68,7 @@ export class TLS24080Component {
     { field: 'updatedCounterName', header: '修正後專櫃編號/名稱', visible: true },
     { field: 'updateDate', header: '修正日期', visible: true },
     { field: 'updatedBy', header: '修正者', visible: true }
-    
+
   ];
 
   constructor(
@@ -77,7 +77,7 @@ export class TLS24080Component {
     private messageService: NotificationService,
     private authService: AuthService,
     private reportTypeService: ReportTypeService,  // 報表型態 service
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

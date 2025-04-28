@@ -6,7 +6,7 @@ import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 import { FlippingstateService } from './../../../service/basic/flippingstate.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -20,7 +20,7 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
   templateUrl: './fin54045.component.html',
   styleUrl: './fin54045.component.scss'
 })
-export class FIN54045Component  extends BasicQpageComponent implements OnInit {
+export class FIN54045Component extends BasicQpageComponent implements OnInit {
   // Upload files
   fileType: FileType = FileType.PNG;
   uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';

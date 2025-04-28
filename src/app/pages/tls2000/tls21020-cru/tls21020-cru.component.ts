@@ -2,7 +2,7 @@ import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -106,7 +106,7 @@ export class TLS21020CRUComponent extends BasicCrupageComponent implements OnIni
       contractOrganizationSplit: [], // 是否依合約拆立組織
       relatedPartyAccounting: [], // 區分關係人會科
       receivableVendor: [], // 應收廠商
-      paymentDays: ['', [ Validators.pattern('^[0-9]*$')]], // 付款天數
+      paymentDays: ['', [Validators.pattern('^[0-9]*$')]], // 付款天數
     });
   }
 

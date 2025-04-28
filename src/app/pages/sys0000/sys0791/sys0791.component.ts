@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
@@ -76,7 +76,7 @@ export class SYS0791Component {
     { field: 'failureCount', header: '使用次數', visible: true },
     { field: 'usageRate', header: '使用率', visible: true },
   ];
-  
+
   // Options
 
   organizationNumberOptions: any[] = [];
@@ -99,7 +99,7 @@ export class SYS0791Component {
     private systemTypeDetailService: SystemTypeDetailService,
     private subsystemService: SubsystemService,
     private jobNumberService: JobNumberService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

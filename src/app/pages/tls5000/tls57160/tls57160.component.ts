@@ -5,9 +5,9 @@ import { NavigationExtras, Router } from '@angular/router';
 import { WarehouseService } from '../../../service/basic/warehouse.service';
 import { ManagementIDService } from '../../../service/basic/management-id.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
@@ -29,15 +29,15 @@ export class TLS57160Component {
   submitted: boolean = false;
 
   queryForm = this.formBuilder.group({
-    warehouseCode: [1,Validators.required],
+    warehouseCode: [1, Validators.required],
     initialDate: [],
     managementCode: [],
     productName: [],
     vendorCode: [],
-    brandCode: [1,Validators.required],
+    brandCode: [1, Validators.required],
     displayMode: [],
     displayCount: [],
-    inventoryDateFrom: [,Validators.required],
+    inventoryDateFrom: [, Validators.required],
   });
 
   // Dropdown options
@@ -72,7 +72,7 @@ export class TLS57160Component {
     { field: 'averagePrice', header: '平均單價', visible: true },
     { field: 'currentSellingPrice', header: '當前售價', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -83,7 +83,7 @@ export class TLS57160Component {
     private authService: AuthService,
     private brandCodeService: BrandCodeService,
     private displayModeService: DisplayModeService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options
@@ -91,7 +91,8 @@ export class TLS57160Component {
     this.warehouseService.getWarehouseOptions().subscribe((data) => (this.warehouseOptions = data));
     this.managementIDService.getSystemTypes().subscribe((data) => (this.managementIDOptions = data));
     this.displayModeService.getDisplayModes().subscribe((data) => (this.displayModeOptions = data));
-    this.brandCodeService.getSystemTypes().subscribe((data) => (this.brandCodeOptions = data));}
+    this.brandCodeService.getSystemTypes().subscribe((data) => (this.brandCodeOptions = data));
+  }
 
   canQuery(): boolean {
     return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;

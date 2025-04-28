@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { RoleCodeService } from '../../../service/basic/role-code.service';
 // 4-2-2-3角色複製
@@ -55,7 +55,7 @@ export class SYS0240Component {
     private messageService: NotificationService,
     private authService: AuthService,
     private roleCodeService: RoleCodeService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

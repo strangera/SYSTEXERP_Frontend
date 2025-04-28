@@ -14,10 +14,10 @@ import { IssuanceTypeService } from '../../../service/basic/issuance-type.servic
 import { IssuanceNoteStatusService } from '../../../service/basic/issuance-note-status.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import {
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -33,8 +33,7 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class TLS56080CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
   // ProgNo: string = '250039';
   // funInfo: FunsrightInfo = {};
   // // Permissions

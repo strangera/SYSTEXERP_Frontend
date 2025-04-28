@@ -6,7 +6,7 @@ import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 import { FlippingstateService } from './../../../service/basic/flippingstate.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -25,7 +25,7 @@ export class FIN35020Component extends BasicQpageComponent implements OnInit {
     SMarginserialnumber: [],
     EMarginserialnumber: [],
     vendorCode: [],
-    Flippingstate: [1,Validators.required],
+    Flippingstate: [1, Validators.required],
   });
 
   // Dropdown options
@@ -60,7 +60,7 @@ export class FIN35020Component extends BasicQpageComponent implements OnInit {
     { field: 'franchiseRegistration', header: '專櫃登錄編號', visible: true },
     { field: 'depositType', header: '保證金類型', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -68,10 +68,10 @@ export class FIN35020Component extends BasicQpageComponent implements OnInit {
     private notificationService: NotificationService,
     private authService: AuthService,
     private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService:AnalysisdateCService,
+    private AnalysisdateCService: AnalysisdateCService,
     private vendorService: VendorService,
-    private flippingstateService:FlippingstateService,
-    private messageService:MessageModule
+    private flippingstateService: FlippingstateService,
+    private messageService: MessageModule
   ) {
     super(); // 呼叫父類建構子
   }
@@ -160,7 +160,7 @@ export class FIN35020Component extends BasicQpageComponent implements OnInit {
     console.log(frm.value);
     this.submitted = true;
     this.loading = true;
-   
+
 
     if (frm.valid && this.canQuery()) {
       // 提交邏輯
@@ -168,7 +168,7 @@ export class FIN35020Component extends BasicQpageComponent implements OnInit {
     }
 
     this.loading = false;
-    
+
   }
 
   onSubmitNext(frm: FormGroup) {

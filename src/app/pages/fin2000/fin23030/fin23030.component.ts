@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { VendorService } from '../../../service/basic/vendor.service';
@@ -16,7 +16,7 @@ import { VendorService } from '../../../service/basic/vendor.service';
   templateUrl: './fin23030.component.html',
   styleUrl: './fin23030.component.scss'
 })
-export class FIN23030Component extends BasicQpageComponent implements OnInit{
+export class FIN23030Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     advanceSheetNumber: [, [Validators.maxLength(13)]], // 預支單號
@@ -39,7 +39,7 @@ export class FIN23030Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '預支單號', visible: true },
     { field: 'col2', header: '預支金額', visible: true },
     { field: 'col3', header: '申請日期', visible: true },
@@ -55,7 +55,7 @@ export class FIN23030Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  requsetEmployeeOptions:any[]=[];
+  requsetEmployeeOptions: any[] = [];
 
   constructor(
     private router: Router,

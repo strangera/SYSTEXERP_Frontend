@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './ass14020.component.html',
   styleUrl: './ass14020.component.scss'
 })
-export class ASS14020Component extends BasicQpageComponent implements OnInit{
+export class ASS14020Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     closeDate: [, [Validators.required]], // 關帳日期
@@ -40,7 +40,7 @@ export class ASS14020Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '發票/收據號碼', visible: true },
     { field: 'col2', header: '供應商編號', visible: true },
     { field: 'col3', header: '請款單據種類', visible: true },
@@ -59,7 +59,7 @@ export class ASS14020Component extends BasicQpageComponent implements OnInit{
     // { field: 'col14', header: '入帳日期', visible: true },
     // { field: 'col15', header: '條件篩選', visible: true },
     // { field: 'col16', header: '顯示筆數', visible: true },
-    
+
     // { field: 'col17', header: '報廢日期前之帳面價值', visible: true },
     // { field: 'col18', header: '報廢損失', visible: true },
 
@@ -80,7 +80,7 @@ export class ASS14020Component extends BasicQpageComponent implements OnInit{
   //   { value: 1, label: '應稅' },
   //   { value: 2, label: '免稅' },
   // ];
-  
+
   //
   constructor(
     private router: Router,

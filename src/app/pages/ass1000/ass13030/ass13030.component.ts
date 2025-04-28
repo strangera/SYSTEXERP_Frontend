@@ -7,7 +7,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { ItemCodeService } from '../../../service/basic/item-code.service';
@@ -23,7 +23,7 @@ import { VendorService } from '../../../service/basic/vendor.service';
   templateUrl: './ass13030.component.html',
   styleUrl: './ass13030.component.scss'
 })
-export class ASS13030Component extends BasicQpageComponent implements OnInit{
+export class ASS13030Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     shareCode: [], // 攤提代號
@@ -43,7 +43,7 @@ export class ASS13030Component extends BasicQpageComponent implements OnInit{
     orderNumber: [], // 驗收單號
     entryDateFrom: [], // 入帳日期
     entryDateTo: [], // 入帳日期
-    outofLimit: [, ], // 已達耐用年限
+    outofLimit: [,], // 已達耐用年限
     displayNumber: [, [this.validationService.numberValidator, Validators.maxLength(160)]], // 	顯示筆數
   });
   // 下拉資料多個呈現
@@ -56,14 +56,15 @@ export class ASS13030Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'shareCode': '1A232300010001', 'assetsCode': '1A232300010001', 'itemCode': '1A232300010001/B1', 'entryDateFrom': '2014/12/31', 'assetStatus': '報修',
+    {
+      'shareCode': '1A232300010001', 'assetsCode': '1A232300010001', 'itemCode': '1A232300010001/B1', 'entryDateFrom': '2014/12/31', 'assetStatus': '報修',
       'keeper': '楊先生', 'supplierCode': '/', 'purchaseAmountFrom': 85000000, 'purchaseCode': '', 'depreciationDue': '201912',
-     },
+    },
     // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'shareCode', header: '攤提代號', visible: true },
     { field: 'assetsCode', header: '資產編號', visible: true },
     { field: 'itemCode', header: '品項編號', visible: true },
@@ -74,7 +75,7 @@ export class ASS13030Component extends BasicQpageComponent implements OnInit{
     { field: 'supplierCode', header: '供應商編號', visible: true },
     { field: 'purchaseAmountFrom', header: '購入金額', visible: true },
     { field: 'purchaseCode', header: '採購單號', visible: true },
-    
+
     { field: 'depreciationDue', header: '折舊到期', visible: true },
 
     // { field: 'col19', header: '工廠地址', visible: true },

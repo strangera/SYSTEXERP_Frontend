@@ -5,7 +5,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -51,7 +51,7 @@ export class ASS16060Component extends BasicQpageComponent implements OnInit {
     Kurabe: [],
     status: [],
     Departmentcode: [],
-    
+
   });
   // Table data
   data: any[] = [];
@@ -65,43 +65,43 @@ export class ASS16060Component extends BasicQpageComponent implements OnInit {
     { field: 'returnStatus', header: '退回狀態', visible: true },
     { field: 'detailCount', header: '明細筆數', visible: true },
   ];
-  
-  
-  
+
+
+
 
   // Dropdown options
-  Reporttype: any[] = [    { value: 1, label: '全部' },
-    { value: 2, label: '差異' },];
-  Departmentcode: any[] =[];
-  Kurabe: any[] =[
+  Reporttype: any[] = [{ value: 1, label: '全部' },
+  { value: 2, label: '差異' },];
+  Departmentcode: any[] = [];
+  Kurabe: any[] = [
     { value: 1, label: '001' },
     { value: 2, label: '002' },
-  
-  
+
+
   ];
   Itemnumber
-: any[] = [
+    : any[] = [
 
-    { value: 1, label: '3A24210000001' },
-    { value: 2, label: '3A24210000002' },
-    { value: 3, label: '3A24210000003' },
-    { value: 4, label: '3A24210000004' },
-    { value: 5, label: '3A24210000005' },
-    { value: 6, label: '3A24210000006' },
-    { value: 7, label: '3A24210000007' },
-    { value: 8, label: '3A24210000008' },
-    { value: 9, label: '3A24210000009' },
-    { value: 10, label: '3A24210000010' },
-];
+      { value: 1, label: '3A24210000001' },
+      { value: 2, label: '3A24210000002' },
+      { value: 3, label: '3A24210000003' },
+      { value: 4, label: '3A24210000004' },
+      { value: 5, label: '3A24210000005' },
+      { value: 6, label: '3A24210000006' },
+      { value: 7, label: '3A24210000007' },
+      { value: 8, label: '3A24210000008' },
+      { value: 9, label: '3A24210000009' },
+      { value: 10, label: '3A24210000010' },
+    ];
   Inventorystatus: any[] = [
     { value: 1, label: '盤點中' },
     { value: 2, label: '登錄完成' },
     { value: 3, label: '已結案' },
-  
+
   ];
   Inventoryordenumber: any[] = [
     { value: 1, label: '202406002' },
-  
+
   ];
   custodyunit: any[] = [
     { value: 1, label: '101000' },
@@ -187,11 +187,11 @@ export class ASS16060Component extends BasicQpageComponent implements OnInit {
     { value: 2, label: '列管品' },
   ];
   status
-  : any[] = [
-    { value: 1, label: '已申請' },
-    { value: 2, label: '已審核' },
-  
-  ];
+    : any[] = [
+      { value: 1, label: '已申請' },
+      { value: 2, label: '已審核' },
+
+    ];
 
 
   constructor(
@@ -202,8 +202,8 @@ export class ASS16060Component extends BasicQpageComponent implements OnInit {
     private bigCategoryService: BigCategoryService,
     private midCategoryService: MidCategoryService,
     private smallCategoryService: SmallCategoryService,
-    private userCodeService:UserCodeService,
-    private organizationNumberService:OrganizationNumberService,
+    private userCodeService: UserCodeService,
+    private organizationNumberService: OrganizationNumberService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -224,9 +224,9 @@ export class ASS16060Component extends BasicQpageComponent implements OnInit {
 
     this.userCodeService.getUserCode()
       .subscribe((data) => (this.reviewer = data));
-      this.userCodeService.getUserCode()
+    this.userCodeService.getUserCode()
       .subscribe((data) => (this.usercode = data));
-      this.organizationNumberService.getOrganizationNumbers()
+    this.organizationNumberService.getOrganizationNumbers()
       .subscribe((data) => (this.Departmentcode = data));
   }
 

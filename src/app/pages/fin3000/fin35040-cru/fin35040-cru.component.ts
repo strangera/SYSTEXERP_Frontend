@@ -8,7 +8,7 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -20,8 +20,7 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
 })
 export class FIN35040CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
   ngOnInit(): void {
     // 初始化
     this.ProgNo = '130014';
@@ -73,7 +72,7 @@ export class FIN35040CRUComponent
   ];
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    remark: [ ],
+    remark: [],
     age: ['', Validators.required],
     email: ['', [Validators.maxLength(50), Validators.required]],
     // ----------------------------------------------------------------

@@ -5,10 +5,10 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { DisplayService } from '../../../service/basic/display.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
@@ -76,7 +76,7 @@ export class TLS22030Component {
     private authService: AuthService,
     private whetherService: WhetherService,
     private displayService: DisplayService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

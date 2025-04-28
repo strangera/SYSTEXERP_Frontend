@@ -6,10 +6,10 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 import { FloorService } from '../../../service/basic/floor.service';
@@ -26,7 +26,7 @@ const now = new Date();
   templateUrl: './tls25030-cru.component.html',
   styleUrl: './tls25030-cru.component.scss'
 })
-export class TLS25030CRUComponent extends BasicCrupageComponent implements OnInit  {
+export class TLS25030CRUComponent extends BasicCrupageComponent implements OnInit {
 
 
 
@@ -74,10 +74,11 @@ export class TLS25030CRUComponent extends BasicCrupageComponent implements OnIni
     private floorService: FloorService,  // 樓層 service
     private violationStatusService: ViolationStatusService,  // 狀態 service
     private deductionItemService: DeductionItemService,  // 扣款項目 service
-    private OrganizationNumberService:OrganizationNumberService,
-    private whetherService:WhetherService,
-  ) {super();  // 呼叫父類建構子
-    }
+    private OrganizationNumberService: OrganizationNumberService,
+    private whetherService: WhetherService,
+  ) {
+    super();  // 呼叫父類建構子
+  }
 
   ngOnInit(): void {
 
@@ -223,8 +224,8 @@ export class TLS25030CRUComponent extends BasicCrupageComponent implements OnIni
 
   onClearForm() {
     this.dataForm.reset();  // 重置表單
-  }  
-  
+  }
+
   onCancel() {
     this.router.navigate(['/demo/demoInputTable']);
   }

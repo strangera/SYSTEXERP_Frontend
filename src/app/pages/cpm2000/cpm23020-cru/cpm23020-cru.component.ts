@@ -9,7 +9,7 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -21,21 +21,20 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
 })
 export class CPM23020CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
 
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    eventStartDate: [,Validators.required], // 活動開始日期
-    eventEndDate: [,Validators.required], // 活動結束日期
-    lastStorageDate: [,Validators.required], // 最後入庫日期
-    marketingCampaignCode: [,Validators.required], // 行銷檔期代號
+    eventStartDate: [, Validators.required], // 活動開始日期
+    eventEndDate: [, Validators.required], // 活動結束日期
+    lastStorageDate: [, Validators.required], // 最後入庫日期
+    marketingCampaignCode: [, Validators.required], // 行銷檔期代號
     campaignName: [], // 檔期名稱
-    suppliesManagementNumber: [,Validators.required], // 用品管理單號
-    manufacturerCode: [,Validators.required], // 廠商編號
-    lastStoragePerson: [,Validators.required], // 最後入庫人員
-    suppliesCondition: [,Validators.required], // 用品狀況
-    storageStatus: [,Validators.required], // 入庫狀況
+    suppliesManagementNumber: [, Validators.required], // 用品管理單號
+    manufacturerCode: [, Validators.required], // 廠商編號
+    lastStoragePerson: [, Validators.required], // 最後入庫人員
+    suppliesCondition: [, Validators.required], // 用品狀況
+    storageStatus: [, Validators.required], // 入庫狀況
     remarks: [],
     // ----------------------------------------------------------------
     items: this.formBuilder.array([this.createItem()]),
@@ -47,7 +46,7 @@ export class CPM23020CRUComponent
     private messageService: NotificationService,
     private authService: AuthService,
     private translate: TranslateService,
-private userCodeService:UserCodeService,
+    private userCodeService: UserCodeService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -56,7 +55,7 @@ private userCodeService:UserCodeService,
     { value: 1, label: '001' },
     { value: 2, label: '002' },
   ];
-  lastStoragePersonOptions:any[] = [  ];
+  lastStoragePersonOptions: any[] = [];
   manufacturerCodeOptions: any[] = [{ value: 1, label: '53472035-23' }];
 
 
@@ -120,23 +119,23 @@ private userCodeService:UserCodeService,
   getFormControl(index: number, controlName: string): FormControl {
     return this.items.at(index).get(controlName) as FormControl;
   }
-    // 初始化表單
-    private initializeForm() {
+  // 初始化表單
+  private initializeForm() {
 
-    }
+  }
   // ----------------------------------------------------------------
   createItem(): FormGroup {
     return this.formBuilder.group({
-      activityCode: [''], 
+      activityCode: [''],
       suppliesCode: [''],
       suppliesName: [''],
       requiredQuantity: [''],
       storedQuantity: [''],
       notStoredQuantity: [''],
-      thisStorageQuantity: ['',Validators.required],
-      unitPrice: ['',Validators.required],
-      totalPrice: ['',Validators.required],
-      totalStorageAmount: ['',Validators.required],
+      thisStorageQuantity: ['', Validators.required],
+      unitPrice: ['', Validators.required],
+      totalPrice: ['', Validators.required],
+      totalStorageAmount: ['', Validators.required],
       remarks: [''],
 
     });

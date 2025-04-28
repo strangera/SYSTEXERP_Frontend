@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -18,14 +18,14 @@ import { OrganizationNumberService } from '../../../service/basic/organization-n
   templateUrl: './ass11100-cru.component.html',
   styleUrl: './ass11100-cru.component.scss'
 })
-export class ASS11100CRUComponent extends BasicCrupageComponent implements OnInit{
+export class ASS11100CRUComponent extends BasicCrupageComponent implements OnInit {
   //
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     storageType: [, [Validators.required, Validators.maxLength(10)]], // 倉別
     storageName: ['', [Validators.required, Validators.maxLength(50)]], // 倉別名稱
-    organizationNumber: [,[Validators.required]], // 部門代號
-    remark: [, ], // 備註
+    organizationNumber: [, [Validators.required]], // 部門代號
+    remark: [,], // 備註
   });
   //
   // ----------------------------------------------------------------
@@ -40,9 +40,9 @@ export class ASS11100CRUComponent extends BasicCrupageComponent implements OnIni
     private translate: TranslateService,
     private validationService: ValidationService,
     //
-    private organizationNumberService:OrganizationNumberService
-    ) {
-      super();  // 呼叫父類建構子
+    private organizationNumberService: OrganizationNumberService
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -95,11 +95,11 @@ export class ASS11100CRUComponent extends BasicCrupageComponent implements OnIni
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }

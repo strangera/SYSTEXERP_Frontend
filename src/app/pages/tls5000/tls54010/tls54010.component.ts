@@ -9,9 +9,9 @@ import { SalesLocationService } from '../../../service/basic/sales-location.serv
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
 import { TransactionTypeService } from '../../../service/basic/transaction-type.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { UserCodeService } from '../../../service/basic/user-code.service';
@@ -79,7 +79,7 @@ export class TLS54010Component {
     { field: 'salesLocation', header: '銷售位置', visible: true },
     { field: 'transactionType', header: '交易型態', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -93,7 +93,7 @@ export class TLS54010Component {
     private transactionTypeService: TransactionTypeService,
     private authService: AuthService,
     private userCodeService: UserCodeService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options

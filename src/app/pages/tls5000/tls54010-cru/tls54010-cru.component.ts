@@ -15,7 +15,7 @@ import { SalesLocationService } from '../../../service/basic/sales-location.serv
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
 import { TransactionTypeService } from '../../../service/basic/transaction-type.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { UserCodeService } from '../../../service/basic/user-code.service';
@@ -28,8 +28,7 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class TLS54010CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
   // ProgNo: string = '250025';
   // funInfo: FunsrightInfo = {};
   // // Permissions

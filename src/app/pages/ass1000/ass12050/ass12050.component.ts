@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -20,7 +20,7 @@ import { PaperStatusService } from '../../../service/basic/paper-status.service'
   templateUrl: './ass12050.component.html',
   styleUrl: './ass12050.component.scss'
 })
-export class ASS12050Component extends BasicQpageComponent implements OnInit{
+export class ASS12050Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     purchaseNumber: [, [this.validationService.numberValidator, Validators.maxLength(11)]], // 採購單號
@@ -56,16 +56,17 @@ export class ASS12050Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'purchaseNumber': '20210128001', 'itemCode': '20210128001-02', 'applicantCode': '', 'checkPerson': 'xcom/', 'organizationNumber': '化妝品',
+    {
+      'purchaseNumber': '20210128001', 'itemCode': '20210128001-02', 'applicantCode': '', 'checkPerson': 'xcom/', 'organizationNumber': '化妝品',
       'applicationDateFrom': '2021/01/28', 'taxAmountFrom': 10, 'totalTaxAmountFrom': 210,
       'paperStatus': '全部驗收', 'checkStatus': '全部驗收', 'reviewerCode': '權限管理者', 'reviewDateFrom': '2021/01/28', 'checkDateTo': '2021/01/28',
       'detailNumber': 1, 'checkNumber': 2
-     },
+    },
     // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'purchaseNumber', header: '採購單號', visible: true },
     { field: 'itemCode', header: '驗收單號', visible: true },
     { field: 'applicantCode', header: '申請人編號', visible: true },
@@ -84,7 +85,7 @@ export class ASS12050Component extends BasicQpageComponent implements OnInit{
 
     { field: 'detailNumber', header: '明細筆數', visible: true },
     { field: 'checkNumber', header: '驗收單筆數', visible: true },
-    
+
     // { field: 'col15', header: '營運模式', visible: true },
     // { field: 'col16', header: '票期', visible: true },
     // { field: 'col17', header: '備註', visible: true },
@@ -103,12 +104,12 @@ export class ASS12050Component extends BasicQpageComponent implements OnInit{
   ];
   // ----------------------------------------------------------------
   //
-  itemCodeOptions:any[] = [];
-  applicantCodeOptions:any[] = [];
+  itemCodeOptions: any[] = [];
+  applicantCodeOptions: any[] = [];
   organizationNumberOptions: any[] = [];
   supplierCodeOptions: any[] = [];
   paperStatusOptions: any[] = [];
-  storageOptions:any[] = [
+  storageOptions: any[] = [
     { value: 1, label: '總公司' },
     { value: 2, label: '測試' },
   ];

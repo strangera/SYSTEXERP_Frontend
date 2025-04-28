@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -17,7 +17,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './fin16060.component.html',
   styleUrl: './fin16060.component.scss'
 })
-export class FIN16060Component extends BasicQpageComponent implements OnInit{
+export class FIN16060Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     declareYm: [], // 	申報年月
@@ -42,7 +42,7 @@ export class FIN16060Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '收銀機編號', visible: true },
     { field: 'col2', header: '申報年月', visible: true },
     { field: 'col3', header: '發票年月', visible: true },
@@ -60,8 +60,8 @@ export class FIN16060Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  usageOptions:any[]=[];
-  printPageOptions:any[]=[];
+  usageOptions: any[] = [];
+  printPageOptions: any[] = [];
 
   constructor(
     private router: Router,
@@ -70,7 +70,7 @@ export class FIN16060Component extends BasicQpageComponent implements OnInit{
     private authService: AuthService,
     private validationService: ValidationService,
     //
-    private usageTypeService:UsageTypeService,
+    private usageTypeService: UsageTypeService,
     private whetherService: WhetherService,
   ) {
     super(); // 呼叫父類建構子

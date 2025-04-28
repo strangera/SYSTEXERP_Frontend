@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { debounceTime } from 'rxjs/operators';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';

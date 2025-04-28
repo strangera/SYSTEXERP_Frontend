@@ -4,9 +4,9 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { VendorService } from '../../../service/basic/vendor.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 
@@ -51,7 +51,7 @@ export class TLS55040Component {
     { field: 'status', header: '狀況', visible: true },
     { field: 'unbilledAmount', header: '未銷金額', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -59,7 +59,7 @@ export class TLS55040Component {
     private notificationService: NotificationService,
     private vendorService: VendorService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options

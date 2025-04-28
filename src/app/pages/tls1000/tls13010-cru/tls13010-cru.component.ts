@@ -1,14 +1,14 @@
 import { LocationCodeService } from './../../../service/basic/locationcode.service';
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { AuthService } from '../../../service/system/auth.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 
@@ -293,20 +293,20 @@ export class TLS13010CRUComponent implements OnInit {
     private vendorService: VendorService,
     private businessTypeService: BusinessTypeService,
     private OrganizationNumberService: OrganizationNumberService,
-    private businessTypeCodeService:BusinessTypeCodeService,
-    private productCategoryService:ProductCategoryService,
+    private businessTypeCodeService: BusinessTypeCodeService,
+    private productCategoryService: ProductCategoryService,
     private smallCategoryService: SmallCategoryService,
     private userCodeService: UserCodeService,
     private LocationCodeService: LocationCodeService,
     private activatedRoute: ActivatedRoute  // 正確的名稱
-  ) {}
+  ) { }
   onSubmitNext(): void {
     this.router.navigate(['TLS1000/TLS13010NEXT1']);
   }
   ngOnInit(): void {
-     // 讀取導航狀態中的專櫃招募編號
-     const navigation = this.router.getCurrentNavigation();
-     const state = navigation?.extras.state as { [key: string]: any };
+    // 讀取導航狀態中的專櫃招募編號
+    const navigation = this.router.getCurrentNavigation();
+    const state = navigation?.extras.state as { [key: string]: any };
 
     // 確保使用方括號來存取 rowdata 和 counterName 屬性
     if (state && state['rowdata'] && state['rowdata']['recruitmentCode']) {

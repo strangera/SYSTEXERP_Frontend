@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { UserCodeService } from '../../../service/basic/user-code.service';
@@ -17,7 +17,7 @@ import { OrganizationNumberService } from '../../../service/basic/organization-n
   templateUrl: './ass13060.component.html',
   styleUrl: './ass13060.component.scss'
 })
-export class ASS13060Component extends BasicQpageComponent implements OnInit{
+export class ASS13060Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     requestCode: [], // 申請編號
@@ -43,7 +43,7 @@ export class ASS13060Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '固資重估單編號', visible: true },
     { field: 'col2', header: '申請人員編號', visible: true },
     { field: 'col3', header: '部門代號', visible: true },
@@ -63,7 +63,7 @@ export class ASS13060Component extends BasicQpageComponent implements OnInit{
     // { field: 'col14', header: '資產狀態', visible: true },
     // { field: 'col15', header: '原始取得金額', visible: true },
     // { field: 'col16', header: '備註', visible: true },
-    
+
     // { field: 'col17', header: '報廢日期前之帳面價值', visible: true },
     // { field: 'col18', header: '報廢損失', visible: true },
 

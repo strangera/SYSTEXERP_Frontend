@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 //
 import { TranslateService } from '@ngx-translate/core';
@@ -21,7 +21,7 @@ import { UserStatusService } from './../../../service/basic/user-status.service'
   styleUrl: './SYSBR10.cru.component.scss'
 })
 // 佈告欄管理作業 CRU
-export class SYSBR10CRUComponent extends BasicCrupageComponent implements OnInit{
+export class SYSBR10CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // POS5101_公告檔
@@ -34,7 +34,7 @@ export class SYSBR10CRUComponent extends BasicCrupageComponent implements OnInit
     ANS_Role: [[] as number[], [Validators.maxLength(1)]], // 公告角色Y/N
     group_no: [[] as number[], [Validators.maxLength(1)]], // 階層代碼
     section_no: [[] as number[], [Validators.maxLength(1)]], // 組織代碼
-    ANS_Desc: [, ], // 公告內容
+    ANS_Desc: [,], // 公告內容
 
     Crt_DateTime: [], // 建檔日期時間 //不顯示於主畫面
   });
@@ -60,8 +60,8 @@ export class SYSBR10CRUComponent extends BasicCrupageComponent implements OnInit
     private announcementCategoryService: AnnouncementCategoryService,
     private roleCodeServiceService: RoleCodeServiceService,
     private announcementUserService: AnnouncementUserService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -124,11 +124,11 @@ export class SYSBR10CRUComponent extends BasicCrupageComponent implements OnInit
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }

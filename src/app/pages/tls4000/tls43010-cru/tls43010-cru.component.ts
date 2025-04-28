@@ -3,7 +3,7 @@ import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -13,15 +13,15 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
   templateUrl: './tls43010-cru.component.html',
   styleUrl: './tls43010-cru.component.scss'
 })
-export class TLS43010CRUComponent extends BasicCrupageComponent implements OnInit{
-  
-  NOT_Status_Options:any[] = [
+export class TLS43010CRUComponent extends BasicCrupageComponent implements OnInit {
+
+  NOT_Status_Options: any[] = [
     { value: 0, label: '未審核' },
     { value: 1, label: '已審核' },
     { value: 2, label: '已刪除' },
   ];
 
-  NOT_DtlLimit_Options:any[] = [
+  NOT_DtlLimit_Options: any[] = [
     { value: 0, label: '不限制' },
     { value: 1, label: '符合明細設定的機台才播放' },
     { value: 2, label: '不符合明細設定的機台才播放' },
@@ -32,15 +32,15 @@ export class TLS43010CRUComponent extends BasicCrupageComponent implements OnIni
     // ID                  NUMERIC(19,0) IDENTITY(1,1) NOT NULL
 
     NOT_No: ['', [Validators.required, Validators.maxLength(20)]], // 通告編號
-    NOT_Date: [ ,[Validators.required]], // 通告日期
-    NOT_BegDate: [ ,[Validators.required]], // 有效開始日期時間
-    NOT_EndDate: [ ,[Validators.required]], // 有效結束日期時間
+    NOT_Date: [, [Validators.required]], // 通告日期
+    NOT_BegDate: [, [Validators.required]], // 有效開始日期時間
+    NOT_EndDate: [, [Validators.required]], // 有效結束日期時間
     NOT_File: ['', [Validators.required, Validators.maxLength(200)]], // 媒體檔案名稱
-    NOT_Status: [0,[Validators.required, Validators.maxLength(1)]], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
+    NOT_Status: [0, [Validators.required, Validators.maxLength(1)]], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
     NOT_Priority: [0, [Validators.required, Validators.maxLength(1)]], // 優先順序，預設值為0(在同一段時間的優先順序9-0, 9最優先)
 
-    NOT_Note: [ ,[Validators.maxLength(255)]], // 備註
-    NOT_PlayTime: [30,[Validators.maxLength(6)]], // 媒體檔播放秒數，預設值為30
+    NOT_Note: [, [Validators.maxLength(255)]], // 備註
+    NOT_PlayTime: [30, [Validators.maxLength(6)]], // 媒體檔播放秒數，預設值為30
     NOT_DtlLimit: [0, [Validators.maxLength(1)]], // 是否限制播放條件，POS50012 0=不限制(預設值) 1=符合明細設定的機台才播放 2=不符合明細設定的機台才播放*
 
     // 以下可以不用顯示於查詢頁
@@ -63,8 +63,8 @@ export class TLS43010CRUComponent extends BasicCrupageComponent implements OnIni
     private authService: AuthService,
     private translate: TranslateService,
     private validationService: ValidationService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -84,14 +84,14 @@ export class TLS43010CRUComponent extends BasicCrupageComponent implements OnIni
       // 創建
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
-        this.accordionTabCss= 'create-accordionTab';
+        this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
         this.showConfirm = this.canAdd();
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
-        this.accordionTabCss= 'edit-accordionTab';
+        this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
         this.showConfirm = this.canEdit();
         this.Edit(state.rowdata);
@@ -125,7 +125,7 @@ export class TLS43010CRUComponent extends BasicCrupageComponent implements OnIni
       // NOT_Date: [ ,[Validators.required]], // 通告日期
 
       NOT_SeqNo: [, [Validators.required, Validators.maxLength(6)]], // 通告序號
-      NOT_Status: [0,[Validators.required, Validators.maxLength(1)]], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
+      NOT_Status: [0, [Validators.required, Validators.maxLength(1)]], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
 
       ECR_No: ['', [Validators.maxLength(6)]], // 收銀機號 POS1002.ECR_No
       TLT_No: ['', [Validators.maxLength(8)]], // 專櫃編號
@@ -134,7 +134,7 @@ export class TLS43010CRUComponent extends BasicCrupageComponent implements OnIni
       BUILDING_No: ['', [Validators.maxLength(2)]], // 館別
       FLOOR_No: ['', [Validators.maxLength(2)]], // 樓層代碼
       AREA_No: ['', [Validators.maxLength(2)]], // 區域代碼
-      
+
       // 以下可以不用顯示於查詢頁
       CRT_Date: [], // 建立日期
       CRT_USR_No: [, [Validators.maxLength(8)]], // 建立人員
@@ -161,11 +161,11 @@ export class TLS43010CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

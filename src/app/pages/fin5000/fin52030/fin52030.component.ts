@@ -6,7 +6,7 @@ import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 import { FlippingstateService } from './../../../service/basic/flippingstate.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -50,61 +50,61 @@ export class FIN52030Component extends BasicQpageComponent implements OnInit {
     typename: [],
     Subpoenatype: [],
   });
-  
+
 
   // Dropdown options
 
   departmentOptions: any[] = [
- 
-];
 
-accountOptions: any[] = [
-  { value: '1101', label: '1101_累積盈虧科目1' },
-  { value: '1102', label: '1102_累積盈虧科目2' },
-  { value: '1103', label: '1103_累積盈虧科目3' }
-];
+  ];
 
-accountingaccountOptions: any[] = [
-  { value: 1, label: '是' },
-  { value: 2, label: '否' }
-];
+  accountOptions: any[] = [
+    { value: '1101', label: '1101_累積盈虧科目1' },
+    { value: '1102', label: '1102_累積盈虧科目2' },
+    { value: '1103', label: '1103_累積盈虧科目3' }
+  ];
 
-statusOptions: any[] = [
-  { value: 1, label: '未拋轉' },
-  { value: 2, label: '已拋轉' },
-  { value: 3, label: '已退回' }
-];
+  accountingaccountOptions: any[] = [
+    { value: 1, label: '是' },
+    { value: 2, label: '否' }
+  ];
 
-unitOptions: any[] = [
-  { value: 1, label: '元' },
-  { value: 2, label: '千' },
-  { value: 3, label: '萬' }
-];
+  statusOptions: any[] = [
+    { value: 1, label: '未拋轉' },
+    { value: 2, label: '已拋轉' },
+    { value: 3, label: '已退回' }
+  ];
 
-typeOptions: any[] = [
-  { value: 1, label: '統制' },
-  { value: 2, label: '明細' }
-];
+  unitOptions: any[] = [
+    { value: 1, label: '元' },
+    { value: 2, label: '千' },
+    { value: 3, label: '萬' }
+  ];
 
-SubpoenatypeOptions: any[] = [
-  { value: 1, label: '現金收入傳票' },
-  { value: 2, label: '現金支出傳票' },
-  { value: 3, label: '轉帳傳票' },
-];
+  typeOptions: any[] = [
+    { value: 1, label: '統制' },
+    { value: 2, label: '明細' }
+  ];
 
-SubpoenastatusOptions: any[] = [
-  { value: 1, label: '作廢' },
-  { value: 2, label: '建立' },
-  { value: 3, label: '確認' },
-  { value: 4, label: '過帳' },
-  { value: 5, label: '刪除' }
-];
+  SubpoenatypeOptions: any[] = [
+    { value: 1, label: '現金收入傳票' },
+    { value: 2, label: '現金支出傳票' },
+    { value: 3, label: '轉帳傳票' },
+  ];
 
-codeOptions: any[] = [
-  { value: 1, label: '68919301_臺南紡織股份有限公司' },
-  { value: 2, label: '73251209_統一企業股份有限公司' },
-  { value: 3, label: '96978370_統正開發股份有限公司' }
-];
+  SubpoenastatusOptions: any[] = [
+    { value: 1, label: '作廢' },
+    { value: 2, label: '建立' },
+    { value: 3, label: '確認' },
+    { value: 4, label: '過帳' },
+    { value: 5, label: '刪除' }
+  ];
+
+  codeOptions: any[] = [
+    { value: 1, label: '68919301_臺南紡織股份有限公司' },
+    { value: 2, label: '73251209_統一企業股份有限公司' },
+    { value: 3, label: '96978370_統正開發股份有限公司' }
+  ];
 
   // Table data
   data: any[] = [
@@ -120,7 +120,7 @@ codeOptions: any[] = [
     { field: 'voucherType', header: '傳票種類', visible: true },
     { field: 'detailCount', header: '明細筆數', visible: true }
   ];
-  
+
   // TypeScript Options
 
 
@@ -141,10 +141,10 @@ codeOptions: any[] = [
   ) {
     super(); // 呼叫父類建構子
   }
-  vendorOptions:any[] = [];
-  displayOptions2:any[] = [];
-  AnalysisdateCOptions:any[] = [];
-  FlippingstateOptions:any[] = [];
+  vendorOptions: any[] = [];
+  displayOptions2: any[] = [];
+  AnalysisdateCOptions: any[] = [];
+  FlippingstateOptions: any[] = [];
   ngOnInit(): void {
     this.ProgNo = '150009';
     // Initialize dropdown options

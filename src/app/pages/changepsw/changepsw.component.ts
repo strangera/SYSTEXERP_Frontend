@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
-import { NotificationService } from '../../shared/service/notification.service';
+import { NotificationService } from '../../shared/component/notification-message/notification.service';
 import { EncryptionService } from '../../shared/service/encryption.service';
 import { UserCodeService } from './../../service/basic/user-code.service';
 import { AuthService } from '../../service/system/auth.service';
@@ -72,7 +72,7 @@ export class ChangepswComponent implements OnInit {
       return;
     }
 
-    if(this.passwordForm.valid){
+    if (this.passwordForm.valid) {
       this.formButtonLoading = true;
 
       const { oldPassword, newPassword } = this.passwordForm.value;
@@ -98,5 +98,5 @@ export class ChangepswComponent implements OnInit {
       });
       this.formButtonLoading = false;
     }
-    }
+  }
 }

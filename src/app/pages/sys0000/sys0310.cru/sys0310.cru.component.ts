@@ -8,13 +8,13 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { RoleDataPermissions } from '../../../models/SYS0000/RoleDataPermissions';
-import { Store, StoreM } from '../../../models/SYS0000/StoreM';
+import { RoleDataPermissions } from '../../../shared/models/SYS/RoleDataPermissions';
+import { Store, StoreM } from '../../../shared/models/SYS/StoreM';
 import { KeyValue } from '@angular/common';
 import { TreeNode } from 'primeng/api';
 
@@ -37,21 +37,21 @@ interface RowData {
 export class SYS0310CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   sourceProducts: Store[] = [{
-      id: 1,
-      cName: 'agnès b.',
-      area: 'A1館',
-      floor: '1F',
-    },{
-      id: 2,
-      cName: 'GAP',
-      area: 'A1館',
-      floor: '1F',
-    },{
-      id: 3,
-      cName: 'HEARTS ON FIRE',
-      area: 'A1館',
-      floor: '1F',
-    },];
+    id: 1,
+    cName: 'agnès b.',
+    area: 'A1館',
+    floor: '1F',
+  }, {
+    id: 2,
+    cName: 'GAP',
+    area: 'A1館',
+    floor: '1F',
+  }, {
+    id: 3,
+    cName: 'HEARTS ON FIRE',
+    area: 'A1館',
+    floor: '1F',
+  },];
   targetProducts: Store[] = [];
 
   // ----------------------------------------------------------------

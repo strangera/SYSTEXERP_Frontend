@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { VoucherTypeService } from '../../../service/basic/voucher-type.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 
@@ -48,7 +48,7 @@ export class TLS21020Component {
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
-  
+
     { field: 'itemName', header: '項目名稱', visible: true },
     { field: 'accountingSubject', header: '會計科目', visible: true },
     { field: 'organizationCode', header: '組織代碼', visible: true },
@@ -58,7 +58,7 @@ export class TLS21020Component {
     { field: 'creditor', header: '應收廠商', visible: true },
     { field: 'paymentDays', header: '付款天數', visible: true }
   ];
-  
+
 
   // 下拉選單選項
   voucherTypeOptions: any[] = [];
@@ -69,7 +69,7 @@ export class TLS21020Component {
     private messageService: NotificationService,
     private authService: AuthService,
     private voucherTypeService: VoucherTypeService, // 使用 VoucherTypeService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
@@ -122,7 +122,7 @@ export class TLS21020Component {
 
   onClearForm() {
     this.queryForm.reset();  // 重置表單
-   
+
   }
 
   // 新增按鈕點擊事件

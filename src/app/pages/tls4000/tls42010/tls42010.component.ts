@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
@@ -56,21 +56,26 @@ export class TLS42010Component {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { id:1, SBM_Type: '一般菜單', TLT_No: 'counter1', TLT_Name: '000285', SBM_BegDate: '2024/06/06 06:06', SBM_EndDate: '2024/07/07 07:07',
+    {
+      id: 1, SBM_Type: '一般菜單', TLT_No: 'counter1', TLT_Name: '000285', SBM_BegDate: '2024/06/06 06:06', SBM_EndDate: '2024/07/07 07:07',
       children: [
-        { id:1, SBM_SeqNo: 3, PLU_MagNo: '0002850003', PLU_Name: '路易安納大魚排蛋包飯',
+        {
+          id: 1, SBM_SeqNo: 3, PLU_MagNo: '0002850003', PLU_Name: '路易安納大魚排蛋包飯',
           PLU_PrnName: '大魚排蛋包飯', PLU_FixPrc: 219, PLU_SalePrc: 219,
           SBM_BtnNo: 0
         },
-        { id:2, SBM_SeqNo: 5, PLU_MagNo: '0002850005', PLU_Name: '英式燉牛肉蛋包飯',
+        {
+          id: 2, SBM_SeqNo: 5, PLU_MagNo: '0002850005', PLU_Name: '英式燉牛肉蛋包飯',
           PLU_PrnName: '牛肉蛋包飯', PLU_FixPrc: 239, PLU_SalePrc: 239,
           SBM_BtnNo: 0
         },
       ]
     },
-    { id:2, SBM_Type: '一般菜單', TLT_No: 'counter2', TLT_Name: '000285', SBM_BegDate: '2024/06/06 06:06', SBM_EndDate: '2024/07/07 07:07',
+    {
+      id: 2, SBM_Type: '一般菜單', TLT_No: 'counter2', TLT_Name: '000285', SBM_BegDate: '2024/06/06 06:06', SBM_EndDate: '2024/07/07 07:07',
       children: [
-        { id:3, SBM_SeqNo: 8, PLU_MagNo: '0002850008', PLU_Name: '海鮮義大利麵',
+        {
+          id: 3, SBM_SeqNo: 8, PLU_MagNo: '0002850008', PLU_Name: '海鮮義大利麵',
           PLU_PrnName: '海鮮義大利麵', PLU_FixPrc: 300, PLU_SalePrc: 300,
           SBM_BtnNo: 1
         },
@@ -81,13 +86,13 @@ export class TLS42010Component {
   ];
   filteredData: any[] = [...this.data];
   //欄位為 POS1004_鍵盤設定明細檔
-  columns: any[]= [
+  columns: any[] = [
     { field: 'SBM_Type', header: '菜單類別', visible: true },
     { field: 'TLT_No', header: '專櫃編號', visible: true },
     { field: 'TLT_Name', header: '專櫃名稱', visible: true },
     // 其他欄位
   ];
-  subColumns: any[]= [
+  subColumns: any[] = [
     { field: 'SBM_SeqNo', header: '菜單序號', visible: true },
 
     { field: 'PLU_MagNo', header: '商品貨號', visible: true },

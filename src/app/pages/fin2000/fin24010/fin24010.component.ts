@@ -11,7 +11,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -22,7 +22,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './fin24010.component.html',
   styleUrl: './fin24010.component.scss'
 })
-export class FIN24010Component extends BasicQpageComponent implements OnInit{
+export class FIN24010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     shouldPayID: [, [Validators.maxLength(14)]], // 應付ID
@@ -76,7 +76,7 @@ export class FIN24010Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '應付ID', visible: true },
     { field: 'col2', header: '帳款年月', visible: true },
     { field: 'col3', header: '應付金額', visible: true },
@@ -95,7 +95,7 @@ export class FIN24010Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  organizationCodeOptions:any[]=[];
+  organizationCodeOptions: any[] = [];
   paymentMethodOptions: any[] = [];
   bankAccountOptions: any[] = [];
   whetherOptions: any[] = [];

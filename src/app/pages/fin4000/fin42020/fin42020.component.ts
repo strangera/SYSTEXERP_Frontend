@@ -6,7 +6,7 @@ import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 import { FlippingstateService } from './../../../service/basic/flippingstate.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -25,16 +25,16 @@ export class FIN42020Component extends BasicQpageComponent implements OnInit {
   uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
   queryForm = this.formBuilder.group({
     year: [],
-version: [],
-organizationNumber: [,Validators.required],
-month: [],
-amountStart: [], // 金額 起
-amountEnd: [], // 金額 迄
-remark: [],
-status: [],
-department: [],
-unit: [],
-type: [],
+    version: [],
+    organizationNumber: [, Validators.required],
+    month: [],
+    amountStart: [], // 金額 起
+    amountEnd: [], // 金額 迄
+    remark: [],
+    status: [],
+    department: [],
+    unit: [],
+    type: [],
   });
 
   // Dropdown options
@@ -47,15 +47,15 @@ type: [],
   vendorOptions: any[] = [];
   FlippingstateOptions: any[] = [];
   organizationNumberOptions: any[] = [];
-  statusOptions: any[] = [{value:1, label:'是'},
-    {value:2, label:'否'}];
-    unitOptions: any[] = [{value:1, label:'元'},
-      {value:2, label:'千'},
-      {value:3, label:'萬'}];
-      typeOptions: any[] = [{value:1, label:'統制'},
-        {value:2, label:'明細'},];
-        
-    
+  statusOptions: any[] = [{ value: 1, label: '是' },
+  { value: 2, label: '否' }];
+  unitOptions: any[] = [{ value: 1, label: '元' },
+  { value: 2, label: '千' },
+  { value: 3, label: '萬' }];
+  typeOptions: any[] = [{ value: 1, label: '統制' },
+  { value: 2, label: '明細' },];
+
+
 
   // Table data
   data: any[] = [
@@ -81,8 +81,8 @@ type: [],
     { field: 'totalBudgetRatio', header: '累計 - 預算比', visible: true },
     { field: 'totalBudgetGrowthRate', header: '累計 - 增減率', visible: true }
   ];
-  
-  
+
+
 
   constructor(
     private router: Router,
@@ -90,10 +90,10 @@ type: [],
     private notificationService: NotificationService,
     private authService: AuthService,
     private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService:AnalysisdateCService,
+    private AnalysisdateCService: AnalysisdateCService,
     private vendorService: VendorService,
-    private flippingstateService:FlippingstateService,
-    private organizationNumberService:OrganizationNumberService
+    private flippingstateService: FlippingstateService,
+    private organizationNumberService: OrganizationNumberService
   ) {
     super(); // 呼叫父類建構子
   }
@@ -118,7 +118,7 @@ type: [],
     this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
       this.departmentOptions = data;
     });
-    
+
 
   }
 

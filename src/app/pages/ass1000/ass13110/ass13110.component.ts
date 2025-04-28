@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { UserCodeService } from '../../../service/basic/user-code.service';
@@ -17,7 +17,7 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
   templateUrl: './ass13110.component.html',
   styleUrl: './ass13110.component.scss'
 })
-export class ASS13110Component extends BasicQpageComponent implements OnInit{
+export class ASS13110Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     inventory_NumberFrom: [, [Validators.max(9999999999), this.validationService.numberValidator]], // 清點單號
@@ -43,7 +43,7 @@ export class ASS13110Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '財產編號', visible: true },
     { field: 'col2', header: '財產名稱', visible: true },
     { field: 'col3', header: '清點單號', visible: true },
@@ -62,7 +62,7 @@ export class ASS13110Component extends BasicQpageComponent implements OnInit{
     // { field: 'col14', header: '入帳日期', visible: true },
     // { field: 'col15', header: '條件篩選', visible: true },
     // { field: 'col16', header: '顯示筆數', visible: true },
-    
+
     // { field: 'col17', header: '報廢日期前之帳面價值', visible: true },
     // { field: 'col18', header: '報廢損失', visible: true },
 

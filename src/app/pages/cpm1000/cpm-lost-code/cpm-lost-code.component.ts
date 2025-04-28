@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
@@ -14,7 +14,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm-lost-code.component.html',
   styleUrl: './cpm-lost-code.component.scss'
 })
-export class CpmLostCodeComponent extends BasicQpageComponent implements OnInit{
+export class CpmLostCodeComponent extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     objectCode: ['', [Validators.maxLength(60)]], // 物品類別代碼
@@ -30,11 +30,11 @@ export class CpmLostCodeComponent extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { isdelete: true, 'objectCode': 'code1', 'objectName': '商品1'},
-    { isdelete: true, 'objectCode': 'code2', 'objectName': '商品2'},
+    { isdelete: true, 'objectCode': 'code1', 'objectName': '商品1' },
+    { isdelete: true, 'objectCode': 'code2', 'objectName': '商品2' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'objectCode', header: '商品類別代碼', visible: true },
     { field: 'objectName', header: '商品類別名稱 ', visible: true },
     // 其他欄位

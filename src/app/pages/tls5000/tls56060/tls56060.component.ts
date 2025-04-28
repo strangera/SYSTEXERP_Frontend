@@ -9,9 +9,9 @@ import { WarehouseService } from '../../../service/basic/warehouse.service';
 import { ManagementIDService } from '../../../service/basic/management-id.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';  // Updated this service
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 
@@ -76,7 +76,7 @@ export class TLS56060Component {
     private managementIDService: ManagementIDService,
     private organizationNumberService: OrganizationNumberService,  // Updated this service
     private authService: AuthService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options

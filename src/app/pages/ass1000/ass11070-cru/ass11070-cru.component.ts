@@ -2,7 +2,7 @@ import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -18,7 +18,7 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
   templateUrl: './ass11070-cru.component.html',
   styleUrl: './ass11070-cru.component.scss'
 })
-export class ASS11070CRUComponent extends BasicCrupageComponent implements OnInit{
+export class ASS11070CRUComponent extends BasicCrupageComponent implements OnInit {
   receptionPersonOptions: any[] = [];
   vendorUIDOptions: any[] = [];
   bussinessOptions: any[] = [
@@ -28,12 +28,12 @@ export class ASS11070CRUComponent extends BasicCrupageComponent implements OnIni
     { value: 4, label: '零售連鎖' },
     { value: 5, label: '零售一般' },
   ];
-  paymentMethodOptions:any[]=[];
+  paymentMethodOptions: any[] = [];
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    buildDate: [,[Validators.required]], // 建檔日期
-    receptionPerson: [[] as number[],[Validators.required]], // 接洽人員
-    vendorUID: [[] as number[],[Validators.required]], // 廠商統一編號
+    buildDate: [, [Validators.required]], // 建檔日期
+    receptionPerson: [[] as number[], [Validators.required]], // 接洽人員
+    vendorUID: [[] as number[], [Validators.required]], // 廠商統一編號
     bussinessModel: [1, []], // 營運模式
     vendorCName: ['', [Validators.required, Validators.maxLength(60)]], // 廠商名稱(中文)
     vendorEName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
@@ -52,7 +52,7 @@ export class ASS11070CRUComponent extends BasicCrupageComponent implements OnIni
     startserialticket: [, [this.validationService.numberValidator]], // 票期
     endserialticket: [, [this.validationService.numberValidator]], // 票期
     //
-    remark: [, ], // 備註
+    remark: [,], // 備註
     // ----------------------------------------------------------------
     items: this.formBuilder.array([
       this.createItem()
@@ -70,8 +70,8 @@ export class ASS11070CRUComponent extends BasicCrupageComponent implements OnIni
     private userCodeService: UserCodeService,
     private vendorService: VendorService,
     private paymentMethodService: PaymentMethodService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -102,14 +102,14 @@ export class ASS11070CRUComponent extends BasicCrupageComponent implements OnIni
       // 創建
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
-        this.accordionTabCss= 'create-accordionTab';
+        this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
         this.showConfirm = this.canAdd();
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
-        this.accordionTabCss= 'edit-accordionTab';
+        this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
         this.showConfirm = this.canEdit();
         this.Edit(state.rowdata);
@@ -156,11 +156,11 @@ export class ASS11070CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

@@ -6,7 +6,7 @@ import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 import { FlippingstateService } from './../../../service/basic/flippingstate.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -54,14 +54,14 @@ export class FIN52070Component extends BasicQpageComponent implements OnInit {
     threecodecategorycode: [],
     mediumcategorycode: [],
   });
-  
+
 
   // Dropdown options
 
   departmentOptions: any[] = [
- 
-];
-mediumcategorycodeOptions: any[] = [{ value: 11, label: '流動資產' },
+
+  ];
+  mediumcategorycodeOptions: any[] = [{ value: 11, label: '流動資產' },
   { value: 12, label: '其他流動資產' },
   { value: 14, label: '基金及投資' },
   { value: 15, label: '固定資產淨額' },
@@ -71,53 +71,53 @@ mediumcategorycodeOptions: any[] = [{ value: 11, label: '流動資產' },
   { value: 21, label: '流動負債' },
   { value: 22, label: '其他流動負債' },
   { value: 23, label: '其他流動負債' }];
-accountOptions: any[] = [
-  { value: '1101', label: '1101_累積盈虧科目1' },
-  { value: '1102', label: '1102_累積盈虧科目2' },
-  { value: '1103', label: '1103_累積盈虧科目3' }
-];
+  accountOptions: any[] = [
+    { value: '1101', label: '1101_累積盈虧科目1' },
+    { value: '1102', label: '1102_累積盈虧科目2' },
+    { value: '1103', label: '1103_累積盈虧科目3' }
+  ];
 
-accountingaccountOptions: any[] = [
-  { value: 1, label: '是' },
-  { value: 2, label: '否' }
-];
+  accountingaccountOptions: any[] = [
+    { value: 1, label: '是' },
+    { value: 2, label: '否' }
+  ];
 
-statusOptions: any[] = [
-  { value: 1, label: '未拋轉' },
-  { value: 2, label: '已拋轉' },
-  { value: 3, label: '已退回' }
-];
+  statusOptions: any[] = [
+    { value: 1, label: '未拋轉' },
+    { value: 2, label: '已拋轉' },
+    { value: 3, label: '已退回' }
+  ];
 
-unitOptions: any[] = [
-  { value: 1, label: '元' },
-  { value: 2, label: '千' },
-  { value: 3, label: '萬' }
-];
+  unitOptions: any[] = [
+    { value: 1, label: '元' },
+    { value: 2, label: '千' },
+    { value: 3, label: '萬' }
+  ];
 
-typeOptions: any[] = [
-  { value: 1, label: '統制' },
-  { value: 2, label: '明細' }
-];
+  typeOptions: any[] = [
+    { value: 1, label: '統制' },
+    { value: 2, label: '明細' }
+  ];
 
-SubpoenatypeOptions: any[] = [
-  { value: 1, label: '現金收入傳票' },
-  { value: 2, label: '現金支出傳票' },
-  { value: 3, label: '轉帳傳票' },
-];
+  SubpoenatypeOptions: any[] = [
+    { value: 1, label: '現金收入傳票' },
+    { value: 2, label: '現金支出傳票' },
+    { value: 3, label: '轉帳傳票' },
+  ];
 
-SubpoenastatusOptions: any[] = [
-  { value: 1, label: '作廢' },
-  { value: 2, label: '建立' },
-  { value: 3, label: '確認' },
-  { value: 4, label: '過帳' },
-  { value: 5, label: '刪除' }
-];
+  SubpoenastatusOptions: any[] = [
+    { value: 1, label: '作廢' },
+    { value: 2, label: '建立' },
+    { value: 3, label: '確認' },
+    { value: 4, label: '過帳' },
+    { value: 5, label: '刪除' }
+  ];
 
-codeOptions: any[] = [
-  { value: 1, label: '68919301_臺南紡織股份有限公司' },
-  { value: 2, label: '73251209_統一企業股份有限公司' },
-  { value: 3, label: '96978370_統正開發股份有限公司' }
-];
+  codeOptions: any[] = [
+    { value: 1, label: '68919301_臺南紡織股份有限公司' },
+    { value: 2, label: '73251209_統一企業股份有限公司' },
+    { value: 3, label: '96978370_統正開發股份有限公司' }
+  ];
 
   // Table data
   data: any[] = [
@@ -131,7 +131,7 @@ codeOptions: any[] = [
     { field: 'subCategoryEnglishName', header: '三碼英文名稱', visible: true },
     { field: 'midCategoryCode', header: '中類代碼', visible: true }
   ];
-  
+
   // TypeScript Options
 
 
@@ -152,10 +152,10 @@ codeOptions: any[] = [
   ) {
     super(); // 呼叫父類建構子
   }
-  vendorOptions:any[] = [];
-  displayOptions2:any[] = [];
-  AnalysisdateCOptions:any[] = [];
-  FlippingstateOptions:any[] = [];
+  vendorOptions: any[] = [];
+  displayOptions2: any[] = [];
+  AnalysisdateCOptions: any[] = [];
+  FlippingstateOptions: any[] = [];
   ngOnInit(): void {
     this.ProgNo = '150013';
     // Initialize dropdown options

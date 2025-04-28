@@ -2,13 +2,12 @@ import { Component, OnInit, } from '@angular/core';
 import { AuthService } from './service/system/auth.service';
 import { InactivityService } from './shared/service/inactivity.service';
 import { PrimeNGConfig } from 'primeng/api';
-import { userLogin } from './models/system/userLogin';
+import { userLogin } from './shared/models/system/userLogin';
 import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
   // title = 'TSRDERP_Frontend';

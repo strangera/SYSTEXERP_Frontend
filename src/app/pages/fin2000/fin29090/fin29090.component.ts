@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { WhetherService } from '../../../service/basic/whether.service';
@@ -16,7 +16,7 @@ import { WhetherService } from '../../../service/basic/whether.service';
   templateUrl: './fin29090.component.html',
   styleUrl: './fin29090.component.scss'
 })
-export class FIN29090Component extends BasicQpageComponent implements OnInit{
+export class FIN29090Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     onedatemm: [], // 申報年月
@@ -40,7 +40,7 @@ export class FIN29090Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '預計付款日', visible: true },
     { field: 'col2', header: '應付款金額', visible: true },
     { field: 'col3', header: '代扣款項', visible: true },
@@ -49,7 +49,7 @@ export class FIN29090Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  printPageOptions:any[]=[];
+  printPageOptions: any[] = [];
 
   constructor(
     private router: Router,

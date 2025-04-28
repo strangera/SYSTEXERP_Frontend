@@ -2,7 +2,7 @@ import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -17,33 +17,33 @@ import { OrganizationNumberService } from '../../../service/basic/organization-n
   templateUrl: './ass12010-cru.component.html',
   styleUrl: './ass12010-cru.component.scss'
 })
-export class ASS12010CRUComponent extends BasicCrupageComponent implements OnInit{
+export class ASS12010CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // ----------------------------------------------------------------
-    applicantCode: [,[Validators.required]], // 申請人代號
-    organizationNumber: [,[Validators.required]], // 部門代號
-    requestDate: [,[Validators.required]], // 需求日期
+    applicantCode: [, [Validators.required]], // 申請人代號
+    organizationNumber: [, [Validators.required]], // 部門代號
+    requestDate: [, [Validators.required]], // 需求日期
 
-    demandLimit: [,[this.validationService.numberValidator, Validators.maxLength(2)]], // 需求期限 *
-    storage: [,[Validators.required]], // 倉別
-    remark: [, ], // 說明
-    
+    demandLimit: [, [this.validationService.numberValidator, Validators.maxLength(2)]], // 需求期限 *
+    storage: [, [Validators.required]], // 倉別
+    remark: [,], // 說明
+
     items: this.formBuilder.array([
       this.createItem()
     ]),
   });
   // ----------------------------------------------------------------
-  storageOptions:any[] = [
+  storageOptions: any[] = [
     { value: 1, label: '總公司' },
     { value: 2, label: '測試' },
   ];
-  requestStatusOptions:any[] = [
+  requestStatusOptions: any[] = [
     { value: 1, label: '已申請' },
     { value: 2, label: '已審核' },
   ];
-  itemCodeOptions:any[] = [];
-  applicantCodeOptions:any[] = [];
+  itemCodeOptions: any[] = [];
+  applicantCodeOptions: any[] = [];
   organizationNumberOptions: any[] = [];
 
   //
@@ -58,8 +58,8 @@ export class ASS12010CRUComponent extends BasicCrupageComponent implements OnIni
     private itemCodeService: ItemCodeService,
     private userCodeService: UserCodeService,
     private organizationNumberService: OrganizationNumberService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -90,14 +90,14 @@ export class ASS12010CRUComponent extends BasicCrupageComponent implements OnIni
       // 創建
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
-        this.accordionTabCss= 'create-accordionTab';
+        this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
         this.showConfirm = this.canAdd();
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
-        this.accordionTabCss= 'edit-accordionTab';
+        this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
         this.showConfirm = this.canEdit();
         this.Edit(state.rowdata);
@@ -126,10 +126,10 @@ export class ASS12010CRUComponent extends BasicCrupageComponent implements OnIni
     return this.formBuilder.group({
       itemCode: [], // 品項代碼
       keepingPerson: [], // 保管人
-      keepingUnit: ['',[Validators.maxLength(6)]], // 保管單位
-      unit: ['',[Validators.maxLength(8)]], // 單位
-      amount: [,[Validators.maxLength(8)]], // 數量
-      singleRemark: [, ], // 單項說明
+      keepingUnit: ['', [Validators.maxLength(6)]], // 保管單位
+      unit: ['', [Validators.maxLength(8)]], // 單位
+      amount: [, [Validators.maxLength(8)]], // 數量
+      singleRemark: [,], // 單項說明
     });
   }
   onRemoveItem(index: number) {
@@ -149,11 +149,11 @@ export class ASS12010CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

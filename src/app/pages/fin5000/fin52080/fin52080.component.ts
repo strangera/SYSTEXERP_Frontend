@@ -6,7 +6,7 @@ import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 import { FlippingstateService } from './../../../service/basic/flippingstate.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -63,7 +63,7 @@ export class FIN52080Component extends BasicQpageComponent implements OnInit {
     input: [],
     Residualvalueyears: [],
     Depreciation: [],
-   
+
   });
 
   // Dropdown options
@@ -161,7 +161,7 @@ export class FIN52080Component extends BasicQpageComponent implements OnInit {
     { field: 'residualValueLimit', header: '殘值年限', visible: true },
     { field: 'isExportable', header: '是否可輸出', visible: true }
   ];
-  
+
   // TypeScript Options
 
   constructor(
@@ -178,7 +178,7 @@ export class FIN52080Component extends BasicQpageComponent implements OnInit {
   ) {
     super(); // 呼叫父類建構子
   }
-  
+
   vendorOptions: any[] = [];
   displayOptions2: any[] = [];
   AnalysisdateCOptions: any[] = [];

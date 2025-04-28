@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { PurchaseTypeService } from '../../../service/basic/purchase-type.service';
@@ -19,7 +19,7 @@ import { OrganizationNumberService } from '../../../service/basic/organization-n
   templateUrl: './ass15010.component.html',
   styleUrl: './ass15010.component.scss'
 })
-export class ASS15010Component extends BasicQpageComponent implements OnInit{
+export class ASS15010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     propertyType: [], // 財產類型
@@ -47,7 +47,7 @@ export class ASS15010Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '傳票編號', visible: true },
     { field: 'col2', header: '傳票種類', visible: true },
     { field: 'col3', header: '發票維護單號', visible: true },
@@ -66,7 +66,7 @@ export class ASS15010Component extends BasicQpageComponent implements OnInit{
     // { field: 'col14', header: '入帳日期', visible: true },
     // { field: 'col15', header: '條件篩選', visible: true },
     // { field: 'col16', header: '顯示筆數', visible: true },
-    
+
     // { field: 'col17', header: '報廢日期前之帳面價值', visible: true },
     // { field: 'col18', header: '報廢損失', visible: true },
 
@@ -84,7 +84,7 @@ export class ASS15010Component extends BasicQpageComponent implements OnInit{
   // ----------------------------------------------------------------
 
   propertyTypeOptions: any[] = [];
-  bigCategoryCodeOptions: any[]=[
+  bigCategoryCodeOptions: any[] = [
     { value: 1, label: 'A/裝潢工程' },
     { value: 2, label: 'B/其他工程' },
     { value: 3, label: 'C/電腦及電子零件產品' },
@@ -94,7 +94,7 @@ export class ASS15010Component extends BasicQpageComponent implements OnInit{
     { value: 7, label: 'G/辦公及營運庶務' },
     { value: 8, label: 'K/印刷品(非廣告行銷)' },
   ];
-  midCategoryCodeOptions: any[]=[
+  midCategoryCodeOptions: any[] = [
     { value: 23, label: '室內裝潢工程' },
     { value: 24, label: '室內裝潢備品' },
     { value: 21, label: '弱電系統' },
@@ -104,10 +104,10 @@ export class ASS15010Component extends BasicQpageComponent implements OnInit{
     { value: 25, label: '機電消防工程' },
     { value: 22, label: '電子產品及零件' },
   ];
-  itemCodeOptions:any[] = [];
+  itemCodeOptions: any[] = [];
   userCodeOptions: any[] = [];
   organizationOptions: any[] = [];
-  
+
   //
   constructor(
     private router: Router,

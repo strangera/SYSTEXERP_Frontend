@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
 @Component({
@@ -44,11 +44,11 @@ export class SYSB100Component extends BasicQpageComponent implements OnInit {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { isdelete:true,unifiedNumber: '53472035', companyCName: '南紡流通事業股份有限公司', taxNumber: '703902223', companyEName: 'TSRD Co.,Ltd.',  principal: '侯先生', contactPerson: '張先生', contactPersonPhone: '06-00000000'},
+    { isdelete: true, unifiedNumber: '53472035', companyCName: '南紡流通事業股份有限公司', taxNumber: '703902223', companyEName: 'TSRD Co.,Ltd.', principal: '侯先生', contactPerson: '張先生', contactPersonPhone: '06-00000000' },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'unifiedNumber', header: '公司代號(統一編號)', visible: true },
     { field: 'companyCName', header: '公司名稱(中文)', visible: true },
     { field: 'taxNumber', header: '稅籍編號', visible: true },
@@ -89,7 +89,7 @@ export class SYSB100Component extends BasicQpageComponent implements OnInit {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.authService.user.subscribe(x => this.user = x);
     // ----------------------------------------------------------------
-    this.reportHead =  {
+    this.reportHead = {
       reporttitle: this.funInfo.prog_name,
       exportuser: this.user?.user_Name,
       reportname: this.funInfo.prog_name,

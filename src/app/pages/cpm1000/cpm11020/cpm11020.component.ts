@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm11020.component.html',
   styleUrl: './cpm11020.component.scss'
 })
-export class CPM11020Component extends BasicQpageComponent implements OnInit{
+export class CPM11020Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     equipmentCode: [], // 設備代號
@@ -31,13 +31,13 @@ export class CPM11020Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { isdelete: false, 'equipmentCode': '01', 'equipmentName': '輕便娃娃車', 'equipmentNumber': 60},
-    { isdelete: false, 'equipmentCode': '02', 'equipmentName': '愛心輪椅', 'equipmentNumber': 3},
-    { isdelete: false, 'equipmentCode': 'A0001', 'equipmentName': '測試', 'equipmentNumber': 1},
-    { isdelete: true, 'equipmentCode': '', 'equipmentName': '', 'equipmentNumber': 0},
+    { isdelete: false, 'equipmentCode': '01', 'equipmentName': '輕便娃娃車', 'equipmentNumber': 60 },
+    { isdelete: false, 'equipmentCode': '02', 'equipmentName': '愛心輪椅', 'equipmentNumber': 3 },
+    { isdelete: false, 'equipmentCode': 'A0001', 'equipmentName': '測試', 'equipmentNumber': 1 },
+    { isdelete: true, 'equipmentCode': '', 'equipmentName': '', 'equipmentNumber': 0 },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'equipmentCode', header: '設備代號', visible: true },
     { field: 'equipmentName', header: '設備名稱', visible: true },
     { field: 'equipmentNumber', header: '設備數量', visible: true },

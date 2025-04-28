@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { FloorService } from '../../../service/basic/floor.service';
@@ -18,7 +18,7 @@ import { LocationService } from '../../../service/basic/location.service';
   templateUrl: './cpm-lost-place.component.html',
   styleUrl: './cpm-lost-place.component.scss'
 })
-export class CpmLostPlaceComponent extends BasicQpageComponent implements OnInit{
+export class CpmLostPlaceComponent extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     objectCode: ['', [Validators.maxLength(60)]], // 遺拾商品地點代碼
@@ -34,11 +34,11 @@ export class CpmLostPlaceComponent extends BasicQpageComponent implements OnInit
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { isdelete: true, 'objectCode': 'code1', 'objectName': '地點1'},
-    { isdelete: true, 'objectCode': 'code2', 'objectName': '地點2'},
+    { isdelete: true, 'objectCode': 'code1', 'objectName': '地點1' },
+    { isdelete: true, 'objectCode': 'code2', 'objectName': '地點2' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'objectCode', header: '遺拾商品地點代碼', visible: true },
     { field: 'objectName', header: '遺拾商品地點名稱  ', visible: true },
     // 其他欄位

@@ -8,9 +8,9 @@ import { PriceChangeStatusService } from '../../../service/basic/price-change-st
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { ManagementIDService } from '../../../service/basic/management-id.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 
@@ -68,7 +68,7 @@ export class TLS52050Component {
     { field: 'approver', header: '審核人', visible: true },
     { field: 'approvalDate', header: '審核日期', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -80,7 +80,7 @@ export class TLS52050Component {
     private userCodeService: UserCodeService,
     private managementIdService: ManagementIDService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options

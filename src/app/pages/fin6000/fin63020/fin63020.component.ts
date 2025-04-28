@@ -5,7 +5,7 @@ import { NavigationExtras, Router } from '@angular/router';
 import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -22,11 +22,11 @@ export class FIN63020Component extends BasicQpageComponent implements OnInit {
     vendorCode: [], // 廠客代號
     bankAccountCode: [], // 公司銀行科目代號
     issueDateStart: [], // 開票日
-    issueDateEnd: [], 
+    issueDateEnd: [],
     dueDateStart: [], // 到期日
-    dueDateEnd: [], 
+    dueDateEnd: [],
     cashDateStart: [], // 兌現日
-    cashDateEnd: [], 
+    cashDateEnd: [],
     amountStart: [], // 票面金額
     amountEnd: [],
     billTitle: [], // 票據抬頭
@@ -38,7 +38,7 @@ export class FIN63020Component extends BasicQpageComponent implements OnInit {
     status: [], // 狀態
     collectionStatus: [], // 領取狀態
     collectionDateStart: [], // 領取日期
-    collectionDateEnd: [], 
+    collectionDateEnd: [],
     paymentBillNumber: [], // 應付票據開票單號
     paymentAccount: [], // 應付票據會計科目
     voucherNumber: [], // 傳票號碼
@@ -99,21 +99,21 @@ export class FIN63020Component extends BasicQpageComponent implements OnInit {
 
   columns: any[] = [
     { field: 'billNumber', header: '票據號碼', visible: true },
-  { field: 'customerCode', header: '顧客代號', visible: true },
-  { field: 'companyBankAccountingSubjectCode', header: '公司銀行科目代號', visible: true },
-  { field: 'issueDate', header: '開票日', visible: true },
-  { field: 'dueDate', header: '到期日', visible: true },
-  { field: 'cashDate', header: '兌現日', visible: true },
-  { field: 'billAmount', header: '票面金額', visible: true },
-  { field: 'billEndorsement', header: '票據抬頭', visible: true },
-  { field: 'notes', header: '備註', visible: true },
-  { field: 'organizationCode', header: '組織代號', visible: true },
-  { field: 'status', header: '狀態', visible: true },
-  { field: 'billStatus', header: '票據狀態', visible: true },
-  { field: 'collectionStatus', header: '領取狀態', visible: true },
-  { field: 'collectionDate', header: '領取日期', visible: true },
-  { field: 'voucherNumber', header: '傳票號碼', visible: true },
-  { field: 'dueVoucherNumber', header: '到期傳票號碼', visible: true },
+    { field: 'customerCode', header: '顧客代號', visible: true },
+    { field: 'companyBankAccountingSubjectCode', header: '公司銀行科目代號', visible: true },
+    { field: 'issueDate', header: '開票日', visible: true },
+    { field: 'dueDate', header: '到期日', visible: true },
+    { field: 'cashDate', header: '兌現日', visible: true },
+    { field: 'billAmount', header: '票面金額', visible: true },
+    { field: 'billEndorsement', header: '票據抬頭', visible: true },
+    { field: 'notes', header: '備註', visible: true },
+    { field: 'organizationCode', header: '組織代號', visible: true },
+    { field: 'status', header: '狀態', visible: true },
+    { field: 'billStatus', header: '票據狀態', visible: true },
+    { field: 'collectionStatus', header: '領取狀態', visible: true },
+    { field: 'collectionDate', header: '領取日期', visible: true },
+    { field: 'voucherNumber', header: '傳票號碼', visible: true },
+    { field: 'dueVoucherNumber', header: '到期傳票號碼', visible: true },
   ];
 
   constructor(

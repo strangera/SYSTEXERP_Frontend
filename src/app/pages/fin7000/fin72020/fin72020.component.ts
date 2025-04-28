@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -46,16 +46,16 @@ export class FIN72020Component extends BasicQpageComponent implements OnInit {
   });
 
   // Dropdown options
-  PettyCashOrderNumber: any[] = [    { value: 201407170001, label: 'C201407170001' },
-    { value: 201407170002, label: 'TC201407170002' },
-    { value: 201407170003, label: 'TC201407170003' },
-    { value: 201407170004, label: 'TC201407170004' },
-    { value: 201407210001, label: 'TC201407210001' },
-    { value: 201407210002, label: 'TC201407210002' },
-    { value: 201407280001, label: 'TC201407280001' },
-    { value: 201407280002, label: 'TC201407280002' },
-    { value: 201407280003, label: 'TC201407280003' },
-    { value: 201407290002, label: 'TC201407290002' },];
+  PettyCashOrderNumber: any[] = [{ value: 201407170001, label: 'C201407170001' },
+  { value: 201407170002, label: 'TC201407170002' },
+  { value: 201407170003, label: 'TC201407170003' },
+  { value: 201407170004, label: 'TC201407170004' },
+  { value: 201407210001, label: 'TC201407210001' },
+  { value: 201407210002, label: 'TC201407210002' },
+  { value: 201407280001, label: 'TC201407280001' },
+  { value: 201407280002, label: 'TC201407280002' },
+  { value: 201407280003, label: 'TC201407280003' },
+  { value: 201407290002, label: 'TC201407290002' },];
   usercode: any[] = [];
   Feespayable: any[] = [
     { value: 210101, label: '銀行短期借款' },
@@ -96,41 +96,41 @@ export class FIN72020Component extends BasicQpageComponent implements OnInit {
     { value: 2, label: 'B20150208002' },
     { value: 3, label: 'B20150410001' },
   ];
-// Table data
-data: any[] = [
-  { pettyCashNumber: 'C201407170001', applicant: '2014000044-王小明', applicantOrg: '104200-營運部', custodian: '2014000044-王小明', custodianOrg: '101300-營企Team(停用)', status: '撥補', isdelete: false, expenseRequestNumber: '00001' },
-  { pettyCashNumber: 'C201407170002', applicant: '2014000055-李佳佳', applicantOrg: '104200-營運部', custodian: '2014000055-李佳佳', custodianOrg: '101100-行政Team(停用)', status: '撥補', isdelete: false, expenseRequestNumber: '00002' },
-  { pettyCashNumber: 'C201407170003', applicant: '2014000011-張志明', applicantOrg: '104200-營運部', custodian: '2014000011-張志明', custodianOrg: '105200-行政Team', status: '撥補', isdelete: false, expenseRequestNumber: '00003' },
-  { pettyCashNumber: 'C201407170004', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false, expenseRequestNumber: '00004' },
-  { pettyCashNumber: 'C201407210001', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false, expenseRequestNumber: '00005' },
-  { pettyCashNumber: 'C201407210002', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false, expenseRequestNumber: '00006' },
-  { pettyCashNumber: 'C201407280001', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false, expenseRequestNumber: '00007' },
-  { pettyCashNumber: 'C201407280003', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false, expenseRequestNumber: '00008' },
-  { pettyCashNumber: 'C201407290002', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false, expenseRequestNumber: '00009' },
-  { pettyCashNumber: 'C201407290003', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false, expenseRequestNumber: '00010' },
-  { pettyCashNumber: 'C201408140001', applicant: '2014000011-張志明', applicantOrg: '105200-行政Team', custodian: '2014000011-張志明', custodianOrg: '105200-行政Team', status: '撥補', isdelete: false, expenseRequestNumber: '00011' },
-  { pettyCashNumber: 'C201408140002', applicant: '2014000055-李佳佳', applicantOrg: '104200-營運部', custodian: '2014000055-李佳佳', custodianOrg: '101100-行政Team(停用)', status: '撥補', isdelete: false, expenseRequestNumber: '00012' },
-  { pettyCashNumber: 'C201410150002', applicant: '2014000017-蔡依林', applicantOrg: '104200-營運部', custodian: '2014000017-蔡依林', custodianOrg: '105200-行政Team', status: '撥補', isdelete: false, expenseRequestNumber: '00013' }
-];
-filteredData: any[] = [...this.data];
-columns: any[] = [
-  { field: 'expenseRequestNumber', header: '支出請款單號', visible: true },
-  { field: 'applicant', header: '零用金申請人', visible: true },
-  { field: 'applicantOrg', header: '申請人組織', visible: true },
-  { field: 'custodian', header: '零用金保管人', visible: true },
-  { field: 'custodianOrg', header: '保管人組織', visible: true },
-  { field: 'pettyCashNumber', header: '零用金單號', visible: true },
-  { field: 'status', header: '狀態', visible: true },
- 
-];
-  
-  
+  // Table data
+  data: any[] = [
+    { pettyCashNumber: 'C201407170001', applicant: '2014000044-王小明', applicantOrg: '104200-營運部', custodian: '2014000044-王小明', custodianOrg: '101300-營企Team(停用)', status: '撥補', isdelete: false, expenseRequestNumber: '00001' },
+    { pettyCashNumber: 'C201407170002', applicant: '2014000055-李佳佳', applicantOrg: '104200-營運部', custodian: '2014000055-李佳佳', custodianOrg: '101100-行政Team(停用)', status: '撥補', isdelete: false, expenseRequestNumber: '00002' },
+    { pettyCashNumber: 'C201407170003', applicant: '2014000011-張志明', applicantOrg: '104200-營運部', custodian: '2014000011-張志明', custodianOrg: '105200-行政Team', status: '撥補', isdelete: false, expenseRequestNumber: '00003' },
+    { pettyCashNumber: 'C201407170004', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false, expenseRequestNumber: '00004' },
+    { pettyCashNumber: 'C201407210001', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false, expenseRequestNumber: '00005' },
+    { pettyCashNumber: 'C201407210002', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false, expenseRequestNumber: '00006' },
+    { pettyCashNumber: 'C201407280001', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false, expenseRequestNumber: '00007' },
+    { pettyCashNumber: 'C201407280003', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false, expenseRequestNumber: '00008' },
+    { pettyCashNumber: 'C201407290002', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false, expenseRequestNumber: '00009' },
+    { pettyCashNumber: 'C201407290003', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false, expenseRequestNumber: '00010' },
+    { pettyCashNumber: 'C201408140001', applicant: '2014000011-張志明', applicantOrg: '105200-行政Team', custodian: '2014000011-張志明', custodianOrg: '105200-行政Team', status: '撥補', isdelete: false, expenseRequestNumber: '00011' },
+    { pettyCashNumber: 'C201408140002', applicant: '2014000055-李佳佳', applicantOrg: '104200-營運部', custodian: '2014000055-李佳佳', custodianOrg: '101100-行政Team(停用)', status: '撥補', isdelete: false, expenseRequestNumber: '00012' },
+    { pettyCashNumber: 'C201410150002', applicant: '2014000017-蔡依林', applicantOrg: '104200-營運部', custodian: '2014000017-蔡依林', custodianOrg: '105200-行政Team', status: '撥補', isdelete: false, expenseRequestNumber: '00013' }
+  ];
+  filteredData: any[] = [...this.data];
+  columns: any[] = [
+    { field: 'expenseRequestNumber', header: '支出請款單號', visible: true },
+    { field: 'applicant', header: '零用金申請人', visible: true },
+    { field: 'applicantOrg', header: '申請人組織', visible: true },
+    { field: 'custodian', header: '零用金保管人', visible: true },
+    { field: 'custodianOrg', header: '保管人組織', visible: true },
+    { field: 'pettyCashNumber', header: '零用金單號', visible: true },
+    { field: 'status', header: '狀態', visible: true },
+
+  ];
+
+
 
   vendorOptions: any[] = [];
   counterCodeOptions: any[] = [];
   violationCategoryOptions: any[] = [];
   floorOptions: any[] = [];
-  
+
   deductionItemOptions: any[] = [];
   organizationNumberOptions: any[] = [];
 
@@ -147,7 +147,7 @@ columns: any[] = [
     private violationCategoryService: ViolationCategoryService,  // 違規類別編號 service
     private floorService: FloorService,  // 樓層 service
     private deductionItemService: DeductionItemService,  // 扣款項目 service
-    private OrganizationNumberService:OrganizationNumberService
+    private OrganizationNumberService: OrganizationNumberService
   ) {
     super(); // 呼叫父類建構子
   }
@@ -165,8 +165,8 @@ columns: any[] = [
       this.vendorOptions = data;
     });
     this.userCodeService
-    .getUserCode()
-    .subscribe((data) => (this.usercode = data));
+      .getUserCode()
+      .subscribe((data) => (this.usercode = data));
     this.counterCodeService.getCounterCodes().subscribe((data) => {
       this.counterCodeOptions = data;
     });

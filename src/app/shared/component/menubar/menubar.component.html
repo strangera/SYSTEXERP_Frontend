@@ -1,10 +1,10 @@
 <p-breadcrumb class="max-w-full" [model]="breadcrumbItems" [home]="home">
   <ng-template pTemplate="item" let-item>
-    <a class="cursor-pointer" [routerLink]="item.url" (click)="item.command ? item.command() : null">
+    <div class="cursor-pointer" [routerLink]="item.url">
       <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">
         {{ item.label }}
       </span>
       <i *ngIf="item.isLast" [class]="isFavorite ? 'pi pi-star-fill text-yellow-400' : 'pi pi-star text-color'"></i>
-    </a>
+    </div>
   </ng-template>
 </p-breadcrumb>

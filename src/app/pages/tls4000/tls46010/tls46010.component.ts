@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -60,7 +60,8 @@ export class TLS46010Component {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { SYS_StoreNo: 'store123', SYS_SrvNo: 'register123', SYS_SrvIP: 'registerIP' ,SYS_SrvPort: 20, SYS_SrvStatus: 'A',
+    {
+      SYS_StoreNo: 'store123', SYS_SrvNo: 'register123', SYS_SrvIP: 'registerIP', SYS_SrvPort: 20, SYS_SrvStatus: 'A',
       SYS_SrvName: 'machine123', SYS_SrvUsrID: 'machine_Account',
       SYS_SRVDDir: '/MyPOSData/PosDown  ', SYS_SRVUDir: '/MyPOSData/PosUp',
       SYS_MyPOSDDir: '/MyPOSData/MyPOSDown', SYS_MyPOSUDir: '/MyPOSData/MyPOSUp',
@@ -69,7 +70,7 @@ export class TLS46010Component {
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'SYS_StoreNo', header: '門市店號', visible: true },
     { field: 'SYS_SrvNo', header: '主機編號', visible: true },
     { field: 'SYS_SrvIP', header: '主機IP', visible: true },

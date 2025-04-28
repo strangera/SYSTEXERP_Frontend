@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,7 +15,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './cpm12030.component.html',
   styleUrl: './cpm12030.component.scss'
 })
-export class CPM12030Component extends BasicQpageComponent implements OnInit{
+export class CPM12030Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     subCategoryCode: [], // 子類別編號
@@ -37,7 +37,7 @@ export class CPM12030Component extends BasicQpageComponent implements OnInit{
     { 'isdelete': true, 'opinionCategoryCode': 'T001', 'opinionCategoryName': '意見反映', 'subCategoryCode': 'D003', 'subCategoryName': '商品' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'opinionCategoryCode', header: '主類別編號', visible: true },
     { field: 'opinionCategoryName', header: '主類別名稱', visible: true },
     { field: 'subCategoryCode', header: '子類別編號', visible: true },

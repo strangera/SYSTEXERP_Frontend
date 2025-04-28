@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -47,12 +47,12 @@ export class ASS16010Component extends BasicQpageComponent implements OnInit {
     { field: 'durableYears', header: '異動耐用年限', visible: true },
     { field: 'remark', header: '備註', visible: true },
   ];
-  
+
 
   // Dropdown options
   Inventoryordenumber: any[] = [
     { value: 1, label: '202406002' },
-  
+
   ];
   custodyunit: any[] = [
     { value: 1, label: '101000' },

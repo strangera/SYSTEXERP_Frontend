@@ -8,9 +8,9 @@ import { IssuanceTypeService } from '../../../service/basic/issuance-type.servic
 import { IssuanceNoteStatusService } from '../../../service/basic/issuance-note-status.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -37,15 +37,15 @@ export class TLS56040CRUComponent {
   dataForm = this.formBuilder.group({
     issuanceNoteCode: [{ value: '自動編號', disabled: true }],
     generalCode: [],
-    inwarehouseCode: [,Validators.required],
-    exwarehouseCode: [,Validators.required],
-    brandCode: [,Validators.required],
+    inwarehouseCode: [, Validators.required],
+    exwarehouseCode: [, Validators.required],
+    brandCode: [, Validators.required],
 
     issuanceType: [],
     issuanceNoteStatus: [],
     applicantCode: [],
     approverCode: [],
-    applicationDateFrom: [,Validators.required],
+    applicationDateFrom: [, Validators.required],
     applicationDateTo: [],
     approvalDateFrom: [],
     approvalDateTo: [],
@@ -65,42 +65,42 @@ export class TLS56040CRUComponent {
   approverCodeOptions: any[] = [];
   organizationNumberOptions: any[] = [];  // Updated dropdown for 部門編號
 
-// Table data
-data: any[] = [
-  {
-    sequence: 1,
-    isNew: true,
-    aboveNew: true,
-    productManagementCodeName: 'Product A',
-    productPrice: 200.0,
-    currentStock: 50,
-    claimQuantity: 5,
-    itemRemarks: 'Some remarks',
-  },
-  {
-    sequence: 2,
-    isNew: false,
-    aboveNew: false,
-    productManagementCodeName: 'Product B',
-    productPrice: 150.0,
-    currentStock: 30,
-    claimQuantity: 3,
-    itemRemarks: 'Other remarks',
-  },
-  // Add other data as needed
-];
+  // Table data
+  data: any[] = [
+    {
+      sequence: 1,
+      isNew: true,
+      aboveNew: true,
+      productManagementCodeName: 'Product A',
+      productPrice: 200.0,
+      currentStock: 50,
+      claimQuantity: 5,
+      itemRemarks: 'Some remarks',
+    },
+    {
+      sequence: 2,
+      isNew: false,
+      aboveNew: false,
+      productManagementCodeName: 'Product B',
+      productPrice: 150.0,
+      currentStock: 30,
+      claimQuantity: 3,
+      itemRemarks: 'Other remarks',
+    },
+    // Add other data as needed
+  ];
 
-filteredData: any[] = [...this.data];
-columns: any[] = [
-  { field: 'sequence', header: '序號', visible: true },
-  { field: 'isNew', header: '是否新增', visible: true },
-  { field: 'aboveNew', header: '以上新增', visible: true },
-  { field: 'productManagementCodeName', header: '商品管理編號/名稱', visible: true },
-  { field: 'productPrice', header: '商品售價', visible: true },
-  { field: 'currentStock', header: '目前庫存', visible: true },
-  { field: 'claimQuantity', header: '領用數量', visible: true },
-  { field: 'itemRemarks', header: '單項備註', visible: true },
-];
+  filteredData: any[] = [...this.data];
+  columns: any[] = [
+    { field: 'sequence', header: '序號', visible: true },
+    { field: 'isNew', header: '是否新增', visible: true },
+    { field: 'aboveNew', header: '以上新增', visible: true },
+    { field: 'productManagementCodeName', header: '商品管理編號/名稱', visible: true },
+    { field: 'productPrice', header: '商品售價', visible: true },
+    { field: 'currentStock', header: '目前庫存', visible: true },
+    { field: 'claimQuantity', header: '領用數量', visible: true },
+    { field: 'itemRemarks', header: '單項備註', visible: true },
+  ];
 
   constructor(
     private router: Router,
@@ -113,7 +113,7 @@ columns: any[] = [
     private userCodeService: UserCodeService,
     private authService: AuthService,
     private organizationNumberService: OrganizationNumberService,  // Updated this service
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options

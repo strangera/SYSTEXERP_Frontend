@@ -6,7 +6,7 @@ import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 import { FlippingstateService } from './../../../service/basic/flippingstate.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -116,7 +116,7 @@ export class FIN51060Component extends BasicQpageComponent implements OnInit {
     { field: 'creditEstimatePaymentEC', header: '貸方-暫估應付帳款-EC', visible: true },
     { field: 'creditTotal', header: '貸方合計', visible: true }
   ];
-  
+
 
   constructor(
     private router: Router,

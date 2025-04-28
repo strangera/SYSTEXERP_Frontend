@@ -3,11 +3,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -34,7 +34,7 @@ export class TLS2H030Component {
     serialnumber: [, [this.validationService.numberValidator, Validators.maxLength(6)]], // 專櫃編號
     startInvoiceNumber: [, [this.validationService.numberValidator, Validators.max(9999999999)]], // 發票號碼
     endInvoiceNumber: [, [this.validationService.numberValidator, Validators.max(9999999999)]], // 發票號碼
-    print: [, ], // 發票封面是否列印
+    print: [,], // 發票封面是否列印
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
   });
   // 表格
@@ -46,7 +46,7 @@ export class TLS2H030Component {
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'contactPerson', header: '洽談者', visible: true },
     { field: 'contactDate', header: '洽談日', visible: true },
     { field: 'UID', header: '統編/廠商', visible: true },

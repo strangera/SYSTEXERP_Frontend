@@ -7,9 +7,9 @@ import { WarehouseService } from '../../../service/basic/warehouse.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { IssuanceTypeService } from '../../../service/basic/issuance-type.service';  // Import IssuanceTypeService
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { IssuanceNoteStatusService } from '../../../service/basic/issuance-note-status.service';
@@ -75,7 +75,7 @@ export class TLS56040Component {
     private issuanceTypeService: IssuanceTypeService,  // Added this service
     private issuanceNoteStatusService: IssuanceNoteStatusService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options

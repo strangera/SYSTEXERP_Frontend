@@ -8,9 +8,9 @@ import { BigCategoryService } from '../../../service/basic/big-category.service'
 import { MidCategoryService } from '../../../service/basic/mid-category.service';
 import { SmallCategoryService } from '../../../service/basic/small-category.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 
@@ -69,7 +69,7 @@ export class TLS52070Component {
     private midCategoryService: MidCategoryService,
     private smallCategoryService: SmallCategoryService,
     private authService: AuthService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options

@@ -1,8 +1,8 @@
 import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
 import { AuthService } from '../../service/system/auth.service';
-import { PermissionsInfo } from '../../models/system/funsrightInfo';
+import { PermissionsInfo } from '../models/system/funsrightInfo';
 
-export interface HasPermissionsValue{
+export interface HasPermissionsValue {
   progNo: string,
   permission: PermissionsInfo,
 }
@@ -11,7 +11,7 @@ export interface HasPermissionsValue{
   selector: '[appHasPermission]',
 })
 export class HasPermissionDirective {
-  @Input() set appHasPermission(value: { progNo:string, permission: PermissionsInfo }) {
+  @Input() set appHasPermission(value: { progNo: string, permission: PermissionsInfo }) {
     if (this.authService.getUserPermissions(value.progNo).permissions?.includes(value.permission)) {
       this.viewContainerRef.createEmbeddedView(this.templateRef);
     } else {
@@ -23,6 +23,6 @@ export class HasPermissionDirective {
     private templateRef: TemplateRef<any>,
     private viewContainerRef: ViewContainerRef,
     private authService: AuthService
-  ) {}
+  ) { }
 
 }

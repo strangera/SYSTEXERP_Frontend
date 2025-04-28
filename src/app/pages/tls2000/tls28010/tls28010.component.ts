@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -56,7 +56,7 @@ export class TLS28010Component {
     { field: 'creator', header: '建立者', visible: true },
     { field: 'creationTime', header: '領袋時間', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -64,7 +64,7 @@ export class TLS28010Component {
     private messageService: NotificationService,
     private authService: AuthService,
     private validationService: ValidationService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

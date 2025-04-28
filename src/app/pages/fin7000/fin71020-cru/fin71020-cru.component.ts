@@ -3,7 +3,7 @@ import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -15,7 +15,7 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
   encapsulation: ViewEncapsulation.None
 })
 export class FIN71020CRUComponent extends BasicCrupageComponent implements OnInit {
-  
+
   // Define form structure
   dataForm = this.formBuilder.nonNullable.group({
     usercode: ['', Validators.required], // 保管人代碼
@@ -47,7 +47,7 @@ export class FIN71020CRUComponent extends BasicCrupageComponent implements OnIni
     private messageService: NotificationService,
     private authService: AuthService,
     private translate: TranslateService,
-    private userCodeService:UserCodeService,
+    private userCodeService: UserCodeService,
   ) {
     super();  // Call parent constructor
   }

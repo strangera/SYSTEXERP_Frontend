@@ -1,10 +1,10 @@
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../service/notification.service';
+import { NotificationService } from '../../component/notification-message/notification.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
-import { UserInfo } from '../../../models/system/userInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
+import { UserInfo } from '../../models/system/userInfo';
 import { CRUDStatus } from '../../enum/CRUDstatus';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 

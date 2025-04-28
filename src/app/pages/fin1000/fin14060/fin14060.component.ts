@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -20,7 +20,7 @@ import { UsageTypeService } from '../../../service/basic/usage-type.service';
   styleUrl: './fin14060.component.scss'
 })
 
-export class FIN14060Component extends BasicQpageComponent implements OnInit{
+export class FIN14060Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     invoiceCategory: [[] as number[]], // 發票類型
@@ -59,7 +59,7 @@ export class FIN14060Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'name', header: '發票類型', visible: true },
     { field: 'age', header: '字軌', visible: true },
     { field: 'email', header: '發票號碼', visible: true },
@@ -77,11 +77,11 @@ export class FIN14060Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  invoiceCategoryOptions:any[]=[];
-  usageOptions:any[]=[];
-  buyerUidOptions:any[]=[];
-  taxTypeOptions:any[]=[];
-  assetsRemrkOptions:any[]=[
+  invoiceCategoryOptions: any[] = [];
+  usageOptions: any[] = [];
+  buyerUidOptions: any[] = [];
+  taxTypeOptions: any[] = [];
+  assetsRemrkOptions: any[] = [
     { value: 1, label: '固定資產' },
     { value: 2, label: '土地' },
   ];

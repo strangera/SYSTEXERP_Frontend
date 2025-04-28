@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -16,7 +16,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
 })
 
 //1.1.1.7 二聯式電子發票筆數核對表
-export class FIN11070Component extends BasicQpageComponent implements OnInit{
+export class FIN11070Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     startdate: [, [Validators.required]], // 銷售日期
@@ -34,7 +34,7 @@ export class FIN11070Component extends BasicQpageComponent implements OnInit{
   data: any[] = [
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col0', header: '交易日期', visible: true },
     { field: 'col1', header: '一般交易(A)	', visible: true },
     { field: 'col2', header: '作廢退貨(B)', visible: true },

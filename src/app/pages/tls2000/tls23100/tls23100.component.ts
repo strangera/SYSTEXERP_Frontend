@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // 共享服務
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { PaymentTypeService } from '../../../service/basic/payment-type.service';
 
@@ -63,15 +63,15 @@ export class TLS23100Component {
     { field: 'cardNumber', header: '號碼', visible: true },
     { field: 'amount', header: '金額', visible: true },
   ];
-  
-  paymentTypeOptions: any[]=[];
+
+  paymentTypeOptions: any[] = [];
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
     private authService: AuthService,
-    private paymentTypeService:PaymentTypeService,
-  ) {}
+    private paymentTypeService: PaymentTypeService,
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

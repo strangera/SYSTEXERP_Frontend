@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -28,36 +28,36 @@ import { CooperationMethodService } from '../../../service/basic/cooperation-met
 
 export class TLS31010Component {
 
-    // 程式編號
-    ProgNo: string = '230001';
-    // 權限變數
-    funInfo: FunsrightInfo = {};
-    addPermission: HasPermissionsValue = {
-      progNo: this.ProgNo,
-      permission: PermissionsInfo.add,
-    };
-    queryPermission: HasPermissionsValue = {
-      progNo: this.ProgNo,
-      permission: PermissionsInfo.query,
-    };
-    editPermission: HasPermissionsValue = {
-      progNo: this.ProgNo,
-      permission: PermissionsInfo.edit,
-    };
+  // 程式編號
+  ProgNo: string = '230001';
+  // 權限變數
+  funInfo: FunsrightInfo = {};
+  addPermission: HasPermissionsValue = {
+    progNo: this.ProgNo,
+    permission: PermissionsInfo.add,
+  };
+  queryPermission: HasPermissionsValue = {
+    progNo: this.ProgNo,
+    permission: PermissionsInfo.query,
+  };
+  editPermission: HasPermissionsValue = {
+    progNo: this.ProgNo,
+    permission: PermissionsInfo.edit,
+  };
 
-      // 查詢表單
+  // 查詢表單
   loading: boolean = false;
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
     radiolist: [1, []], // 條件篩選, radioButton
     floor: [],  // 樓層
-    region:[], //區域
-    tax:[], //稅別
+    region: [], //區域
+    tax: [], //稅別
     type: [],
     organizationCode: [],  // 專櫃編號
     businessTypeCode: [],  // 業種
     commissionType: [], // 抽成方式
-    onedatedd:[],
+    onedatedd: [],
     counterCode: [],  // 專櫃編號
   });
 
@@ -72,44 +72,44 @@ export class TLS31010Component {
   commissionTypeOptions: any[] = [];
   TypeOptions: any[] = [];
   counterCodeOptions: any[] = [];
-  taxOptions: any[]=[];
+  taxOptions: any[] = [];
   operationsOptions: any[] = [];
 
 
   // 表格資料
   data: any[] = [
-    { 'BOTag': '9876',  },
+    { 'BOTag': '9876', },
   ];
   filteredData: any[] = [...this.data];
 
   columns: any[] = [
-    { field: '1', header: '樓層名稱', visible: true},
-    { field: '2', header: '營業目標', visible: true},
-    { field: '3', header: '營業實績', visible: true},
-    { field: '4', header: '達成率', visible: true},
-    { field: '5', header: '營業目標佔比', visible: true},
-    { field: '6', header: '營業實績佔比', visible: true},
-    { field: '7', header: '交易筆數', visible: true},
-    { field: '8', header: '客單價', visible: true},
-    { field: '9', header: '坪數', visible: true},
-    { field: '10', header: '坪效', visible: true},
-    { field: '11', header: '營業實績', visible: true},
-    { field: '12', header: '營業實績佔比', visible: true},
-    { field: '13', header: '臨時櫃業績佔比', visible: true},
-    { field: '14', header: '月營業目標', visible: true},
-    { field: '15', header: '營業實績', visible: true},
-    { field: '16', header: '完成率', visible: true},
+    { field: '1', header: '樓層名稱', visible: true },
+    { field: '2', header: '營業目標', visible: true },
+    { field: '3', header: '營業實績', visible: true },
+    { field: '4', header: '達成率', visible: true },
+    { field: '5', header: '營業目標佔比', visible: true },
+    { field: '6', header: '營業實績佔比', visible: true },
+    { field: '7', header: '交易筆數', visible: true },
+    { field: '8', header: '客單價', visible: true },
+    { field: '9', header: '坪數', visible: true },
+    { field: '10', header: '坪效', visible: true },
+    { field: '11', header: '營業實績', visible: true },
+    { field: '12', header: '營業實績佔比', visible: true },
+    { field: '13', header: '臨時櫃業績佔比', visible: true },
+    { field: '14', header: '月營業目標', visible: true },
+    { field: '15', header: '營業實績', visible: true },
+    { field: '16', header: '完成率', visible: true },
   ];
 
   headerRows: any[] = [
     [
-      { field: '', header: '樓層名稱', visible: true, rowspan:2, colspan:1 },
-      { field: '', header: '營業額', visible: true, rowspan:1, colspan: 3 },
-      { field: '', header: '營業佔比', visible: true, rowspan:1, colspan: 2 },
-      { field: '', header: '客單價', visible: true, rowspan:1, colspan: 2 },
-      { field: '', header: '營業坪效', visible: true, rowspan:1, colspan: 2 },
-      { field: '', header: '臨時櫃', visible: true, rowspan:1, colspan: 3 },
-      { field: '', header: '月累積', visible: true, rowspan:1, colspan: 3 },
+      { field: '', header: '樓層名稱', visible: true, rowspan: 2, colspan: 1 },
+      { field: '', header: '營業額', visible: true, rowspan: 1, colspan: 3 },
+      { field: '', header: '營業佔比', visible: true, rowspan: 1, colspan: 2 },
+      { field: '', header: '客單價', visible: true, rowspan: 1, colspan: 2 },
+      { field: '', header: '營業坪效', visible: true, rowspan: 1, colspan: 2 },
+      { field: '', header: '臨時櫃', visible: true, rowspan: 1, colspan: 3 },
+      { field: '', header: '月累積', visible: true, rowspan: 1, colspan: 3 },
     ],
     [
       { field: 'floorName', header: '樓層名稱', visible: true },
@@ -144,11 +144,11 @@ export class TLS31010Component {
     private businessTypeCodeService: BusinessTypeCodeService,
     private organizationNumberService: OrganizationNumberService,
     private commissionTypeService: CommissionTypeService,
-    private TypeService:TypeService,
+    private TypeService: TypeService,
     private TaxableService: TaxableService,
     private cooperationMethodService: CooperationMethodService,
     private counterCodeService: CounterCodeService,  // 專櫃編號
-  ) {}
+  ) { }
 
 
   ngOnInit(): void {
@@ -178,11 +178,11 @@ export class TLS31010Component {
     });
     this.TaxableService.getSystemTypes().subscribe(data => {
       this.taxOptions = data;
-  });
+    });
 
-  this.counterCodeService.getCounterCodes().subscribe((data) => {
-    this.counterCodeOptions = data;
-  });
+    this.counterCodeService.getCounterCodes().subscribe((data) => {
+      this.counterCodeOptions = data;
+    });
   }
 
   canQuery(): boolean {

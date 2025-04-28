@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -80,7 +80,7 @@ export class FIN71010Component extends BasicQpageComponent implements OnInit {
   // Table data
   data: any[] = [
     { code: '216104', name: '應付費用-現金' },
-    { code: '123203', name: '進項稅額-固定資產及費用'},
+    { code: '123203', name: '進項稅額-固定資產及費用' },
     { code: '110101', name: '庫存現金-營收及正負差' },
     { code: '110102', name: '庫存現金-其他收入' },
     { code: '110103', name: '庫存現金-財務部' },
@@ -94,8 +94,8 @@ export class FIN71010Component extends BasicQpageComponent implements OnInit {
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
-    { field: 'code', header: '科目代號', visible: true }, 
-    { field: 'name', header: '科目名稱', visible: true }, 
+    { field: 'code', header: '科目代號', visible: true },
+    { field: 'name', header: '科目名稱', visible: true },
   ];
 
   vendorOptions: any[] = [];
@@ -126,8 +126,8 @@ export class FIN71010Component extends BasicQpageComponent implements OnInit {
       this.vendorOptions = data;
     });
     this.userCodeService
-    .getUserCode()
-    .subscribe((data) => (this.usercode = data));
+      .getUserCode()
+      .subscribe((data) => (this.usercode = data));
   }
 
   onSubmit(frm: FormGroup) {
@@ -194,8 +194,8 @@ export class FIN71010Component extends BasicQpageComponent implements OnInit {
     { field: 'code', placeholder: '科目代號' },
     { field: 'name', placeholder: '科目名稱' },
   ];
-    // 處理選中行的事件
-    handleRowSelect(selectedItem: any): void {
-      console.log('選中的項目:', selectedItem);
-    }
+  // 處理選中行的事件
+  handleRowSelect(selectedItem: any): void {
+    console.log('選中的項目:', selectedItem);
+  }
 }

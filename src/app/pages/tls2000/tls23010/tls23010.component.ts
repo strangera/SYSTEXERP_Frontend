@@ -3,11 +3,11 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { SystemTypeService } from '../../../service/basic/system-type.service';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { TransactionTypeService } from '../../../service/basic/transaction-type.service';
 import { StatusFlagService } from '../../../service/basic/status-flag.service';
 import { WhetherService } from '../../../service/basic/whether.service';
@@ -110,15 +110,15 @@ export class TLS23010Component {
     { field: 'eInvoiceSerial', header: '電子發票是否列印', visible: true },
 
   ];
-  
+
   transactionTypeOptions: any[] = [];
   statusFlagOptions: any[] = [];
   whetherOptions: any[] = [];
   transactionSubTypeOptions: any[] = [];
   carrierTypeOptions: any[] = [];
-  checkTotalAmount: any[] = [    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-    ];
+  checkTotalAmount: any[] = [{ value: 1, label: '是' },
+  { value: 2, label: '否' },
+  ];
 
   constructor(
     private router: Router,
@@ -129,9 +129,9 @@ export class TLS23010Component {
     private transactionTypeService: TransactionTypeService,
     private statusFlagService: StatusFlagService,
     private whetherService: WhetherService,
-    private transactionSubTypeService:TransactionSubTypeService,
+    private transactionSubTypeService: TransactionSubTypeService,
     private carrierTypeService: CarrierTypeService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
@@ -219,10 +219,10 @@ export class TLS23010Component {
   onDetail(data: any) {
     let extras: NavigationExtras = {
       state: {
-          crudstatus: CRUDStatus.Read,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
+        crudstatus: CRUDStatus.Read,
+        rowdata: data,
+        queryform: this.queryForm,
+      },
       skipLocationChange: true,
     };
     this.router.navigate(['/demo/demoInputTableCRU'], extras);

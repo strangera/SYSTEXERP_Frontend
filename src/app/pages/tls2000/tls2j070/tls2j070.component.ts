@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { ValidationService } from '../../../shared/service/validation.service';
 import { InvoiceTypeService } from '../../../service/basic/invoice-type.service';
@@ -35,58 +35,58 @@ export class TLS2J070Component {
     //
     private validationService: ValidationService,
     private invoiceTypeService: InvoiceTypeService,
-) {
-    }
+  ) {
+  }
 
-    ngOnInit(): void {
-      // ----------------------------------------------------------------
-      this.invoiceTypeService.getSystemTypes().subscribe(data => {
-        this.invoiceTypeOptions = data;
-      });
-    }
-    //
-    get items(): FormArray {
-      return this.cruForm.get('items') as FormArray;
-    }
+  ngOnInit(): void {
+    // ----------------------------------------------------------------
+    this.invoiceTypeService.getSystemTypes().subscribe(data => {
+      this.invoiceTypeOptions = data;
+    });
+  }
+  //
+  get items(): FormArray {
+    return this.cruForm.get('items') as FormArray;
+  }
 
-    getFormControl(index: number, controlName: string): FormControl {
-      return this.items.at(index).get(controlName) as FormControl;
-    }
+  getFormControl(index: number, controlName: string): FormControl {
+    return this.items.at(index).get(controlName) as FormControl;
+  }
 
-    //
-    createItem(): FormGroup {
-      return this.formBuilder.group({
-        salesDate: [, [Validators.required]], // 單選日限制 (datetime yyyy/mm/dd)
-        registerID: [, [Validators.required, Validators.maxLength(6), ]], // Input serial number: this.validationService.exactLengthValidator(8)
-        transferID: [, [Validators.required, Validators.maxLength(6), ]], // Input serial number: this.validationService.exactLengthValidator(8)
-      });
-    }
+  //
+  createItem(): FormGroup {
+    return this.formBuilder.group({
+      salesDate: [, [Validators.required]], // 單選日限制 (datetime yyyy/mm/dd)
+      registerID: [, [Validators.required, Validators.maxLength(6),]], // Input serial number: this.validationService.exactLengthValidator(8)
+      transferID: [, [Validators.required, Validators.maxLength(6),]], // Input serial number: this.validationService.exactLengthValidator(8)
+    });
+  }
 
-    onAddItem(): void {
-      this.items.push(this.createItem());
-    }
+  onAddItem(): void {
+    this.items.push(this.createItem());
+  }
 
-    onRemoveItem(index: number) {
-      this.items.removeAt(index);
-    }
+  onRemoveItem(index: number) {
+    this.items.removeAt(index);
+  }
 
-    onSubmit(frm: FormGroup){
-      this.messageService.blockUi();
-      this.submitted = true;
+  onSubmit(frm: FormGroup) {
+    this.messageService.blockUi();
+    this.submitted = true;
 
-      console.log(frm.value); // 取得表frm的值
+    console.log(frm.value); // 取得表frm的值
 
-      if (this.cruForm.invalid){
-        this.messageService.unblockUi();
-        return;
-      }
-
+    if (this.cruForm.invalid) {
       this.messageService.unblockUi();
-      this.submitted = false;
+      return;
     }
 
-    submitForm(frm: FormGroup) {
-      // 查詢邏輯
-      this.onSubmit(frm);
-    }
+    this.messageService.unblockUi();
+    this.submitted = false;
+  }
+
+  submitForm(frm: FormGroup) {
+    // 查詢邏輯
+    this.onSubmit(frm);
+  }
 }

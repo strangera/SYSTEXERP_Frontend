@@ -6,11 +6,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { LocationCodeService } from '../../../service/basic/locationcode.service';
 import { OperationStatusService } from '../../../service/basic/operation-status.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
@@ -92,7 +92,7 @@ export class TLS13060Component {
     { field: 'discountCoupon', header: '折價券', visible: true },
     { field: 'cashDiscount', header: '現抵', visible: true },
   ];
-  
+
   // 下拉选单选项
   LocationCodeOptions: any[] = [];
   operationStatusOptions: any[] = [];
@@ -116,7 +116,7 @@ export class TLS13060Component {
     private floorService: FloorService,
     private commissionTypeService: CommissionTypeService,
     private paymentMethodService: PaymentMethod2Service
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

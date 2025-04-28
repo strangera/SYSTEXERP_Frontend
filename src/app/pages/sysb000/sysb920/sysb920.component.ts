@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { IndustryTypeService } from '../../../service/basic/industry-type.service';
 import { ProductCategoryService } from '../../../service/basic/product-category.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -28,13 +28,13 @@ export class SYSB920Component extends BasicQpageComponent implements OnInit {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { isdelete:true, productCatCode: '00', productCatName: '綜合服飾', industryType: '物販', productCategory: '男女服飾'},
-    { isdelete:true, productCatCode: '00', productCatName: '兒童資訊軟體', industryType: '物販', productCategory: '嬰童用品'},
-    { isdelete:true, productCatCode: '00', productCatName: '其他', industryType: '服務', productCategory: '綜合服務'},
+    { isdelete: true, productCatCode: '00', productCatName: '綜合服飾', industryType: '物販', productCategory: '男女服飾' },
+    { isdelete: true, productCatCode: '00', productCatName: '兒童資訊軟體', industryType: '物販', productCategory: '嬰童用品' },
+    { isdelete: true, productCatCode: '00', productCatName: '其他', industryType: '服務', productCategory: '綜合服務' },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'productCatCode', header: '商品類別碼', visible: true },
     { field: 'productCatName', header: '商品類別名稱', visible: true },
     { field: 'industryType', header: '所屬業種', visible: true },

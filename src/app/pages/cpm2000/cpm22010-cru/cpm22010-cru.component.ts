@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
@@ -38,12 +38,12 @@ export class CPM22010CRUComponent extends BasicCrupageComponent implements OnIni
     { value: 4, label: '聯名超強卡友日' },
   ];
   activityCategory
-  : any[] = [
-    { value: 1, label: '贈品兌換活動' },
-    { value: 2, label: '紅利積點活動' },
-    { value: 3, label: 'DM發送活動' },
-    { value: 4, label: '聯名超強卡友日' },
-  ];
+    : any[] = [
+      { value: 1, label: '贈品兌換活動' },
+      { value: 2, label: '紅利積點活動' },
+      { value: 3, label: 'DM發送活動' },
+      { value: 4, label: '聯名超強卡友日' },
+    ];
 
 
   // 初始化

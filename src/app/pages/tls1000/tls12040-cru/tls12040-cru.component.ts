@@ -24,7 +24,7 @@ import { Component, OnInit, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -36,33 +36,33 @@ import { ValidationService } from '../../../shared/service/validation.service';
   templateUrl: './tls12040-cru.component.html',
   styleUrl: './tls12040-cru.component.scss'
 })
-export class TLS12040CRUComponent extends BasicCrupageComponent implements OnInit{
+export class TLS12040CRUComponent extends BasicCrupageComponent implements OnInit {
   vendorUIDOptions: any[] = [];
-    negotiatorOptions: any[] = [];
-    industryCodeOptions: any[] = [];
-    locationNumberOptions: any[] = [];
-    regionOptions: any[] = [];
-    floorOptions: any[] = [];
-    contractStatusOptions: any[] = [];
-    businessTypeOptions: any[] = [];
-    organizationCodeOptions: any[] = [];
-    calculationMethodOptions: any[] = [];
-    counterTypeOptions: any[] = [];
-    decorationStyleOptions: any[] = [];
-    chargeTypeOptions: any[] = [];
-    checkoutOptions: any[] = [];
-    paymentOptions: any[] = [];
-    cooerationTypeOptions: any[] = [];
-    productCategoryOptions: any[] = [];
-    packageTypeOptions: any[] = [];
-    bankCodeOptions: any[] = [];
-    exceededPartOptions: any[] = [
-      { value: 1, label: '全部' },
-      { value: 2, label: '部分' },
-    ];
-    reconciliationMethodOptions: any[] = [];
-    paymentWithCashOptions: any[] = [];
-    requestFormOptions: any[] = [];
+  negotiatorOptions: any[] = [];
+  industryCodeOptions: any[] = [];
+  locationNumberOptions: any[] = [];
+  regionOptions: any[] = [];
+  floorOptions: any[] = [];
+  contractStatusOptions: any[] = [];
+  businessTypeOptions: any[] = [];
+  organizationCodeOptions: any[] = [];
+  calculationMethodOptions: any[] = [];
+  counterTypeOptions: any[] = [];
+  decorationStyleOptions: any[] = [];
+  chargeTypeOptions: any[] = [];
+  checkoutOptions: any[] = [];
+  paymentOptions: any[] = [];
+  cooerationTypeOptions: any[] = [];
+  productCategoryOptions: any[] = [];
+  packageTypeOptions: any[] = [];
+  bankCodeOptions: any[] = [];
+  exceededPartOptions: any[] = [
+    { value: 1, label: '全部' },
+    { value: 2, label: '部分' },
+  ];
+  reconciliationMethodOptions: any[] = [];
+  paymentWithCashOptions: any[] = [];
+  requestFormOptions: any[] = [];
 
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
@@ -71,24 +71,24 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
     versionNumber: [, [this.validationService.numberValidator, Validators.maxLength(10)]], // 版本編號
 
     vendorUID: [, [Validators.required]], // 廠商統一編號
-    businessType: [, ], // 營業型態
+    businessType: [,], // 營業型態
     organizationCode: [, [Validators.required]], // 組織代碼
     industryCode: [, [Validators.required]], // 業種
     productCategory: [, [Validators.required]], // 商品類別
 
     negotiator: [, [Validators.required]], // 洽談者
-    counterType: [, ], // 櫃別
-    decorationStyle: [, ], // 裝潢方式
-    chargeType: [, ], // 抽成別
-    calculationMethod: [, ], // 抽成額計算方式
-    packageType: [, ], // 包底類別
-    exceededPart: [, ], // 超出部份處理方式
-    checkout: [, ], // 結帳方式
-    cooerationType: [, ], // 配合方式
-    reconciliationMethod: [, ], // 對帳方式
-    payment: [, ], // 付款方式
+    counterType: [,], // 櫃別
+    decorationStyle: [,], // 裝潢方式
+    chargeType: [,], // 抽成別
+    calculationMethod: [,], // 抽成額計算方式
+    packageType: [,], // 包底類別
+    exceededPart: [,], // 超出部份處理方式
+    checkout: [,], // 結帳方式
+    cooerationType: [,], // 配合方式
+    reconciliationMethod: [,], // 對帳方式
+    payment: [,], // 付款方式
     recognizancePaymentMethod: [, [Validators.required]], // 保證金付款方式
-    constructionPaymentMethod: [, ], // 施工保證金付款方式
+    constructionPaymentMethod: [,], // 施工保證金付款方式
     requestForm: [, [Validators.required]], // 請款單據別
     bankCode: [, [Validators.required]], // 廠商匯款銀行代號
 
@@ -96,9 +96,9 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
     contractEndDate: [, [Validators.required]], // 契約截止日
     operationStartDate: [, [Validators.required]], // 營運起始日
     operationEndDate: [, [Validators.required]], // 營運截止日
-    replyStartDate: [, ], // 回函日期
-    replyEndDate: [, ], // 回函截止日
-    negotiationDate: [, ], // 洽談日期
+    replyStartDate: [,], // 回函日期
+    replyEndDate: [,], // 回函截止日
+    negotiationDate: [,], // 洽談日期
 
     advanceRentPeriod: [, [Validators.maxLength(50)]], // 預收租金期數
     fixedRent: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 固定租金
@@ -111,13 +111,13 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
     constructionRecognizance: [, [Validators.maxLength(20)]], // 施工保證金
     payDay: [, [Validators.required, Validators.maxLength(20)]], // 付款期限(天數)
 
-    ownerStoreCode: [, ], // 是否使用業主商店代號
-    advanceRent: [, ], // 預收租金
-    venderInvoice: [, ], // 是否開立業主發票
-    venderRegister: [, ], // 是否使用業主收銀機
-    venderCash: [, ], // 是否為業主收現
-    commissionCheck: [, ], // 是否為抽成
-    brandedCardCooperate: [, ], // 是否配合聯名卡
+    ownerStoreCode: [,], // 是否使用業主商店代號
+    advanceRent: [,], // 預收租金
+    venderInvoice: [,], // 是否開立業主發票
+    venderRegister: [,], // 是否使用業主收銀機
+    venderCash: [,], // 是否為業主收現
+    commissionCheck: [,], // 是否為抽成
+    brandedCardCooperate: [,], // 是否配合聯名卡
 
     vendorName: ['', [Validators.required, Validators.maxLength(60)]], // 廠商名稱
     counterName: ['', [Validators.required, Validators.maxLength(50)]], // 品牌(專櫃名稱)
@@ -130,7 +130,7 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
     companyPhone: ['', [Validators.required, Validators.maxLength(17)]], // 公司電話號碼(O)
     companyFex: ['', [Validators.required, Validators.maxLength(12)]], // 公司傳真號碼(F)
     postAddress: ['', [Validators.required, Validators.maxLength(100)]], // 郵寄地址
-    remark: [, ], // 備註
+    remark: [,], // 備註
 
     // ----------------------------------------------------------------
     items: this.formBuilder.array([
@@ -168,8 +168,8 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
     private paperTypeService: PaperTypeService,
     private postOptionService: PostOptionService,
     private payWithCashService: PayWithCashService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -303,11 +303,11 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
   createItem(): FormGroup {
     return this.formBuilder.group({
       locationNumber: [[] as number[]], // 位置編號
-        region: [[] as number[]], // 區域
-        floor: [[] as number[]], // 樓層
-        squareMeters: ['', [Validators.maxLength(5)]], // 營業坪數
-        startdate: [], // 使用期間
-        enddate: [], // 使用期間
+      region: [[] as number[]], // 區域
+      floor: [[] as number[]], // 樓層
+      squareMeters: ['', [Validators.maxLength(5)]], // 營業坪數
+      startdate: [], // 使用期間
+      enddate: [], // 使用期間
     });
   }
   onRemoveItem(index: number) {
@@ -327,11 +327,11 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

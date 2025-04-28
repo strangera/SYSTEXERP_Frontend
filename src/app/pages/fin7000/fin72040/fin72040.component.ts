@@ -5,7 +5,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -47,16 +47,16 @@ export class FIN72040Component extends BasicQpageComponent implements OnInit {
   });
 
   // Dropdown options
-  PettyCashOrderNumber: any[] = [    { value: 201407170001, label: 'C201407170001' },
-    { value: 201407170002, label: 'TC201407170002' },
-    { value: 201407170003, label: 'TC201407170003' },
-    { value: 201407170004, label: 'TC201407170004' },
-    { value: 201407210001, label: 'TC201407210001' },
-    { value: 201407210002, label: 'TC201407210002' },
-    { value: 201407280001, label: 'TC201407280001' },
-    { value: 201407280002, label: 'TC201407280002' },
-    { value: 201407280003, label: 'TC201407280003' },
-    { value: 201407290002, label: 'TC201407290002' },];
+  PettyCashOrderNumber: any[] = [{ value: 201407170001, label: 'C201407170001' },
+  { value: 201407170002, label: 'TC201407170002' },
+  { value: 201407170003, label: 'TC201407170003' },
+  { value: 201407170004, label: 'TC201407170004' },
+  { value: 201407210001, label: 'TC201407210001' },
+  { value: 201407210002, label: 'TC201407210002' },
+  { value: 201407280001, label: 'TC201407280001' },
+  { value: 201407280002, label: 'TC201407280002' },
+  { value: 201407280003, label: 'TC201407280003' },
+  { value: 201407290002, label: 'TC201407290002' },];
   usercode: any[] = [];
   Feespayable: any[] = [
     { value: 210101, label: '銀行短期借款' },
@@ -108,14 +108,14 @@ export class FIN72040Component extends BasicQpageComponent implements OnInit {
     { field: 'custodianOrgNameCode', header: '保管人組織名稱(代號)', visible: true },
     { field: 'status', header: '狀態', visible: true }
   ];
-  
-  
+
+
 
   vendorOptions: any[] = [];
   counterCodeOptions: any[] = [];
   violationCategoryOptions: any[] = [];
   floorOptions: any[] = [];
-  
+
   deductionItemOptions: any[] = [];
   organizationNumberOptions: any[] = [];
 
@@ -132,7 +132,7 @@ export class FIN72040Component extends BasicQpageComponent implements OnInit {
     private violationCategoryService: ViolationCategoryService,  // 違規類別編號 service
     private floorService: FloorService,  // 樓層 service
     private deductionItemService: DeductionItemService,  // 扣款項目 service
-    private OrganizationNumberService:OrganizationNumberService
+    private OrganizationNumberService: OrganizationNumberService
   ) {
     super(); // 呼叫父類建構子
   }
@@ -151,8 +151,8 @@ export class FIN72040Component extends BasicQpageComponent implements OnInit {
       this.vendorOptions = data;
     });
     this.userCodeService
-    .getUserCode()
-    .subscribe((data) => (this.usercode = data));
+      .getUserCode()
+      .subscribe((data) => (this.usercode = data));
     this.counterCodeService.getCounterCodes().subscribe((data) => {
       this.counterCodeOptions = data;
     });

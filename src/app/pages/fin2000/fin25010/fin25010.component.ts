@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -16,10 +16,10 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './fin25010.component.html',
   styleUrl: './fin25010.component.scss'
 })
-export class FIN25010Component extends BasicQpageComponent implements OnInit{
+export class FIN25010Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
-    transferSource:[], //匯款來源單號
+    transferSource: [], //匯款來源單號
     buildDateFrom: [], // 建立日期
     buildDateTo: [], // 建立日期
     settlementDateFrom: [], // 收/付款日
@@ -42,7 +42,7 @@ export class FIN25010Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '匯款來源單號', visible: true },
     { field: 'col2', header: '建立日期', visible: true },
     { field: 'col3', header: '收/付款日', visible: true },

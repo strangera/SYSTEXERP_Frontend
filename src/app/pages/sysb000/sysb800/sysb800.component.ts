@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
 @Component({
@@ -25,15 +25,15 @@ export class SYSB800Component extends BasicQpageComponent implements OnInit {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { isdelete:true, industryCode: '10', industryName: '物販', remark: ''},
-    { isdelete:true, industryCode: '20', industryName: '餐飲', remark: ''},
-    { isdelete:true, industryCode: '30', industryName: '娛樂', remark: ''},
-    { isdelete:true, industryCode: '40', industryName: '服務', remark: ''},
-    { isdelete:true, industryCode: '98', industryName: '停車管理', remark: '虛擬機台'},
+    { isdelete: true, industryCode: '10', industryName: '物販', remark: '' },
+    { isdelete: true, industryCode: '20', industryName: '餐飲', remark: '' },
+    { isdelete: true, industryCode: '30', industryName: '娛樂', remark: '' },
+    { isdelete: true, industryCode: '40', industryName: '服務', remark: '' },
+    { isdelete: true, industryCode: '98', industryName: '停車管理', remark: '虛擬機台' },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'industryCode', header: '業種代號', visible: true },
     { field: 'industryName', header: '業種名稱', visible: true },
     { field: 'remark', header: '備註', visible: true },

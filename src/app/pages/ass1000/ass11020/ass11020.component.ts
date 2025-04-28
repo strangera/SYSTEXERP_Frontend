@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,9 +15,9 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './ass11020.component.html',
   styleUrl: './ass11020.component.scss'
 })
-export class ASS11020Component extends BasicQpageComponent implements OnInit{
+export class ASS11020Component extends BasicQpageComponent implements OnInit {
   //
-  bigCategoryCodeOptions: any[]=[
+  bigCategoryCodeOptions: any[] = [
     { value: 1, label: 'A/裝潢工程' },
     { value: 2, label: 'B/其他工程' },
     { value: 3, label: 'C/電腦及電子零件產品' },
@@ -33,7 +33,7 @@ export class ASS11020Component extends BasicQpageComponent implements OnInit{
     midCategoryName: ['', [Validators.maxLength(32)]], // 中分類名稱
     bigCategoryCode: [], // 大分類代碼
     bigCategoryName: ['', [Validators.maxLength(40)]], // 大分類名稱
-    illustrate: [, ], // 說明
+    illustrate: [,], // 說明
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -50,7 +50,7 @@ export class ASS11020Component extends BasicQpageComponent implements OnInit{
     { 'midCategoryCode': '21', 'midCategoryName': '燈具照明設備-資產', 'bigCategoryCode': 'D', 'illustrate': '說明3' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'midCategoryCode', header: '中分類代碼', visible: true },
     { field: 'midCategoryName', header: '中分類名稱', visible: true },
     { field: 'bigCategoryCode', header: '大分類代碼', visible: true },

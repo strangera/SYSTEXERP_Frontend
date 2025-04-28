@@ -6,7 +6,7 @@ import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 import { FlippingstateService } from './../../../service/basic/flippingstate.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -26,32 +26,32 @@ export class FIN51030Component extends BasicQpageComponent implements OnInit {
   uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
   queryForm = this.formBuilder.group({
     year: [],
-version: [],
-organizationNumber: [,Validators.required],
-month: [],
-amountStart: [], // 金額 起
-amountEnd: [], // 金額 迄
-remark: [],
-status: [],
-department: [],
-unit: [],
-type: [],
-compareyear: [],
-version1: [],
-version2: [],
-year1: [],
-year2: [],
-Subpoenatype: [],
-startdate: [],
-enddate: [],
-Subpoenastatus: [],
-Subpoenacode: [],
-SummonsSummary: [],
-accountingaccount: [],
-vendorCode: [],
-code: [],
-Summonscode: [],
-Summary: [],
+    version: [],
+    organizationNumber: [, Validators.required],
+    month: [],
+    amountStart: [], // 金額 起
+    amountEnd: [], // 金額 迄
+    remark: [],
+    status: [],
+    department: [],
+    unit: [],
+    type: [],
+    compareyear: [],
+    version1: [],
+    version2: [],
+    year1: [],
+    year2: [],
+    Subpoenatype: [],
+    startdate: [],
+    enddate: [],
+    Subpoenastatus: [],
+    Subpoenacode: [],
+    SummonsSummary: [],
+    accountingaccount: [],
+    vendorCode: [],
+    code: [],
+    Summonscode: [],
+    Summary: [],
   });
 
   // Dropdown options
@@ -64,26 +64,26 @@ Summary: [],
   vendorOptions: any[] = [];
   FlippingstateOptions: any[] = [];
   organizationNumberOptions: any[] = [];
-  statusOptions: any[] = [{value:1, label:'未拋轉'},
-    {value:2, label:'已拋轉'},
-    {value:2, label:'已退回'}];
-    unitOptions: any[] = [{value:1, label:'元'},
-      {value:2, label:'千'},
-      {value:3, label:'萬'}];
-      typeOptions: any[] = [{value:1, label:'統制'},
-        {value:2, label:'明細'},];
-        
-        SubpoenatypeOptions: any[] = [{value:1, label:'回收銷售日傳票'},
-         ];
-          SubpoenastatusOptions: any[] = [{value:1, label:'作廢'},
-            {value:2, label:'建立'},{value:2, label:'確認'},{value:2, label:'過帳'},{value:2, label:'刪除'},];
+  statusOptions: any[] = [{ value: 1, label: '未拋轉' },
+  { value: 2, label: '已拋轉' },
+  { value: 2, label: '已退回' }];
+  unitOptions: any[] = [{ value: 1, label: '元' },
+  { value: 2, label: '千' },
+  { value: 3, label: '萬' }];
+  typeOptions: any[] = [{ value: 1, label: '統制' },
+  { value: 2, label: '明細' },];
+
+  SubpoenatypeOptions: any[] = [{ value: 1, label: '回收銷售日傳票' },
+  ];
+  SubpoenastatusOptions: any[] = [{ value: 1, label: '作廢' },
+  { value: 2, label: '建立' }, { value: 2, label: '確認' }, { value: 2, label: '過帳' }, { value: 2, label: '刪除' },];
   accountingaccountOptions: any[] = [];
-  codeOptions:any[] = [
-   {value:1,	  label:'68919301_臺南紡織股份有限公司'}, {value:2,label:'73251209_統一企業股份有限公司'},{value:3,label:'96978370_統正開發股份有限公司'}
+  codeOptions: any[] = [
+    { value: 1, label: '68919301_臺南紡織股份有限公司' }, { value: 2, label: '73251209_統一企業股份有限公司' }, { value: 3, label: '96978370_統正開發股份有限公司' }
 
 
   ];
- 
+
 
   // Table data
   data: any[] = [
@@ -98,7 +98,7 @@ Summary: [],
     { field: 'voucherStatus', header: '傳票狀態', visible: true },
     { field: 'voucherNumber', header: '傳票編號', visible: true },
     { field: 'voucherSummary', header: '傳票摘要', visible: true },
-    
+
     // Debit Section
     { field: 'debitRecoveryPayable', header: '借方 - 應收帳款-有價券(含稅)', visible: true },
     { field: 'debitPreIncomeGoodsVoucher', header: '借方 - 預收款項-商品提貨單', visible: true },
@@ -107,7 +107,7 @@ Summary: [],
     { field: 'debitSalesTax', header: '借方 - 銷項稅額-有價券', visible: true },
     { field: 'debitSalesDiscount', header: '借方 - 銷售折讓-商品損壞單據折扣', visible: true },
     { field: 'debitTotal', header: '借方合計', visible: true },
-    
+
     // Credit Section
     { field: 'creditRecoveryPayable', header: '貸方 - 應付帳款-有價券(含稅)', visible: true },
     { field: 'creditPreExpenseGoodsVoucher', header: '貸方 - 預收款項-商品提貨單', visible: true },
@@ -117,7 +117,7 @@ Summary: [],
     { field: 'creditSalesDiscount', header: '貸方 - 銷售折讓-商品損壞單據折扣', visible: true },
     { field: 'creditTotal', header: '貸方合計', visible: true }
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -125,11 +125,11 @@ Summary: [],
     private notificationService: NotificationService,
     private authService: AuthService,
     private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService:AnalysisdateCService,
+    private AnalysisdateCService: AnalysisdateCService,
     private vendorService: VendorService,
-    private flippingstateService:FlippingstateService,
-    private organizationNumberService:OrganizationNumberService,
-    private accountingaccountService:AccountingaccountService,
+    private flippingstateService: FlippingstateService,
+    private organizationNumberService: OrganizationNumberService,
+    private accountingaccountService: AccountingaccountService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -157,7 +157,7 @@ Summary: [],
     this.accountingaccountService.getOptions().subscribe((data) => {
       this.accountingaccountOptions = data;
     });
-    
+
 
   }
 

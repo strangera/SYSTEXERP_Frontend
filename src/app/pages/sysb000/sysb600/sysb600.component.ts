@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
 @Component({
@@ -24,14 +24,14 @@ export class SYSB600Component extends BasicQpageComponent implements OnInit {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { isdelete:false, floorNumber: '01', floorName: 'B1'},
-    { isdelete:false, floorNumber: '02', floorName: 'BM'},
-    { isdelete:false, floorNumber: '03', floorName: 'B1'},
-    { isdelete:false, floorNumber: '11', floorName: '1F'},
+    { isdelete: false, floorNumber: '01', floorName: 'B1' },
+    { isdelete: false, floorNumber: '02', floorName: 'BM' },
+    { isdelete: false, floorNumber: '03', floorName: 'B1' },
+    { isdelete: false, floorNumber: '11', floorName: '1F' },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'floorNumber', header: '樓層編號', visible: true },
     { field: 'floorName', header: '樓層名稱', visible: true },
     // 其他欄位

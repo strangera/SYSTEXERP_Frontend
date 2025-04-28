@@ -5,11 +5,11 @@ import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
   PermissionsInfo,
-} from '../../../models/system/funsrightInfo';
+} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ErroreventCodeService } from '../../../service/basic/errorevent-code.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -39,34 +39,34 @@ export class SYS0760Component extends BasicQpageComponent implements OnInit {
   // 表格
   data: any[] = [
     {
-        "eventCode": "密碼輸入錯誤",
-        "userName": "6666666611",
-        "userCode": "6666666611",
-        "loginAddress": "10.3.35.148",
-        "loginTime": "2024/10/27 下午 02:02:23"
+      "eventCode": "密碼輸入錯誤",
+      "userName": "6666666611",
+      "userCode": "6666666611",
+      "loginAddress": "10.3.35.148",
+      "loginTime": "2024/10/27 下午 02:02:23"
     },
     {
-        "eventCode": "密碼輸入錯誤",
-        "userName": "6666666601",
-        "userCode": "6666666601",
-        "loginAddress": "10.3.35.24",
-        "loginTime": "2024/10/24 下午 01:27:26"
+      "eventCode": "密碼輸入錯誤",
+      "userName": "6666666601",
+      "userCode": "6666666601",
+      "loginAddress": "10.3.35.24",
+      "loginTime": "2024/10/24 下午 01:27:26"
     },
     {
-        "eventCode": "密碼輸入錯誤",
-        "userName": "6666666691",
-        "userCode": "6666666691",
-        "loginAddress": "10.3.41.26",
-        "loginTime": "2024/10/22 下午 01:04:59"
+      "eventCode": "密碼輸入錯誤",
+      "userName": "6666666691",
+      "userCode": "6666666691",
+      "loginAddress": "10.3.41.26",
+      "loginTime": "2024/10/22 下午 01:04:59"
     },
     {
-        "eventCode": "密碼輸入錯誤",
-        "userName": "6666666102",
-        "userCode": "6666666102",
-        "loginAddress": "10.3.35.159",
-        "loginTime": "2024/10/18 下午 05:36:38"
+      "eventCode": "密碼輸入錯誤",
+      "userName": "6666666102",
+      "userCode": "6666666102",
+      "loginAddress": "10.3.35.159",
+      "loginTime": "2024/10/18 下午 05:36:38"
     }
-];
+  ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
     { field: 'eventCode', header: '事件代碼', visible: true },

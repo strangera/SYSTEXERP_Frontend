@@ -7,7 +7,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -16,9 +16,9 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './fin64030.component.html',
   styleUrl: './fin64030.component.scss'
 })
-export class FIN64030Component extends BasicQpageComponent implements OnInit  {
+export class FIN64030Component extends BasicQpageComponent implements OnInit {
 
-  
+
 
   queryForm = this.formBuilder.group({
     startdate: [],
@@ -34,9 +34,9 @@ export class FIN64030Component extends BasicQpageComponent implements OnInit  {
 
   // Dropdown options
   statusOptions: any[] = [
-    { value: 1, label: '未異動'},
-    { value: 2, label: '到期'},
-    { value: 3, label: '兌現'},
+    { value: 1, label: '未異動' },
+    { value: 2, label: '到期' },
+    { value: 3, label: '兌現' },
   ];
   FNCCodeOptions: any[] = [];
   AccountcodeOptions: any[] = [];
@@ -60,16 +60,16 @@ export class FIN64030Component extends BasicQpageComponent implements OnInit  {
     { field: 'remark', header: '備註', visible: true },
     { field: 'status', header: '狀態', visible: true }
   ];
-  
-  
-  
+
+
+
 
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
     private notificationService: NotificationService,
     private authService: AuthService,
-    private IfdisplayService:IfdisplayService
+    private IfdisplayService: IfdisplayService
   ) {
     super(); // 呼叫父類建構子
   }

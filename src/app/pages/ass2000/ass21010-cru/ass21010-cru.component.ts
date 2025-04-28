@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
@@ -18,17 +18,16 @@ import { OrganizationNumberService } from '../../../service/basic/organization-n
 })
 export class ASS21010CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
   ngOnInit(): void {
     // 網站導覽設定
     this.ProgNo = '320001';
     // ----------------------------------------------------------------
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-     // 下拉選單--------------------------------------------------------
+    // 下拉選單--------------------------------------------------------
     //  this.userCodeService.getUserCode().subscribe((data) => (this.Applicantcode = data));
-     this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.Departmentcode = data));
-     this.floorService.getFloors().subscribe((data) => (this.floor = data));
+    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.Departmentcode = data));
+    this.floorService.getFloors().subscribe((data) => (this.floor = data));
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus;
@@ -65,7 +64,7 @@ export class ASS21010CRUComponent
   //動態新增----------------------------------------------------------
   createItem(): FormGroup {
     return this.formBuilder.group({
-      
+
       itemCodeOptions: [],
       unit: [],
       returnQty: [],
@@ -79,7 +78,7 @@ export class ASS21010CRUComponent
     floor: [],
     area: [],
     SN: [],
-    xCoordinate : [],
+    xCoordinate: [],
     yCoordinate: [],
     desc: [],
     placementDesc: [],
@@ -87,7 +86,7 @@ export class ASS21010CRUComponent
     items: this.formBuilder.array([this.createItem()]),
   });
   // Dropdown options
-  floor: any[] =[];
+  floor: any[] = [];
   area: any[] = [];
   Departmentcode: any[] = [];
   itemCodeOptions: any[] = [
@@ -101,10 +100,10 @@ export class ASS21010CRUComponent
     { value: 8, label: '3A24210000008' },
     { value: 9, label: '3A24210000009' },
     { value: 10, label: '3A24210000010' },
-];
+  ];
 
 
- 
+
   // ----------------------------------------------------------------
   constructor(
     private router: Router,
@@ -112,9 +111,9 @@ export class ASS21010CRUComponent
     private messageService: NotificationService,
     private authService: AuthService,
     private translate: TranslateService,
-    private userCodeService:UserCodeService,
-    private organizationNumberService:OrganizationNumberService,
-    private floorService:FloorService,
+    private userCodeService: UserCodeService,
+    private organizationNumberService: OrganizationNumberService,
+    private floorService: FloorService,
 
   ) {
     super(); // 呼叫父類建構子

@@ -5,11 +5,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { AnnouncementUserService } from '../../../service/basic/announcement-user.service';
@@ -33,7 +33,7 @@ export class TLS2D060Component {
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
     department: [], // 部門
-    reviewNumber: [, [Validators.maxLength(9),this.validationService.numberValidator]], // 審核單號
+    reviewNumber: [, [Validators.maxLength(9), this.validationService.numberValidator]], // 審核單號
     salesType: [], // 銷售類型
     deductionItems: [], // 扣款項目
     startdateFrom: [], // 活動起始日期
@@ -53,7 +53,7 @@ export class TLS2D060Component {
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'contactPerson', header: '洽談者', visible: true },
     { field: 'contactDate', header: '洽談日', visible: true },
     { field: 'UID', header: '統編/廠商', visible: true },

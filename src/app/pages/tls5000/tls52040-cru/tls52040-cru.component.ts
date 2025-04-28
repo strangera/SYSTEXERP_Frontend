@@ -9,9 +9,9 @@ import { BrandCodeService } from '../../../service/basic/brand-code.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { ManagementIDService } from '../../../service/basic/management-id.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { SystemTypeService } from '../../../service/basic/system-type.service';
@@ -23,7 +23,7 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
   styleUrl: './tls52040-cru.component.scss'
 })
 export class TLS52040CRUComponent extends BasicCrupageComponent implements OnInit {
-  
+
   // ProgNo: string = '250017';
   // funInfo: FunsrightInfo = {};
 
@@ -57,10 +57,10 @@ export class TLS52040CRUComponent extends BasicCrupageComponent implements OnIni
     taxAmount: [], // 稅額
     totalAmount: [], // 合計金額
     totalSaleAmount: [], // 售價總計   
-        // ----------------------------------------------------------------
-        items: this.formBuilder.array([
-          this.createItem()
-        ]),
+    // ----------------------------------------------------------------
+    items: this.formBuilder.array([
+      this.createItem()
+    ]),
   });
 
   // Dropdown options
@@ -74,60 +74,60 @@ export class TLS52040CRUComponent extends BasicCrupageComponent implements OnIni
   // showConfirm: boolean = false;//CRU
   // crudstatus: CRUDStatus = CRUDStatus.Read;//CRU
 
-// Table data
-data: any[] = [
-  {
-    sequence: 1,
-    isNew: true,
-    aboveNew: true,
-    productManagementCodeName: 'Product A',
-    returnableQuantity: 100,
-    returnQuantity: 10,
-    productUnit: 'PCS',
-    unitPrice: 20.0,
-    tax: 5.0,
-    untaxedAmount: 190.0,
-    salePrice: 200.0,
-    saleSubtotal: 4000.0,
-    returnInvoiceNumber: 'INV12345',
-    itemRemarks: 'Some remarks',
-  },
-  {
-    sequence: 2,
-    isNew: false,
-    aboveNew: false,
-    productManagementCodeName: 'Product B',
-    returnableQuantity: 200,
-    returnQuantity: 20,
-    productUnit: 'PCS',
-    unitPrice: 15.0,
-    tax: 3.0,
-    untaxedAmount: 297.0,
-    salePrice: 300.0,
-    saleSubtotal: 6000.0,
-    returnInvoiceNumber: 'INV54321',
-    itemRemarks: 'Other remarks',
-  },
-  // Add other data as needed
-];
+  // Table data
+  data: any[] = [
+    {
+      sequence: 1,
+      isNew: true,
+      aboveNew: true,
+      productManagementCodeName: 'Product A',
+      returnableQuantity: 100,
+      returnQuantity: 10,
+      productUnit: 'PCS',
+      unitPrice: 20.0,
+      tax: 5.0,
+      untaxedAmount: 190.0,
+      salePrice: 200.0,
+      saleSubtotal: 4000.0,
+      returnInvoiceNumber: 'INV12345',
+      itemRemarks: 'Some remarks',
+    },
+    {
+      sequence: 2,
+      isNew: false,
+      aboveNew: false,
+      productManagementCodeName: 'Product B',
+      returnableQuantity: 200,
+      returnQuantity: 20,
+      productUnit: 'PCS',
+      unitPrice: 15.0,
+      tax: 3.0,
+      untaxedAmount: 297.0,
+      salePrice: 300.0,
+      saleSubtotal: 6000.0,
+      returnInvoiceNumber: 'INV54321',
+      itemRemarks: 'Other remarks',
+    },
+    // Add other data as needed
+  ];
 
-filteredData: any[] = [...this.data];
-columns: any[] = [
-  { field: 'sequence', header: '序號', visible: true },
-  { field: 'isNew', header: '是否新貨', visible: true },
-  { field: 'aboveNew', header: '以上新貨', visible: true },
-  { field: 'productManagementCodeName', header: '商品管理編號/名稱', visible: true },
-  { field: 'returnableQuantity', header: '可退回數量', visible: true },
-  { field: 'returnQuantity', header: '退回數量', visible: true },
-  { field: 'productUnit', header: '商品單位', visible: true },
-  { field: 'unitPrice', header: '單價', visible: true },
-  { field: 'tax', header: '稅額', visible: true },
-  { field: 'untaxedAmount', header: '未稅金額', visible: true },
-  { field: 'salePrice', header: '售價', visible: true },
-  { field: 'saleSubtotal', header: '售價小計', visible: true },
-  { field: 'returnInvoiceNumber', header: '退貨單號碼', visible: true },
-  { field: 'itemRemarks', header: '單項備註', visible: true },
-];
+  filteredData: any[] = [...this.data];
+  columns: any[] = [
+    { field: 'sequence', header: '序號', visible: true },
+    { field: 'isNew', header: '是否新貨', visible: true },
+    { field: 'aboveNew', header: '以上新貨', visible: true },
+    { field: 'productManagementCodeName', header: '商品管理編號/名稱', visible: true },
+    { field: 'returnableQuantity', header: '可退回數量', visible: true },
+    { field: 'returnQuantity', header: '退回數量', visible: true },
+    { field: 'productUnit', header: '商品單位', visible: true },
+    { field: 'unitPrice', header: '單價', visible: true },
+    { field: 'tax', header: '稅額', visible: true },
+    { field: 'untaxedAmount', header: '未稅金額', visible: true },
+    { field: 'salePrice', header: '售價', visible: true },
+    { field: 'saleSubtotal', header: '售價小計', visible: true },
+    { field: 'returnInvoiceNumber', header: '退貨單號碼', visible: true },
+    { field: 'itemRemarks', header: '單項備註', visible: true },
+  ];
 
   systemTypeOptions: any[] = [];
 
@@ -144,7 +144,8 @@ columns: any[] = [
     private systemTypeService: SystemTypeService,
     private authService: AuthService,
 
-  ) {super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -220,7 +221,7 @@ columns: any[] = [
   onSubmit(frm: FormGroup) {
     console.log(frm.value);
     this.submitted = true;
-    
+
     this.notificationService.blockUi();
 
     if (frm.valid && this.canQuery()) {
@@ -273,8 +274,8 @@ columns: any[] = [
   onCancel() {
     this.router.navigate(['TLS5000/TLS52040']);
   }
-   // 初始化CRU表單
-   cruForm = this.formBuilder.group({
+  // 初始化CRU表單
+  cruForm = this.formBuilder.group({
     items: this.formBuilder.array([this.createItem()]), // 項目列表
   });
 

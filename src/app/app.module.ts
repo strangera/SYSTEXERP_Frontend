@@ -15,7 +15,7 @@ import { ContenttypeinterceptorService } from './interceptors/contenttypeinterce
 import { CustomheaderinterceptorService } from './interceptors/customheaderinterceptor.service';
 import { ErrorinterceptorService } from './interceptors/errorinterceptor.service';
 import { ConfirmationService, MessageService, PrimeNGConfig } from 'primeng/api';
-import { NotificationService } from './shared/service/notification.service';
+import { NotificationService } from './shared/component/notification-message/notification.service';
 import { NotificationMessageComponent } from './shared/component/notification-message/notification-message.component';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { HttpClient } from '@angular/common/http';

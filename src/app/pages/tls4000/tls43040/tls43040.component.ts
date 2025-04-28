@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../models/system/funsrightInfo';
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -47,13 +47,13 @@ export class TLS43040Component {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { ECR_GrpNo: 'serial123', ECR_GrpName: 'group1', ECR_GrpDesc: 'remark1' ,ECR_DtlLimit: 0},
+    { ECR_GrpNo: 'serial123', ECR_GrpName: 'group1', ECR_GrpDesc: 'remark1', ECR_DtlLimit: 0 },
     //{ contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
     //{ contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'ECR_GrpNo', header: '機台群組編號', visible: true },
     { field: 'ECR_GrpName', header: '機台群組名稱', visible: true },
     { field: 'ECR_GrpDesc', header: '機台群組備註', visible: true },
@@ -61,7 +61,7 @@ export class TLS43040Component {
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  ECR_DtlLimit_Options:any[] = [
+  ECR_DtlLimit_Options: any[] = [
     { value: 0, label: '不限制' },
     { value: 1, label: '符合明細設定的機台才列入群組' },
     { value: 2, label: '不符合明細設定的機台才列入群組' },

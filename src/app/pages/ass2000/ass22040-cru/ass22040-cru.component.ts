@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
@@ -19,8 +19,7 @@ import { FileType } from '../../../shared/componentkit/file-upload/file-upload.c
 })
 export class ASS22040CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{  // Upload files
+  implements OnInit {  // Upload files
   fileType: FileType = FileType.PNG;
   uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
   //
@@ -29,10 +28,10 @@ export class ASS22040CRUComponent
     this.ProgNo = '320010';
     // ----------------------------------------------------------------
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-     // 下拉選單--------------------------------------------------------
+    // 下拉選單--------------------------------------------------------
     //  this.userCodeService.getUserCode().subscribe((data) => (this.Applicantcode = data));
-     this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.Departmentcode = data));
-     this.floorService.getFloors().subscribe((data) => (this.floor = data));
+    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.Departmentcode = data));
+    this.floorService.getFloors().subscribe((data) => (this.floor = data));
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus;
@@ -69,13 +68,13 @@ export class ASS22040CRUComponent
   //動態新增----------------------------------------------------------
   createItem(): FormGroup {
     return this.formBuilder.group({
-      
+
       itemCodeOptions: [],
       unit: [],
       returnQty: [],
       desc: [],
       cCat: [],
-      
+
     });
   }
 
@@ -85,7 +84,7 @@ export class ASS22040CRUComponent
     floor: [],
     area: [],
     SN: [],
-    xCoordinate : [],
+    xCoordinate: [],
     yCoordinate: [],
     desc: [],
     placementDesc: [],
@@ -94,13 +93,13 @@ export class ASS22040CRUComponent
     floorCat: [],
     VFP: [],
     cCat: [],
-    settlementYM : [],
+    settlementYM: [],
     // ----------------------------------------------------------------
     items: this.formBuilder.array([this.createItem()]),
   });
   // Dropdown options
-  VFP: any[] =[];
-  floor: any[] =[];
+  VFP: any[] = [];
+  floor: any[] = [];
   area: any[] = [];
   Departmentcode: any[] = [];
   itemCodeOptions: any[] = [
@@ -114,11 +113,11 @@ export class ASS22040CRUComponent
     { value: 8, label: '3A24210000008' },
     { value: 9, label: '3A24210000009' },
     { value: 10, label: '3A24210000010' },
-];
-Energytype: any[] = [{ value: 1, label: '瓦斯費' },
-];  
-// { value: 2, label: '瓦斯費' },
-// { value: 3, label: '瓦斯費' },
+  ];
+  Energytype: any[] = [{ value: 1, label: '瓦斯費' },
+  ];
+  // { value: 2, label: '瓦斯費' },
+  // { value: 3, label: '瓦斯費' },
   meterPosCode: any[] = [
     { value: 1, label: '3A24210000001' },
     { value: 2, label: '3A24210000002' },
@@ -130,25 +129,25 @@ Energytype: any[] = [{ value: 1, label: '瓦斯費' },
     { value: 8, label: '3A24210000008' },
     { value: 9, label: '3A24210000009' },
     { value: 10, label: '3A24210000010' },
-];
-equipmentLocationOptions: any[] = [
-  { value: 1, label: '010A000001' },
-  { value: 2, label: '010A000002' },
-  { value: 3, label: '010A000003' },
-  { value: 4, label: '010A000004' },
-  { value: 5, label: '010B000001' },
-  { value: 6, label: '010B000002' },
-  { value: 7, label: '010B000003' },
-  { value: 8, label: '010B000004' },
-  { value: 9, label: '010B000005' },
-  { value: 10, label: '010B000006' },
-];
-cCat: any[] = [
-  { value: 1, label: '商場' },
- 
-];
+  ];
+  equipmentLocationOptions: any[] = [
+    { value: 1, label: '010A000001' },
+    { value: 2, label: '010A000002' },
+    { value: 3, label: '010A000003' },
+    { value: 4, label: '010A000004' },
+    { value: 5, label: '010B000001' },
+    { value: 6, label: '010B000002' },
+    { value: 7, label: '010B000003' },
+    { value: 8, label: '010B000004' },
+    { value: 9, label: '010B000005' },
+    { value: 10, label: '010B000006' },
+  ];
+  cCat: any[] = [
+    { value: 1, label: '商場' },
 
- 
+  ];
+
+
   // ----------------------------------------------------------------
   constructor(
     private router: Router,
@@ -156,9 +155,9 @@ cCat: any[] = [
     private messageService: NotificationService,
     private authService: AuthService,
     private translate: TranslateService,
-    private userCodeService:UserCodeService,
-    private organizationNumberService:OrganizationNumberService,
-    private floorService:FloorService,
+    private userCodeService: UserCodeService,
+    private organizationNumberService: OrganizationNumberService,
+    private floorService: FloorService,
 
   ) {
     super(); // 呼叫父類建構子

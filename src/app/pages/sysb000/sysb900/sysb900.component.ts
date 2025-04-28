@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { IndustryTypeService } from '../../../service/basic/industry-type.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
@@ -26,14 +26,14 @@ export class SYSB900Component extends BasicQpageComponent implements OnInit {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { productCatCode: '00', productCatName: '複合店',industryTypeCode: '10', industryTypeName: '物販'},
-    { productCatCode: '01', productCatName: '男女服飾', industryTypeCode: '10', industryTypeName: '物販'},
-    { productCatCode: '01', productCatName: '餐廳', industryTypeCode: '20', industryTypeName: '餐飲'},
-    { productCatCode: '01', productCatName: '主題樂園', industryTypeCode: '30', industryTypeName: '娛樂'},
+    { productCatCode: '00', productCatName: '複合店', industryTypeCode: '10', industryTypeName: '物販' },
+    { productCatCode: '01', productCatName: '男女服飾', industryTypeCode: '10', industryTypeName: '物販' },
+    { productCatCode: '01', productCatName: '餐廳', industryTypeCode: '20', industryTypeName: '餐飲' },
+    { productCatCode: '01', productCatName: '主題樂園', industryTypeCode: '30', industryTypeName: '娛樂' },
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'productCatCode', header: '商品類別碼', visible: true },
     { field: 'productCatName', header: '商品類別名稱', visible: true },
     { field: 'industryTypeCode', header: '所屬業種代碼', visible: true },

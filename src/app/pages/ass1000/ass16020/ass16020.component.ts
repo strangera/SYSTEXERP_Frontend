@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -45,8 +45,8 @@ export class ASS16020Component extends BasicQpageComponent implements OnInit {
   });
   // Table data
   data: any[] = [];
-  Reporttype: any[] = [    { value: 1, label: '全部' },
-    { value: 2, label: '差異' },];
+  Reporttype: any[] = [{ value: 1, label: '全部' },
+  { value: 2, label: '差異' },];
   filteredData: any[] = [...this.data];
   columns: any[] = [
     { field: 'inventoryNumber', header: '盤點單號', visible: true },
@@ -55,19 +55,19 @@ export class ASS16020Component extends BasicQpageComponent implements OnInit {
     { field: 'closingDate', header: '結案日期', visible: true },
     { field: 'inventoryStaff', header: '盤點人員', visible: true },
   ];
-  
-  
+
+
 
   // Dropdown options
   Inventorystatus: any[] = [
     { value: 1, label: '盤點中' },
     { value: 2, label: '登錄完成' },
     { value: 3, label: '已結案' },
-  
+
   ];
   Inventoryordenumber: any[] = [
     { value: 1, label: '202406002' },
-  
+
   ];
   custodyunit: any[] = [
     { value: 1, label: '101000' },

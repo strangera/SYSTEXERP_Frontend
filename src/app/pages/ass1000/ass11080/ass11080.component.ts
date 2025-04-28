@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -17,22 +17,22 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './ass11080.component.html',
   styleUrl: './ass11080.component.scss'
 })
-export class ASS11080Component extends BasicQpageComponent implements OnInit{
+export class ASS11080Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     active_SellofSummons: [], // 變賣傳票是否啟用
     active_ScrappedSummons: [], // 變賣傳票是否啟用
     // 資產報廢 會計科目設定
-    assetsALoss: [,[Validators.required]], // 處分資產損失
+    assetsALoss: [, [Validators.required]], // 處分資產損失
     // 資產變賣 會計科目設定
-    receiveAccount: [,[Validators.required]], // 應收帳款
-    assetsCLoss: [,[Validators.required]], // 處分資產損失
-    assetsCIncome: [,[Validators.required]], // 處分資產收入
+    receiveAccount: [, [Validators.required]], // 應收帳款
+    assetsCLoss: [, [Validators.required]], // 處分資產損失
+    assetsCIncome: [, [Validators.required]], // 處分資產收入
     // 耗材報廢 會計科目設定
-    consumables_Scrapped: [,[Validators.required]], // 耗材報廢會科
+    consumables_Scrapped: [, [Validators.required]], // 耗材報廢會科
     // 耗材盤點 會計科目設定
-    consumables_Income: [,[Validators.required]], // 耗材盤盈會科
-    consumables_Loss: [,[Validators.required]], // 耗材盤損會科
+    consumables_Income: [, [Validators.required]], // 耗材盤盈會科
+    consumables_Loss: [, [Validators.required]], // 耗材盤損會科
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -49,7 +49,7 @@ export class ASS11080Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '建檔日期', visible: true },
     { field: 'col2', header: '接洽人員', visible: true },
     { field: 'col3', header: '廠商統一編號', visible: true },
@@ -88,7 +88,7 @@ export class ASS11080Component extends BasicQpageComponent implements OnInit{
   //
   WhetherOptions: any[] = [];
   payOptions: any[] = [];
-  
+
   //
   constructor(
     private router: Router,

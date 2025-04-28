@@ -2,7 +2,7 @@ import { Component, OnInit, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -18,7 +18,7 @@ import { CounterCodeService } from '../../../service/basic/counter-code.service'
   templateUrl: './fin23040-cru.component.html',
   styleUrl: './fin23040-cru.component.scss'
 })
-export class FIN23040CRUComponent extends BasicCrupageComponent implements OnInit{
+export class FIN23040CRUComponent extends BasicCrupageComponent implements OnInit {
   //
   accountingCodeOptions: any[] = [];
   detailedCategoryOptions: any[] = [
@@ -26,7 +26,7 @@ export class FIN23040CRUComponent extends BasicCrupageComponent implements OnIni
     { value: 1, label: '收據' },
     { value: 2, label: '不抵扣憑證' },
   ];
-  invoiceFormatOptions:any[]=[
+  invoiceFormatOptions: any[] = [
     { value: 1, label: '21/進項三聯式、電子計算機統一發票' },
     { value: 2, label: '22/進項二聯式收銀機統一發票、載有稅額之其他憑證' },
     { value: 3, label: '25/進向三連式收銀機統一發票及一般稅額計算之電子發票' },
@@ -35,19 +35,19 @@ export class FIN23040CRUComponent extends BasicCrupageComponent implements OnIni
     { value: 6, label: '28/進項海關代徵營業稅繳納證' },
   ];
   vendorUIDOptions: any[] = [];
-  usageOptions:any[]=[
+  usageOptions: any[] = [
     { value: 1, label: '營業用' },
     { value: 2, label: '共同使用' },
   ];
-  taxTypeOptions:any[]=[];
+  taxTypeOptions: any[] = [];
   eventCodeOptions: any[] = [];
-  deductionCodeOptions:any[]=[
+  deductionCodeOptions: any[] = [
     { value: 1, label: '代表近項可扣抵之進貨及費用' },
     { value: 2, label: '代表近項可扣抵之固定資產' },
     { value: 3, label: '代表近項不可扣抵之進貨及費用' },
     { value: 4, label: '代表近項不可扣抵之固定資產' },
   ];
-  categoryOptions:any[]=[
+  categoryOptions: any[] = [
     { value: 1, label: '進貨及費用' },
     { value: 2, label: '固定資產' },
   ];
@@ -75,8 +75,8 @@ export class FIN23040CRUComponent extends BasicCrupageComponent implements OnIni
     private vendorService: VendorService,
     private taxTypeService: TaxTypeService,
     private counterCodeService: CounterCodeService,
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -141,9 +141,9 @@ export class FIN23040CRUComponent extends BasicCrupageComponent implements OnIni
   // ----------------------------------------------------------------
   createItem(): FormGroup {
     return this.formBuilder.group({
-      accountingCode: [,[Validators.required]], // 會計科目代號
+      accountingCode: [, [Validators.required]], // 會計科目代號
       summary: ['', [Validators.required, Validators.maxLength(30)]], // 項目摘要
-      detailedCategory: [,[Validators.required]], // 明細類別
+      detailedCategory: [, [Validators.required]], // 明細類別
       invoiceFormat: [], // 發票格式
       invoiceNumber: [, [this.validationService.numberValidator, Validators.maxLength(10)]], // 發票/收據號碼
       invoiceDate: [, [Validators.required]], // 發票日期
@@ -177,11 +177,11 @@ export class FIN23040CRUComponent extends BasicCrupageComponent implements OnIni
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;

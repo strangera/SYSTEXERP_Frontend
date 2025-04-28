@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { ItemCodeService } from '../../../service/basic/item-code.service';
@@ -19,7 +19,7 @@ import { NeedPayTicketService } from '../../../service/basic/need-pay-ticket.ser
   templateUrl: './ass13090.component.html',
   styleUrl: './ass13090.component.scss'
 })
-export class ASS13090Component extends BasicQpageComponent implements OnInit{
+export class ASS13090Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     shareCode: [, [Validators.maxLength(20)]], // 攤提代號
@@ -44,17 +44,20 @@ export class ASS13090Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'shareCode': '1A2323001001', 'itemCode': '1A2323001001/B1', 'purchaseDate': '2014/12/31', 'derditDate': '2014/12/31',
+    {
+      'shareCode': '1A2323001001', 'itemCode': '1A2323001001/B1', 'purchaseDate': '2014/12/31', 'derditDate': '2014/12/31',
       'assetType': '資產', 'purchaseAmount': 10000, 'amortizationStatus': '已攤提'
     },
-    { 'shareCode': '1A2323002001', 'itemCode': '1A2323001001/1F', 'purchaseDate': '2014/12/31', 'derditDate': '2014/12/31',
+    {
+      'shareCode': '1A2323002001', 'itemCode': '1A2323001001/1F', 'purchaseDate': '2014/12/31', 'derditDate': '2014/12/31',
       'assetType': '資產', 'purchaseAmount': 20000, 'amortizationStatus': '已攤提'
     },
-    { 'shareCode': '1A2323003001', 'itemCode': '1A2323001001/2F', 'purchaseDate': '2014/12/31', 'derditDate': '2014/12/31',
+    {
+      'shareCode': '1A2323003001', 'itemCode': '1A2323001001/2F', 'purchaseDate': '2014/12/31', 'derditDate': '2014/12/31',
       'assetType': '列管品', 'purchaseAmount': 20000, 'amortizationStatus': '已攤提'
     },
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'shareCode', header: '攤提代號', visible: true },
     { field: 'itemCode', header: '品項編號', visible: true },
     { field: 'purchaseDate', header: '購入日期', visible: true },
@@ -66,7 +69,7 @@ export class ASS13090Component extends BasicQpageComponent implements OnInit{
   ];
   // ----------------------------------------------------------------
   //
-  itemCodeOptions:any[] = [];
+  itemCodeOptions: any[] = [];
   assetsStatusOptions: any[] = [];
   assetTypeOptions: any[] = [];
   accountingCodeOptions: any[] = [];

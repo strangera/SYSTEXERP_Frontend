@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
@@ -15,14 +15,13 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
 })
 export class CPM23030CRUComponent
   extends BasicCrupageComponent
-  implements OnInit
-{
+  implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    issueDate: [,Validators.required],
-    issueNumber: [,Validators.required],
-    marketingCampaignCode: [,Validators.required],
+    issueDate: [, Validators.required],
+    issueNumber: [, Validators.required],
+    marketingCampaignCode: [, Validators.required],
     campaignName: [],
-    applicant: [,Validators.required],
+    applicant: [, Validators.required],
     remarks: [],
     items: this.formBuilder.array([this.createItem()]),
   });
@@ -74,12 +73,12 @@ export class CPM23030CRUComponent
 
   createItem(): FormGroup {
     return this.formBuilder.group({
-      activityItemCode: [,Validators.required],
+      activityItemCode: [, Validators.required],
       activityItemName: [],
       itemNature: [],
       currentStock: [],
       availableQuantity: [],
-      issuedQuantity: [,Validators.required],
+      issuedQuantity: [, Validators.required],
       remainingQuantity: [],
     });
   }

@@ -4,7 +4,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -17,9 +17,9 @@ import { ValidationService } from '../../../shared/service/validation.service';
   templateUrl: './ass11020-cru.component.html',
   styleUrl: './ass11020-cru.component.scss'
 })
-export class ASS11020CRUComponent extends BasicCrupageComponent implements OnInit{
+export class ASS11020CRUComponent extends BasicCrupageComponent implements OnInit {
   //
-  bigCategoryCodeOptions: any[]=[
+  bigCategoryCodeOptions: any[] = [
     { value: 'A', label: 'A/裝潢工程' },
     { value: 'B', label: 'B/其他工程' },
     { value: 'C', label: 'C/電腦及電子零件產品' },
@@ -35,7 +35,7 @@ export class ASS11020CRUComponent extends BasicCrupageComponent implements OnIni
     midCategoryName: ['', [Validators.required, Validators.maxLength(32)]], // 中分類名稱
     bigCategoryCode: [, [Validators.required]], // 大分類代碼
     bigCategoryName: ['', [Validators.maxLength(40)]], // 大分類名稱
-    illustrate: [, ], // 說明
+    illustrate: [,], // 說明
   });
   //
   // ----------------------------------------------------------------
@@ -49,8 +49,8 @@ export class ASS11020CRUComponent extends BasicCrupageComponent implements OnIni
     private translate: TranslateService,
     private validationService: ValidationService,
     //
-    ) {
-      super();  // 呼叫父類建構子
+  ) {
+    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -100,11 +100,11 @@ export class ASS11020CRUComponent extends BasicCrupageComponent implements OnIni
     this.dataForm.disable();
   }
 
-  onSubmit(frm: FormGroup){
+  onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid){
+    if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }

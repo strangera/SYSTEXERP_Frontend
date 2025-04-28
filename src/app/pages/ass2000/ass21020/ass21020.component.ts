@@ -6,7 +6,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -26,11 +26,11 @@ export class ASS21020Component extends BasicQpageComponent implements OnInit {
     // Initialize dropdown options
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.organizationNumberService.getOrganizationNumbers()
-    .subscribe((data) => (this.Departmentcode = data));
+      .subscribe((data) => (this.Departmentcode = data));
     this.floorService.getFloors()
-    .subscribe((data) => (this.floor = data));
+      .subscribe((data) => (this.floor = data));
     this.locationCodeService.getSystemTypes()
-    .subscribe((data) => (this.location = data));
+      .subscribe((data) => (this.location = data));
   }
   queryForm = this.formBuilder.group({
     bigCategoryCode: [],
@@ -56,10 +56,10 @@ export class ASS21020Component extends BasicQpageComponent implements OnInit {
   });
   // Table data
   Energytype: any[] = [{ value: 1, label: '水費' },
-    { value: 2, label: '電費' },
-    { value: 3, label: '瓦斯費' },];
-  data: any[] = [   ];
-equipmentLocationOptions: any[] = [
+  { value: 2, label: '電費' },
+  { value: 3, label: '瓦斯費' },];
+  data: any[] = [];
+  equipmentLocationOptions: any[] = [
     { value: 1, label: '010A000001' },
     { value: 2, label: '010A000002' },
     { value: 3, label: '010A000003' },
@@ -67,16 +67,16 @@ equipmentLocationOptions: any[] = [
     { value: 5, label: '010B000001' },
     { value: 6, label: '010B000002' },
     { value: 7, label: '010B000003' },
-];
-ironNumberOptions: any[] = [
-  { value: 1, label: 'EB101' },
-  { value: 2, label: 'EB103' },
-  { value: 3, label: 'EB105' },
-  { value: 4, label: 'EB107' },
-  { value: 5, label: 'EB109' },
-  { value: 6, label: 'EB110' },
-  { value: 7, label: 'EB111' },
-];
+  ];
+  ironNumberOptions: any[] = [
+    { value: 1, label: 'EB101' },
+    { value: 2, label: 'EB103' },
+    { value: 3, label: 'EB105' },
+    { value: 4, label: 'EB107' },
+    { value: 5, label: 'EB109' },
+    { value: 6, label: 'EB110' },
+    { value: 7, label: 'EB111' },
+  ];
   location: any[] = [];
   filteredData: any[] = [...this.data];
   columns: any[] = [
@@ -85,14 +85,14 @@ ironNumberOptions: any[] = [
     { field: 'deviceLocationCode', header: '設備位置編號', visible: true },
     { field: 'remarks', header: '備註', visible: true },
   ];
-  
-  
-  
-  
+
+
+
+
 
   // Dropdown options
-  floor: any[] =[];
-  Kurabe: any[] =[
+  floor: any[] = [];
+  Kurabe: any[] = [
     { value: 1, label: '001' },
     { value: 2, label: '002' },
   ];
@@ -150,26 +150,26 @@ ironNumberOptions: any[] = [
     { value: 7, label: '1A232400000010000001' },
     { value: 8, label: '1A232400000040000001' },
     { value: 9, label: '1A232400000060000001' },
-];
-propertytype
-: any[] = [
-  { value: 1, label: '資產' },
-  { value: 2, label: '列管品' },
-];
-Itemnumber
-: any[] = [
+  ];
+  propertytype
+    : any[] = [
+      { value: 1, label: '資產' },
+      { value: 2, label: '列管品' },
+    ];
+  Itemnumber
+    : any[] = [
 
-    { value: 1, label: '3A24210000001' },
-    { value: 2, label: '3A24210000002' },
-    { value: 3, label: '3A24210000003' },
-    { value: 4, label: '3A24210000004' },
-    { value: 5, label: '3A24210000005' },
-    { value: 6, label: '3A24210000006' },
-    { value: 7, label: '3A24210000007' },
-    { value: 8, label: '3A24210000008' },
-    { value: 9, label: '3A24210000009' },
-    { value: 10, label: '3A24210000010' },
-];
+      { value: 1, label: '3A24210000001' },
+      { value: 2, label: '3A24210000002' },
+      { value: 3, label: '3A24210000003' },
+      { value: 4, label: '3A24210000004' },
+      { value: 5, label: '3A24210000005' },
+      { value: 6, label: '3A24210000006' },
+      { value: 7, label: '3A24210000007' },
+      { value: 8, label: '3A24210000008' },
+      { value: 9, label: '3A24210000009' },
+      { value: 10, label: '3A24210000010' },
+    ];
 
 
 
@@ -181,9 +181,9 @@ Itemnumber
     private bigCategoryService: BigCategoryService,
     private midCategoryService: MidCategoryService,
     private smallCategoryService: SmallCategoryService,
-    private organizationNumberService:OrganizationNumberService,
-    private floorService:FloorService,
-    private locationCodeService:LocationCodeService
+    private organizationNumberService: OrganizationNumberService,
+    private floorService: FloorService,
+    private locationCodeService: LocationCodeService
   ) {
     super(); // 呼叫父類建構子
   }

@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -15,14 +15,14 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   templateUrl: './ass14030.component.html',
   styleUrl: './ass14030.component.scss'
 })
-export class ASS14030Component extends BasicQpageComponent implements OnInit{
+export class ASS14030Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     subpoenaType: [[] as number[]], // 傳票總類
     subpoenaDateFrom: [], // 傳票日期
     subpoenaDateTo: [], // 傳票日期
     subpoenaStatus: [[] as number[]], // 傳票狀態
-    checkoutNumber: [, [Validators.maxLength(12),this.validationService.numberValidator]], // 結帳單號
+    checkoutNumber: [, [Validators.maxLength(12), this.validationService.numberValidator]], // 結帳單號
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -34,14 +34,15 @@ export class ASS14030Component extends BasicQpageComponent implements OnInit{
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    { 'temp': '應付', 'subpoenaNumber': '', 'subpoenaType': '資材進貨', 'maintenanceNumber': 'I0000377',
+    {
+      'temp': '應付', 'subpoenaNumber': '', 'subpoenaType': '資材進貨', 'maintenanceNumber': 'I0000377',
       'subpoenaDateFrom': '2022/08/04', 'subpoenaStatus': '未拋轉', 'subpoenaSummary': '202208月進貨傳票', 'checkoutNumber': '20220831',
-     },
+    },
     // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'temp', header: '應收(付)明細暫存資料', visible: true },
     { field: 'subpoenaNumber', header: '傳票編號', visible: true },
     { field: 'subpoenaType', header: '傳票種類', visible: true },
@@ -67,7 +68,7 @@ export class ASS14030Component extends BasicQpageComponent implements OnInit{
     { value: 1, label: '已拋轉' },
     { value: 2, label: '已退回' },
   ];
-  
+
   //
   constructor(
     private router: Router,

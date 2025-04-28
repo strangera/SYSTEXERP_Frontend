@@ -6,7 +6,7 @@ import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
 import { FlippingstateService } from './../../../service/basic/flippingstate.service';
 // Shared
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -25,7 +25,7 @@ export class FIN35050Component extends BasicQpageComponent implements OnInit {
     SMarginserialnumber: [],
     EMarginserialnumber: [],
     vendorCode: [],
-    Flippingstate: [1,Validators.required],
+    Flippingstate: [1, Validators.required],
     Checknumber: [],
     margintype: [1],
     borrowloan: [],
@@ -43,10 +43,10 @@ export class FIN35050Component extends BasicQpageComponent implements OnInit {
   vendorOptions: any[] = [];
   FlippingstateOptions: any[] = [];
   margintypeOptions: any[] = [];
-  borrowloanOptions: any[] = [    { value: 1, label: '借' },
-    { value: 2, label: '貸' },];
-    typeOptions: any[] = [    { value: 1, label: '存入保證金' },
-      { value: 2, label: '存出保證金' },];
+  borrowloanOptions: any[] = [{ value: 1, label: '借' },
+  { value: 2, label: '貸' },];
+  typeOptions: any[] = [{ value: 1, label: '存入保證金' },
+  { value: 2, label: '存出保證金' },];
   // Table data
   data: any[] = [
 
@@ -58,7 +58,7 @@ export class FIN35050Component extends BasicQpageComponent implements OnInit {
     { field: 'note', header: '備註', visible: true },
     { field: 'amount', header: '金額', visible: true },
   ];
-  
+
 
   constructor(
     private router: Router,
@@ -66,10 +66,10 @@ export class FIN35050Component extends BasicQpageComponent implements OnInit {
     private notificationService: NotificationService,
     private authService: AuthService,
     private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService:AnalysisdateCService,
+    private AnalysisdateCService: AnalysisdateCService,
     private vendorService: VendorService,
-    private flippingstateService:FlippingstateService,
-    private margintypeService:MargintypeService,
+    private flippingstateService: FlippingstateService,
+    private margintypeService: MargintypeService,
   ) {
     super(); // 呼叫父類建構子
   }

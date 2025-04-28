@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/service/notification.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
@@ -17,7 +17,7 @@ import { InvoiceCategoryService } from './../../../service/basic/invoice-categor
   templateUrl: './fin14070.component.html',
   styleUrl: './fin14070.component.scss'
 })
-export class FIN14070Component extends BasicQpageComponent implements OnInit{
+export class FIN14070Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     registerID: [, [Validators.maxLength(6)]], // 收銀機編號
@@ -54,7 +54,7 @@ export class FIN14070Component extends BasicQpageComponent implements OnInit{
     // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
-  columns: any[]= [
+  columns: any[] = [
     { field: 'col1', header: '收銀機編號', visible: true },
     { field: 'col2', header: '申報年月', visible: true },
     { field: 'col3', header: '發票年月', visible: true },
@@ -72,13 +72,13 @@ export class FIN14070Component extends BasicQpageComponent implements OnInit{
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  whetherOptions:any[]=[];
-  statusOptions:any[]=[
+  whetherOptions: any[] = [];
+  statusOptions: any[] = [
     { value: 1, label: '正常' },
     { value: 2, label: '作廢' },
     { value: 3, label: '空白' },
   ];
-  invoiceCategoryOptions:any[]=[];
+  invoiceCategoryOptions: any[] = [];
 
   constructor(
     private router: Router,
