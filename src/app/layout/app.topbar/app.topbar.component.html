@@ -31,7 +31,7 @@
       <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm);" class="mx-2">
         <p-iconField iconPosition="right" class="h-full" styleClass="h-full">
           <p-autoComplete formControlName="query_data" [suggestions]="filteredProgs" emptyMessage="查無此快速碼"
-            (completeMethod)="filterCountry($event)" optionLabel="label" placeholder="搜尋選單的名稱編號" styleClass="h-2rem"
+            (completeMethod)="filterProgNo($event)" optionLabel="label" placeholder="搜尋選單的名稱編號" styleClass="h-2rem"
             (keydown.enter)="onSubmit(queryForm)" />
           <p-inputIcon styleClass="pi pi-search" onclick="onSubmit(queryForm);" />
         </p-iconField>
@@ -46,7 +46,7 @@
         <div class="flex flex-column gap-1">
           <div class="flex flex-column">
             <p-table [value]="Favorites" selectionMode="multiple" [(selection)]="selectedFavorites"
-              [reorderableColumns]="editingFavorites" (onRowReorder)="onRowReorder($event)" dataKey="label">
+              [reorderableColumns]="editingFavorites" (onRowReorder)="onRowReorder()" dataKey="label">
               <ng-template pTemplate="header">
                 <tr>
                   <th *ngIf="editingFavorites" class="text-center bg-white"><p-tableHeaderCheckbox /></th>
@@ -74,6 +74,7 @@
                   </td>
                   <td class="p-2 text-center">
                     <span *ngIf="!editingFavorites" (click)="onFavoriteItemClick(item)"
+                      (keyup.enter)="onFavoriteItemClick(item)" (keyup.space)="onFavoriteItemClick(item)" tabindex="0"
                       class="min-w-max p-2">{{item.label}}</span>
                     <span *ngIf="editingFavorites" class="min-w-max p-2">{{item.label}}</span>
                   </td>
