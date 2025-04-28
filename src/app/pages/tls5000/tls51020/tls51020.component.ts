@@ -125,7 +125,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
       this.lastQueryParams = queryParams;
       console.log('Query params:', queryParams); // 調試查詢參數
 
-      this.apiService.queryPOS20031(queryParams).subscribe({
+      this.apiService.queryTLS51020(queryParams).subscribe({
         next: (response: any) => {
           console.log('API response:', response);
           if (response.Status === '0000') {
@@ -194,7 +194,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
         id: item.id // 保持 number 型別
       };
       console.log('Request body:', JSON.stringify(requestBody));
-      this.apiService.deletePOS20031(requestBody).subscribe({
+      this.apiService.deleteTLS51020(requestBody).subscribe({
         next: (response: any) => {
           console.log('API response:', response);
           if (response.Status === '0000') {

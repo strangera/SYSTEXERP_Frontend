@@ -117,7 +117,7 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         case CRUDStatus.Create:
           if (this.canAdd()) {
             // 待實現：調用 API 進行新增
-            this.apiService.insertPOS2003(frm.value).subscribe((response: any) => {
+            this.apiService.insertTLS51010(frm.value).subscribe((response: any) => {
               this.messageService.successBubble('新增成功');
               this.onCancel(); // 新增成功後返回查詢頁面
             });
@@ -126,7 +126,7 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             // 待實現：調用 API 進行更新
-            this.apiService.updatePOS2003(frm.value).subscribe((response: any) => {
+            this.apiService.updateTLS51010(frm.value).subscribe((response: any) => {
               this.messageService.successBubble('更新成功');
               this.onCancel(); // 更新成功後返回查詢頁面
             });

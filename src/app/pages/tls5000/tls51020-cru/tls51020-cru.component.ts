@@ -28,7 +28,6 @@ interface CategoryItem {
   styleUrl: './tls51020-cru.component.scss'
 })
 export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
-
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [0], // ID
@@ -64,7 +63,7 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
         case CRUDStatus.Create:
           if (this.canAdd()) {
             // 待實現：調用 API 進行新增
-            this.apiService.insertPOS20031(frm.value).subscribe((response: any) => {
+            this.apiService.insertTLS51020(frm.value).subscribe((response: any) => {
               this.messageService.successBubble('新增成功');
               this.onCancel(); // 新增成功後返回查詢頁面
             });
@@ -73,7 +72,7 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             // 待實現：調用 API 進行更新
-            this.apiService.updatePOS20031(frm.value).subscribe((response: any) => {
+            this.apiService.updateTLS51020(frm.value).subscribe((response: any) => {
               this.messageService.successBubble('更新成功');
               this.onCancel(); // 更新成功後返回查詢頁面
             });
