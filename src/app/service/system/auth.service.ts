@@ -58,8 +58,7 @@ export class AuthService {
   }
   login(data: userLogin): Observable<ApiResponse<UserInfo>> {
     data.password = this.encrypt.getPassword(data.code as string, data.password as string);
-    const url = `${this.apiUrl}/User/userLogin`;
-    return this.http.post<ApiResponse<UserInfo>>(url, data).pipe(
+    return this.http.post<ApiResponse<UserInfo>>(`${this.apiUrl}/User/userLogin`, data).pipe(
       map((response: ApiResponse<UserInfo>) => {
         if (response.Status === '0000') {
           this.userSubject.next(response.Data);
@@ -226,15 +225,11 @@ export class AuthService {
   }
 
   getFunRightsInfo(): Observable<any> {
-    return this.http.get<any>(`assets/service/User/userLogin.json`).pipe(
+    // return this.http.get<any>(`assets/service/User/userLogin.json`).pipe(
+    return this.http.post<any>(`${this.apiUrl}/User/GetUserDashboard`, {}).pipe(
       map((response: any) => {
-        if (response && response.funright_info) {
-          sessionStorage.setItem('FunRightsInfo', JSON.stringify(response.funright_info));
-          this._menuUpdated.next(response.funright_info);
-          sessionStorage.setItem('AuthorizeInfo', JSON.stringify(response.authorize_info));
-        } else {
-          console.error('funright_info not found in mock data');
-        }
+        sessionStorage.setItem('FunRightsInfo', JSON.stringify(response.Data.funright_info));
+        this._menuUpdated.next(response.Data.funright_info);
         return response;
       }),
       catchError((error) => {

@@ -23,7 +23,15 @@ export class SsoDashboardComponent implements OnInit {
   user: UserInfo | null = null;
   private subscriptions: Subscription[] = [];
   data: UserInfo | null = null; // 使用者資料
-  items!: MenuItem[];
+  items: MenuItem[] = [
+    {
+      label: '個人資料',
+      items: [
+        { label: '修改使用者密碼', icon: 'pi pi-pen-to-square', command: () => { this.visible = true; this.form.reset(); } },
+        { label: '登出', icon: 'pi pi-sign-out', command: () => this.authService.logout() },
+      ],
+    },
+  ];
 
   urlItems: ApiItem[] = [];
   loading = true;
@@ -36,8 +44,7 @@ export class SsoDashboardComponent implements OnInit {
     // newPassword: ['', [Validators.required, this.validationService.passwordStrengthValidator()]],
     confirmPassword: ['', [Validators.required]],
   }); // }, { validators: this.validationService.passwordsMatchValidator('newPassword', 'confirmPassword') });
-  strongRegex =
-    '^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>-_+=`~[]\\;\']).{4,8}$';
+  strongRegex = '^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>-_+=`~[]\\;\']).{4,8}$';
   formButtonLoading = false; // 控制按鈕的載入狀態
 
   constructor(
@@ -57,26 +64,6 @@ export class SsoDashboardComponent implements OnInit {
     );
   }
   ngOnInit() {
-    this.items = [
-      {
-        label: '個人資料',
-        items: [
-          {
-            label: '修改使用者密碼',
-            icon: 'pi pi-pen-to-square',
-            command: () => {
-              this.visible = true;
-              this.form.reset();
-            },
-          },
-          {
-            label: '登出',
-            icon: 'pi pi-sign-out',
-            command: () => this.authService.logout(),
-          },
-        ],
-      },
-    ];
     try {
       const userInfo = sessionStorage.getItem('UserInfo');
       this.data = userInfo ? JSON.parse(userInfo) : null;
@@ -85,17 +72,10 @@ export class SsoDashboardComponent implements OnInit {
     }
     this.fetchUrlList();
 
-    this.form.get('newPassword')?.valueChanges.subscribe(() => {
-      this.form.get('confirmPassword')?.updateValueAndValidity();
-    });
+    this.form.get('newPassword')?.valueChanges.subscribe(() => { this.form.get('confirmPassword')?.updateValueAndValidity() });
+    this.form.get('confirmPassword')?.valueChanges.subscribe(() => { this.form.get('confirmPassword')?.updateValueAndValidity() });
 
-    this.form.get('confirmPassword')?.valueChanges.subscribe(() => {
-      this.form.get('confirmPassword')?.updateValueAndValidity();
-    });
-
-    const time = JSON.parse(
-      sessionStorage.getItem('UserInfo') || '{}',
-    ).USER_PwdExpireDate;
+    const time = JSON.parse(sessionStorage.getItem('UserInfo') || '{}').USER_PwdExpireDate;
     if (time <= new Date().toISOString()) {
       this.messageService.warnBubble(
         '為維護帳號安全，您的密碼已超過 90 天未變更，為保障帳戶安全，請立即設定新密碼後再登入系統。',
@@ -108,7 +88,13 @@ export class SsoDashboardComponent implements OnInit {
     this.loading = true;
     this.ssoDashboardService.fetchUrlList().subscribe({
       next: (data) => {
-        this.urlItems = data;
+        this.urlItems = data.Data.sort((a: any, b: any) => {
+          const seqNoA = Number(a.Seq_No);
+          const seqNoB = Number(b.Seq_No);
+          if (seqNoA === undefined || seqNoA === null) return 1;
+          if (seqNoB === undefined || seqNoB === null) return -1;
+          return seqNoA - seqNoB;
+        }).filter((item: any) => item.IsEnable === 'Y'); // 篩選 IsEnable 為 true 的項目
         this.loading = false;
       },
       error: (error) => {
@@ -120,30 +106,20 @@ export class SsoDashboardComponent implements OnInit {
   }
 
   navigateToUrl(item: ApiItem): void {
-    if (item.routerLink) {
+    if (item.System_Url) {
       this.loading = true; // 開始載入，顯示 loading 效果 (如果需要)
-      forkJoin([
-        this.authService.getFunRightsInfo(),
-        this.sys1000Service.getData(),
-      ]).subscribe({
-        next: ([sys1000Response]) => {
-          sessionStorage.setItem(
-            'SYSTEMSetting',
-            JSON.stringify(sys1000Response),
-          );
+      this.authService.getFunRightsInfo().subscribe({
+        next: (sys1000Response) => {
+          sessionStorage.setItem('SYSTEMSetting', JSON.stringify(sys1000Response));
           this.loading = false; // 停止載入
-          this.router.navigate([item.routerLink]); // 切換路由
+          window.open(item.System_Url, '_blank');
         },
         error: (error) => {
-          // 其中一個或兩個 API 請求失敗
           console.error('API 請求失敗:', error);
           this.loading = false; // 停止載入
           this.errorMessage = '載入資料失敗，無法導航。'; // 顯示錯誤訊息 (如果需要)
-          // 可以在這裡處理錯誤，例如顯示錯誤訊息給使用者
         },
       });
-    } else if (item.url) {
-      window.open(item.url, '_blank');
     }
   }
 
@@ -151,29 +127,12 @@ export class SsoDashboardComponent implements OnInit {
     frm.markAllAsTouched();
     if (frm.valid) {
       this.formButtonLoading = true;
-      // const body = {
-      //   User_code: this.data?.code || '',
-      //   Old_password: this.encryptionService.getPassword(this.data?.code || '', frm.value.oldPassword),
-      //   New_password: this.encryptionService.getPassword(this.data?.code || '', frm.value.newPassword),
-      // };
-      // this.authService.changePassword(body).subscribe({
-      //   next: () => {
-
       const query = {
         User_No: this.data?.user_No || '',
-        Old_password: this.encryptionService.getPassword(
-          this.data?.user_No || '',
-          frm.value.oldPassword,
-        ),
-        New_password: this.encryptionService.getPassword(
-          this.data?.user_No || '',
-          frm.value.newPassword,
-        ),
-        PwdExpireDate: new Date(
-          Date.now() + 90 * 24 * 60 * 60 * 1000,
-        ).toISOString(), // 密碼到期日設為90天後
+        Old_password: this.encryptionService.getPassword(this.data?.user_No || '', frm.value.oldPassword),
+        New_password: this.encryptionService.getPassword(this.data?.user_No || '', frm.value.newPassword),
+        PwdExpireDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 密碼到期日設為90天後
       };
-
       this.userCodeService.changePassword(query).subscribe({
         next: () => {
           this.messageService.successBubble('密碼修改成功');
@@ -186,22 +145,5 @@ export class SsoDashboardComponent implements OnInit {
         },
       });
     }
-  }
-  get containerClass() {
-    return {
-      'layout-theme-light': this.layoutService.config().colorScheme === 'light',
-      'layout-theme-dark': this.layoutService.config().colorScheme === 'dark',
-      'dark-theme': this.layoutService.config().colorScheme === 'dark', // 添加 dark-theme class
-      'light-theme': this.layoutService.config().colorScheme === 'light', // 添加 light-theme class (可選，因為預設是 light)
-      'layout-overlay': this.layoutService.config().menuMode === 'overlay',
-      'layout-static': this.layoutService.config().menuMode === 'static',
-      'layout-static-inactive':
-        this.layoutService.state.staticMenuDesktopInactive &&
-        this.layoutService.config().menuMode === 'static',
-      'layout-overlay-active': this.layoutService.state.overlayMenuActive,
-      'layout-mobile-active': this.layoutService.state.staticMenuMobileActive,
-      'p-input-filled': this.layoutService.config().inputStyle === 'filled',
-      'p-ripple-disabled': !this.layoutService.config().ripple,
-    };
   }
 }
