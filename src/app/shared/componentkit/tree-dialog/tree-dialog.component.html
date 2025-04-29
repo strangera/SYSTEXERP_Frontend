@@ -1,0 +1,48 @@
+<label [for]="controlName">{{ label }}
+  <span *ngIf="isRequired" class="required">*</span>
+</label>
+<input class="w-full cursor-pointer" title='請輸入' [id]="controlName" type="text" [formControl]="control"
+  [placeholder]="control.disabled ? '' : '請選擇'" [min]="minLength" [maxlength]="maxLength"
+  [ngClass]="{'ng-invalid ng-dirty': submitted && control.errors || this.control.parent?.errors}" pInputText
+  [attr.aria-label]="label || placeholder" title="{{ label || placeholder }}" variant="filled"
+  (mouseup)="onInputMouseUp()" />
+<app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>
+
+
+<p-dialog id="tree-dialog" header="Header" [(visible)]="visible" [modal]="true" [closable]="false">
+  <!-- header -->
+  <ng-template pTemplate="header">
+    <p-inputGroup>
+      <p-inputGroupAddon class="flex-grow-1" styleClass="w-full">
+        <p-dropdown styleClass="w-full" [options]="cities" [(ngModel)]="selectedCity" optionLabel="name" />
+      </p-inputGroupAddon>
+      <p-iconField iconPosition="right" class="flex-grow-1">
+        <p-inputIcon styleClass="pi pi-search" />
+        <input class="w-full" type="text" pInputText placeholder="Search" />
+      </p-iconField>
+    </p-inputGroup>
+  </ng-template>
+  <!-- selectButton -->
+  <p-selectButton [options]="justifyOptions" optionLabel="icon">
+    <ng-template let-item pTemplate>
+      <span>{{ item.label }}</span>
+    </ng-template>
+  </p-selectButton>
+
+  <!-- tree -->
+  <p-tree [value]="nodes" selectionMode="checkbox" class="w-full md:w-30rem">
+    <ng-template let-node pTemplate="url">
+      <a [href]="node.data" target="_blank" rel="noopener noreferrer" class="text-700 hover:text-primary">
+        {{ node.label }}
+      </a>
+    </ng-template>
+    <ng-template let-node pTemplate="default">
+      <b>{{ node.label }}</b>
+    </ng-template>
+  </p-tree>
+  <!-- footer -->
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" [text]="true" severity="secondary" (onClick)="visible = false" />
+    <p-button label="Save" [outlined]="true" severity="secondary" (onClick)="visible = false" />
+  </ng-template>
+</p-dialog>

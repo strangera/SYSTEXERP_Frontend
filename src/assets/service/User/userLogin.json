@@ -1,12 +1,4 @@
 {
-  "user_info": {
-    "user_id": "admin",
-    "user_name": "管理員",
-    "sto_no": "100",
-    "sto_sname": "南紡管理平台",
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImFkbWluIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvc3VybmFtZSI6IueuoeeQhuWToSIsImV4cCI6MTcyMDUwNzI0NywiaXNzIjoiSW5mb0xpbmsiLCJhdWQiOiJUT00ifQ.ayEa36U86LCwWvXgO9pnLBg8kkvFcEeSTlmerZamNik",
-    "login_time": "2024-07-08T14:40:47.536621+08:00"
-  },
   "store_info": [],
   "funright_info": [
     {

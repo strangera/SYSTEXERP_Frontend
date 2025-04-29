@@ -106,6 +106,7 @@ import { CalendarComponent } from './componentkit/calendar/calendar.component';
 import { CalendarRangeComponent } from './componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from './componentkit/table/table.component';
 import { TableExpansionComponent } from './componentkit/table/table-expansion/table-expansion.component';
+import { TreeDialogComponent } from './componentkit/tree-dialog/tree-dialog.component';
 
 @NgModule({
   declarations: [
@@ -121,6 +122,7 @@ import { TableExpansionComponent } from './componentkit/table/table-expansion/ta
     CalendarRangeComponent,
     TableComponent,
     TableExpansionComponent,
+    TreeDialogComponent,
 
     ButtonDynamicallyaddComponent,
     ButtonDynamicallydeleteComponent,
@@ -306,6 +308,7 @@ import { TableExpansionComponent } from './componentkit/table/table-expansion/ta
     ButtonDynamicallyaddComponent,
     ButtonDynamicallydeleteComponent,
     InputTextComponent,
+    TreeDialogComponent,
     InputNumberComponent,
     InputNumberRangeComponent,
     FileUploadComponent,
