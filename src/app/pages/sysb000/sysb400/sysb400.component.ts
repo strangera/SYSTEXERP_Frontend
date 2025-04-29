@@ -77,7 +77,8 @@ export class SYSB400Component extends BasicQpageComponent implements OnInit {
   IsPaginator: boolean = true;
   IsScrollable: boolean = false;
   IsScrollHeight: string = 'flex';
-  tableSize: string = 'p-datatable-sm p-datatable-gridlines p-datatable-striped';
+  tableSize: string =
+    'p-datatable-sm p-datatable-gridlines p-datatable-striped';
   selectedRows: Organization[] = [];
 
   constructor(
@@ -100,10 +101,12 @@ export class SYSB400Component extends BasicQpageComponent implements OnInit {
     const totalRecords = this.data.length;
     const totalPages = Math.ceil(totalRecords / this.rows);
 
-    this.pages = Array(totalPages).fill(0).map((_, i) => ({
-      label: `第 ${i + 1} 頁`,
-      value: i + 1,
-    }));
+    this.pages = Array(totalPages)
+      .fill(0)
+      .map((_, i) => ({
+        label: `第 ${i + 1} 頁`,
+        value: i + 1,
+      }));
   }
 
   // 跳轉頁面
@@ -128,27 +131,6 @@ export class SYSB400Component extends BasicQpageComponent implements OnInit {
     this.selectedPage = Math.ceil(this.first / this.rows) + 1;
   }
 
-  applyFilters(): void {
-    // const filters = this.queryForm.value;
-    // this.filteredData = [...this.data];
-
-    // if (filters.org_name) {
-    //   this.filteredData = this.filteredData.filter(
-    //     item => item.org_name === filters.org_name
-    //   );
-    // }
-
-    if (this.queryForm.valid && this.canQuery()) {
-      // console.log('查詢條件', this.queryForm.value);
-      this.sysb400Service.querySYS3100(this.queryForm.value).subscribe((response) => {
-        this.data = response.Data;
-        console.log('查詢結果', this.data);
-        // this.queryStateService.setQueryState(QUERY_STORAGE_KEY, form.value);
-        this.loading = false;
-      });
-    }
-  }
-
   onSitemap(): void {
     this.router.navigate(['/SYSB000/SYSB400OS']);
   }
@@ -164,9 +146,21 @@ export class SYSB400Component extends BasicQpageComponent implements OnInit {
     this.router.navigate(['/SYSB000/SYSB400CRU'], extras);
   }
 
-  onSubmit(): void {
+  onSubmit(frm: FormGroup): void {
     if (this.queryForm.valid) {
-      console.log('Form submitted:', this.queryForm.value);
+      const query = {
+        level_id: frm.value.level_id,
+        org_id: frm.value.org_id,
+        org_name: frm.value.org_name,
+      };
+      if (frm.valid && this.canQuery()) {
+        console.log('查詢條件', this.queryForm.value);
+        this.sysb400Service.querySYSB400(query).subscribe((response) => {
+          console.log('查詢結果', response.Data);
+          // this.queryStateService.setQueryState(QUERY_STORAGE_KEY, form.value);
+          this.loading = false;
+        });
+      }
     } else {
       console.warn('Invalid form');
     }
@@ -177,7 +171,7 @@ export class SYSB400Component extends BasicQpageComponent implements OnInit {
   }
 
   isDisabled(): boolean {
-    return !this.selectedRows.some(row => row.stop_flag);
+    return !this.selectedRows.some((row) => row.stop_flag);
   }
 
   onEdit(row: Organization): void {
@@ -189,11 +183,11 @@ export class SYSB400Component extends BasicQpageComponent implements OnInit {
   }
 
   onDelete(): void {
-    const deletableRows = this.selectedRows.filter(row => row.stop_flag);
+    const deletableRows = this.selectedRows.filter((row) => row.stop_flag);
     if (deletableRows.length > 0) {
       console.log('Deleting:', deletableRows);
       this.filteredData = this.filteredData.filter(
-        row => !deletableRows.includes(row)
+        (row) => !deletableRows.includes(row),
       );
     } else {
       alert('無可刪除的項目');

@@ -1,5 +1,12 @@
-import { Component, OnInit, } from '@angular/core';
-import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
+import { Sysb400Service } from './../../../service/sysb/sysb400.service';
+import { Component, OnInit } from '@angular/core';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormGroup,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -11,10 +18,13 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
 @Component({
   selector: 'app-sysb400.cru',
   templateUrl: './sysb400.cru.component.html',
-  styleUrl: './sysb400.cru.component.scss'
+  styleUrl: './sysb400.cru.component.scss',
 })
 // 組織碼設定作業 CRU
-export class SYSB400CRUComponent extends BasicCrupageComponent implements OnInit {
+export class SYSB400CRUComponent
+  extends BasicCrupageComponent
+  implements OnInit
+{
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // SYS3100 + SYS3000
@@ -52,8 +62,9 @@ export class SYSB400CRUComponent extends BasicCrupageComponent implements OnInit
     private messageService: NotificationService,
     private authService: AuthService,
     private translate: TranslateService,
+    private sysb400Service: Sysb400Service,
   ) {
-    super();  // 呼叫父類建構子
+    super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -64,10 +75,9 @@ export class SYSB400CRUComponent extends BasicCrupageComponent implements OnInit
 
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
+      crudstatus: CRUDStatus;
+      rowdata: any;
     };
-
 
     switch (state.crudstatus) {
       // 創建
@@ -114,13 +124,32 @@ export class SYSB400CRUComponent extends BasicCrupageComponent implements OnInit
       case CRUDStatus.Create:
         if (this.canAdd()) {
           // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
+          const insert = {
+            org_id: this.dataForm.controls.level_id.value,
+            org_name: this.dataForm.controls.org_name.value,
+            p_org_id: this.dataForm.controls.p_org_id.value,
+            level_id: this.dataForm.controls.level_id.value,
+            p_level_id: this.dataForm.controls.p_level_id.value,
+            stop_flag: this.dataForm.controls.stop_flag.value,
+          };
+          console.log('insert', insert);
+          this.sysb400Service.insertSYSB400(insert).subscribe(() => {
+            this.messageService.successBubble('新增成功');
+            this.onCancel();
+          });
+
+          this.messageService.successBubble(
+            this.translate.instant('success_message'),
+          );
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
+
+          this.messageService.successBubble(
+            this.translate.instant('updated-successfully'),
+          );
         }
         break;
     }
@@ -132,7 +161,7 @@ export class SYSB400CRUComponent extends BasicCrupageComponent implements OnInit
   submitForm(frm: FormGroup) {
     // 查詢邏輯
     this.onSubmit(frm);
-  }//CRU
+  } //CRU
 
   onCancel() {
     this.router.navigate(['/SYSB000/SYSB400']);

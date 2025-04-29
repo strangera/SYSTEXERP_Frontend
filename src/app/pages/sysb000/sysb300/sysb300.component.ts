@@ -80,7 +80,7 @@ export class SYSB300Component
 
       console.log('查詢條件', query);
 
-      this.sysb300Service.querySYS3000(query).subscribe((response) => {
+      this.sysb300Service.querySYSB300(query).subscribe((response) => {
         this.data = response.Data;
         console.log('查詢結果', this.data);
         // this.queryStateService.setQueryState(QUERY_STORAGE_KEY, form.value);
@@ -106,7 +106,7 @@ export class SYSB300Component
         p_level_id: '',
       };
 
-      this.sysb300Service.querySYS3000(query).subscribe((response) => {
+      this.sysb300Service.querySYSB300(query).subscribe((response) => {
         this.upgroup_Options = response.Data.map((item: any) => ({
           value: item.level_id,
           label: item.level_name,
