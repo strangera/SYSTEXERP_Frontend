@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AppFooterComponent } from './app.footer.component';
+import { TreeDialogComponent } from './tree-dialog.component';
 
-describe('AppFooterComponent', () => {
-  let component: AppFooterComponent;
-  let fixture: ComponentFixture<AppFooterComponent>;
+describe('TreeDialogComponent', () => {
+  let component: TreeDialogComponent;
+  let fixture: ComponentFixture<TreeDialogComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppFooterComponent]
+      imports: [TreeDialogComponent]
     })
     .compileComponents();
-    
-    fixture = TestBed.createComponent(AppFooterComponent);
+
+    fixture = TestBed.createComponent(TreeDialogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

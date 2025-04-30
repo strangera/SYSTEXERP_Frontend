@@ -21,9 +21,11 @@
           </div>
           <div class="zoomin animation-duration-500 w-full mb-5">
             <label for="password" class="block text-900 font-medium text-xl mb-2">使用者密碼</label>
-            <p-password id="password" formControlName="password" placeholder="密碼" [ngClass]="{
-              'is-invalid': submitted && loginForm.controls.password.errors}" [toggleMask]="true" [feedback]="false"
-              inputStyleClass="w-full p-3 md:w-30rem" styleClass="w-full"></p-password>
+            <div class="">
+              <p-password id="password" formControlName="password" placeholder="密碼" [ngClass]="{
+                'ng-invalid ng-dirty': submitted && loginForm.controls.password.errors}" [toggleMask]="true"
+                [feedback]="false" inputStyleClass="w-full p-3 md:w-30rem" styleClass="w-full"></p-password>
+            </div>
             <span class="p-error" *ngIf="submitted && loginForm.get('password')?.hasError('required')">請輸入密碼</span>
           </div>
           <p-button type="submit" pButton pRipple label="登入" class="zoomin animation-duration-500 w-full p-0"

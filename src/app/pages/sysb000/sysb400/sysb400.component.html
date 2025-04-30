@@ -17,7 +17,7 @@
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
 
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="組織階層" controlName="level_id" [control]="queryForm.controls.level_id">
@@ -49,7 +49,7 @@
         </div>
         <div class="grid justify-content-end">
           <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button btnType="query" [loading]="loading" (onClick)="applyFilters()">
+          <app-button btnType="query" [loading]="loading" (onClick)="onSubmit(queryForm)">
           </app-button>
         </div>
       </form>
@@ -57,73 +57,9 @@
   </p-accordion>
 
   <div class="card">
-    <div class="grid align-items-center mb-3">
-      <div class="col">
-        <p-dropdown [options]="pages" [(ngModel)]="selectedPage" (onChange)="goToPage(selectedPage)" placeholder="選擇頁面">
-        </p-dropdown>
-      </div>
-      <div class="col">
-        <p-dropdown [options]="rowsPerPageDropdownOptions" [(ngModel)]="rows" placeholder="每頁顯示"
-          (onChange)="calculateTotalPages()">
-        </p-dropdown>
-      </div>
-      <div class="col">
-        <button pButton label="切換分頁器" class="p-button-outlined" (click)="togglePaginator()">
-        </button>
-      </div>
+    <div class="col-13">
+      <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+      </app-data-table>
     </div>
-
-    <p-table [value]="data" [paginator]="IsPaginator" [rows]="rows" [first]="first"
-      [rowsPerPageOptions]="rowsPerPageOptions" [resizableColumns]="true" [scrollable]="IsScrollable"
-      [scrollHeight]="IsScrollHeight" (onPage)="onPageChange($event)" [tableStyleClass]="tableSize"
-      selectionMode="multiple" [(selection)]="selectedRows">
-
-      <!-- 表頭 -->
-      <ng-template pTemplate="header">
-        <tr>
-          <th>
-            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
-          </th>
-          <th *ngFor="let col of columns" [pSortableColumn]="col.field">
-            {{ col.header }}
-            <p-sortIcon [field]="col.field"></p-sortIcon>
-          </th>
-          <th>操作</th>
-        </tr>
-      </ng-template>
-
-      <!-- 表身 -->
-      <ng-template pTemplate="body" let-row>
-        <tr [pSelectableRow]="row">
-          <td>
-            <p-tableCheckbox [value]="row"></p-tableCheckbox>
-          </td>
-          <td *ngFor="let col of columns">
-            {{ row[col.field] }}
-          </td>
-          <td>
-            <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-success"
-              (click)="onEdit(row)">
-            </button>
-            <button pButton icon="pi pi-search" class="p-button-rounded p-button-text p-button-info"
-              (click)="onDetail(row)">
-            </button>
-            <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger"
-              [disabled]="!row.isdelete" (click)="onDelete()">
-            </button>
-          </td>
-        </tr>
-      </ng-template>
-
-      <!-- 表尾 -->
-      <ng-template pTemplate="footer">
-        <tr>
-          <td colspan="100%">
-            <button pButton label="刪除選中" icon="pi pi-trash" class="p-button-danger" [disabled]="isDisabled()"
-              (click)="onDelete()">
-            </button>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
   </div>
+</div>

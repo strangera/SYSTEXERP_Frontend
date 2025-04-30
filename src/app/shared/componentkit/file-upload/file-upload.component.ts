@@ -44,7 +44,7 @@ export enum FileType {
   encapsulation: ViewEncapsulation.None,
 })
 export class FileUploadComponent {
-  @Input() fileType: FileType = FileType.PNG;
+  @Input() fileType: string = FileType.PNG;
   @Input() uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
   uploadedFiles: any[] = [];
   chooseLab: string = '選擇檔案';

@@ -7,55 +7,58 @@
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true">
       <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-5" label="文字輸入" controlName="name"
-            [control]="queryForm.controls.name" [submitted]="submitted" />
+          <app-tree-dialog class="col-12 md:col-6 lg:col-5" label="多層次(彈跳視窗)選擇" controlName="text"
+            [control]="queryForm.controls.text" [submitted]="submitted"></app-tree-dialog>
         </div>
         <div class="grid p-fluid">
-          <app-input-number class="col-12 md:col-6 lg:col-5" label="數字輸入" controlName="money"
-            [control]="queryForm.controls.money" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-5" label="文字輸入" controlName="text"
+            [control]="queryForm.controls.text" [submitted]="submitted" />
+        </div>
+        <div class="grid p-fluid">
+          <app-input-number class="col-12 md:col-6 lg:col-5" label="數字輸入" controlName="number"
+            [control]="queryForm.controls.number" [submitted]="submitted" />
           <app-input-number-range class="col-12 md:col-6 lg:col-5" label="數字輸入(範圍)"
-            [startControl]="queryForm.controls.startticket" [endControl]="queryForm.controls.endticket"
+            [startControl]="queryForm.controls.number1" [endControl]="queryForm.controls.number2"
             [submitted]="submitted" />
-          <app-dropdown class="col-12 md:col-6 lg:col-5" label="單選下拉" controlName="systemtypedefault"
+          <app-dropdown class="col-12 md:col-6 lg:col-5" label="單選下拉" controlName="dropdown"
             [options]="systemTypeOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.systemtypedefault" [submitted]="submitted" />
-          <app-multi-select class="col-12 md:col-6 lg:col-5" label="多選下拉" controlName="systemtypemulti"
+            [control]="queryForm.controls.dropdown" [submitted]="submitted" />
+          <app-multi-select class="col-12 md:col-6 lg:col-5" label="多選下拉" controlName="multiSelect"
             [options]="systemTypeOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.systemtypemulti" [submitted]="submitted" />
+            [control]="queryForm.controls.multiSelect" [submitted]="submitted" />
           <app-calendar calendarType="timeOne" class="col-12 md:col-6 lg:col-5" label="時分"
-            [control]="queryForm.controls.onetime" [submitted]="submitted" />
+            [control]="queryForm.controls.timeOne" controlName="timeOne" [submitted]="submitted" />
           <app-calendar-range calendarType="timeRange" class="col-12 md:col-6 lg:col-5" label="時分"
-            [startControl]="queryForm.controls.starttime" [endControl]="queryForm.controls.endtime"
+            [startControl]="queryForm.controls.timeRange1" [endControl]="queryForm.controls.timeRange2"
             [submitted]="submitted" />
           <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="年月日"
-            [control]="queryForm.controls.onetime" [submitted]="submitted" />
+            [control]="queryForm.controls.dateOne" controlName="dateOne" [submitted]="submitted" />
           <app-calendar-range calendarType="dateRange" class="col-12 md:col-6 lg:col-5" label="年月日"
-            [startControl]="queryForm.controls.starttime" [endControl]="queryForm.controls.endtime"
+            [startControl]="queryForm.controls.dateRange1" [endControl]="queryForm.controls.dateRange2"
             [submitted]="submitted" />
           <app-calendar calendarType="dateTimeOne" class="col-12 md:col-6 lg:col-5" label="年月日時分秒"
-            [control]="queryForm.controls.onetime" [submitted]="submitted" />
+            [control]="queryForm.controls.dateTimeOne" [submitted]="submitted" />
           <app-calendar-range calendarType="dateTimeRange" class="col-12 md:col-6 lg:col-5" label="年月日時分秒"
-            [startControl]="queryForm.controls.starttime" [endControl]="queryForm.controls.endtime"
+            [startControl]="queryForm.controls.dateTimeRange1" [endControl]="queryForm.controls.dateTimeRange2"
             [submitted]="submitted" />
           <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-5" label="月"
-            [control]="queryForm.controls.onetime" [submitted]="submitted" />
+            [control]="queryForm.controls.dateMonthOne" [submitted]="submitted" />
           <app-calendar-range calendarType="dateMonthRange" class="col-12 md:col-6 lg:col-5" label="月"
-            [startControl]="queryForm.controls.starttime" [endControl]="queryForm.controls.endtime"
+            [startControl]="queryForm.controls.dateMonthRange1" [endControl]="queryForm.controls.dateMonthRange2"
             [submitted]="submitted" />
           <app-calendar calendarType="dateYearOne" class="col-12 md:col-6 lg:col-5" label="年"
-            [control]="queryForm.controls.onetime" [submitted]="submitted" />
+            [control]="queryForm.controls.dateYearOne" [submitted]="submitted" />
           <app-calendar-range calendarType="dateYearRange" class="col-12 md:col-6 lg:col-5" label="年"
-            [startControl]="queryForm.controls.starttime" [endControl]="queryForm.controls.endtime"
+            [startControl]="queryForm.controls.dateYearRange1" [endControl]="queryForm.controls.dateYearRange2"
             [submitted]="submitted" />
-          <app-radiobutton class="col-12" label="radio多選" groupname="systemtyperadio"
-            [control]="queryForm.controls.radiolist" [options]="systemTypeOptions" [submitted]="submitted"
-            (valueChange)="onSystemTypeChange($event)" />
+          <app-radiobutton class="col-12" label="radio多選" groupname="radiolist" [control]="queryForm.controls.radiolist"
+            [options]="systemTypeOptions" [submitted]="submitted" />
           <app-editor-text class="col-12" label="編輯器" controlName="editortext" [control]="queryForm.controls.editortext"
             [submitted]="submitted" />
         </div>
         <hr />
         <div class="grid p-fluid">
-          <app-file-upload class="col-12 md:col-6 lg:col-4" [uploadUrl]="uploadUrl" [fileType]="fileType" />
+          <app-file-upload class="col-12 md:col-6 lg:col-4" fileType=".pdf" />
         </div>
         <!-- <div *appHasPermission="queryPermission" class="col"> -->
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

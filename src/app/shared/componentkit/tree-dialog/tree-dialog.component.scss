@@ -1,0 +1,69 @@
+::ng-deep #tree-dialog {
+  .p-dialog {
+    border-radius: 1rem;
+    .p-dialog-header {
+      padding: 0.5rem;
+      border-top-left-radius: 1rem;
+      border-top-right-radius: 1rem;
+      border-top-width: 0; /* 移除頂部邊框 */
+      border-left-width: 0; /* 移除左側邊框 */
+      border-right-width: 0; /* 移除右側邊框 */
+      border-bottom-width: 1px;
+      border-style: solid;
+      border-color: var(--surface-border);
+      p-inputGroupAddon {
+        border-top-left-radius: 0.5rem;
+        border-bottom-width: 0; /* 移除頂部邊框 */
+        border-right-width: 0; /* 移除右側邊框 */
+        .p-dropdown {
+          border-top-left-radius: 0.5rem;
+          border-top-right-radius: 0;
+          border-bottom-right-radius: 0;
+          .p-dropdown-trigger {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+          }
+        }
+      }
+      .p-inputgroup-addon {
+        border: 0;
+        padding: 0;
+      }
+      p-iconfield {
+        border-top-right-radius: 0.5rem;
+        input {
+          border-top-right-radius: 0.5rem;
+          border-radius: 0;
+        }
+      }
+    }
+    .p-dialog-content {
+      padding: 0;
+      .p-selectbutton {
+        .p-button {
+          border: 0;
+          flex: none;
+          width: auto;
+          margin: 0.5rem;
+          padding: 0.3rem;
+          border-radius: 0.5rem;
+        }
+      }
+      .p-tree {
+        padding: 0;
+        border: 0;
+      }
+    }
+    .p-dialog-footer {
+      padding: 0.5rem;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      border-bottom-width: 0; /* 移除頂部邊框 */
+      border-left-width: 0; /* 移除左側邊框 */
+      border-right-width: 0; /* 移除右側邊框 */
+      border-top-width: 1px;
+      border-style: solid;
+      border-color: var(--surface-border);
+    }
+  }
+}

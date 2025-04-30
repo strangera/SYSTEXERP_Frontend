@@ -27,9 +27,9 @@
           [outlined]="!IsPrint" />
         <div [@toggleButtons]="!IsPrint ? 'visible' : 'hidden'" [ngClass]="IsPrint ? 'hidden' : 'flex'" class="gap-2">
           <p-button pButton tooltipPosition="top" pTooltip="列印PDF" class="p-button-rounded p-button-text p-button-info"
-            icon="pi pi-print" (click)="BasicPrinting(columns, data, reportHead,printColumns)" />
+            icon="fa-regular fa-file-pdf" (click)="BasicPrinting(columns, data, reportHead,printColumns)" />
           <p-button pButton tooltipPosition="top" pTooltip="匯出Excel"
-            class="p-button-rounded p-button-text p-button-info" icon="pi pi-file-excel"
+            class="p-button-rounded p-button-text p-button-info" icon="fa-regular fa-file-lines"
             (click)="exportFunction( columns, data, exportFilename,printColumns)" />
         </div>
         <p-button *ngIf="IsPrint && showInsert && !rowEditing" (click)="insertRow()" pTooltip="新增" tooltipPosition="top"

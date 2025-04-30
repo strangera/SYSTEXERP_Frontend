@@ -1,5 +1,5 @@
 import { Router } from '@angular/router';
-import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output, ViewChild, ViewEncapsulation } from '@angular/core';
 import { MenuItem } from 'primeng/api';
 import { LayoutService } from '../layout.service';
 import { AuthService } from '../../service/system/auth.service';
@@ -9,7 +9,19 @@ import { FunsrightInfo } from '../../shared/models/system/funsrightInfo';
 import { interval, Subscription } from 'rxjs';
 import { NotificationService } from '../../shared/component/notification-message/notification.service';
 import { OverlayPanel } from 'primeng/overlaypanel';
-import { TableRowReorderEvent } from 'primeng/table';
+import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
+
+interface Favorite {
+  USER_No: string,
+  PROG_No: string,
+  FVT_SeqNo: number,
+  CRT_Date: string | null,
+  CRT_USR_No: string | null,
+  CRT_USR_Name: string | null,
+  UPD_Date: string | null,
+  UPD_USR_No: string | null,
+  UPD_USR_Name: string | null
+}
 
 @Component({
   selector: 'app-topbar',
@@ -17,7 +29,7 @@ import { TableRowReorderEvent } from 'primeng/table';
   styleUrl: './app.topbar.component.scss',
   encapsulation: ViewEncapsulation.None,
 })
-export class AppTopbarComponent implements OnInit {
+export class AppTopbarComponent implements OnInit, OnDestroy {
   @ViewChild('appTopbarDiv', { static: false }) appTopbarDiv!: ElementRef;
   @ViewChild('menubutton') menuButton!: ElementRef;
   @ViewChild('topbarmenubutton') topbarMenuButton!: ElementRef;
@@ -63,54 +75,21 @@ export class AppTopbarComponent implements OnInit {
       if (newData?.length > 0) { // TODO: 先隱藏 000000 和 999999 的選單，等資料庫有刪掉就不用加這段了
         this.funRightsInfo = newData.filter(item => item.prog_no !== '000000' && item.prog_no !== '999999');
         this.funRightsInfo = this.funRightsInfo.map((item: FunsrightInfo) => ({
-          ...item,
-          label: `${item.prog_no} ${item.prog_name}` // 建立 label 屬性
+          ...item, label: `${item.prog_no} ${item.prog_name}` // 建立 label 屬性
         }));
         this.topLevelMenuItems = this.funRightsInfo.filter(item => item.parent_id === '0'); // 假設 parent_id 為 null 或 undefined 表示第一層
-        this.initFavorites(); // 初始化最愛功能 
+        this.initFavorites(); // 初始化最愛功能
       }
     });
     this.userSubscription = this.authService.user.subscribe((userInfo: UserInfo | null) => {
       this.data = userInfo;
       this.initFavorites();
     });
-
     this.timerSubscription = interval(500).subscribe(() => {
       this.now = new Date();
     });
   };
-
-  ngOnDestroy() {
-    this.timerSubscription.unsubscribe();
-    this.userSubscription?.unsubscribe();
-    this.menuUpdatedSubscription?.unsubscribe();
-  }
-
-  filteredProgs: any[] = [];
-  filterCountry(event: any) {
-    const filtered: { label: string; value: FunsrightInfo }[] = [];
-    const query = event.query;
-    for (let i = 0; i < this.funRightsInfo.length; i++) {
-      const country = this.funRightsInfo[i];
-      if (country.path?.trim() !== "") {
-        if (country.label?.toLowerCase().includes(query.toLowerCase())) { // 判斷輸入是否包含在 label 中
-          filtered.push({ label: country.label, value: country }); // 將 label 和原始物件一起放入 filteredCountries
-        }
-      }
-    }
-    this.filteredProgs = filtered;
-  }
-
-  // 點擊最愛項目時的處理函數
-  onFavoriteItemClick(item: FunsrightInfo) {
-    if (item.path?.trim() === '') {
-      this.messageService.warnBubble(`您目前無檢視「${item.label}」的權限，請聯絡系統管理員開啟權限。`, '無法開啟畫面');
-      return;
-    }
-    this.router.navigate([item.path]);
-    this.favorite.hide(); // 點擊後關閉最愛選單
-  }
-
+  // 當點擊頂部菜單項時
   onTopMenuItemClick(item: FunsrightInfo) {
     if (this.activeTopMenuItem === item) {
       this.activeTopMenuItem = null; // 點擊已激活的項，將其取消激活
@@ -120,7 +99,23 @@ export class AppTopbarComponent implements OnInit {
       this.topMenuClick.emit(item.prog_no);
     }
   }
+  // 搜尋程式編碼
+  filteredProgs: { label: string; value: FunsrightInfo }[] = [];
+  filterProgNo(event: AutoCompleteCompleteEvent) {
+    const filtered: { label: string; value: FunsrightInfo }[] = [];
+    const query = event.query;
+    for (const f of this.funRightsInfo) {
+      if (f.path?.trim() !== "") {
+        if (f.label?.toLowerCase().includes(query.toLowerCase())) {
+          filtered.push({ label: f.label, value: f });
+        }
+      }
+    }
+    this.filteredProgs = filtered;
+    console.log(this.filteredProgs);
 
+  }
+  // 按下搜尋確認
   onSubmit(frm: FormGroup) {
     const query = frm.controls["query_data"].value;
     let matchedItem: FunsrightInfo | undefined;
@@ -140,12 +135,8 @@ export class AppTopbarComponent implements OnInit {
       this.messageService.warnBubble('輸入的代碼不存在，或您目前無權限存取對應頁面。', '查無此快速碼');
     }
   }
-
-  editFavorites() {
-    this.editingFavorites = !this.editingFavorites; // 切換編輯狀態
-  }
-
-  initFavorites(event?: any) {
+  // 初始化我的最愛
+  initFavorites(event?: Event) {
     if (this.favorite && event) {
       this.favorite.toggle(event)
       this.editingFavorites = false; // 取消編輯狀態
@@ -156,7 +147,8 @@ export class AppTopbarComponent implements OnInit {
       next: (response) => { // 指明 response 的結構
         const favoritesWithDetails: FunsrightInfo[] = [];
         if (response.Data.length === 0) { this.Favorites = []; return; }
-        response.Data.forEach((fav: any) => {
+        console.log(response.Data);
+        response.Data.forEach((fav: Favorite) => {
           const matchingFunRight = this.funRightsInfo.find(item => item.prog_no === fav.PROG_No);
           if (matchingFunRight) favoritesWithDetails.push(matchingFunRight);
         });
@@ -169,7 +161,20 @@ export class AppTopbarComponent implements OnInit {
       }, error: error => { console.error('Error fetching favorites:', error); }
     });
   }
-
+  // 點擊我的最愛事件
+  onFavoriteItemClick(item: FunsrightInfo) {
+    if (item.path?.trim() === '') {
+      this.messageService.warnBubble(`您目前無檢視「${item.label}」的權限，請聯絡系統管理員開啟權限。`, '無法開啟畫面');
+      return;
+    }
+    this.router.navigate([item.path]);
+    this.favorite.hide(); // 點擊後關閉最愛選單
+  }
+  // 進入編輯我的最愛模式
+  editFavorites() {
+    this.editingFavorites = !this.editingFavorites; // 切換編輯狀態
+  }
+  // 刪除我的最愛
   deleteSelectedFavorites() {
     if (this.selectedFavorites && this.selectedFavorites.length > 0 && this.Favorites) {
       const remainingFavorites = this.Favorites.filter(favorite =>
@@ -195,8 +200,8 @@ export class AppTopbarComponent implements OnInit {
       this.selectedFavorites = []; // 清空已選中的項目
     }
   }
-
-  onRowReorder(event: TableRowReorderEvent) {
+  // 排序我的最愛
+  onRowReorder() {
     const body = this.Favorites.map((favorite, index) => ({
       USER_No: this.data?.user_No,
       PROG_No: favorite['prog_no'],
@@ -207,5 +212,11 @@ export class AppTopbarComponent implements OnInit {
         this.initFavorites();
       }, error: error => { console.error('Error fetching favorites:', error); }
     });
+  }
+
+  ngOnDestroy() {
+    this.timerSubscription.unsubscribe();
+    this.userSubscription?.unsubscribe();
+    this.menuUpdatedSubscription?.unsubscribe();
   }
 }
