@@ -52,16 +52,7 @@ export class SYSB300Component
   }
 
   ngOnInit(): void {
-    // this.ProgNo = '410003';
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    // 新增：在 ngOnInit 中調用 initializePage 設置 ProgNo 和 cruPage
     this.initializePage('410003', '/SYSB000/SYSB300CRU');
-
-    // 新增：調試權限數據
-    console.log('funInfo:', this.funInfo);
-    console.log('queryPermission:', this.queryPermission);
-    //
     this.loadOptions();
   }
 
@@ -80,18 +71,13 @@ export class SYSB300Component
 
       console.log('查詢條件', query);
 
-      this.sysb300Service.querySYS3000(query).subscribe((response) => {
+      this.sysb300Service.querySYSB300(query).subscribe((response) => {
         this.data = response.Data;
         console.log('查詢結果', this.data);
         // this.queryStateService.setQueryState(QUERY_STORAGE_KEY, form.value);
         this.loading = false;
       });
     }
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
   }
 
   onClearForm() {
@@ -106,7 +92,7 @@ export class SYSB300Component
         p_level_id: '',
       };
 
-      this.sysb300Service.querySYS3000(query).subscribe((response) => {
+      this.sysb300Service.querySYSB300(query).subscribe((response) => {
         this.upgroup_Options = response.Data.map((item: any) => ({
           value: item.level_id,
           label: item.level_name,
