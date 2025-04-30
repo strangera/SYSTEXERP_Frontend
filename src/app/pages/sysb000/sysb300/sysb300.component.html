@@ -5,11 +5,9 @@
                 <div class="col" style="flex: 1;">
                     <app-menubar [ProgNo]="ProgNo"></app-menubar>
                 </div>
-                <!-- <div *appHasPermission="addPermission"> -->
-                <div>
+                <div *appHasPermission="addPermission">
                     <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
                 </div>
-                <!-- </div> -->
             </div>
             <p-accordion>
                 <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true"
