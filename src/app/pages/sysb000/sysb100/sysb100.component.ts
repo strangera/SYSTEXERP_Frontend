@@ -1,19 +1,20 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { FormGroup, Validators } from '@angular/forms';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Sysb100m } from '../module/sysb000.module';
+import { Sysb100Service } from '../../../service/sysb/sysb100.service';
 
 @Component({
   selector: 'app-sysb100',
   templateUrl: './sysb100.component.html',
-  styleUrl: './sysb100.component.scss'
+  styleUrl: './sysb100.component.scss',
 })
 // 公司基本資料維護作業
-export class SYSB100Component extends BasicQpageComponent implements OnInit {
+export class SYSB100Component
+  extends BasicQueryPageComponent<Sysb100m>
+  implements OnInit
+{
   // 查詢
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
@@ -39,15 +40,10 @@ export class SYSB100Component extends BasicQpageComponent implements OnInit {
     mailingAddress: ['', [Validators.maxLength(60)]], // 郵寄地址
     email: ['', [Validators.maxLength(60)]], // 電子郵件信箱
     companyWebsite: ['', [Validators.maxLength(60)]], // 公司網址
-    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
   });
   // 表格
   // ----------------------------------------------------------------
-  data: any[] = [
-    { isdelete: true, unifiedNumber: '53472035', companyCName: '南紡流通事業股份有限公司', taxNumber: '703902223', companyEName: 'TSRD Co.,Ltd.', principal: '侯先生', contactPerson: '張先生', contactPersonPhone: '06-00000000' },
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
+  data: Sysb100m[] = [];
   columns: any[] = [
     { field: 'unifiedNumber', header: '公司代號(統一編號)', visible: true },
     { field: 'companyCName', header: '公司名稱(中文)', visible: true },
@@ -62,39 +58,32 @@ export class SYSB100Component extends BasicQpageComponent implements OnInit {
     { field: 'REG_ID', header: '營業登記證號', visible: false },
     { field: 'CENTER_TEL', header: '公司電話', visible: false },
     { field: 'CENTER_ADDR', header: '公司(營業處)地址(中文)', visible: false },
-    { field: 'CENTER_ADDR_E', header: '公司(營業處)地址(英文)', visible: false },
+    {
+      field: 'CENTER_ADDR_E',
+      header: '公司(營業處)地址(英文)',
+      visible: false,
+    },
     { field: 'CENTER_REG_ADDR', header: '公司登記地址(中文)', visible: false },
-    { field: 'CENTER_REG_ADDR_E', header: '公司登記地址(英文)', visible: false },
+    {
+      field: 'CENTER_REG_ADDR_E',
+      header: '公司登記地址(英文)',
+      visible: false,
+    },
     { field: 'TAX_ADDR', header: '發票地址', visible: false },
     { field: 'POST_TEL', header: '郵寄電話', visible: false },
     { field: 'POST_FAX', header: '郵寄傳真', visible: false },
     { field: 'POST_ADDR', header: '郵寄地址', visible: false },
     { field: 'EMAIL', header: '電子郵件信箱', visible: false },
-    { field: 'CENTER_URL', header: '公司網址', visible: false }
+    { field: 'CENTER_URL', header: '公司網址', visible: false },
   ];
 
   // ----------------------------------------------------------------
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-  ) {
+  constructor(private sysb100Service: Sysb100Service) {
     super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '410001';
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.authService.user.subscribe(x => this.user = x);
-    // ----------------------------------------------------------------
-    this.reportHead = {
-      reporttitle: this.funInfo.prog_name,
-      exportuser: this.user?.user_Name,
-      reportname: this.funInfo.prog_name,
-      outputvisible: false,
-    };
+    this.initializePage('410001', '/SYSB000/SYSB100CRU');
   }
 
   onSubmit(frm: FormGroup) {
@@ -103,13 +92,12 @@ export class SYSB100Component extends BasicQpageComponent implements OnInit {
     this.loading = true;
     this.messageService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+    if (frm.valid) {
+      this.sysb100Service.querySYSB100(frm.value).subscribe((response) => {
+        this.data = response.Data;
+        console.log('查詢結果', this.data);
+        this.loading = false;
+      });
     }
 
     this.loading = false;
@@ -122,49 +110,6 @@ export class SYSB100Component extends BasicQpageComponent implements OnInit {
   }
 
   onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      //console.log("extra", extras);
-      this.router.navigate(['/SYSB000/SYSB100CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      this.router.navigate(['/SYSB000/SYSB100CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
-    };
-
-    this.router.navigate(['/SYSB000/SYSB100CRU'], extras);
+    this.queryForm.reset(); // 重置表單
   }
 }

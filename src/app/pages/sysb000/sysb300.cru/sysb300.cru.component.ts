@@ -1,3 +1,4 @@
+import { option } from './../module/sysb000.module';
 import { Sysb300Service } from './../../../service/sysb/sysb300.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -8,7 +9,6 @@ import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { Sys300m } from '../sysb300m/sysb300m';
 
 @Component({
   selector: 'app-sysb300.cru',
@@ -16,7 +16,7 @@ import { Sys300m } from '../sysb300m/sysb300m';
   styleUrl: './sysb300.cru.component.scss',
 })
 // 組織階層設定作業 CRU
-export class SYSB300CRUComponent
+export class SYSB300CRUComponent<Sysb300m>
   extends BasicCrupageComponent
   implements OnInit
 {
@@ -29,14 +29,14 @@ export class SYSB300CRUComponent
     p_level_id: [, [Validators.maxLength(2)]], // 上層組織階層代碼(空白代表第一層)
   });
   //
-  upgroup_Options: any[] = [
+  upgroup_Options: option[] = [
     { value: '', label: '全公司' },
     { value: '10', label: '室/部' },
     { value: '20', label: 'Team' },
     { value: '30', label: '樓/組' },
   ];
 
-  allquery: Sys300m[] = [];
+  allquery: Sysb300m[] = [];
 
   // ----------------------------------------------------------------
   constructor(
@@ -44,7 +44,6 @@ export class SYSB300CRUComponent
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
     private authService: AuthService,
-    private translate: TranslateService,
     private sysb300Service: Sysb300Service,
   ) {
     super(); // 呼叫父類建構子
@@ -113,10 +112,10 @@ export class SYSB300CRUComponent
     this.sysb300Service.querySYSB300(query).subscribe((response) => {
       this.allquery = response.Data;
       const hasEmptypLevel = this.allquery.some(
-        (item) => item.p_level_id === '',
+        (item: any) => item.p_level_id === '',
       );
       const hasSameLevel = this.allquery.some(
-        (item) => item.level_id === this.dataForm.controls.level_id.value,
+        (item: any) => item.level_id === this.dataForm.controls.level_id.value,
       );
       console.log('上層組織階層存在 空白的單位', hasEmptypLevel);
 

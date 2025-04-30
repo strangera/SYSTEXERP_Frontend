@@ -3,21 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-
-interface Organization {
-  org_id: number; // 組織代碼
-  org_name: string; // 組織名稱
-  level_id: string; // 階層代碼
-  level_name: string; // 階層名稱
-  p_level_id: string; // 上層組織代碼
-  stop_flag: boolean; // 是否停用
-  CRT_Date: Date;
-  CRT_USR_No: string;
-  CRT_USR_Name: string;
-  UPD_Date: Date;
-  UPD_USR_No: string;
-  UPD_USR_Name: string;
-}
+import { Sysb400m } from '../module/sysb000.module';
 
 @Component({
   selector: 'app-sysb400',
@@ -25,11 +11,11 @@ interface Organization {
   styleUrls: ['./sysb400.component.scss'],
 })
 export class SYSB400Component
-  extends BasicQueryPageComponent<Organization>
+  extends BasicQueryPageComponent<Sysb400m>
   implements OnInit
 {
-  data: Organization[] = [];
-  filteredData: Organization[] = [...this.data];
+  data: Sysb400m[] = [];
+  filteredData: Sysb400m[] = [...this.data];
   columns: any[] = [
     { field: 'org_id', header: '階層代碼', visible: true },
     { field: 'org_name', header: '階層名稱', visible: true },
@@ -74,7 +60,12 @@ export class SYSB400Component
   }
 
   ngOnInit(): void {
-    this.initializePage('410004', '/SYSB000/SYSB400CRU');
+    // 初始化
+    this.ProgNo = '410004';
+    this.cruPage = '/SYSB000/SYSB400CRU';
+    //
+    // ----------------------------------------------------------------
+    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
   }
 
   onSubmit(frm: FormGroup): void {

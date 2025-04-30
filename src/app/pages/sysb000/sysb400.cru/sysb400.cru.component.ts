@@ -1,4 +1,3 @@
-import { option, Sys300m } from './../sysb300m/sysb300m';
 import { Sysb300Service } from './../../../service/sysb/sysb300.service';
 import { Sysb400Service } from './../../../service/sysb/sysb400.service';
 import { Component, OnInit } from '@angular/core';
@@ -6,22 +5,7 @@ import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ValidationService } from '../../../shared/service/validation.service';
-
-interface Organization {
-  org_id: number; // 組織代碼
-  org_name: string; // 組織名稱
-  level_id: string; // 階層代碼
-  level_name: string; // 階層名稱
-  p_level_id: string; // 上層組織代碼
-  stop_flag: boolean; // 是否停用
-  CRT_Date: Date;
-  CRT_USR_No: string;
-  CRT_USR_Name: string;
-  UPD_Date: Date;
-  UPD_USR_No: string;
-  UPD_USR_Name: string;
-}
+import { option, Sysb400m } from '../module/sysb000.module';
 
 @Component({
   selector: 'app-sysb400.cru',
@@ -30,7 +14,7 @@ interface Organization {
 })
 // 組織碼設定作業 CRU
 export class SYSB400CRUComponent
-  extends BasicCruPageComponent<Organization>
+  extends BasicCruPageComponent<Sysb400m>
   implements OnInit
 {
   // ----------------------------------------------------------------
@@ -57,7 +41,6 @@ export class SYSB400CRUComponent
   // ----------------------------------------------------------------
 
   constructor(
-    private validationService: ValidationService,
     private sysb400Service: Sysb400Service,
     private sysb300Service: Sysb300Service,
   ) {
@@ -78,9 +61,9 @@ export class SYSB400CRUComponent
 
     console.log('查詢條件', query);
     this.sysb300Service.querySYSB300(query).subscribe((response) => {
-      this.upgroup_Options = response.Data.map((item: Sys300m) => ({
-        label: item.level_id,
-        value: item.level_name,
+      this.upgroup_Options = response.Data.map((item: Sysb400m) => ({
+        value: item.level_id,
+        label: item.level_name,
       }));
       console.log('300 options查詢結果', this.upgroup_Options);
     });
@@ -111,7 +94,6 @@ export class SYSB400CRUComponent
           if (this.canEdit()) {
             const body = {
               id: this.dataForm.controls.id.value,
-              // org_id: this.dataForm.controls.org_id.value,
               org_name: this.dataForm.controls.org_name.value,
               p_org_id: this.dataForm.controls.p_org_id.value,
               level_id: this.dataForm.controls.level_id.value,
