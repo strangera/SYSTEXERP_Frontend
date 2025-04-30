@@ -15,15 +15,15 @@ import { TableLazyLoadEvent } from 'primeng/table';
 // 資料模型：分類項目
 interface CategoryItem {
   id: number;
-  CAT_LNo: string;
-  CAT_LName: string;
-  CAT_MRemark: string | null;
-  CRT_Date?: string;
-  CRT_USR_No?: string;
-  CRT_USR_Name?: string;
-  UPD_Date?: string;
-  UPD_USR_No?: string;
-  UPD_USR_Name?: string;
+  bus_type: string;
+  bus_type_name: string;
+  bus_type_desc: string;
+  CRT_Date: string;
+  CRT_USR_No: string;
+  CRT_USR_Name: string;
+  UPD_Date: string;
+  UPD_USR_No: string;
+  UPD_USR_Name: string;
 }
 const storageKey = 'SYSB800';
 
@@ -130,7 +130,7 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
       console.log('Processing item:', JSON.stringify(item, null, 2));
       if (!item || item.id == null || item.id === undefined) {
         console.error('ID is missing or invalid for item:', item);
-        this.messageService.errorBubble(`無法刪除項目 ${item?.CAT_LNo || '未知'}：缺少 ID`);
+        this.messageService.errorBubble(`無法刪除項目 ${item?.bus_type || '未知'}：缺少 ID`);
         return;
       }
 
@@ -142,15 +142,15 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
         next: (response: any) => {
           console.log('API response:', response);
           if (response.Status === '0000') {
-            this.messageService.successBubble(`項目 ${item.CAT_LNo} 刪除成功`);
+            this.messageService.successBubble(`項目 ${item.bus_type} 刪除成功`);
           } else {
             console.error('API error:', response.Status, response.Message);
-            this.messageService.errorBubble(`項目 ${item.CAT_LNo} 刪除失敗: ${response.Message}`);
+            this.messageService.errorBubble(`項目 ${item.bus_type} 刪除失敗: ${response.Message}`);
           }
         },
         error: (err: string) => {
           console.error('API error:', err);
-          this.messageService.errorBubble(`項目 ${item.CAT_LNo} 刪除失敗`);
+          this.messageService.errorBubble(`項目 ${item.bus_type} 刪除失敗`);
         },
         complete: () => {
           if (index === items.length - 1) {
