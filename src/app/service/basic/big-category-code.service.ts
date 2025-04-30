@@ -9,7 +9,7 @@ import { catchError, Observable, tap, map, throwError } from 'rxjs';
 })
 export class BigCategoryCodeService {
   apiUrl: string = environment.ApiUrl;
-  queryApiUrl: string = `${environment.ApiUrl}/TLS0000/TLS5000/queryTLS51010`;
+  queryApiUrl: string = `${environment.ApiUrl}/TLS0000/TLS5000/queryTLS51010_DropDownList`;
   title: string = '大分類代碼';
 
   constructor(
@@ -19,15 +19,13 @@ export class BigCategoryCodeService {
 
   getSystemTypes(): Observable<{ value: string, label: string }[]> {
     const params = {
-      PageSize: 999,
-      PageIndex: 0,
-      SortBy: [{ field: 'CAT_LNo', order: 1 }],
+      id: 0,
       CAT_LNo: '',
       CAT_LName: ''
     };
 
     return this.http.post<any>(this.queryApiUrl, params).pipe(
-      tap(data => console.debug('queryTLS51010 response', data)),
+      tap(data => console.debug('queryTLS51010_DropDownList response', data)),
       map(response => {
         // 檢查回傳數據結構
         if (!response || typeof response !== 'object') {
@@ -38,10 +36,10 @@ export class BigCategoryCodeService {
         if (!Array.isArray(data)) {
           throw new Error('API 回傳的 Data 不是陣列');
         }
-        // 轉換為 { value, label } 格式
+        // 轉換為 { value, label } 格式，label 顯示 CAT_LNo + CAT_LName
         return data.map((item: any) => ({
-          value: item.CAT_LNo || '',
-          label: item.CAT_LName || ''
+          value: item.No || '', // value 為 CAT_LNo
+          label: `${item.No || ''} - ${item.Name || ''}` // label 為 "CAT_LNo - CAT_LName"
         }));
       }),
       // catchError((error: HttpErrorResponse | Error) => {

@@ -18,8 +18,9 @@ import { SortMeta } from 'primeng/api';
 import { Column } from '../../../shared/componentkit/table/table.model';
 
 interface CategoryItem {
-  id: 0;
+  id: number;
   CAT_LNo: string;
+  CAT_LName: string;
   CAT_MNo: string;
   CAT_MName: string;
   CAT_MRemark: string;
@@ -29,6 +30,7 @@ interface CategoryItem {
   UPD_Date: string;
   UPD_USR_No: string;
   UPD_USR_Name: string;
+  CAT_LDisplay?: string; // 組合 CAT_LNo 和 CAT_LName
 }
 
 interface NavigationState {
@@ -70,7 +72,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
   columns: Column[] = [
     { field: 'CAT_MNo', header: '中分類代碼', visible: true },
     { field: 'CAT_MName', header: '中分類名稱', visible: true },
-    { field: 'CAT_LNo', header: '大分類代碼 / 名稱', visible: true },
+    { field: 'CAT_LDisplay', header: '大分類代碼 / 名稱', visible: true },
     { field: 'CAT_MRemark', header: '備註', visible: true },
     // 其他欄位CAT_MRemark
   ];
@@ -91,21 +93,10 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
 
   ngOnInit(): void {
     this.initializePage('250002', '/TLS5000/TLS51020CRU');
-    // 新增：調試權限數據
-    // console.log('funInfo:', this.funInfo);
-    // console.log('queryPermission:', this.queryPermission);
-
-    //TODO:下拉等API如果確認要用哪支再看要用哪支 先用假資料
-    // this.bigCategoryCodeService.getSystemTypes().subscribe(data => {
-    //   this.bigCategoryOptions = data;
-    // });
-    // console.log('bigCategoryOptions:', this.bigCategoryOptions); // 調試用
-
     // 獲取大分類代碼
     this.bigCategoryCodeService.getSystemTypes().subscribe({
       next: (response) => {
         this.bigCategoryOptions = response;
-        console.log('大分類代碼:', response);
       },
       error: (error) => {
         console.error('獲取大分類代碼失敗:', error);
@@ -115,25 +106,18 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
 
     // 恢復查詢狀態並自動查詢
     this.handleQueryRestore(this.queryForm, storageKey, (form) => this.onSubmit(form));
-
-    // 監聽表單變化，延遲儲存有效值
-    this.queryForm.valueChanges
-      .pipe(debounceTime(500)) // 延遲 500ms 減少頻繁儲存
-      .subscribe(value => {
-        if (this.queryForm.valid) {
-          this.queryStateService.setQueryState(storageKey, value);
-        }
-      });
   }
 
   onSubmit(frm: FormGroup): void {
-    console.log('Form value:', frm.value); // 調試表單值
     this.handleSubmit(frm, () => {
       this.apiService.queryTLS51020(frm.value).subscribe({
         next: (response: any) => {
-          console.log('API response:', response);
           if (response.Status === '0000') {
-            this.data = response.Data || [];
+            // this.data = response.Data || [];
+            this.data = (response.Data || []).map((item: CategoryItem) => ({
+              ...item,
+              CAT_LDisplay: `${item.CAT_LNo || ''} - ${item.CAT_LName || ''}`
+            }));
             this.filteredData = [...this.data];
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(storageKey, frm.value);
@@ -158,7 +142,6 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
 
   // 查詢按鈕：重置分頁並提交查詢
   onSubmitQuery(frm: FormGroup): void {
-    console.log('onSubmitQuery triggered');
     this.onSubmit(frm);
   }
 
@@ -172,7 +155,6 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
   }
 
   onDelete(data: CategoryItem | CategoryItem[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
 
     const items = Array.isArray(data) ? data : [data];
     if (items.length === 0) {
@@ -182,7 +164,6 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
     }
 
     items.forEach((item, index) => {
-      console.log('Processing item:', JSON.stringify(item, null, 2));
       if (!item || item.id == null || item.id === undefined) {
         console.error('ID is missing or invalid for item:', item);
         this.messageService.errorBubble(`無法刪除項目 ${item?.CAT_LNo || '未知'}：缺少 ID`);
@@ -192,10 +173,8 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
       const requestBody = {
         id: item.id // 保持 number 型別
       };
-      console.log('Request body:', JSON.stringify(requestBody));
       this.apiService.deleteTLS51020(requestBody).subscribe({
         next: (response: any) => {
-          console.log('API response:', response);
           if (response.Status === '0000') {
             this.messageService.successBubble(`項目 ${item.CAT_LNo} 刪除成功`);
           } else {
@@ -222,7 +201,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
     const form = this.queryForm.value;
     if (this.totalRecords === 0) { return; }
     form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize;
+    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
     form.SortBy = event.multiSortMeta ?? [{ field: 'CAT_MNo', order: 1 }];
     this.onSubmit(this.queryForm);
   }

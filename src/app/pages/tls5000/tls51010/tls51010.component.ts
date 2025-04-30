@@ -85,29 +85,22 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
   ngOnInit(): void {
     // 初始化頁面：設置程式編號和 CRUD 頁面路徑
     this.initializePage('250001', '/TLS5000/TLS51010CRU');
-
-    // 調試：輸出權限和功能資訊
-    console.log('funInfo:', this.funInfo);
-    console.log('queryPermission:', this.queryPermission);
-
     // 恢復查詢狀態並自動查詢
     this.handleQueryRestore(this.queryForm, storageKey, (form) => this.onSubmit(form));
 
     // 監聽表單變化，延遲儲存有效值
-    this.queryForm.valueChanges
-      .pipe(debounceTime(500)) // 延遲 500ms 減少頻繁儲存
-      .subscribe(value => {
-        if (this.queryForm.valid) {
-          this.queryStateService.setQueryState(storageKey, value);
-        }
-      });
+    // this.queryForm.valueChanges
+    //   .pipe(debounceTime(500)) // 延遲 500ms 減少頻繁儲存
+    //   .subscribe(value => {
+    //     if (this.queryForm.valid) {
+    //       this.queryStateService.setQueryState(storageKey, value);
+    //     }
+    //   });
   }
 
   // 提交查詢：處理表單並呼叫查詢 API
   onSubmit(frm: FormGroup): void {
-    console.log('Form value:', frm.value);
     this.handleSubmit(frm, () => {
-
       this.apiService.queryTLS51010(frm.value).subscribe({
         next: (response: any) => {
           console.log('API response:', response);
@@ -117,9 +110,6 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
             this.totalRecords = response.TotalCount || response.Data.length;
             // 儲存查詢條件（成功查詢後）
             this.queryStateService.setQueryState(storageKey, frm.value);
-            if (this.data.length === 0) {
-              console.log('查詢結果為空');
-            }
           } else {
             console.error('API error:', response.Status, response.Message);
           }
@@ -137,7 +127,6 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
 
   // 查詢按鈕：重置分頁並提交查詢
   onSubmitQuery(frm: FormGroup): void {
-    console.log('onSubmitQuery triggered');
     this.onSubmit(frm);
   }
 
@@ -156,8 +145,7 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
   }
 
 
-  // 刪除項目：支援單個或多個項目刪除
-  //TODO:看未來刪除API是否支援多id再來看看是否需要更改
+  // 刪除項目
   onDelete(data: CategoryItem | CategoryItem[]): void {
     console.log('Delete data:', JSON.stringify(data, null, 2));
 
@@ -168,38 +156,38 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
       return;
     }
 
-    items.forEach((item, index) => {
-      console.log('Processing item:', JSON.stringify(item, null, 2));
-      if (!item || item.id == null || item.id === undefined) {
-        console.error('ID is missing or invalid for item:', item);
-        this.messageService.errorBubble(`無法刪除項目 ${item?.CAT_LNo || '未知'}：缺少 ID`);
-        return;
-      }
+    // 收集所有有效的 ID
+    const idList = items
+      .filter(item => item && item.id != null && item.id !== undefined)
+      .map(item => item.id);
 
-      const requestBody = {
-        id: item.id // 保持 number 型別
-      };
-      console.log('Request body:', JSON.stringify(requestBody));
-      this.apiService.deleteTLS51010(requestBody).subscribe({
-        next: (response: any) => {
-          console.log('API response:', response);
-          if (response.Status === '0000') {
-            this.messageService.successBubble(`項目 ${item.CAT_LNo} 刪除成功`);
-          } else {
-            console.error('API error:', response.Status, response.Message);
-            this.messageService.errorBubble(`項目 ${item.CAT_LNo} 刪除失敗: ${response.Message}`);
-          }
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.messageService.errorBubble(`項目 ${item.CAT_LNo} 刪除失敗`);
-        },
-        complete: () => {
-          if (index === items.length - 1) {
-            this.onSubmit(this.queryForm);
-          }
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
+    }
+
+    // 構建新的 requestBody 格式
+    const requestBody = {
+      idList: idList // 符合 API 的 idList 格式
+    };
+    // 調用 API
+    this.apiService.deleteTLS51010(requestBody).subscribe({
+      next: (response: any) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('選中項目刪除成功');
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
         }
-      });
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗');
+      },
+      complete: () => {
+        this.onSubmit(this.queryForm);
+      }
     });
 
     this.selectedItems = [];
@@ -209,7 +197,7 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
     const form = this.queryForm.value;
     if (this.totalRecords === 0) { return; }
     form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize;
+    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
     form.SortBy = event.multiSortMeta ?? [{ field: 'CAT_LNo', order: 1 }];
     this.onSubmit(this.queryForm);
   }
