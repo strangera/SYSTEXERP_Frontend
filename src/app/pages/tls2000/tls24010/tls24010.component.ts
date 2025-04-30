@@ -25,7 +25,7 @@ export class TLS24010Component implements OnInit {
   ProgNo: string = '220024';
 
   // 權限變數
-  funInfo: FunsrightInfo = {};
+  funInfo?: FunsrightInfo;
   addPermission: HasPermissionsValue = {
     progNo: this.ProgNo,
     permission: PermissionsInfo.add,
@@ -123,15 +123,15 @@ export class TLS24010Component implements OnInit {
   }
 
   canQuery(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
   }
 
   canAdd(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
   }
 
   canEdit(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
   }
 
   onSubmit(frm: FormGroup): void {

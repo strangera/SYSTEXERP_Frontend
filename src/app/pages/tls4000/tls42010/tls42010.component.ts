@@ -21,16 +21,16 @@ import { CounterCodeService } from '../../../service/basic/counter-code.service'
   styleUrl: './tls42010.component.scss'
 })
 export class TLS42010Component {
-  ProgNo: string = '240007';
+  ProgNo = '240007';
   // 權限
-  funInfo: FunsrightInfo = {};
+  funInfo?: FunsrightInfo;
   addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
   queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
   editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
   // 查詢
   // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
+  loading = false;
+  submitted = false;
   queryForm = this.formBuilder.group({
     // POS10271_收銀菜單明細檔
 
@@ -129,13 +129,13 @@ export class TLS42010Component {
   // 權限
   // ----------------------------------------------------------------
   canQuery(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
   }
   canAdd(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
   }
   canEdit(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
   }
   // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {

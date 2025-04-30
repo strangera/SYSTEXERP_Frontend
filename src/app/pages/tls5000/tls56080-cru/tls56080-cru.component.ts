@@ -35,7 +35,7 @@ export class TLS56080CRUComponent
   extends BasicCrupageComponent
   implements OnInit {
   // ProgNo: string = '250039';
-  // funInfo: FunsrightInfo = {};
+  // funInfo?: FunsrightInfo;
   // // Permissions
   // addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
   // queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
@@ -166,7 +166,7 @@ export class TLS56080CRUComponent
   }
 
   canQuery(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
   }
 
   onSubmit(frm: FormGroup) {

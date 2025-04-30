@@ -21,7 +21,7 @@ import { IssuanceNoteStatusService } from '../../../service/basic/issuance-note-
 })
 export class TLS56040Component {
   ProgNo: string = '250035';
-  funInfo: FunsrightInfo = {};
+  funInfo?: FunsrightInfo;
   // Permissions
   addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
   queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
@@ -88,15 +88,15 @@ export class TLS56040Component {
   }
 
   canQuery(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
   }
 
   canAdd(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
   }
 
   canEdit(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
   }
 
   onSubmit(frm: FormGroup) {

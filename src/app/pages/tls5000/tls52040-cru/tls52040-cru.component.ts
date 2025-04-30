@@ -25,7 +25,7 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
 export class TLS52040CRUComponent extends BasicCrupageComponent implements OnInit {
 
   // ProgNo: string = '250017';
-  // funInfo: FunsrightInfo = {};
+  // funInfo?: FunsrightInfo;
 
   // // Permissions
   // addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
@@ -56,7 +56,7 @@ export class TLS52040CRUComponent extends BasicCrupageComponent implements OnIni
     returnAcceptanceAmount: [], // 退貨驗收金額
     taxAmount: [], // 稅額
     totalAmount: [], // 合計金額
-    totalSaleAmount: [], // 售價總計   
+    totalSaleAmount: [], // 售價總計
     // ----------------------------------------------------------------
     items: this.formBuilder.array([
       this.createItem()
@@ -207,15 +207,15 @@ export class TLS52040CRUComponent extends BasicCrupageComponent implements OnIni
   }
 
   canQuery(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
   }
 
   // canAdd(): boolean {
-  //   return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
+  //   return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
   // }
 
   // canEdit(): boolean {
-  //   return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
+  //   return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
   // }
 
   onSubmit(frm: FormGroup) {

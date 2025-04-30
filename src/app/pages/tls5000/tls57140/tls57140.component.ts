@@ -20,7 +20,7 @@ const now = new Date();
 })
 export class TLS57140Component {
   ProgNo: string = '250053';
-  funInfo: FunsrightInfo = {};
+  funInfo?: FunsrightInfo;
   // Permissions
   addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
   queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
@@ -80,15 +80,15 @@ export class TLS57140Component {
   }
 
   canQuery(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
   }
 
   canAdd(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
   }
 
   canEdit(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
   }
 
   onSubmit(frm: FormGroup) {

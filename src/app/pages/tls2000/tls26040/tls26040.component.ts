@@ -12,7 +12,7 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { FloorService } from '../../../service/basic/floor.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
-//預售管理作業 
+//預售管理作業
 const now = new Date();
 
 @Component({
@@ -25,7 +25,7 @@ export class TLS26040Component {
   ProgNo: string = '220038';
 
   // 權限變數
-  funInfo: FunsrightInfo = {};
+  funInfo?: FunsrightInfo;
   addPermission: HasPermissionsValue = {
     progNo: this.ProgNo,
     permission: PermissionsInfo.add,
@@ -95,15 +95,15 @@ export class TLS26040Component {
   }
 
   canQuery(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
   }
 
   canAdd(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
   }
 
   canEdit(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
   }
 
   onSubmit(frm: FormGroup) {

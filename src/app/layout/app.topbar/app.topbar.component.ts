@@ -41,8 +41,8 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
   queryForm = this.formBuilder.nonNullable.group({ query_data: [''] });
   // 我的最愛
   @ViewChild('op') favorite!: OverlayPanel; // 取得我的最愛的 OverlayPanel
-  Favorites: MenuItem[] = [];               // 我的最愛清單
-  selectedFavorites: MenuItem[] = [];       // 新增：用於存儲選中的最愛項目
+  Favorites: FunsrightInfo[] = [];               // 我的最愛清單
+  selectedFavorites: FunsrightInfo[] = [];       // 新增：用於存儲選中的最愛項目
   editingFavorites = false;                 // 是否正在編輯最愛
   // 使用者選單
   private userSubscription: Subscription | undefined; // 使用者訂閱
@@ -72,12 +72,11 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // 訂閱 AccessService 的 menuUpdated，當選單資料更新時重新建立選單
     this.menuUpdatedSubscription = this.authService.menuUpdated.subscribe((newData: FunsrightInfo[]) => {
-      if (newData?.length > 0) { // TODO: 先隱藏 000000 和 999999 的選單，等資料庫有刪掉就不用加這段了
-        this.funRightsInfo = newData.filter(item => item.prog_no !== '000000' && item.prog_no !== '999999');
+      if (newData?.length > 0) {
         this.funRightsInfo = this.funRightsInfo.map((item: FunsrightInfo) => ({
           ...item, label: `${item.prog_no} ${item.prog_name}` // 建立 label 屬性
         }));
-        this.topLevelMenuItems = this.funRightsInfo.filter(item => item.parent_id === '0'); // 假設 parent_id 為 null 或 undefined 表示第一層
+        this.topLevelMenuItems = this.funRightsInfo.filter(item => item.prog_up === ''); // 假設 parent_id 為 null 或 undefined 表示第一層
         this.initFavorites(); // 初始化最愛功能
       }
     });
@@ -105,7 +104,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     const filtered: { label: string; value: FunsrightInfo }[] = [];
     const query = event.query;
     for (const f of this.funRightsInfo) {
-      if (f.path?.trim() !== "") {
+      if (f.prog_ispage === 'Y') {
         if (f.label?.toLowerCase().includes(query.toLowerCase())) {
           filtered.push({ label: f.label, value: f });
         }
@@ -122,14 +121,14 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     if (typeof query === 'string') {
       // 如果 query 是字串，直接在 funRightsInfo 中尋找 label 包含該字串的項目
       matchedItem = this.funRightsInfo.find(item =>
-        item.label?.toLowerCase().includes(query.toLowerCase()) && item.path?.trim() !== ''
+        item.label?.toLowerCase().includes(query.toLowerCase()) && item.prog_ispage === 'Y'
       );
     } else if (typeof query === 'object' && query !== null && 'value' in query) {
       // 如果 query 是選中的自動完成選項（包含 value 屬性），直接使用 query.value
       matchedItem = query.value;
     }
     if (matchedItem) {
-      this.router.navigate([matchedItem.path]);
+      this.router.navigate([`/${matchedItem.prog_up}/${matchedItem.prog_no}`]); // 導向到該頁面，並傳遞 prog_no 參數到該頁面路由matchedItem.]);
       this.queryForm.reset();
     } else {
       this.messageService.warnBubble('輸入的代碼不存在，或您目前無權限存取對應頁面。', '查無此快速碼');
@@ -147,7 +146,6 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
       next: (response) => { // 指明 response 的結構
         const favoritesWithDetails: FunsrightInfo[] = [];
         if (response.Data.length === 0) { this.Favorites = []; return; }
-        console.log(response.Data);
         response.Data.forEach((fav: Favorite) => {
           const matchingFunRight = this.funRightsInfo.find(item => item.prog_no === fav.PROG_No);
           if (matchingFunRight) favoritesWithDetails.push(matchingFunRight);
@@ -155,19 +153,19 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
         sessionStorage.setItem('Favorites', JSON.stringify(response.Data));
         this.Favorites = favoritesWithDetails.map(item => ({
           ...item,
-          label: item.prog_no + ' ' + item.prog_name,
-          path: item.path,
+          label: item.label,
+          path: `/${item.prog_up}/${item.prog_no}`,
         }));
       }, error: error => { console.error('Error fetching favorites:', error); }
     });
   }
   // 點擊我的最愛事件
   onFavoriteItemClick(item: FunsrightInfo) {
-    if (item.path?.trim() === '') {
+    if (item.prog_ispage === 'N') {
       this.messageService.warnBubble(`您目前無檢視「${item.label}」的權限，請聯絡系統管理員開啟權限。`, '無法開啟畫面');
       return;
     }
-    this.router.navigate([item.path]);
+    this.router.navigate([`/${item.prog_up}/${item.prog_no}`]);
     this.favorite.hide(); // 點擊後關閉最愛選單
   }
   // 進入編輯我的最愛模式

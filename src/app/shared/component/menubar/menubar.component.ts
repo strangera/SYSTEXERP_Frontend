@@ -18,12 +18,12 @@ interface Favorite {
   encapsulation: ViewEncapsulation.None,
 })
 export class MenubarComponent implements OnInit, OnDestroy {
-  @Input() ProgNo: string = '';
-  home: any;
+  @Input() ProgNo = '';
+  home?: { icon: string, routerLink: string };
   breadcrumbItems: MenuItem[] = [];
   menu: string[] = [];
 
-  isFavorite: boolean = false;
+  isFavorite = false;
   // 使用者選單
   private userSubscription: Subscription | undefined; // 使用者訂閱
   data: UserInfo | null = null;              // 使用者資料
@@ -56,11 +56,11 @@ export class MenubarComponent implements OnInit, OnDestroy {
     });
   }
 
-  getMenuName(funs: any[], progNo: string) {
-    const prog = funs.filter(x => x.prog_no == progNo && x.enable_fg == "1" && x.show_fg == "1");
-    if (prog[0].parent_id != "0") {
+  getMenuName(funs: FunsrightInfo[], progNo: string) {
+    const prog = funs.filter(x => x.prog_no == progNo);
+    if (prog[0].prog_up !== '') {
       this.menu.push(prog[0].prog_name);
-      this.getMenuName(funs, prog[0].parent_id)
+      this.getMenuName(funs, prog[0].prog_up)
     } else {
       this.menu.push(prog[0].prog_name);
     }

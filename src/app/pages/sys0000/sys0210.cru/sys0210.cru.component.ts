@@ -66,7 +66,7 @@ export class SYS0210CRUComponent
 
   // 權限檢查
   canQuery(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.query) ?? false;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) ?? false;
   }
 
 

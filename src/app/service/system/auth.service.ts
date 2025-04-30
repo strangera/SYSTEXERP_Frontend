@@ -6,7 +6,7 @@ import { EncryptionService } from '../../shared/service/encryption.service';
 import { catchError, map } from 'rxjs/operators';
 import { userLogin } from '../../shared/models/system/userLogin';
 import { environment } from '../../../environments/environment';
-import { FunsrightInfo, PermissionsInfo } from '../../shared/models/system/funsrightInfo';
+import { FunsrightInfo } from '../../shared/models/system/funsrightInfo';
 import { UserInfo } from '../../shared/models/system/userInfo';
 import { NotificationService } from '../../shared/component/notification-message/notification.service';
 
@@ -140,76 +140,27 @@ export class AuthService {
   }
 
   getUserPermissions(progNo: string): FunsrightInfo {
-    const initialFunsrightInfo: FunsrightInfo = {};
+    const initialFunsrightInfo: FunsrightInfo = {
+      id: 0,
+      prog_no: '',
+      prog_id: '',
+      prog_name: '',
+      prog_up: '',
+      module_no: '',
+      sub_module_no: '',
+      prog_ispage: '',
+      prog_stopflag: '',
+      prog_sort: 0,
+      label: '',
+      PrivilegeBehavior: [],
+    };
 
-    const funs = sessionStorage.getItem("FunRightsInfo");
-
-    if (funs == "undefined" || funs == null || funs == '') {
+    try {
+      const funs: FunsrightInfo[] = JSON.parse(sessionStorage.getItem("FunRightsInfo") || '');
       return initialFunsrightInfo;
-    } else {
-      try {
-        const funs: FunsrightInfo[] = JSON.parse(sessionStorage.getItem("FunRightsInfo") || '');
-        // filter
-        const progs = funs.filter(x => x.prog_no == progNo);
-        // Find the maximum values for each property
-        const value: FunsrightInfo = progs.reduce((max: FunsrightInfo, prog: FunsrightInfo) => ({
-          add_api_path: (prog.add_api_path?.length || 0) > (max.add_api_path?.length || 0) ? prog.add_api_path : max.add_api_path,
-          delete_api_path: (prog.delete_api_path?.length || 0) > (max.delete_api_path?.length || 0) ? prog.delete_api_path : max.delete_api_path,
-          edit_api_path: (prog.edit_api_path?.length || 0) > (max.edit_api_path?.length || 0) ? prog.edit_api_path : max.edit_api_path,
-          export_api_path: (prog.export_api_path?.length || 0) > (max.export_api_path?.length || 0) ? prog.export_api_path : max.export_api_path,
-          extright1_api_path: (prog.extright1_api_path?.length || 0) > (max.extright1_api_path?.length || 0) ? prog.extright1_api_path : max.extright1_api_path,
-          extright2_api_path: (prog.extright2_api_path?.length || 0) > (max.extright2_api_path?.length || 0) ? prog.extright2_api_path : max.extright2_api_path,
-          extright3_api_path: (prog.extright3_api_path?.length || 0) > (max.extright3_api_path?.length || 0) ? prog.extright3_api_path : max.extright3_api_path,
-          extright4_api_path: (prog.extright4_api_path?.length || 0) > (max.extright4_api_path?.length || 0) ? prog.extright4_api_path : max.extright4_api_path,
-          extright5_api_path: (prog.extright5_api_path?.length || 0) > (max.extright5_api_path?.length || 0) ? prog.extright5_api_path : max.extright5_api_path,
-          print_api_path: (prog.print_api_path?.length || 0) > (max.print_api_path?.length || 0) ? prog.print_api_path : max.print_api_path,
-          query_api_path: (prog.query_api_path?.length || 0) > (max.query_api_path?.length || 0) ? prog.query_api_path : max.query_api_path,
-          report_api_path: (prog.report_api_path?.length || 0) > (max.report_api_path?.length || 0) ? prog.report_api_path : max.report_api_path,
-          permissions: [],
-        }), initialFunsrightInfo);
-
-        //
-        if (value.add_api_path) {
-          value.permissions?.push(PermissionsInfo.add);
-        }
-        if (value.delete_api_path) {
-          value.permissions?.push(PermissionsInfo.delete);
-        }
-        if (value.edit_api_path) {
-          value.permissions?.push(PermissionsInfo.edit);
-        }
-        if (value.export_api_path) {
-          value.permissions?.push(PermissionsInfo.export);
-        }
-        if (value.extright1_api_path) {
-          value.permissions?.push(PermissionsInfo.extright1);
-        }
-        if (value.extright2_api_path) {
-          value.permissions?.push(PermissionsInfo.extright2);
-        }
-        if (value.extright3_api_path) {
-          value.permissions?.push(PermissionsInfo.extright3);
-        }
-        if (value.extright4_api_path) {
-          value.permissions?.push(PermissionsInfo.extright4);
-        }
-        if (value.extright5_api_path) {
-          value.permissions?.push(PermissionsInfo.extright5);
-        }
-        if (value.print_api_path) {
-          value.permissions?.push(PermissionsInfo.print);
-        }
-        if (value.query_api_path) {
-          value.permissions?.push(PermissionsInfo.query);
-        }
-        if (value.report_api_path) {
-          value.permissions?.push(PermissionsInfo.report);
-        }
-        return value;
-      } catch (error) {
-        console.error('Error', error);
-        return initialFunsrightInfo;
-      }
+    } catch (error) {
+      console.error('Error', error);
+      return initialFunsrightInfo;
     }
   }
 
@@ -225,8 +176,8 @@ export class AuthService {
   }
 
   getFunRightsInfo(): Observable<any> {
-    // return this.http.get<any>(`assets/service/User/userLogin.json`).pipe(
-    return this.http.post<any>(`${this.apiUrl}/User/GetUserDashboard`, {}).pipe(
+    return this.http.get<any>(`assets/service/User/FunRightsInfo.json`).pipe(
+      // return this.http.post<any>(`${this.apiUrl}/User/GetUserDashboard`, {}).pipe(
       map((response: any) => {
         sessionStorage.setItem('FunRightsInfo', JSON.stringify(response.Data.funright_info));
         this._menuUpdated.next(response.Data.funright_info);
