@@ -1,4 +1,3 @@
-import { animate, state, style, transition, trigger } from '@angular/animations';
 import { ElementRef, Input, OnDestroy, OnInit } from '@angular/core';
 import { Component } from '@angular/core';
 import { MenuItem } from 'primeng/api';
@@ -10,14 +9,7 @@ import { AuthService } from '../../service/system/auth.service';
 @Component({
   selector: 'app-menulist',
   templateUrl: './app.menulist.component.html',
-  styleUrls: ['./app.menulist.component.scss'],
-  animations: [
-    trigger('children', [
-      state('collapsed', style({ height: '0' })),
-      state('expanded', style({ height: '*' })),
-      transition('collapsed <=> expanded', animate('400ms cubic-bezier(0.86, 0, 0.07, 1)'))
-    ])
-  ]
+  styleUrls: ['./app.menulist.component.scss']
 })
 export class AppMenulistComponent implements OnInit, OnDestroy {
   @Input() activeTopMenuProgNo: string | null = null; // 新增：接收來自頂部菜單的激活 prog_no
@@ -32,12 +24,24 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
+    // 加入寫死的選單項目
+    this.model = [
+      {
+        prog_no: '000',
+        label: '首頁',
+        items: [{ prog_no: '000000', label: '布告欄', parent_id: '000', routerLink: '/dashboard', icon: 'pi pi-bookmark', prog_ispage: 'Y' }],
+      },
+      {
+        prog_no: '999',
+        label: '測試',
+        items: [{ prog_no: '999999', label: '範例', parent_id: '999', routerLink: '/demo/demoInputTable', icon: 'pi pi-bookmark', prog_ispage: 'Y' }],
+        icon: 'pi pi-cog',
+      }
+    ];
     // 訂閱 AccessService 的 menuUpdated，當選單資料更新時重新建立選單
     this.menuUpdatedSubscription = this.authService.menuUpdated.subscribe((newData: FunsrightInfo[]) => {
       if (newData?.length > 0) {
-        this.model = this.buildMenuModel(newData);
-        console.log(this.model);
-
+        this.model = [...this.model, ...this.buildMenuModel(newData)];
       }
     });
     // 訂閱 currentPageProgNo 的變化
@@ -57,93 +61,36 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
 
   // 建立選單模型 (遞迴方式)
   buildMenuModel(lists: FunsrightInfo[]): MenuItem[] {
-    const firstLevelMenu: MenuItem[] = [];
     const menuLookup = new Map<string, MenuItem>();
-    lists.filter(item => item.prog_up === '').sort((a, b) => (a.prog_sort || 0) - (b.prog_sort || 0))
-      .forEach(({ prog_name, prog_no, prog_ispage }) => {
-        const menuItem: MenuItem = {
-          label: prog_name,
-          routerLink: `/${prog_no}`, // 第一層的 routerLink 直接給 /prog_no
-          items: [],
-          expanded: false,
-          icon: prog_ispage === 'Y' ? 'pi pi-file' : 'pi pi-folder',
-          hasChildrenOnly: false,
-          prog_no: prog_no,
-          selected: false
-        };
-        firstLevelMenu.push(menuItem);
-        menuLookup.set(prog_no, menuItem);
-      });
-    // 建立第二層選單
-    lists.filter(item => item.prog_up !== '' && item.sub_module_no === '').sort((a, b) => (a.prog_sort || 0) - (b.prog_sort || 0))
-      .forEach(({ prog_name, prog_no, prog_up, prog_ispage }) => {
-        const parentMenuItem = menuLookup.get(prog_up);
-        if (parentMenuItem) {
-          const menuItem: MenuItem = {
-            label: prog_name,
-            routerLink: `${parentMenuItem.routerLink}/${prog_no}`, // 使用父層的 routerLink
-            items: [],
-            expanded: false,
-            icon: prog_ispage === 'Y' ? 'pi pi-file' : 'pi pi-folder',
-            hasChildrenOnly: false,
-            prog_no: prog_no,
-            selected: false
-          };
-          parentMenuItem.items?.push(menuItem);
-          parentMenuItem.icon = 'pi pi-folder'; // 父節點有子項目，確保是資料夾圖案
-          parentMenuItem['hasChildrenOnly'] = true; // 標記為只有子節點
-        }
-      });
-    // 處理更深層次的關聯
-    const buildDeepLevel = (node: MenuItem, remainingLists: FunsrightInfo[]) => {
-      remainingLists
-        .filter(item => item.sub_module_no === node['prog_no'])
-        .sort((a, b) => (a.prog_sort || 0) - (b.prog_sort || 0))
-        .forEach(({ prog_name, prog_no, prog_ispage }) => {
-          const newMenuItem: MenuItem = {
-            label: prog_name,
-            routerLink: node.routerLink ? `${node.routerLink}/${prog_no}` : undefined,
-            items: [],
-            expanded: false,
-            icon: prog_ispage === 'Y' ? 'pi pi-file' : 'pi pi-folder',
-            hasChildrenOnly: false,
-            prog_no: prog_no,
-            selected: false
-          };
-          if (!node.items) {
-            node.items = [];
-            node.icon = 'pi pi-folder';
-            node['hasChildrenOnly'] = true;
+    const menu: MenuItem[] = [];
+    lists.forEach(({ prog_no, prog_name, prog_up, prog_ispage }) => {
+      const menuItem: MenuItem = {
+        prog_no: prog_no,
+        label: prog_name,
+        parent_id: prog_up,
+        routerLink: '/' + prog_no,
+        items: undefined,
+        expanded: false,
+        icon: prog_ispage === 'Y' ? 'pi pi-bookmark' : 'pi pi-home',
+        hasChildrenOnly: false,
+        prog_ispage: prog_ispage,
+      };
+      menuLookup.set(prog_no, menuItem); // 先將 menuItem 加入 lookup，方便後續父節點引用
+      if (prog_up !== "") {
+        const parentItem = menuLookup.get(prog_up as string);
+        if (parentItem) {
+          menuItem.routerLink = parentItem['routerLink'] + '/' + menuItem['prog_no'] // 路由依照複層的 prog_no 再加上自己的 prog_no
+          parentItem.items = parentItem.items || [];
+          parentItem.items.push(menuItem);
+          if (parentItem.items) {
+            parentItem['hasChildrenOnly'] = true;
           }
-          node.items.push(newMenuItem);
-          menuLookup.set(prog_no, newMenuItem); // 將新節點加入 menuLookup
-          // 遞迴處理更深層次的子節點
-          const nextRemainingLists = remainingLists.filter(item => item.sub_module_no !== node['prog_no']);
-          buildDeepLevel(newMenuItem, nextRemainingLists);
-        });
-      if (node.items && node.items.length === 0) {
-        node.items = undefined;
-        node.icon = node.routerLink ? 'pi pi-file' : 'pi pi-folder';
-        node['hasChildrenOnly'] = false;
-      }
-    };
-
-    // 對第一層和第二層的每個節點執行深度查找
-    firstLevelMenu.forEach(item => {
-      const remainingLists = lists.filter(listItem => listItem.prog_up !== '' && listItem.sub_module_no !== '');
-      buildDeepLevel(item, remainingLists);
-    });
-    firstLevelMenu.forEach(item => {
-      if (item.items) {
-        item.items.forEach(secondLevelItem => {
-          const remainingLists = lists.filter(listItem => listItem.prog_up !== '' && listItem.sub_module_no !== '');
-          buildDeepLevel(secondLevelItem, remainingLists);
-        });
+        }
+      } else {
+        menu.push(menuItem);
       }
     });
-
-    console.log('包含更深層次關聯的選單模型 (Log):', JSON.stringify(firstLevelMenu, null, 2));
-    return firstLevelMenu;
+    return menu;
   }
 
   // 根據 ProgNo 設置激活的選單項目

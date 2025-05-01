@@ -1,0 +1,21 @@
+<li [ngClass]="{'active-menuitem': item.expanded}" *ngIf="item.items; else noHasSubmenu">
+    <a (click)="toggleActive(item)" [attr.href]="null" pRipple>
+        <i [ngClass]="item.icon" class="layout-menuitem-icon"></i>
+        <span class="layout-menuitem-text">{{item.label}}</span>
+        <i class="pi pi-fw pi-angle-down layout-submenu-toggler" *ngIf="item.items"></i>
+    </a>
+</li>
+<ul *ngIf="item.items" [@children]="item.expanded ? 'expanded' : 'collapsed'" style="overflow: hidden;">
+    <ng-container *ngFor="let subItem of item.items">
+        <app-menu-item [item]="subItem"></app-menu-item>
+    </ng-container>
+</ul>
+<ng-template #noHasSubmenu>
+    <li class="layout-menuitem">
+        <a [routerLink]="item['prog_ispage'] === 'Y' ? item.routerLink : undefined" pRipple
+            [ngClass]="{'menuitem-selected': item['selected']}">
+            <i [ngClass]="item.icon" class="layout-menuitem-icon"></i>
+            <span class="layout-menuitem-text">{{item.label}}</span>
+        </a>
+    </li>
+</ng-template>

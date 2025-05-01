@@ -141,7 +141,7 @@ export class AuthService {
 
   getUserPermissions(progNo: string): FunsrightInfo {
     const initialFunsrightInfo: FunsrightInfo = {
-      id: 0,
+      id: "",
       prog_no: '',
       prog_id: '',
       prog_name: '',
@@ -150,7 +150,7 @@ export class AuthService {
       sub_module_no: '',
       prog_ispage: '',
       prog_stopflag: '',
-      prog_sort: 0,
+      prog_sort: "",
       label: '',
       PrivilegeBehavior: [],
     };

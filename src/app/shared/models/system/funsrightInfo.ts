@@ -14,16 +14,16 @@ export enum PermissionsInfo {
 }
 
 export interface FunsrightInfo {
-  id: number,           // ID
-  prog_no: string,      // 程式代號
+  id: string,
+  prog_no: string,
   prog_id: string,
-  prog_name: string,    // 程式名稱
-  prog_up: string,      // 上層程式代號
-  module_no: string,    // 模組代號
-  sub_module_no: string,// 子模組代號
-  prog_ispage: string,  // 是否為頁面
-  prog_stopflag: string,// 停用狀態
-  prog_sort: number     // 排序
+  prog_name: string,
+  prog_up: string,
+  module_no: string,
+  sub_module_no: string,
+  prog_ispage: string,
+  prog_stopflag: string,
+  prog_sort: string,
 
   label?: string  // 程式代號 + 程式名稱
 

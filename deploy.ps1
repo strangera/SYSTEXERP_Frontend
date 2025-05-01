@@ -1,6 +1,6 @@
 # 建置
 # 設定變數
-$projectPath = "C:\Users\2400215.SYSTEX\Desktop\TSRDERP_Frontend" # Angular 專案路徑
+$projectPath = "C:\Users\amisl\Desktop\TSRDERP_Frontend" # Angular 專案路徑
 $buildPath = "$projectPath\dist\tmserp-frontend\browser" # Build 產物目錄
 $zipFile = "$buildPath.zip"                # 壓縮後的檔案
 
@@ -17,6 +17,6 @@ if ($LASTEXITCODE -ne 0) {
 
 # 2️⃣ 壓縮 build 產物，儲存在桌面
 Write-Host "📦 Compressing build files..."
-Compress-Archive -Path "$buildPath\*" -DestinationPath "$env:USERPROFILE\Desktop\TSRDERP_Frontend.zip" -Force
+Compress-Archive -Path "$buildPath\*" -DestinationPath "$projectPath\TSRDERP_Frontend.zip" -Force
 
 Write-Host "✅ Compress completed"
