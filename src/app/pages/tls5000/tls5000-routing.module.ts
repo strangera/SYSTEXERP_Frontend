@@ -1,7 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-// Component
-import { NotfoundComponent } from '../notfound/notfound.component';
 import { TLS51010CRUComponent } from './tls51010-cru/tls51010-cru.component';
 import { TLS51010Component } from './tls51010/tls51010.component';
 import { TLS51020CRUComponent } from './tls51020-cru/tls51020-cru.component';
@@ -99,7 +97,6 @@ import { TLS57160Component } from './tls57160/tls57160.component';
 import { TLS57170Component } from './tls57170/tls57170.component';
 
 const routes: Routes = [
-  { path: '', redirectTo: '404', pathMatch: 'full' },
   { path: 'TLS51010', component: TLS51010Component }, // 大分類維護作業
   { path: 'TLS51020', component: TLS51020Component }, // 中分類維護作業
   { path: 'TLS51030', component: TLS51030Component }, // 小分類維護作業
@@ -195,8 +192,6 @@ const routes: Routes = [
   { path: 'TLS56060CRU', component: TLS56060CRUComponent }, // 倉別調撥驗收作業 CRU
   { path: 'TLS56070CRU', component: TLS56070CRUComponent }, // 商品報廢維護 CRU
   { path: 'TLS56080CRU', component: TLS56080CRUComponent }, // 同業調撥作業 CRU
-  { path: '404', component: NotfoundComponent },
-  { path: '**', redirectTo: '404' },
 ];
 
 @NgModule({

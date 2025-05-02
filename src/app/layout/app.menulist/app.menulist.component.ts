@@ -1,3 +1,4 @@
+import { AppMenulistService } from './app.menulist.service';
 import { ElementRef, Input, OnDestroy, OnInit } from '@angular/core';
 import { Component } from '@angular/core';
 import { MenuItem } from 'primeng/api';
@@ -20,28 +21,15 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
   constructor(
     public el: ElementRef,
     private currentPageService: CurrentPageService, // 注入 Service
-    private authService: AuthService
+    private authService: AuthService,
+    private appMenulistService: AppMenulistService
   ) { }
 
   ngOnInit(): void {
-    // 加入寫死的選單項目
-    this.model = [
-      {
-        prog_no: '000',
-        label: '首頁',
-        items: [{ prog_no: '000000', label: '布告欄', parent_id: '000', routerLink: '/dashboard', icon: 'pi pi-bookmark', prog_ispage: 'Y' }],
-      },
-      {
-        prog_no: '999',
-        label: '測試',
-        items: [{ prog_no: '999999', label: '範例', parent_id: '999', routerLink: '/demo/demoInputTable', icon: 'pi pi-bookmark', prog_ispage: 'Y' }],
-        icon: 'pi pi-cog',
-      }
-    ];
     // 訂閱 AccessService 的 menuUpdated，當選單資料更新時重新建立選單
     this.menuUpdatedSubscription = this.authService.menuUpdated.subscribe((newData: FunsrightInfo[]) => {
       if (newData?.length > 0) {
-        this.model = [...this.model, ...this.buildMenuModel(newData)];
+        this.model = this.appMenulistService.buildMenuModel(newData);
       }
     });
     // 訂閱 currentPageProgNo 的變化
@@ -57,40 +45,6 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.currentPageProgNoSubscription?.unsubscribe();
     this.menuUpdatedSubscription?.unsubscribe();
-  }
-
-  // 建立選單模型 (遞迴方式)
-  buildMenuModel(lists: FunsrightInfo[]): MenuItem[] {
-    const menuLookup = new Map<string, MenuItem>();
-    const menu: MenuItem[] = [];
-    lists.forEach(({ prog_no, prog_name, prog_up, prog_ispage }) => {
-      const menuItem: MenuItem = {
-        prog_no: prog_no,
-        label: prog_name,
-        parent_id: prog_up,
-        routerLink: '/' + prog_no,
-        items: undefined,
-        expanded: false,
-        icon: prog_ispage === 'Y' ? 'pi pi-bookmark' : 'pi pi-home',
-        hasChildrenOnly: false,
-        prog_ispage: prog_ispage,
-      };
-      menuLookup.set(prog_no, menuItem); // 先將 menuItem 加入 lookup，方便後續父節點引用
-      if (prog_up !== "") {
-        const parentItem = menuLookup.get(prog_up as string);
-        if (parentItem) {
-          menuItem.routerLink = parentItem['routerLink'] + '/' + menuItem['prog_no'] // 路由依照複層的 prog_no 再加上自己的 prog_no
-          parentItem.items = parentItem.items || [];
-          parentItem.items.push(menuItem);
-          if (parentItem.items) {
-            parentItem['hasChildrenOnly'] = true;
-          }
-        }
-      } else {
-        menu.push(menuItem);
-      }
-    });
-    return menu;
   }
 
   // 根據 ProgNo 設置激活的選單項目
@@ -121,6 +75,7 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
   private markParentsActiveRecursive(item: MenuItem | null) {
     if (item && item['parent_id'] !== '') {
       const parent = this.findItemRecursive(this.model, item['parent_id']);
+      console.log(parent);
       if (parent) {
         parent['selected'] = true;
         parent.expanded = true;

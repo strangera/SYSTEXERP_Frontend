@@ -10,6 +10,7 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
 //
 import { WhetherService } from './../../../service/basic/whether.service';
 import { AllInvoiceCategoryService } from './../../../service/basic/all-invoice-category.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
 //1.1.1.2 發票基本資料維護
 @Component({
@@ -17,7 +18,7 @@ import { AllInvoiceCategoryService } from './../../../service/basic/all-invoice-
   templateUrl: './fin11020.component.html',
   styleUrl: './fin11020.component.scss'
 })
-export class FIN11020Component extends BasicQpageComponent implements OnInit {
+export class FIN11020Component extends BasicQueryPageComponent<any> implements OnInit {
   //
   queryForm = this.formBuilder.group({
     onedatemm: [, [Validators.required]], // 發票年月
@@ -53,10 +54,6 @@ export class FIN11020Component extends BasicQpageComponent implements OnInit {
   whetherOptions: any[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private validationService: ValidationService,
     //
     private allInvoiceCategoryService: AllInvoiceCategoryService,
@@ -66,13 +63,7 @@ export class FIN11020Component extends BasicQpageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '110002';
-    this.cruPage = '/FIN1000/FIN11020CRU';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
+    this.initializePage('FIN11020', '/FIN1000/FIN11020CRU');
     this.allInvoiceCategoryService.getAllInvoiceCategorys().subscribe(data => {
       this.invoiceCategoryOptions = data;
     });
@@ -92,14 +83,14 @@ export class FIN11020Component extends BasicQpageComponent implements OnInit {
     this.loading = true;
     this.messageService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
+    // if (frm.valid && this.canQuery()) {
+    //   // 提交邏輯
+    //   // Service
+    //   // this.xxxService.queryMachine(frm.value as xxxInterface)
+    //   //  .subscribe((response: any) => {
+    //   //    this.rows = response.xxx;
+    //   // });
+    // }
 
     this.loading = false;
     this.messageService.unblockUi();
@@ -108,22 +99,6 @@ export class FIN11020Component extends BasicQpageComponent implements OnInit {
   onSubmitQuery(frm: FormGroup) {
     // 查詢邏輯
     this.onSubmit(frm);
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
   }
   onClearForm() {
     this.queryForm.reset();  // 重置表單

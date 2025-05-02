@@ -32,7 +32,7 @@ export class MenubarComponent implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
-    private messageService: NotificationService
+    private messageService: NotificationService,
   ) { }
 
   ngOnInit(): void {
@@ -42,7 +42,12 @@ export class MenubarComponent implements OnInit, OnDestroy {
       this.data = userInfo;
     });
     this.menuUpdatedSubscription = this.authService.menuUpdated.subscribe((newData: FunsrightInfo[]) => {
-      this.getMenuName(newData, this.ProgNo);
+      this.funRightsInfo = [
+        { id: "", prog_no: "dashboard", prog_id: "", prog_name: "佈告欄", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
+        { id: "", prog_no: "900001", prog_id: "", prog_name: "範例", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
+        ...newData
+      ];
+      this.getMenuName(this.funRightsInfo, this.ProgNo);
       this.isFavorite = this.checkIfFavorite(this.ProgNo); // 檢查是否已經加入我的最愛
       for (let i = this.menu.length - 1; i >= 0; i--) {
         if (this.menu[i]) {
@@ -57,12 +62,18 @@ export class MenubarComponent implements OnInit, OnDestroy {
   }
 
   getMenuName(funs: FunsrightInfo[], progNo: string) {
+    console.log(funs);
+    console.log(progNo);
     const prog = funs.filter(x => x.prog_no == progNo);
-    if (prog[0].prog_up !== '') {
-      this.menu.push(prog[0].prog_name);
-      this.getMenuName(funs, prog[0].prog_up)
+    if (prog.length > 0) {
+      if (prog[0].prog_up !== '') {
+        this.menu.push(prog[0].prog_name);
+        this.getMenuName(funs, prog[0].prog_up);
+      } else {
+        this.menu.push(prog[0].prog_name);
+      }
     } else {
-      this.menu.push(prog[0].prog_name);
+      this.messageService.warnBubble(`此頁面尚未設定程式代號或在選單資料中找不到程式代號: ${progNo}`, '警告')
     }
   }
 

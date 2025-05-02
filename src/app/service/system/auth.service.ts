@@ -43,8 +43,8 @@ export class AuthService {
     private encrypt: EncryptionService,
     private notemessage: NotificationService,
   ) {
-    const userStorage: any = sessionStorage.getItem('UserInfo');
-    this.userSubject = new BehaviorSubject(JSON.parse(userStorage));
+    const userStorage: any = this.getUserInfo();
+    this.userSubject = new BehaviorSubject(userStorage);
     this.user = this.userSubject.asObservable();
     // 檢查 sessionStorage 中是否有已儲存的權限資料
     const storedFunRightsInfo = sessionStorage.getItem('FunRightsInfo');
@@ -75,49 +75,19 @@ export class AuthService {
       })
     );
   }
-  // login(data: userLogin): Observable<UserInfo> {
-  //   const now = this.commService.getNOW();
-  //   const key = `${data.code?.toLowerCase()}${now.utc_nowtime}${environment.PasswordKey}`.substring(0, 16);
-  //   data.password = this.encrypt.encryptTripleDES(data.password as string, key, now.utc_nowtime);
-  //   // data.password = "W0kPywQIWtw=";
-  //   const url = `${this.apiUrl}/User/userLogin`;
-  //   console.log('🔐 Login API URL:', url);
-  //   console.log('📦 Login data:', data);
-
-  //   return this.http.post<ApiResponse<UserInfo>>(url, data).pipe(
-  //     map((response: ApiResponse<UserInfo>) => {
-  //       if (response.Status === '0000') {
-  //         sessionStorage.setItem('UserInfo', JSON.stringify(response.Data));
-  //         this.userSubject.next(response.Data);
-  //         return response.Data;
-  //       } else {
-  //         throw new Error(response.Message || 'Login failed');
-  //       }
-  //     })
-  //   );
-  // }
-
   // 移除存儲的 JWT Token
   logout(): void {
-    const userInfoStr = sessionStorage.getItem('UserInfo');
-    const token = userInfoStr ? JSON.parse(userInfoStr).AccessToken : null;
-
+    const userInfoStr = this.getUserInfo();
+    const token = userInfoStr ? userInfoStr.AccessToken : null;
     if (!token) {
       sessionStorage.clear();
       this.userSubject.next(null);
-      // this.queryStateService.clearAllQueryStates();
       this.router.navigate(['/account/login'], { replaceUrl: true });
       this.notemessage.infoBubble('已成功登出');
       return;
     }
-
-    const headers = {
-      Authorization: `Bearer ${token}`
-    };
-
-    this.http.post<ApiResponse<any>>(`${this.apiUrl}/User/userLogout`, {}, { headers }).pipe(
+    this.http.post<ApiResponse<any>>(`${this.apiUrl}/User/userLogout`, {}).pipe(
       catchError((error) => {
-        console.error('Logout error:', error);
         this.notemessage.errorBubble('登出失敗，請稍後再試');
         return throwError(() => error);
       })
@@ -128,17 +98,9 @@ export class AuthService {
         this.router.navigate(['/account/login'], { replaceUrl: true });
         this.notemessage.infoBubble('已成功登出');
       },
-      error: (error) => {
-        console.error('Logout error:', error);
-      }
+      error: (error) => { console.error('Logout error:', error); }
     });
   }
-
-
-  isAuthenticated(): boolean {
-    return !!this.currentUserValue;
-  }
-
   getUserPermissions(progNo: string): FunsrightInfo {
     const initialFunsrightInfo: FunsrightInfo = {
       id: "",
@@ -154,7 +116,6 @@ export class AuthService {
       label: '',
       PrivilegeBehavior: [],
     };
-
     try {
       const funs: FunsrightInfo[] = JSON.parse(sessionStorage.getItem("FunRightsInfo") || '');
       return initialFunsrightInfo;
@@ -163,7 +124,7 @@ export class AuthService {
       return initialFunsrightInfo;
     }
   }
-
+  // 獲取我的最愛
   getFavorites(user_No?: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/User/GetUserFavorite`, { user_No: user_No }).pipe(
       map((response: any) => {
@@ -171,6 +132,7 @@ export class AuthService {
         return response;
       }));
   }
+  // 更新我的最愛
   UpdateUserFavorite(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/User/UpdateUserFavorite`, { Favorites: body });
   }

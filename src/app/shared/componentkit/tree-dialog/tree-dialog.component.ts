@@ -13,7 +13,7 @@ export class TreeDialogComponent extends BasicKitComponent implements OnInit {
   @Input() controlName = '';
   @Input() control = new FormControl;
   @Input() submitted = false; // 檢查欄位是否標準
-  @Input() visible = true;
+  @Input() visible = false;
   @Input() disabled: boolean | undefined;
   // header
   cities = [
