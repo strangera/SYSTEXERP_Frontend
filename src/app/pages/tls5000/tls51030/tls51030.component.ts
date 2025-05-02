@@ -145,15 +145,12 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      console.log('middleCategoryOptions:', this.middleCategoryOptions);
-      console.log('bigCategoryOptions:', this.bigCategoryOptions);
       this.apiService.queryTLS51030(frm.value).subscribe({
         next: (response: any) => {
           if (response.Status === '0000') {
             this.data = (response.Data || []).map((item: CategoryItem) => {
               const catLDisplay = this.getCategoryDisplayName(item.CAT_LNo, this.bigCategoryOptions);
               const catMDisplay = item.CAT_MName ? `${item.CAT_MNo} - ${item.CAT_MName}` : item.CAT_MNo;
-              console.log(`Item: ${item.CAT_MNo}, CAT_MDisplay: ${catMDisplay}`);
               return {
                 ...item,
                 CAT_LDisplay: catLDisplay,
@@ -254,7 +251,6 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
       ...sort,
       field: sort.field === 'CAT_LDisplay' ? 'CAT_LNo' : sort.field === 'CAT_MDisplay' ? 'CAT_MNo' : sort.field
     }));
-    console.log('SortBy:', form.SortBy);
     this.onSubmit(this.queryForm);
   }
 }
