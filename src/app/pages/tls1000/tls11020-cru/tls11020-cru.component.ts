@@ -204,5 +204,31 @@ export class TLS11020CRUComponent extends BasicCrupageComponent implements OnIni
   onRemoveItem(index: number): void {
     this.items.removeAt(index);
   }
+  inputForm = this.formBuilder.group({
+    deductionItemNumber: [{ value: '由系統帶入', disabled: true }],
+    deductionItemName: [''],
+    deductionCategory: [''],
+    accNo: [''],
+    guiFlag: ['Y'],
+    capTaxType: ['1'],
+    isCommonlyUsed: ['N'],
+    printArea: [''],
+    remark: [''],
+  });
+  
+  itemList: any[] = [];
+  
+  addItem(): void {
+    this.itemList.unshift(this.inputForm.getRawValue());
+    this.inputForm.reset({ deductionItemNumber: '由系統帶入', guiFlag: 'Y', capTaxType: '1', isCommonlyUsed: 'N' });
+  }
+  
+  removeItem(index: number): void {
+    this.itemList.splice(index, 1);
+  }
+  
+  getLabelByValue(options: any[], value: any): string {
+    return options?.find(o => o.value === value)?.label || value;
+  }
   //---------------------------------------------------------------------------------------------------------------
 }
