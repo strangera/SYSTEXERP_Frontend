@@ -57,8 +57,18 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
   columns: Column[] = [
     { field: 'CAT_SNo', header: '小分類代碼', visible: true },
     { field: 'CAT_SName', header: '小分類名稱', visible: true },
-    { field: 'CAT_MDisplay', header: '中分類代碼 / 名稱', visible: true },
-    { field: 'CAT_LDisplay', header: '大分類代碼 / 名稱', visible: true },
+    {
+      field: 'CAT_MDisplay',
+      header: '中分類代碼 / 名稱',
+      visible: true,
+      sortField: 'CAT_MNo'
+    } as Column & { sortField: string },
+    {
+      field: 'CAT_LDisplay',
+      header: '大分類代碼 / 名稱',
+      visible: true,
+      sortField: 'CAT_LNo'
+    } as Column & { sortField: string },
     { field: 'CAT_SRemark', header: '說明', visible: true }
   ];
 
@@ -95,7 +105,6 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
         this.middleCategoryCodeService.getSystemTypesByCatLNo(catLNo).subscribe({
           next: (response) => {
             this.middleCategoryOptions = response;
-            // 恢復 CAT_MNo（如果有）
             const currentCatMNo = this.queryForm.controls.CAT_MNo.value;
             if (currentCatMNo && !response.find(opt => opt.value === currentCatMNo)) {
               this.queryForm.controls.CAT_MNo.setValue('');
@@ -116,13 +125,12 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
 
     // 恢復查詢狀態並自動查詢
     this.handleQueryRestore(this.queryForm, storageKey, (form) => {
-      // 確保中分類選項載入後再查詢
       const catLNo = form.value.CAT_LNo;
       if (catLNo) {
         this.middleCategoryCodeService.getSystemTypesByCatLNo(catLNo).subscribe({
           next: (response) => {
             this.middleCategoryOptions = response;
-            this.onSubmit(form); // 在中分類載入後執行查詢
+            this.onSubmit(form);
           },
           error: (error) => {
             console.error('恢復中分類代碼失敗:', error);
@@ -130,23 +138,28 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
           }
         });
       } else {
-        this.onSubmit(form); // 無 CAT_LNo 時直接查詢
+        this.onSubmit(form);
       }
     });
   }
 
   onSubmit(frm: FormGroup): void {
-    console.log('Form value:', JSON.stringify(frm.value, null, 2));
     this.handleSubmit(frm, () => {
+      console.log('middleCategoryOptions:', this.middleCategoryOptions);
+      console.log('bigCategoryOptions:', this.bigCategoryOptions);
       this.apiService.queryTLS51030(frm.value).subscribe({
         next: (response: any) => {
-          console.log('API response:', JSON.stringify(response, null, 2));
           if (response.Status === '0000') {
-            this.data = (response.Data || []).map((item: CategoryItem) => ({
-              ...item,
-              CAT_LDisplay: this.getCategoryDisplayName(item.CAT_LNo, this.bigCategoryOptions),
-              CAT_MDisplay: this.getCategoryDisplayName(item.CAT_MNo, this.middleCategoryOptions)
-            }));
+            this.data = (response.Data || []).map((item: CategoryItem) => {
+              const catLDisplay = this.getCategoryDisplayName(item.CAT_LNo, this.bigCategoryOptions);
+              const catMDisplay = item.CAT_MName ? `${item.CAT_MNo} - ${item.CAT_MName}` : item.CAT_MNo;
+              console.log(`Item: ${item.CAT_MNo}, CAT_MDisplay: ${catMDisplay}`);
+              return {
+                ...item,
+                CAT_LDisplay: catLDisplay,
+                CAT_MDisplay: catMDisplay
+              };
+            });
             this.filteredData = [...this.data];
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(storageKey, frm.value);
@@ -191,8 +204,6 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
   }
 
   onDelete(data: CategoryItem | CategoryItem[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
-
     const items = Array.isArray(data) ? data : [data];
     if (items.length === 0) {
       console.error('No items to delete');
@@ -200,7 +211,6 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
       return;
     }
 
-    // 收集有效 ID
     const idList = items
       .filter(item => item && item.id != null && item.id !== undefined)
       .map(item => item.id);
@@ -214,14 +224,12 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
     const requestBody = {
       idList: idList
     };
-    console.log('Request body:', JSON.stringify(requestBody, null, 2));
 
     this.apiService.deleteTLS51030(requestBody).subscribe({
       next: (response: any) => {
-        console.log('API response:', JSON.stringify(response, null, 2));
         if (response.Status === '0000') {
           this.messageService.successBubble(`成功刪除 ${idList.length} 個項目`);
-          this.onSubmit(this.queryForm); // 刷新資料
+          this.onSubmit(this.queryForm);
         } else {
           console.error('API error:', response.Status, response.Message, response.Error);
           this.messageService.errorBubble(`刪除失敗: ${response.Message || '未知錯誤'}`);
@@ -232,7 +240,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
         this.messageService.errorBubble('刪除失敗，請檢查網路連線或聯繫管理員');
       },
       complete: () => {
-        this.selectedItems = []; // 清空選中項目
+        this.selectedItems = [];
       }
     });
   }
@@ -242,7 +250,11 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
     if (this.totalRecords === 0) { return; }
     form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
     form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'CAT_SNo', order: 1 }];
+    form.SortBy = (event.multiSortMeta ?? [{ field: 'CAT_SNo', order: 1 }]).map(sort => ({
+      ...sort,
+      field: sort.field === 'CAT_LDisplay' ? 'CAT_LNo' : sort.field === 'CAT_MDisplay' ? 'CAT_MNo' : sort.field
+    }));
+    console.log('SortBy:', form.SortBy);
     this.onSubmit(this.queryForm);
   }
 }
