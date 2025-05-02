@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { LayoutService } from '../../../layout/layout.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { UserInfo } from '../../../shared/models/system/userInfo';
-import { forkJoin, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { MenuItem } from 'primeng/api';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -86,15 +86,26 @@ export class SsoDashboardComponent implements OnInit {
   }
   fetchUrlList(): void {
     this.loading = true;
+    this.urlItems = [
+      {
+        System_Id: 'ERP',
+        System_Name: '商場營運管理系統',
+        System_Url: '/dashboard',
+        System_ImgFile: 'EIP_Image',
+      },
+    ];
     this.ssoDashboardService.fetchUrlList().subscribe({
       next: (data) => {
-        this.urlItems = data.Data.sort((a: any, b: any) => {
-          const seqNoA = Number(a.Seq_No);
-          const seqNoB = Number(b.Seq_No);
-          if (seqNoA === undefined || seqNoA === null) return 1;
-          if (seqNoB === undefined || seqNoB === null) return -1;
-          return seqNoA - seqNoB;
-        }).filter((item: any) => item.IsEnable === 'Y'); // 篩選 IsEnable 為 true 的項目
+        const sortedAndFilteredData = data.Data
+          .sort((a: any, b: any) => {
+            const seqNoA = Number(a.Seq_No);
+            const seqNoB = Number(b.Seq_No);
+            if (seqNoA === undefined || seqNoA === null) return 1;
+            if (seqNoB === undefined || seqNoB === null) return -1;
+            return seqNoA - seqNoB;
+          })
+          .filter((item: any) => item.IsEnable === 'Y');
+        this.urlItems = [...this.urlItems, ...sortedAndFilteredData];
         this.loading = false;
       },
       error: (error) => {
@@ -106,13 +117,13 @@ export class SsoDashboardComponent implements OnInit {
   }
 
   navigateToUrl(item: ApiItem): void {
-    if (item.System_Url) {
+    if (this.urlItems.length > 0 && item === this.urlItems[0]) {
       this.loading = true; // 開始載入，顯示 loading 效果 (如果需要)
       this.authService.getFunRightsInfo().subscribe({
         next: (sys1000Response) => {
           sessionStorage.setItem('SYSTEMSetting', JSON.stringify(sys1000Response));
           this.loading = false; // 停止載入
-          window.open(item.System_Url, '_blank');
+          this.router.navigate([item.System_Url]);
         },
         error: (error) => {
           console.error('API 請求失敗:', error);
@@ -120,6 +131,8 @@ export class SsoDashboardComponent implements OnInit {
           this.errorMessage = '載入資料失敗，無法導航。'; // 顯示錯誤訊息 (如果需要)
         },
       });
+    } else {
+      window.open(item.System_Url, '_blank');
     }
   }
 

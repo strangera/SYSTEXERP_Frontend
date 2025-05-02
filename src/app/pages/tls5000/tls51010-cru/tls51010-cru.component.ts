@@ -30,7 +30,7 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // ProgNo: string = '250001';
 
   // 移除：funInfo、addPermission 和 editPermission 由父類提供
-  // funInfo: FunsrightInfo = {};
+  // funInfo?: FunsrightInfo;
   // addPermission = { progNo: this.ProgNo, permission: PermissionsInfo.add };
   // editPermission = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
 
@@ -95,10 +95,10 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   //   return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());
   // }
   // canAdd(): boolean {
-  //   return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
+  //   return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
   // }
   // canEdit(): boolean {
-  //   return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
+  //   return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
   // }
 
   // 移除：Edit 和 Read 方法由父類 initializePage 處理

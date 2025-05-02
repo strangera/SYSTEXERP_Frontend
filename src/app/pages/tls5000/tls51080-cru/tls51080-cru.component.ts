@@ -19,7 +19,7 @@ export class TLS51080CRUComponent {
   ProgNo: string = '250008';
   // 權限
   // ----------------------------------------------------------------
-  funInfo: FunsrightInfo = {};
+  funInfo?: FunsrightInfo;
   addPermission = { progNo: this.ProgNo, permission: PermissionsInfo.add };
   editPermission = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
   // ----------------------------------------------------------------
@@ -86,11 +86,11 @@ export class TLS51080CRUComponent {
   }
 
   canAdd(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
   }
 
   canEdit(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
   }
   // ----------------------------------------------------------------
   Edit(rowdata: any) {

@@ -19,7 +19,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
 export class TLS41060Component {
   ProgNo: string = '240006';
   // 權限
-  funInfo: FunsrightInfo = {};
+  funInfo?: FunsrightInfo;
   addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
   queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
   editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
@@ -84,13 +84,13 @@ export class TLS41060Component {
   // 權限
   // ----------------------------------------------------------------
   canQuery(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
   }
   canAdd(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
   }
   canEdit(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
   }
   // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {

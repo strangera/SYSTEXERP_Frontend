@@ -259,6 +259,6 @@ export class TLS13010Next1Component extends BasicCrupageComponent implements OnI
   }
   // Check if the user has query permission
   canQuery(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
   }
 }

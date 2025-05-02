@@ -13,30 +13,30 @@ export class BasicQpageComponent {
   user?: UserInfo | null;
   // 權限
   // ----------------------------------------------------------------
-  funInfo: FunsrightInfo = {};
+  funInfo?: FunsrightInfo;
   addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
   queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
   editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
   // 查詢
   // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
+  loading = false;
+  submitted = false;
   reportHead: ReportHead = { outputvisible: true };   //報表表頭(預設匯出顯示資料)
   // 權限
   // ----------------------------------------------------------------
   canQuery(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
   }
   canAdd(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
   }
   canEdit(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
   }
   // 傳送的資料
   // ----------------------------------------------------------------
   navigateWithState(router: Router, crudstatus: CRUDStatus, rowdata?: any, pageroute?: string) {
-    let extras: NavigationExtras = {
+    const extras: NavigationExtras = {
       state: {
         crudstatus: crudstatus,
         rowdata: rowdata,

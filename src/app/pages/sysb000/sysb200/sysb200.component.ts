@@ -122,9 +122,9 @@ export class SYSB200Component extends BasicQpageComponent implements OnInit {
     this.authService.user.subscribe(x => this.user = x);
     // ----------------------------------------------------------------
     this.reportHead = {
-      reporttitle: this.funInfo.prog_name,
+      reporttitle: this.funInfo.prog_no,
       exportuser: this.user?.user_Name,
-      reportname: this.funInfo.prog_name,
+      reportname: this.funInfo.prog_no,
       outputvisible: false,
     };
     // ----------------------------------------------------------------

@@ -20,7 +20,7 @@ import { Router } from '@angular/router';
 export class TLS52050CRUComponent extends BasicCrupageComponent implements OnInit {
 
   // ProgNo: string = '250018';
-  // funInfo: FunsrightInfo = {};
+  // funInfo?: FunsrightInfo;
   // // Permissions
   // addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
   // queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };

@@ -19,7 +19,7 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class TLS53020CRUComponent extends BasicCrupageComponent implements OnInit {
   // ProgNo: string = '250022';
-  // funInfo: FunsrightInfo = {};
+  // funInfo?: FunsrightInfo;
   // // Permissions
   // addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
   // queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };

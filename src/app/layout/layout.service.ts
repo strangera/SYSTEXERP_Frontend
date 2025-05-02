@@ -70,77 +70,72 @@ export class LayoutService {
     );
   }
 
-    onMenuToggle() {
-        if (this.isOverlay()) {
-            this.state.overlayMenuActive = !this.state.overlayMenuActive;
-            if (this.state.overlayMenuActive) {
-                this.overlayOpen.next(null);
-            }
-        }
-
-        if (this.isDesktop()) {
-            this.state.staticMenuDesktopInactive =
-                !this.state.staticMenuDesktopInactive;
-        } else {
-            this.state.staticMenuMobileActive =
-                !this.state.staticMenuMobileActive;
-
-            if (this.state.staticMenuMobileActive) {
-                this.overlayOpen.next(null);
-            }
-        }
+  onMenuToggle() {
+    if (this.isOverlay()) {
+      this.state.overlayMenuActive = !this.state.overlayMenuActive;
+      if (this.state.overlayMenuActive) {
+        this.overlayOpen.next(null);
+      }
     }
 
-    showProfileSidebar() {
-        this.state.profileSidebarVisible = !this.state.profileSidebarVisible;
-        if (this.state.profileSidebarVisible) {
-            this.overlayOpen.next(null);
-        }
-    }
+    if (this.isDesktop()) {
+      this.state.staticMenuDesktopInactive =
+        !this.state.staticMenuDesktopInactive;
+    } else {
+      this.state.staticMenuMobileActive =
+        !this.state.staticMenuMobileActive;
 
-    showConfigSidebar() {
-        this.state.configSidebarVisible = true;
+      if (this.state.staticMenuMobileActive) {
+        this.overlayOpen.next(null);
+      }
     }
+  }
 
-    isOverlay() {
-        return this.config().menuMode === 'overlay';
+  showProfileSidebar() {
+    this.state.profileSidebarVisible = !this.state.profileSidebarVisible;
+    if (this.state.profileSidebarVisible) {
+      this.overlayOpen.next(null);
     }
+  }
 
-    isDesktop() {
-        return window.innerWidth > 991;
-    }
+  showConfigSidebar() {
+    this.state.configSidebarVisible = true;
+  }
 
-    isMobile() {
-        return !this.isDesktop();
-    }
+  isOverlay() {
+    return this.config().menuMode === 'overlay';
+  }
 
-     onConfigUpdate() {
+  isDesktop() {
+    return window.innerWidth > 991;
+  }
+
+  isMobile() {
+    return !this.isDesktop();
+  }
+
+  onConfigUpdate() {
     this._config = { ...this.config() };
     this.configUpdate.next(this.config());
   }
 
   changeTheme() {
-    const config = this.config();
-    const themeLink = <HTMLLinkElement>document.getElementById('theme-css');
+    const themeLink = document.getElementById('theme-css') as HTMLLinkElement;
     if (!themeLink) {
       return;
     }
-    const themePath = `assets/layout/styles/themes/tomsworld/theme.css`; // 假設你只有一個 CSS，透過 class 控制
-    this.replaceThemeLink(themePath);
+    this.replaceThemeLink(`assets/layout/styles/themes/tomsworld/theme.css`);
   }
 
   replaceThemeLink(href: string) {
     const id = 'theme-css';
-    let themeLink = <HTMLLinkElement>document.getElementById(id);
-    const cloneLinkElement = <HTMLLinkElement>themeLink.cloneNode(true);
+    const themeLink = document.getElementById(id) as HTMLLinkElement;
+    const cloneLinkElement = themeLink.cloneNode(true) as HTMLLinkElement;
 
     cloneLinkElement.setAttribute('href', href);
     cloneLinkElement.setAttribute('id', id + '-clone');
 
-    themeLink.parentNode!.insertBefore(
-      cloneLinkElement,
-      themeLink.nextSibling
-    );
+    themeLink.parentNode!.insertBefore(cloneLinkElement, themeLink.nextSibling);
     cloneLinkElement.addEventListener('load', () => {
       themeLink.remove();
       cloneLinkElement.setAttribute('id', id);
@@ -160,13 +155,10 @@ export class LayoutService {
     document.documentElement.style.fontSize = `${value}px`;
   }
 
-  /**
-   * 切換佈景主題 (light/dark)
-   */
+  // 切換佈景主題 (light/dark)
   toggleColorScheme() {
     this.config.update(currentConfig => ({
-      ...currentConfig,
-      colorScheme: currentConfig.colorScheme === 'light' ? 'dark' : 'light',
+      ...currentConfig, colorScheme: currentConfig.colorScheme === 'light' ? 'dark' : 'light',
     }));
   }
 }

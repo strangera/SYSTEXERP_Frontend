@@ -21,7 +21,7 @@ import { HasPermissionsValue } from '../../../shared/directive/has-permission.di
 export class TLS21020Component {
   ProgNo: string = '220002';
   // 權限相關資訊
-  funInfo: FunsrightInfo = {};
+  funInfo?: FunsrightInfo;
   addPermission: HasPermissionsValue = {
     progNo: this.ProgNo,
     permission: PermissionsInfo.add,
@@ -85,17 +85,17 @@ export class TLS21020Component {
 
   // 檢查是否有查詢權限
   canQuery(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
   }
 
   // 檢查是否有新增權限
   canAdd(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
   }
 
   // 檢查是否有編輯權限
   canEdit(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
   }
 
   // 提交表單

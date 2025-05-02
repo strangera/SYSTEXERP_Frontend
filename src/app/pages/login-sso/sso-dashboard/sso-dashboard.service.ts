@@ -9,14 +9,14 @@ export interface ApiItem {
   System_Name: string,
   System_Url: string,
   System_ImgFile: string,
-  IsEnable: string,
-  Seq_No: number,
-  CRT_Date: string,
-  CRT_USR_No: string,
-  CRT_USR_Name: string,
-  UPD_Date: string,
-  UPD_USR_No: string,
-  UPD_USR_Name: string
+  IsEnable?: string,
+  Seq_No?: number,
+  CRT_Date?: string,
+  CRT_USR_No?: string,
+  CRT_USR_Name?: string,
+  UPD_Date?: string,
+  UPD_USR_No?: string,
+  UPD_USR_Name?: string
 }
 
 @Injectable({

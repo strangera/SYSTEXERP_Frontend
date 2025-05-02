@@ -23,7 +23,7 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
 export class TLS56020CRUComponent extends BasicCrupageComponent
   implements OnInit {
   // ProgNo: string = '250033';
-  // funInfo: FunsrightInfo = {};
+  // funInfo?: FunsrightInfo;
   // // Permissions
   // addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
   // queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };

@@ -14,26 +14,18 @@ export enum PermissionsInfo {
 }
 
 export interface FunsrightInfo {
-  add_api_path?: string; //
-  delete_api_path?: string;
-  edit_api_path?: string;
-  enable_fg?: string;
-  export_api_path?: string;
-  extright1_api_path?: string;
-  extright2_api_path?: string;
-  extright3_api_path?: string;
-  extright4_api_path?: string;
-  extright5_api_path?: string;
-  group_no?: string;
-  http_method?: string;
-  parent_id?: string;
-  path?: string;
-  print_api_path?: string;
-  prog_name?: string;
-  prog_no?: string;
-  query_api_path?: string;
-  report_api_path?: string;
-  show_fg?: string;
-  permissions?: string[];
-  label?: string;
+  id: string,
+  prog_no: string,
+  prog_id: string,
+  prog_name: string,
+  prog_up: string,
+  module_no: string,
+  sub_module_no: string,
+  prog_ispage: string,
+  prog_stopflag: string,
+  prog_sort: string,
+
+  label?: string  // 程式代號 + 程式名稱
+
+  PrivilegeBehavior?: PermissionsInfo[] // 先不理會
 }

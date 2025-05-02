@@ -4,17 +4,17 @@ import { CRUDStatus } from '../../enum/CRUDstatus';
 export class BasicCrupageComponent {
   // Page No
   // ----------------------------------------------------------------
-  ProgNo: string = '900001';
+  ProgNo = '900001';
   // 權限
   // ----------------------------------------------------------------
-  funInfo: FunsrightInfo = {};
+  funInfo?: FunsrightInfo;
   addPermission = { progNo: this.ProgNo, permission: PermissionsInfo.add };
   editPermission = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
   // ----------------------------------------------------------------
   crudstatus: CRUDStatus = CRUDStatus.Read;
-  formTitle: string = '';
+  formTitle = '';
   accordionTabCss = 'create-accordionTab';
-  showConfirm: boolean = false;
+  showConfirm = false;
   submitted = false;
   // ----------------------------------------------------------------
   get isFormEditable(): boolean {
@@ -27,10 +27,10 @@ export class BasicCrupageComponent {
   }
   // ----------------------------------------------------------------
   canAdd(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
   }
 
   canEdit(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
   }
 }

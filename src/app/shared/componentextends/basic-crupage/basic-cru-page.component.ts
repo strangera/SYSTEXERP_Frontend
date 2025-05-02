@@ -11,7 +11,7 @@ import { CurrentPageService } from '../../../layout/app.menulist/current-page.se
 export class BasicCruPageComponent<T> {
   // Page No
   ProgNo = '900001';
-  funInfo: FunsrightInfo = {};
+  funInfo?: FunsrightInfo;
   rowdata: T | null = null;
   // 權限
   // ----------------------------------------------------------------
@@ -43,11 +43,11 @@ export class BasicCruPageComponent<T> {
   }
   // ----------------------------------------------------------------
   canAdd(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
   }
 
   canEdit(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
   }
   initializePage(progNo: string, form?: FormGroup) {
     this.user = this.authService.getUserInfo() as UserInfo;

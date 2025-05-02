@@ -12,11 +12,11 @@ export interface HasPermissionsValue {
 })
 export class HasPermissionDirective {
   @Input() set appHasPermission(value: { progNo: string, permission: PermissionsInfo }) {
-    if (this.authService.getUserPermissions(value.progNo).permissions?.includes(value.permission)) {
-      this.viewContainerRef.createEmbeddedView(this.templateRef);
-    } else {
-      this.viewContainerRef.clear();
-    }
+    // if (this.authService.getUserPermissions(value.progNo).BehaviorNames?.includes(value.permission)) {
+    //   this.viewContainerRef.createEmbeddedView(this.templateRef);
+    // } else {
+    //   this.viewContainerRef.clear();
+    // }
   }
 
   constructor(

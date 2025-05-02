@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 //
-import { NotfoundComponent } from '../notfound/notfound.component';
 import { FIN51010CRUComponent } from './fin51010-cru/fin51010-cru.component';
 import { FIN51010Component } from './fin51010/fin51010.component';
 import { FIN51020CRUComponent } from './fin51020-cru/fin51020-cru.component';
@@ -78,7 +77,6 @@ import { FIN55130CRUComponent } from './fin55130-cru/fin55130-cru.component';
 import { FIN55130Component } from './fin55130/fin55130.component';
 
 const routes: Routes = [
-  { path: '', redirectTo: '404', pathMatch: 'full' },
   { path: 'FIN51010', component: FIN51010Component },  // 資材系統
   { path: 'FIN51010CRU', component: FIN51010CRUComponent },
   { path: 'FIN51020', component: FIN51020Component },  // 人資系統
@@ -153,8 +151,6 @@ const routes: Routes = [
   { path: 'FIN55120CRU', component: FIN55120CRUComponent },
   { path: 'FIN55130', component: FIN55130Component },  // 總帳報表-資產負債比較表
   { path: 'FIN55130CRU', component: FIN55130CRUComponent },
-  { path: '404', component: NotfoundComponent },
-  { path: '**', redirectTo: '404' },
 ];
 
 @NgModule({
