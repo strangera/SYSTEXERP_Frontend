@@ -6,6 +6,26 @@ import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { SortMeta } from 'primeng/api';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ValidationService } from '../../../shared/service/validation.service';
+import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
+import { TableLazyLoadEvent } from 'primeng/table';
+
+// 資料模型：分類項目
+interface CategoryItem {
+  id: number;
+  bus_type: string;
+  bus_type_name: string;
+  bus_type_desc: string;
+  CRT_Date: string;
+  CRT_USR_No: string;
+  CRT_USR_Name: string;
+  UPD_Date: string;
+  UPD_USR_No: string;
+  UPD_USR_Name: string;
+}
+const storageKey = 'SYSB800';
 
 @Component({
   selector: 'app-sysb800',
@@ -13,67 +33,73 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   styleUrl: './sysb800.component.scss'
 })
 // 業種基本資料維護作業
-export class SYSB800Component extends BasicQpageComponent implements OnInit {
-  // 查詢
-  // ----------------------------------------------------------------
-  queryForm = this.formBuilder.group({
-    industryCode: [, [Validators.maxLength(2)]], // 業種代號
-    industryName: ['', [Validators.maxLength(40)]], // 業種名稱
+export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    bus_type: [, [Validators.maxLength(2)]], // 大分類代號
+    bus_type_name: ['', [Validators.maxLength(40)]], // 大分類名稱
     remark: ['', [Validators.maxLength(160)]], // 備註
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+    //分頁查詢
+    pageSize: [10],
+    pageIndex: [0],
+    SortBy: [[{ field: 'bus_type', order: 1 }] as SortMeta[]],
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    { isdelete: true, industryCode: '10', industryName: '物販', remark: '' },
-    { isdelete: true, industryCode: '20', industryName: '餐飲', remark: '' },
-    { isdelete: true, industryCode: '30', industryName: '娛樂', remark: '' },
-    { isdelete: true, industryCode: '40', industryName: '服務', remark: '' },
-    { isdelete: true, industryCode: '98', industryName: '停車管理', remark: '虛擬機台' },
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
+
+  data: CategoryItem[] = [];
+  filteredData: CategoryItem[] = [...this.data];
   columns: any[] = [
-    { field: 'industryCode', header: '業種代號', visible: true },
-    { field: 'industryName', header: '業種名稱', visible: true },
+    { field: 'bus_type', header: '大分類代號', visible: true },
+    { field: 'bus_type_name', header: '大分類名稱', visible: true },
     { field: 'remark', header: '備註', visible: true },
     // 其他欄位
   ];
-  // ----------------------------------------------------------------
+
+  totalRecords: number = 0;
+  selectedItems: CategoryItem[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
+    private validationService: ValidationService,
+    private apiService: Bas1000Service
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '410007';
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
+    // this.ProgNo = '410007';
+    this.initializePage('410007', '/SYSB000/SYSB800CRU');
+
+    // 恢復查詢狀態並自動查詢
+    this.handleQueryRestore(this.queryForm, storageKey, (form) => this.onSubmit(form));
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+  onSubmit(frm: FormGroup): void {
+    console.log('Form value:', frm.value);
+    this.handleSubmit(frm, () => {
+      this.apiService.querySYSB800(frm.value).subscribe({
+        next: (response: any) => {
+          console.log('API response:', response);
+          if (response.Status === '0000') {
+            this.data = response.Data || [];
+            this.filteredData = [...this.data];
+            this.totalRecords = response.TotalCount || response.Data.length;
+            // 儲存查詢條件（成功查詢後）
+            this.queryStateService.setQueryState(storageKey, frm.value);
+            if (this.data.length === 0) {
+              console.log('查詢結果為空');
+            }
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        }
+      });
+    });
   }
 
   onSubmitQuery(frm: FormGroup) {
@@ -81,50 +107,69 @@ export class SYSB800Component extends BasicQpageComponent implements OnInit {
     this.onSubmit(frm);
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
+  // 清空表單：重置表單和表格狀態
+  onClearForm(): void {
+    this.queryForm.reset();
+    this.data = [];
+    this.filteredData = [];
+    this.totalRecords = 0;
+    this.queryStateService.clearQueryState(storageKey);
   }
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
+  onDelete(data: CategoryItem | CategoryItem[]): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
 
-      //console.log("extra", extras);
-      this.router.navigate(['/SYSB000/SYSB800CRU'], extras);
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) {
+      console.error('No items to delete');
+      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+      return;
     }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
+    items.forEach((item, index) => {
+      console.log('Processing item:', JSON.stringify(item, null, 2));
+      if (!item || item.id == null || item.id === undefined) {
+        console.error('ID is missing or invalid for item:', item);
+        this.messageService.errorBubble(`無法刪除項目 ${item?.bus_type || '未知'}：缺少 ID`);
+        return;
+      }
+
+      const requestBody = {
+        id: item.id // 保持 number 型別
       };
+      console.log('Request body:', JSON.stringify(requestBody));
+      this.apiService.deleteSYSB800(requestBody).subscribe({
+        next: (response: any) => {
+          console.log('API response:', response);
+          if (response.Status === '0000') {
+            this.messageService.successBubble(`項目 ${item.bus_type} 刪除成功`);
+          } else {
+            console.error('API error:', response.Status, response.Message);
+            this.messageService.errorBubble(`項目 ${item.bus_type} 刪除失敗: ${response.Message}`);
+          }
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.messageService.errorBubble(`項目 ${item.bus_type} 刪除失敗`);
+        },
+        complete: () => {
+          if (index === items.length - 1) {
+            this.onSubmit(this.queryForm);
+          }
+        }
+      });
+    });
 
-      this.router.navigate(['/SYSB000/SYSB800CRU'], extras);
-    }
+    this.selectedItems = [];
   }
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
-    };
-
-    this.router.navigate(['/SYSB000/SYSB800CRU'], extras);
+  loadData(event: TableLazyLoadEvent) {
+    const form = this.queryForm.value;
+    if (this.totalRecords === 0) { return; }
+    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+    form.pageIndex = (event.first ?? 0) / form.pageSize;
+    form.SortBy = event.multiSortMeta ?? [{ field: 'CAT_LNo', order: 1 }];
+    this.onSubmit(this.queryForm);
   }
+
 }

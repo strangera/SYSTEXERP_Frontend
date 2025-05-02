@@ -1,138 +1,123 @@
-import { Component, OnInit, } from '@angular/core';
-import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Sysb300Service } from './../../../service/sysb/sysb300.service';
+import { Sysb400Service } from './../../../service/sysb/sysb400.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { TranslateService } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { option, Sysb400m } from '../module/sysb000.module';
 
 @Component({
   selector: 'app-sysb400.cru',
   templateUrl: './sysb400.cru.component.html',
-  styleUrl: './sysb400.cru.component.scss'
+  styleUrl: './sysb400.cru.component.scss',
 })
 // 組織碼設定作業 CRU
-export class SYSB400CRUComponent extends BasicCrupageComponent implements OnInit {
+export class SYSB400CRUComponent
+  extends BasicCruPageComponent<Sysb400m>
+  implements OnInit
+{
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    // SYS3100 + SYS3000
+    id: [, [Validators.required]], //id
+
     org_id: ['', [Validators.required, Validators.maxLength(20)]], // 組織代碼
     org_name: ['', [Validators.required, Validators.maxLength(40)]], // 組織名稱
     p_org_id: ['', [Validators.required, Validators.maxLength(20)]], // 上層組織代碼
     level_id: ['', [Validators.required, Validators.maxLength(2)]], // 組織階層代碼
-    p_level_id: ['', [Validators.required, Validators.maxLength(2)]], // 上層組織代碼
+    level_name: ['', [Validators.required, Validators.maxLength(40)]], // 組織階層名稱
+    p_level_id: ['', [Validators.required, Validators.maxLength(2)]], // 上層組織階層代碼
+    p_level_name: ['', [Validators.required, Validators.maxLength(40)]], // 上層組織階層名稱
     stop_flag: ['N', [Validators.required, Validators.maxLength(1)]], // 是否停用
-
-    // 以下可以不用顯示於查詢頁
-    CRT_Date: [], // 建立日期
-    CRT_USR_No: [, [Validators.maxLength(10)]], // 建立人員
-    CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-    UPD_Date: [], // 變更日期
-    UPD_USR_No: [, [Validators.maxLength(10)]], // 變更人員
-    UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
   });
-  //
-  upgroup_Options: any[] = [
-    { value: 0, label: '全公司' },
-    { value: 1, label: '室/部' },
-    { value: 2, label: 'Team' },
-    { value: 3, label: '樓/組' },
-  ];
+  showConfirm = false;
 
-  whetherOptions: any[] = [
+  upgroup_Options: option[] = [];
+  whetherOptions: option[] = [
     { value: 'Y', label: '是' },
     { value: 'N', label: '否' },
   ];
+
   // ----------------------------------------------------------------
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
+    private sysb400Service: Sysb400Service,
+    private sysb300Service: Sysb300Service,
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '410004';
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
+    this.initializePage('410004', this.dataForm);
+    this.loadOptions();
+  }
 
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
+  loadOptions() {
+    const query = {
+      level_id: '',
+      org_id: '',
+      org_name: '',
     };
 
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
+    console.log('查詢條件', query);
+    this.sysb300Service.querySYSB300(query).subscribe((response) => {
+      this.upgroup_Options = response.Data.map((item: Sysb400m) => ({
+        value: item.level_id,
+        label: item.level_name,
+      }));
+      console.log('300 options查詢結果', this.upgroup_Options);
+    });
   }
 
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+    // 修改：使用父類的 handleSubmit 方法
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            const body = {
+              org_id: this.dataForm.controls.org_id.value,
+              org_name: this.dataForm.controls.org_name.value,
+              p_org_id: this.dataForm.controls.p_org_id.value,
+              level_id: this.dataForm.controls.level_id.value,
+              p_level_id: this.dataForm.controls.p_level_id.value,
+              stop_flag: this.dataForm.controls.stop_flag.value,
+            };
+            console.log('insert', body);
+            this.sysb400Service.insertSYSB400(body).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              this.onCancel(); // 新增成功後返回查詢頁面
+            });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            const body = {
+              id: this.dataForm.controls.id.value,
+              org_name: this.dataForm.controls.org_name.value,
+              p_org_id: this.dataForm.controls.p_org_id.value,
+              level_id: this.dataForm.controls.level_id.value,
+              p_level_id: this.dataForm.controls.p_level_id.value,
+              stop_flag: this.dataForm.controls.stop_flag.value,
+            };
+            console.log('update', body);
+            this.sysb400Service.updateSYSB400(body).subscribe(() => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel(); // 更新成功後返回查詢頁面
+            });
+          }
+          break;
+      }
+    });
   }
 
   submitForm(frm: FormGroup) {
-    // 查詢邏輯
     this.onSubmit(frm);
-  }//CRU
+  }
+
+  onClearForm() {
+    this.dataForm.reset(); // 重置表單
+  }
 
   onCancel() {
     this.router.navigate(['/SYSB000/SYSB400']);

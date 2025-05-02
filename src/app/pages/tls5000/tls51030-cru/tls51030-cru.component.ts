@@ -1,147 +1,177 @@
-import { Component, } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { NavigationExtras, Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
 import { ValidationService } from '../../../shared/service/validation.service';
-//
 import { BigCategoryCodeService } from './../../../service/basic/big-category-code.service';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
+import { MidCategoryCodeService } from '../../../service/basic/mid-category-code.service';
+import { debounceTime } from 'rxjs';
 
-// 2.5.1.2 中分類維護作業 CRU
+interface CategoryItem {
+  id: number;
+  CAT_LNo: string;
+  CAT_LName?: string;
+  CAT_MNo: string;
+  CAT_MName?: string;
+  CAT_SNo: string;
+  CAT_SName: string;
+  CAT_SRemark: string | null;
+  CRT_Date?: string;
+  CRT_USR_No: string;
+  CRT_USR_Name: string;
+  UPD_Date?: string;
+  UPD_USR_No?: string;
+  UPD_USR_Name?: string;
+}
+
 @Component({
   selector: 'app-tls51030-cru',
   templateUrl: './tls51030-cru.component.html',
-  styleUrl: './tls51030-cru.component.scss'
+  styleUrls: ['./tls51030-cru.component.scss']
 })
-export class TLS51030CRUComponent {
-  ProgNo: string = '250003';
-  // 權限
-  // ----------------------------------------------------------------
-  funInfo: FunsrightInfo = {};
-  addPermission = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  editPermission = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
-  // ----------------------------------------------------------------
+export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    mCode: [, [Validators.required, Validators.maxLength(3), this.validationService.numberValidator]], // Input serial number
-    mName: ['', [Validators.required, Validators.maxLength(32)]], // Input Text
-    bigCategory: [, [Validators.required]], // DropDown
-    middleCategory: [, [Validators.required]], // DropDown
-    editortext: [,], // editor text
+    id: [0],
+    CAT_SNo: ['', [Validators.required, Validators.maxLength(3), this.validationService.numberValidator]],
+    CAT_SName: ['', [Validators.required, Validators.maxLength(32)]],
+    CAT_LNo: ['', [Validators.required]],
+    CAT_MNo: ['', [Validators.required]],
+    CAT_SRemark: ['', [Validators.maxLength(200)]],
   });
-  // ----------------------------------------------------------------
-  crudstatus: CRUDStatus = CRUDStatus.Read;
-  formTitle: string = '';
-  showConfirm: boolean = false;
-  submitted = false;
 
-  // ----------------------------------------------------------------
-  bigCategoryOptions: any[] = [];
-  middleCategoryOptions: any[] = [];
+  bigCategoryOptions: { value: string, label: string }[] = [];
+  middleCategoryOptions: { value: string, label: string }[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private validationService: ValidationService,
-    //
+    private apiService: TLS5000Service,
     private bigCategoryCodeService: BigCategoryCodeService,
+    private middleCategoryCodeService: MidCategoryCodeService,
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.bigCategoryCodeService.getSystemTypes().subscribe(data => {
-      this.bigCategoryOptions = data;
+    this.initializePage('250003', this.dataForm);
+    this.bigCategoryCodeService.getSystemTypes().subscribe({
+      next: (response) => {
+        this.bigCategoryOptions = response;
+        this.loadInitialData();
+      },
+      error: (error) => {
+        console.error('獲取大分類代碼失敗:', error);
+        this.messageService.errorBubble('無法載入大分類代碼，請稍後重試');
+      }
     });
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
 
-    switch (state.crudstatus) {
-      case CRUDStatus.Create:
-        this.formTitle = '新增資料';
-        this.showConfirm = this.canAdd();
-        break;
-      case CRUDStatus.Edit:
-        console.log(state.rowdata);
-        this.formTitle = '編輯資料';
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      case CRUDStatus.Read:
-        this.formTitle = '顯示資料';
-        this.Read(state.rowdata);
-        break;
-    }
-  }
-  // ----------------------------------------------------------------
-  get isFormEditable(): boolean {
-    return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());
+
+    this.dataForm.controls.CAT_LNo.valueChanges.pipe(debounceTime(300)).subscribe(catLNo => {
+      if (catLNo) {
+        this.middleCategoryCodeService.getSystemTypesByCatLNo(catLNo).subscribe({
+          next: (response) => {
+            this.middleCategoryOptions = response;
+            const currentCatMNo = this.dataForm.controls.CAT_MNo.value;
+            if (currentCatMNo && !response.find(opt => opt.value === currentCatMNo)) {
+              this.dataForm.controls.CAT_MNo.setValue('');
+            }
+          },
+          error: (error) => {
+            console.error('獲取中分類代碼失敗:', error);
+            this.messageService.errorBubble('無法載入中分類代碼，請稍後重試');
+            this.middleCategoryOptions = [];
+            this.dataForm.controls.CAT_MNo.setValue('');
+          }
+        });
+      } else {
+        this.middleCategoryOptions = [];
+        this.dataForm.controls.CAT_MNo.setValue('');
+      }
+    });
   }
 
-  canAdd(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
-  }
-
-  canEdit(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble('新增成功');
+  private loadInitialData(): void {
+    if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
+      if (this.rowdata) {
+        const catLNo = this.rowdata.CAT_LNo;
+        if (catLNo) {
+          this.middleCategoryCodeService.getSystemTypesByCatLNo(catLNo).subscribe({
+            next: (response) => {
+              this.middleCategoryOptions = response;
+            },
+            error: (error) => {
+              console.error('初始載入中分類代碼失敗:', error);
+              this.messageService.errorBubble('無法載入中分類代碼，請稍後重試');
+              this.middleCategoryOptions = [];
+              this.dataForm.controls.CAT_MNo.setValue('');
+            }
+          });
         }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble('更新成功');
-        }
-        break;
+      } else {
+        console.error('rowdata is missing in Edit/View mode');
+        this.messageService.errorBubble('無法載入資料，請返回查詢頁面重試');
+        this.onCancel();
+      }
     }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
   }
 
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            this.apiService.insertTLS51030(frm.value).subscribe({
+              next: (response: any) => {
+                if (response.Status === '0000') {
+                  this.messageService.successBubble('新增成功');
+                  this.onCancel();
+                } else {
+                  console.error('API error:', response.Status, response.Message);
+                  this.messageService.errorBubble(`新增失敗: ${response.Message || '未知錯誤'}`);
+                }
+              },
+              error: (err: any) => {
+                console.error('API error:', err.status, err.message, err.error);
+                this.messageService.errorBubble('新增失敗，請檢查網路連線或聯繫管理員');
+              }
+            });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            this.apiService.updateTLS51030(frm.value).subscribe({
+              next: (response: any) => {
+                if (response.Status === '0000') {
+                  this.messageService.successBubble('更新成功');
+                  this.onCancel();
+                } else {
+                  console.error('API error:', response.Status, response.Message);
+                  this.messageService.errorBubble(`更新失敗: ${response.Message || '未知錯誤'}`);
+                }
+              },
+              error: (err: any) => {
+                console.error('API error:', err.status, err.message, err.error);
+                this.messageService.errorBubble('更新失敗，請檢查網路連線或聯繫管理員');
+              }
+            });
+          }
+          break;
+      }
+    });
+  }
+
+  submitForm(frm: FormGroup): void {
     this.onSubmit(frm);
   }
 
-  onClearForm() {
-    this.dataForm.reset();  // 重置表單
+  onClearForm(): void {
+    this.dataForm.reset();
+    this.middleCategoryOptions = [];
   }
 
-  onCancel() {
+  onCancel(): void {
     this.router.navigate(['/TLS5000/TLS51030']);
   }
 }

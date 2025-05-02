@@ -8,6 +8,21 @@ import { NotificationService } from '../../../shared/component/notification-mess
 //
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
+
+interface CategoryItem {
+  id: number;
+  bus_type: string;
+  bus_type_name: string;
+  bus_type_desc: string;
+  CRT_Date: string;
+  CRT_USR_No: string;
+  CRT_USR_Name: string;
+  UPD_Date: string;
+  UPD_USR_No: string;
+  UPD_USR_Name: string;
+}
 
 @Component({
   selector: 'app-sysb800.cru',
@@ -15,104 +30,86 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
   styleUrl: './sysb800.cru.component.scss'
 })
 // 業種基本資料維護作業 CRU
-export class SYSB800CRUComponent extends BasicCrupageComponent implements OnInit {
+export class SYSB800CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    industryCode: [, [Validators.required, Validators.maxLength(2)]], // 業種代號
-    industryName: ['', [Validators.required, Validators.maxLength(40)]], // 業種名稱
-    remark: [,], // 備註
+    bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 業種代號
+    bus_type_name: ['', [Validators.required, Validators.maxLength(40)]], // 業種名稱
+    bus_type_desc: ['',], // 備註
   });
-  //
-  // upperLevelOrgOptions: any[]=[];
-  // ----------------------------------------------------------------
+
+
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private translate: TranslateService,
+    private apiService: Bas1000Service,
     //
   ) {
     super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    this.ProgNo = '410007';
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
+    // this.ProgNo = '410007';
+    this.initializePage('410007', this.dataForm);
 
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
   }
 
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
 
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+    // 修改：使用父類的 handleSubmit 方法
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            // 待實現：調用 API 進行新增
+            this.apiService.insertSYSB800(frm.value).subscribe((response: any) => {
+              this.messageService.successBubble('新增成功');
+              this.onCancel(); // 新增成功後返回查詢頁面
+            });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            // 待實現：調用 API 進行更新
+            this.apiService.updateSYSB800(frm.value).subscribe((response: any) => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel(); // 更新成功後返回查詢頁面
+            });
+          }
+          break;
+      }
+    });
   }
 
+  // 修改：submitForm 調用父類 handleSubmit
   submitForm(frm: FormGroup) {
-    // 查詢邏輯
     this.onSubmit(frm);
-  }//CRU
+  }
+
+  onClearForm() {
+    this.dataForm.reset(); // 重置表單
+  }
 
   onCancel() {
-    this.router.navigate(['/SYSB000/SYSB800']);
+    // 修改：保留分頁狀態
+    const state = this.router.lastSuccessfulNavigation?.extras.state as {
+      queryParams?: any;
+      pageIndex?: number;
+      pageSize?: number;
+      totalRecords?: number;
+      sortField?: string;
+      sortOrder?: number;
+    };
+    let extras: NavigationExtras = {
+      state: {
+        queryParams: state?.queryParams,
+        pageIndex: state?.pageIndex,
+        pageSize: state?.pageSize,
+        totalRecords: state?.totalRecords,
+        sortField: state?.sortField,
+        sortOrder: state?.sortOrder,
+      },
+    };
+    this.router.navigate(['/SYSB000/SYSB800'], extras);
   }
-  //------------------------------------------------------------------------------------------------------------
 }

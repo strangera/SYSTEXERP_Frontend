@@ -1,22 +1,26 @@
 import { BigCategoryCodeService } from './../../../service/basic/big-category-code.service';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-// Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
 import { debounceTime } from 'rxjs';
+import { TableLazyLoadEvent } from 'primeng/table';
+import { SortMeta } from 'primeng/api';
+import { MidCategoryCodeService } from '../../../service/basic/mid-category-code.service';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
-// 資料模型：分類項目
 interface CategoryItem {
   id: number;
   CAT_LNo: string;
+  CAT_LName?: string;
   CAT_MNo: string;
+  CAT_MName?: string;
   CAT_SNo: string;
   CAT_SName: string;
   CAT_SRemark: string | null;
@@ -26,53 +30,47 @@ interface CategoryItem {
   UPD_Date: string;
   UPD_USR_No: string;
   UPD_USR_Name: string;
+  CAT_LDisplay?: string;
+  CAT_MDisplay?: string;
 }
 
-// 本地儲存鍵：用於儲存查詢狀態
 const storageKey = 'TLS51030';
 
-// 2.5.1.3  小分類維護作業
 @Component({
   selector: 'app-tls51030',
   templateUrl: './tls51030.component.html',
-  styleUrl: './tls51030.component.scss'
+  styleUrls: ['./tls51030.component.scss']
 })
-export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> {
-  queryForm = this.formBuilder.group({
-    CAT_SNo: ['', [Validators.maxLength(3), this.validationService.numberValidator]], // Input serial number
-    CAT_SName: ['', [Validators.maxLength(32)]], // Input Text
-    CAT_LNo: [''], // DropDown
-    CAT_MNo: [''], // DropDown
-    editortext: [''], // editor text
+export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    CAT_SNo: ['', [Validators.maxLength(3), this.validationService.numberValidator]],
+    CAT_SName: ['', [Validators.maxLength(32)]],
+    CAT_LNo: [''],
+    CAT_MNo: [''],
+    pageSize: [10],
+    pageIndex: [0],
+    SortBy: [[{ field: 'CAT_SNo', order: 1 }] as SortMeta[]],
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
+
+  data: CategoryItem[] = [];
+  filteredData: CategoryItem[] = [...this.data];
+  columns: Column[] = [
     { field: 'CAT_SNo', header: '小分類代碼', visible: true },
     { field: 'CAT_SName', header: '小分類名稱', visible: true },
-    { field: 'CAT_MNo', header: '中分類代碼', visible: true },
-    { field: 'CAT_LNo', header: '大分類代碼', visible: true },
-    { field: 'CAT_SRemark', header: '說明', visible: true },
-    // 其他欄位
+    { field: 'CAT_MDisplay', header: '中分類代碼 / 名稱', visible: true },
+    { field: 'CAT_LDisplay', header: '大分類代碼 / 名稱', visible: true },
+    { field: 'CAT_SRemark', header: '說明', visible: true }
   ];
-  // 分頁和排序參數
-  pageSize: number = 10;
-  pageIndex: number = 0;
+
   totalRecords: number = 0;
-  lastQueryParams: any = null;
-  sortField: string = 'CAT_SNo';
-  sortOrder: number = 1;
-  // 多選項目
   selectedItems: CategoryItem[] = [];
-  // ----------------------------------------------------------------
-  bigCategoryOptions: any[] = [];
-  middleCategoryOptions: any[] = [];
+  bigCategoryOptions: { value: string, label: string }[] = [];
+  middleCategoryOptions: { value: string, label: string }[] = [];
 
   constructor(
     private validationService: ValidationService,
     private bigCategoryCodeService: BigCategoryCodeService,
+    private middleCategoryCodeService: MidCategoryCodeService,
     private apiService: TLS5000Service,
   ) {
     super();
@@ -80,69 +78,116 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> {
 
   ngOnInit(): void {
     this.initializePage('250003', '/TLS5000/TLS51030CRU');
-    // 調試：輸出權限和功能資訊
-    console.log('funInfo:', this.funInfo);
-    console.log('queryPermission:', this.queryPermission);
-
-    this.handleQueryRestore(this.queryForm, storageKey, (form) => this.onSubmit(form));
-
-    this.bigCategoryCodeService.getSystemTypes().subscribe(data => {
-      this.bigCategoryOptions = data;
-      this.middleCategoryOptions = data;
+    // 載入大分類代碼
+    this.bigCategoryCodeService.getSystemTypes().subscribe({
+      next: (response) => {
+        this.bigCategoryOptions = response;
+      },
+      error: (error) => {
+        console.error('獲取大分類代碼失敗:', error);
+        this.messageService.errorBubble('無法載入大分類代碼，請稍後重試');
+      }
     });
-    // 監聽表單變化，延遲儲存有效值
-    this.queryForm.valueChanges
-      .pipe(debounceTime(500)) // 延遲 500ms 減少頻繁儲存
-      .subscribe(value => {
-        if (this.queryForm.valid) {
-          this.queryStateService.setQueryState(storageKey, value);
-        }
-      });
+
+    // 監聽 CAT_LNo 變化，動態載入中分類代碼
+    this.queryForm.controls.CAT_LNo.valueChanges.pipe(debounceTime(300)).subscribe(catLNo => {
+      if (catLNo) {
+        this.middleCategoryCodeService.getSystemTypesByCatLNo(catLNo).subscribe({
+          next: (response) => {
+            this.middleCategoryOptions = response;
+            // 恢復 CAT_MNo（如果有）
+            const currentCatMNo = this.queryForm.controls.CAT_MNo.value;
+            if (currentCatMNo && !response.find(opt => opt.value === currentCatMNo)) {
+              this.queryForm.controls.CAT_MNo.setValue('');
+            }
+          },
+          error: (error) => {
+            console.error('獲取中分類代碼失敗:', error);
+            this.messageService.errorBubble('無法載入中分類代碼，請稍後重試');
+            this.middleCategoryOptions = [];
+            this.queryForm.controls.CAT_MNo.setValue('');
+          }
+        });
+      } else {
+        this.middleCategoryOptions = [];
+        this.queryForm.controls.CAT_MNo.setValue('');
+      }
+    });
+
+    // 恢復查詢狀態並自動查詢
+    this.handleQueryRestore(this.queryForm, storageKey, (form) => {
+      // 確保中分類選項載入後再查詢
+      const catLNo = form.value.CAT_LNo;
+      if (catLNo) {
+        this.middleCategoryCodeService.getSystemTypesByCatLNo(catLNo).subscribe({
+          next: (response) => {
+            this.middleCategoryOptions = response;
+            this.onSubmit(form); // 在中分類載入後執行查詢
+          },
+          error: (error) => {
+            console.error('恢復中分類代碼失敗:', error);
+            this.messageService.errorBubble('無法恢復中分類代碼，查詢已取消');
+          }
+        });
+      } else {
+        this.onSubmit(form); // 無 CAT_LNo 時直接查詢
+      }
+    });
   }
 
-
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup): void {
-    console.log('Form value:', frm.value);
+    console.log('Form value:', JSON.stringify(frm.value, null, 2));
     this.handleSubmit(frm, () => {
-      const queryParams = {
-        CAT_LNo: frm.value.CAT_LNo || '',
-        CAT_LName: frm.value.CAT_LName || '',
-        CAT_SNo: frm.value.CAT_SNo || '',
-        CAT_SName: frm.value.CAT_SName || '',
-        CAT_MNo: frm.value.CAT_MNo || '',
-
-        PageSize: this.pageSize,
-        PageIndex: '1',
-        SortBy: [{ field: this.sortField || 'CAT_MNo', order: this.sortOrder || 1 }]
-      };
-      console.log('Query params:', queryParams);
-
-      this.apiService.queryTLS51030(queryParams).subscribe({
+      this.apiService.queryTLS51030(frm.value).subscribe({
         next: (response: any) => {
-          console.log('API response:', response);
+          console.log('API response:', JSON.stringify(response, null, 2));
           if (response.Status === '0000') {
-            this.data = response.Data || [];
+            this.data = (response.Data || []).map((item: CategoryItem) => ({
+              ...item,
+              CAT_LDisplay: this.getCategoryDisplayName(item.CAT_LNo, this.bigCategoryOptions),
+              CAT_MDisplay: this.getCategoryDisplayName(item.CAT_MNo, this.middleCategoryOptions)
+            }));
             this.filteredData = [...this.data];
             this.totalRecords = response.TotalCount || response.Data.length;
-            // 儲存查詢條件（成功查詢後）
             this.queryStateService.setQueryState(storageKey, frm.value);
             if (this.data.length === 0) {
               console.log('查詢結果為空');
+              this.messageService.infoBubble('查詢結果為空');
             }
           } else {
-            console.error('API error:', response.Status, response.Message);
+            console.error('API error:', response.Status, response.Message, response.Error);
+            this.messageService.errorBubble(`查詢失敗: ${response.Message || '未知錯誤'}`);
           }
           this.loading = false;
           this.messageService.unblockUi();
         },
-        error: (err: string) => {
-          console.error('API error:', err);
+        error: (err: any) => {
+          console.error('API error:', err.status, err.message, err.error);
+          this.messageService.errorBubble(`查詢失敗: ${err.message || '請檢查網路連線或聯繫管理員'}`);
           this.loading = false;
           this.messageService.unblockUi();
         }
       });
     });
+  }
+
+  private getCategoryDisplayName(code: string, options: { value: string, label: string }[]): string {
+    const option = options.find(opt => opt.value === code);
+    return option ? option.label : code;
+  }
+
+  onSubmitQuery(frm: FormGroup): void {
+    console.log('onSubmitQuery triggered');
+    this.onSubmit(frm);
+  }
+
+  onClearForm(): void {
+    this.queryForm.reset();
+    this.data = [];
+    this.filteredData = [];
+    this.totalRecords = 0;
+    this.middleCategoryOptions = [];
+    this.queryStateService.clearQueryState(storageKey);
   }
 
   onDelete(data: CategoryItem | CategoryItem[]): void {
@@ -155,61 +200,49 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> {
       return;
     }
 
-    items.forEach((item, index) => {
-      console.log('Processing item:', JSON.stringify(item, null, 2));
-      if (!item || item.id == null || item.id === undefined) {
-        console.error('ID is missing or invalid for item:', item);
-        this.messageService.errorBubble(`無法刪除項目 ${item?.CAT_MNo || '未知'}：缺少 ID`);
-        return;
-      }
+    // 收集有效 ID
+    const idList = items
+      .filter(item => item && item.id != null && item.id !== undefined)
+      .map(item => item.id);
 
-      const requestBody = {
-        id: item.id // 保持 number 型別
-      };
-      console.log('Request body:', JSON.stringify(requestBody));
-      this.apiService.deleteTLS51030(requestBody).subscribe({
-        next: (response: any) => {
-          console.log('API response:', response);
-          if (response.Status === '0000') {
-            this.messageService.successBubble(`項目 ${item.CAT_LNo} 刪除成功`);
-          } else {
-            console.error('API error:', response.Status, response.Message);
-            this.messageService.errorBubble(`項目 ${item.CAT_LNo} 刪除失敗: ${response.Message}`);
-          }
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.messageService.errorBubble(`項目 ${item.CAT_LNo} 刪除失敗`);
-        },
-        complete: () => {
-          if (index === items.length - 1) {
-            this.onSubmit(this.queryForm);
-          }
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
+    }
+
+    const requestBody = {
+      idList: idList
+    };
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+
+    this.apiService.deleteTLS51030(requestBody).subscribe({
+      next: (response: any) => {
+        console.log('API response:', JSON.stringify(response, null, 2));
+        if (response.Status === '0000') {
+          this.messageService.successBubble(`成功刪除 ${idList.length} 個項目`);
+          this.onSubmit(this.queryForm); // 刷新資料
+        } else {
+          console.error('API error:', response.Status, response.Message, response.Error);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message || '未知錯誤'}`);
         }
-      });
+      },
+      error: (err: any) => {
+        console.error('API error:', err.status, err.message, err.error);
+        this.messageService.errorBubble('刪除失敗，請檢查網路連線或聯繫管理員');
+      },
+      complete: () => {
+        this.selectedItems = []; // 清空選中項目
+      }
     });
-
-    this.selectedItems = [];
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    console.log('onSubmitQuery triggered');
-    this.pageIndex = 0;
-    this.onSubmit(frm);
-    this.onSubmit(frm);
+  loadData(event: TableLazyLoadEvent) {
+    const form = this.queryForm.value;
+    if (this.totalRecords === 0) { return; }
+    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
+    form.SortBy = event.multiSortMeta ?? [{ field: 'CAT_SNo', order: 1 }];
+    this.onSubmit(this.queryForm);
   }
-
-  onClearForm(): void {
-    this.queryForm.reset();
-    this.pageIndex = 0;
-    this.data = [];
-    this.filteredData = [];
-    this.lastQueryParams = null;
-    this.totalRecords = 0;
-    this.sortField = 'CAT_SNo';
-    this.sortOrder = 1;
-    // 清空儲存的查詢狀態
-    this.queryStateService.clearQueryState(storageKey);
-  }
-
 }

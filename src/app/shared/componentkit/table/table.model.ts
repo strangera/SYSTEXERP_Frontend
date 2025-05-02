@@ -3,16 +3,22 @@ import { NotificationService } from "../../component/notification-message/notifi
 export interface Column {
   field: string;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
-  style?: (value: any) => string; // styles
   visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
   hidden?: boolean;  // 是否隱藏 (是否為無法篩選欄位)
+  format?: (value: any) => string | number | null; // 格式化(日期、時間...)
+
+
   disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
+
+  style?: (value: any) => string; // styles
   maxWidth?: string; // 最大寬度 max-w-{{ col.maxWidth }}
+
+  validate?: ((value: string, rowData: any, data: any[], field: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
+
+
+  type?: string;     // 欄位類型 input、inputNumber、dropdown、default、html
   frozen?: boolean;  // 是否凍結 (是否為凍結欄位)
   alignFrozen?: string; // 凍結欄位對齊方式
-  type?: string;     // 欄位類型 input、inputNumber、dropdown、default、html
-  validate?: ((value: string, rowData: any, data: any[], field: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
-  format?: (value: any) => string | number | null; // 格式化(日期、時間...)
   prefix?: string;
   fractionDigits?: number;
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成

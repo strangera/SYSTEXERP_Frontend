@@ -2,38 +2,51 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { ErrorHandlerService } from '../../shared/service/error-handler.service';
-import { catchError, Observable, of, tap } from 'rxjs';
+import { catchError, Observable, tap, map, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BigCategoryCodeService {
   apiUrl: string = environment.ApiUrl;
+  queryApiUrl: string = `${environment.ApiUrl}/TLS0000/TLS5000/queryTLS51010_DropDownList`;
   title: string = '大分類代碼';
-  options: any[] = [
-    { value: '1', label: '化妝品' },
-    { value: '2', label: '內睡衣' },
-    { value: '3', label: '電子商務EC' },
-    { value: '4', label: '電子商務EC-萊雅' },
-    { value: '5', label: '電子商務EC-台鹽' },
-  ];
 
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
   ) { }
 
-  getSystemTypes(): Observable<any[]> {
-    return of(this.options).pipe(
-      tap(data => console.debug('get options response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
+  getSystemTypes(): Observable<{ value: string, label: string }[]> {
+    const params = {
+      id: 0,
+      CAT_LNo: '',
+      CAT_LName: ''
+    };
+
+    return this.http.post<any>(this.queryApiUrl, params).pipe(
+      tap(data => console.debug('queryTLS51010_DropDownList response', data)),
+      map(response => {
+        // 檢查回傳數據結構
+        if (!response || typeof response !== 'object') {
+          throw new Error('無效的 API 回傳格式');
+        }
+        // 確保 Data 存在且為陣列
+        const data = response.Data || [];
+        if (!Array.isArray(data)) {
+          throw new Error('API 回傳的 Data 不是陣列');
+        }
+        // 轉換為 { value, label } 格式，label 顯示 CAT_LNo + CAT_LName
+        return data.map((item: any) => ({
+          value: item.No || '', // value 為 CAT_LNo
+          label: `${item.No || ''} - ${item.Name || ''}` // label 為 "CAT_LNo - CAT_LName"
+        }));
+      }),
+      // catchError((error: HttpErrorResponse | Error) => {
+      //   console.error('getSystemTypes error:', error);
+      //   return this.errorHandler.handleError(error);
+      // })
     );
-    /*
-    return this.http.get<any[]>(this.apiUrl).pipe(
-      tap(data => console.debug('get response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
-    );
-    */
   }
 
   getSystemTypeById(id: number): Observable<any> {

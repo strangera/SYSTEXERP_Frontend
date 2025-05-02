@@ -1,11 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 // Permissions
-// Shared
 // import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { Sysb300Service } from '../../../service/sysb/sysb300.service';
-import { option, Sys300m } from '../sysb300m/sysb300m';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { option, Sysb300m } from '../module/sysb000.module';
 
 @Component({
   selector: 'app-sysb300',
@@ -14,7 +13,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 })
 // 組織階層設定作業
 export class SYSB300Component
-  extends BasicQueryPageComponent<Sys300m>
+  extends BasicQueryPageComponent<Sysb300m>
   implements OnInit
 {
   // 查詢
@@ -36,8 +35,7 @@ export class SYSB300Component
   });
   // 表格
   // ----------------------------------------------------------------
-  data: Sys300m[] = [];
-  filteredData: any[] = [...this.data];
+  data: Sysb300m[] = [];
   columns: any[] = [
     { field: 'level_id', header: '階層代碼', visible: true },
     { field: 'level_name', header: '階層名稱', visible: true },
@@ -52,16 +50,7 @@ export class SYSB300Component
   }
 
   ngOnInit(): void {
-    // this.ProgNo = '410003';
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    // 新增：在 ngOnInit 中調用 initializePage 設置 ProgNo 和 cruPage
     this.initializePage('410003', '/SYSB000/SYSB300CRU');
-
-    // 新增：調試權限數據
-    console.log('funInfo:', this.funInfo);
-    console.log('queryPermission:', this.queryPermission);
-    //
     this.loadOptions();
   }
 
@@ -80,18 +69,13 @@ export class SYSB300Component
 
       console.log('查詢條件', query);
 
-      this.sysb300Service.querySYS3000(query).subscribe((response) => {
+      this.sysb300Service.querySYSB300(query).subscribe((response) => {
         this.data = response.Data;
         console.log('查詢結果', this.data);
         // this.queryStateService.setQueryState(QUERY_STORAGE_KEY, form.value);
         this.loading = false;
       });
     }
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
   }
 
   onClearForm() {
@@ -106,8 +90,8 @@ export class SYSB300Component
         p_level_id: '',
       };
 
-      this.sysb300Service.querySYS3000(query).subscribe((response) => {
-        this.upgroup_Options = response.Data.map((item: any) => ({
+      this.sysb300Service.querySYSB300(query).subscribe((response) => {
+        this.upgroup_Options = response.Data.map((item: Sysb300m) => ({
           value: item.level_id,
           label: item.level_name,
         }));

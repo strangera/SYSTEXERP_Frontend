@@ -1,36 +1,21 @@
 import { Sysb400Service } from './../../../service/sysb/sysb400.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { NavigationExtras, Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-
-interface Columns {
-  field: string;
-  header: string;
-  visible: boolean;
-}
-
-interface Organization {
-  org_id: number; // 組織代碼
-  org_name: string; // 組織名稱
-  level_id: string; // 階層代碼
-  level_name: string; // 階層名稱
-  p_level_id: string; // 上層組織代碼
-  stop_flag: boolean; // 是否停用
-}
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Sysb400m } from '../module/sysb000.module';
 
 @Component({
   selector: 'app-sysb400',
   templateUrl: './sysb400.component.html',
   styleUrls: ['./sysb400.component.scss'],
 })
-export class SYSB400Component extends BasicQpageComponent implements OnInit {
-  data: Organization[] = [];
-  filteredData: Organization[] = [...this.data];
+export class SYSB400Component
+  extends BasicQueryPageComponent<Sysb400m>
+  implements OnInit
+{
+  data: Sysb400m[] = [];
+  filteredData: Sysb400m[] = [...this.data];
   columns: any[] = [
     { field: 'org_id', header: '階層代碼', visible: true },
     { field: 'org_name', header: '階層名稱', visible: true },
@@ -70,103 +55,35 @@ export class SYSB400Component extends BasicQpageComponent implements OnInit {
     { value: 'N', label: '否' },
   ];
 
-  pages: any[] = [];
-  rows: number = 10;
-  first: number = 0;
-  selectedPage: number = 1;
-  IsPaginator: boolean = true;
-  IsScrollable: boolean = false;
-  IsScrollHeight: string = 'flex';
-  tableSize: string = 'p-datatable-sm p-datatable-gridlines p-datatable-striped';
-  selectedRows: Organization[] = [];
-
-  constructor(
-    private formBuilder: FormBuilder,
-    private authService: AuthService,
-    private router: Router,
-    private sysb400Service: Sysb400Service,
-  ) {
+  constructor(private sysb400Service: Sysb400Service) {
     super();
   }
 
   ngOnInit(): void {
+    // 初始化
     this.ProgNo = '410004';
+    this.cruPage = '/SYSB000/SYSB400CRU';
+    //
+    // ----------------------------------------------------------------
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.calculateTotalPages();
   }
 
-  // 計算總頁數並生成頁面選項
-  calculateTotalPages(): void {
-    const totalRecords = this.data.length;
-    const totalPages = Math.ceil(totalRecords / this.rows);
-
-    this.pages = Array(totalPages).fill(0).map((_, i) => ({
-      label: `第 ${i + 1} 頁`,
-      value: i + 1,
-    }));
-  }
-
-  // 跳轉頁面
-  goToPage(pageNumber: number): void {
-    if (pageNumber < 1 || pageNumber > this.pages.length) return;
-    this.first = (pageNumber - 1) * this.rows;
-  }
-
-  togglePaginator(): void {
-    this.IsPaginator = !this.IsPaginator;
-    this.IsScrollable = !this.IsScrollable;
-    this.IsScrollHeight = this.IsPaginator ? 'flex' : '700px';
-    this.tableSize = this.IsPaginator
-      ? 'p-datatable-sm p-datatable-gridlines p-datatable-striped'
-      : 'p-datatable-sm p-datatable-striped';
-  }
-
-  onPageChange(event: any): void {
-    this.first = event.first;
-    this.rows = event.rows;
-    this.calculateTotalPages();
-    this.selectedPage = Math.ceil(this.first / this.rows) + 1;
-  }
-
-  applyFilters(): void {
-    // const filters = this.queryForm.value;
-    // this.filteredData = [...this.data];
-
-    // if (filters.org_name) {
-    //   this.filteredData = this.filteredData.filter(
-    //     item => item.org_name === filters.org_name
-    //   );
-    // }
-
-    if (this.queryForm.valid && this.canQuery()) {
-      // console.log('查詢條件', this.queryForm.value);
-      this.sysb400Service.querySYS3100(this.queryForm.value).subscribe((response) => {
-        this.data = response.Data;
-        console.log('查詢結果', this.data);
-        // this.queryStateService.setQueryState(QUERY_STORAGE_KEY, form.value);
-        this.loading = false;
-      });
-    }
-  }
-
-  onSitemap(): void {
-    this.router.navigate(['/SYSB000/SYSB400OS']);
-  }
-
-  onCreate(): void {
-    const extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Create,
-        queryform: this.queryForm.value,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/SYSB000/SYSB400CRU'], extras);
-  }
-
-  onSubmit(): void {
+  onSubmit(frm: FormGroup): void {
     if (this.queryForm.valid) {
-      console.log('Form submitted:', this.queryForm.value);
+      const query = {
+        level_id: frm.value.level_id,
+        org_id: frm.value.org_id,
+        org_name: frm.value.org_name,
+      };
+      if (frm.valid) {
+        console.log('查詢條件', this.queryForm.value);
+        this.sysb400Service.querySYSB400(query).subscribe((response) => {
+          this.data = response.Data;
+          console.log('查詢結果', response.Data);
+          // this.queryStateService.setQueryState(QUERY_STORAGE_KEY, form.value);
+          this.loading = false;
+        });
+      }
     } else {
       console.warn('Invalid form');
     }
@@ -176,27 +93,7 @@ export class SYSB400Component extends BasicQpageComponent implements OnInit {
     this.queryForm.reset();
   }
 
-  isDisabled(): boolean {
-    return !this.selectedRows.some(row => row.stop_flag);
-  }
-
-  onEdit(row: Organization): void {
-    console.log('Edit:', row);
-  }
-
-  onDetail(row: Organization): void {
-    console.log('Detail:', row);
-  }
-
-  onDelete(): void {
-    const deletableRows = this.selectedRows.filter(row => row.stop_flag);
-    if (deletableRows.length > 0) {
-      console.log('Deleting:', deletableRows);
-      this.filteredData = this.filteredData.filter(
-        row => !deletableRows.includes(row)
-      );
-    } else {
-      alert('無可刪除的項目');
-    }
+  onSitemap(): void {
+    this.router.navigate(['/SYSB000/SYSB400OS']);
   }
 }
