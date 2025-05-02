@@ -11,8 +11,9 @@
                     <thead style="background-color: #c1c9f5;">
                         <tr>
                             <th style="width: 30px;">扣款項目編號</th>
-                            <th>扣款項目名稱</th>
                             <th style="width: 500px;">扣款類別</th>
+                            <th>扣款項目名稱</th>
+                           
                             <th>會計科目</th>
                             <th>是否開立發票</th>
                             <th>課稅別</th>
@@ -28,14 +29,15 @@
                                 <input pInputText formControlName="deductionItemNumber" maxlength="3"
                                     style="width: 100%;" />
                             </td>
-                            <td>
-                                <input pInputText formControlName="deductionItemName" />
-                            </td>
+
                             <td style="width: 500px;">
                                 <p-dropdown [options]="deductionCategoryOptions" optionLabel="label" optionValue="value"
                                     formControlName="deductionCategory"
                                     [style]="{ 'width': '100%', 'min-width': '100px' }">
                                 </p-dropdown>
+                            </td>
+                            <td>
+                                <input pInputText formControlName="deductionItemName" />
                             </td>
 
 
