@@ -20,24 +20,20 @@
                                 </app-input-number>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-text label="扣款項目名稱" controlName="deductionItemName"
-                                    [control]="queryForm.controls.deductionItemName" [submitted]="submitted">>
-                                </app-input-text>
-                            </div>
-                            <div class="col-12 md:col-6 lg:col-4">
                                 <app-multi-select label="扣款類別" controlName="deductionCategory"
                                     [options]="deductionCategoryOptions" optionLabel="label" optionValue="value"
                                     [control]="queryForm.controls.deductionCategory" [submitted]="submitted">
                                 </app-multi-select>
                             </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="扣款項目名稱" controlName="deductionItemName"
+                                    [control]="queryForm.controls.deductionItemName" [submitted]="submitted">>
+                                </app-input-text>
+                            </div>
+
                         </div>
                         <div class="grid p-fluid">
-                            <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-number-range label="預設金額"
-                                    [startControl]="queryForm.controls.defaultAmountMin"
-                                    [endControl]="queryForm.controls.defaultAmountMax"
-                                    [submitted]="submitted"></app-input-number-range>
-                            </div>
+              
                             <div class="col-12 md:col-6 lg:col-4">
                                 <app-input-text label="備註" controlName="remark" [control]="queryForm.controls.remark"
                                     [submitted]="submitted">>

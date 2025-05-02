@@ -12,6 +12,7 @@ import { DeductionCategoryService } from '../../../service/basic/deduction-categ
 import { TicketPaymentService } from './../../../service/basic/ticket-payment.service';
 import { InstallmentPeriodService } from './../../../service/basic/installment-period.service';
 import { SalesTypeService } from './../../../service/basic/sales-type.service';
+import { ConfirmationService } from 'primeng/api';
 
 @Component({
   selector: 'app-tls11020-cru',
@@ -50,6 +51,7 @@ export class TLS11020CRUComponent extends BasicCrupageComponent implements OnIni
     private salesTypeService: SalesTypeService,
     private installmentPeriodService: InstallmentPeriodService,
     private ticketPaymentService: TicketPaymentService,
+    private confirmationService: ConfirmationService,
   ) {
     super();  // 呼叫父類建構子
   }
@@ -117,21 +119,20 @@ export class TLS11020CRUComponent extends BasicCrupageComponent implements OnIni
   // ----------------------------------------------------------------
   createItem(): FormGroup {
     return this.formBuilder.group({
-      deductionItemNumber: [, [Validators.required, this.validationService.numberValidator, Validators.maxLength(3)]], // 扣款項目編號
-      deductionItemName: ['', [Validators.required, Validators.maxLength(40)]], // 扣款項目名稱
-      deductionCategory: [, [Validators.required]], // 扣款類別
-      salesType: [, [Validators.required]], // 銷售類型
-      receiveBank: [, [Validators.required]], // 收單行
-      payPeriod: [, [Validators.required]], // 期數
-      couponType: [[], [Validators.required]], // 券類支付工具類別
-      couponCalculation: [, [Validators.required]], // 券類計算方式
-      basicRate: [, [Validators.required, Validators.maxLength(40)]], // 基準 金額/比率
-      defaultAmount: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 預設金額
-      remark: ['', [Validators.maxLength(50)]], // 備註
+      deductionItemNumber: [{ value: '由系統帶入', disabled: true }, [Validators.required, this.validationService.numberValidator, Validators.maxLength(3)]],
+      deductionItemName: ['', [Validators.required, Validators.maxLength(40)]],
+      deductionCategory: [, [Validators.required]],
+      accNo: ['', [Validators.maxLength(14)]],
+      guiFlag: ['Y'],
+      capTaxType: ['1'],
+      isCommonlyUsed: ['N'],
+      printArea: ['', [Validators.maxLength(5)]],
+      remark: ['', [Validators.maxLength(50)]],
     });
   }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
+
+  onAddItem(): void {
+    this.items.insert(0, this.createItem());
   }
   // ----------------------------------------------------------------
   Edit(rowdata: any) {
@@ -143,9 +144,7 @@ export class TLS11020CRUComponent extends BasicCrupageComponent implements OnIni
     this.dataForm.disable();
   }
 
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
+
 
   onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
@@ -187,6 +186,23 @@ export class TLS11020CRUComponent extends BasicCrupageComponent implements OnIni
 
   onCancel() {
     this.router.navigate(['/TLS1000/TLS11020']);
+  }
+
+  confirmRemove(index: number): void {
+    this.confirmationService.confirm({
+      message: '確定要刪除此列資料嗎？',
+      header: '刪除確認',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: '確認',
+      rejectLabel: '取消',
+      accept: () => {
+        this.onRemoveItem(index);
+      }
+    });
+  }
+  
+  onRemoveItem(index: number): void {
+    this.items.removeAt(index);
   }
   //---------------------------------------------------------------------------------------------------------------
 }

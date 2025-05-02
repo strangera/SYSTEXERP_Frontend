@@ -4,103 +4,87 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
     </div>
-    <h6>扣款項目編號:扣款類別1碼+2碼流水碼!!</h6>
-    <h6>金額/比率欄位如輸入比率請輸入1以下數字,如2%請輸入0.02!!</h6>
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <!---->
-            <ng-container formArrayName="items">
-                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                    <div class="grid align-items-center">
-                        <div class="col" style="flex: 1;">
-                            <h5>扣款項目 {{i+1}}</h5>
-                        </div>
-                        <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
-                                class="col"></app-button-dynamicallydelete>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="扣款項目編號" controlName="deductionItemNumber"
-                                [control]="getFormControl(i, 'deductionItemNumber')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="扣款項目名稱" controlName="deductionItemName"
-                                [control]="getFormControl(i, 'deductionItemName')" [submitted]="submitted">>
-                            </app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="扣款類別" controlName="deductionCategory"
-                                [options]="deductionCategoryOptions" optionLabel="label" optionValue="value"
-                                [control]="getFormControl(i, 'deductionCategory')" [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="銷售類型" controlName="salesType" [options]="salesTypeOptions"
-                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'salesType')"
-                                [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="收單行" controlName="receiveBank" [options]="receiveBankOptions"
-                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'receiveBank')"
-                                [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="期數" controlName="payPeriod" [options]="payPeriodOptions"
-                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'payPeriod')"
-                                [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-multi-select label="券類支付工具類別" controlName="couponType" [options]="couponTypeOptions"
-                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'couponType')"
-                                [submitted]="submitted">
-                            </app-multi-select>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="券類計算方式" controlName="couponCalculation"
-                                [options]="couponCalculationOptions" optionLabel="label" optionValue="value"
-                                [control]="getFormControl(i, 'couponCalculation')" [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="基準 金額/比率" controlName="basicRate"
-                                [control]="getFormControl(i, 'basicRate')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="預設金額" controlName="defaultAmount"
-                                [control]="getFormControl(i, 'defaultAmount')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="備註" controlName="remark" [control]="getFormControl(i, 'remark')"
-                                [submitted]="submitted">>
-                            </app-input-text>
-                        </div>
-                    </div>
-                    <hr>
-                </ng-container>
-            </ng-container>
-            <div class="pt-1">
-                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
+            <div style="overflow-x: auto; overflow-y: auto; min-height: 300px;">
+                <table class="table w-full" style="min-width: 1200px; white-space: nowrap;">
+                    <thead style="background-color: #c1c9f5;">
+                        <tr>
+                            <th style="width: 30px;">扣款項目編號</th>
+                            <th>扣款項目名稱</th>
+                            <th style="width: 500px;">扣款類別</th>
+                            <th>會計科目</th>
+                            <th>是否開立發票</th>
+                            <th>課稅別</th>
+                            <th>是否為常用</th>
+                            <th>列印區分</th>
+                            <th>備註</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody formArrayName="items">
+                        <tr *ngFor="let row of items.controls; let i = index" [formGroupName]="i">
+                            <td>
+                                <input pInputText formControlName="deductionItemNumber" maxlength="3"
+                                    style="width: 100%;" />
+                            </td>
+                            <td>
+                                <input pInputText formControlName="deductionItemName" />
+                            </td>
+                            <td style="width: 500px;">
+                                <p-dropdown [options]="deductionCategoryOptions" optionLabel="label" optionValue="value"
+                                    formControlName="deductionCategory"
+                                    [style]="{ 'width': '100%', 'min-width': '100px' }">
+                                </p-dropdown>
+                            </td>
+
+
+                            <td>
+                                <input pInputText formControlName="accNo" />
+                            </td>
+                            <td>
+                                <p-dropdown [options]="[{ label: '開立', value: 'Y' }, { label: '不開立', value: 'N' }]"
+                                    formControlName="guiFlag">
+                                </p-dropdown>
+                            </td>
+                            <td>
+                                <p-dropdown [options]="[{ label: '免稅', value: '0' }, { label: '應稅', value: '1' }]"
+                                    formControlName="capTaxType">
+                                </p-dropdown>
+                            </td>
+                            <td>
+                                <p-dropdown [options]="[{ label: '常用', value: 'Y' }, { label: '不常用', value: 'N' }]"
+                                    formControlName="isCommonlyUsed">
+                                </p-dropdown>
+                            </td>
+                            <td>
+                                <input pInputText formControlName="printArea" />
+                            </td>
+                            <td>
+                                <input pInputText formControlName="remark" />
+                            </td>
+                            <td>
+                                <!-- 新增按鈕（第一列） -->
+                                <button *ngIf="i === 0" pButton type="button" icon="pi pi-plus" label="新增"
+                                    class="p-button-sm p-button-success mr-2" (click)="onAddItem()">
+                                </button>
+
+                                <!-- 刪除按鈕（非第一列） -->
+                                <button *ngIf="i !== 0" pButton type="button" icon="pi pi-trash" label="刪除"
+                                    class="p-button-sm p-button-danger" (click)="confirmRemove(i)">
+                                </button>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
-            </div>
-        </div>
     </p-panel>
+
+    <div class="col pt-4">
+        <div class="grid justify-content-end">
+            <app-button btnType="cancel" (click)="onCancel()"></app-button>
+            <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
+        </div>
+    </div>
+
 </div>
