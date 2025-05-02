@@ -2,16 +2,17 @@
   <div #appTopbarDiv>
     <app-topbar (topMenuClick)="selectedTopMenuProgNo = $event"></app-topbar>
   </div>
-  <div class="py-4 layout-sidebar w-full sm:w-22rem border-noround sm:border-round-xl">
-    <div class="layout-sidebar-scroll-content flex lg:flex-row-reverse justify-content-between items-center w-full">
-      <button type="button" class="p-link" (click)="onToggleTheme()">
-        <i class="pi text-2xl cursor-pointer"
-          [ngClass]="{'pi-sun': !isDarkMode(), 'pi-moon': isDarkMode()}"
-          style="color: var(--text-color);"></i>
-      </button>
-      <button type="button" class="p-link layout-sidebar-close-button lg:hidden" (click)="onMaskClick()">
-        <i class="pi pi-times text-white text-2xl cursor-pointer" style="color: var(--text-color);"></i>
-      </button>
+  <div class="px-4 pt-0 layout-sidebar w-full sm:w-22rem border-noround sm:border-round-xl">
+    <div class="layout-sidebar-scroll-content flex lg:flex-row-reverse w-full sticky top-0 z-5 pt-4 pb-2">
+      <div class="flex flex-row justify-content-between align-items-center gap-2 w-full">
+        <button type="button" class="p-link" (click)="onToggleTheme()">
+          <i class="pi text-2xl cursor-pointer" [ngClass]="{'pi-sun': !isDarkMode(), 'pi-moon': isDarkMode()}"
+            style="color: var(--text-color);"></i>
+        </button>
+        <button type="button" class="p-link layout-sidebar-close-button lg:hidden" (click)="onMaskClick()">
+          <i class="pi pi-times text-white text-2xl cursor-pointer" style="color: var(--text-color);"></i>
+        </button>
+      </div>
     </div>
     <app-menulist [activeTopMenuProgNo]="selectedTopMenuProgNo"></app-menulist>
   </div>

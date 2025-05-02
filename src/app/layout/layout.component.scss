@@ -23,7 +23,12 @@
   }
 
   &:focus {
-    background-color: rgba(255, 255, 255, 0.2); /* Light Mode 下保持較淺的 focus 背景 */
+    background-color: rgba(
+      255,
+      255,
+      255,
+      0.2
+    ); /* Light Mode 下保持較淺的 focus 背景 */
     border-color: var(--primary-color); /* 使用你的主要顏色作為 focus 邊框 */
     outline: none;
   }
@@ -35,6 +40,10 @@
   height: calc(100vh - 7rem);
   background-color: var(--sidebar-bg);
   border: 1px solid var(--sidebar-border-color);
+
+  .layout-sidebar-scroll-content {
+    background-color: var(--sidebar-bg);
+  }
 
   i {
     color: var(--sidebar-icon-color) !important;
@@ -50,7 +59,7 @@
   }
 
   .selected > a {
-    color: #FFA500 !important; // 保持橘色不變，因為這是強調選中項
+    color: #ffa500 !important; // 保持橘色不變，因為這是強調選中項
   }
 
   .active-menuitem > a {
@@ -82,7 +91,9 @@
   }
 
   &::-webkit-scrollbar-thumb {
-    background: var(--gray-300); /* 使用一個淺灰色作為滑塊，Light Mode 看起來不錯 */
+    background: var(
+      --gray-300
+    ); /* 使用一個淺灰色作為滑塊，Light Mode 看起來不錯 */
     border-radius: 12px;
     border: 2px solid var(--sidebar-bg); /* 使用側邊欄背景色作為邊框，使其更融入 */
   }
@@ -103,7 +114,12 @@
     }
 
     &:focus {
-      background-color: rgba(255, 255, 255, 0.1); /* Dark Mode 下更深的 focus 背景 */
+      background-color: rgba(
+        255,
+        255,
+        255,
+        0.1
+      ); /* Dark Mode 下更深的 focus 背景 */
     }
   }
 
@@ -113,7 +129,9 @@
     }
 
     &::-webkit-scrollbar-thumb {
-      background: var(--gray-700); /* 使用一個深灰色作為滑塊，Dark Mode 看起來不錯 */
+      background: var(
+        --gray-700
+      ); /* 使用一個深灰色作為滑塊，Dark Mode 看起來不錯 */
       border-color: var(--sidebar-bg);
     }
 

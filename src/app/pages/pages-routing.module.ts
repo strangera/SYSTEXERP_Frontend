@@ -52,7 +52,7 @@ const routes: Routes = [
       {
         path: 'SYS',
         children: [
-          { path: 'b', loadChildren: () => import('./sysb000/sysb000.module').then(m => m.SYSB000Module), canActivate: [AuthGuard] }, // 4.1 基本資料管理系統
+          { path: 'B', loadChildren: () => import('./sysb000/sysb000.module').then(m => m.SYSB000Module), canActivate: [AuthGuard] }, // 4.1 基本資料管理系統
           { path: '0', loadChildren: () => import('./sys0000/sys0000.module').then(m => m.SYS0000Module), canActivate: [AuthGuard] }, // 4.2 權限管理系統
         ]
       },
