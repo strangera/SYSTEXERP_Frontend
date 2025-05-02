@@ -72,7 +72,13 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
   columns: Column[] = [
     { field: 'CAT_MNo', header: '中分類代碼', visible: true },
     { field: 'CAT_MName', header: '中分類名稱', visible: true },
-    { field: 'CAT_LDisplay', header: '大分類代碼 / 名稱', visible: true },
+    // { field: 'CAT_LDisplay', header: '大分類代碼 / 名稱', visible: true },
+    {
+      field: 'CAT_LDisplay',
+      header: '大分類代碼 / 名稱',
+      visible: true,
+      sortField: 'CAT_LNo' // 強制添加 sortField
+    } as Column & { sortField: string }, // 使用類型斷言
     { field: 'CAT_MRemark', header: '備註', visible: true },
     // 其他欄位CAT_MRemark
   ];
@@ -202,7 +208,11 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
     if (this.totalRecords === 0) { return; }
     form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
     form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'CAT_MNo', order: 1 }];
+    // form.SortBy = event.multiSortMeta ?? [{ field: 'CAT_MNo', order: 1 }];
+    form.SortBy = (event.multiSortMeta ?? [{ field: 'CAT_MNo', order: 1 }]).map(sort => ({
+      ...sort,
+      field: sort.field === 'CAT_LDisplay' ? 'CAT_LNo' : sort.field // 將 CAT_LDisplay 替換為 CAT_LNo
+    }));
     this.onSubmit(this.queryForm);
   }
 }

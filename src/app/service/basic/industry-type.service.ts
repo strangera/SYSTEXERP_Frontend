@@ -11,18 +11,18 @@ export class IndustryTypeService {
   apiUrl: string = environment.ApiUrl;
   title: string = '所屬業種';
   options: any[] = [
-    { value: 1, label: '物販' },
-    { value: 2, label: '餐飲' },
-    { value: 3, label: '娛樂' },
-    { value: 4, label: '服務' },
-    { value: 5, label: '停車管理' },
-    { value: 6, label: '服務台' },
+    { value: '1', label: '物販' },
+    { value: '2', label: '餐飲' },
+    { value: '3', label: '娛樂' },
+    { value: '4', label: '服務' },
+    { value: '5', label: '停車管理' },
+    { value: '6', label: '服務台' },
   ];
 
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getSystemTypes(): Observable<any[]> {
     return of(this.options).pipe(

@@ -7,6 +7,29 @@ import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { IndustryTypeService } from '../../../service/basic/industry-type.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { SortMeta } from 'primeng/api';
+import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
+import { ValidationService } from '../../../shared/service/validation.service';
+import { TableLazyLoadEvent } from 'primeng/table';
+
+// 資料模型：分類項目
+interface CategoryItem {
+  id: number;
+  bus_type: string; //大分類代碼
+  bus_class: string; //中分類(商品類別)代碼
+  bus_class_name: string; //中分類(商品類別)名稱
+  bus_type_name: string; //大分類名稱
+  bus_type_desc: string; //大分類說明(不過好像沒用到)
+  CRT_Date: string;
+  CRT_USR_No: string;
+  CRT_USR_Name: string;
+  UPD_Date: string;
+  UPD_USR_No: string;
+  UPD_USR_Name: string;
+}
+
+const storageKey = 'SYSB900';
 
 @Component({
   selector: 'app-sysb900',
@@ -14,54 +37,43 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   styleUrl: './sysb900.component.scss'
 })
 // 商品類別維護作業
-export class SYSB900Component extends BasicQpageComponent implements OnInit {
-  // 查詢
-  // ----------------------------------------------------------------
-  queryForm = this.formBuilder.group({
-    productCatCode: [, [Validators.maxLength(2)]], // 商品類別碼
-    productCatName: ['', [Validators.maxLength(40)]], // 商品類別名稱
+export class SYSB900Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    bus_class: ['', [Validators.maxLength(2)]], // 中分類代號
+    bus_class_name: ['', [Validators.maxLength(40)]], // 中分類名稱
     industryType: [[] as number[]], // 所屬業種
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+    //分頁查詢
+    pageSize: [10],
+    pageIndex: [0],
+    SortBy: [[{ field: 'bus_class', order: 1 }] as SortMeta[]],
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    { productCatCode: '00', productCatName: '複合店', industryTypeCode: '10', industryTypeName: '物販' },
-    { productCatCode: '01', productCatName: '男女服飾', industryTypeCode: '10', industryTypeName: '物販' },
-    { productCatCode: '01', productCatName: '餐廳', industryTypeCode: '20', industryTypeName: '餐飲' },
-    { productCatCode: '01', productCatName: '主題樂園', industryTypeCode: '30', industryTypeName: '娛樂' },
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
+
+  data: CategoryItem[] = [];
+  filteredData: CategoryItem[] = [...this.data];
   columns: any[] = [
-    { field: 'productCatCode', header: '商品類別碼', visible: true },
-    { field: 'productCatName', header: '商品類別名稱', visible: true },
-    { field: 'industryTypeCode', header: '所屬業種代碼', visible: true },
-    { field: 'industryTypeName', header: '所屬業種名稱', visible: true },
+    { field: 'bus_class', header: '中分類代碼', visible: true },
+    { field: 'bus_class_name', header: '中分類名稱', visible: true },
+    { field: 'bus_type', header: '所屬大分類代碼', visible: true },
+    { field: 'bus_type_name', header: '所屬大分類名稱', visible: true },
     // 其他欄位
   ];
-  // ----------------------------------------------------------------
+  totalRecords: number = 0;
+  selectedItems: CategoryItem[] = [];
   industryTypeOptions: any[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private industryTypeService: IndustryTypeService,
+    private validationService: ValidationService,
+    private apiService: Bas1000Service,
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '410008';
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
-    // this.industryTypeService.getSystemTypes().subscribe(data => {
-    //   this.industryTypeOptions = data;
-    // });
-    //
+    // this.ProgNo = '410008';
+    this.initializePage('410008', '/SYSB000/SYSB900CRU');
+
     this.industryTypeService.getSystemTypes().subscribe(data => {
       this.industryTypeOptions = data;
 
@@ -70,25 +82,37 @@ export class SYSB900Component extends BasicQpageComponent implements OnInit {
       //   industryType: allSystemValues
       // });
     });
+
+    this.handleQueryRestore(this.queryForm, storageKey, (form) => this.onSubmit(form));
+
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      this.apiService.querySYSB900(frm.value).subscribe({
+        next: (response: any) => {
+          if (response.Status === '0000') {
+            this.data = response.Data || [];
+            this.filteredData = [...this.data];
+            this.totalRecords = response.TotalCount || response.Data.length;
+            // 儲存查詢條件（成功查詢後）
+            this.queryStateService.setQueryState(storageKey, frm.value);
+            if (this.data.length === 0) {
+              console.log('查詢結果為空');
+            }
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        }
+      });
+    });
   }
 
   onSubmitQuery(frm: FormGroup) {
@@ -100,46 +124,56 @@ export class SYSB900Component extends BasicQpageComponent implements OnInit {
     this.queryForm.reset();  // 重置表單
   }
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      //console.log("extra", extras);
-      this.router.navigate(['/SYSB000/SYSB900CRU'], extras);
+  onDelete(data: CategoryItem | CategoryItem[]): void {
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) {
+      console.error('No items to delete');
+      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+      return;
     }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
+    const idList = items
+      .filter(item => item && item.id != null && item.id !== undefined)
+      .map(item => item.id);
 
-      this.router.navigate(['/SYSB000/SYSB900CRU'], extras);
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
     }
-  }
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
+    const requestBody = {
+      idList: idList
     };
 
-    this.router.navigate(['/SYSB000/SYSB900CRU'], extras);
+    console.log('Request body:', JSON.stringify(requestBody));
+    this.apiService.deleteSYSB900(requestBody).subscribe({
+      next: (response: any) => {
+        console.log('API response:', response);
+        if (response.Status === '0000') {
+          this.messageService.successBubble(`成功刪除 ${idList.length} 個項目`);
+          this.onSubmit(this.queryForm);
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message || '未知錯誤'}`);
+        }
+      },
+      error: (err: any) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗，請檢查網路連線或聯繫管理員');
+      },
+      complete: () => {
+        this.selectedItems = [];
+      }
+    });
+  }
+
+  loadData(event: TableLazyLoadEvent) {
+    const form = this.queryForm.value;
+    if (this.totalRecords === 0) { return; }
+    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
+    form.SortBy = event.multiSortMeta ?? [{ field: 'bus_class', order: 1 }];
+    this.onSubmit(this.queryForm);
   }
 }
