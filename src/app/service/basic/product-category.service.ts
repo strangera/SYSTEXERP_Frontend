@@ -11,18 +11,18 @@ export class ProductCategoryService {
   apiUrl: string = environment.ApiUrl;
   title: string = '商品類別';
   options: any[] = [
-    { value: 1, label: '複合店' },
-    { value: 2, label: '主題樂園' },
-    { value: 3, label: '男女服飾' },
-    { value: 4, label: '摩天輪' },
-    { value: 5, label: '電器3C' },
-    { value: 6, label: '美妝保健' },
+    { value: '1', label: '複合店' },
+    { value: '2', label: '主題樂園' },
+    { value: '3', label: '男女服飾' },
+    { value: '4', label: '摩天輪' },
+    { value: '5', label: '電器3C' },
+    { value: '6', label: '美妝保健' },
   ];
 
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getSystemTypes(): Observable<any[]> {
     return of(this.options).pipe(
