@@ -211,7 +211,7 @@ export class TLS11020CRUComponent extends BasicCrupageComponent implements OnIni
     accNo: [''],
     guiFlag: ['Y'],
     capTaxType: ['1'],
-    isCommonlyUsed: ['N'],
+    isCommonlyUsed: ['Y'],
     printArea: [''],
     remark: [''],
   });

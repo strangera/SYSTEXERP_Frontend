@@ -8,19 +8,27 @@
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
       <form [formGroup]="inputForm">
         <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-10"></div>
+            <div class="col-12 md:col-6 lg:col-2">
+                <div class="flex justify-content-end">
+                  <button pButton type="button" label="新增" icon="pi pi-plus" class="p-button-success"
+                          (click)="addItem()"></button>
+                </div>
+              </div>
           <div class="col-12 md:col-6 lg:col-4">
             <label>扣款項目編號</label>
             <input pInputText formControlName="deductionItemNumber" maxlength="3"  />
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <label>扣款項目名稱</label>
-            <input pInputText formControlName="deductionItemName" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <label>扣款類別</label>
             <p-dropdown [options]="deductionCategoryOptions" optionLabel="label" optionValue="value"
                         formControlName="deductionCategory" [style.width.%]="100"></p-dropdown>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <label>扣款項目名稱</label>
+            <input pInputText formControlName="deductionItemName" />
+          </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <label>會計科目</label>
             <input pInputText formControlName="accNo" />
@@ -48,10 +56,7 @@
             <label>備註</label>
             <input pInputText formControlName="remark" />
           </div>
-          <div class="col-12">
-            <button pButton type="button" label="新增" icon="pi pi-plus" class="p-button-success"
-                    (click)="addItem()"></button>
-          </div>
+
         </div>
       </form>
   
@@ -60,8 +65,9 @@
           <thead style="background-color: #c1c9f5;">
             <tr>
               <th style="width: 30px;">扣款項目編號</th>
-              <th>扣款項目名稱</th>
               <th style="width: 150px;">扣款類別</th>
+              <th>扣款項目名稱</th>
+              
               <th>會計科目</th>
               <th>是否開立發票</th>
               <th>課稅別</th>
@@ -74,8 +80,8 @@
           <tbody>
             <tr *ngFor="let item of itemList; let i = index">
               <td>{{ item.deductionItemNumber }}</td>
-              <td>{{ item.deductionItemName }}</td>
               <td>{{ getLabelByValue(deductionCategoryOptions, item.deductionCategory) }}</td>
+              <td>{{ item.deductionItemName }}</td>
               <td>{{ item.accNo }}</td>
               <td>{{ item.guiFlag === 'Y' ? '開立' : '不開立' }}</td>
               <td>{{ item.capTaxType === '0' ? '免稅' : '應稅' }}</td>
@@ -91,5 +97,11 @@
         </table>
       </div>
     </p-panel>
+    <div class="col pt-4">
+        <div class="grid justify-content-end">
+            <app-button btnType="cancel" (click)="onCancel()"></app-button>
+            <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
+        </div>
+    </div>
   </div>
   
