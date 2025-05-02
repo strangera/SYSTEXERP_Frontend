@@ -11,10 +11,12 @@ export class DeductionCategoryService {
   apiUrl: string = environment.ApiUrl;
   title: string = '扣款類別';
   options: any[] = [
-    { value: 1, label: '一次扣款' },
-    { value: 2, label: '每月扣款' },
-    { value: 3, label: '平均分攤' },
-    { value: 4, label: '比例分攤' }
+    { value: 1, label: 'A　一次扣款' },
+    { value: 2, label: 'B　每月扣款' },
+    { value: 3, label: 'C　平均分攤' },
+    { value: 4, label: 'D　比率分攤' },
+    { value: 5, label: 'E　活動扣款' },
+    { value: 6, label: 'Z　其他扣款' },
   ];
 
   constructor(

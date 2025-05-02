@@ -32,9 +32,7 @@ export class TLS11020Component {
     deductionItemNumber: [, [this.validationService.numberValidator, Validators.maxLength(3)]], // 扣款項目編號
     deductionItemName: ['', [Validators.maxLength(40)]], // 扣款項目名稱
     deductionCategory: [[] as number[]], // 扣款類別
-    defaultAmountMin: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 預設金額
-    defaultAmountMax: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 預設金額
-    remark: ['', [Validators.maxLength(50)]], // 備註
+    remark: ['', [Validators.maxLength(160)]], // 備註
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
   });
   // 表格
@@ -47,16 +45,16 @@ export class TLS11020Component {
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
-    { field: 'col1', header: '扣款項目編號', visible: true },
-    { field: 'col2', header: '扣款項目名稱', visible: true },
-    { field: 'col3', header: '扣款類別', visible: true },
-    { field: 'col4', header: '銷售類型', visible: true },
-    { field: 'col5', header: '收單行', visible: true },
-    { field: 'col6', header: '期數', visible: true },
-    { field: 'col7', header: '有價卷代扣款類別', visible: true },
-    { field: 'col8', header: '基準金額/比率', visible: true },
-    { field: 'col9', header: '預設金額', visible: true },
-    { field: 'col10', header: '備註', visible: true },
+    { field: 'col1', header: '扣款代碼', visible: true },
+    { field: 'col2', header: '扣款類型', visible: true },
+    { field: 'col3', header: '扣款名稱', visible: true },
+    { field: 'col4', header: '會計科目', visible: true },
+    { field: 'col5', header: '是否開立發票', visible: true },
+    { field: 'col6', header: '課稅別', visible: true },
+    { field: 'col7', header: '是否常用', visible: true },
+    { field: 'col8', header: '扣款項目合約列印區分', visible: true },
+    { field: 'col9', header: '備註', visible: true }
+
 
     // 其他欄位
   ];
