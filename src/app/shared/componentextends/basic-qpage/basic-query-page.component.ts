@@ -18,7 +18,7 @@ export class BasicQueryPageComponent<T> {
   cruPage = '';
 
   user?: UserInfo | null; // 使用者資訊
-  funInfo: FunsrightInfo = {}; // 權限
+  funInfo?: FunsrightInfo; // 權限
 
   router: Router = inject(Router);
   messageService: NotificationService = inject(NotificationService);
@@ -41,13 +41,13 @@ export class BasicQueryPageComponent<T> {
     this.cruPage = cruPage ?? ''; // CRU路徑
     this.funInfo = this.authService.getUserPermissions(this.ProgNo); // 取得權限
     // 無API測試用
-    // this.funInfo.PrivilegeBehavior = [PermissionsInfo.query, PermissionsInfo.add, PermissionsInfo.edit, PermissionsInfo.delete, PermissionsInfo.export, PermissionsInfo.report, PermissionsInfo.print];
+    // this.funInfo?.PrivilegeBehavior = [PermissionsInfo.query, PermissionsInfo.add, PermissionsInfo.edit, PermissionsInfo.delete, PermissionsInfo.export, PermissionsInfo.report, PermissionsInfo.print];
     // 在初始化頁面後，通知選單更新選中狀態
     this.currentPageService.setCurrentProgNo(this.ProgNo);
   }
 
   hasPermission(permission: PermissionsInfo): boolean {
-    // return this.funInfo.PrivilegeBehavior?.includes(permission); // !!! 後端權限調整後再使用
+    // return this.funInfo?.PrivilegeBehavior?.includes(permission); // !!! 後端權限調整後再使用
     return true; // 測試用
   }
   canPerformAction(action: PermissionsInfo): boolean {

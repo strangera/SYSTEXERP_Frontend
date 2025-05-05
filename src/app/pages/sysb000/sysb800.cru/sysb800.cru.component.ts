@@ -1,13 +1,8 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
+import { FormGroup, Validators } from '@angular/forms';
+import { NavigationExtras } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-//
 import { TranslateService } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
 
@@ -53,7 +48,6 @@ export class SYSB800CRUComponent extends BasicCruPageComponent<CategoryItem> imp
     this.initializePage('410007', this.dataForm);
 
   }
-
 
   onSubmit(frm: FormGroup) {
     // 修改：使用父類的 handleSubmit 方法

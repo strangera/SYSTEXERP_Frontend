@@ -78,10 +78,6 @@ const routes: Routes = [
   { path: 'TLS14020CRU', component: TLS14020CRUComponent }, // 專櫃契約書列印 CRU
   { path: 'TLS13010NEXT1', component: TLS13010Next1Component }, // 專櫃契約書維護 NEXT1
   { path: 'TLS13010NEXT2', component: TLS13010Next2Component }, // 專櫃契約書維護 NEXT2
-
-
-
-
   { path: '404', component: NotfoundComponent },
   { path: '**', redirectTo: '404' },
 ];

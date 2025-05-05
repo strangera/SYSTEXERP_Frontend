@@ -84,7 +84,8 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
 
   ngOnInit(): void {
     // 初始化頁面：設置程式編號和 CRUD 頁面路徑
-    this.initializePage('250001', '/TLS5000/TLS51010CRU');
+    this.initializePage('TLS51010', '/TLS/TLS51010CRU');
+
     // 恢復查詢狀態並自動查詢
     this.handleQueryRestore(this.queryForm, storageKey, (form) => this.onSubmit(form));
 

@@ -10,6 +10,21 @@ import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 //
 import { IndustryTypeService } from '../../../service/basic/industry-type.service';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
+
+interface CategoryItem {
+  id: number;
+  bus_type: string;
+  bus_type_name: string;
+  bus_type_desc: string;
+  CRT_Date: string;
+  CRT_USR_No: string;
+  CRT_USR_Name: string;
+  UPD_Date: string;
+  UPD_USR_No: string;
+  UPD_USR_Name: string;
+}
 
 @Component({
   selector: 'app-sysb900.cru',
@@ -17,24 +32,19 @@ import { IndustryTypeService } from '../../../service/basic/industry-type.servic
   styleUrl: './sysb900.cru.component.scss'
 })
 // 商品類別維護作業 CRU
-export class SYSB900CRUComponent extends BasicCrupageComponent implements OnInit {
-  // ----------------------------------------------------------------
+export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    productCatCode: [, [Validators.required, Validators.maxLength(2)]], // 商品類別碼
-    productCatName: ['', [Validators.required, Validators.maxLength(40)]], // 商品類別名稱
-    industryType: [, [Validators.required]], // 所屬業種
+    bus_class: ['', [Validators.required, Validators.maxLength(2)]], // 中分類代碼
+    bus_class_name: ['', [Validators.required, Validators.maxLength(40)]], // 中分類名稱
+    bus_type: [, [Validators.required]], // 所屬大分類
   });
   //
   industryTypeOptions: any[] = [];
   // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private translate: TranslateService,
-    //
     private industryTypeService: IndustryTypeService,
+    private apiService: Bas1000Service,
   ) {
     super();  // 呼叫父類建構子
   }
@@ -42,10 +52,7 @@ export class SYSB900CRUComponent extends BasicCrupageComponent implements OnInit
   ngOnInit(): void {
     // 初始化
     this.ProgNo = '410008';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
+    this.initializePage('410008', this.dataForm);
     this.industryTypeService.getSystemTypes().subscribe(data => {
       this.industryTypeOptions = data;
 
@@ -54,33 +61,6 @@ export class SYSB900CRUComponent extends BasicCrupageComponent implements OnInit
       //   industryType: allSystemValues
       // });
     });
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
   }
   // ----------------------------------------------------------------
   Edit(rowdata: any) {
@@ -93,31 +73,29 @@ export class SYSB900CRUComponent extends BasicCrupageComponent implements OnInit
   }
 
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+    // 修改：使用父類的 handleSubmit 方法
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            // 待實現：調用 API 進行新增
+            this.apiService.insertSYSB900(frm.value).subscribe((response: any) => {
+              this.messageService.successBubble('新增成功');
+              this.onCancel(); // 新增成功後返回查詢頁面
+            });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            // 待實現：調用 API 進行更新
+            this.apiService.updateSYSB900(frm.value).subscribe((response: any) => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel(); // 更新成功後返回查詢頁面
+            });
+          }
+          break;
+      }
+    });
   }
 
   submitForm(frm: FormGroup) {
@@ -126,7 +104,25 @@ export class SYSB900CRUComponent extends BasicCrupageComponent implements OnInit
   }//CRU
 
   onCancel() {
-    this.router.navigate(['/SYSB000/SYSB900']);
+    // 修改：保留分頁狀態
+    const state = this.router.lastSuccessfulNavigation?.extras.state as {
+      queryParams?: any;
+      pageIndex?: number;
+      pageSize?: number;
+      totalRecords?: number;
+      sortField?: string;
+      sortOrder?: number;
+    };
+    let extras: NavigationExtras = {
+      state: {
+        queryParams: state?.queryParams,
+        pageIndex: state?.pageIndex,
+        pageSize: state?.pageSize,
+        totalRecords: state?.totalRecords,
+        sortField: state?.sortField,
+        sortOrder: state?.sortOrder,
+      },
+    };
+    this.router.navigate(['/SYSB000/SYSB900'], extras);
   }
-  //------------------------------------------------------------------------------------------------------------
 }

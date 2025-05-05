@@ -37,7 +37,7 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
   queryForm = this.formBuilder.nonNullable.group({
     bus_type: [, [Validators.maxLength(2)]], // 大分類代號
     bus_type_name: ['', [Validators.maxLength(40)]], // 大分類名稱
-    remark: ['', [Validators.maxLength(160)]], // 備註
+    bus_type_desc: ['', [Validators.maxLength(160)]], // 備註
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
     //分頁查詢
     pageSize: [10],
@@ -50,7 +50,7 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
   columns: any[] = [
     { field: 'bus_type', header: '大分類代號', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
-    { field: 'remark', header: '備註', visible: true },
+    { field: 'bus_type_desc', header: '備註', visible: true },
     // 其他欄位
   ];
 
@@ -73,11 +73,9 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
   }
 
   onSubmit(frm: FormGroup): void {
-    console.log('Form value:', frm.value);
     this.handleSubmit(frm, () => {
       this.apiService.querySYSB800(frm.value).subscribe({
         next: (response: any) => {
-          console.log('API response:', response);
           if (response.Status === '0000') {
             this.data = response.Data || [];
             this.filteredData = [...this.data];
@@ -117,8 +115,6 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
   }
 
   onDelete(data: CategoryItem | CategoryItem[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
-
     const items = Array.isArray(data) ? data : [data];
     if (items.length === 0) {
       console.error('No items to delete');
@@ -126,49 +122,48 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
       return;
     }
 
-    items.forEach((item, index) => {
-      console.log('Processing item:', JSON.stringify(item, null, 2));
-      if (!item || item.id == null || item.id === undefined) {
-        console.error('ID is missing or invalid for item:', item);
-        this.messageService.errorBubble(`無法刪除項目 ${item?.bus_type || '未知'}：缺少 ID`);
-        return;
-      }
+    const idList = items
+      .filter(item => item && item.id != null && item.id !== undefined)
+      .map(item => item.id);
 
-      const requestBody = {
-        id: item.id // 保持 number 型別
-      };
-      console.log('Request body:', JSON.stringify(requestBody));
-      this.apiService.deleteSYSB800(requestBody).subscribe({
-        next: (response: any) => {
-          console.log('API response:', response);
-          if (response.Status === '0000') {
-            this.messageService.successBubble(`項目 ${item.bus_type} 刪除成功`);
-          } else {
-            console.error('API error:', response.Status, response.Message);
-            this.messageService.errorBubble(`項目 ${item.bus_type} 刪除失敗: ${response.Message}`);
-          }
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.messageService.errorBubble(`項目 ${item.bus_type} 刪除失敗`);
-        },
-        complete: () => {
-          if (index === items.length - 1) {
-            this.onSubmit(this.queryForm);
-          }
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
+    }
+
+    const requestBody = {
+      idList: idList
+    };
+
+    console.log('Request body:', JSON.stringify(requestBody));
+    this.apiService.deleteSYSB800(requestBody).subscribe({
+      next: (response: any) => {
+        console.log('API response:', response);
+        if (response.Status === '0000') {
+          this.messageService.successBubble(`成功刪除 ${idList.length} 個項目`);
+          this.onSubmit(this.queryForm);
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message || '未知錯誤'}`);
         }
-      });
+      },
+      error: (err: any) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗，請檢查網路連線或聯繫管理員');
+      },
+      complete: () => {
+        this.selectedItems = [];
+      }
     });
-
-    this.selectedItems = [];
   }
 
   loadData(event: TableLazyLoadEvent) {
     const form = this.queryForm.value;
     if (this.totalRecords === 0) { return; }
     form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'CAT_LNo', order: 1 }];
+    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
+    form.SortBy = event.multiSortMeta ?? [{ field: 'bus_type', order: 1 }];
     this.onSubmit(this.queryForm);
   }
 

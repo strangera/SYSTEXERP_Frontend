@@ -30,7 +30,7 @@ export class TLS54010CRUComponent
   extends BasicCrupageComponent
   implements OnInit {
   // ProgNo: string = '250025';
-  // funInfo: FunsrightInfo = {};
+  // funInfo?: FunsrightInfo;
   // // Permissions
   // addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
   // queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };

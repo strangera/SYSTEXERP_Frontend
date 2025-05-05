@@ -27,7 +27,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
 export class TLS41010Component {
   ProgNo: string = '240001';
   // 權限
-  funInfo: FunsrightInfo = {};
+  funInfo?: FunsrightInfo;
   addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
   queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
   editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
@@ -61,7 +61,7 @@ export class TLS41010Component {
     ECR_LocNo: [, [Validators.maxLength(8)]], // 位置
     HOS_No: [, [Validators.maxLength(6)]], // 倉庫編號
     ECR_ComName: ['', [Validators.maxLength(64)]], // 機台電腦名稱
-    ECR_IP: [, [Validators.maxLength(20)]], // 機台網路IP 
+    ECR_IP: [, [Validators.maxLength(20)]], // 機台網路IP
     ECR_SrvIP: [, [Validators.maxLength(20)]], // 後台主機IP
     ECR_TmplNo: [, [Validators.maxLength(8)]], //  環境變數編號: 新增收銀機設定時會依照輸入的模版編號匯入模版的設定內容，但允許使用者修改匯入後的設定
     //
@@ -302,13 +302,13 @@ export class TLS41010Component {
   // 權限
   // ----------------------------------------------------------------
   canQuery(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
   }
   canAdd(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
   }
   canEdit(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
   }
   // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
