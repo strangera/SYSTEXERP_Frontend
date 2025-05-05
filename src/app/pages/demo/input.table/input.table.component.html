@@ -26,6 +26,9 @@
           <app-multi-select class="col-12 md:col-6 lg:col-5" label="多選下拉" controlName="multiSelect"
             [options]="systemTypeOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.multiSelect" [submitted]="submitted" />
+          <!-- add treeDropDown component   -->
+          <app-tree-dropdown></app-tree-dropdown>
+          <!-- --- -->
           <app-calendar calendarType="timeOne" class="col-12 md:col-6 lg:col-5" label="時分"
             [control]="queryForm.controls.timeOne" controlName="timeOne" [submitted]="submitted" />
           <app-calendar-range calendarType="timeRange" class="col-12 md:col-6 lg:col-5" label="時分"
