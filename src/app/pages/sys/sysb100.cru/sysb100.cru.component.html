@@ -1,151 +1,156 @@
-<div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1;">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+<div class="grid">
+    <div class="col-12">
+        <div class="card">
+            <div class="grid p-fluid ">
+                <div class="col-20 md:col-10 lg:col-12">
+                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
+
+                </div>
+            </div>
+            <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+                <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-number [useGrouping]="false" label="公司編號/店號" controlName="SYS_StoreNo"
+                                [control]="dataForm.controls.SYS_StoreNo" [submitted]="submitted">>
+                            </app-input-number>
+                        </div>
+                        <div class="col-12 md:col-12 lg:col-4">
+                            <app-input-text label="公司名稱(中文)" controlName="SYS_StoreName"
+                                [control]="dataForm.controls.SYS_StoreName" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-12 lg:col-4">
+                            <app-input-text label="公司名稱(英文)" controlName="SYS_StoreNameENG"
+                                [control]="dataForm.controls.SYS_StoreNameENG" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="統一編號" controlName="STR_Uniform"
+                                [control]="dataForm.controls.STR_Uniform" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-number [useGrouping]="false" label="稅籍編號" controlName="STO_TaxNo"
+                                [control]="dataForm.controls.STO_TaxNo" [submitted]="submitted">>
+                            </app-input-number>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="負責人" controlName="STO_ManagerName"
+                                [control]="dataForm.controls.STO_ManagerName" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-12 lg:col-4">
+                            <app-input-text label="聯絡人" controlName="STO_ContactName"
+                                [control]="dataForm.controls.STO_ContactName" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="聯絡人電話" controlName="STO_ContactTel"
+                                [control]="dataForm.controls.STO_ContactTel" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-12 lg:col-4">
+                            <app-input-text label="聯絡人傳真" controlName="STO_ContactFax"
+                                [control]="dataForm.controls.STO_ContactFax" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-number [useGrouping]="false" label="郵遞區號" controlName="STO_PostCode"
+                                [control]="dataForm.controls.STO_PostCode" [submitted]="submitted">>
+                            </app-input-number>
+                        </div>
+                        <div class="col-12 md:col-12 lg:col-4">
+                            <app-input-number [useGrouping]="false" label="營業登記證號" controlName="STO_BRN"
+                                [control]="dataForm.controls.STO_BRN" [submitted]="submitted">
+                            </app-input-number>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="公司電話" controlName="STO_Tel" [control]="dataForm.controls.STO_Tel"
+                                [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-4">
+                            <app-input-text label="公司傳真" controlName="STO_Fax" [control]="dataForm.controls.STO_Fax"
+                                [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-12 lg:col-6">
+                            <app-input-text label="公司(營業處)地址(中文)" controlName="STO_Addr"
+                                [control]="dataForm.controls.STO_Addr" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-6">
+                            <app-input-text label="公司(營業處)地址(英文)" controlName="STO_AddrENG"
+                                [control]="dataForm.controls.STO_AddrENG" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-12 lg:col-6">
+                            <app-input-text label="公司登記地址(中文)" controlName="STO_RegAddr"
+                                [control]="dataForm.controls.STO_RegAddr" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-6">
+                            <app-input-text label="公司登記地址(英文)" controlName="STO_RegAddrENG"
+                                [control]="dataForm.controls.STO_RegAddrENG" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-3">
+                            <app-input-text label="公司網址" controlName="STO_URL" [control]="dataForm.controls.STO_URL"
+                                [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-12 lg:col-3">
+                            <app-input-text label="電子信箱" controlName="STO_Email" [control]="dataForm.controls.STO_Email"
+                                [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-12 lg:col-6">
+                            <app-input-text label="發票地址" controlName="STO_InvoiceAddr"
+                                [control]="dataForm.controls.STO_InvoiceAddr" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                    </div>
+                    <div class="grid p-fluid">
+                        <div class="col-12 md:col-6 lg:col-3">
+                            <app-input-text label="郵寄電話" controlName="STO_MailTel"
+                                [control]="dataForm.controls.STO_MailTel" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-12 lg:col-3">
+                            <app-input-text label="郵寄傳真" controlName="STO_MailFax"
+                                [control]="dataForm.controls.STO_MailFax" [submitted]="submitted">
+                            </app-input-text>
+                        </div>
+                        <div class="col-12 md:col-6 lg:col-6">
+                            <app-input-text label="郵寄地址" controlName="STO_MailAddr"
+                                [control]="dataForm.controls.STO_MailAddr" [submitted]="submitted">>
+                            </app-input-text>
+                        </div>
+                    </div>
+                </form>
+                <div class="col pt-4">
+                    <div class="grid justify-content-end">
+                        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                        <app-button btnType="submit" (click)="submitForm(dataForm)"
+                            *ngIf="!isFormReadable"></app-button>
+                    </div>
+                </div>
+            </p-panel>
         </div>
     </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <h5>必 要 欄 位 資 料</h5>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="分店代號" controlName="branchCode" [control]="dataForm.controls.branchCode"
-                        [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="公司代號(統一編號)" controlName="unifiedNumber"
-                        [control]="dataForm.controls.unifiedNumber" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="公司名稱(中文)" controlName="companyCName"
-                        [control]="dataForm.controls.companyCName" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="商場名稱" controlName="mallName" [control]="dataForm.controls.mallName"
-                        [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="公司名稱(英文)" controlName="companyEName"
-                        [control]="dataForm.controls.companyEName" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="稅籍編號" controlName="taxNumber"
-                        [control]="dataForm.controls.taxNumber" [submitted]="submitted">>
-                    </app-input-number>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="負責人" controlName="principal" [control]="dataForm.controls.principal"
-                        [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="聯絡人" controlName="contactPerson" [control]="dataForm.controls.contactPerson"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="聯絡人電話" controlName="contactPersonPhone"
-                        [control]="dataForm.controls.contactPersonPhone" [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="聯絡人傳真" controlName="contactPersonFax"
-                        [control]="dataForm.controls.contactPersonFax" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="郵遞區號" controlName="postalCode"
-                        [control]="dataForm.controls.postalCode" [submitted]="submitted">>
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="營業登記證號" controlName="BusinessCertificateNumber"
-                        [control]="dataForm.controls.BusinessCertificateNumber" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="公司電話" controlName="companyPhone" [control]="dataForm.controls.companyPhone"
-                        [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="公司(營業處)地址(中文)" controlName="companyCAddress"
-                        [control]="dataForm.controls.companyCAddress" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="公司(營業處)地址(英文)" controlName="companyEAddress"
-                        [control]="dataForm.controls.companyEAddress" [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="公司登記地址(中文)" controlName="registeredCAddress"
-                        [control]="dataForm.controls.registeredCAddress" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="公司登記地址(英文)" controlName="registeredEAddress"
-                        [control]="dataForm.controls.registeredEAddress" [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="發票地址" controlName="invoiceAddress"
-                        [control]="dataForm.controls.invoiceAddress" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-            </div>
-            <hr>
-            <h5>郵 寄 資 料</h5>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="郵寄電話" controlName="mailingPhone" [control]="dataForm.controls.mailingPhone"
-                        [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="郵寄傳真" controlName="mailingFex" [control]="dataForm.controls.mailingFex"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="郵寄地址" controlName="mailingAddress"
-                        [control]="dataForm.controls.mailingAddress" [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="電子信箱" controlName="email" [control]="dataForm.controls.email"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="公司網址" controlName="companyWebsite"
-                        [control]="dataForm.controls.companyWebsite" [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-            </div>
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
-            </div>
-        </div>
-    </p-panel>
 </div>
