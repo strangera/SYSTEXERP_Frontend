@@ -36,16 +36,8 @@ const routes: Routes = [
           { path: '2', loadChildren: () => import('./ass2000/ass2000.module').then(m => m.ASS2000Module), canActivate: [AuthGuard] }, // 3.2 能源管理系統
         ]
       },
-
       // 4. 系統管理 (SYS)
-      {
-        path: 'SYS',
-        children: [
-          { path: 'B', loadChildren: () => import('./sysb000/sysb000.module').then(m => m.SYSB000Module), canActivate: [AuthGuard] }, // 4.1 基本資料管理系統
-          { path: '0', loadChildren: () => import('./sys0000/sys0000.module').then(m => m.SYS0000Module), canActivate: [AuthGuard] }, // 4.2 權限管理系統
-        ]
-      },
-
+      { path: 'SYS', loadChildren: () => import('./sys/sys.module').then(m => m.SysModule), canActivate: [AuthGuard] },
       // 5. 客戶關係管理 (CPM)
       {
         path: 'CPM',
