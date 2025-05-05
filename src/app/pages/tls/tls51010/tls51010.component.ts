@@ -90,7 +90,7 @@ export class TLS51010Component
 
   ngOnInit(): void {
     // 初始化頁面：設置程式編號和 CRUD 頁面路徑
-    this.initializePage('TLS51010', '/TLS/5/TLS51010CRU');
+    this.initializePage('TLS51010', '/TLS/TLS51010CRU');
 
     // 恢復查詢狀態並自動查詢
     this.handleQueryRestore(this.queryForm, storageKey, (form) =>
