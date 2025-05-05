@@ -4,6 +4,11 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Sysb100m } from '../module/sysb000.module';
 import { Sysb100Service } from '../../../service/sysb/sysb100.service';
+import { TableLazyLoadEvent } from 'primeng/table';
+import { SortMeta } from 'primeng/api';
+
+// 本地儲存鍵：用於儲存查詢狀態
+const storageKey = 'SYSB100';
 
 @Component({
   selector: 'app-sysb100',
@@ -13,68 +18,91 @@ import { Sysb100Service } from '../../../service/sysb/sysb100.service';
 // 公司基本資料維護作業
 export class SYSB100Component
   extends BasicQueryPageComponent<Sysb100m>
-  implements OnInit {
+  implements OnInit
+{
   // 查詢
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
-    unifiedNumber: [, [Validators.maxLength(8)]], // 公司代號(統一編號)
-    companyCName: ['', [Validators.maxLength(60)]], // 公司名稱(中文)
-    mallName: ['', Validators.maxLength(40)], // 商場名稱
-    companyEName: ['', [Validators.maxLength(60)]], // 公司名稱(英文)
-    taxNumber: [, [Validators.maxLength(9)]], // 稅籍編號
-    principal: ['', [Validators.maxLength(12)]], // 負責人
-    contactPerson: ['', [Validators.maxLength(12)]], // 聯絡人
-    contactPersonPhone: ['', [Validators.maxLength(15)]], // 聯絡人電話
-    contactPersonFax: ['', [Validators.maxLength(15)]], // 聯絡人傳真
-    postalCode: [, [Validators.maxLength(5)]], // 郵遞區號
-    BusinessCertificateNumber: [, [Validators.maxLength(10)]], // 營業登記證號
-    companyPhone: ['', [Validators.maxLength(15)]], // 公司電話
-    companyCAddress: ['', [Validators.maxLength(100)]], // 公司(營業處)地址(中文)
-    companyEAddress: ['', [Validators.maxLength(100)]], // 公司(營業處)地址(英文)
-    registeredCAddress: ['', [Validators.maxLength(100)]], // 公司登記地址(中文)
-    registeredEAddress: ['', [Validators.maxLength(100)]], // 公司登記地址(英文)
-    invoiceAddress: ['', [Validators.maxLength(60)]], // 發票地址
-    mailingPhone: ['', [Validators.maxLength(15)]], // 郵寄電話
-    mailingFex: ['', [Validators.maxLength(15)]], // 郵寄傳真
-    mailingAddress: ['', [Validators.maxLength(60)]], // 郵寄地址
-    email: ['', [Validators.maxLength(60)]], // 電子郵件信箱
-    companyWebsite: ['', [Validators.maxLength(60)]], // 公司網址
+    SYS_StoreNo: [, [Validators.maxLength(10)]], // 公司編號/店號
+    STR_Uniform: [, [Validators.maxLength(8)]], // 統一編號
+    SYS_StoreName: ['', [Validators.maxLength(60)]], // 公司名稱(中文)
+    SYS_StoreNameENG: ['', [Validators.maxLength(60)]], // 公司名稱(英文)
+    STO_TaxNo: [, [Validators.maxLength(9)]], // 稅籍編號
+    STO_ManagerName: ['', [Validators.maxLength(12)]], // 負責人
+    STO_ContactName: ['', [Validators.maxLength(12)]], // 聯絡人
+    STO_ContactTel: ['', [Validators.maxLength(15)]], // 聯絡人電話
+    STO_ContactFax: ['', [Validators.maxLength(15)]], // 聯絡人傳真
+    STO_Addr: ['', [Validators.maxLength(100)]], // 公司(營業處)地址(中文)
+    STO_AddrENG: ['', [Validators.maxLength(100)]], // 公司(營業處)地址(英文)
+    STO_RegAddr: ['', [Validators.maxLength(100)]], // 公司登記地址(中文)
+    STO_RegAddrENG: ['', [Validators.maxLength(100)]], // 公司登記地址(英文)
+    STO_BRN: [, [Validators.maxLength(10)]], // 營業登記證號
+    STO_Tel: ['', [Validators.maxLength(15)]], // 公司電話
+    STO_Fax: ['', [Validators.maxLength(15)]], // 公司傳真
+    STO_PostCode: [, [Validators.maxLength(6)]], // 郵遞區號
+    STO_MailTel: ['', [Validators.maxLength(15)]], // 郵寄電話
+    STO_MailFax: ['', [Validators.maxLength(15)]], // 郵寄傳真
+    STO_MailAddr: ['', [Validators.maxLength(100)]], // 郵寄地址
+    STO_InvoiceAddr: ['', [Validators.maxLength(60)]], // 發票地址
+    STO_Email: ['', [Validators.maxLength(100)]], // 電子郵件
+    STO_URL: ['', [Validators.maxLength(60)]], // 公司網址
+
+    //分頁查詢
+    pageSize: [10],
+    pageIndex: [0],
+    SortBy: [[{ field: 'SYS_StoreNo', order: 1 }] as SortMeta[]],
   });
   // 表格
   // ----------------------------------------------------------------
   data: Sysb100m[] = [];
   columns: any[] = [
-    { field: 'unifiedNumber', header: '公司代號(統一編號)', visible: true },
-    { field: 'companyCName', header: '公司名稱(中文)', visible: true },
-    { field: 'taxNumber', header: '稅籍編號', visible: true },
-    { field: 'companyEName', header: '公司名稱(英文)', visible: true },
-    { field: 'contactPerson', header: '負責人', visible: true },
-    { field: 'companyEName', header: '聯絡人', visible: true },
-    { field: 'contactPersonPhone', header: '聯絡人電話', visible: true },
+    { field: 'SYS_StoreNo', header: '公司編號/店號', visible: true },
+    { field: 'STR_Uniform', header: '統一編號', visible: true },
+    { field: 'SYS_StoreName', header: '公司名稱(中文)', visible: true },
+    { field: 'SYS_StoreNameENG', header: '公司名稱(英文)', visible: true },
+    { field: 'STO_TaxNo', header: '稅籍編號', visible: true },
+
+    { field: 'STO_ManagerName', header: '負責人', visible: true },
+    { field: 'STO_ContactName', header: '聯絡人', visible: true },
+    { field: 'STO_ContactTel', header: '聯絡人電話', visible: true },
     // 其他欄位
-    { field: 'CONTACT_FAX', header: '聯絡人傳真', visible: false },
-    { field: 'POST_ID', header: '郵遞區號', visible: false },
-    { field: 'REG_ID', header: '營業登記證號', visible: false },
-    { field: 'CENTER_TEL', header: '公司電話', visible: false },
-    { field: 'CENTER_ADDR', header: '公司(營業處)地址(中文)', visible: false },
+    { field: 'STO_ContactFax', header: '聯絡人傳真', visible: false },
+    { field: 'STO_PostCode', header: '郵遞區號', visible: false },
+    { field: 'STO_BRN', header: '營業登記證號', visible: false },
+    { field: 'STO_Tel', header: '公司電話', visible: false },
+    { field: 'STO_Addr', header: '公司(營業處)地址(中文)', visible: false },
     {
-      field: 'CENTER_ADDR_E',
+      field: 'STO_AddrENG',
       header: '公司(營業處)地址(英文)',
       visible: false,
     },
-    { field: 'CENTER_REG_ADDR', header: '公司登記地址(中文)', visible: false },
+    { field: 'STO_RegAddr', header: '公司登記地址(中文)', visible: false },
     {
-      field: 'CENTER_REG_ADDR_E',
+      field: 'STO_RegAddrENG',
       header: '公司登記地址(英文)',
       visible: false,
     },
-    { field: 'TAX_ADDR', header: '發票地址', visible: false },
-    { field: 'POST_TEL', header: '郵寄電話', visible: false },
-    { field: 'POST_FAX', header: '郵寄傳真', visible: false },
-    { field: 'POST_ADDR', header: '郵寄地址', visible: false },
-    { field: 'EMAIL', header: '電子郵件信箱', visible: false },
-    { field: 'CENTER_URL', header: '公司網址', visible: false },
+    { field: 'STO_InvoiceAddr', header: '發票地址', visible: false },
+    { field: 'STO_MailTel', header: '郵寄電話', visible: false },
+    { field: 'STO_MailFax', header: '郵寄傳真', visible: false },
+    { field: 'STO_MailAddr', header: '郵寄地址', visible: false },
+    { field: 'STO_Email', header: '電子郵件信箱', visible: false },
+    { field: 'STO_URL', header: '公司網址', visible: false },
   ];
+
+  // 表格數據和篩選數據
+  filteredData: Sysb100m[] = [...this.data];
+
+  // // 分頁和排序參數
+  // pageSize: number = 10;
+  // pageIndex: number = 0;
+  totalRecords = 0;
+  // lastQueryParams: any = null;
+  // sortField: string = 'CAT_LNo';
+  // sortOrder: number = 1;
+
+  // 多選項目
+  selectedItems: Sysb100m[] = [];
 
   // ----------------------------------------------------------------
   constructor(private sysb100Service: Sysb100Service) {
@@ -82,7 +110,7 @@ export class SYSB100Component
   }
 
   ngOnInit(): void {
-    this.initializePage('410001', '/SYSB000/SYSB100CRU');
+    this.initializePage('SYSB100', '/SYSB000/SYSB100CRU');
   }
 
   onSubmit(frm: FormGroup) {
@@ -109,6 +137,79 @@ export class SYSB100Component
   }
 
   onClearForm() {
-    this.queryForm.reset(); // 重置表單
+    // this.queryForm.reset(); // 重置表單
+
+    this.queryForm.reset();
+    // this.pageIndex = 0;
+    this.data = [];
+    this.filteredData = [];
+    // this.lastQueryParams = null;
+    this.totalRecords = 0;
+    // this.sortField = 'CAT_LNo';
+    // this.sortOrder = 1;
+    // 清空儲存的查詢狀態
+    this.queryStateService.clearQueryState(storageKey);
+  }
+
+  // 刪除項目
+  onDelete(data: Sysb100m | Sysb100m[]): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
+
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) {
+      console.error('No items to delete');
+      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+      return;
+    }
+
+    // 收集所有有效的 ID
+    const idList = items
+      .filter(
+        (item) =>
+          item && item.SYS_StoreNo != null && item.SYS_StoreNo !== undefined,
+      )
+      .map((item) => item.SYS_StoreNo);
+
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
+    }
+
+    // 構建新的 requestBody 格式
+    // const requestBody = {
+    //   idList: idList, // 符合 API 的 idList 格式
+    // };
+    // 調用 API
+    // this.apiService.deleteTLS51010(requestBody).subscribe({
+    //   next: (response: any) => {
+    //     if (response.Status === '0000') {
+    //       this.messageService.successBubble('選中項目刪除成功');
+    //     } else {
+    //       console.error('API error:', response.Status, response.Message);
+    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+    //     }
+    //   },
+    //   error: (err: string) => {
+    //     console.error('API error:', err);
+    //     this.messageService.errorBubble('刪除失敗');
+    //   },
+    //   complete: () => {
+    //     this.onSubmit(this.queryForm);
+    //   },
+    // });
+
+    this.selectedItems = [];
+  }
+
+  loadData(event: TableLazyLoadEvent) {
+    const form = this.queryForm.value;
+    if (this.totalRecords === 0) {
+      return;
+    }
+    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
+    form.SortBy = event.multiSortMeta ?? [{ field: 'CAT_LNo', order: 1 }];
+    this.onSubmit(this.queryForm);
   }
 }
