@@ -91,8 +91,4 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
   onClearForm() {
     this.dataForm.reset();  // 重置表單
   }
-
-  onCancel() {
-    this.router.navigate(['/TLS5000/TLS51020']);
-  }
 }

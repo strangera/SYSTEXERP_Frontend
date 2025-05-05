@@ -15,8 +15,7 @@ import { option, Sysb400m } from '../module/sysb000.module';
 // 組織碼設定作業 CRU
 export class SYSB400CRUComponent
   extends BasicCruPageComponent<Sysb400m>
-  implements OnInit
-{
+  implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [, [Validators.required]], //id
@@ -117,9 +116,5 @@ export class SYSB400CRUComponent
 
   onClearForm() {
     this.dataForm.reset(); // 重置表單
-  }
-
-  onCancel() {
-    this.router.navigate(['/SYSB000/SYSB400']);
   }
 }

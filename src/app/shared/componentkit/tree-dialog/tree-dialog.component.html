@@ -36,20 +36,20 @@
         <span *ngIf="!node.data">
           {{ node.label }}
         </span>
-        <div *ngIf="node.data" class="flex">
-          <p-table [columns]="node.cols" [value]="node.data" [tableStyle]="{ 'min-width': '50rem' }">
+        <div *ngIf="node.data" class="flex" (click)="$event.stopPropagation()">
+          <p-table [columns]="node.cols" [value]="node.data" dataKey="id" selectionMode="multiple">
             <ng-template pTemplate="header" let-columns>
               <tr>
-                <th *ngFor="let col of columns">
-                  {{ col.header }}
-                </th>
+                <th><p-tableHeaderCheckbox /></th>
+                <th *ngFor="let col of columns">{{ col.header }}</th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-rowData let-columns="columns">
               <tr>
-                <td *ngFor="let col of columns">
-                  {{ rowData[col.field] }}
+                <td>
+                  <p-tableCheckbox [value]="rowData" class="pointer-events-none" />
                 </td>
+                <td *ngFor="let col of columns">{{ rowData[col.field] }}</td>
               </tr>
             </ng-template>
           </p-table>
@@ -57,7 +57,6 @@
       </div>
     </ng-template>
   </p-tree>
-  <!-- footer -->
   <ng-template pTemplate="footer">
     <p-button label="Cancel" [text]="true" severity="secondary" (onClick)="visible = false" />
     <p-button label="Save" [outlined]="true" severity="secondary" (onClick)="visible = false" />

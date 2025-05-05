@@ -40,8 +40,6 @@ export class TreeDialogComponent extends BasicKitComponent implements OnInit {
       key: '1',
       label: 'Components In-Depth',
       children: [
-        { key: '1-0', label: 'Component Registration' },
-        { key: '1-1', label: 'User Input' },
         { key: '1-2', label: 'Hooks' },
         {
           key: '1-3', label: 'Attribute Directives',
@@ -55,107 +53,15 @@ export class TreeDialogComponent extends BasicKitComponent implements OnInit {
                 { field: 'quantity', header: 'Quantity' }
               ],
               data: [
-                {
-                  id: '1000',
-                  code: 'f230fh0g3',
-                  name: 'Bamboo Watch',
-                  description: 'Product Description',
-                  image: 'bamboo-watch.jpg',
-                  price: 65,
-                  category: 'Accessories',
-                  quantity: 24,
-                  inventoryStatus: 'INSTOCK',
-                  rating: 5
-                },
+                { id: '1001', code: 'f230fh0g3', name: 'Bamboo Watch', category: 'Accessories' },
+                { id: '1002', code: 'f230fh0g3', name: 'Bamboo Watch', category: 'Accessories' },
+                { id: '1003', code: 'f230fh0g3', name: 'Bamboo Watch', category: 'Accessories' },
               ]
             },
-            {
-              key: '1-3-1', label: 'Data 2',
-              cols: [
-                { field: 'code', header: 'Code' },
-                { field: 'name', header: 'Name' },
-                { field: 'category', header: 'Category' },
-                { field: 'quantity', header: 'Quantity' }
-              ],
-              data: [
-                {
-                  id: '1000',
-                  code: 'f230fh0g3',
-                  name: 'Bamboo Watch',
-                  description: 'Product Description',
-                  image: 'bamboo-watch.jpg',
-                  price: 65,
-                  category: 'Accessories',
-                  quantity: 24,
-                  inventoryStatus: 'INSTOCK',
-                  rating: 5
-                },
-              ]
-            },
-            {
-              key: '1-3-2', label: 'Data 3',
-              cols: [
-                { field: 'code', header: 'Code' },
-                { field: 'name', header: 'Name' },
-                { field: 'category', header: 'Category' },
-                { field: 'quantity', header: 'Quantity' }
-              ],
-              data: [
-                {
-                  id: '1000',
-                  code: 'f230fh0g3',
-                  name: 'Bamboo Watch',
-                  description: 'Product Description',
-                  image: 'bamboo-watch.jpg',
-                  price: 65,
-                  category: 'Accessories',
-                  quantity: 24,
-                  inventoryStatus: 'INSTOCK',
-                  rating: 5
-                },
-              ]
-            }
           ]
         }
       ]
     },
-    {
-      key: '2',
-      label: 'Directives Deep Dive',
-      children: [
-        { key: '2-0', label: 'Structural Directives' },
-        {
-          key: '2-1', label: 'Custom Directives',
-          children: [
-            {
-              key: '2-1-0',
-              label: 'Item X',
-              cols: [
-                { field: 'code', header: 'Code' },
-                { field: 'name', header: 'Name' },
-                { field: 'category', header: 'Category' },
-                { field: 'quantity', header: 'Quantity' }
-              ],
-              data: [
-                {
-                  id: '1000',
-                  code: 'f230fh0g3',
-                  name: 'Bamboo Watch',
-                  description: 'Product Description',
-                  image: 'bamboo-watch.jpg',
-                  price: 65,
-                  category: 'Accessories',
-                  quantity: 24,
-                  inventoryStatus: 'INSTOCK',
-                  rating: 5
-                },
-              ]
-            },
-            { key: '2-1-1', label: 'Item Y', data: { column1: 'Gamma', column2: 'Delta' } }
-          ]
-        }
-      ]
-    }
   ];
 
   ngOnInit(): void {

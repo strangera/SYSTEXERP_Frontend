@@ -170,8 +170,4 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.dataForm.reset();
     this.middleCategoryOptions = [];
   }
-
-  onCancel(): void {
-    this.router.navigate(['/TLS5000/TLS51030']);
-  }
 }

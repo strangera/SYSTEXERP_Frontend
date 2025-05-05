@@ -144,27 +144,4 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   onClearForm() {
     this.dataForm.reset(); // 重置表單
   }
-
-  onCancel() {
-    // 修改：保留分頁狀態
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      queryParams?: any;
-      pageIndex?: number;
-      pageSize?: number;
-      totalRecords?: number;
-      sortField?: string;
-      sortOrder?: number;
-    };
-    let extras: NavigationExtras = {
-      state: {
-        queryParams: state?.queryParams,
-        pageIndex: state?.pageIndex,
-        pageSize: state?.pageSize,
-        totalRecords: state?.totalRecords,
-        sortField: state?.sortField,
-        sortOrder: state?.sortOrder,
-      },
-    };
-    this.router.navigate(['/TLS5000/TLS51010'], extras);
-  }
 }

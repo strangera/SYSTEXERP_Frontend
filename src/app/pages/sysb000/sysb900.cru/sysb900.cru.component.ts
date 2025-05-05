@@ -102,27 +102,4 @@ export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> imp
     // 查詢邏輯
     this.onSubmit(frm);
   }//CRU
-
-  onCancel() {
-    // 修改：保留分頁狀態
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      queryParams?: any;
-      pageIndex?: number;
-      pageSize?: number;
-      totalRecords?: number;
-      sortField?: string;
-      sortOrder?: number;
-    };
-    let extras: NavigationExtras = {
-      state: {
-        queryParams: state?.queryParams,
-        pageIndex: state?.pageIndex,
-        pageSize: state?.pageSize,
-        totalRecords: state?.totalRecords,
-        sortField: state?.sortField,
-        sortOrder: state?.sortOrder,
-      },
-    };
-    this.router.navigate(['/SYSB000/SYSB900'], extras);
-  }
 }

@@ -14,7 +14,7 @@ export class AppMenulistService {
     {
       prog_no: '000',
       label: '首頁',
-      items: [{ prog_no: 'dashboard', label: '布告欄', parent_id: '000', routerLink: '/dashboard', icon: 'pi pi-bookmark', prog_ispage: 'Y', prog_sort: 1 }],
+      items: [{ prog_no: 'dashboard', label: '佈告欄', parent_id: '000', routerLink: '/dashboard', icon: 'pi pi-bookmark', prog_ispage: 'Y', prog_sort: 1 }],
       prog_sort: 0 // 給寫死的首頁一個排序值
     },
     {
