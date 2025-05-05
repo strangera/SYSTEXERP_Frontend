@@ -1,34 +1,21 @@
 // TLS11020Component.ts
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { Component} from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { DeductionCategoryService } from '../../../service/basic/deduction-category.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
 @Component({
   selector: 'app-tls11020',
   templateUrl: './tls11020.component.html',
   styleUrls: ['./tls11020.component.scss']
 })
-export class TLS11020Component implements OnInit {
-  ProgNo: string = '210002';
-  funInfo: FunsrightInfo = {};
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+export class TLS11020Component extends BasicQueryPageComponent<any>  {
 
-  loading: boolean = false;
-  submitted: boolean = false;
 
   queryForm = this.formBuilder.group({
-    deductionItemNumber: ['', [this.validationService.numberValidator, Validators.maxLength(3)]],
+    deductionItemNumber: [[this.validationService.numberValidator, Validators.maxLength(3)]],
     deductionItemName: ['', [Validators.maxLength(40)]],
     deductionCategory: [[] as string[]],
     remark: ['', [Validators.maxLength(160)]]
@@ -50,19 +37,20 @@ export class TLS11020Component implements OnInit {
   deductionCategoryOptions: any[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
+
     private validationService: ValidationService,
     private deductionCategoryService: DeductionCategoryService,
     private http: HttpClient
-  ) {}
+  ) {
+    super();
+  }
+  
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.deductionCategoryService.getDeductionCategories().subscribe(data => {
       this.deductionCategoryOptions = data;
+      this.initializePage('TLS11020','TLS/1/TLS11020CRU');
     });
   }
 
@@ -104,43 +92,8 @@ export class TLS11020Component implements OnInit {
     this.queryForm.reset();
   }
 
-  onCreate() {
-    if (this.canAdd()) {
-      const extras: NavigationExtras = {
-        state: { crudstatus: CRUDStatus.Create, queryform: this.queryForm },
-        skipLocationChange: true
-      };
-      this.router.navigate(['/TLS1000/TLS11020CRU'], extras);
-    }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      const extras: NavigationExtras = {
-        state: { crudstatus: CRUDStatus.Edit, rowdata: data, queryform: this.queryForm },
-        skipLocationChange: true
-      };
-      this.router.navigate(['/TLS1000/TLS11020CRU'], extras);
-    }
-  }
 
-  onDetail(data: any) {
-    const extras: NavigationExtras = {
-      state: { crudstatus: CRUDStatus.Read, rowdata: data, queryform: this.queryForm },
-      skipLocationChange: true
-    };
-    this.router.navigate(['/TLS1000/TLS11020CRU'], extras);
-  }
-
-  canQuery(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.query) as boolean;
-  }
-  canAdd(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.add) as boolean;
-  }
-  canEdit(): boolean {
-    return this.funInfo.permissions?.includes(PermissionsInfo.edit) as boolean;
-  }
 
   onSubmit(frm: FormGroup) {
     this.onSubmitQuery(frm);

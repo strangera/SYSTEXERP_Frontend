@@ -5,7 +5,7 @@
                 <div class="col" style="flex: 1;">
                     <app-menubar [ProgNo]="ProgNo"></app-menubar>
                 </div>
-                <div *appHasPermission="addPermission">
+                <div>
                     <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
                 </div>
             </div>
@@ -36,8 +36,8 @@
                                     [control]="queryForm.controls.deductionCategory" [submitted]="submitted">
                                 </app-multi-select>
                             </div>
-                        </div>
-                        <div class="grid p-fluid">
+               
+          
               
                             <div class="col-12 md:col-6 lg:col-4">
                                 <app-input-text label="備註" controlName="remark" [control]="queryForm.controls.remark"
@@ -45,21 +45,20 @@
                                 </app-input-text>
                             </div>
                         </div>
-                        <div *appHasPermission="queryPermission" class="col">
                             <div class="grid justify-content-end">
                                 <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
                                 <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
                                     [loading]="loading"></app-button>
                             </div>
-                        </div>
+                  
                     </form>
                 </p-accordionTab>
             </p-accordion>
         </div>
         <div class="card">
             <div class="col-13">
-                <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-                </app-data-table>
+                <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+                </app-table>
             </div>
         </div>
     </div>
