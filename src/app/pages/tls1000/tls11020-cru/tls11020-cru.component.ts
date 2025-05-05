@@ -13,6 +13,7 @@ import { TicketPaymentService } from './../../../service/basic/ticket-payment.se
 import { InstallmentPeriodService } from './../../../service/basic/installment-period.service';
 import { SalesTypeService } from './../../../service/basic/sales-type.service';
 import { ConfirmationService } from 'primeng/api';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
 @Component({
   selector: 'app-tls11020-cru',
@@ -20,7 +21,7 @@ import { ConfirmationService } from 'primeng/api';
   styleUrl: './tls11020-cru.component.scss'
 })
 // 2.1.2.1 扣款項目維護作業 CRU
-export class TLS11020CRUComponent extends BasicCrupageComponent implements OnInit {
+export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
   //
   deductionCategoryOptions: any[] = [];
   salesTypeOptions: any[] = [];
@@ -40,10 +41,7 @@ export class TLS11020CRUComponent extends BasicCrupageComponent implements OnIni
   });
   // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
+
     private translate: TranslateService,
     private validationService: ValidationService,
     //
@@ -58,10 +56,8 @@ export class TLS11020CRUComponent extends BasicCrupageComponent implements OnIni
 
   ngOnInit(): void {
     // 初始化
-    this.ProgNo = '210002';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
+    this.initializePage
     //
     //
     this.deductionCategoryService.getDeductionCategories().subscribe(data => {
@@ -90,13 +86,13 @@ export class TLS11020CRUComponent extends BasicCrupageComponent implements OnIni
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔
@@ -184,10 +180,6 @@ export class TLS11020CRUComponent extends BasicCrupageComponent implements OnIni
     this.dataForm.reset();  // 重置表單
   }
 
-  onCancel() {
-    this.router.navigate(['/TLS1000/TLS11020']);
-  }
-
   confirmRemove(index: number): void {
     this.confirmationService.confirm({
       message: '確定要刪除此列資料嗎？',
@@ -200,9 +192,35 @@ export class TLS11020CRUComponent extends BasicCrupageComponent implements OnIni
       }
     });
   }
-  
+
   onRemoveItem(index: number): void {
     this.items.removeAt(index);
+  }
+  inputForm = this.formBuilder.group({
+    deductionItemNumber: [{ value: '由系統帶入', disabled: true }],
+    deductionItemName: [''],
+    deductionCategory: [''],
+    accNo: [''],
+    guiFlag: ['Y'],
+    capTaxType: ['1'],
+    isCommonlyUsed: ['Y'],
+    printArea: [''],
+    remark: [''],
+  });
+
+  itemList: any[] = [];
+
+  addItem(): void {
+    this.itemList.unshift(this.inputForm.getRawValue());
+    this.inputForm.reset({ deductionItemNumber: '由系統帶入', guiFlag: 'Y', capTaxType: '1', isCommonlyUsed: 'N' });
+  }
+
+  removeItem(index: number): void {
+    this.itemList.splice(index, 1);
+  }
+
+  getLabelByValue(options: any[], value: any): string {
+    return options?.find(o => o.value === value)?.label || value;
   }
   //---------------------------------------------------------------------------------------------------------------
 }

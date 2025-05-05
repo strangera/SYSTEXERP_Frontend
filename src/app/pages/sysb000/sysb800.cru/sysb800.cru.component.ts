@@ -83,27 +83,4 @@ export class SYSB800CRUComponent extends BasicCruPageComponent<CategoryItem> imp
   onClearForm() {
     this.dataForm.reset(); // 重置表單
   }
-
-  onCancel() {
-    // 修改：保留分頁狀態
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      queryParams?: any;
-      pageIndex?: number;
-      pageSize?: number;
-      totalRecords?: number;
-      sortField?: string;
-      sortOrder?: number;
-    };
-    let extras: NavigationExtras = {
-      state: {
-        queryParams: state?.queryParams,
-        pageIndex: state?.pageIndex,
-        pageSize: state?.pageSize,
-        totalRecords: state?.totalRecords,
-        sortField: state?.sortField,
-        sortOrder: state?.sortOrder,
-      },
-    };
-    this.router.navigate(['/SYS/B/SYSB800'], extras);
-  }
 }

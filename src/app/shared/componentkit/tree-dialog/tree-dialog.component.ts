@@ -3,6 +3,11 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
 import { FormControl } from '@angular/forms';
 import { TreeNode } from 'primeng/api';
 
+interface CustomTreeNode extends TreeNode {
+  cols?: { field: string, header: string }[];
+  children?: CustomTreeNode[];
+}
+
 @Component({
   selector: 'app-tree-dialog',
   templateUrl: './tree-dialog.component.html',
@@ -13,7 +18,7 @@ export class TreeDialogComponent extends BasicKitComponent implements OnInit {
   @Input() controlName = '';
   @Input() control = new FormControl;
   @Input() submitted = false; // 檢查欄位是否標準
-  @Input() visible = false;
+  @Input() visible = true;
   @Input() disabled: boolean | undefined;
   // header
   cities = [
@@ -30,27 +35,33 @@ export class TreeDialogComponent extends BasicKitComponent implements OnInit {
     { label: '第三層' },
   ];
   // tree
-  nodes: TreeNode[] = [
-    {
-      key: '0',
-      label: 'Introduction',
-      children: [
-        { key: '0-0', label: 'What is Angular', data: 'https://angular.io', type: 'url' },
-        { key: '0-1', label: 'Getting Started', data: 'https://angular.io/guide/setup-local', type: 'url' },
-        { key: '0-2', label: 'Learn and Explore', data: 'https://angular.io/guide/architecture', type: 'url' },
-        { key: '0-3', label: 'Take a Look', data: 'https://angular.io/start', type: 'url' }
-      ]
-    },
+  nodes: CustomTreeNode[] = [
     {
       key: '1',
       label: 'Components In-Depth',
       children: [
-        { key: '1-0', label: 'Component Registration', data: 'https://angular.io/guide/component-interaction', type: 'url' },
-        { key: '1-1', label: 'User Input', data: 'https://angular.io/guide/user-input', type: 'url' },
-        { key: '1-2', label: 'Hooks', data: 'https://angular.io/guide/lifecycle-hooks', type: 'url' },
-        { key: '1-3', label: 'Attribute Directives', data: 'https://angular.io/guide/attribute-directives', type: 'url' }
+        { key: '1-2', label: 'Hooks' },
+        {
+          key: '1-3', label: 'Attribute Directives',
+          children: [
+            {
+              key: '1-3-0', label: 'Data 1',
+              cols: [
+                { field: 'code', header: 'Code' },
+                { field: 'name', header: 'Name' },
+                { field: 'category', header: 'Category' },
+                { field: 'quantity', header: 'Quantity' }
+              ],
+              data: [
+                { id: '1001', code: 'f230fh0g3', name: 'Bamboo Watch', category: 'Accessories' },
+                { id: '1002', code: 'f230fh0g3', name: 'Bamboo Watch', category: 'Accessories' },
+                { id: '1003', code: 'f230fh0g3', name: 'Bamboo Watch', category: 'Accessories' },
+              ]
+            },
+          ]
+        }
       ]
-    }
+    },
   ];
 
   ngOnInit(): void {

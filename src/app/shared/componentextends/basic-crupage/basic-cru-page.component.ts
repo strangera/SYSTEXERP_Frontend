@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
@@ -29,6 +29,8 @@ export class BasicCruPageComponent<T> {
   messageService = inject(NotificationService);
   formBuilder = inject(FormBuilder);
   currentPageService: CurrentPageService = inject(CurrentPageService);
+  activatedRoute = inject(ActivatedRoute); // 注入 ActivatedRoute
+  previousRoute: string | null = null; // 新增用於儲存前一個路由的屬性
   // ----------------------------------------------------------------
   get isFormEditable(): boolean {
     return (this.crudstatus === CRUDStatus.Edit && this.canEdit());
@@ -55,6 +57,7 @@ export class BasicCruPageComponent<T> {
     this.currentPageService.setCurrentProgNo(this.ProgNo);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     const state = this.router.lastSuccessfulNavigation?.extras.state;
+    this.previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/dashboard';
     this.rowdata = state?.['rowdata'];
     console.log(this.rowdata);
     switch (state?.['crudstatus']) {
@@ -106,5 +109,8 @@ export class BasicCruPageComponent<T> {
         });
       }
     });
+  }
+  onCancel() {
+    this.router.navigate([this.previousRoute]);
   }
 }

@@ -12,7 +12,6 @@ const routes: Routes = [
       { path: 'dashboard', loadChildren: () => import('./dashboard/dashboard.module').then(m => m.DashboardModule), canActivate: [AuthGuard] },
       { path: 'demo', loadChildren: () => import('./demo/demo.module').then(m => m.DemoModule), canActivate: [AuthGuard] },
       { path: 'changepsw', loadChildren: () => import('./changepsw/changepsw.module').then(m => m.ChangepswModule), canActivate: [AuthGuard] },
-
       // 1. 財務會計系統 (FIN)
       {
         path: 'FIN',
@@ -26,7 +25,6 @@ const routes: Routes = [
           { path: '7', loadChildren: () => import('./fin7000/fin7000.module').then(m => m.FIN7000Module), canActivate: [AuthGuard] }, // 1.7 零用金管理系統
         ]
       },
-
       // 2. 銷售管理系統 (TLS)
       {
         path: 'TLS',

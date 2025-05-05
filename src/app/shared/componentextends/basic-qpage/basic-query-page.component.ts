@@ -58,6 +58,7 @@ export class BasicQueryPageComponent<T> {
       state: {
         crudstatus: crudstatus,
         rowdata: rowdata,
+        fromRoute: this.router.url, // 加入 fromRoute 並設定為目前頁面的 URL
       },
     };
     this.router.navigate([pageroute || this.cruPage], extras);
