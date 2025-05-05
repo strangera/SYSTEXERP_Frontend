@@ -3,15 +3,9 @@ import { RouterModule, Routes } from '@angular/router';
 import { ChangepswComponent } from './changepsw.component';
 import { AuthGuard } from '../../service/system/auth.guard';
 
-const routes: Routes = [{
-  path: '',
-  redirectTo: 'changepsw',
-  pathMatch: 'full'
-}, {
-    path: 'changepsw',
-    component: ChangepswComponent,
-    canActivate: [AuthGuard],
-  },
+const routes: Routes = [
+  { path: '', redirectTo: 'changepsw', pathMatch: 'full' },
+  { path: '', component: ChangepswComponent, canActivate: [AuthGuard] },
 ];
 
 @NgModule({

@@ -1,8 +1,44 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TlsRoutingModule } from './tls-routing.module';
 import { SharedModule } from '../../shared/shared.module';
-import { TLS2000RoutingModule } from './tls2000-routing.module';
-//
+// Component
+import { TLS11010CRUComponent } from './tls11010-cru/tls11010-cru.component';
+import { TLS11010Component } from './tls11010/tls11010.component';
+import { TLS11020CRUComponent } from './tls11020-cru/tls11020-cru.component';
+import { TLS11020Component } from './tls11020/tls11020.component';
+import { TLS12010CRUComponent } from './tls12010-cru/tls12010-cru.component';
+import { TLS12010Component } from './tls12010/tls12010.component';
+import { TLS12020CRUComponent } from './tls12020-cru/tls12020-cru.component';
+import { TLS12020Component } from './tls12020/tls12020.component';
+import { TLS12030CRUComponent } from './tls12030-cru/tls12030-cru.component';
+import { TLS12030Component } from './tls12030/tls12030.component';
+import { TLS12040CRUComponent } from './tls12040-cru/tls12040-cru.component';
+import { TLS12040Component } from './tls12040/tls12040.component';
+import { TLS12050CRUComponent } from './tls12050-cru/tls12050-cru.component';
+import { TLS12050Component } from './tls12050/tls12050.component';
+import { TLS12060Component } from './tls12060/tls12060.component';
+import { TLS12070Component } from './tls12070/tls12070.component';
+import { TLS13010CRUComponent } from './tls13010-cru/tls13010-cru.component';
+import { TLS13010Component } from './tls13010/tls13010.component';
+import { TLS13020CRUComponent } from './tls13020-cru/tls13020-cru.component';
+import { TLS13020Component } from './tls13020/tls13020.component';
+import { TLS13030CRUComponent } from './tls13030-cru/tls13030-cru.component';
+import { TLS13030Component } from './tls13030/tls13030.component';
+import { TLS13040CRUComponent } from './tls13040-cru/tls13040-cru.component';
+import { TLS13040Component } from './tls13040/tls13040.component';
+import { TLS13050CRUComponent } from './tls13050-cru/tls13050-cru.component';
+import { TLS13050Component } from './tls13050/tls13050.component';
+import { TLS13060CRUComponent } from './tls13060-cru/tls13060-cru.component';
+import { TLS13060Component } from './tls13060/tls13060.component';
+import { TLS13070CRUComponent } from './tls13070-cru/tls13070-cru.component';
+import { TLS13070Component } from './tls13070/tls13070.component';
+import { TLS14010CRUComponent } from './tls14010-cru/tls14010-cru.component';
+import { TLS14010Component } from './tls14010/tls14010.component';
+import { TLS14020CRUComponent } from './tls14020-cru/tls14020-cru.component';
+import { TLS14020Component } from './tls14020/tls14020.component';
+import { TLS13010Next1Component } from './tls13010-next1/tls13010-next1.component';
+import { TLS13010Next2Component } from './tls13010-next2/tls13010-next2.component';
 import { TLS21010CRUComponent } from './tls21010-cru/tls21010-cru.component';
 import { TLS21010Component } from './tls21010/tls21010.component';
 import { TLS21020CRUComponent } from './tls21020-cru/tls21020-cru.component';
@@ -198,9 +234,205 @@ import { TLS25010ModComponent } from './tls25010-mod/tls25010-mod.component';
 import { TLS25020ModComponent } from './tls25020-mod/tls25020-mod.component';
 import { TLS25030ModComponent } from './tls25030-mod/tls25030-mod.component';
 import { TLS26040ModComponent } from './tls26040-mod/tls26040-mod.component';
+import { TLS31010Component } from './tls31010/tls31010.component';
+import { TLS31020Component } from './tls31020/tls31020.component';
+import { TLS31030Component } from './tls31030/tls31030.component';
+import { TLS31040Component } from './tls31040/tls31040.component';
+import { TLS31050Component } from './tls31050/tls31050.component';
+import { TLS31060Component } from './tls31060/tls31060.component';
+import { TLS31070Component } from './tls31070/tls31070.component';
+import { TLS31080Component } from './tls31080/tls31080.component';
+import { TLS31090Component } from './tls31090/tls31090.component';
+import { TLS32010Component } from './tls32010/tls32010.component';
+import { TLS32020Component } from './tls32020/tls32020.component';
+import { TLS32030Component } from './tls32030/tls32030.component';
+import { TLS32040Component } from './tls32040/tls32040.component';
+import { TLS32050Component } from './tls32050/tls32050.component';
+import { TLS32060Component } from './tls32060/tls32060.component';
+import { TLS41010CRUComponent } from './tls41010-cru/tls41010-cru.component';
+import { TLS41010Component } from './tls41010/tls41010.component';
+import { TLS41020CRUComponent } from './tls41020-cru/tls41020-cru.component';
+import { TLS41020Component } from './tls41020/tls41020.component';
+import { TLS41030CRUComponent } from './tls41030-cru/tls41030-cru.component';
+import { TLS41030Component } from './tls41030/tls41030.component';
+import { TLS41040CRUComponent } from './tls41040-cru/tls41040-cru.component';
+import { TLS41040Component } from './tls41040/tls41040.component';
+import { TLS41050CRUComponent } from './tls41050-cru/tls41050-cru.component';
+import { TLS41050Component } from './tls41050/tls41050.component';
+import { TLS41060CRUComponent } from './tls41060-cru/tls41060-cru.component';
+import { TLS41060Component } from './tls41060/tls41060.component';
+import { TLS42010CRUComponent } from './tls42010-cru/tls42010-cru.component';
+import { TLS42010Component } from './tls42010/tls42010.component';
+import { TLS42020CRUComponent } from './tls42020-cru/tls42020-cru.component';
+import { TLS42020Component } from './tls42020/tls42020.component';
+import { TLS43010CRUComponent } from './tls43010-cru/tls43010-cru.component';
+import { TLS43010Component } from './tls43010/tls43010.component';
+import { TLS43020CRUComponent } from './tls43020-cru/tls43020-cru.component';
+import { TLS43020Component } from './tls43020/tls43020.component';
+import { TLS43030CRUComponent } from './tls43030-cru/tls43030-cru.component';
+import { TLS43030Component } from './tls43030/tls43030.component';
+import { TLS43040CRUComponent } from './tls43040-cru/tls43040-cru.component';
+import { TLS43040Component } from './tls43040/tls43040.component';
+import { TLS43050CRUComponent } from './tls43050-cru/tls43050-cru.component';
+import { TLS43050Component } from './tls43050/tls43050.component';
+import { TLS44010CRUComponent } from './tls44010-cru/tls44010-cru.component';
+import { TLS44010Component } from './tls44010/tls44010.component';
+import { TLS44020CRUComponent } from './tls44020-cru/tls44020-cru.component';
+import { TLS44020Component } from './tls44020/tls44020.component';
+import { TLS45010CRUComponent } from './tls45010-cru/tls45010-cru.component';
+import { TLS45010Component } from './tls45010/tls45010.component';
+import { TLS45020CRUComponent } from './tls45020-cru/tls45020-cru.component';
+import { TLS45020Component } from './tls45020/tls45020.component';
+import { TLS45030CRUComponent } from './tls45030-cru/tls45030-cru.component';
+import { TLS45030Component } from './tls45030/tls45030.component';
+import { TLS46010CRUComponent } from './tls46010-cru/tls46010-cru.component';
+import { TLS46010Component } from './tls46010/tls46010.component';
+import { TLS46020CRUComponent } from './tls46020-cru/tls46020-cru.component';
+import { TLS46020Component } from './tls46020/tls46020.component';
+import { TLS46030CRUComponent } from './tls46030-cru/tls46030-cru.component';
+import { TLS46030Component } from './tls46030/tls46030.component';
+import { TLS46040CRUComponent } from './tls46040-cru/tls46040-cru.component';
+import { TLS46040Component } from './tls46040/tls46040.component';
+import { TLS46050CRUComponent } from './tls46050-cru/tls46050-cru.component';
+import { TLS46050Component } from './tls46050/tls46050.component';
+import { TLS46060CRUComponent } from './tls46060-cru/tls46060-cru.component';
+import { TLS46060Component } from './tls46060/tls46060.component';
+import { TLS47010CRUComponent } from './tls47010-cru/tls47010-cru.component';
+import { TLS47010Component } from './tls47010/tls47010.component';
+import { TLS51010CRUComponent } from './tls51010-cru/tls51010-cru.component';
+import { TLS51010Component } from './tls51010/tls51010.component';
+import { TLS51020CRUComponent } from './tls51020-cru/tls51020-cru.component';
+import { TLS51020Component } from './tls51020/tls51020.component';
+import { TLS51030CRUComponent } from './tls51030-cru/tls51030-cru.component';
+import { TLS51030Component } from './tls51030/tls51030.component';
+import { TLS51040CRUComponent } from './tls51040-cru/tls51040-cru.component';
+import { TLS51040Component } from './tls51040/tls51040.component';
+import { TLS51050CRUComponent } from './tls51050-cru/tls51050-cru.component';
+import { TLS51050Component } from './tls51050/tls51050.component';
+import { TLS51060CRUComponent } from './tls51060-cru/tls51060-cru.component';
+import { TLS51060Component } from './tls51060/tls51060.component';
+import { TLS51070CRUComponent } from './tls51070-cru/tls51070-cru.component';
+import { TLS51070Component } from './tls51070/tls51070.component';
+import { TLS51080CRUComponent } from './tls51080-cru/tls51080-cru.component';
+import { TLS51080Component } from './tls51080/tls51080.component';
+import { TLS51090CRUComponent } from './tls51090-cru/tls51090-cru.component';
+import { TLS51090Component } from './tls51090/tls51090.component';
+import { TLS51100CRUComponent } from './tls51100-cru/tls51100-cru.component';
+import { TLS51100Component } from './tls51100/tls51100.component';
+import { TLS51110CRUComponent } from './tls51110-cru/tls51110-cru.component';
+import { TLS51110Component } from './tls51110/tls51110.component';
+import { TLS51120CRUComponent } from './tls51120-cru/tls51120-cru.component';
+import { TLS51120Component } from './tls51120/tls51120.component';
+import { TLS51130CRUComponent } from './tls51130-cru/tls51130-cru.component';
+import { TLS51130Component } from './tls51130/tls51130.component';
+import { TLS52010CRUComponent } from './tls52010-cru/tls52010-cru.component';
+import { TLS52010Component } from './tls52010/tls52010.component';
+import { TLS52020CRUComponent } from './tls52020-cru/tls52020-cru.component';
+import { TLS52020Component } from './tls52020/tls52020.component';
+import { TLS52030CRUComponent } from './tls52030-cru/tls52030-cru.component';
+import { TLS52030Component } from './tls52030/tls52030.component';
+import { TLS52040CRUComponent } from './tls52040-cru/tls52040-cru.component';
+import { TLS52040Component } from './tls52040/tls52040.component';
+import { TLS52050CRUComponent } from './tls52050-cru/tls52050-cru.component';
+import { TLS52050Component } from './tls52050/tls52050.component';
+import { TLS52060CRUComponent } from './tls52060-cru/tls52060-cru.component';
+import { TLS52060Component } from './tls52060/tls52060.component';
+import { TLS52070CRUComponent } from './tls52070-cru/tls52070-cru.component';
+import { TLS52070Component } from './tls52070/tls52070.component';
+import { TLS53010CRUComponent } from './tls53010-cru/tls53010-cru.component';
+import { TLS53010Component } from './tls53010/tls53010.component';
+import { TLS53020CRUComponent } from './tls53020-cru/tls53020-cru.component';
+import { TLS53020Component } from './tls53020/tls53020.component';
+import { TLS53030CRUComponent } from './tls53030-cru/tls53030-cru.component';
+import { TLS53030Component } from './tls53030/tls53030.component';
+import { TLS53040CRUComponent } from './tls53040-cru/tls53040-cru.component';
+import { TLS53040Component } from './tls53040/tls53040.component';
+import { TLS54010CRUComponent } from './tls54010-cru/tls54010-cru.component';
+import { TLS54010Component } from './tls54010/tls54010.component';
+import { TLS55010CRUComponent } from './tls55010-cru/tls55010-cru.component';
+import { TLS55010Component } from './tls55010/tls55010.component';
+import { TLS55020CRUComponent } from './tls55020-cru/tls55020-cru.component';
+import { TLS55020Component } from './tls55020/tls55020.component';
+import { TLS55030CRUComponent } from './tls55030-cru/tls55030-cru.component';
+import { TLS55030Component } from './tls55030/tls55030.component';
+import { TLS55040CRUComponent } from './tls55040-cru/tls55040-cru.component';
+import { TLS55040Component } from './tls55040/tls55040.component';
+import { TLS55050CRUComponent } from './tls55050-cru/tls55050-cru.component';
+import { TLS55050Component } from './tls55050/tls55050.component';
+import { TLS55060CRUComponent } from './tls55060-cru/tls55060-cru.component';
+import { TLS55060Component } from './tls55060/tls55060.component';
+import { TLS56010CRUComponent } from './tls56010-cru/tls56010-cru.component';
+import { TLS56010Component } from './tls56010/tls56010.component';
+import { TLS56020CRUComponent } from './tls56020-cru/tls56020-cru.component';
+import { TLS56020Component } from './tls56020/tls56020.component';
+import { TLS56030CRUComponent } from './tls56030-cru/tls56030-cru.component';
+import { TLS56030Component } from './tls56030/tls56030.component';
+import { TLS56040CRUComponent } from './tls56040-cru/tls56040-cru.component';
+import { TLS56040Component } from './tls56040/tls56040.component';
+import { TLS56050CRUComponent } from './tls56050-cru/tls56050-cru.component';
+import { TLS56050Component } from './tls56050/tls56050.component';
+import { TLS56060CRUComponent } from './tls56060-cru/tls56060-cru.component';
+import { TLS56060Component } from './tls56060/tls56060.component';
+import { TLS56070CRUComponent } from './tls56070-cru/tls56070-cru.component';
+import { TLS56070Component } from './tls56070/tls56070.component';
+import { TLS56080CRUComponent } from './tls56080-cru/tls56080-cru.component';
+import { TLS56080Component } from './tls56080/tls56080.component';
+import { TLS57010Component } from './tls57010/tls57010.component';
+import { TLS57020Component } from './tls57020/tls57020.component';
+import { TLS57030Component } from './tls57030/tls57030.component';
+import { TLS57040Component } from './tls57040/tls57040.component';
+import { TLS57050Component } from './tls57050/tls57050.component';
+import { TLS57060Component } from './tls57060/tls57060.component';
+import { TLS57070Component } from './tls57070/tls57070.component';
+import { TLS57080Component } from './tls57080/tls57080.component';
+import { TLS57090Component } from './tls57090/tls57090.component';
+import { TLS57100Component } from './tls57100/tls57100.component';
+import { TLS57110Component } from './tls57110/tls57110.component';
+import { TLS57120Component } from './tls57120/tls57120.component';
+import { TLS57130Component } from './tls57130/tls57130.component';
+import { TLS57140Component } from './tls57140/tls57140.component';
+import { TLS57150Component } from './tls57150/tls57150.component';
+import { TLS57160Component } from './tls57160/tls57160.component';
+import { TLS57170Component } from './tls57170/tls57170.component';
 
 @NgModule({
   declarations: [
+    TLS11010Component,
+    TLS11020Component,
+    TLS12010Component,
+    TLS12020Component,
+    TLS12030Component,
+    TLS12040Component,
+    TLS12050Component,
+    TLS12060Component,
+    TLS12070Component,
+    TLS13010Component,
+    TLS13020Component,
+    TLS13030Component,
+    TLS13040Component,
+    TLS13050Component,
+    TLS13060Component,
+    TLS13070Component,
+    TLS14010Component,
+    TLS14020Component,
+    TLS11010CRUComponent,
+    TLS11020CRUComponent,
+    TLS12010CRUComponent,
+    TLS12020CRUComponent,
+    TLS12030CRUComponent,
+    TLS12040CRUComponent,
+    TLS12050CRUComponent,
+    TLS13010CRUComponent,
+    TLS13020CRUComponent,
+    TLS13030CRUComponent,
+    TLS13040CRUComponent,
+    TLS13050CRUComponent,
+    TLS13060CRUComponent,
+    TLS13070CRUComponent,
+    TLS14010CRUComponent,
+    TLS14020CRUComponent,
+    TLS13010Next1Component,
+    TLS13010Next2Component,
     TLS21010Component,
     TLS21020Component,
     TLS21030Component,
@@ -395,13 +627,172 @@ import { TLS26040ModComponent } from './tls26040-mod/tls26040-mod.component';
     TLS25010ModComponent,
     TLS25020ModComponent,
     TLS25030ModComponent,
-    TLS26040ModComponent
+    TLS26040ModComponent,
+    TLS31010Component,
+    TLS31020Component,
+    TLS31030Component,
+    TLS31040Component,
+    TLS31050Component,
+    TLS31060Component,
+    TLS31070Component,
+    TLS31080Component,
+    TLS31090Component,
+    TLS32010Component,
+    TLS32020Component,
+    TLS32030Component,
+    TLS32040Component,
+    TLS32050Component,
+    TLS32060Component,
+    TLS41010Component,
+    TLS41020Component,
+    TLS41030Component,
+    TLS41040Component,
+    TLS41050Component,
+    TLS41060Component,
+    TLS42010Component,
+    TLS42020Component,
+    TLS43010Component,
+    TLS43020Component,
+    TLS43030Component,
+    TLS43040Component,
+    TLS43050Component,
+    TLS44010Component,
+    TLS44020Component,
+    TLS45010Component,
+    TLS45020Component,
+    TLS45030Component,
+    TLS46010Component,
+    TLS46020Component,
+    TLS46030Component,
+    TLS46040Component,
+    TLS46050Component,
+    TLS46060Component,
+    TLS47010Component,
+    TLS41010CRUComponent,
+    TLS41020CRUComponent,
+    TLS41030CRUComponent,
+    TLS41040CRUComponent,
+    TLS41050CRUComponent,
+    TLS41060CRUComponent,
+    TLS42010CRUComponent,
+    TLS42020CRUComponent,
+    TLS43010CRUComponent,
+    TLS43020CRUComponent,
+    TLS43030CRUComponent,
+    TLS43040CRUComponent,
+    TLS43050CRUComponent,
+    TLS44010CRUComponent,
+    TLS44020CRUComponent,
+    TLS45010CRUComponent,
+    TLS45020CRUComponent,
+    TLS45030CRUComponent,
+    TLS46010CRUComponent,
+    TLS46020CRUComponent,
+    TLS46030CRUComponent,
+    TLS46040CRUComponent,
+    TLS46050CRUComponent,
+    TLS46060CRUComponent,
+    TLS47010CRUComponent,
+    TLS51010Component,
+    TLS51020Component,
+    TLS51030Component,
+    TLS51040Component,
+    TLS51050Component,
+    TLS51060Component,
+    TLS51070Component,
+    TLS51080Component,
+    TLS51090Component,
+    TLS51100Component,
+    TLS51110Component,
+    TLS51120Component,
+    TLS51130Component,
+    TLS52010Component,
+    TLS52020Component,
+    TLS52030Component,
+    TLS52040Component,
+    TLS52050Component,
+    TLS52060Component,
+    TLS52070Component,
+    TLS53010Component,
+    TLS53020Component,
+    TLS53030Component,
+    TLS53040Component,
+    TLS54010Component,
+    TLS55010Component,
+    TLS55020Component,
+    TLS55030Component,
+    TLS55040Component,
+    TLS55050Component,
+    TLS55060Component,
+    TLS56010Component,
+    TLS56020Component,
+    TLS56030Component,
+    TLS56040Component,
+    TLS56050Component,
+    TLS56060Component,
+    TLS56070Component,
+    TLS56080Component,
+    TLS57010Component,
+    TLS57020Component,
+    TLS57030Component,
+    TLS57040Component,
+    TLS57050Component,
+    TLS57060Component,
+    TLS57070Component,
+    TLS57080Component,
+    TLS57090Component,
+    TLS57100Component,
+    TLS57110Component,
+    TLS57120Component,
+    TLS57130Component,
+    TLS57140Component,
+    TLS57150Component,
+    TLS57160Component,
+    TLS57170Component,
+    TLS51010CRUComponent,
+    TLS51020CRUComponent,
+    TLS51030CRUComponent,
+    TLS51040CRUComponent,
+    TLS51050CRUComponent,
+    TLS51060CRUComponent,
+    TLS51070CRUComponent,
+    TLS51080CRUComponent,
+    TLS51090CRUComponent,
+    TLS51100CRUComponent,
+    TLS51110CRUComponent,
+    TLS51120CRUComponent,
+    TLS51130CRUComponent,
+    TLS52010CRUComponent,
+    TLS52020CRUComponent,
+    TLS52030CRUComponent,
+    TLS52040CRUComponent,
+    TLS52050CRUComponent,
+    TLS52060CRUComponent,
+    TLS52070CRUComponent,
+    TLS53010CRUComponent,
+    TLS53020CRUComponent,
+    TLS53030CRUComponent,
+    TLS53040CRUComponent,
+    TLS54010CRUComponent,
+    TLS55010CRUComponent,
+    TLS55020CRUComponent,
+    TLS55030CRUComponent,
+    TLS55040CRUComponent,
+    TLS55050CRUComponent,
+    TLS55060CRUComponent,
+    TLS56010CRUComponent,
+    TLS56020CRUComponent,
+    TLS56030CRUComponent,
+    TLS56040CRUComponent,
+    TLS56050CRUComponent,
+    TLS56060CRUComponent,
+    TLS56070CRUComponent,
+    TLS56080CRUComponent,
   ],
   imports: [
     CommonModule,
-    TLS2000RoutingModule,
-    SharedModule,
+    TlsRoutingModule,
+    SharedModule
   ]
 })
-// 2.2 專櫃營運管理
-export class TLS2000Module { }
+export class TlsModule { }

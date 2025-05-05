@@ -26,16 +26,7 @@ const routes: Routes = [
         ]
       },
       // 2. 銷售管理系統 (TLS)
-      {
-        path: 'TLS',
-        children: [
-          { path: '1', loadChildren: () => import('./tls1000/tls1000.module').then(m => m.TLS1000Module), canActivate: [AuthGuard] }, // 2.1 招商暨合約系統
-          { path: '2', loadChildren: () => import('./tls2000/tls2000.module').then(m => m.TLS2000Module), canActivate: [AuthGuard] }, // 2.2 專櫃營運管理
-          { path: '3', loadChildren: () => import('./tls3000/tls3000.module').then(m => m.TLS3000Module), canActivate: [AuthGuard] }, // 2.3 決策支援管理-營運管理及銷售分析報表
-          { path: '4', loadChildren: () => import('./tls4000/tls4000.module').then(m => m.TLS4000Module), canActivate: [AuthGuard] }, // 2.4 POS網管系統
-          { path: '5', loadChildren: () => import('./tls5000/tls5000.module').then(m => m.TLS5000Module), canActivate: [AuthGuard] }, // 2.5 自營管理系統
-        ]
-      },
+      { path: 'TLS', loadChildren: () => import('./tls/tls.module').then(m => m.TlsModule), canActivate: [AuthGuard] },
 
       // 3. 資產管理系統 (ASS)
       {
