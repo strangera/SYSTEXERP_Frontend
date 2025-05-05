@@ -21,13 +21,7 @@ const routes: Routes = [
       // 4. 系統管理 (SYS)
       { path: 'SYS', loadChildren: () => import('./sys/sys.module').then(m => m.SysModule), canActivate: [AuthGuard] },
       // 5. 客戶關係管理 (CPM)
-      {
-        path: 'CPM',
-        children: [
-          { path: '1', loadChildren: () => import('./cpm1000/cpm1000.module').then(m => m.CPM1000Module), canActivate: [AuthGuard] }, // 5.1 客服客訴系統
-          { path: '2', loadChildren: () => import('./cpm2000/cpm2000.module').then(m => m.CPM2000Module), canActivate: [AuthGuard] }, // 5.2 行銷活動管理系統
-        ]
-      },
+      { path: 'CPM', loadChildren: () => import('./cpm/cpm.module').then(m => m.CpmModule), canActivate: [AuthGuard] },
       {
         path: '**',
         loadChildren: () => import('./notfound/notfound.module').then(m => m.NotfoundModule),
