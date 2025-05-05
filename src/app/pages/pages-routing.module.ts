@@ -16,15 +16,8 @@ const routes: Routes = [
       { path: 'FIN', loadChildren: () => import('./fin/fin.module').then(m => m.FinModule), canActivate: [AuthGuard] },
       // 2. 銷售管理系統 (TLS)
       { path: 'TLS', loadChildren: () => import('./tls/tls.module').then(m => m.TlsModule), canActivate: [AuthGuard] },
-
       // 3. 資產管理系統 (ASS)
-      {
-        path: 'ASS',
-        children: [
-          { path: '1', loadChildren: () => import('./ass1000/ass1000.module').then(m => m.ASS1000Module), canActivate: [AuthGuard] }, // 3.1 資材管理系統
-          { path: '2', loadChildren: () => import('./ass2000/ass2000.module').then(m => m.ASS2000Module), canActivate: [AuthGuard] }, // 3.2 能源管理系統
-        ]
-      },
+      { path: 'ASS', loadChildren: () => import('./ass/ass.module').then(m => m.AssModule), canActivate: [AuthGuard] },
       // 4. 系統管理 (SYS)
       { path: 'SYS', loadChildren: () => import('./sys/sys.module').then(m => m.SysModule), canActivate: [AuthGuard] },
       // 5. 客戶關係管理 (CPM)
