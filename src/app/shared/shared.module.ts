@@ -108,6 +108,7 @@ import { TableComponent } from './componentkit/table/table.component';
 import { TableExpansionComponent } from './componentkit/table/table-expansion/table-expansion.component';
 import { DialogComponent } from './componentkit/dialog/dialog.component';
 import { TreeDropdownComponent } from './componentkit/tree-dropdown/tree-dropdown.component';
+import { InputTextareaComponent } from './componentkit/input-textarea/input-textarea.component';
 
 @NgModule({
   declarations: [
@@ -125,6 +126,7 @@ import { TreeDropdownComponent } from './componentkit/tree-dropdown/tree-dropdow
     TableExpansionComponent,
     DialogComponent,
     TreeDropdownComponent,
+    InputTextareaComponent,
 
     ButtonDynamicallyaddComponent,
     ButtonDynamicallydeleteComponent,
@@ -312,6 +314,7 @@ import { TreeDropdownComponent } from './componentkit/tree-dropdown/tree-dropdow
     InputTextComponent,
     DialogComponent,
     TreeDropdownComponent,
+    InputTextareaComponent,
     InputNumberComponent,
     InputNumberRangeComponent,
     FileUploadComponent,

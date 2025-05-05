@@ -12,6 +12,7 @@ import { Column } from '../../../shared/componentkit/table/table.model';
 export class InputTableComponent extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     text: ['', [Validators.required, Validators.maxLength(13)]], // Input Text
+    textarea: ['', [Validators.required, Validators.maxLength(13)]], // Input Textarea
     number: [null, [Validators.required, Validators.maxLength(13)]], // Input number
     number1: [null, [Validators.required, Validators.maxLength(13)]], // Input number
     number2: [null, [Validators.required, Validators.maxLength(13)]], // Input number
@@ -80,7 +81,7 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
   }
 
   // dialog==================================
-  visibleDialog = true;
+  visibleDialog = false;
   dialogForm = this.formBuilder.group({
     CashRegisterCode: ['', [Validators.maxLength(13)]], // 收銀機代號
     counterCode: ['', [Validators.maxLength(13)]], // 專櫃編號

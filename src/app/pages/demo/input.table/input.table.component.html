@@ -11,8 +11,8 @@
         <div class="grid p-fluid">
           <app-input-text class="col-12 md:col-6 lg:col-5" label="文字輸入" controlName="text"
             [control]="queryForm.controls.text" [submitted]="submitted" />
-        </div>
-        <div class="grid p-fluid">
+          <app-input-textarea class="col-12 md:col-6 lg:col-5" label="長文字輸入" controlName="textarea"
+            [control]="queryForm.controls.textarea" [submitted]="submitted" />
           <app-input-number class="col-12 md:col-6 lg:col-5" label="數字輸入" controlName="number"
             [control]="queryForm.controls.number" [submitted]="submitted" />
           <app-input-number-range class="col-12 md:col-6 lg:col-5" label="數字輸入(範圍)"
