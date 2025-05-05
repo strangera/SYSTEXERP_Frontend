@@ -31,18 +31,18 @@ import { RippleModule } from 'primeng/ripple';
 import { SplitButtonModule } from 'primeng/splitbutton';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
-import { AutoCompleteModule } from "primeng/autocomplete";
-import { ChipsModule } from "primeng/chips";
-import { InputMaskModule } from "primeng/inputmask";
-import { InputNumberModule } from "primeng/inputnumber";
-import { CascadeSelectModule } from "primeng/cascadeselect";
-import { InputTextareaModule } from "primeng/inputtextarea";
-import { InputTextModule } from "primeng/inputtext";
-import { PasswordModule } from "primeng/password";
+import { AutoCompleteModule } from 'primeng/autocomplete';
+import { ChipsModule } from 'primeng/chips';
+import { InputMaskModule } from 'primeng/inputmask';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { CascadeSelectModule } from 'primeng/cascadeselect';
+import { InputTextareaModule } from 'primeng/inputtextarea';
+import { InputTextModule } from 'primeng/inputtext';
+import { PasswordModule } from 'primeng/password';
 import { MessagesModule } from 'primeng/messages';
 import { AccordionModule } from 'primeng/accordion';
-import { TreeTableModule } from "primeng/treetable";
-import { CalendarModule } from "primeng/calendar";
+import { TreeTableModule } from 'primeng/treetable';
+import { CalendarModule } from 'primeng/calendar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ListboxModule } from 'primeng/listbox';
 import { PickListModule } from 'primeng/picklist';
@@ -107,6 +107,7 @@ import { CalendarRangeComponent } from './componentkit/calendar-range/calendar-r
 import { TableComponent } from './componentkit/table/table.component';
 import { TableExpansionComponent } from './componentkit/table/table-expansion/table-expansion.component';
 import { TreeDialogComponent } from './componentkit/tree-dialog/tree-dialog.component';
+import { TreeDropdownComponent } from './componentkit/tree-dropdown/tree-dropdown.component';
 
 @NgModule({
   declarations: [
@@ -123,6 +124,7 @@ import { TreeDialogComponent } from './componentkit/tree-dialog/tree-dialog.comp
     TableComponent,
     TableExpansionComponent,
     TreeDialogComponent,
+    TreeDropdownComponent,
 
     ButtonDynamicallyaddComponent,
     ButtonDynamicallydeleteComponent,
@@ -222,7 +224,7 @@ import { TreeDialogComponent } from './componentkit/tree-dialog/tree-dialog.comp
     EditorModule,
     TranslateModule,
 
-    OrganizationChartModule
+    OrganizationChartModule,
   ],
   exports: [
     NgChartsModule,
@@ -309,6 +311,7 @@ import { TreeDialogComponent } from './componentkit/tree-dialog/tree-dialog.comp
     ButtonDynamicallydeleteComponent,
     InputTextComponent,
     TreeDialogComponent,
+    TreeDropdownComponent,
     InputNumberComponent,
     InputNumberRangeComponent,
     FileUploadComponent,
@@ -331,7 +334,7 @@ import { TreeDialogComponent } from './componentkit/tree-dialog/tree-dialog.comp
     FloatLabelModule,
     EditorModule,
 
-    OrganizationChartModule
+    OrganizationChartModule,
   ],
 })
-export class SharedModule { }
+export class SharedModule {}

@@ -37,6 +37,36 @@ export class Sysb100m {
   'UPD_USR_Name': string;
 }
 
+export class Sysb200m {
+  'manufacturerID': string;
+  'approvalStatus': string;
+  'manufacturerUID': string;
+  'manufacturerCName': string;
+  'manufacturerEName': Date;
+  'manufacturerSName': string;
+  'mailingAddress': string;
+  'contactPerson': Date;
+  'contactPersonTitle': string;
+  'contactPersonUID': string;
+  'contactPersonPhone': string;
+  'contactAddress': string;
+  'contactEmail': string;
+  'registeredAddress': string;
+  'registeredPhone': Date;
+  'companyFax': string;
+  'companyWebsite': string;
+  'systemtype': Date;
+  'remark': string;
+  'expirationDay': string;
+  'remittanceBankCode': string;
+  'CRT_Date': Date;
+  'CRT_USR_No': string;
+  'CRT_USR_Name': string;
+  'UPD_Date': Date;
+  'UPD_USR_No': string;
+  'UPD_USR_Name': string;
+}
+
 export class Sysb300m {
   'id': string;
   'level_id': string;

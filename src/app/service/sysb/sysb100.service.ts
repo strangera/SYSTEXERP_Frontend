@@ -25,4 +25,9 @@ export class Sysb100Service {
   updateSYSB100(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateSYSB100`, body);
   }
+
+  // 刪除 POS1001 資料表
+  deleteSYSB100(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deleteSYSB100`, body);
+  }
 }

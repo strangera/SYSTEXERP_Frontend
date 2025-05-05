@@ -110,25 +110,37 @@ export class SYSB100Component
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSB100', '/SYSB000/SYSB100CRU');
+    this.initializePage('SYSB100', 'SYS/SYSB100CRU');
+
+    // 恢復查詢狀態並自動查詢
+    this.handleQueryRestore(this.queryForm, storageKey, (form) =>
+      this.onSubmit(form),
+    );
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid) {
-      this.sysb100Service.querySYSB100(frm.value).subscribe((response) => {
-        this.data = response.Data;
-        console.log('查詢結果', this.data);
-        this.loading = false;
+    this.handleSubmit(frm, () => {
+      this.sysb100Service.querySYSB100(frm.value).subscribe({
+        next: (response: any) => {
+          console.log('API response:', response);
+          if (response.Status === '0000') {
+            this.data = response.Data || [];
+            this.filteredData = [...this.data];
+            this.totalRecords = response.TotalCount || response.Data.length;
+            this.queryStateService.setQueryState(storageKey, frm.value);
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
       });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    });
   }
 
   onSubmitQuery(frm: FormGroup) {
@@ -137,15 +149,13 @@ export class SYSB100Component
   }
 
   onClearForm() {
-    // this.queryForm.reset(); // 重置表單
-
     this.queryForm.reset();
     // this.pageIndex = 0;
     this.data = [];
     this.filteredData = [];
     // this.lastQueryParams = null;
     this.totalRecords = 0;
-    // this.sortField = 'CAT_LNo';
+    // this.sortField = 'SYS_StoreNo';
     // this.sortOrder = 1;
     // 清空儲存的查詢狀態
     this.queryStateService.clearQueryState(storageKey);
@@ -176,28 +186,26 @@ export class SYSB100Component
       return;
     }
 
-    // 構建新的 requestBody 格式
-    // const requestBody = {
-    //   idList: idList, // 符合 API 的 idList 格式
-    // };
-    // 調用 API
-    // this.apiService.deleteTLS51010(requestBody).subscribe({
-    //   next: (response: any) => {
-    //     if (response.Status === '0000') {
-    //       this.messageService.successBubble('選中項目刪除成功');
-    //     } else {
-    //       console.error('API error:', response.Status, response.Message);
-    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-    //     }
-    //   },
-    //   error: (err: string) => {
-    //     console.error('API error:', err);
-    //     this.messageService.errorBubble('刪除失敗');
-    //   },
-    //   complete: () => {
-    //     this.onSubmit(this.queryForm);
-    //   },
-    // });
+    const deleteBody = {
+      idList: idList, // 符合 API 的 idList 格式
+    };
+    this.sysb100Service.deleteSYSB100(deleteBody).subscribe({
+      next: (response: any) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('選中項目刪除成功');
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        }
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗');
+      },
+      complete: () => {
+        this.onSubmit(this.queryForm);
+      },
+    });
 
     this.selectedItems = [];
   }
@@ -209,7 +217,7 @@ export class SYSB100Component
     }
     form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
     form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'CAT_LNo', order: 1 }];
+    form.SortBy = event.multiSortMeta ?? [{ field: 'SYS_StoreNo', order: 1 }];
     this.onSubmit(this.queryForm);
   }
 }
