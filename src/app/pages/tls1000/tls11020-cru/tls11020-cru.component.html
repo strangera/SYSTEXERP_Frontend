@@ -11,8 +11,10 @@
             <div class="col-12 md:col-6 lg:col-10"></div>
             <div class="col-12 md:col-6 lg:col-2">
                 <div class="flex justify-content-end">
-                  <button pButton type="button" label="新增" icon="pi pi-plus" class="p-button-success"
-                          (click)="addItem()"></button>
+               
+                          <div *appHasPermission="addPermission">
+                            <app-button btnType="create" (click)="addItem()" class="col"></app-button>
+                        </div>
                 </div>
               </div>
           <div class="col-12 md:col-6 lg:col-4">
