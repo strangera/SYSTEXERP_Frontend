@@ -21,7 +21,7 @@ export class SYSB100CRUComponent
     SYS_StoreName: ['', [Validators.required, Validators.maxLength(60)]], // 公司名稱(中文)
     SYS_StoreNameENG: ['', [Validators.maxLength(60)]], // 公司名稱(英文)
 
-    STR_Uniform: [, [Validators.maxLength(8)]], // 統一編號
+    STR_Uniform: [, [Validators.required, Validators.maxLength(8)]], // 統一編號
     STO_TaxNo: [, [Validators.required, Validators.maxLength(9)]], // 稅籍編號
     STO_ManagerName: ['', [Validators.required, Validators.maxLength(12)]], // 負責人
 
@@ -30,9 +30,9 @@ export class SYSB100CRUComponent
     STO_ContactFax: ['', [Validators.required, Validators.maxLength(15)]], // 聯絡人傳真
 
     STO_Addr: ['', [Validators.required, Validators.maxLength(100)]], // 公司(營業處)地址(中文)
-    STO_AddrENG: ['', [Validators.required, Validators.maxLength(100)]], // 公司(營業處)地址(英文)
+    STO_AddrENG: ['', [Validators.maxLength(100)]], // 公司(營業處)地址(英文)
     STO_RegAddr: ['', [Validators.required, Validators.maxLength(100)]], // 公司登記地址(中文)
-    STO_RegAddrENG: ['', [Validators.required, Validators.maxLength(100)]], //公司登記地址(英文)
+    STO_RegAddrENG: ['', [Validators.maxLength(100)]], //公司登記地址(英文)
     STO_BRN: [, [Validators.maxLength(10)]], // 營業登記證號
     STO_PostCode: [, [Validators.required, Validators.maxLength(5)]], // 郵遞區號
 
