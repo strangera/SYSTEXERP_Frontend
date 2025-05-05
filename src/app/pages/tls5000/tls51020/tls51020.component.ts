@@ -1,18 +1,10 @@
 import { BigCategoryCodeService } from './../../../service/basic/big-category-code.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
-import { debounceTime } from 'rxjs';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
 import { Column } from '../../../shared/componentkit/table/table.model';
@@ -33,16 +25,6 @@ interface CategoryItem {
   CAT_LDisplay?: string; // 組合 CAT_LNo 和 CAT_LName
 }
 
-interface NavigationState {
-  crudstatus?: CRUDStatus;
-  rowdata?: any;
-  queryParams?: any;
-  pageIndex?: number;
-  pageSize?: number;
-  totalRecords?: number;
-  sortField?: string;
-  sortOrder?: number;
-}
 // 本地儲存鍵：用於儲存查詢狀態
 const storageKey = 'TLS51020';
 
@@ -98,7 +80,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('250002', '/TLS5000/TLS51020CRU');
+    this.initializePage('TLS51020', '/TLS/5/TLS51020CRU');
     // 獲取大分類代碼
     this.bigCategoryCodeService.getSystemTypes().subscribe({
       next: (response) => {

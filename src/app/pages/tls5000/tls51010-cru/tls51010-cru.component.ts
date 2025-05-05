@@ -63,8 +63,7 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   ngOnInit(): void {
     // 新增：在 ngOnInit 中調用 initializePage 設置 ProgNo 和初始化表單
-    this.initializePage('250001', this.dataForm);
-
+    this.initializePage('TLS51010', this.dataForm);
     // 移除：父類 initializePage 已處理 funInfo 和狀態邏輯
     // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     // const state = this.router.lastSuccessfulNavigation?.extras.state as {
@@ -165,6 +164,6 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         sortOrder: state?.sortOrder,
       },
     };
-    this.router.navigate(['/TLS5000/TLS51010'], extras);
+    this.router.navigate(['/TLS/5/TLS51010'], extras);
   }
 }

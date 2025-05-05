@@ -1,14 +1,8 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
+import { FormGroup, Validators } from '@angular/forms';
+import { NavigationExtras } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-//
 import { TranslateService } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-//
 import { IndustryTypeService } from '../../../service/basic/industry-type.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
@@ -51,8 +45,8 @@ export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> imp
 
   ngOnInit(): void {
     // 初始化
-    this.ProgNo = '410008';
-    this.initializePage('410008', this.dataForm);
+    // this.ProgNo = '410008';
+    this.initializePage('SYSB900', this.dataForm);
     this.industryTypeService.getSystemTypes().subscribe(data => {
       this.industryTypeOptions = data;
 
@@ -123,6 +117,6 @@ export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> imp
         sortOrder: state?.sortOrder,
       },
     };
-    this.router.navigate(['/SYSB000/SYSB900'], extras);
+    this.router.navigate(['/SYS/B/SYSB900'], extras);
   }
 }

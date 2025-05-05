@@ -45,7 +45,7 @@ export class SYSB800CRUComponent extends BasicCruPageComponent<CategoryItem> imp
 
   ngOnInit(): void {
     // this.ProgNo = '410007';
-    this.initializePage('410007', this.dataForm);
+    this.initializePage('SYSB800', this.dataForm);
 
   }
 
@@ -104,6 +104,6 @@ export class SYSB800CRUComponent extends BasicCruPageComponent<CategoryItem> imp
         sortOrder: state?.sortOrder,
       },
     };
-    this.router.navigate(['/SYSB000/SYSB800'], extras);
+    this.router.navigate(['/SYS/B/SYSB800'], extras);
   }
 }
