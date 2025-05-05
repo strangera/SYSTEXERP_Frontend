@@ -1,12 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { FormGroup, Validators } from '@angular/forms';
 import { IndustryTypeService } from '../../../service/basic/industry-type.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { SortMeta } from 'primeng/api';
 import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
@@ -72,7 +66,7 @@ export class SYSB900Component extends BasicQueryPageComponent<CategoryItem> impl
 
   ngOnInit(): void {
     // this.ProgNo = '410008';
-    this.initializePage('410008', '/SYSB000/SYSB900CRU');
+    this.initializePage('SYSB900', '/SYS/B/SYSB900CRU');
 
     this.industryTypeService.getSystemTypes().subscribe(data => {
       this.industryTypeOptions = data;

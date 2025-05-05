@@ -56,8 +56,8 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
 
   ngOnInit(): void {
     // 初始化
-   
-this.initializePage
+
+    this.initializePage
     //
     //
     this.deductionCategoryService.getDeductionCategories().subscribe(data => {
@@ -86,13 +86,13 @@ this.initializePage
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
         this.crudstatus = CRUDStatus.Create;
-     
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.crudstatus = CRUDStatus.Edit;
-       
+
         this.Edit(state.rowdata);
         break;
       // 讀檔
@@ -180,10 +180,6 @@ this.initializePage
     this.dataForm.reset();  // 重置表單
   }
 
-  onCancel() {
-    this.router.navigate(['/TLS1000/TLS11020']);
-  }
-
   confirmRemove(index: number): void {
     this.confirmationService.confirm({
       message: '確定要刪除此列資料嗎？',
@@ -196,7 +192,7 @@ this.initializePage
       }
     });
   }
-  
+
   onRemoveItem(index: number): void {
     this.items.removeAt(index);
   }
@@ -211,18 +207,18 @@ this.initializePage
     printArea: [''],
     remark: [''],
   });
-  
+
   itemList: any[] = [];
-  
+
   addItem(): void {
     this.itemList.unshift(this.inputForm.getRawValue());
     this.inputForm.reset({ deductionItemNumber: '由系統帶入', guiFlag: 'Y', capTaxType: '1', isCommonlyUsed: 'N' });
   }
-  
+
   removeItem(index: number): void {
     this.itemList.splice(index, 1);
   }
-  
+
   getLabelByValue(options: any[], value: any): string {
     return options?.find(o => o.value === value)?.label || value;
   }

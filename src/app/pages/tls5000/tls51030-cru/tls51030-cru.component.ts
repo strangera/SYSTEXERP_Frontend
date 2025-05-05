@@ -1,8 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BigCategoryCodeService } from './../../../service/basic/big-category-code.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -55,7 +53,7 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   ngOnInit(): void {
-    this.initializePage('250003', this.dataForm);
+    this.initializePage('TLS51030', this.dataForm);
     this.bigCategoryCodeService.getSystemTypes().subscribe({
       next: (response) => {
         this.bigCategoryOptions = response;

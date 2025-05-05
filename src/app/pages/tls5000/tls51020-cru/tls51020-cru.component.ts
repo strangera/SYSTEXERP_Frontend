@@ -1,12 +1,7 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { NavigationExtras, Router } from '@angular/router';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
 import { ValidationService } from '../../../shared/service/validation.service';
-//
 import { BigCategoryCodeService } from './../../../service/basic/big-category-code.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
@@ -50,7 +45,7 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   ngOnInit(): void {
-    this.initializePage('250002', this.dataForm);
+    this.initializePage('TLS51020', this.dataForm);
     this.bigCategoryCodeService.getSystemTypes().subscribe(data => {
       this.bigCategoryOptions = data;
       console.log('bigCategoryOptions:', this.bigCategoryOptions); // 調試用

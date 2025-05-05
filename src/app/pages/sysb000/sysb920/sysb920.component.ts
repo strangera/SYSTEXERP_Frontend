@@ -8,21 +8,6 @@ import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
 
-
-// id                  numeric(19,0) identity(1,1) not null,
-// bus_type            varchar(2)           not null ,     /*大分類代碼*/
-// bus_class           varchar(2)           not null ,     /*中分類(商品類別)代碼*/
-// bus_sclass          varchar(2)           not null ,     /*小分類代碼*/
-// bus_sclass_name     nvarchar(40)         not null ,     /*小分類名稱*/
-// bus_sclass_desc     nvarchar(200)            null ,     /*備註*/
-// CRT_Date            datetime                 null ,     /*建立日期*/
-// CRT_USR_No          varchar (16)             null ,     /*建立人員*/
-// CRT_USR_Name        nvarchar (20)            null ,     /*建立人員姓名*/
-// UPD_Date            datetime                 null ,     /*變更日期*/
-// UPD_USR_No          varchar (10)             null ,     /*變更人員*/
-// UPD_USR_Name        nvarchar (20)            null ,     /*變更人員姓名*/
-
-
 // 資料模型：分類項目
 interface CategoryItem {
   id: number;
@@ -90,7 +75,7 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
 
   ngOnInit(): void {
     // this.ProgNo = '410009';
-    this.initializePage('410009', '/SYSB000/SYSB920CRU');
+    this.initializePage('SYSB920', '/SYS/B/SYSB920CRU');
     this.industryTypeService.getSystemTypes().subscribe(data => {
       this.industryTypeOptions = data;
 

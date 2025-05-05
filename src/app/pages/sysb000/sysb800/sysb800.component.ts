@@ -1,11 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { FormGroup, Validators } from '@angular/forms';
 import { SortMeta } from 'primeng/api';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -66,7 +60,7 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
 
   ngOnInit(): void {
     // this.ProgNo = '410007';
-    this.initializePage('410007', '/SYSB000/SYSB800CRU');
+    this.initializePage('SYSB800', '/SYS/B/SYSB800CRU');
 
     // 恢復查詢狀態並自動查詢
     this.handleQueryRestore(this.queryForm, storageKey, (form) => this.onSubmit(form));

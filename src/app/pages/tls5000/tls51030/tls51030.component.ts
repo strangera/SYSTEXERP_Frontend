@@ -1,11 +1,6 @@
 import { BigCategoryCodeService } from './../../../service/basic/big-category-code.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+import { FormGroup, Validators } from '@angular/forms';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
@@ -87,7 +82,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('250003', '/TLS5000/TLS51030CRU');
+    this.initializePage('TLS51030', '/TLS/5/TLS51030CRU');
     // 載入大分類代碼
     this.bigCategoryCodeService.getSystemTypes().subscribe({
       next: (response) => {

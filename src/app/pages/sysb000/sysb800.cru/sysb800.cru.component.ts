@@ -45,7 +45,7 @@ export class SYSB800CRUComponent extends BasicCruPageComponent<CategoryItem> imp
 
   ngOnInit(): void {
     // this.ProgNo = '410007';
-    this.initializePage('410007', this.dataForm);
+    this.initializePage('SYSB800', this.dataForm);
 
   }
 
