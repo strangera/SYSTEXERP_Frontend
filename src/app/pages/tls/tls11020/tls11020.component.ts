@@ -1,10 +1,10 @@
-// TLS11020Component.ts
 import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { DeductionCategoryService } from '../../../service/basic/deduction-category.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-tls11020',
@@ -14,7 +14,8 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 export class TLS11020Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     deductionItemNumber: [
-      [this.validationService.numberValidator, Validators.maxLength(3)],
+      '', 
+      [this.validationService.numberValidator, Validators.maxLength(3)]
     ],
     deductionItemName: ['', [Validators.maxLength(40)]],
     deductionCategory: [[] as string[]],
@@ -57,30 +58,28 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
     if (frm.invalid) return;
     this.loading = true;
     this.messageService.blockUi();
-
+  
     const formValue = frm.value;
     const payload = {
-      CAP_Item: formValue.deductionItemNumber,
-      CAP_Type: null,
-      CAP_Name: formValue.deductionItemName,
-      AccNo: null,
-      GUI_FLAG: null,
-      CAP_TaxType: null,
-      IsCommonlyUsed: null,
-      Print_Area: null,
-      PageIndex: 1,
       PageSize: 10,
+      PageIndex: 1,
+      OrderBy: '',
+      Offset: 0,
       SortBy: [{ field: 'CAP_Item', order: 1 }],
+      CAP_Item: formValue.deductionItemNumber,
+      CAP_Type: formValue.deductionCategory, // 扣款類別
+      CAP_Name: formValue.deductionItemName,
+      CAP_Remark: formValue.remark,
     };
-
+  
     this.http
       .post<any>(
-        'https://localhost:7271/TLS0000/TLS1000/queryTLS11020',
+        `${environment.ApiUrl}/TLS0000/TLS1000/queryTLS11020`,
         payload,
       )
       .subscribe({
         next: (res) => {
-          this.data = res.Data; // <- 修正這裡，原本是 res.data
+          this.data = res.Data;
           this.messageService.successBubble('查詢成功');
         },
         error: () => this.messageService.errorBubble('查詢失敗'),
@@ -90,7 +89,6 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
         },
       });
   }
-
   onClearForm() {
     this.queryForm.reset();
   }
