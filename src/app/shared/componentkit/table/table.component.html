@@ -63,8 +63,8 @@
   <ng-template pTemplate="header" let-columns>
     <tr>
       <th class="w-1rem">序號</th>
-      <th class="w-1rem" *ngIf="IsPrint && showCheckBox && !rowEditing">
-        <p-tableHeaderCheckbox *ngIf="selectionMode === 'multiple'" />
+      <th class="w-1rem" *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
+        <p-tableHeaderCheckbox />
       </th>
       <th class="w-1rem" *ngIf="expansionDataKey && IsPrint">收合/展開</th>
       <th *ngFor="let col of columns" [pSortableColumn]="col.field" class="text-center"
@@ -83,11 +83,9 @@
       (dblclick)="detailRow(rowData)" [pEditableRow]="rowData" [pSelectableRow]="rowData"
       [pSelectableRowIndex]="rowIndex">
       <td class="text-center">{{ rowIndex + 1 }}</td>
-      <td *ngIf="IsPrint && showCheckBox && !rowEditing">
-        <p-tableCheckbox *ngIf="selectionMode === 'multiple'" class="flex justify-content-center pointer-events-none"
-          [pSelectableRow]="rowData" [value]="rowData" [disabled]="!isRowSelectable(rowData)" />
-        <p-tableRadioButton *ngIf="selectionMode === 'single'" class="flex justify-content-center pointer-events-none"
-          [pSelectableRow]="rowData" [value]="rowData" [disabled]="!isRowSelectable(rowData)" />
+      <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
+        <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
+          [value]="rowData" [disabled]="!isRowSelectable(rowData)" />
       </td>
       <td *ngIf="expansionDataKey && IsPrint" class="text-center">
         <p-button pRipple [pRowToggler]="rowData" [text]="true" [rounded]="true" [plain]="true" severity="secondary"

@@ -106,7 +106,7 @@ import { CalendarComponent } from './componentkit/calendar/calendar.component';
 import { CalendarRangeComponent } from './componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from './componentkit/table/table.component';
 import { TableExpansionComponent } from './componentkit/table/table-expansion/table-expansion.component';
-import { DialogComponent } from './componentkit/dialog/dialog.component';
+import { DropdownTableComponent } from './componentkit/dialog/dropdown-table.component';
 import { TreeDropdownComponent } from './componentkit/tree-dropdown/tree-dropdown.component';
 import { InputTextareaComponent } from './componentkit/input-textarea/input-textarea.component';
 
@@ -124,7 +124,7 @@ import { InputTextareaComponent } from './componentkit/input-textarea/input-text
     CalendarRangeComponent,
     TableComponent,
     TableExpansionComponent,
-    DialogComponent,
+    DropdownTableComponent,
     TreeDropdownComponent,
     InputTextareaComponent,
 
@@ -312,7 +312,7 @@ import { InputTextareaComponent } from './componentkit/input-textarea/input-text
     ButtonDynamicallyaddComponent,
     ButtonDynamicallydeleteComponent,
     InputTextComponent,
-    DialogComponent,
+    DropdownTableComponent,
     TreeDropdownComponent,
     InputTextareaComponent,
     InputNumberComponent,

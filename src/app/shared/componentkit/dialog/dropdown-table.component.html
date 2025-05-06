@@ -1,0 +1,30 @@
+<div class="grid p-fluid">
+  <ng-container *ngFor="let field of fieldsConfig">
+    <div class="col pb-0">
+      <ng-container *ngIf="field.mainDataField; else elseBlock">
+        <label [for]="field.field">{{ field.header }}<span *ngIf="isRequired" class="required">*</span></label>
+        <p-autoComplete [formControl]="control" [id]="field.field" [optionLabel]="optionLabel"
+          [optionValue]="optionValue" (onFocus)="op.show($event)" (input)="onInputChange($event)" (input)="op.hide()"
+          [lazy]="true" [suggestions]="suggestions" [minLength]="minLength" [maxlength]="maxLength"
+          [placeholder]="control.disabled ? '' : placeholder"></p-autoComplete>
+        <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
+          [control]="control"></app-control-messages>
+      </ng-container>
+      <ng-template #elseBlock>
+        <label for="{{ field.field }}">{{ field.header }}</label>
+        <input type="text" pInputText [disabled]="true" [value]="getFieldValue(field)" [disabled]="true" />
+      </ng-template>
+    </div>
+  </ng-container>
+</div>
+
+<p-overlayPanel #op>
+  <form [formGroup]="opForm">
+    <div class="grid p-fluid">
+      <ng-content />
+      <app-table class="col-12" [dataKey]="optionLabel || 'id'" [data]="suggestions" [selectedItems]="selectedItems"
+        (selectionChange)="onSelectionChange($event)" [columns]="columns" [showHeader]="false" [showPage]="false"
+        [showCheckBox]="true" selectionMode="single" [showManage]="false" />
+    </div>
+  </form>
+</p-overlayPanel>

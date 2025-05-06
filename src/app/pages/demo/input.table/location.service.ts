@@ -66,11 +66,15 @@ export class LocationService {
     { LOCATION_No: 'TT020', BUILDING_NO: '02', FLOOR_NO: '23F', AREA_NO: 'TT', GROSS_SPACE: 118 },
   ];
 
-  searchLocations(locationNo: string): Observable<LocationData[]> {
+  searchLocations(body: any): Observable<LocationData[]> {
     return of(
-      this.mockLocations.filter((location) =>
-        location.LOCATION_No.toLowerCase().includes(locationNo.toLowerCase())
-      )
+      this.mockLocations.filter((location) => {
+        const locationNoMatch = !body.LOCATION_No || location.LOCATION_No.toLowerCase().includes(body.LOCATION_No.toLowerCase());
+        const buildingNoMatch = !body.BUILDING_NO || body.BUILDING_NO.length === 0 || body.BUILDING_NO.includes(location.BUILDING_NO);
+        const floorNoMatch = !body.FLOOR_NO || body.FLOOR_NO.length === 0 || body.FLOOR_NO.includes(location.FLOOR_NO);
+        const areaNoMatch = !body.AREA_NO || body.AREA_NO.length === 0 || body.AREA_NO.includes(location.AREA_NO);
+        return locationNoMatch && buildingNoMatch && floorNoMatch && areaNoMatch;
+      })
     ).pipe(delay(500)); // 模擬 500 毫秒的 API 延遲
   }
 }

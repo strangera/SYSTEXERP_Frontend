@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
-import { FieldsConfig } from '../../../shared/componentkit/dialog/dialog.component';
+import { FieldsConfig } from '../../../shared/componentkit/dialog/dropdown-table.component';
 import { debounceTime, Subject, switchMap } from 'rxjs';
 import { LocationService } from './location.service';
 
@@ -14,7 +14,7 @@ import { LocationService } from './location.service';
 })
 export class InputTableComponent extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    multiLevel: [null, [Validators.required]], // Multi Level
+    multiLevel: ['', [Validators.required]], // Multi Level
     text: ['', [Validators.required, Validators.maxLength(13)]], // Input Text
     textarea: ['', [Validators.required, Validators.maxLength(13)]], // Input Textarea
     number: [null, [Validators.required, Validators.maxLength(13)]], // Input number
@@ -77,15 +77,18 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     this.systemTypeService.getSystemTypes().subscribe(data => {
       this.systemTypeOptions = data;
     });
-    this.searchInput$.pipe(debounceTime(300), switchMap((term: string) => this.locationService.searchLocations(term))).subscribe((results) => {
-      this.dialogData = results;
-    });
+
+
+    // dialog==================================
+    this.searchInput$.pipe(debounceTime(300), switchMap((formValue: { LOCATION_No: string, BUILDING_NO: any, FLOOR_NO: any, AREA_NO: any }) =>
+      this.locationService.searchLocations(formValue))).subscribe((results) => {
+        this.dialogData = results;
+      });
   }
-  // dialog==================================
   fieldsConfig: FieldsConfig[] = [
     { field: 'LOCATION_No', header: '位置編號', mainDataField: true },
-    { field: 'FLOOR_NO', header: '樓層' },
-    { field: 'AREA_NO', header: '區域' },
+    { field: 'FLOOR_NO', header: '樓層', format: (value: any) => this.floorOptions.find(option => option.value === value)?.label || value },
+    { field: 'AREA_NO', header: '區域', format: (value: any) => this.RegionCodeOptions.find(option => option.value === value)?.label || value },
     { field: 'GROSS_SPACE', header: '營業坪數' },
   ];
   dialogForm = this.formBuilder.group({
@@ -118,8 +121,11 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     { value: 'B', label: 'B區' },
   ];
 
-  private searchInput$ = new Subject<string>(); // Subject 用於處理輸入流
+  private searchInput$ = new Subject<{ LOCATION_No: string, BUILDING_NO: any, FLOOR_NO: any, AREA_NO: any }>(); // Subject 用於處理包含表單值的物件流
   onAutoCompleteInputChange(event: any) {
-    this.searchInput$.next(event); // 將輸入值發送到 Subject
+    this.searchInput$.next({ LOCATION_No: event, BUILDING_NO: null, FLOOR_NO: null, AREA_NO: null }); // 將包含 LOCATION_No 的表單值發送到 Subject
+  }
+  onDialogFormChanged(value: any) {
+    this.searchInput$.next(value); // 將完整的表單值發送到 Subject
   }
 }
