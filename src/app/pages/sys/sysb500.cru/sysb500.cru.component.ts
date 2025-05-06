@@ -1,23 +1,25 @@
-import { Component, OnInit, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { Sysb500Service } from './../../../service/sysb/sysb500.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
-import { TranslateService } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Sysb500m } from '../module/sysb000.module';
 
 @Component({
   selector: 'app-sysb500.cru',
   templateUrl: './sysb500.cru.component.html',
-  styleUrl: './sysb500.cru.component.scss'
+  styleUrl: './sysb500.cru.component.scss',
 })
 // 區域基本資料維護作業 CRU
-export class SYSB500CRUComponent extends BasicCrupageComponent implements OnInit {
+export class SYSB500CRUComponent
+  extends BasicCruPageComponent<Sysb500m>
+  implements OnInit
+{
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
+    id: [],
     area_no: ['', [Validators.required, Validators.maxLength(2)]], // 區域別編號
     area_desc: ['', [Validators.required, Validators.maxLength(30)]], // 區域別名稱
   });
@@ -25,93 +27,56 @@ export class SYSB500CRUComponent extends BasicCrupageComponent implements OnInit
   // upperLevelOrgOptions: any[]=[];
   // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
+    private sysb500Service: Sysb500Service,
     //
   ) {
-    super();  // 呼叫父類建構子
+    super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    this.ProgNo = '410005';
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
+    this.initializePage('SYSB500', this.dataForm);
   }
 
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+    // 修改：使用父類的 handleSubmit 方法
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            const body = {
+              area_no: this.dataForm.controls.area_no.value,
+              area_desc: this.dataForm.controls.area_desc.value,
+            };
+            console.log('insert', body);
+            this.sysb500Service.insertSYSB500(body).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              this.onCancel(); // 新增成功後返回查詢頁面
+            });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            const body = {
+              id: this.dataForm.controls.id.value,
+              area_no: this.dataForm.controls.area_no.value,
+              area_desc: this.dataForm.controls.area_desc.value,
+            };
+            console.log('update', body);
+            this.sysb500Service.updateSYSB500(body).subscribe(() => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel(); // 更新成功後返回查詢頁面
+            });
+          }
+          break;
+      }
+    });
   }
 
   submitForm(frm: FormGroup) {
-    // 查詢邏輯
     this.onSubmit(frm);
-  }//CRU
-
-  onCancel() {
-    this.router.navigate(['/SYSB000/SYSB500']);
   }
-  //------------------------------------------------------------------------------------------------------------
+
+  onClearForm() {
+    this.dataForm.reset(); // 重置表單
+  }
 }

@@ -141,7 +141,6 @@ export class SYSB500Component
       idList: idList, // 符合 API 的 idList 格式
     };
 
-    console.log('delete body', deleteBody);
     this.sysb500Service.deleteSYSB500(deleteBody).subscribe({
       next: (response: any) => {
         if (response.Status === '0000') {

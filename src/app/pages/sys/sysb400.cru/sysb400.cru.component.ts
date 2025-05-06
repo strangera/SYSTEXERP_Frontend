@@ -19,8 +19,7 @@ export class SYSB400CRUComponent
 {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    id: [, [Validators.required]], //id
-
+    id: [], // ID
     org_id: ['', [Validators.required, Validators.maxLength(20)]], // 組織代碼
     org_name: ['', [Validators.required, Validators.maxLength(40)]], // 組織名稱
     p_org_id: ['', [Validators.required, Validators.maxLength(20)]], // 上層組織代碼
