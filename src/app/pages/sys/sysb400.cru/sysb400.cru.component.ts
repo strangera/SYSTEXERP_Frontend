@@ -15,11 +15,11 @@ import { option, Sysb400m } from '../module/sysb000.module';
 // 組織碼設定作業 CRU
 export class SYSB400CRUComponent
   extends BasicCruPageComponent<Sysb400m>
-  implements OnInit {
+  implements OnInit
+{
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    id: [, [Validators.required]], //id
-
+    id: [], // ID
     org_id: ['', [Validators.required, Validators.maxLength(20)]], // 組織代碼
     org_name: ['', [Validators.required, Validators.maxLength(40)]], // 組織名稱
     p_org_id: ['', [Validators.required, Validators.maxLength(20)]], // 上層組織代碼
@@ -47,7 +47,7 @@ export class SYSB400CRUComponent
   }
 
   ngOnInit(): void {
-    this.initializePage('410004', this.dataForm);
+    this.initializePage('SYSB400', this.dataForm);
     this.loadOptions();
   }
 

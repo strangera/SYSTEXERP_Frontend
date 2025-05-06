@@ -16,7 +16,7 @@ export class SYSB100CRUComponent
   implements OnInit
 {
   dataForm = this.formBuilder.nonNullable.group({
-    id: [0], // ID
+    id: [], // ID
     SYS_StoreNo: [, [Validators.required, Validators.maxLength(8)]], // 公司編號/店號
     SYS_StoreName: ['', [Validators.required, Validators.maxLength(60)]], // 公司名稱(中文)
     SYS_StoreNameENG: ['', [Validators.maxLength(60)]], // 公司名稱(英文)
