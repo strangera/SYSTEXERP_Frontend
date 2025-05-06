@@ -1,7 +1,6 @@
 import { BigCategoryCodeService } from './../../../service/basic/big-category-code.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';

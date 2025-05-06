@@ -9,8 +9,8 @@ import { catchError, Observable, tap, map, throwError } from 'rxjs';
 })
 export class BigCategoryCodeService {
   apiUrl: string = environment.ApiUrl;
-  queryApiUrl: string = `${environment.ApiUrl}/TLS0000/TLS5000/queryTLS51010_DropDownList`;
-  title: string = '大分類代碼';
+  queryApiUrl = `${environment.ApiUrl}/TLS0000/TLS5000/queryTLS51010_DropDownList`;
+  title = '大分類代碼';
 
   constructor(
     private http: HttpClient,
