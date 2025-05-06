@@ -41,12 +41,18 @@ const storageKey = 'TLS51010';
 @Component({
   selector: 'app-tls51010',
   templateUrl: './tls51010.component.html',
-  styleUrl: './tls51010.component.scss'
+  styleUrl: './tls51010.component.scss',
 })
-export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
+export class TLS51010Component
+  extends BasicQueryPageComponent<CategoryItem>
+  implements OnInit
+{
   // 查詢表單：包含大分類代碼和名稱
   queryForm = this.formBuilder.nonNullable.group({
-    CAT_LNo: ['', [Validators.maxLength(2), this.validationService.numberValidator]],
+    CAT_LNo: [
+      '',
+      [Validators.maxLength(2), this.validationService.numberValidator],
+    ],
     CAT_LName: ['', [Validators.maxLength(32)]],
     //分頁查詢
     pageSize: [10],
@@ -78,7 +84,7 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
 
   constructor(
     private validationService: ValidationService,
-    private apiService: TLS5000Service
+    private apiService: TLS5000Service,
   ) {
     super();
   }
@@ -88,7 +94,9 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
     this.initializePage('TLS51010', '/TLS/TLS51010CRU');
 
     // 恢復查詢狀態並自動查詢
-    this.handleQueryRestore(this.queryForm, storageKey, (form) => this.onSubmit(form));
+    this.handleQueryRestore(this.queryForm, storageKey, (form) =>
+      this.onSubmit(form),
+    );
 
     // 監聽表單變化，延遲儲存有效值
     // this.queryForm.valueChanges
@@ -122,7 +130,7 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
           console.error('API error:', err);
           this.loading = false;
           this.messageService.unblockUi();
-        }
+        },
       });
     });
   }
@@ -146,7 +154,6 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
     this.queryStateService.clearQueryState(storageKey);
   }
 
-
   // 刪除項目
   onDelete(data: CategoryItem | CategoryItem[]): void {
     console.log('Delete data:', JSON.stringify(data, null, 2));
@@ -160,8 +167,8 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
 
     // 收集所有有效的 ID
     const idList = items
-      .filter(item => item && item.id != null && item.id !== undefined)
-      .map(item => item.id);
+      .filter((item) => item && item.id != null && item.id !== undefined)
+      .map((item) => item.id);
 
     if (idList.length === 0) {
       console.error('No valid IDs to delete');
@@ -171,7 +178,7 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
 
     // 構建新的 requestBody 格式
     const requestBody = {
-      idList: idList // 符合 API 的 idList 格式
+      idList: idList, // 符合 API 的 idList 格式
     };
     // 調用 API
     this.apiService.deleteTLS51010(requestBody).subscribe({
@@ -189,7 +196,7 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
       },
       complete: () => {
         this.onSubmit(this.queryForm);
-      }
+      },
     });
 
     this.selectedItems = [];
@@ -197,7 +204,9 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
 
   loadData(event: TableLazyLoadEvent) {
     const form = this.queryForm.value;
-    if (this.totalRecords === 0) { return; }
+    if (this.totalRecords === 0) {
+      return;
+    }
     form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
     form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
     form.SortBy = event.multiSortMeta ?? [{ field: 'CAT_LNo', order: 1 }];

@@ -31,18 +31,18 @@ import { RippleModule } from 'primeng/ripple';
 import { SplitButtonModule } from 'primeng/splitbutton';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
-import { AutoCompleteModule } from "primeng/autocomplete";
-import { ChipsModule } from "primeng/chips";
-import { InputMaskModule } from "primeng/inputmask";
-import { InputNumberModule } from "primeng/inputnumber";
-import { CascadeSelectModule } from "primeng/cascadeselect";
-import { InputTextareaModule } from "primeng/inputtextarea";
-import { InputTextModule } from "primeng/inputtext";
-import { PasswordModule } from "primeng/password";
+import { AutoCompleteModule } from 'primeng/autocomplete';
+import { ChipsModule } from 'primeng/chips';
+import { InputMaskModule } from 'primeng/inputmask';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { CascadeSelectModule } from 'primeng/cascadeselect';
+import { InputTextareaModule } from 'primeng/inputtextarea';
+import { InputTextModule } from 'primeng/inputtext';
+import { PasswordModule } from 'primeng/password';
 import { MessagesModule } from 'primeng/messages';
 import { AccordionModule } from 'primeng/accordion';
-import { TreeTableModule } from "primeng/treetable";
-import { CalendarModule } from "primeng/calendar";
+import { TreeTableModule } from 'primeng/treetable';
+import { CalendarModule } from 'primeng/calendar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ListboxModule } from 'primeng/listbox';
 import { PickListModule } from 'primeng/picklist';
@@ -106,7 +106,9 @@ import { CalendarComponent } from './componentkit/calendar/calendar.component';
 import { CalendarRangeComponent } from './componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from './componentkit/table/table.component';
 import { TableExpansionComponent } from './componentkit/table/table-expansion/table-expansion.component';
-import { TreeDialogComponent } from './componentkit/tree-dialog/tree-dialog.component';
+import { DialogComponent } from './componentkit/dialog/dialog.component';
+import { TreeDropdownComponent } from './componentkit/tree-dropdown/tree-dropdown.component';
+import { InputTextareaComponent } from './componentkit/input-textarea/input-textarea.component';
 
 @NgModule({
   declarations: [
@@ -122,7 +124,9 @@ import { TreeDialogComponent } from './componentkit/tree-dialog/tree-dialog.comp
     CalendarRangeComponent,
     TableComponent,
     TableExpansionComponent,
-    TreeDialogComponent,
+    DialogComponent,
+    TreeDropdownComponent,
+    InputTextareaComponent,
 
     ButtonDynamicallyaddComponent,
     ButtonDynamicallydeleteComponent,
@@ -222,7 +226,7 @@ import { TreeDialogComponent } from './componentkit/tree-dialog/tree-dialog.comp
     EditorModule,
     TranslateModule,
 
-    OrganizationChartModule
+    OrganizationChartModule,
   ],
   exports: [
     NgChartsModule,
@@ -308,7 +312,9 @@ import { TreeDialogComponent } from './componentkit/tree-dialog/tree-dialog.comp
     ButtonDynamicallyaddComponent,
     ButtonDynamicallydeleteComponent,
     InputTextComponent,
-    TreeDialogComponent,
+    DialogComponent,
+    TreeDropdownComponent,
+    InputTextareaComponent,
     InputNumberComponent,
     InputNumberRangeComponent,
     FileUploadComponent,
@@ -331,7 +337,7 @@ import { TreeDialogComponent } from './componentkit/tree-dialog/tree-dialog.comp
     FloatLabelModule,
     EditorModule,
 
-    OrganizationChartModule
+    OrganizationChartModule,
   ],
 })
 export class SharedModule { }

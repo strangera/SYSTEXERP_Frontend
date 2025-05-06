@@ -1,24 +1,29 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { FormGroup, Validators } from '@angular/forms';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ApprovalStatusService } from '../../../service/basic/approval-status.service';
-import { SystemTypeService } from '../../../service/basic/system-type.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Sysb200m } from '../module/sysb000.module';
+import { SortMeta } from 'primeng/api';
+import { TableLazyLoadEvent } from 'primeng/table';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { SystemTypeService } from '../../../service/basic/system-type.service';
+import { ApprovalStatusService } from '../../../service/basic/approval-status.service';
 import { SYS1000Response } from '../../../shared/models/SYS/SYS1000';
+
+// 本地儲存鍵：用於儲存查詢狀態
+const storageKey = 'SYSB200';
 
 @Component({
   selector: 'app-sysb200',
   templateUrl: './sysb200.component.html',
-  styleUrl: './sysb200.component.scss'
+  styleUrl: './sysb200.component.scss',
 })
 
 // 廠商基本資料維護作業
-export class SYSB200Component extends BasicQpageComponent implements OnInit {
+export class SYSB200Component
+  extends BasicQueryPageComponent<Sysb200m>
+  implements OnInit
+{
   // 查詢
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
@@ -42,18 +47,22 @@ export class SYSB200Component extends BasicQpageComponent implements OnInit {
     systemtype: [[] as number[]], // 系統別
     remark: ['', [Validators.maxLength(160)]], // 備註
     expirationDay: [, [this.validationService.numberValidator]], // 付款期限(天數)
-    remittanceBankCode: [, [this.validationService.numberValidator, Validators.max(9999999)]], // 廠商匯款銀行代號
-    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+    remittanceBankCode: [
+      ,
+      [this.validationService.numberValidator, Validators.max(9999999)],
+    ], // 廠商匯款銀行代號
+
+    //分頁查詢
+    pageSize: [10],
+    pageIndex: [0],
+    SortBy: [[{ field: 'manufacturerID', order: 1 }] as SortMeta[]],
   });
   // 表格
   // ----------------------------------------------------------------
-  data: any[] = [
-    { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-    { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-    { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
+  data: Sysb200m[] = [
     // 其他資料
   ];
-  filteredData: any[] = [...this.data];
+  filteredData: Sysb200m[] = [...this.data];
   columns: any[] = [
     { field: 'manufacturerID', header: '廠商編號', visible: true },
     { field: 'approvalStatus', header: '審核狀態', visible: true },
@@ -79,56 +88,56 @@ export class SYSB200Component extends BasicQpageComponent implements OnInit {
     { field: 'SYS_ID', header: '系統別', visible: false },
     { field: 'NOTES', header: '備註', visible: false },
     { field: 'SUPL_BANK_ACCT', header: '廠商銀行帳號', visible: false },
-    { field: 'SUPL_ACCT_NAME', header: '廠商帳戶名稱', visible: false }
+    { field: 'SUPL_ACCT_NAME', header: '廠商帳戶名稱', visible: false },
   ];
 
   venderOptions = [
-    { "id": 1, "code": "000000000-1", "name": "南紡流通服務台" },
-    { "id": 2, "code": "000000000-2", "name": "停車管理" },
-    { "id": 3, "code": "000000000-3", "name": "南紡流通-特殊交易" },
+    { id: 1, code: '000000000-1', name: '南紡流通服務台' },
+    { id: 2, code: '000000000-2', name: '停車管理' },
+    { id: 3, code: '000000000-3', name: '南紡流通-特殊交易' },
   ];
-  filterFields: any[] = [
-    'code',
-    'name'
-  ];
-  vendersearchplaceholder: string = '模糊查詢:廠商代碼, 廠商名稱';
-  // ----------------------------------------------------------------
-  approvalOptions: any[] = [];
-  systemCodeOptions: any[] = [];
-  t111Options: SYS1000Response[] = [];
 
+  // // 分頁和排序參數
+  // pageSize: number = 10;
+  // pageIndex: number = 0;
+  totalRecords = 0;
+  // lastQueryParams: any = null;
+  // sortField: string = 'CAT_LNo';
+  // sortOrder: number = 1;
+
+  // 多選項目
+  selectedItems: Sysb200m[] = [];
+
+  // ----------------------------------------------------------------
+  t111Options: SYS1000Response[] = [];
   venderColumns: any[] = [
     { field: 'id', header: 'ID', visible: true },
     { field: 'code', header: '廠商代碼', visible: true },
     { field: 'name', header: '廠商名稱', visible: true },
   ];
-
+  approvalOptions: any[] = [];
+  systemCodeOptions: any[] = [];
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
+    // private sysb200Service: Sysb200Service,
+    private validationService: ValidationService,
     private systemTypeService: SystemTypeService,
     private approvalStatusService: ApprovalStatusService,
-    private validationService: ValidationService,
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '410002';
+    this.initializePage('SYSB200', 'SYS/SYSB200CRU');
+    this.loadOptions();
+
+    // 恢復查詢狀態並自動查詢
+    this.handleQueryRestore(this.queryForm, storageKey, (form) =>
+      this.onSubmit(form),
+    );
+  }
+  loadOptions() {
     // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.authService.user.subscribe(x => this.user = x);
-    // ----------------------------------------------------------------
-    this.reportHead = {
-      reporttitle: this.funInfo.prog_no,
-      exportuser: this.user?.user_Name,
-      reportname: this.funInfo.prog_no,
-      outputvisible: false,
-    };
-    // ----------------------------------------------------------------
-    this.systemTypeService.getSystemTypes().subscribe(data => {
+    this.systemTypeService.getSystemTypes().subscribe((data) => {
       this.systemCodeOptions = data;
 
       // let systemCodeValues = this.systemCodeOptions.map(system => system.value);
@@ -137,7 +146,7 @@ export class SYSB200Component extends BasicQpageComponent implements OnInit {
       // });
     });
     //
-    this.approvalStatusService.getSystemTypes().subscribe(data => {
+    this.approvalStatusService.getSystemTypes().subscribe((data) => {
       this.approvalOptions = data;
 
       // let approvalValues = this.approvalOptions.map(system => system.value);
@@ -145,85 +154,31 @@ export class SYSB200Component extends BasicQpageComponent implements OnInit {
       //   approvalStatus: approvalValues
       // });
     });
-    // ----------------------------------------------------------------
-    // 從 sessionStorage 抓取資料
-    const systemSettingString = sessionStorage.getItem('SYSTEMSetting');
-
-    if (systemSettingString) {
-      // 將 JSON 字串解析成 JavaScript 物件
-      const systemSetting = JSON.parse(systemSettingString) as SYS1000Response[];
-      // 篩選出 SYS_Type 為 'T111' 的項目
-      this.t111Options = systemSetting.filter(option => option.SYS_Type === 'T111');
-    } else {
-      this.t111Options = []; // 或者設定為空陣列
-    }
   }
+
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.data = [
-      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000001', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址1', contactPerson: 'A先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000002', isdelete: false, approvalStatus: '未審核', manufacturerUID: '00000000', manufacturerCName: '南紡流通服務台', mailingAddress: '地址2', contactPerson: 'B先生', registeredPhone: '06-000000', companyFax: '123', expirationDay: 0, remittanceBankCode: '0000123' },
-      { manufacturerID: '0000003', isdelete: true, approvalStatus: '已審核', manufacturerUID: '00000000', manufacturerCName: '停車管理', mailingAddress: '地址3', contactPerson: 'C先生', registeredPhone: '06-000000', companyFax: '06-000000', expirationDay: 0, remittanceBankCode: '0000123' },
-      // 其他資料
-    ];
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
+    this.handleSubmit(frm, () => {
+      // this.sysb200Service.querySYSB200(frm.value).subscribe({
+      //   next: (response: any) => {
+      //     console.log('API response:', response);
+      //     if (response.Status === '0000') {
+      //       this.data = response.Data || [];
+      //       this.filteredData = [...this.data];
+      //       this.totalRecords = response.TotalCount || response.Data.length;
+      //       this.queryStateService.setQueryState(storageKey, frm.value);
+      //     } else {
+      //       console.error('API error:', response.Status, response.Message);
+      //     }
+      //     this.loading = false;
+      //     this.messageService.unblockUi();
+      //   },
+      //   error: (err: string) => {
+      //     console.error('API error:', err);
+      //     this.loading = false;
+      //     this.messageService.unblockUi();
+      //   },
       // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    });
   }
 
   onSubmitQuery(frm: FormGroup) {
@@ -232,52 +187,79 @@ export class SYSB200Component extends BasicQpageComponent implements OnInit {
   }
 
   onClearForm() {
-    this.queryForm.reset();  // 重置表單
+    this.queryForm.reset();
+    // this.pageIndex = 0;
+    this.data = [];
+    this.filteredData = [];
+    // this.lastQueryParams = null;
+    this.totalRecords = 0;
+    // this.sortField = 'SYS_StoreNo';
+    // this.sortOrder = 1;
+    // 清空儲存的查詢狀態
+    this.queryStateService.clearQueryState(storageKey);
   }
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
+  // 刪除項目
+  onDelete(data: Sysb200m | Sysb200m[]): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
 
-      //console.log("extra", extras);
-      this.router.navigate(['/SYSB000/SYSB200CRU'], extras);
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) {
+      console.error('No items to delete');
+      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+      return;
     }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
+    // 收集所有有效的 ID
+    const idList = items
+      .filter(
+        (item) =>
+          item &&
+          item.manufacturerID != null &&
+          item.manufacturerID !== undefined,
+      )
+      .map((item) => item.manufacturerID);
 
-      this.router.navigate(['/SYSB000/SYSB200CRU'], extras);
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
     }
+
+    // const deleteBody = {
+    //   idList: idList, // 符合 API 的 idList 格式
+    // };
+    // this.sysb100Service.deleteSYSB100(deleteBody).subscribe({
+    //   next: (response: any) => {
+    //     if (response.Status === '0000') {
+    //       this.messageService.successBubble('選中項目刪除成功');
+    //     } else {
+    //       console.error('API error:', response.Status, response.Message);
+    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+    //     }
+    //   },
+    //   error: (err: string) => {
+    //     console.error('API error:', err);
+    //     this.messageService.errorBubble('刪除失敗');
+    //   },
+    //   complete: () => {
+    //     this.onSubmit(this.queryForm);
+    //   },
+    // });
+
+    this.selectedItems = [];
   }
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
-    };
-
-    this.router.navigate(['/SYSB000/SYSB200CRU'], extras);
-  }
-  onDelete() {
-
+  loadData(event: TableLazyLoadEvent) {
+    const form = this.queryForm.value;
+    if (this.totalRecords === 0) {
+      return;
+    }
+    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
+    form.SortBy = event.multiSortMeta ?? [
+      { field: 'manufacturerID', order: 1 },
+    ];
+    this.onSubmit(this.queryForm);
   }
 }

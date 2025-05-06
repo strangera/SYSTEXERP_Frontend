@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TreeDialogComponent } from './tree-dialog.component';
+import { TreeDropdownComponent } from './tree-dropdown.component';
 
-describe('TreeDialogComponent', () => {
-  let component: TreeDialogComponent;
-  let fixture: ComponentFixture<TreeDialogComponent>;
+describe('TreeDropdownComponent', () => {
+  let component: TreeDropdownComponent;
+  let fixture: ComponentFixture<TreeDropdownComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TreeDialogComponent]
+      imports: [TreeDropdownComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(TreeDialogComponent);
+    fixture = TestBed.createComponent(TreeDropdownComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
