@@ -8,7 +8,6 @@ import { DatePipe } from '@angular/common';
 @NgModule({
   declarations: [
     PagesComponent,
-
   ],
   imports: [
     PagesRoutingModule,

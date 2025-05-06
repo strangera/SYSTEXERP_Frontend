@@ -1,0 +1,11 @@
+<label [for]="controlName">{{ label }}
+  <span *ngIf="isRequired" class="required">*</span>
+</label>
+<textarea [id]="controlName" [formControl]="control" [placeholder]="control.disabled ? '' : placeholder"
+  [minlength]="minLength" [maxlength]="maxLength" rows="5" cols="30" [autoResize]="true"
+  [ngClass]="{'ng-invalid ng-dirty': submitted && control.errors}" pInputTextarea
+  [attr.aria-label]="label || placeholder" title="{{ label || placeholder }}"
+  class="p-inputtextarea h-5rem overflow-y-auto">
+</textarea>
+<app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
+  [control]="control"></app-control-messages>

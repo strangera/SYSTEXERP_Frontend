@@ -106,8 +106,9 @@ import { CalendarComponent } from './componentkit/calendar/calendar.component';
 import { CalendarRangeComponent } from './componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from './componentkit/table/table.component';
 import { TableExpansionComponent } from './componentkit/table/table-expansion/table-expansion.component';
-import { TreeDialogComponent } from './componentkit/tree-dialog/tree-dialog.component';
+import { DialogComponent } from './componentkit/dialog/dialog.component';
 import { TreeDropdownComponent } from './componentkit/tree-dropdown/tree-dropdown.component';
+import { InputTextareaComponent } from './componentkit/input-textarea/input-textarea.component';
 
 @NgModule({
   declarations: [
@@ -123,8 +124,9 @@ import { TreeDropdownComponent } from './componentkit/tree-dropdown/tree-dropdow
     CalendarRangeComponent,
     TableComponent,
     TableExpansionComponent,
-    TreeDialogComponent,
+    DialogComponent,
     TreeDropdownComponent,
+    InputTextareaComponent,
 
     ButtonDynamicallyaddComponent,
     ButtonDynamicallydeleteComponent,
@@ -310,8 +312,9 @@ import { TreeDropdownComponent } from './componentkit/tree-dropdown/tree-dropdow
     ButtonDynamicallyaddComponent,
     ButtonDynamicallydeleteComponent,
     InputTextComponent,
-    TreeDialogComponent,
+    DialogComponent,
     TreeDropdownComponent,
+    InputTextareaComponent,
     InputNumberComponent,
     InputNumberRangeComponent,
     FileUploadComponent,
@@ -337,4 +340,4 @@ import { TreeDropdownComponent } from './componentkit/tree-dropdown/tree-dropdow
     OrganizationChartModule,
   ],
 })
-export class SharedModule {}
+export class SharedModule { }
