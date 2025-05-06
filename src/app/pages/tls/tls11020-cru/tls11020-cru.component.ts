@@ -57,7 +57,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
   ngOnInit(): void {
     // 初始化
 
-    this.initializePage
+    this.initializePage('TLS11020');
     //
     //
     this.deductionCategoryService.getDeductionCategories().subscribe(data => {

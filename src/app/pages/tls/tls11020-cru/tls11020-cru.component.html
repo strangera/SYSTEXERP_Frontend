@@ -4,7 +4,6 @@
         <app-menubar [ProgNo]="ProgNo"></app-menubar>
       </div>
     </div>
-  
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
       <form [formGroup]="inputForm">
         <div class="grid p-fluid">
@@ -18,13 +17,13 @@
                 </div>
               </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <label>扣款項目編號</label>
-            <input pInputText formControlName="deductionItemNumber" maxlength="3"  />
+           
+            <app-input-text pInputText formControlName="deductionItemNumber" maxlength="3" label="扣款項目編號"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <label>扣款類別</label>
-            <p-dropdown [options]="deductionCategoryOptions" optionLabel="label" optionValue="value"
-                        formControlName="deductionCategory" [style.width.%]="100"></p-dropdown>
+            <app-dropdown [options]="deductionCategoryOptions" optionLabel="label" optionValue="value"
+                        formControlName="deductionCategory" [style.width.%]="100"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <label>扣款項目名稱</label>
@@ -62,42 +61,7 @@
         </div>
       </form>
   
-      <div style="overflow-x: auto; margin-top: 2rem;">
-        <table class="table w-full" style="min-width: 1200px; white-space: nowrap;">
-          <thead style="background-color: #c1c9f5;">
-            <tr>
-              <th style="width: 30px;">扣款項目編號</th>
-              <th style="width: 150px;">扣款類別</th>
-              <th>扣款項目名稱</th>
-              
-              <th>會計科目</th>
-              <th>是否開立發票</th>
-              <th>課稅別</th>
-              <th>是否為常用</th>
-              <th>列印區分</th>
-              <th>備註</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of itemList; let i = index">
-              <td>{{ item.deductionItemNumber }}</td>
-              <td>{{ getLabelByValue(deductionCategoryOptions, item.deductionCategory) }}</td>
-              <td>{{ item.deductionItemName }}</td>
-              <td>{{ item.accNo }}</td>
-              <td>{{ item.guiFlag === 'Y' ? '開立' : '不開立' }}</td>
-              <td>{{ item.capTaxType === '0' ? '免稅' : '應稅' }}</td>
-              <td>{{ item.isCommonlyUsed === 'Y' ? '常用' : '不常用' }}</td>
-              <td>{{ item.printArea }}</td>
-              <td>{{ item.remark }}</td>
-              <td>
-                <button pButton type="button" icon="pi pi-trash" class="p-button-danger p-button-sm"
-                        (click)="removeItem(i)"></button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+
     </p-panel>
     <div class="col pt-4">
         <div class="grid justify-content-end">

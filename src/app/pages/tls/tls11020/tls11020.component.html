@@ -15,9 +15,9 @@
                     <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-number [useGrouping]="false" label="扣款項目編號" controlName="deductionItemNumber"
+                                <app-input-text  label="扣款項目編號" controlName="deductionItemNumber"
                                     [control]="queryForm.controls.deductionItemNumber" [submitted]="submitted">
-                                </app-input-number>
+                                </app-input-text>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
                                 <app-multi-select label="扣款類別" controlName="deductionCategory"
@@ -30,15 +30,7 @@
                                     [control]="queryForm.controls.deductionItemName" [submitted]="submitted">>
                                 </app-input-text>
                             </div>
-                            <div class="col-12 md:col-6 lg:col-4">
-                                <app-multi-select label="扣款類別" controlName="deductionCategory"
-                                    [options]="deductionCategoryOptions" optionLabel="label" optionValue="value"
-                                    [control]="queryForm.controls.deductionCategory" [submitted]="submitted">
-                                </app-multi-select>
-                            </div>
-               
-          
-              
+                                  
                             <div class="col-12 md:col-6 lg:col-4">
                                 <app-input-text label="備註" controlName="remark" [control]="queryForm.controls.remark"
                                     [submitted]="submitted">>
