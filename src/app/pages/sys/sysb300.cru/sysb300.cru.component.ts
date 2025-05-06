@@ -1,14 +1,10 @@
-import { option } from './../module/sysb000.module';
+import { option, Sysb300m } from './../module/sysb000.module';
 import { Sysb300Service } from './../../../service/sysb/sysb300.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormGroup, Validators } from '@angular/forms';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { TranslateService } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
 @Component({
   selector: 'app-sysb300.cru',
@@ -16,8 +12,8 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
   styleUrl: './sysb300.cru.component.scss',
 })
 // 組織階層設定作業 CRU
-export class SYSB300CRUComponent<Sysb300m>
-  extends BasicCrupageComponent
+export class SYSB300CRUComponent
+  extends BasicCruPageComponent<Sysb300m>
   implements OnInit
 {
   // ----------------------------------------------------------------
@@ -39,58 +35,12 @@ export class SYSB300CRUComponent<Sysb300m>
   allquery: Sysb300m[] = [];
 
   // ----------------------------------------------------------------
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private sysb300Service: Sysb300Service,
-  ) {
+  constructor(private sysb300Service: Sysb300Service) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    this.ProgNo = '410003';
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
-
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus;
-      rowdata: any;
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
+    this.initializePage('SYSB300', this.dataForm);
   }
 
   onSubmit(frm: FormGroup) {
@@ -169,11 +119,10 @@ export class SYSB300CRUComponent<Sysb300m>
   }
 
   submitForm(frm: FormGroup) {
-    // 查詢邏輯
     this.onSubmit(frm);
   }
 
-  onCancel() {
-    this.router.navigate(['/SYSB000/SYSB300']);
+  onClearForm() {
+    this.dataForm.reset(); // 重置表單
   }
 }

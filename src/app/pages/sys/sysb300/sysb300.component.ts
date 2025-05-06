@@ -5,12 +5,18 @@ import { FormGroup, Validators } from '@angular/forms';
 import { Sysb300Service } from '../../../service/sysb/sysb300.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { option, Sysb300m } from '../module/sysb000.module';
+import { SortMeta } from 'primeng/api';
+import { TableLazyLoadEvent } from 'primeng/table';
+
+// 本地儲存鍵：用於儲存查詢狀態
+const storageKey = 'SYSB300';
 
 @Component({
   selector: 'app-sysb300',
   templateUrl: './sysb300.component.html',
   styleUrl: './sysb300.component.scss',
 })
+
 // 組織階層設定作業
 export class SYSB300Component
   extends BasicQueryPageComponent<Sysb300m>
@@ -25,23 +31,33 @@ export class SYSB300Component
     level_name: ['', [Validators.maxLength(30)]], // 組織階層名稱
     p_level_id: [, [Validators.maxLength(2)]], // 上層組織階層代碼
 
-    // 以下可以不用顯示於查詢頁
-    CRT_Date: [], // 建立日期
-    CRT_USR_No: [, [Validators.maxLength(10)]], // 建立人員
-    CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-    UPD_Date: [], // 變更日期
-    UPD_USR_No: [, [Validators.maxLength(10)]], // 變更人員
-    UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
+    //分頁查詢
+    pageSize: [10],
+    pageIndex: [0],
+    SortBy: [[{ field: 'id', order: 1 }] as SortMeta[]],
   });
   // 表格
   // ----------------------------------------------------------------
   data: Sysb300m[] = [];
+  filteredData: Sysb300m[] = [...this.data];
   columns: any[] = [
     { field: 'level_id', header: '階層代碼', visible: true },
     { field: 'level_name', header: '階層名稱', visible: true },
     { field: 'p_level_id', header: '上層組織', visible: true },
     // 其他欄位
   ];
+
+  // // 分頁和排序參數
+  // pageSize: number = 10;
+  // pageIndex: number = 0;
+  totalRecords = 0;
+  // lastQueryParams: any = null;
+  // sortField: string = 'CAT_LNo';
+  // sortOrder: number = 1;
+
+  // 多選項目
+  selectedItems: Sysb300m[] = [];
+
   // ----------------------------------------------------------------
   upgroup_Options: option[] = [];
 
@@ -50,36 +66,104 @@ export class SYSB300Component
   }
 
   ngOnInit(): void {
-    this.initializePage('410003', '/SYSB000/SYSB300CRU');
+    this.initializePage('SYSB300', 'SYS/SYSB300CRU');
     this.loadOptions();
+
+    // 恢復查詢狀態並自動查詢
+    this.handleQueryRestore(this.queryForm, storageKey, (form) =>
+      this.onSubmit(form),
+    );
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid) {
-      const query = {
-        level_id: this.queryForm.value.level_id,
-        level_name: this.queryForm.value.level_name,
-        p_level_id: this.queryForm.value.p_level_id,
-      };
-
-      console.log('查詢條件', query);
-
-      this.sysb300Service.querySYSB300(query).subscribe((response) => {
-        this.data = response.Data;
-        console.log('查詢結果', this.data);
-        // this.queryStateService.setQueryState(QUERY_STORAGE_KEY, form.value);
-        this.loading = false;
+    this.handleSubmit(frm, () => {
+      this.sysb300Service.querySYSB300(frm.value).subscribe({
+        next: (response: any) => {
+          console.log('API response:', response);
+          if (response.Status === '0000') {
+            this.data = response.Data || [];
+            this.filteredData = [...this.data];
+            this.totalRecords = response.TotalCount || response.Data.length;
+            this.queryStateService.setQueryState(storageKey, frm.value);
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
       });
-    }
+    });
+  }
+
+  onSubmitQuery(frm: FormGroup) {
+    // 查詢邏輯
+    this.onSubmit(frm);
   }
 
   onClearForm() {
-    this.queryForm.reset(); // 重置表單
+    this.queryForm.reset();
+    // this.pageIndex = 0;
+    this.data = [];
+    this.filteredData = [];
+    // this.lastQueryParams = null;
+    this.totalRecords = 0;
+    // this.sortField = 'SYS_StoreNo';
+    // this.sortOrder = 1;
+    // 清空儲存的查詢狀態
+    this.queryStateService.clearQueryState(storageKey);
+  }
+
+  // 刪除項目
+  onDelete(data: Sysb300m | Sysb300m[]): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
+
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) {
+      console.error('No items to delete');
+      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+      return;
+    }
+
+    // 收集所有有效的 ID
+    const idList = items
+      .filter(
+        (item) => item && item.level_id != null && item.level_id !== undefined,
+      )
+      .map((item) => item.level_id);
+
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
+    }
+
+    const deleteBody = {
+      idList: idList, // 符合 API 的 idList 格式
+    };
+    this.sysb300Service.deleteSYSB300(deleteBody).subscribe({
+      next: (response: any) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('選中項目刪除成功');
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        }
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗');
+      },
+      complete: () => {
+        this.onSubmit(this.queryForm);
+      },
+    });
+
+    this.selectedItems = [];
   }
 
   loadOptions() {
@@ -97,5 +181,16 @@ export class SYSB300Component
         }));
       });
     }
+  }
+
+  loadData(event: TableLazyLoadEvent) {
+    const form = this.queryForm.value;
+    if (this.totalRecords === 0) {
+      return;
+    }
+    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
+    form.SortBy = event.multiSortMeta ?? [{ field: 'level_id', order: 1 }];
+    this.onSubmit(this.queryForm);
   }
 }
