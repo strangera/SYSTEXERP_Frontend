@@ -7,6 +7,7 @@ import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -44,8 +45,7 @@ const storageKey = 'TLS51010';
 })
 export class TLS51010Component
   extends BasicQueryPageComponent<CategoryItem>
-  implements OnInit
-{
+  implements OnInit {
   // 查詢表單：包含大分類代碼和名稱
   queryForm = this.formBuilder.nonNullable.group({
     CAT_LNo: [
@@ -64,10 +64,10 @@ export class TLS51010Component
   filteredData: CategoryItem[] = [...this.data];
 
   // 表格欄位定義
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'CAT_LNo', header: '大分類代碼', visible: true },
     { field: 'CAT_LName', header: '大分類名稱', visible: true },
-    { field: 'CAT_LRemark', header: '備註', visible: true },
+    { field: 'CAT_LRemark', header: '備註', visible: true, type: 'html' },
   ];
 
   // // 分頁和排序參數
