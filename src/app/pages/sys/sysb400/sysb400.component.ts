@@ -4,6 +4,11 @@ import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Sysb400m } from '../module/sysb000.module';
+import { TableLazyLoadEvent } from 'primeng/table';
+import { SortMeta } from 'primeng/api';
+
+// 本地儲存鍵：用於儲存查詢狀態
+const storageKey = 'SYSB400';
 
 @Component({
   selector: 'app-sysb400',
@@ -17,83 +22,182 @@ export class SYSB400Component
   data: Sysb400m[] = [];
   filteredData: Sysb400m[] = [...this.data];
   columns: any[] = [
-    { field: 'org_id', header: '階層代碼', visible: true },
-    { field: 'org_name', header: '階層名稱', visible: true },
-    { field: 'level_id', header: '組織代碼', visible: true },
-    { field: 'level_name', header: '組織名稱', visible: true },
-    { field: 'p_level_id', header: '上層組織', visible: true },
+    { field: 'org_id', header: '組織代碼', visible: true },
+    { field: 'org_name', header: '組織名稱', visible: true },
+    { field: 'level_id', header: '組織階層代碼', visible: true },
+    { field: 'p_org_id', header: '上層組織代碼', visible: true },
+    { field: 'p_level_id', header: '上層組織階層代碼', visible: true },
+    { field: 'stop_flag', header: '是否停用', visible: true },
   ];
 
   queryForm = this.formBuilder.group({
     // SYS3100 + SYS3000
     org_id: ['', Validators.maxLength(20)], // 組織代碼
     org_name: ['', Validators.maxLength(40)], // 組織名稱
-    level_id: ['', Validators.maxLength(2)], // 階層代碼
-    // p_org_id: ['', Validators.maxLength(20)], // 上層組織代碼
-    // p_level_id: ['', Validators.maxLength(2)], // 上層組織階層代碼(空白代表第一層)
-    // stop_flag: [['N'] as string[], Validators.maxLength(2)], // 是否停用
+    level_id: ['', Validators.maxLength(2)], // 組織階層代碼
+
+    //分頁查詢
+    pageSize: [10],
+    pageIndex: [0],
+    SortBy: [[{ field: 'org_id', order: 1 }] as SortMeta[]],
   });
 
-  rowsPerPageOptions = [10, 25, 50, 100];
-  rowsPerPageDropdownOptions = [
-    { label: '10', value: 10 },
-    { label: '25', value: 25 },
-    { label: '50', value: 50 },
-    { label: '100', value: 100 },
-  ];
+  rowsPerPageOptions: any = [];
+  rowsPerPageDropdownOptions: any = [];
+  level_nameOptions: any[] = [];
+  whetherOptions: any[] = [];
 
-  level_nameOptions: any[] = [
-    { value: '全公司', label: '全公司' },
-    { value: '室/部', label: '室/部' },
-    { value: 'Team', label: 'Team' },
-    { value: '組', label: '組' },
-    { value: '樓層', label: '樓層' },
-  ];
+  // // 分頁和排序參數
+  // pageSize: number = 10;
+  // pageIndex: number = 0;
+  totalRecords = 0;
+  // lastQueryParams: any = null;
+  // sortField: string = 'CAT_LNo';
+  // sortOrder: number = 1;
 
-  whetherOptions: any[] = [
-    { value: 'Y', label: '是' },
-    { value: 'N', label: '否' },
-  ];
+  // 多選項目
+  selectedItems: Sysb400m[] = [];
 
   constructor(private sysb400Service: Sysb400Service) {
     super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '410004';
-    this.cruPage = '/SYSB000/SYSB400CRU';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('SYSB400', 'SYS/SYSB400CRU');
+    this.loadOptions();
+
+    // 恢復查詢狀態並自動查詢
+    this.handleQueryRestore(this.queryForm, storageKey, (form) =>
+      this.onSubmit(form),
+    );
   }
 
   onSubmit(frm: FormGroup): void {
-    if (this.queryForm.valid) {
+    this.handleSubmit(frm, () => {
       const query = {
-        level_id: frm.value.level_id,
-        org_id: frm.value.org_id,
-        org_name: frm.value.org_name,
+        level_id: frm.value.level_id || '',
+        org_id: frm.value.org_id || '',
+        org_name: frm.value.org_name || '',
       };
-      if (frm.valid) {
-        console.log('查詢條件', this.queryForm.value);
-        this.sysb400Service.querySYSB400(query).subscribe((response) => {
-          this.data = response.Data;
-          console.log('查詢結果', response.Data);
-          // this.queryStateService.setQueryState(QUERY_STORAGE_KEY, form.value);
+
+      this.sysb400Service.querySYSB400(query).subscribe({
+        next: (response: any) => {
+          console.log('API response:', response);
+          if (response.Status === '0000') {
+            this.data = response.Data || [];
+            this.filteredData = [...this.data];
+            this.totalRecords = response.TotalCount || response.Data.length;
+            this.queryStateService.setQueryState(storageKey, frm.value);
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
           this.loading = false;
-        });
-      }
-    } else {
-      console.warn('Invalid form');
-    }
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
+    });
   }
 
-  onClearForm(): void {
+  onSubmitQuery(frm: FormGroup) {
+    // 查詢邏輯
+    this.onSubmit(frm);
+  }
+
+  onClearForm() {
     this.queryForm.reset();
+    // this.pageIndex = 0;
+    this.data = [];
+    this.filteredData = [];
+    // this.lastQueryParams = null;
+    this.totalRecords = 0;
+    // this.sortField = 'SYS_StoreNo';
+    // this.sortOrder = 1;
+    // 清空儲存的查詢狀態
+    this.queryStateService.clearQueryState(storageKey);
   }
 
-  onSitemap(): void {
-    this.router.navigate(['/SYSB000/SYSB400OS']);
+  // 刪除項目
+  onDelete(data: Sysb400m | Sysb400m[]): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
+
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) {
+      console.error('No items to delete');
+      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+      return;
+    }
+
+    // 收集所有有效的 ID
+    const idList = items
+      .filter(
+        (item) => item && item.level_id != null && item.level_id !== undefined,
+      )
+      .map((item) => item.level_id);
+
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
+    }
+
+    const deleteBody = {
+      idList: idList, // 符合 API 的 idList 格式
+    };
+    this.sysb400Service.deleteSYSB400(deleteBody).subscribe({
+      next: (response: any) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('選中項目刪除成功');
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        }
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗');
+      },
+      complete: () => {
+        this.onSubmit(this.queryForm);
+      },
+    });
+
+    this.selectedItems = [];
+  }
+
+  loadOptions() {
+    this.rowsPerPageOptions = [10, 25, 50, 100];
+    this.rowsPerPageDropdownOptions = [
+      { label: '10', value: 10 },
+      { label: '25', value: 25 },
+      { label: '50', value: 50 },
+      { label: '100', value: 100 },
+    ];
+    this.level_nameOptions = [
+      { value: '全公司', label: '全公司' },
+      { value: '室/部', label: '室/部' },
+      { value: 'Team', label: 'Team' },
+      { value: '組', label: '組' },
+      { value: '樓層', label: '樓層' },
+    ];
+    this.whetherOptions = [
+      { value: 'Y', label: '是' },
+      { value: 'N', label: '否' },
+    ];
+  }
+
+  loadData(event: TableLazyLoadEvent) {
+    const form = this.queryForm.value;
+    if (this.totalRecords === 0) {
+      return;
+    }
+    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
+    form.SortBy = event.multiSortMeta ?? [{ field: 'org_id', order: 1 }];
+    this.onSubmit(this.queryForm);
   }
 }

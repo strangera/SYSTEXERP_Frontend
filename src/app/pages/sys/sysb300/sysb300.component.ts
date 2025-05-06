@@ -34,7 +34,7 @@ export class SYSB300Component
     //分頁查詢
     pageSize: [10],
     pageIndex: [0],
-    SortBy: [[{ field: 'id', order: 1 }] as SortMeta[]],
+    SortBy: [[{ field: 'level_id', order: 1 }] as SortMeta[]],
   });
   // 表格
   // ----------------------------------------------------------------
@@ -77,7 +77,13 @@ export class SYSB300Component
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.sysb300Service.querySYSB300(frm.value).subscribe({
+      const query = {
+        level_id: frm.value.level_id || '',
+        level_name: frm.value.level_name || '',
+        p_level_id: frm.value.p_level_id || '',
+      };
+
+      this.sysb300Service.querySYSB300(query).subscribe({
         next: (response: any) => {
           console.log('API response:', response);
           if (response.Status === '0000') {
