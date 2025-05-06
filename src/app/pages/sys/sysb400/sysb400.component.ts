@@ -134,10 +134,8 @@ export class SYSB400Component
 
     // 收集所有有效的 ID
     const idList = items
-      .filter(
-        (item) => item && item.level_id != null && item.level_id !== undefined,
-      )
-      .map((item) => item.level_id);
+      .filter((item) => item && item.id != null && item.id !== undefined)
+      .map((item) => item.id);
 
     if (idList.length === 0) {
       console.error('No valid IDs to delete');

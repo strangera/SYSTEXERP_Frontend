@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
 })
 export class Sysb100m {
+  'id': string;
   'SYS_StoreNo': string;
   'STR_Uniform': string;
   'SYS_StoreName': string;
@@ -38,6 +39,7 @@ export class Sysb100m {
 }
 
 export class Sysb200m {
+  'id': string;
   'manufacturerID': string;
   'approvalStatus': string;
   'manufacturerUID': string;
@@ -81,6 +83,7 @@ export class Sysb300m {
 }
 
 export class Sysb400m {
+  'id': string;
   'org_id': string;
   'org_name': string;
   'p_org_id': string;
@@ -88,6 +91,19 @@ export class Sysb400m {
   'level_name': string;
   'p_level_id': string;
   'stop_flag': string;
+  'CRT_USR_No': string;
+  'CRT_USR_Name': string;
+  'UPD_Date': Date;
+  'UPD_USR_No': string;
+  'UPD_USR_Name': string;
+}
+
+// SYS3A00 區域代碼檔
+export class Sysb500m {
+  'id': string;
+  'area_no': string;
+  'area_desc': string;
+  'CRT_Date': Date;
   'CRT_USR_No': string;
   'CRT_USR_Name': string;
   'UPD_Date': Date;
