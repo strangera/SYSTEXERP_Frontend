@@ -45,7 +45,7 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
   columns: Column[] = [
     { field: 'bus_type', header: '大分類代號', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
-    { field: 'bus_type_desc', header: '備註', visible: true },
+    { field: 'bus_type_desc', header: '備註', visible: true, type: 'html' },
     // 其他欄位
   ];
 
