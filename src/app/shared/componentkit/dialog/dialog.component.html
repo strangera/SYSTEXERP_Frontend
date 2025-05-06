@@ -1,12 +1,25 @@
-<p-dialog [(visible)]="visible" position="center" [style]="{ width: '100%', maxWidth: '900px' }" [header]="header"
-  [modal]="true" styleClass="p-fluid" (visibleChange)="visibleChange.emit($event)">
-  <ng-template pTemplate="content">
-    <ng-content></ng-content>
-  </ng-template>
-  <ng-template pTemplate="footer">
-    <div class="grid justify-content-end gap-2 m-0 border-top-1 surface-border pt-3">
-      <app-button btnType="cancel" (click)="visibleChange.emit(false)"></app-button>
-      <app-button label="確定" btnType="default" (click)="saveDialog()" [disabled]="disable"></app-button>
+<div class="grid p-fluid">
+  <ng-container *ngFor="let field of fieldsConfig">
+    <div class="col pb-0">
+      <ng-container *ngIf="field.mainDataField; else elseBlock">
+        <label [for]="field.field">{{ field.header }}<span *ngIf="isRequired" class="required">*</span></label>
+        <p-autoComplete [formControl]="control" [id]="field.field" [suggestions]="filteredOptions"
+          (completeMethod)="filterOptions($event)" [optionLabel]="optionLabel" [optionValue]="optionValue"
+          (onFocus)="op.show($event)" (input)="onInputChange($event)" (input)="op.hide()" [showClear]="true"
+          [lazy]="true" [suggestions]="suggestions"></p-autoComplete>
+        <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
+          [control]="control"></app-control-messages>
+      </ng-container>
+      <ng-template #elseBlock>
+        <label for="{{ field.field }}">{{ field.header }}</label>
+        <input type="text" pInputText [disabled]="true" [value]="getFieldValue(field)" [disabled]="true" />
+      </ng-template>
     </div>
-  </ng-template>
-</p-dialog>
+  </ng-container>
+</div>
+
+<p-overlayPanel #op>
+  <div class="flex flex-column gap-3">
+    <ng-content />
+  </div>
+</p-overlayPanel>

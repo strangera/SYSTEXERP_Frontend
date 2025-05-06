@@ -57,9 +57,11 @@
       background: transparent;
       border: none;
       padding: 0;
-      .caption-left p-multiselect {
+      p-multiselect {
         width: 35px;
         height: 35px;
+      }
+      p-multiselect {
         .p-multiselect-label {
           display: none;
         }
@@ -119,7 +121,7 @@
         // 叉叉效果
         &::before,
         &::after {
-          content: '';
+          content: "";
           position: absolute;
           top: 50%;
           left: 50%;
@@ -198,5 +200,18 @@
     left: 50%;
     top: 67%;
     transform: translate(-50%, -50%);
+  }
+  .no-wrap {
+    white-space: nowrap;
+    div {
+      display: inline;
+    }
+  }
+  .p-datatable .p-datatable-thead > tr > th {
+    background: #c7d2fe;
+  }
+
+  .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+    background: #eef2ff;
   }
 }

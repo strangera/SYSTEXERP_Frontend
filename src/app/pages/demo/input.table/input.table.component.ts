@@ -3,6 +3,9 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
+import { FieldsConfig } from '../../../shared/componentkit/dialog/dialog.component';
+import { debounceTime, Subject, switchMap } from 'rxjs';
+import { LocationService } from './location.service';
 
 @Component({
   selector: 'app-input.table',
@@ -11,6 +14,7 @@ import { Column } from '../../../shared/componentkit/table/table.model';
 })
 export class InputTableComponent extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
+    multiLevel: [null, [Validators.required]], // Multi Level
     text: ['', [Validators.required, Validators.maxLength(13)]], // Input Text
     textarea: ['', [Validators.required, Validators.maxLength(13)]], // Input Textarea
     number: [null, [Validators.required, Validators.maxLength(13)]], // Input number
@@ -56,8 +60,16 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
   // ----------------------------------------------------------------
   systemTypeOptions: any[] = [];
 
-  constructor(private systemTypeService: SystemTypeService,) {
-    super(); // 呼叫父類建構子
+  constructor(
+    private systemTypeService: SystemTypeService,
+    private locationService: LocationService,) {
+    super();
+  }
+  onSubmit(frm: FormGroup) {
+    console.log(frm.value);
+  }
+  onDelete(data: any) {
+    console.log(data);
   }
 
   ngOnInit(): void {
@@ -65,70 +77,49 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     this.systemTypeService.getSystemTypes().subscribe(data => {
       this.systemTypeOptions = data;
     });
+    this.searchInput$.pipe(debounceTime(300), switchMap((term: string) => this.locationService.searchLocations(term))).subscribe((results) => {
+      this.dialogData = results;
+    });
   }
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      this.data = [
-        { 'name': 'William', 'isdelete': true, 'age': 35, 'email': 'william36@example.com', 'city': 'Yilan' },
-        { 'name': 'Sarah', 'isdelete': false, 'age': 30, 'email': 'sarah49@example.com', 'city': 'Tainan' },
-        { 'name': 'Emily', 'isdelete': true, 'age': 24, 'email': 'emily82@example.com', 'city': 'New Taipei' },
-        { 'name': 'Sarah', 'isdelete': false, 'age': 23, 'email': 'sarah51@example.com', 'city': 'Tainan' },
-      ];
-    })
-  }
-  onDelete(data: any) {
-    console.log(data);
-  }
-
   // dialog==================================
-  visibleDialog = false;
+  fieldsConfig: FieldsConfig[] = [
+    { field: 'LOCATION_No', header: '位置編號', mainDataField: true },
+    { field: 'FLOOR_NO', header: '樓層' },
+    { field: 'AREA_NO', header: '區域' },
+    { field: 'GROSS_SPACE', header: '營業坪數' },
+  ];
   dialogForm = this.formBuilder.group({
-    CashRegisterCode: ['', [Validators.maxLength(13)]], // 收銀機代號
-    counterCode: ['', [Validators.maxLength(13)]], // 專櫃編號
-    counterName: ['', [Validators.maxLength(13)]], // 專櫃名稱
+    LOCATION_No: ['', [Validators.maxLength(10)]], // 位置編號
     BUILDING_NO: [null], // 館別
     FLOOR_NO: [null], // 樓層
     AREA_NO: [null], // 區域
   })
-  BUILDING_NO_Options: any[] = [
-    { value: 1, label: '1館' },
-    { value: 2, label: '2館' },
-  ];
-  floorOptions: any[] = [
-    { value: 1, label: 'B1' },
-    { value: 2, label: '1F' },
-    { value: 3, label: '2F' },
-  ];
-  RegionCodeOptions: any[] = [
-    { value: 1, label: 'A區' },
-    { value: 2, label: 'B區' },
-    { value: 3, label: 'C區' },
-  ];
   dialogColumns: Column[] = [
-    { field: 'CashRegisterCode', header: '收銀機代號' },
-    { field: 'counterCode', header: '專櫃編號' },
-    { field: 'counterName', header: '專櫃名稱' },
-    { field: 'BUILDING_NO', header: '館別', format: (value: any) => this.BUILDING_NO_Options.find(option => option.value === value)?.label || value },
+    { field: 'LOCATION_No', header: '位置編號' },
+    { field: 'BUILDING_NO', header: '館別' },
     { field: 'FLOOR_NO', header: '樓層', format: (value: any) => this.floorOptions.find(option => option.value === value)?.label || value },
     { field: 'AREA_NO', header: '區域', format: (value: any) => this.RegionCodeOptions.find(option => option.value === value)?.label || value },
+    { field: 'GROSS_SPACE', header: '營業坪數' },
   ];
   dialogData: any = [];
   selectedItemsDialog: any = [];
-  dialogIsLoading = false;
-  onDialogQuery(frm: FormGroup) {
-    console.log(frm.value);
-    this.dialogIsLoading = true;
-    setTimeout(() => {
-      this.dialogData = [
-        { CashRegisterCode: '001', counterCode: 'A01', counterName: '櫃檯1', BUILDING_NO: 1, FLOOR_NO: 1, AREA_NO: 1 },
-        { CashRegisterCode: '002', counterCode: 'A02', counterName: '櫃檯2', BUILDING_NO: 1, FLOOR_NO: 2, AREA_NO: 2 },
-        { CashRegisterCode: '003', counterCode: 'A03', counterName: '櫃檯3', BUILDING_NO: 2, FLOOR_NO: 3, AREA_NO: 3 },
-        { CashRegisterCode: '004', counterCode: 'A04', counterName: '櫃檯4', BUILDING_NO: 2, FLOOR_NO: 1, AREA_NO: 1 },
-      ];
-      this.dialogIsLoading = false;
-    }, 1000);
-  }
-  onDialogSubmit() {
+  BUILDING_NO_Options: any[] = [
+    { value: '01', label: '01' },
+    { value: '02', label: '02' },
+  ]
+  floorOptions: any[] = [
+    { value: '16F', label: '16F' },
+    { value: '1F', label: '1F' },
+    { value: 'B1', label: 'B1' },
+  ];
+  RegionCodeOptions: any[] = [
+    { value: 'Z', label: 'Z區' },
+    { value: 'A', label: 'A區' },
+    { value: 'B', label: 'B區' },
+  ];
 
+  private searchInput$ = new Subject<string>(); // Subject 用於處理輸入流
+  onAutoCompleteInputChange(event: any) {
+    this.searchInput$.next(event); // 將輸入值發送到 Subject
   }
 }

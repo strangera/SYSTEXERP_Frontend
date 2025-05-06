@@ -7,6 +7,29 @@
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true">
       <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
+          <app-dialog class="col-12" label="位置編號" [control]="queryForm.controls.multiLevel" [submitted]="submitted"
+            [options]="dialogData" [fieldsConfig]="fieldsConfig" optionLabel="LOCATION_No"
+            (inputValueChanged)="onAutoCompleteInputChange($event)">
+            <form [formGroup]="dialogForm">
+              <div class="grid p-fluid">
+                <app-input-text class="col-12 md:col-6 lg:col-3" label="位置編號" controlName="LOCATION_No"
+                  [control]="dialogForm.controls.LOCATION_No" />
+                <app-multi-select class="col-12 md:col-6 lg:col-3" label="館別" controlName="BUILDING_NO"
+                  [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
+                  [control]="dialogForm.controls.BUILDING_NO" />
+                <app-multi-select class="col-12 md:col-6 lg:col-3" label="樓層" controlName="FLOOR_NO"
+                  [options]="floorOptions" optionLabel="label" optionValue="value"
+                  [control]="dialogForm.controls.FLOOR_NO" />
+                <app-multi-select class="col-12 md:col-6 lg:col-3" label="區域" controlName="AREA_NO"
+                  [options]="RegionCodeOptions" optionLabel="label" optionValue="value"
+                  [control]="dialogForm.controls.AREA_NO" />
+              </div>
+              <app-table tableKey="dialogTable" dataKey="LOCATION_No" [data]="dialogData"
+                [selectedItems]="selectedItemsDialog" (selectionChange)="selectedItemsDialog = $event"
+                [columns]="dialogColumns" [showHeader]="false" [showPage]="false" [showCheckBox]="true"
+                selectionMode="single" [showManage]="false" />
+            </form>
+          </app-dialog>
         </div>
         <div class="grid p-fluid">
           <app-input-text class="col-12 md:col-6 lg:col-5" label="文字輸入" controlName="text"
@@ -61,7 +84,6 @@
         <div class="grid p-fluid">
           <app-file-upload class="col-12 md:col-6 lg:col-4" fileType=".pdf" />
         </div>
-        <!-- <div *appHasPermission="queryPermission" class="col"> -->
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
@@ -83,32 +105,3 @@
   <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
   </app-data-table>
 </div>
-
-<app-dialog [visible]="visibleDialog" header="專櫃查詢" (visibleChange)="visibleDialog = $event" (save)="onDialogSubmit()"
-  [disable]="selectedItemsDialog.length === 0">
-  <form [formGroup]="dialogForm">
-    <div class="grid p-fluid">
-      <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機代號" controlName="CashRegisterCode"
-        [control]="dialogForm.controls.CashRegisterCode" />
-      <app-input-text class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="counterCode"
-        [control]="dialogForm.controls.counterCode" />
-      <app-input-text class="col-12 md:col-6 lg:col-4" label="專櫃名稱" controlName="counterName"
-        [control]="dialogForm.controls.counterName" />
-      <app-multi-select class="col-12 md:col-6 lg:col-4" label="館別" controlName="BUILDING_NO"
-        [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
-        [control]="dialogForm.controls.BUILDING_NO" />
-      <app-multi-select class="col-12 md:col-6 lg:col-4" label="樓層" controlName="FLOOR_NO" [options]="floorOptions"
-        optionLabel="label" optionValue="value" [control]="dialogForm.controls.FLOOR_NO" />
-      <app-multi-select class="col-12 md:col-6 lg:col-4" label="區域" controlName="AREA_NO" [options]="RegionCodeOptions"
-        optionLabel="label" optionValue="value" [control]="dialogForm.controls.AREA_NO" />
-      <div class="col flex justify-content-end gap-2">
-        <app-button btnType="clear" (click)="dialogForm.reset()" />
-        <app-button btnType="query" (clickEvent)="onDialogQuery(dialogForm)" [loading]="dialogIsLoading" />
-      </div>
-    </div>
-    <app-table tableKey="dialogTable" dataKey="CashRegisterCode" [data]="dialogData"
-      [selectedItems]="selectedItemsDialog" (selectionChange)="selectedItemsDialog = $event" [columns]="dialogColumns"
-      [showHeader]="false" [showPage]="false" [showCheckBox]="true" [showManage]="false" [loading]="dialogIsLoading">
-    </app-table>
-  </form>
-</app-dialog>
