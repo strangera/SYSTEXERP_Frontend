@@ -24,23 +24,59 @@
             </div>
 
             <!-- 顯示 Team Members -->
-            <ul class="list-none p-0 m-0 flex flex-column gap-3">
+            <!-- <ul class="list-none p-0 m-0 flex flex-column gap-3">
                 <li *ngFor="let dept of members" class="flex flex-column gap-2">
-                    <span class="font-bold text-primary">{{ dept.department }}</span>
-                    <ul class="list-none p-0 m-0 flex flex-column gap-2 pl-3">
-                        <li *ngFor="let role of dept.roles" class="flex flex-column gap-2">
-                            <span class="font-medium text-900">{{ role.role }}</span>
-                            <ul class="list-none p-0 m-0 flex flex-column gap-2 pl-3">
-                                <li *ngFor="let member of role.members" class="flex align-items-center gap-2"
+                    <span class="font-bold text-primary">
+                        <i class="pi pi-folder-open mr-2"></i>{{ dept.department }}
+                    </span>
+                    <ul class="list-none p-0 m-0 flex flex-column gap-2 pl-3 border-left-2 border-gray-300">
+                        <li *ngFor="let role of dept.roles" class="flex flex-column gap-2 pl-3">
+                            <span class="font-medium text-900">
+                                <i class="pi pi-users mr-2 text-sm"></i>{{ role.role }}
+                            </span>
+                            <ul class="list-none p-0 m-0 flex flex-column gap-2 pl-4 border-left-1 border-gray-200">
+                                <li *ngFor="let member of role.members" class="flex align-items-center gap-2 pl-2"
                                     (click)="toggleSelection(member)" (keydown)="onKeyDown($event, member)" tabindex="0"
                                     [ngClass]="{'selected': selectedMembers.includes(member)}">
+                                    <i class="pi pi-user text-sm mr-2 text-gray-500"></i>
                                     <div>
                                         <span class="font-medium">{{ member.name }}</span>
                                         <div class="text-sm text-color-secondary">{{ member.email }}</div>
                                     </div>
                                     <div class="flex align-items-center gap-2 text-color-secondary ml-auto text-sm">
                                         <span>{{ member.role }}</span>
-                                        <i class="pi pi-angle-down"></i>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul> -->
+
+            <ul class="list-none p-0 m-0 flex flex-column gap-3">
+                <li *ngFor="let dept of members" class="flex flex-column gap-2">
+                    <div class="clickable-item font-bold text-primary pl-1" tabindex="0" (click)="toggleSelection(dept)"
+                        (keydown)="onKeyDown($event, dept)">
+                        <i class="pi pi-folder-open mr-2"></i>{{ dept.department }}
+                    </div>
+                    <ul class="list-none p-0 m-0 flex flex-column gap-2 pl-4 border-left-2 border-gray-300">
+                        <li *ngFor="let role of dept.roles" class="flex flex-column gap-2">
+                            <div class="clickable-item font-medium text-900 pl-1" tabindex="0"
+                                (click)="toggleSelection(role)" (keydown)="onKeyDown($event, role)">
+                                <i class="pi pi-users mr-2 text-sm"></i>{{ role.role }}
+                            </div>
+                            <ul class="list-none p-0 m-0 flex flex-column gap-2 pl-4 border-left-1 border-gray-200">
+                                <li *ngFor="let member of role.members"
+                                    class="clickable-item flex align-items-center gap-2 pl-1"
+                                    (click)="toggleSelection(member)" (keydown)="onKeyDown($event, member)" tabindex="0"
+                                    [ngClass]="{'selected': selectedMembers.includes(member)}">
+                                    <i class="pi pi-user text-sm mr-2 text-gray-500"></i>
+                                    <div>
+                                        <span class="font-medium">{{ member.name }}</span>
+                                        <div class="text-sm text-color-secondary">{{ member.email }}</div>
+                                    </div>
+                                    <div class="flex align-items-center gap-2 text-color-secondary ml-auto text-sm">
+                                        <span>{{ member.role }}</span>
                                     </div>
                                 </li>
                             </ul>

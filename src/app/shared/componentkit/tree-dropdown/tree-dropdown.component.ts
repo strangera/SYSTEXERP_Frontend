@@ -73,20 +73,51 @@ export class TreeDropdownComponent {
   }
 
   // 切換選擇狀態
-  toggleSelection(member: any) {
-    const index = this.selectedMembers.findIndex((m) => m.name === member.name);
+  toggleSelection(item: any) {
+    // const index = this.selectedMembers.findIndex((m) => m.name === member.name);
 
-    if (index === -1) {
-      // 如果成員沒有被選中，就加入選擇列表
-      this.selectedMembers.push(member);
+    // if (index === -1) {
+    //   // 如果成員沒有被選中，就加入選擇列表
+    //   this.selectedMembers.push(member);
+    // } else {
+    //   // 如果成員已經被選中，就移除它
+    //   this.selectedMembers.splice(index, 1);
+    // }
+
+    // // 強制刷新 p-multiSelect 顯示
+    // setTimeout(() => {
+    //   // 使用 ngModel 更新後，強制刷新顯示
+    //   this.selectedMembers = [...this.selectedMembers];
+    // }, 0);
+
+    let membersToToggle: any[] = [];
+
+    if (item.roles) {
+      // 👉 item 是部門
+      item.roles.forEach((role: any) => {
+        membersToToggle.push(...role.members);
+      });
+    } else if (item.members) {
+      // 👉 item 是角色
+      membersToToggle = item.members;
     } else {
-      // 如果成員已經被選中，就移除它
-      this.selectedMembers.splice(index, 1);
+      // 👉 item 是單一成員
+      membersToToggle = [item];
     }
+
+    membersToToggle.forEach((member) => {
+      const index = this.selectedMembers.findIndex(
+        (m) => m.name === member.name,
+      );
+      if (index === -1) {
+        this.selectedMembers.push(member);
+      } else {
+        this.selectedMembers.splice(index, 1);
+      }
+    });
 
     // 強制刷新 p-multiSelect 顯示
     setTimeout(() => {
-      // 使用 ngModel 更新後，強制刷新顯示
       this.selectedMembers = [...this.selectedMembers];
     }, 0);
   }
