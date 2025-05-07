@@ -116,8 +116,12 @@
     border-radius: 0.75rem !important;
   }
 }
-.p-overlaypanel-content .p-datatable.p-datatable-hoverable-rows .p-datatable-tbody > tr:not(.p-highlight):hover td {
-  border-radius: 0 !important; 
+.p-overlaypanel-content
+  .p-datatable.p-datatable-hoverable-rows
+  .p-datatable-tbody
+  > tr:not(.p-highlight):hover
+  td {
+  border-radius: 0 !important;
 }
 
 .p-overlaypanel {
@@ -160,4 +164,13 @@
       margin-right: 0 !important;
     }
   }
+}
+
+.p-button.p-button-secondary.p-button-text:not(:disabled):hover,
+.p-buttonset.p-button-secondary > .p-button.p-button-text:not(:disabled):hover,
+.p-splitbutton.p-button-secondary
+  > .p-button.p-button-text:not(:disabled):hover {
+  background: rgba(96, 125, 139, 0.4);
+  border-color: transparent;
+  color: #607d8b;
 }
