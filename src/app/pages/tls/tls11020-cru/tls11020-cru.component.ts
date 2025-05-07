@@ -1,33 +1,31 @@
-import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-//
 import { ValidationService } from '../../../shared/service/validation.service';
 import { DeductionCategoryService } from '../../../service/basic/deduction-category.service';
-import { TicketPaymentService } from './../../../service/basic/ticket-payment.service';
-import { InstallmentPeriodService } from './../../../service/basic/installment-period.service';
-import { SalesTypeService } from './../../../service/basic/sales-type.service';
-import { ConfirmationService } from 'primeng/api';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-tls11020-cru',
   templateUrl: './tls11020-cru.component.html',
-  styleUrl: './tls11020-cru.component.scss'
+  styleUrls: ['./tls11020-cru.component.scss'],
 })
-// 2.1.2.1 扣款項目維護作業 CRU
 export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
   deductionCategoryOptions: any[] = [];
 
   inputForm = this.formBuilder.group({
     deductionItemNumber: [
       { value: '由系統帶入', disabled: true },
-      [Validators.required, this.validationService.numberValidator, Validators.maxLength(3)]
+      [
+        Validators.required,
+        this.validationService.numberValidator,
+        Validators.maxLength(3),
+      ],
     ],
     deductionItemName: ['', [Validators.required, Validators.maxLength(40)]],
     deductionCategory: [null, [Validators.required]],
@@ -41,9 +39,10 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
 
   constructor(
     private translate: TranslateService,
+
     private validationService: ValidationService,
     private deductionCategoryService: DeductionCategoryService,
-    private confirmationService: ConfirmationService,
+    private http: HttpClient,
   ) {
     super();
   }
@@ -51,11 +50,10 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS11020', this.inputForm);
 
-    this.deductionCategoryService.getDeductionCategories().subscribe(data => {
+    this.deductionCategoryService.getDeductionCategories().subscribe((data) => {
       this.deductionCategoryOptions = data;
     });
   }
-
   Edit(rowdata: any) {
     this.inputForm.patchValue(rowdata);
   }
@@ -65,31 +63,69 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     this.inputForm.disable();
   }
 
-  onSubmit() {
+  onSubmit(): void {
     this.messageService.blockUi();
     this.submitted = true;
 
     if (this.inputForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
+      this.messageService.errorBubble(
+        this.translate.instant('form_error_message'),
+      );
       this.messageService.unblockUi();
       return;
     }
 
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
+    const raw = this.inputForm.getRawValue();
+    const capType = (raw.deductionCategory ?? '') as string;
+
+    if (capType.length !== 1) {
+      this.messageService.errorBubble('扣款類別(CAP_Type) 必須是一個單一字元');
+      this.messageService.unblockUi();
+      return;
     }
 
-    this.messageService.unblockUi();
-    this.submitted = false;
+    const payload = {
+ 
+        CAP_Type: capType,
+        CAP_Name: raw.deductionItemName,
+        AccNo: raw.accNo,
+        GUI_FLAG: raw.guiFlag,
+        CAP_TaxType: raw.capTaxType,
+        IsCommonlyUsed: raw.isCommonlyUsed,
+        Print_Area: raw.printArea,
+        CAP_Remark: raw.remark,
+      
+    };
+    console.log('🚀 送出 payload:', payload);
+    if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
+      this.http
+        .post(`${environment.ApiUrl}/TLS0000/TLS1000/insertTLS11020`, payload)
+        .subscribe({
+          next: () => {
+            this.messageService.successBubble(
+              this.translate.instant('success_message'),
+            );
+            this.router.navigate(['/TLS11020']);
+          },
+          error: () => {
+            this.messageService.errorBubble(
+              this.translate.instant('create_failed'),
+            );
+          },
+          complete: () => {
+            this.messageService.unblockUi();
+            this.submitted = false;
+          },
+        });
+    } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
+      this.messageService.successBubble(
+        this.translate.instant('updated-successfully'),
+      );
+      this.messageService.unblockUi();
+      this.submitted = false;
+    } else {
+      this.messageService.unblockUi();
+    }
   }
 
   onClearForm() {

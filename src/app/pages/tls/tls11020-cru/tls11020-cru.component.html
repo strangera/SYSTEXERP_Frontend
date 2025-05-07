@@ -9,90 +9,54 @@
     <form [formGroup]="inputForm">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text 
-            label="扣款項目編號"
-            [control]="inputForm.controls.deductionItemNumber"
-            [submitted]="submitted">
+          <app-input-text label="扣款項目編號" [control]="inputForm.controls.deductionItemNumber" [submitted]="submitted">
           </app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown 
-            label="扣款類別"
-            [options]="deductionCategoryOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="inputForm.controls.deductionCategory"
-            [submitted]="submitted"
+          <app-dropdown label="扣款類別" [options]="deductionCategoryOptions" optionLabel="label" optionValue="value"
+            [control]="inputForm.controls.deductionCategory" [submitted]="submitted" [style.width.%]="100">
+          </app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="扣款項目名稱" [control]="inputForm.controls.deductionItemName" [submitted]="submitted">
+          </app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="會計科目" [control]="inputForm.controls.accNo" [submitted]="submitted">
+          </app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="是否開立發票" [options]="[{ label: '開立', value: 'Y' }, { label: '不開立', value: 'N' }]"
+            optionLabel="label" optionValue="value" [control]="inputForm.controls.guiFlag" [submitted]="submitted"
             [style.width.%]="100">
           </app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text 
-            label="扣款項目名稱"
-            [control]="inputForm.controls.deductionItemName"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text 
-            label="會計科目"
-            [control]="inputForm.controls.accNo"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown 
-            label="是否開立發票"
-            [options]="[{ label: '開立', value: 'Y' }, { label: '不開立', value: 'N' }]"
-            optionLabel="label"
-            optionValue="value"
-            [control]="inputForm.controls.guiFlag"
-            [submitted]="submitted"
+          <app-dropdown label="課稅別" [options]="[{ label: '免稅', value: '0' }, { label: '應稅', value: '1' }]"
+            optionLabel="label" optionValue="value" [control]="inputForm.controls.capTaxType" [submitted]="submitted"
             [style.width.%]="100">
           </app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown 
-            label="課稅別"
-            [options]="[{ label: '免稅', value: '0' }, { label: '應稅', value: '1' }]"
-            optionLabel="label"
-            optionValue="value"
-            [control]="inputForm.controls.capTaxType"
-            [submitted]="submitted"
-            [style.width.%]="100">
+          <app-dropdown label="是否為常用" [options]="[{ label: '常用', value: 'Y' }, { label: '不常用', value: 'N' }]"
+            optionLabel="label" optionValue="value" [control]="inputForm.controls.isCommonlyUsed"
+            [submitted]="submitted" [style.width.%]="100">
           </app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown 
-            label="是否為常用"
-            [options]="[{ label: '常用', value: 'Y' }, { label: '不常用', value: 'N' }]"
-            optionLabel="label"
-            optionValue="value"
-            [control]="inputForm.controls.isCommonlyUsed"
-            [submitted]="submitted"
-            [style.width.%]="100">
-          </app-dropdown>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text 
-            label="列印區分"
-            [control]="inputForm.controls.printArea"
-            [submitted]="submitted">
+          <app-input-text label="列印區分" [control]="inputForm.controls.printArea" [submitted]="submitted">
           </app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text 
-            label="備註"
-            [control]="inputForm.controls.remark"
-            [submitted]="submitted">
+          <app-input-text label="備註" [control]="inputForm.controls.remark" [submitted]="submitted">
           </app-input-text>
         </div>
       </div>

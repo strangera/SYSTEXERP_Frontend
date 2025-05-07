@@ -12,8 +12,8 @@ export const environment = {
   // BaseUrl: 'http://10.7.55.13/TSRD_WEBAPI',
   // BaseUrl: 'http://43.207.4.99//TSRD_WEBAPI',
   // ApiUrl: 'http://43.207.4.99//TSRD_WEBAPI',
-  BaseUrl: 'http://10.7.55.13/TSRD_WEBAPI',
-  ApiUrl: 'http://10.7.55.13/TSRD_WEBAPI',
+  BaseUrl: 'http://10.3.11.2/TSRD_WEBAPI',
+  ApiUrl: 'http://10.3.11.2/TSRD_WEBAPI',
   PasswordKey: '8a9zx@a1231sdl!aafohc.u',
   PasswordIV: '12523648',
   APIKey:
