@@ -9,26 +9,46 @@ export class TreeDropdownComponent {
   // 樹狀結構資料
   members = [
     {
-      role: 'Owner',
-      members: [
-        { name: 'Amy Elsner', email: 'amy@email.com', role: 'Owner' },
+      department: 'Department A',
+      roles: [
         {
-          name: 'Bernardo Dominic',
-          email: 'bernardo@email.com',
           role: 'Owner',
+          members: [
+            { name: 'Amy Elsner', email: 'amy@email.com', role: 'Owner' },
+            {
+              name: 'Bernardo Dominic',
+              email: 'bernardo@email.com',
+              role: 'Owner',
+            },
+          ],
+        },
+        {
+          role: 'Viewer',
+          members: [
+            { name: 'Ioni Bowcher', email: 'ioni@email.com', role: 'Viewer' },
+          ],
         },
       ],
     },
     {
-      role: 'Viewer',
-      members: [
-        { name: 'Ioni Bowcher', email: 'ioni@email.com', role: 'Viewer' },
-      ],
-    },
-    {
-      role: 'Examiner',
-      members: [
-        { name: 'Super Man', email: 'superman@email.com', role: 'Examiner' },
+      department: 'Department B',
+      roles: [
+        {
+          role: 'Examiner',
+          members: [
+            {
+              name: 'Super Man',
+              email: 'superman@email.com',
+              role: 'Examiner',
+            },
+          ],
+        },
+        {
+          role: 'Reviewer',
+          members: [
+            { name: 'Spider Man', email: 'spider@email.com', role: 'Reviewer' },
+          ],
+        },
       ],
     },
   ];
@@ -38,8 +58,10 @@ export class TreeDropdownComponent {
   // 將樹狀結構展平成一維陣列以便於選擇
   flattenMembers(members: any[]): any[] {
     let flattened: any[] = [];
-    members.forEach((role) => {
-      flattened = [...flattened, ...role.members];
+    members.forEach((dept) => {
+      dept.roles.forEach((role: { members: any }) => {
+        flattened = [...flattened, ...role.members];
+      });
     });
     return flattened;
   }
