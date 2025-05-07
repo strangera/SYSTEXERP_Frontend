@@ -1,6 +1,6 @@
+import { Sysb800DropdownService } from './../../../service/dropdown/sysb800-dropdown.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { IndustryTypeService } from '../../../service/basic/industry-type.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { SortMeta } from 'primeng/api';
 import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
@@ -32,10 +32,11 @@ const storageKey = 'SYSB900';
 })
 // 商品類別維護作業
 export class SYSB900Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
+  Options: { value: string, label: string }[] = [];
   queryForm = this.formBuilder.nonNullable.group({
     bus_class: ['', [Validators.maxLength(2)]], // 中分類代號
     bus_class_name: ['', [Validators.maxLength(40)]], // 中分類名稱
-    industryType: [[] as number[]], // 所屬業種
+    bus_type: [[] as number[]], // 所屬業種
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
     //分頁查詢
     pageSize: [10],
@@ -54,10 +55,10 @@ export class SYSB900Component extends BasicQueryPageComponent<CategoryItem> impl
   ];
   totalRecords: number = 0;
   selectedItems: CategoryItem[] = [];
-  industryTypeOptions: any[] = [];
+  option: any[] = [];
 
   constructor(
-    private industryTypeService: IndustryTypeService,
+    private Sysb800DropdownService: Sysb800DropdownService,
     private validationService: ValidationService,
     private apiService: Bas1000Service,
   ) {
@@ -66,15 +67,16 @@ export class SYSB900Component extends BasicQueryPageComponent<CategoryItem> impl
 
   ngOnInit(): void {
     // this.ProgNo = '410008';
-    this.initializePage('SYSB900', '/SYS/B/SYSB900CRU');
+    this.initializePage('SYSB900', '/SYS/SYSB900CRU');
 
-    this.industryTypeService.getSystemTypes().subscribe(data => {
-      this.industryTypeOptions = data;
-
-      // let allSystemValues = this.industryTypeOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   industryType: allSystemValues
-      // });
+    this.Sysb800DropdownService.getSystemTypes().subscribe({
+      next: (response) => {
+        this.option = response;
+      },
+      error: (error) => {
+        console.error('獲取大分類代碼失敗:', error);
+        this.messageService.errorBubble('無法載入大分類代碼，請稍後重試');
+      }
     });
 
     this.handleQueryRestore(this.queryForm, storageKey, (form) => this.onSubmit(form));

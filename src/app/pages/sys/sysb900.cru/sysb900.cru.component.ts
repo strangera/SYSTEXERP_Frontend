@@ -1,9 +1,8 @@
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { TranslateService } from '@ngx-translate/core';
-import { IndustryTypeService } from '../../../service/basic/industry-type.service';
+import { Sysb800DropdownService } from './../../../service/dropdown/sysb800-dropdown.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
 
@@ -30,14 +29,13 @@ export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> imp
   dataForm = this.formBuilder.nonNullable.group({
     bus_class: ['', [Validators.required, Validators.maxLength(2)]], // 中分類代碼
     bus_class_name: ['', [Validators.required, Validators.maxLength(40)]], // 中分類名稱
-    bus_type: [, [Validators.required]], // 所屬大分類
+    bus_type: ['', [Validators.required]], // 所屬大分類
   });
-  //
-  industryTypeOptions: any[] = [];
-  // ----------------------------------------------------------------
+  option: any[] = [];
+
   constructor(
     private translate: TranslateService,
-    private industryTypeService: IndustryTypeService,
+    private Sysb800DropdownService: Sysb800DropdownService,
     private apiService: Bas1000Service,
   ) {
     super();  // 呼叫父類建構子
@@ -47,13 +45,14 @@ export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> imp
     // 初始化
     // this.ProgNo = '410008';
     this.initializePage('SYSB900', this.dataForm);
-    this.industryTypeService.getSystemTypes().subscribe(data => {
-      this.industryTypeOptions = data;
-
-      // let allSystemValues = this.industryTypeOptions.map(system => system.value);
-      // this.dataForm.patchValue({
-      //   industryType: allSystemValues
-      // });
+    this.Sysb800DropdownService.getSystemTypes().subscribe({
+      next: (response) => {
+        this.option = response;
+      },
+      error: (error) => {
+        console.error('獲取大分類代碼失敗:', error);
+        this.messageService.errorBubble('無法載入大分類代碼，請稍後重試');
+      }
     });
   }
   // ----------------------------------------------------------------

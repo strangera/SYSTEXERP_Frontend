@@ -5,6 +5,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ValidationService } from '../../../shared/service/validation.service';
 import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
 import { TableLazyLoadEvent } from 'primeng/table';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -41,10 +42,10 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
 
   data: CategoryItem[] = [];
   filteredData: CategoryItem[] = [...this.data];
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'bus_type', header: '大分類代號', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
-    { field: 'bus_type_desc', header: '備註', visible: true },
+    { field: 'bus_type_desc', header: '備註', visible: true, type: 'html' },
     // 其他欄位
   ];
 
@@ -60,7 +61,7 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
 
   ngOnInit(): void {
     // this.ProgNo = '410007';
-    this.initializePage('SYSB800', '/SYS/B/SYSB800CRU');
+    this.initializePage('SYSB800', '/SYS/SYSB800CRU');
 
     // 恢復查詢狀態並自動查詢
     this.handleQueryRestore(this.queryForm, storageKey, (form) => this.onSubmit(form));
