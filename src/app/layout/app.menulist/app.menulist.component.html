@@ -1,6 +1,6 @@
 <ul class="layout-menu">
   <ng-container *ngFor="let level1 of filteredMenu">
-    <li class="layout-root-menuitem">
+    <li class="layout-root-menuitem" *ngIf="!activeTopMenuProgNo">
       <div class="layout-menuitem-root-text">{{level1.label}}</div>
     </li>
     <ul *ngIf="level1.items">

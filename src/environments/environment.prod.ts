@@ -1,4 +1,4 @@
-// 開發環境的 API 路徑
+// 生產環境的 API 路徑
 export const environment = {
   production: true,
   // BaseUrl: 'http://43.207.4.99//TSRD_WEBAPI',

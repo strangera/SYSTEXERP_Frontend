@@ -31,7 +31,7 @@ export class AppMenulistService {
     const menuLookup = new Map<string, MenuItem>();
     const dynamicMenu: MenuItem[] = [];
     // 先處理所有節點，建立基本的 MenuItem 物件並放入 menuLookup
-    lists.forEach(({ prog_no, prog_name, prog_up, prog_ispage, prog_sort }) => {
+    lists.forEach(({ prog_no, prog_name, prog_up, prog_ispage, prog_sort, sub_module_no }) => {
       const menuItem: MenuItem = {
         prog_no: prog_no,
         label: prog_name,
@@ -39,7 +39,7 @@ export class AppMenulistService {
         routerLink: prog_ispage === 'Y' ? `/${prog_no.slice(0, 3)}/${prog_no}` : undefined,
         items: undefined,
         expanded: false,
-        icon: prog_ispage === 'Y' ? 'pi pi-bookmark' : 'pi pi-home',
+        icon: prog_ispage === 'Y' ? 'pi pi-bookmark' : sub_module_no === "" ? "pi pi-home" : 'pi pi-box',
         hasChildrenOnly: false,
         prog_ispage: prog_ispage,
         prog_sort: prog_sort || 0, // 確保 prog_sort 有預設值，方便排序

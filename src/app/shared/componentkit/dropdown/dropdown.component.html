@@ -5,8 +5,8 @@
 <p-dropdown styleClass="w-full" [id]="controlName" [formControl]="control"
   [placeholder]="control.disabled ? '' : placeholder" [options]="options" [optionLabel]="optionLabel"
   [optionValue]="optionValue" [showClear]="true" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
-  appendTo="body" [dropdownIcon]="control.disabled ? 'hidden' : 'pi pi-angle-down'"
-  (onChange)="onDropdownChange($event)" dataKey="optionValue" [filter]="true">
+  [dropdownIcon]="control.disabled ? 'hidden' : 'pi pi-angle-down'" (onChange)="onDropdownChange($event)"
+  dataKey="optionValue" [filter]="true">
 </p-dropdown>
 
 <app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>

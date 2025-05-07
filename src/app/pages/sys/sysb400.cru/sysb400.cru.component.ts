@@ -24,14 +24,15 @@ export class SYSB400CRUComponent
     org_name: ['', [Validators.required, Validators.maxLength(40)]], // 組織名稱
     p_org_id: ['', [Validators.required, Validators.maxLength(20)]], // 上層組織代碼
     level_id: ['', [Validators.required, Validators.maxLength(2)]], // 組織階層代碼
-    level_name: ['', [Validators.required, Validators.maxLength(40)]], // 組織階層名稱
+    // level_name: ['', [Validators.required, Validators.maxLength(40)]], // 組織階層名稱
     p_level_id: ['', [Validators.required, Validators.maxLength(2)]], // 上層組織階層代碼
-    p_level_name: ['', [Validators.required, Validators.maxLength(40)]], // 上層組織階層名稱
+    // p_level_name: ['', [Validators.required, Validators.maxLength(40)]], // 上層組織階層名稱
     stop_flag: ['N', [Validators.required, Validators.maxLength(1)]], // 是否停用
   });
   showConfirm = false;
 
   upgroup_Options: option[] = [];
+  org_Option: option[] = [];
   whetherOptions: option[] = [
     { value: 'Y', label: '是' },
     { value: 'N', label: '否' },
@@ -64,7 +65,21 @@ export class SYSB400CRUComponent
         value: item.level_id,
         label: item.level_name,
       }));
-      console.log('300 options查詢結果', this.upgroup_Options);
+      console.log('階層代碼 查詢結果', this.upgroup_Options);
+    });
+
+    const query_org = {
+      level_id: '',
+      org_id: '',
+      org_name: '',
+    };
+
+    this.sysb400Service.querySYSB400(query_org).subscribe((response) => {
+      this.org_Option = response.Data.map((item: Sysb400m) => ({
+        value: item.org_id,
+        label: item.org_name,
+      }));
+      console.log('組織代碼 查詢結果', this.org_Option);
     });
   }
 
