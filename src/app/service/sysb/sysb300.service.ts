@@ -27,4 +27,9 @@ export class Sysb300Service {
   updateSYSB300(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateSYSB300`, body);
   }
+
+  // 刪除 SYS3000 資料表
+  deleteSYSB300(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deleteSYSB300`, body);
+  }
 }

@@ -3,7 +3,13 @@ import { ApprovalStatusService } from './../../../service/basic/approval-status.
 import { PaymentMethodService } from './../../../service/basic/payment-method.service';
 import { PostageChargeService } from './../../../service/basic/postage-charge.service';
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import {
+  FormArray,
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -19,12 +25,16 @@ import { SYS1000Response } from '../../../shared/models/SYS/SYS1000';
 @Component({
   selector: 'app-sysb200.cru',
   templateUrl: './sysb200.cru.component.html',
-  styleUrl: './sysb200.cru.component.scss'
+  styleUrl: './sysb200.cru.component.scss',
 })
 // 廠商基本資料維護作業 CRU
-export class SYSB200CRUComponent extends BasicCrupageComponent implements OnInit {
+export class SYSB200CRUComponent
+  extends BasicCrupageComponent
+  implements OnInit
+{
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
+    id: [], // ID
     manufacturerID: ['', [Validators.required, Validators.maxLength(14)]], // 廠商編號
     manufacturerUID: [1, []], // 統一編號
 
@@ -43,9 +53,7 @@ export class SYSB200CRUComponent extends BasicCrupageComponent implements OnInit
     registeredEmail: ['', [Validators.maxLength(60)]], // 發票電子郵件
     // 聯絡人資料
     // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+    items: this.formBuilder.array([this.createItem()]),
     // 付款資料
     // ----------------------------------------------------------------
     paynayMethod: [[] as number[], [Validators.required]], // 付款方式
@@ -84,7 +92,7 @@ export class SYSB200CRUComponent extends BasicCrupageComponent implements OnInit
     //
     private messagehint: MessageService,
   ) {
-    super();  // 呼叫父類建構子
+    super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -92,39 +100,47 @@ export class SYSB200CRUComponent extends BasicCrupageComponent implements OnInit
     // ----------------------------------------------------------------
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     // ----------------------------------------------------------------
-    this.postageChargeService.getSystemTypes().subscribe(data => {
+    this.postageChargeService.getSystemTypes().subscribe((data) => {
       this.postageChargeOptions = data;
 
-      let postageChargeValues = this.postageChargeOptions.map(system => system.value);
+      let postageChargeValues = this.postageChargeOptions.map(
+        (system) => system.value,
+      );
       this.dataForm.patchValue({
-        postageCharge: postageChargeValues
+        postageCharge: postageChargeValues,
       });
     });
     //
-    this.paymentMethodService.getSystemTypes().subscribe(data => {
+    this.paymentMethodService.getSystemTypes().subscribe((data) => {
       this.paymentMethodOptions = data;
 
-      let paymentMethodValues = this.paymentMethodOptions.map(system => system.value);
+      let paymentMethodValues = this.paymentMethodOptions.map(
+        (system) => system.value,
+      );
       this.dataForm.patchValue({
-        paynayMethod: paymentMethodValues
+        paynayMethod: paymentMethodValues,
       });
     });
     //
-    this.approvalStatusService.getSystemTypes().subscribe(data => {
+    this.approvalStatusService.getSystemTypes().subscribe((data) => {
       this.approvalStatusOptions = data;
 
-      let paymentMethodValues = this.approvalStatusOptions.map(system => system.value);
+      let paymentMethodValues = this.approvalStatusOptions.map(
+        (system) => system.value,
+      );
       this.dataForm.patchValue({
-        approveState: paymentMethodValues
+        approveState: paymentMethodValues,
       });
     });
     //
-    this.bankAccountCodeService.getSystemTypes().subscribe(data => {
+    this.bankAccountCodeService.getSystemTypes().subscribe((data) => {
       this.payBankAccountOptions = data;
 
-      let bankCodeValues = this.payBankAccountOptions.map(system => system.value);
+      let bankCodeValues = this.payBankAccountOptions.map(
+        (system) => system.value,
+      );
       this.dataForm.patchValue({
-        payBankCode: bankCodeValues
+        payBankCode: bankCodeValues,
       });
     });
     // ----------------------------------------------------------------
@@ -133,16 +149,20 @@ export class SYSB200CRUComponent extends BasicCrupageComponent implements OnInit
 
     if (systemSettingString) {
       // 將 JSON 字串解析成 JavaScript 物件
-      const systemSetting = JSON.parse(systemSettingString) as SYS1000Response[];
+      const systemSetting = JSON.parse(
+        systemSettingString,
+      ) as SYS1000Response[];
       // 篩選出 SYS_Type 為 'T111' 的項目
-      this.t111Options = systemSetting.filter(option => option.SYS_Type === 'T111');
+      this.t111Options = systemSetting.filter(
+        (option) => option.SYS_Type === 'T111',
+      );
     } else {
       this.t111Options = []; // 或者設定為空陣列
     }
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
+      crudstatus: CRUDStatus;
+      rowdata: any;
     };
 
     switch (state.crudstatus) {
@@ -217,13 +237,17 @@ export class SYSB200CRUComponent extends BasicCrupageComponent implements OnInit
       case CRUDStatus.Create:
         if (this.canAdd()) {
           // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
+          this.messageService.successBubble(
+            this.translate.instant('success_message'),
+          );
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
+          this.messageService.successBubble(
+            this.translate.instant('updated-successfully'),
+          );
         }
         break;
     }
@@ -235,13 +259,17 @@ export class SYSB200CRUComponent extends BasicCrupageComponent implements OnInit
   submitForm(frm: FormGroup) {
     // 查詢邏輯
     this.onSubmit(frm);
-  }//CRU
+  } //CRU
 
   onCancel() {
     this.router.navigate(['/SYSB000/SYSB200']);
   }
 
   demoShowUp() {
-    this.messagehint.add({ severity: 'success', summary: '同公司登記地址', detail: '測試' });
+    this.messagehint.add({
+      severity: 'success',
+      summary: '同公司登記地址',
+      detail: '測試',
+    });
   }
 }

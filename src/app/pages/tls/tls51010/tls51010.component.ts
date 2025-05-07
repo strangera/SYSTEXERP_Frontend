@@ -45,8 +45,7 @@ const storageKey = 'TLS51010';
 })
 export class TLS51010Component
   extends BasicQueryPageComponent<CategoryItem>
-  implements OnInit
-{
+  implements OnInit {
   // 查詢表單：包含大分類代碼和名稱
   queryForm = this.formBuilder.nonNullable.group({
     CAT_LNo: [
