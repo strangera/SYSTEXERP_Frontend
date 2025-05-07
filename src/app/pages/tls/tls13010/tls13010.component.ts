@@ -1,6 +1,6 @@
 import { WhetherService } from './../../../service/basic/whether.service';
 import { FloorService } from './../../../service/basic/floor.service';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
@@ -29,6 +29,28 @@ import { CooperationMethodService } from '../../../service/basic/cooperation-met
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { BusinessTypeService } from '../../../service/basic/businesstype.service';
 import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
+import { SortMeta } from 'primeng/api';
+import { TableLazyLoadEvent } from 'primeng/table';
+
+// 資料模型：分類項目
+interface CategoryItem {
+  id: number;
+  bus_type: string; //大分類代碼
+  bus_type_name: string; //大分類名稱
+  bus_class: string; //中分類(商品類別)代碼
+  bus_class_name: string; //中分類(商品類別)名稱
+  bus_sclass: string; //小分類代碼
+  bus_sclass_name: string; //小分類名稱
+  bus_sclass_desc: string; //備註
+  CRT_Date: string;
+  CRT_USR_No: string;
+  CRT_USR_Name: string;
+  UPD_Date: string;
+  UPD_USR_No: string;
+  UPD_USR_Name: string;
+}
 
 const now = new Date();
 const nowDate = new Date();
@@ -38,26 +60,8 @@ const nowDate = new Date();
   templateUrl: './tls13010.component.html',
   styleUrl: './tls13010.component.scss',
 })
-export class TLS13010Component {
-  ProgNo: string = '210010';
-  // 權限
-  funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
-  // 查詢
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
+export class TLS13010Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
     recruitmentCode: [, [Validators.maxLength(8)]],
     businessTypeCode: [],
     counterCode: [, [Validators.maxLength(6)]],
@@ -99,10 +103,29 @@ export class TLS13010Component {
     ownerCashCollection: [],
     whetherOptions: [],
     businessTypeCodeOptions: [],
-
-
+    isMeterReadOption: [],
+    isGuaranteedByNoteOption: [],
+    //分頁
+    pageSize: [10],
+    pageIndex: [0],
+    SortBy: [[{ field: 'TEST', order: 1 }] as SortMeta[]],
   });
   // 表格
+
+  //假資料 先放一下
+  counterCodeOptions: any[] = [
+    { value: 'C001', label: 'C001' },]
+  isMeterReadOptions: any[] = [
+    { value: '1', label: '水表' },
+    { value: '2', label: '電表' },
+    { value: '3', label: '瓦斯表' },
+  ];
+  isGuaranteedByNoteOptions: any[] = [
+    { value: '1', label: '準時開業' },
+    { value: '2', label: '施工保證' },
+    { value: '3', label: '契約屆滿保證票' },
+  ];
+
   data: any[] = [
     {
       recruitmentCode: 'R001',
@@ -187,7 +210,7 @@ export class TLS13010Component {
     }
   ];
   filteredData: any[] = [...this.data];
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'recruitmentCode', header: '專櫃招募編號', visible: true },
     { field: 'counterCode', header: '專櫃編號', visible: true },
     { field: 'counterName', header: '專櫃名稱', visible: true },
@@ -214,6 +237,8 @@ export class TLS13010Component {
     { field: 'source', header: '來源處', visible: true },
     { field: 'leaseAmount', header: '承租數', visible: true },
   ];
+  totalRecords: number = 0;
+  selectedItems: CategoryItem[] = [];
 
   // 下拉選單選項
   businessTypeOptions: any[] = [];
@@ -241,10 +266,6 @@ export class TLS13010Component {
 
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private businessTypeCodeService: BusinessTypeCodeService,
     private vendorService: VendorService,
     private locationService: LocationService,
@@ -263,9 +284,12 @@ export class TLS13010Component {
     private whetherService: WhetherService,
     private negotiatorService: UserCodeService,
     private businessTypeService: BusinessTypeService,
-  ) { }
+  ) {
+    super(); // 呼叫父類建構子
+  }
 
   ngOnInit(): void {
+    this.initializePage('TLS13010', '/TLS/TLS13010CRU');
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
       this.businessTypeCodeOptions = data;
@@ -370,43 +394,55 @@ export class TLS13010Component {
     this.queryForm.reset();  // 重置表單
   }
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS1000/TLS13010CRU'], extras);
-    }
-  }
+  onDelete(data: CategoryItem | CategoryItem[]): void {
+    // const items = Array.isArray(data) ? data : [data];
+    // if (items.length === 0) {
+    //   console.error('No items to delete');
+    //   this.messageService.errorBubble('無法刪除：沒有選中的項目');
+    //   return;
+    // }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-          recruitmentCode: data.recruitmentCode  // 將專櫃招募編號傳遞過去
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS1000/TLS13010CRU'], extras);
-    }
-  }
+    // const idList = items
+    //   .filter(item => item && item.id != null && item.id !== undefined)
+    //   .map(item => item.id);
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+    // if (idList.length === 0) {
+    //   console.error('No valid IDs to delete');
+    //   this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+    //   return;
+    // }
+
+    // const requestBody = {
+    //   idList: idList
+    // };
+
+    // console.log('Request body:', JSON.stringify(requestBody));
+    // this.apiService.deleteSYSB900(requestBody).subscribe({
+    //   next: (response: any) => {
+    //     console.log('API response:', response);
+    //     if (response.Status === '0000') {
+    //       this.messageService.successBubble(`成功刪除 ${idList.length} 個項目`);
+    //       this.onSubmit(this.queryForm);
+    //     } else {
+    //       console.error('API error:', response.Status, response.Message);
+    //       this.messageService.errorBubble(`刪除失敗: ${response.Message || '未知錯誤'}`);
+    //     }
+    //   },
+    //   error: (err: any) => {
+    //     console.error('API error:', err);
+    //     this.messageService.errorBubble('刪除失敗，請檢查網路連線或聯繫管理員');
+    //   },
+    //   complete: () => {
+    //     this.selectedItems = [];
+    //   }
+    // });
+  }
+  loadData(event: TableLazyLoadEvent) {
+    // const form = this.queryForm.value;
+    // if (this.totalRecords === 0) { return; }
+    // form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+    // form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
+    // form.SortBy = event.multiSortMeta ?? [{ field: 'bus_class', order: 1 }];
+    // this.onSubmit(this.queryForm);
   }
 }

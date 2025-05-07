@@ -1,12 +1,12 @@
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { TranslateService } from '@ngx-translate/core';
-import { IndustryTypeService } from '../../../service/basic/industry-type.service';
-import { ProductCategoryService } from '../../../service/basic/product-category.service';
+import { Sysb800DropdownService } from './../../../service/dropdown/sysb800-dropdown.service';
+import { Sysb900DropdownService } from './../../../service/dropdown/sysb900-dropdown.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
+import { debounceTime } from 'rxjs';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -33,12 +33,13 @@ interface CategoryItem {
 })
 // 小分類維護作業 CRU
 export class SYSB920CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
-  // ----------------------------------------------------------------
+  optionsBig: { value: string, label: string }[] = [];
+  optionsMid: { value: string, label: string }[] = [];
   dataForm = this.formBuilder.nonNullable.group({
     bus_sclass: ['', [Validators.maxLength(2)]], // 小分類代碼
     bus_sclass_name: ['', [Validators.maxLength(40)]], // 小分類名稱
-    bus_type: [[] as number[]], // 大分類代碼
-    bus_class: [[] as number[]], // 中分類代碼
+    bus_type: [''], // 大分類代碼
+    bus_class: [''], // 中分類代碼
   });
   //
   industryTypeOptions: any[] = [];
@@ -46,9 +47,9 @@ export class SYSB920CRUComponent extends BasicCruPageComponent<CategoryItem> imp
   // ----------------------------------------------------------------
   constructor(
     private translate: TranslateService,
-    private industryTypeService: IndustryTypeService,
-    private productCategoryService: ProductCategoryService,
     private apiService: Bas1000Service,
+    private Sysb800DropdownService: Sysb800DropdownService,
+    private Sysb900DropdownService: Sysb900DropdownService,
   ) {
     super();  // 呼叫父類建構子
   }
@@ -56,14 +57,40 @@ export class SYSB920CRUComponent extends BasicCruPageComponent<CategoryItem> imp
   ngOnInit(): void {
     // this.ProgNo = '410009';
     this.initializePage('SYSB920', this.dataForm);
-
-    this.industryTypeService.getSystemTypes().subscribe(data => {
-      this.industryTypeOptions = data;
+    this.Sysb800DropdownService.getSystemTypes().subscribe({
+      next: (response) => {
+        this.optionsBig = response;
+      },
+      error: (error) => {
+        console.error('獲取大分類代碼失敗:', error);
+        this.messageService.errorBubble('無法載入大分類代碼，請稍後重試');
+      }
     });
 
-    this.productCategoryService.getSystemTypes().subscribe(data => {
-      this.productTypeOptions = data;
-    });
+
+    // // 監聽 變化，動態載入中分類代碼
+    // this.dataForm.controls.bus_type.valueChanges.pipe(debounceTime(300)).subscribe(busType => {
+    //   if (busType) {
+    //     this.Sysb900DropdownService.getSystemTypesByBustype(busType).subscribe({
+    //       next: (response) => {
+    //         this.optionsMid = response;
+    //         const currentData = this.dataForm.controls.bus_type.value;
+    //         if (currentData && !response.find(opt => opt.value === currentData)) {
+    //           this.dataForm.controls.bus_type.setValue('');
+    //         }
+    //       },
+    //       error: (error) => {
+    //         console.error('獲取中分類代碼失敗:', error);
+    //         this.messageService.errorBubble('無法載入中分類代碼，請稍後重試');
+    //         this.optionsMid = [];
+    //         this.dataForm.controls.bus_class.setValue('');
+    //       }
+    //     });
+    //   } else {
+    //     this.optionsMid = [];
+    //     this.dataForm.controls.bus_class.setValue('');
+    //   }
+    // });
   }
 
   onSubmit(frm: FormGroup) {
