@@ -93,30 +93,40 @@ export class TreeDropdownComponent {
     let membersToToggle: any[] = [];
 
     if (item.roles) {
-      // 👉 item 是部門
-      item.roles.forEach((role: any) => {
+      // 部門
+      item.roles.forEach((role: { members: any[] }) => {
         membersToToggle.push(...role.members);
       });
     } else if (item.members) {
-      // 👉 item 是角色
+      // 角色
       membersToToggle = item.members;
     } else {
-      // 👉 item 是單一成員
+      // 單一成員
       membersToToggle = [item];
     }
 
-    membersToToggle.forEach((member) => {
-      const index = this.selectedMembers.findIndex(
-        (m) => m.name === member.name,
-      );
-      if (index === -1) {
-        this.selectedMembers.push(member);
-      } else {
-        this.selectedMembers.splice(index, 1);
-      }
-    });
+    const allSelected = membersToToggle.every((member) =>
+      this.selectedMembers.some((selected) => selected.name === member.name),
+    );
 
-    // 強制刷新 p-multiSelect 顯示
+    if (allSelected) {
+      // 移除所有成員
+      this.selectedMembers = this.selectedMembers.filter(
+        (selected) =>
+          !membersToToggle.some((member) => member.name === selected.name),
+      );
+    } else {
+      // 加入尚未被選擇的成員
+      const newMembers = membersToToggle.filter(
+        (member) =>
+          !this.selectedMembers.some(
+            (selected) => selected.name === member.name,
+          ),
+      );
+      this.selectedMembers = [...this.selectedMembers, ...newMembers];
+    }
+
+    // 強制刷新 UI
     setTimeout(() => {
       this.selectedMembers = [...this.selectedMembers];
     }, 0);
@@ -127,5 +137,24 @@ export class TreeDropdownComponent {
     if (event.key === 'Enter' || event.key === ' ') {
       this.toggleSelection(member);
     }
+  }
+
+  // 父項目顏色切換
+  isAnyMemberSelected(item: any): boolean {
+    let members: any[] = [];
+
+    if (item.roles) {
+      // 部門
+      item.roles.forEach((role: { members: any }) => {
+        members.push(...role.members);
+      });
+    } else if (item.members) {
+      // 角色
+      members = item.members;
+    }
+
+    return members.some((member) =>
+      this.selectedMembers.find((m) => m.name === member.name),
+    );
   }
 }
