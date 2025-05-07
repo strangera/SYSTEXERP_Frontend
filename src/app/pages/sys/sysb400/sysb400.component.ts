@@ -74,13 +74,7 @@ export class SYSB400Component
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      const query = {
-        level_id: frm.value.level_id || '',
-        org_id: frm.value.org_id || '',
-        org_name: frm.value.org_name || '',
-      };
-
-      this.sysb400Service.querySYSB400(query).subscribe({
+      this.sysb400Service.querySYSB400(frm.value).subscribe({
         next: (response: any) => {
           console.log('API response:', response);
           if (response.Status === '0000') {
