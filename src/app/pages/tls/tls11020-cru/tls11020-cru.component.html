@@ -1,109 +1,109 @@
 <div class="card">
-    <div class="grid align-items-center">
-      <div class="col" style="flex: 1;">
-        <app-menubar [ProgNo]="ProgNo"></app-menubar>
-      </div>
-    </div>
-  
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-      <form [formGroup]="inputForm">
-        <div class="grid p-fluid">
-            <div class="col-12 md:col-6 lg:col-10"></div>
-            <div class="col-12 md:col-6 lg:col-2">
-                <div class="flex justify-content-end">
-               
-                          <div>
-                            <app-button btnType="create" (click)="addItem()" class="col"></app-button>
-                        </div>
-                </div>
-              </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <label>扣款項目編號</label>
-            <input pInputText formControlName="deductionItemNumber" maxlength="3"  />
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <label>扣款類別</label>
-            <p-dropdown [options]="deductionCategoryOptions" optionLabel="label" optionValue="value"
-                        formControlName="deductionCategory" [style.width.%]="100"></p-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <label>扣款項目名稱</label>
-            <input pInputText formControlName="deductionItemName" />
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <label>會計科目</label>
-            <input pInputText formControlName="accNo" />
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <label>是否開立發票</label>
-            <p-dropdown [options]="[{ label: '開立', value: 'Y' }, { label: '不開立', value: 'N' }]"
-                        formControlName="guiFlag"></p-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <label>課稅別</label>
-            <p-dropdown [options]="[{ label: '免稅', value: '0' }, { label: '應稅', value: '1' }]"
-                        formControlName="capTaxType"></p-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <label>是否為常用</label>
-            <p-dropdown [options]="[{ label: '常用', value: 'Y' }, { label: '不常用', value: 'N' }]"
-                        formControlName="isCommonlyUsed"></p-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <label>列印區分</label>
-            <input pInputText formControlName="printArea" />
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <label>備註</label>
-            <input pInputText formControlName="remark" />
-          </div>
-
-        </div>
-      </form>
-  
-      <div style="overflow-x: auto; margin-top: 2rem;">
-        <table class="table w-full" style="min-width: 1200px; white-space: nowrap;">
-          <thead style="background-color: #c1c9f5;">
-            <tr>
-              <th style="width: 30px;">扣款項目編號</th>
-              <th style="width: 150px;">扣款類別</th>
-              <th>扣款項目名稱</th>
-              
-              <th>會計科目</th>
-              <th>是否開立發票</th>
-              <th>課稅別</th>
-              <th>是否為常用</th>
-              <th>列印區分</th>
-              <th>備註</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of itemList; let i = index">
-              <td>{{ item.deductionItemNumber }}</td>
-              <td>{{ getLabelByValue(deductionCategoryOptions, item.deductionCategory) }}</td>
-              <td>{{ item.deductionItemName }}</td>
-              <td>{{ item.accNo }}</td>
-              <td>{{ item.guiFlag === 'Y' ? '開立' : '不開立' }}</td>
-              <td>{{ item.capTaxType === '0' ? '免稅' : '應稅' }}</td>
-              <td>{{ item.isCommonlyUsed === 'Y' ? '常用' : '不常用' }}</td>
-              <td>{{ item.printArea }}</td>
-              <td>{{ item.remark }}</td>
-              <td>
-                <button pButton type="button" icon="pi pi-trash" class="p-button-danger p-button-sm"
-                        (click)="removeItem(i)"></button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </p-panel>
-    <div class="col pt-4">
-        <div class="grid justify-content-end">
-            <app-button btnType="cancel" (click)="onCancel()"></app-button>
-            <app-button btnType="submit" (click)="submitForm(dataForm)" ></app-button>
-        </div>
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1;">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
   </div>
-  
+
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="inputForm">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text 
+            label="扣款項目編號"
+            [control]="inputForm.controls.deductionItemNumber"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown 
+            label="扣款類別"
+            [options]="deductionCategoryOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="inputForm.controls.deductionCategory"
+            [submitted]="submitted"
+            [style.width.%]="100">
+          </app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text 
+            label="扣款項目名稱"
+            [control]="inputForm.controls.deductionItemName"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text 
+            label="會計科目"
+            [control]="inputForm.controls.accNo"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown 
+            label="是否開立發票"
+            [options]="[{ label: '開立', value: 'Y' }, { label: '不開立', value: 'N' }]"
+            optionLabel="label"
+            optionValue="value"
+            [control]="inputForm.controls.guiFlag"
+            [submitted]="submitted"
+            [style.width.%]="100">
+          </app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown 
+            label="課稅別"
+            [options]="[{ label: '免稅', value: '0' }, { label: '應稅', value: '1' }]"
+            optionLabel="label"
+            optionValue="value"
+            [control]="inputForm.controls.capTaxType"
+            [submitted]="submitted"
+            [style.width.%]="100">
+          </app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown 
+            label="是否為常用"
+            [options]="[{ label: '常用', value: 'Y' }, { label: '不常用', value: 'N' }]"
+            optionLabel="label"
+            optionValue="value"
+            [control]="inputForm.controls.isCommonlyUsed"
+            [submitted]="submitted"
+            [style.width.%]="100">
+          </app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text 
+            label="列印區分"
+            [control]="inputForm.controls.printArea"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text 
+            label="備註"
+            [control]="inputForm.controls.remark"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+      </div>
+    </form>
+  </p-panel>
+
+  <div class="col pt-4">
+    <div class="grid justify-content-end">
+      <app-button btnType="cancel" (click)="onCancel()"></app-button>
+      <app-button btnType="submit" (click)="onSubmit()"></app-button>
+
+    </div>
+  </div>
+</div>
