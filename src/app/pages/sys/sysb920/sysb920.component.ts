@@ -1,12 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { IndustryTypeService } from '../../../service/basic/industry-type.service';
-import { ProductCategoryService } from '../../../service/basic/product-category.service';
+import { Sysb800DropdownService } from './../../../service/dropdown/sysb800-dropdown.service';
+import { Sysb900DropdownService } from './../../../service/dropdown/sysb900-dropdown.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
+import { IndustryTypeService } from '../../../service/basic/industry-type.service';
+import { ProductCategoryService } from '../../../service/basic/product-category.service';
+import { debounceTime } from 'rxjs';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -35,13 +38,13 @@ const storageKey = 'SYSB920';
 })
 // 小分類維護作業
 export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
-  // 查詢
-  // ----------------------------------------------------------------
+  optionsBig: { value: string, label: string }[] = [];
+  optionsMid: { value: string, label: string }[] = [];
   queryForm = this.formBuilder.nonNullable.group({
     bus_sclass: ['', [Validators.maxLength(2)]], // 小分類
     bus_sclass_name: ['', [Validators.maxLength(40)]], // 小分類名稱
-    bus_type: [[] as number[]], // 大分類代碼
-    bus_class: [[] as number[]], // 中分類代碼
+    bus_type: [[] as string[]], // 大分類代碼
+    bus_class: [[] as string[]], // 中分類代碼
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
     //分頁用
     pageSize: [10],
@@ -54,8 +57,8 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
   columns: any[] = [
     { field: 'bus_sclass', header: '小分類代碼', visible: true },
     { field: 'bus_sclass_name', header: '小分類名稱', visible: true },
-    { field: 'industryType', header: '所屬大分類', visible: true },
-    { field: 'productCategory', header: '中分類名稱', visible: true },
+    { field: 'bus_type_name', header: '所屬大分類', visible: true },
+    { field: 'bus_class_name', header: '中分類名稱', visible: true },
     // 其他欄位
   ];
   // ----------------------------------------------------------------
@@ -67,6 +70,8 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
   constructor(
     private industryTypeService: IndustryTypeService,
     private productCategoryService: ProductCategoryService,
+    private Sysb800DropdownService: Sysb800DropdownService,
+    private Sysb900DropdownService: Sysb900DropdownService,
     private validationService: ValidationService,
     private apiService: Bas1000Service,
   ) {
@@ -74,24 +79,44 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
   }
 
   ngOnInit(): void {
-    // this.ProgNo = '410009';
-    this.initializePage('SYSB920', '/SYS/B/SYSB920CRU');
-    this.industryTypeService.getSystemTypes().subscribe(data => {
-      this.industryTypeOptions = data;
+    this.initializePage('SYSB920', '/SYS/SYSB920CRU');
 
-      // let industryTypeValues = this.industryTypeOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   industryType: industryTypeValues
-      // });
+    this.Sysb800DropdownService.getSystemTypes().subscribe({
+      next: (response) => {
+        this.optionsBig = response;
+      },
+      error: (error) => {
+        console.error('獲取大分類代碼失敗:', error);
+        this.messageService.errorBubble('無法載入大分類代碼，請稍後重試');
+      }
     });
 
-    this.productCategoryService.getSystemTypes().subscribe(data => {
-      this.productTypeOptions = data;
-
-      // let productTypeValues = this.productTypeOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   productCategory: productTypeValues
-      // });
+    // 監聽 bus_type 變化，動態載入中分類代碼
+    this.queryForm.controls.bus_type.valueChanges.pipe(debounceTime(300)).subscribe(busTypes => {
+      if (busTypes && busTypes.length > 0) {
+        this.Sysb900DropdownService.getSystemTypesByBustype(busTypes).subscribe({
+          next: (response) => {
+            this.optionsMid = response;
+            // 如果當前的 bus_class 值不在新的 optionsMid 中，重置 bus_class
+            const currentBusClasses = this.queryForm.controls.bus_class.value;
+            if (currentBusClasses.length > 0) {
+              const validBusClasses = currentBusClasses.filter(busClass =>
+                response.find(opt => opt.value === busClass)
+              );
+              this.queryForm.controls.bus_class.setValue(validBusClasses);
+            }
+          },
+          error: (error) => {
+            console.error('獲取中分類代碼失敗:', error);
+            this.messageService.errorBubble('無法載入中分類代碼，請稍後重試');
+            this.optionsMid = [];
+            this.queryForm.controls.bus_class.setValue([]);
+          }
+        });
+      } else {
+        this.optionsMid = [];
+        this.queryForm.controls.bus_class.setValue([]);
+      }
     });
 
     this.handleQueryRestore(this.queryForm, storageKey, (form) => this.onSubmit(form));
