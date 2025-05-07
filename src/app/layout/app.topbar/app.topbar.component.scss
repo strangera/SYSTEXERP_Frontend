@@ -67,6 +67,9 @@
     padding: 0.5rem;
     border-radius: var(--border-radius);
     cursor: pointer;
+    &.favorites {
+      border: 1px solid var(--surface-border);
+    }
 
     &:hover {
       background-color: var(--surface-hover); /* 使用你的 hover 背景顏色變數 */
@@ -76,7 +79,7 @@
   .p-inputtext {
     border-radius: var(--border-radius) !important;
     background-color: var(--surface-a) !important;
-    border: 1px solid var(--text-color-secondary) !important;
+    border: 1px solid var(--surface-border);
     color: var(--text-color) !important; /* 使用你的文字顏色變數 */
   }
 }

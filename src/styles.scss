@@ -78,7 +78,7 @@ body {
 ::placeholder,
 ::-webkit-input-placeholder,
 .p-placeholder {
-  color: #000000;
+  color: var(--surface-900);
   opacity: 0.35; /* Firefox */
 }
 
@@ -87,17 +87,13 @@ input[disabled],
 .p-component:disabled,
 .p-component.p-disabled {
   background-color: #d6d6d6 !important;
-  color: #000000;
+  color: #495057;
   font-weight: bold;
   cursor: not-allowed;
   border: 1px solid #e9ecef;
   opacity: 0.65;
   pointer-events: none;
-  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1);
-  /* 添加内阴影以实现凹陷效果 */
   border-radius: 4px;
-  /* 可选：添加圆角以使外观更柔和 */
-
   span,
   p {
     color: #000;
