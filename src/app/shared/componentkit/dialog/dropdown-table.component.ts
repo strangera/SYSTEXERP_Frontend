@@ -57,6 +57,13 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     this.selectedItems = []
     this.control.setValue(event.target.value); // 更新控制項的值
     this.inputValueChanged.emit(this.control.value); // 發射輸入框的值
+    this.op?.hide();
+  }
+
+  openPanel(event: any) {
+    this.opForm?.reset();
+    this.suggestions = [];
+    this.op?.show(event);
   }
 
   getFieldValue(field: FieldsConfig): string {

@@ -4,8 +4,8 @@
       <ng-container *ngIf="field.mainDataField; else elseBlock">
         <label [for]="field.field">{{ field.header }}<span *ngIf="isRequired" class="required">*</span></label>
         <p-autoComplete [formControl]="control" [id]="field.field" [optionLabel]="optionLabel"
-          [optionValue]="optionValue" (onFocus)="op.show($event)" (input)="onInputChange($event)" (input)="op.hide()"
-          [lazy]="true" [suggestions]="suggestions" [minLength]="minLength" [maxlength]="maxLength"
+          [optionValue]="optionValue" (click)="openPanel($event)" (input)="onInputChange($event)" [lazy]="true"
+          [suggestions]="suggestions" [minLength]="minLength" [maxlength]="maxLength"
           [placeholder]="control.disabled ? '' : placeholder"></p-autoComplete>
         <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
           [control]="control"></app-control-messages>
@@ -18,7 +18,7 @@
   </ng-container>
 </div>
 
-<p-overlayPanel #op>
+<p-overlayPanel #op [appendTo]="'body'">
   <form [formGroup]="opForm">
     <div class="grid p-fluid">
       <ng-content />

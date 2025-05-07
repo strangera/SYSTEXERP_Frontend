@@ -1,6 +1,6 @@
 # 建置
 # 設定變數
-$projectPath = "C:\Users\amisl\Desktop\TSRDERP_Frontend" # Angular 專案路徑
+$projectPath = "C:\Users\2400215.SYSTEX\Desktop\TSRDERP_Frontend" # Angular 專案路徑
 $buildPath = "$projectPath\dist\tmserp-frontend\browser" # Build 產物目錄
 $zipFile = "$buildPath.zip"                # 壓縮後的檔案
 
