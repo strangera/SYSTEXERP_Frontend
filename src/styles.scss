@@ -75,6 +75,39 @@ body {
   }
 }
 
+::placeholder,
+::-webkit-input-placeholder,
+.p-placeholder {
+  color: #000000;
+  opacity: 0.35; /* Firefox */
+}
+
+input[disabled],
+.p-dropdown.p-disabled,
+.p-component:disabled,
+.p-component.p-disabled {
+  background-color: #d6d6d6 !important;
+  color: #000000;
+  font-weight: bold;
+  cursor: not-allowed;
+  border: 1px solid #e9ecef;
+  opacity: 0.65;
+  pointer-events: none;
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1);
+  /* 添加内阴影以实现凹陷效果 */
+  border-radius: 4px;
+  /* 可选：添加圆角以使外观更柔和 */
+
+  span,
+  p {
+    color: #000;
+  }
+
+  span.p-button-icon {
+    color: #898989 !important;
+  }
+}
+
 // 以下用來調整暗黑明亮模式(需要用var()來調整)
 .p-accordion .p-accordion-content,
 .p-panel .p-panel-content {
@@ -108,4 +141,11 @@ body {
   background-color: #a2e7c6;
   color: black;
   font-weight: bold;
+}
+
+.p-selectbutton {
+  display: flex;
+  .p-button {
+    flex-grow: 1;
+  }
 }

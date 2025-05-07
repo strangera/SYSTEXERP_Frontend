@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
-import { FieldsConfig } from '../../../shared/componentkit/dialog/dropdown-table.component';
+import { FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { debounceTime, Subject, switchMap } from 'rxjs';
 import { LocationService } from './location.service';
 
@@ -14,6 +14,8 @@ import { LocationService } from './location.service';
 })
 export class InputTableComponent extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
+    dateRangeQuick1: [null, [Validators.required]],
+    dateRangeQuick2: [null, [Validators.required]],
     multiLevel: ['', [Validators.required]], // Multi Level
     text: ['', [Validators.required, Validators.maxLength(13)]], // Input Text
     textarea: ['', [Validators.required, Validators.maxLength(13)]], // Input Textarea
