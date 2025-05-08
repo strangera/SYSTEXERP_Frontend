@@ -52,15 +52,21 @@ export class SYSB300CRUComponent
       level_id: '',
       level_name: '',
       p_level_id: '',
+
+      //分頁查詢
+      pageSize: 1000,
+      pageIndex: 0,
+      SortBy: [{ field: 'level_id', order: 1 }],
     };
 
     this.sysb300Service.querySYSB300(query).subscribe((response) => {
       this.allquery = response.Data;
       const hasEmptypLevel = this.allquery.some(
-        (item: any) => item.p_level_id === '',
+        (item: Sysb300m) => item.p_level_id === '',
       );
       const hasSameLevel = this.allquery.some(
-        (item: any) => item.level_id === this.dataForm.controls.level_id.value,
+        (item: Sysb300m) =>
+          item.level_id === this.dataForm.controls.level_id.value,
       );
       console.log('上層組織階層存在 空白的單位', hasEmptypLevel);
 

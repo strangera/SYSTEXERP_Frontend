@@ -68,7 +68,7 @@ export class SYSB400CRUComponent
       org_name: '',
 
       //分頁查詢
-      pageSize: 10000,
+      pageSize: 1000,
       pageIndex: 0,
       SortBy: [{ field: 'org_id', order: 1 }],
     };
@@ -88,16 +88,7 @@ export class SYSB400CRUComponent
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            const body = {
-              org_id: this.dataForm.controls.org_id.value,
-              org_name: this.dataForm.controls.org_name.value,
-              p_org_id: this.dataForm.controls.p_org_id.value,
-              level_id: this.dataForm.controls.level_id.value,
-              p_level_id: this.dataForm.controls.p_level_id.value,
-              stop_flag: this.dataForm.controls.stop_flag.value,
-            };
-            console.log('insert', body);
-            this.sysb400Service.insertSYSB400(body).subscribe(() => {
+            this.sysb400Service.insertSYSB400(frm.value).subscribe(() => {
               this.messageService.successBubble('新增成功');
               this.onCancel(); // 新增成功後返回查詢頁面
             });
@@ -105,16 +96,7 @@ export class SYSB400CRUComponent
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            const body = {
-              id: this.dataForm.controls.id.value,
-              org_name: this.dataForm.controls.org_name.value,
-              p_org_id: this.dataForm.controls.p_org_id.value,
-              level_id: this.dataForm.controls.level_id.value,
-              p_level_id: this.dataForm.controls.p_level_id.value,
-              stop_flag: this.dataForm.controls.stop_flag.value,
-            };
-            console.log('update', body);
-            this.sysb400Service.updateSYSB400(body).subscribe(() => {
+            this.sysb400Service.updateSYSB400(frm.value).subscribe(() => {
               this.messageService.successBubble('更新成功');
               this.onCancel(); // 更新成功後返回查詢頁面
             });
