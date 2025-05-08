@@ -4,7 +4,7 @@ import { FormGroup, Validators } from '@angular/forms';
 // import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { Sysb300Service } from '../../../service/sysb/sysb300.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { option, Sysb300m } from '../module/sysb000.module';
+import { apiOption, Sysb300m } from '../module/sysb000.module';
 import { SortMeta } from 'primeng/api';
 import { TableLazyLoadEvent } from 'primeng/table';
 
@@ -50,14 +50,14 @@ export class SYSB300Component
   // pageIndex: number = 0;
   totalRecords = 0;
   // lastQueryParams: any = null;
-  // sortField: string = 'CAT_LNo';
+  // sortField: string = 'level_id';
   // sortOrder: number = 1;
 
   // 多選項目
   selectedItems: Sysb300m[] = [];
 
   // ----------------------------------------------------------------
-  upgroup_Options: option[] = [];
+  upgroup_Options: apiOption[] = [];
 
   constructor(private sysb300Service: Sysb300Service) {
     super();
@@ -152,18 +152,14 @@ export class SYSB300Component
 
   loadOptions() {
     {
-      const query = {
-        level_id: '',
-        level_name: '',
-        p_level_id: '',
-      };
-
-      this.sysb300Service.querySYSB300(query).subscribe((response) => {
-        this.upgroup_Options = response.Data.map((item: Sysb300m) => ({
-          value: item.level_id,
-          label: item.level_name,
-        }));
-      });
+      this.sysb300Service
+        .querySYSB300_DropDownList({})
+        .subscribe((response) => {
+          this.upgroup_Options = response.Data.map((item: apiOption) => ({
+            No: item.No,
+            Name: item.Name,
+          }));
+        });
     }
   }
 

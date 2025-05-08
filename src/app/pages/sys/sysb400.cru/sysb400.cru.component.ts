@@ -5,7 +5,7 @@ import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { option, Sysb400m } from '../module/sysb000.module';
+import { apiOption, option, Sysb400m } from '../module/sysb000.module';
 
 @Component({
   selector: 'app-sysb400.cru',
@@ -24,15 +24,15 @@ export class SYSB400CRUComponent
     org_name: ['', [Validators.required, Validators.maxLength(40)]], // 組織名稱
     p_org_id: ['', [Validators.required, Validators.maxLength(20)]], // 上層組織代碼
     level_id: ['', [Validators.required, Validators.maxLength(2)]], // 組織階層代碼
-    // level_name: ['', [Validators.required, Validators.maxLength(40)]], // 組織階層名稱
+    level_name: ['', [Validators.required, Validators.maxLength(40)]], // 組織階層名稱
     p_level_id: ['', [Validators.required, Validators.maxLength(2)]], // 上層組織階層代碼
-    // p_level_name: ['', [Validators.required, Validators.maxLength(40)]], // 上層組織階層名稱
+    p_level_name: ['', [Validators.required, Validators.maxLength(40)]], // 上層組織階層名稱
     stop_flag: ['N', [Validators.required, Validators.maxLength(1)]], // 是否停用
   });
   showConfirm = false;
 
-  upgroup_Options: option[] = [];
-  org_Option: option[] = [];
+  upgroup_Options: apiOption[] = [];
+  org_Option: apiOption[] = [];
   whetherOptions: option[] = [
     { value: 'Y', label: '是' },
     { value: 'N', label: '否' },
@@ -53,25 +53,24 @@ export class SYSB400CRUComponent
   }
 
   loadOptions() {
-    const query = {
-      level_id: '',
-      org_id: '',
-      org_name: '',
-    };
-
-    console.log('查詢條件', query);
-    this.sysb300Service.querySYSB300(query).subscribe((response) => {
-      this.upgroup_Options = response.Data.map((item: Sysb400m) => ({
-        value: item.level_id,
-        label: item.level_name,
+    // 組織階層列表
+    this.sysb300Service.querySYSB300_DropDownList({}).subscribe((response) => {
+      this.upgroup_Options = response.Data.map((item: apiOption) => ({
+        No: item.No,
+        Name: item.Name,
       }));
-      console.log('階層代碼 查詢結果', this.upgroup_Options);
+      console.log('組織階層', this.upgroup_Options);
     });
 
     const query_org = {
       level_id: '',
       org_id: '',
       org_name: '',
+
+      //分頁查詢
+      pageSize: 10000,
+      pageIndex: 0,
+      SortBy: [{ field: 'org_id', order: 1 }],
     };
 
     this.sysb400Service.querySYSB400(query_org).subscribe((response) => {

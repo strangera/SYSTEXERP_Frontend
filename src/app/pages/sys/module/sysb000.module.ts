@@ -111,6 +111,11 @@ export class Sysb500m {
   'UPD_USR_Name': string;
 }
 
+export interface apiOption {
+  No: string;
+  Name: string;
+}
+
 export interface option {
   value: string;
   label: string;
