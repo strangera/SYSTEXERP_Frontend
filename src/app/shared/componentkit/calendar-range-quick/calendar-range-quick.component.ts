@@ -31,6 +31,9 @@ export class CalendarRangeQuickComponent extends BasicKitComponent implements On
   allTimeRangeOptions = timeRangeOptions; // 保存原始的 timeRangeOptions
   filteredTimeRangeOptions: TimeRangeOption[] = []; // 用於顯示的過濾後選項
   timeRange!: TimeRangeOption | null;
+  constructor() {
+    super();
+  }
   ngOnInit() {
     if (!this.startControl.disabled && !this.endControl.disabled) {
       this.updateControlState(this.startControl, this.endControl);
@@ -65,8 +68,12 @@ export class CalendarRangeQuickComponent extends BasicKitComponent implements On
   // 監聽 timeRange 的變化
   onTimeRangeChange(event: SelectButtonChangeEvent) {
     if (event && event.value?.startDate && event.value?.endDate) {
-      this.startControl.setValue(event.value.startDate);
-      this.endControl.setValue(event.value.endDate);
+      this.startControl.setValue(null);
+      this.endControl.setValue(null);
+      setTimeout(() => {
+        this.startControl.setValue(event.value.startDate);
+        this.endControl.setValue(event.value.endDate);
+      }, 0);
       this.op?.hide(); // 需要在模板中獲取 op 的引用
     }
   }

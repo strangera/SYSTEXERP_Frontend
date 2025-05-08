@@ -29,7 +29,7 @@
       <p-calendar [formControl]="startControl" [placeholder]="startControl.disabled ? '' : placeholder"
         [timeOnly]="timeOnly" [showTime]="showTime" hourFormat="24" [dateFormat]="dateFormat" [view]="view"
         [ngClass]="{'ng-invalid ng-dirty': submitted && startControl.errors}" [showIcon]="!startControl.disabled"
-        [iconDisplay]="'input'" [appendTo]="'body'">
+        [iconDisplay]="'input'" [appendTo]="'body'" [maxDate]="endControl.value">
         <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
           <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
           <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>
@@ -47,7 +47,7 @@
       <p-calendar [formControl]="endControl" [placeholder]="endControl.disabled ? '' : placeholder"
         [timeOnly]="timeOnly" [showTime]="showTime" hourFormat="24" [dateFormat]="dateFormat" [view]="view"
         [iconDisplay]="'input'" [ngClass]="{'ng-invalid ng-dirty': submitted && endControl.errors}"
-        [showIcon]="!endControl.disabled" [appendTo]="'body'">
+        [showIcon]="!endControl.disabled" [appendTo]="'body'" [minDate]="startControl.value">
         <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
           <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
           <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>
