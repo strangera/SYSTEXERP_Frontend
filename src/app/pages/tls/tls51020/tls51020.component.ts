@@ -142,6 +142,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
   }
 
   onDelete(data: CategoryItem | CategoryItem[]): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
 
     const items = Array.isArray(data) ? data : [data];
     if (items.length === 0) {
@@ -150,35 +151,38 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
       return;
     }
 
-    items.forEach((item, index) => {
-      if (!item || item.id == null || item.id === undefined) {
-        console.error('ID is missing or invalid for item:', item);
-        this.messageService.errorBubble(`無法刪除項目 ${item?.CAT_LNo || '未知'}：缺少 ID`);
-        return;
-      }
+    // 收集所有有效的 ID
+    const idList = items
+      .filter((item) => item && item.id != null && item.id !== undefined)
+      .map((item) => item.id);
 
-      const requestBody = {
-        id: item.id // 保持 number 型別
-      };
-      this.apiService.deleteTLS51020(requestBody).subscribe({
-        next: (response: any) => {
-          if (response.Status === '0000') {
-            this.messageService.successBubble(`項目 ${item.CAT_LNo} 刪除成功`);
-          } else {
-            console.error('API error:', response.Status, response.Message);
-            this.messageService.errorBubble(`項目 ${item.CAT_LNo} 刪除失敗: ${response.Message}`);
-          }
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.messageService.errorBubble(`項目 ${item.CAT_LNo} 刪除失敗`);
-        },
-        complete: () => {
-          if (index === items.length - 1) {
-            this.onSubmit(this.queryForm);
-          }
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
+    }
+
+    // 構建新的 requestBody 格式
+    const requestBody = {
+      idList: idList, // 符合 API 的 idList 格式
+    };
+    // 調用 API
+    this.apiService.deleteTLS51020(requestBody).subscribe({
+      next: (response: any) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('選中項目刪除成功');
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
         }
-      });
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗');
+      },
+      complete: () => {
+        this.onSubmit(this.queryForm);
+      },
     });
 
     this.selectedItems = [];
