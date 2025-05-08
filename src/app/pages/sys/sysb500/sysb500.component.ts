@@ -70,11 +70,8 @@ export class SYSB500Component
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const query = {
-        area_no: frm.value.area_no || '',
-        area_desc: frm.value.area_desc || '',
-      };
-      this.sysb500Service.querySYSB500(query).subscribe({
+      console.log('queryForm', frm.value);
+      this.sysb500Service.querySYSB500(frm.value).subscribe({
         next: (response: any) => {
           console.log('API response:', response);
           if (response.Status === '0000') {
@@ -100,19 +97,6 @@ export class SYSB500Component
   onSubmitQuery(frm: FormGroup) {
     // 查詢邏輯
     this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();
-    // this.pageIndex = 0;
-    this.data = [];
-    this.filteredData = [];
-    // this.lastQueryParams = null;
-    this.totalRecords = 0;
-    // this.sortField = 'SYS_StoreNo';
-    // this.sortOrder = 1;
-    // 清空儲存的查詢狀態
-    this.queryStateService.clearQueryState(storageKey);
   }
 
   // 刪除項目

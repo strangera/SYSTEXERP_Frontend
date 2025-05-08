@@ -18,6 +18,14 @@ export class Sysb300Service {
     return this.http.post<any>(`${this.apiUrl}/querySYSB300`, body);
   }
 
+  // 查詢 上層組織(SYS3000) 下拉選單
+  querySYSB300_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/querySYSB300_DropDownList`,
+      body,
+    );
+  }
+
   // 新增 SYS3000 資料表
   insertSYSB300(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertSYSB300`, body);

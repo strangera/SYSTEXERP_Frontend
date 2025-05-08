@@ -111,6 +111,24 @@ export class Sysb500m {
   'UPD_USR_Name': string;
 }
 
+// SYS3900 樓層基本資料維護
+export class Sysb600m {
+  'id': string;
+  'floor_no': string;
+  'floor_desc': string;
+  'CRT_Date': Date;
+  'CRT_USR_No': string;
+  'CRT_USR_Name': string;
+  'UPD_Date': Date;
+  'UPD_USR_No': string;
+  'UPD_USR_Name': string;
+}
+
+export interface apiOption {
+  No: string;
+  Name: string;
+}
+
 export interface option {
   value: string;
   label: string;

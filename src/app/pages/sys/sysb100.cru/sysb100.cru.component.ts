@@ -59,7 +59,6 @@ export class SYSB100CRUComponent
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            console.log('Create');
             this.sysb100Service.insertSYSB100(frm.value).subscribe(() => {
               this.messageService.successBubble('新增成功');
               this.onCancel(); // 新增成功後返回查詢頁面
@@ -68,7 +67,6 @@ export class SYSB100CRUComponent
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            console.log('Edit');
             this.sysb100Service.updateSYSB100(frm.value).subscribe(() => {
               this.messageService.successBubble('更新成功');
               this.onCancel(); // 更新成功後返回查詢頁面

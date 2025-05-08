@@ -4,7 +4,7 @@ import { FormGroup, Validators } from '@angular/forms';
 // import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { Sysb300Service } from '../../../service/sysb/sysb300.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { option, Sysb300m } from '../module/sysb000.module';
+import { apiOption, Sysb300m } from '../module/sysb000.module';
 import { SortMeta } from 'primeng/api';
 import { TableLazyLoadEvent } from 'primeng/table';
 
@@ -23,13 +23,11 @@ export class SYSB300Component
   implements OnInit
 {
   // 查詢
-  // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
     // SYS3000 組織階層設定檔
-    id: [],
     level_id: ['', [Validators.maxLength(2)]], // 組織階層代碼
     level_name: ['', [Validators.maxLength(30)]], // 組織階層名稱
-    p_level_id: [, [Validators.maxLength(2)]], // 上層組織階層代碼
+    p_level_id: ['', [Validators.maxLength(2)]], // 上層組織階層代碼
 
     //分頁查詢
     pageSize: [10],
@@ -52,14 +50,14 @@ export class SYSB300Component
   // pageIndex: number = 0;
   totalRecords = 0;
   // lastQueryParams: any = null;
-  // sortField: string = 'CAT_LNo';
+  // sortField: string = 'level_id';
   // sortOrder: number = 1;
 
   // 多選項目
   selectedItems: Sysb300m[] = [];
 
   // ----------------------------------------------------------------
-  upgroup_Options: option[] = [];
+  upgroup_Options: apiOption[] = [];
 
   constructor(private sysb300Service: Sysb300Service) {
     super();
@@ -77,13 +75,8 @@ export class SYSB300Component
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const query = {
-        level_id: frm.value.level_id || '',
-        level_name: frm.value.level_name || '',
-        p_level_id: frm.value.p_level_id || '',
-      };
-
-      this.sysb300Service.querySYSB300(query).subscribe({
+      console.log('query condition', frm.value);
+      this.sysb300Service.querySYSB300(frm.value).subscribe({
         next: (response: any) => {
           console.log('API response:', response);
           if (response.Status === '0000') {
@@ -109,19 +102,6 @@ export class SYSB300Component
   onSubmitQuery(frm: FormGroup) {
     // 查詢邏輯
     this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();
-    // this.pageIndex = 0;
-    this.data = [];
-    this.filteredData = [];
-    // this.lastQueryParams = null;
-    this.totalRecords = 0;
-    // this.sortField = 'SYS_StoreNo';
-    // this.sortOrder = 1;
-    // 清空儲存的查詢狀態
-    this.queryStateService.clearQueryState(storageKey);
   }
 
   // 刪除項目
@@ -172,18 +152,14 @@ export class SYSB300Component
 
   loadOptions() {
     {
-      const query = {
-        level_id: '',
-        level_name: '',
-        p_level_id: '',
-      };
-
-      this.sysb300Service.querySYSB300(query).subscribe((response) => {
-        this.upgroup_Options = response.Data.map((item: Sysb300m) => ({
-          value: item.level_id,
-          label: item.level_name,
-        }));
-      });
+      this.sysb300Service
+        .querySYSB300_DropDownList({})
+        .subscribe((response) => {
+          this.upgroup_Options = response.Data.map((item: apiOption) => ({
+            No: item.No,
+            Name: item.Name,
+          }));
+        });
     }
   }
 

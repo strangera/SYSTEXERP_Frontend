@@ -45,7 +45,8 @@ const storageKey = 'TLS51010';
 })
 export class TLS51010Component
   extends BasicQueryPageComponent<CategoryItem>
-  implements OnInit {
+  implements OnInit
+{
   // 查詢表單：包含大分類代碼和名稱
   queryForm = this.formBuilder.nonNullable.group({
     CAT_LNo: [
@@ -110,6 +111,7 @@ export class TLS51010Component
   // 提交查詢：處理表單並呼叫查詢 API
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
+      console.log('query condition', frm.value);
       this.apiService.queryTLS51010(frm.value).subscribe({
         next: (response: any) => {
           console.log('API response:', response);

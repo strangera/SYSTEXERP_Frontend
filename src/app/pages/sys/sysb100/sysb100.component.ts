@@ -27,7 +27,7 @@ export class SYSB100Component
     STR_Uniform: ['', [Validators.maxLength(8)]], // 統一編號
     SYS_StoreName: ['', [Validators.maxLength(60)]], // 公司名稱(中文)
     SYS_StoreNameENG: ['', [Validators.maxLength(60)]], // 公司名稱(英文)
-    STO_TaxNo: [, [Validators.maxLength(10)]], // 稅籍編號
+    STO_TaxNo: ['', [Validators.maxLength(10)]], // 稅籍編號
     STO_ManagerName: ['', [Validators.maxLength(12)]], // 負責人
     STO_ContactName: ['', [Validators.maxLength(12)]], // 聯絡人
     STO_ContactTel: ['', [Validators.maxLength(15)]], // 聯絡人電話
@@ -39,7 +39,7 @@ export class SYSB100Component
     STO_BRN: ['', [Validators.maxLength(10)]], // 營業登記證號
     STO_Tel: ['', [Validators.maxLength(15)]], // 公司電話
     STO_Fax: ['', [Validators.maxLength(15)]], // 公司傳真
-    STO_PostCode: [, [Validators.maxLength(6)]], // 郵遞區號
+    STO_PostCode: ['', [Validators.maxLength(6)]], // 郵遞區號
     STO_MailTel: ['', [Validators.maxLength(15)]], // 郵寄電話
     STO_MailFax: ['', [Validators.maxLength(15)]], // 郵寄傳真
     STO_MailAddr: ['', [Validators.maxLength(100)]], // 郵寄地址
@@ -146,19 +146,6 @@ export class SYSB100Component
   onSubmitQuery(frm: FormGroup) {
     // 查詢邏輯
     this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();
-    // this.pageIndex = 0;
-    this.data = [];
-    this.filteredData = [];
-    // this.lastQueryParams = null;
-    this.totalRecords = 0;
-    // this.sortField = 'SYS_StoreNo';
-    // this.sortOrder = 1;
-    // 清空儲存的查詢狀態
-    this.queryStateService.clearQueryState(storageKey);
   }
 
   // 刪除項目
