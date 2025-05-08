@@ -8,7 +8,7 @@ import { Sysb600Service } from '../../../service/sysb/sysb600.service';
 import { TableLazyLoadEvent } from 'primeng/table';
 
 // 本地儲存鍵：用於儲存查詢狀態
-const storageKey = 'SYSB500';
+const storageKey = 'SYSB600';
 
 @Component({
   selector: 'app-sysb600',
