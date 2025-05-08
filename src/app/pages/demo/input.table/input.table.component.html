@@ -19,9 +19,10 @@
         </p-divider>
         <div class="grid p-fluid">
           <app-dropdown-table class="col-12" label="位置編號" [control]="queryForm.controls.multiLevel"
-            [submitted]="submitted" [suggestions]="dialogData" [fieldsConfig]="fieldsConfig" [columns]="dialogColumns"
-            optionLabel="LOCATION_No" optionValue="LOCATION_No" (inputValueChanged)="onAutoCompleteInputChange($event)"
-            [opForm]="dialogForm" (formValueChanged)="onDialogFormChanged($event)">
+            optionLabel="LOCATION_No" optionValue="LOCATION_No" [submitted]="submitted" [suggestions]="suggestions"
+            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
+            [formGroup]="dialogForm" (formValueChanged)="onformValueChanged($event)" [dialogData]="dialogData"
+            [dialogColumns]="dialogColumns" [loading]="dialogloading">
             <app-input-text class="col-12 md:col-6 lg:col-3" label="位置編號" controlName="LOCATION_No"
               [control]="dialogForm.controls.LOCATION_No" />
             <app-multi-select class="col-12 md:col-6 lg:col-3" label="館別" controlName="BUILDING_NO"

@@ -2,7 +2,14 @@ import { Injectable } from '@angular/core';
 import { of, Observable } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
-interface LocationData {
+export interface LocationForm {
+  LOCATION_No: string,
+  BUILDING_NO?: string,
+  FLOOR_NO?: string,
+  AREA_NO?: string
+}
+
+export interface LocationData {
   LOCATION_No: string;
   BUILDING_NO: string;
   FLOOR_NO: string;

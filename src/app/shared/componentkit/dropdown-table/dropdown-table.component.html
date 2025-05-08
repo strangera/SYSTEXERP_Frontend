@@ -2,10 +2,11 @@
   <ng-container *ngFor="let field of fieldsConfig">
     <div class="col pb-0">
       <ng-container *ngIf="field.mainDataField; else elseBlock">
-        <label [for]="field.field">{{ field.header }}<span *ngIf="isRequired" class="required">*</span></label>
-        <p-autoComplete [formControl]="control" [id]="field.field" [optionLabel]="optionLabel"
-          [optionValue]="optionValue" (click)="openPanel($event)" (input)="onInputChange($event)" [lazy]="true"
-          [suggestions]="suggestions" [minLength]="minLength" [maxlength]="maxLength"
+        <label [for]="field.field">{{ field.header }}
+          <span *ngIf="isRequired" class="required">*</span>
+        </label>
+        <p-autoComplete [formControl]="control" [id]="field.field" [optionLabel]="optionLabel" (input)="onInputChange()"
+          (onFocus)="op.toggle($event)" [suggestions]="suggestions" [optionValue]="optionValue"
           [placeholder]="control.disabled ? '' : placeholder"></p-autoComplete>
         <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
           [control]="control"></app-control-messages>
@@ -18,13 +19,11 @@
   </ng-container>
 </div>
 
-<p-overlayPanel #op [appendTo]="'body'">
-  <form [formGroup]="opForm">
-    <div class="grid p-fluid">
-      <ng-content />
-      <app-table class="col-12" [dataKey]="optionLabel || 'id'" [data]="suggestions" [selectedItems]="selectedItems"
-        (selectionChange)="onSelectionChange($event)" [columns]="columns" [showHeader]="false" [showPage]="false"
-        [showCheckBox]="true" selectionMode="single" [showManage]="false" />
-    </div>
+<p-overlayPanel #op [style]="{'max-width': '700px'}" [appendTo]="'body'">
+  <form [formGroup]="formGroup" class="grid p-fluid">
+    <ng-content />
+    <app-table class="col-12" [dataKey]="optionValue" [data]="dialogData" [selectedItems]="selectedItems"
+      (select)="onSelectionChange($event)" [columns]="dialogColumns" [showHeader]="false" [showPage]="false"
+      [showCheckBox]="true" selectionMode="single" [showManage]="false" scrollHeight="200px" [loading]="loading" />
   </form>
 </p-overlayPanel>

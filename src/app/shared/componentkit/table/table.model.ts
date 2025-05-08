@@ -10,15 +10,12 @@ export interface Column {
 
   disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
 
-  style?: (value: any) => string; // styles
+  style?: string; // styles
   maxWidth?: string; // 最大寬度 max-w-{{ col.maxWidth }}
 
   validate?: ((value: string, rowData: any, data: any[], field: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
 
-
   type?: string;     // 欄位類型 input、inputNumber、dropdown、default、html
-  frozen?: boolean;  // 是否凍結 (是否為凍結欄位)
-  alignFrozen?: string; // 凍結欄位對齊方式
   prefix?: string;
   fractionDigits?: number;
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
@@ -28,6 +25,10 @@ export interface Column {
   chipLabel?: string | undefined; // chips 顯示的 label
   checkboxValue?: string; // checkbox 顯示的 ngModel
   checkboxLabel?: (value: any) => string; // checkbox 顯示的 label
+
+  frozen?: boolean;  // 是否凍結 (是否為凍結欄位)
+  alignFrozen?: string; // 凍結欄位對齊方式
+
 }
 
 export const toggleButtons = trigger('toggleButtons', [

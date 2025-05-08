@@ -1,8 +1,9 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { Subject, takeUntil } from 'rxjs';
 import { OverlayPanel } from 'primeng/overlaypanel';
+import { debounceTime, Subject, switchMap, takeUntil, tap } from 'rxjs';
+import { TableRowSelectEvent } from 'primeng/table';
 import { Column } from '../table/table.model';
 
 export interface FieldsConfig {
@@ -15,60 +16,59 @@ export interface FieldsConfig {
 @Component({
   selector: 'app-dropdown-table',
   templateUrl: './dropdown-table.component.html',
-  styleUrl: './dropdown-table.component.scss'
+  styleUrl: './dropdown-table.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
+
 })
 export class DropdownTableComponent extends BasicKitComponent implements OnInit, OnDestroy {
-  @ViewChild('op') op: OverlayPanel | undefined;
-  @Input() control = new FormControl;
-  @Input() submitted = false; // 檢查欄位是否標準
-  @Input() optionLabel: string | undefined; // 資料的 Label
-  @Input() optionValue: string | undefined; // 資料的 Value
-  @Input() suggestions: any[] = []; // 父層根據 API 結果過濾後的 suggestions
+  // 表單參數
+  @Input() control = new FormControl;                // 必填
+  @Input() submitted = false;                        // 必填
+  // 自動完成欄位
+  @Input() suggestions: any[] = [];  // 建議的資料    // 必填
+  @Input() optionLabel = '';                         // 必填
+  @Input() optionValue = '';                         // 必填
   @Input() fieldsConfig: FieldsConfig[] = []; // 要顯示在 p-autoComplete 下方的欄位配置
-  @Input() opForm!: FormGroup;
-  @Input() columns: Column[] = []; // 表格的欄位配置
-  @Input() selectedItems: any = []; // 選擇的項目
-
-  @Output() inputValueChanged = new EventEmitter<string>(); // 新增 Output 事件
-  @Output() formValueChanged = new EventEmitter<FormGroup>(); // 監聽 form 變化的 Output
-
-  private destroy$ = new Subject<void>();
+  @Output() inputValueChanged = new EventEmitter<Record<string, string>>(); // 方法:輸入p-autoComplete事件
+  // OverlayPanel
+  @ViewChild('op') op: OverlayPanel | undefined;
+  private destroy$ = new Subject<void>();            // 訂閱，為了監聽表單改變
+  @Input() formGroup!: FormGroup;                    // 下拉要輸入的form 必填
+  @Input() dialogData: any = [];                     // 下拉table 的資料 必填
+  @Input() loading = false;
+  selectedItems: any;
+  @Input() dialogColumns: Column[] = [];             // 下拉table 的欄位配置 必填
+  @Output() formValueChanged = new EventEmitter<any>(); // 表單改變事件
 
   ngOnInit(): void {
     this.updateControlState(this.control);
-    if (this.opForm) {
-      this.opForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
+    this.formGroup.valueChanges.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(value => {
+      const hasInputValue = Object.values(value).some(
+        (val) => val !== null && val !== undefined && val !== '' && (!Array.isArray(val) || val.length > 0)
+      );
+      if (hasInputValue) {
         this.formValueChanged.emit(value);
-      });
-    }
-  }
-  onSelectionChange(event: any) {
-    if (event.length > 0) {
-      this.selectedItems = event;
-      this.control.setValue(this.selectedItems[0]?.[this.optionValue || '']);
-      this.op?.hide();
-    }
+      }
+    });
   }
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
-  onInputChange(event: any) {
-    this.selectedItems = []
-    this.control.setValue(event.target.value); // 更新控制項的值
-    this.inputValueChanged.emit(this.control.value); // 發射輸入框的值
-    this.op?.hide();
+  onInputChange() {
+    this.inputValueChanged.emit({ [this.optionValue]: this.control.value }); // 使用動態 key
   }
-
-  openPanel(event: any) {
-    this.opForm?.reset();
-    this.suggestions = [];
-    this.op?.show(event);
-  }
-
   getFieldValue(field: FieldsConfig): string {
-    const selectedSuggestion = this.suggestions.find((item: any) => item[this.optionValue || ''] === this.control.value);
-    if (this.control.value && selectedSuggestion && this.suggestions && this.optionValue) {
+    let selectedValue: string;
+    if (typeof this.control.value === 'string') {
+      selectedValue = this.control.value;
+    } else if (typeof this.control.value === 'object') {
+      selectedValue = this.control.value[this.optionValue];
+    } else {
+      return ''; // 如果 control.value 不是字串也不是包含 controlName 屬性的物件，則返回空字串
+    }
+    const selectedSuggestion = this.suggestions.find((item: any) => item[this.optionValue] === selectedValue);
+    if (selectedValue && selectedSuggestion && this.suggestions && this.optionValue) {
       if (selectedSuggestion[field.field] !== undefined) {
         if (field.format) {
           return field.format(selectedSuggestion[field.field]) as string;
@@ -78,5 +78,14 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
       }
     }
     return '';
+  }
+  onSelectionChange(event: TableRowSelectEvent) {
+    this.selectedItems = event.data;
+    this.suggestions = [...this.dialogData]
+    this.control.setValue(this.optionValue ? this.selectedItems[this.optionValue] : this.selectedItems);
+    this.op?.hide();
+    this.dialogData = [];
+    this.selectedItems = [];
+    this.formGroup.reset();
   }
 }

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, EventEmitter, Input, SimpleChanges, OnChanges, Output, ViewChild } from '@angular/core';
-import { Table, TableLazyLoadEvent, TablePageEvent, TableRowUnSelectEvent } from 'primeng/table';
+import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
 import { AddButton, Column, FieldChangeEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
 import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
@@ -31,8 +31,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // select 選擇Row相關
   @Input() showCheckBox = false;                                                // 是否顯示 checkbox
   @Input() selectionMode: 'multiple' | 'single' | null | undefined = 'multiple';// table 勾選 Mode (預設多選)
-  @Input() selectedItems: any[] = [];                                           // table 已勾選資料
+  @Input() selectedItems: any = [];                                           // table 已勾選資料
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true; // 可選擇(條件)
+  @Output() select = new EventEmitter<TableRowSelectEvent>();               // 資料取消勾選(事件)
   @Output() unSelect = new EventEmitter<TableRowUnSelectEvent>();               // 資料取消勾選(事件)
   @Output() selectionChange = new EventEmitter<any>();                          // 資料勾選(事件)
   // Sort 相關
@@ -80,6 +81,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() showFooter = false;                      // 是否顯示 Footer
   // 分頁器
   @Input() scrollHeight = '600px';                  // table 高度
+  @Input() scrollable = true                        // 是否要滾輪
   @Input() showPaginator = true;                    // 是否顯示 分頁器
   @Input() totalRecords = 0;                        // 記錄總數
   totalPages = 0;                                   // 共幾頁數
@@ -198,7 +200,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   }
   // 資料勾選
   onSelectionChange(event: any) {
-    const selected = Array.isArray(event) ? event : [event];
+    const selected = Array.isArray(event) ? event : event ? [event] : [];
     this.selectedItems = selected.filter((item: any) => this.isRowSelectable(item));
     this.selectionChange.emit(this.selectedItems);
   }

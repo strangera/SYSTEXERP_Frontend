@@ -16,8 +16,7 @@
     <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
       <tr>
         <td class="text-center">{{ rowIndex + 1 }}</td>
-        <td *ngFor="let col of getFilterColumns(expansionColumns)" class="text-center"
-          [ngClass]="col.style ? col.style(rowData[col.field]) : ''">
+        <td *ngFor="let col of getFilterColumns(expansionColumns)" class="text-center" [ngClass]="col.style">
           <ng-container *ngIf="col.type === 'chips'">
             <div class="flex flex-wrap gap-2">
               <p-chip *ngFor="let item of rowData[col.field]" [label]="item[col.chipLabel || 'label']"></p-chip>

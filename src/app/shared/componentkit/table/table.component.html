@@ -6,16 +6,17 @@
 </p-divider>
 <p-table #dt [value]="data" [columns]="selectedColumns" [(selection)]="selectedItems" sortMode="multiple"
   [selectionMode]="showCheckBox && IsPrint ? selectionMode : null" [dataKey]="dataKey" [rowTrackBy]="trackByRow"
-  [resizableColumns]="true" [paginator]="showPaginator && IsPrint" [scrollable]="true" [showCurrentPageReport]="IsPrint"
-  [multiSortMeta]="multiSortMeta" [rowsPerPageOptions]="[10, 25, 50, 75, 100]"
+  [resizableColumns]="true" [paginator]="showPaginator && IsPrint" [scrollable]="scrollable"
+  [showCurrentPageReport]="IsPrint" [multiSortMeta]="multiSortMeta" [rowsPerPageOptions]="[10, 25, 50, 75, 100]"
   [scrollHeight]="IsPrint ? scrollHeight:'385px'" [rows]="rows" [(first)]="first" (onPage)="onPageChange($event)"
   (onLazyLoad)="loadDataLazy($event)" [lazy]="lazy || !IsPrint"
   [styleClass]=" IsPrint ? 'p-datatable-sm p-datatable-striped p-datatable-gridlines' : 'p-datatable-sm p-datatable-striped'"
   [virtualScroll]="!IsPrint" [virtualScrollItemSize]="35" [virtualScrollDelay]="250"
   currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})" (onSort)="onSort($event)"
-  (selectionChange)="onSelectionChange($event)" (onRowUnselect)="unSelect.emit($event)"
-  [rowSelectable]="rowSelectableWrapper" [ngClass]="{ 'table-disabled': tableDisabled }"
-  [expandedRowKeys]="IsPrint ? expandedRows : {}" paginatorDropdownAppendTo="body" editMode="row" [loading]="loading">
+  (selectionChange)="onSelectionChange($event)" (onRowSelect)="select.emit($event)"
+  (onRowUnselect)="unSelect.emit($event)" [rowSelectable]="rowSelectableWrapper"
+  [ngClass]="{ 'table-disabled': tableDisabled }" [expandedRowKeys]="IsPrint ? expandedRows : {}"
+  paginatorDropdownAppendTo="body" editMode="row" [loading]="loading">
   <ng-template pTemplate="caption">
     <div class="grid align-items-center justify-content-between mx-0"
       *ngIf="showHeader && !isPDFDownloading && !isExcelDownloading">
@@ -95,8 +96,7 @@
           [disabled]="rowData[expansionDataKey]?.length === 0" tooltipPosition="right" pButton />
       </td>
       <td *ngFor="let col of columns" (click)="editing ? $event.stopPropagation() : null"
-        class="max-w-{{ col.maxWidth }} text-center" style="text-overflow: ellipsis"
-        [ngClass]="col.style ? col.style(rowData[col.field]) : ''"
+        class="max-w-{{ col.maxWidth }} text-center" style="text-overflow: ellipsis" [ngClass]="col.style"
         [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn
         [frozen]="IsPrint && !tableDisabled && col.frozen">
         <p-cellEditor *ngIf="col.type === 'input'">

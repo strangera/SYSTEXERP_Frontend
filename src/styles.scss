@@ -104,6 +104,13 @@ input[disabled],
   }
 }
 
+.p-overlaypanel {
+  box-shadow:
+    0 2px 4px -1px rgba(0, 0, 0, 0.2),
+    0 4px 5px 0 rgba(0, 0, 0, 0.14),
+    0 1px 10px 0 rgba(0, 0, 0, 0.12) !important;
+}
+
 // 以下用來調整暗黑明亮模式(需要用var()來調整)
 .p-accordion .p-accordion-content,
 .p-panel .p-panel-content {
