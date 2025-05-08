@@ -23,13 +23,11 @@ export class SYSB300Component
   implements OnInit
 {
   // 查詢
-  // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
     // SYS3000 組織階層設定檔
-    id: [],
     level_id: ['', [Validators.maxLength(2)]], // 組織階層代碼
     level_name: ['', [Validators.maxLength(30)]], // 組織階層名稱
-    p_level_id: [, [Validators.maxLength(2)]], // 上層組織階層代碼
+    p_level_id: ['', [Validators.maxLength(2)]], // 上層組織階層代碼
 
     //分頁查詢
     pageSize: [10],
@@ -77,13 +75,8 @@ export class SYSB300Component
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const query = {
-        level_id: frm.value.level_id || '',
-        level_name: frm.value.level_name || '',
-        p_level_id: frm.value.p_level_id || '',
-      };
-
-      this.sysb300Service.querySYSB300(query).subscribe({
+      console.log('query condition', frm.value);
+      this.sysb300Service.querySYSB300(frm.value).subscribe({
         next: (response: any) => {
           console.log('API response:', response);
           if (response.Status === '0000') {

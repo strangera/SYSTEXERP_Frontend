@@ -70,11 +70,8 @@ export class SYSB500Component
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const query = {
-        area_no: frm.value.area_no || '',
-        area_desc: frm.value.area_desc || '',
-      };
-      this.sysb500Service.querySYSB500(query).subscribe({
+      console.log('queryForm', frm.value);
+      this.sysb500Service.querySYSB500(frm.value).subscribe({
         next: (response: any) => {
           console.log('API response:', response);
           if (response.Status === '0000') {
