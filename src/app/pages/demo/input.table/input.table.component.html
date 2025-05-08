@@ -6,6 +6,17 @@
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true">
       <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <p-divider align="left" type="solid">
+          <b class="text-primary">日期範圍選擇器(新)</b>
+        </p-divider>
+        <div class="grid p-fluid">
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-5" label="年月日(快速碼)"
+            [startControl]="queryForm.controls.dateRangeQuick1" [endControl]="queryForm.controls.dateRangeQuick2"
+            [submitted]="submitted" />
+        </div>
+        <p-divider align="left" type="solid">
+          <b class="text-primary">Table下拉</b>
+        </p-divider>
         <div class="grid p-fluid">
           <app-dropdown-table class="col-12" label="位置編號" [control]="queryForm.controls.multiLevel"
             [submitted]="submitted" [suggestions]="dialogData" [fieldsConfig]="fieldsConfig" [columns]="dialogColumns"
@@ -24,50 +35,98 @@
               [control]="dialogForm.controls.AREA_NO" />
           </app-dropdown-table>
         </div>
+        <p-divider align="left" type="solid">
+          <b class="text-primary">樹狀下拉</b>
+        </p-divider>
+        <div class="grid p-fluid">
+          <!-- add treeDropDown component   -->
+          <app-tree-dropdown></app-tree-dropdown>
+          <!-- --- -->
+        </div>
+        <p-divider align="left" type="solid">
+          <b class="text-primary">文字</b>
+        </p-divider>
         <div class="grid p-fluid">
           <app-input-text class="col-12 md:col-6 lg:col-5" label="文字輸入" controlName="text"
             [control]="queryForm.controls.text" [submitted]="submitted" />
           <app-input-textarea class="col-12 md:col-6 lg:col-5" label="長文字輸入" controlName="textarea"
             [control]="queryForm.controls.textarea" [submitted]="submitted" />
+        </div>
+        <p-divider align="left" type="solid">
+          <b class="text-primary">數字</b>
+        </p-divider>
+        <div class="grid p-fluid">
           <app-input-number class="col-12 md:col-6 lg:col-5" label="數字輸入" controlName="number"
             [control]="queryForm.controls.number" [submitted]="submitted" />
           <app-input-number-range class="col-12 md:col-6 lg:col-5" label="數字輸入(範圍)"
             [startControl]="queryForm.controls.number1" [endControl]="queryForm.controls.number2"
             [submitted]="submitted" />
+        </div>
+        <p-divider align="left" type="solid">
+          <b class="text-primary">下拉式</b>
+        </p-divider>
+        <div class="grid p-fluid">
           <app-dropdown class="col-12 md:col-6 lg:col-5" label="單選下拉" controlName="dropdown"
             [options]="systemTypeOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.dropdown" [submitted]="submitted" />
           <app-multi-select class="col-12 md:col-6 lg:col-5" label="多選下拉" controlName="multiSelect"
             [options]="systemTypeOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.multiSelect" [submitted]="submitted" />
-          <!-- add treeDropDown component   -->
-          <app-tree-dropdown></app-tree-dropdown>
-          <!-- --- -->
+        </div>
+        <p-divider align="left" type="solid">
+          <b class="text-primary">時間選擇</b>
+        </p-divider>
+        <div class="grid p-fluid">
           <app-calendar calendarType="timeOne" class="col-12 md:col-6 lg:col-5" label="時分"
             [control]="queryForm.controls.timeOne" controlName="timeOne" [submitted]="submitted" />
           <app-calendar-range calendarType="timeRange" class="col-12 md:col-6 lg:col-5" label="時分"
             [startControl]="queryForm.controls.timeRange1" [endControl]="queryForm.controls.timeRange2"
             [submitted]="submitted" />
+        </div>
+        <p-divider align="left" type="solid">
+          <b class="text-primary">年月日選擇</b>
+        </p-divider>
+        <div class="grid p-fluid">
           <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="年月日"
             [control]="queryForm.controls.dateOne" controlName="dateOne" [submitted]="submitted" />
           <app-calendar-range calendarType="dateRange" class="col-12 md:col-6 lg:col-5" label="年月日"
             [startControl]="queryForm.controls.dateRange1" [endControl]="queryForm.controls.dateRange2"
             [submitted]="submitted" />
+        </div>
+        <p-divider align="left" type="solid">
+          <b class="text-primary">年月日時分秒選擇</b>
+        </p-divider>
+        <div class="grid p-fluid">
           <app-calendar calendarType="dateTimeOne" class="col-12 md:col-6 lg:col-5" label="年月日時分秒"
             [control]="queryForm.controls.dateTimeOne" [submitted]="submitted" />
           <app-calendar-range calendarType="dateTimeRange" class="col-12 md:col-6 lg:col-5" label="年月日時分秒"
             [startControl]="queryForm.controls.dateTimeRange1" [endControl]="queryForm.controls.dateTimeRange2"
             [submitted]="submitted" />
+        </div>
+        <p-divider align="left" type="solid">
+          <b class="text-primary">月份</b>
+        </p-divider>
+        <div class="grid p-fluid">
           <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-5" label="月"
             [control]="queryForm.controls.dateMonthOne" [submitted]="submitted" />
           <app-calendar-range calendarType="dateMonthRange" class="col-12 md:col-6 lg:col-5" label="月"
             [startControl]="queryForm.controls.dateMonthRange1" [endControl]="queryForm.controls.dateMonthRange2"
             [submitted]="submitted" />
+        </div>
+        <p-divider align="left" type="solid">
+          <b class="text-primary">年份</b>
+        </p-divider>
+        <div class="grid p-fluid">
           <app-calendar calendarType="dateYearOne" class="col-12 md:col-6 lg:col-5" label="年"
             [control]="queryForm.controls.dateYearOne" [submitted]="submitted" />
           <app-calendar-range calendarType="dateYearRange" class="col-12 md:col-6 lg:col-5" label="年"
             [startControl]="queryForm.controls.dateYearRange1" [endControl]="queryForm.controls.dateYearRange2"
             [submitted]="submitted" />
+        </div>
+        <p-divider align="left" type="solid">
+          <b class="text-primary">其他</b>
+        </p-divider>
+        <div class="grid p-fluid">
           <app-radiobutton class="col-12" label="radio多選" groupname="radiolist" [control]="queryForm.controls.radiolist"
             [options]="systemTypeOptions" [submitted]="submitted" />
           <app-editor-text class="col-12" label="編輯器" controlName="editortext" [control]="queryForm.controls.editortext"

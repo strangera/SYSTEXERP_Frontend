@@ -106,9 +106,10 @@ import { CalendarComponent } from './componentkit/calendar/calendar.component';
 import { CalendarRangeComponent } from './componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from './componentkit/table/table.component';
 import { TableExpansionComponent } from './componentkit/table/table-expansion/table-expansion.component';
-import { DropdownTableComponent } from './componentkit/dialog/dropdown-table.component';
+import { DropdownTableComponent } from './componentkit/dropdown-table/dropdown-table.component';
 import { TreeDropdownComponent } from './componentkit/tree-dropdown/tree-dropdown.component';
 import { InputTextareaComponent } from './componentkit/input-textarea/input-textarea.component';
+import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick/calendar-range-quick.component';
 
 @NgModule({
   declarations: [
@@ -122,6 +123,7 @@ import { InputTextareaComponent } from './componentkit/input-textarea/input-text
     MultiSelectComponent,
     CalendarComponent,
     CalendarRangeComponent,
+    CalendarRangeQuickComponent,
     TableComponent,
     TableExpansionComponent,
     DropdownTableComponent,
@@ -328,6 +330,7 @@ import { InputTextareaComponent } from './componentkit/input-textarea/input-text
     MultiSelectComponent,
     CalendarComponent,
     CalendarRangeComponent,
+    CalendarRangeQuickComponent,
     TableComponent,
     TableExpansionComponent,
     RadiobuttonComponent,

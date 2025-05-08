@@ -75,6 +75,35 @@ body {
   }
 }
 
+::placeholder,
+::-webkit-input-placeholder,
+.p-placeholder {
+  color: var(--surface-900);
+  opacity: 0.35; /* Firefox */
+}
+
+input[disabled],
+.p-dropdown.p-disabled,
+.p-component:disabled,
+.p-component.p-disabled {
+  background-color: #d6d6d6 !important;
+  color: #495057;
+  font-weight: bold;
+  cursor: not-allowed;
+  border: 1px solid #e9ecef;
+  opacity: 0.65;
+  pointer-events: none;
+  border-radius: 4px;
+  span,
+  p {
+    color: #000;
+  }
+
+  span.p-button-icon {
+    color: #898989 !important;
+  }
+}
+
 // 以下用來調整暗黑明亮模式(需要用var()來調整)
 .p-accordion .p-accordion-content,
 .p-panel .p-panel-content {
@@ -108,4 +137,11 @@ body {
   background-color: #a2e7c6;
   color: black;
   font-weight: bold;
+}
+
+.p-selectbutton {
+  display: flex;
+  .p-button {
+    flex-grow: 1;
+  }
 }
