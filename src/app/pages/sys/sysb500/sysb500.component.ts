@@ -99,19 +99,6 @@ export class SYSB500Component
     this.onSubmit(frm);
   }
 
-  onClearForm() {
-    this.queryForm.reset();
-    // this.pageIndex = 0;
-    this.data = [];
-    this.filteredData = [];
-    // this.lastQueryParams = null;
-    this.totalRecords = 0;
-    // this.sortField = 'SYS_StoreNo';
-    // this.sortOrder = 1;
-    // 清空儲存的查詢狀態
-    this.queryStateService.clearQueryState(storageKey);
-  }
-
   // 刪除項目
   onDelete(data: Sysb500m | Sysb500m[]): void {
     console.log('Delete data:', JSON.stringify(data, null, 2));
