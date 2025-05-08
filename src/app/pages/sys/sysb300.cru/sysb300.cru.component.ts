@@ -1,4 +1,4 @@
-import { option, Sysb300m } from './../module/sysb000.module';
+import { apiOption, Sysb300m } from './../module/sysb000.module';
 import { Sysb300Service } from './../../../service/sysb/sysb300.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
@@ -25,13 +25,7 @@ export class SYSB300CRUComponent
     p_level_id: [, [Validators.maxLength(2)]], // 上層組織階層代碼(空白代表第一層)
   });
   //
-  upgroup_Options: option[] = [
-    { value: '', label: '全公司' },
-    { value: '10', label: '室/部' },
-    { value: '20', label: 'Team' },
-    { value: '30', label: '樓/組' },
-  ];
-
+  upgroup_Options: apiOption[] = [];
   allquery: Sysb300m[] = [];
 
   // ----------------------------------------------------------------
@@ -41,6 +35,7 @@ export class SYSB300CRUComponent
 
   ngOnInit(): void {
     this.initializePage('SYSB300', this.dataForm);
+    this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
@@ -57,15 +52,21 @@ export class SYSB300CRUComponent
       level_id: '',
       level_name: '',
       p_level_id: '',
+
+      //分頁查詢
+      pageSize: 1000,
+      pageIndex: 0,
+      SortBy: [{ field: 'level_id', order: 1 }],
     };
 
     this.sysb300Service.querySYSB300(query).subscribe((response) => {
       this.allquery = response.Data;
       const hasEmptypLevel = this.allquery.some(
-        (item: any) => item.p_level_id === '',
+        (item: Sysb300m) => item.p_level_id === '',
       );
       const hasSameLevel = this.allquery.some(
-        (item: any) => item.level_id === this.dataForm.controls.level_id.value,
+        (item: Sysb300m) =>
+          item.level_id === this.dataForm.controls.level_id.value,
       );
       console.log('上層組織階層存在 空白的單位', hasEmptypLevel);
 
@@ -124,5 +125,18 @@ export class SYSB300CRUComponent
 
   onClearForm() {
     this.dataForm.reset(); // 重置表單
+  }
+
+  loadOptions() {
+    {
+      this.sysb300Service
+        .querySYSB300_DropDownList({})
+        .subscribe((response) => {
+          this.upgroup_Options = response.Data.map((item: apiOption) => ({
+            No: item.No,
+            Name: item.Name,
+          }));
+        });
+    }
   }
 }

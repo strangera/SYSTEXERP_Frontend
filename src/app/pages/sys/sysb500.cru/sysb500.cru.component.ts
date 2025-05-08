@@ -43,12 +43,7 @@ export class SYSB500CRUComponent
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            const body = {
-              area_no: this.dataForm.controls.area_no.value,
-              area_desc: this.dataForm.controls.area_desc.value,
-            };
-            console.log('insert', body);
-            this.sysb500Service.insertSYSB500(body).subscribe(() => {
+            this.sysb500Service.insertSYSB500(frm.value).subscribe(() => {
               this.messageService.successBubble('新增成功');
               this.onCancel(); // 新增成功後返回查詢頁面
             });
@@ -56,13 +51,7 @@ export class SYSB500CRUComponent
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            const body = {
-              id: this.dataForm.controls.id.value,
-              area_no: this.dataForm.controls.area_no.value,
-              area_desc: this.dataForm.controls.area_desc.value,
-            };
-            console.log('update', body);
-            this.sysb500Service.updateSYSB500(body).subscribe(() => {
+            this.sysb500Service.updateSYSB500(frm.value).subscribe(() => {
               this.messageService.successBubble('更新成功');
               this.onCancel(); // 更新成功後返回查詢頁面
             });

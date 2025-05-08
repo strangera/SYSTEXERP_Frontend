@@ -17,9 +17,9 @@
                     <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-number [useGrouping]="false" label="公司編號/店號" controlName="SYS_StoreNo"
+                                <app-input-text label="公司編號/店號" controlName="SYS_StoreNo"
                                     [control]="queryForm.controls.SYS_StoreNo" [submitted]="submitted">>
-                                </app-input-number>
+                                </app-input-text>
                             </div>
                             <div class="col-12 md:col-12 lg:col-4">
                                 <app-input-text label="公司名稱(中文)" controlName="SYS_StoreName"
@@ -39,9 +39,9 @@
                                 </app-input-text>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-number [useGrouping]="false" label="稅籍編號" controlName="STO_TaxNo"
+                                <app-input-text label="稅籍編號" controlName="STO_TaxNo"
                                     [control]="queryForm.controls.STO_TaxNo" [submitted]="submitted">>
-                                </app-input-number>
+                                </app-input-text>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
                                 <app-input-text label="負責人" controlName="STO_ManagerName"
@@ -68,14 +68,14 @@
                         </div>
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-number [useGrouping]="false" label="郵遞區號" controlName="STO_PostCode"
+                                <app-input-text label="郵遞區號" controlName="STO_PostCode"
                                     [control]="queryForm.controls.STO_PostCode" [submitted]="submitted">>
-                                </app-input-number>
+                                </app-input-text>
                             </div>
                             <div class="col-12 md:col-12 lg:col-4">
-                                <app-input-number [useGrouping]="false" label="營業登記證號" controlName="STO_BRN"
+                                <app-input-text label="營業登記證號" controlName="STO_BRN"
                                     [control]="queryForm.controls.STO_BRN" [submitted]="submitted">
-                                </app-input-number>
+                                </app-input-text>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
                                 <app-input-text label="公司電話" controlName="STO_Tel"
@@ -143,7 +143,7 @@
                         </div>
                         <!-- <div *appHasPermission="queryPermission" class="col"> -->
                         <div class="grid justify-content-end">
-                            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                            <app-button btnType="clear"></app-button>
                             <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
                                 [loading]="loading"></app-button>
                         </div>

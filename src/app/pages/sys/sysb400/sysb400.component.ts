@@ -6,6 +6,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { Sysb400m } from '../module/sysb000.module';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
+import { Sysb300Service } from '../../../service/sysb/sysb300.service';
 
 // 本地儲存鍵：用於儲存查詢狀態
 const storageKey = 'SYSB400';
@@ -58,7 +59,10 @@ export class SYSB400Component
   // 多選項目
   selectedItems: Sysb400m[] = [];
 
-  constructor(private sysb400Service: Sysb400Service) {
+  constructor(
+    private sysb300Service: Sysb300Service,
+    private sysb400Service: Sysb400Service,
+  ) {
     super();
   }
 
@@ -104,14 +108,9 @@ export class SYSB400Component
 
   onClearForm() {
     this.queryForm.reset();
-    // this.pageIndex = 0;
     this.data = [];
     this.filteredData = [];
-    // this.lastQueryParams = null;
     this.totalRecords = 0;
-    // this.sortField = 'SYS_StoreNo';
-    // this.sortOrder = 1;
-    // 清空儲存的查詢狀態
     this.queryStateService.clearQueryState(storageKey);
   }
 
@@ -169,13 +168,30 @@ export class SYSB400Component
       { label: '50', value: 50 },
       { label: '100', value: 100 },
     ];
-    this.level_nameOptions = [
-      { value: '全公司', label: '全公司' },
-      { value: '室/部', label: '室/部' },
-      { value: 'Team', label: 'Team' },
-      { value: '組', label: '組' },
-      { value: '樓層', label: '樓層' },
-    ];
+
+    //階層作業
+    const queryLevel = {
+      level_id: '',
+      level_name: '',
+      p_level_id: '',
+    };
+    this.sysb300Service.querySYSB300(queryLevel).subscribe({
+      next: (response: any) => {
+        console.log('API response:', response);
+        if (response.Status === '0000') {
+          this.level_nameOptions = response.Data || [];
+          console.log('取得內容', this.level_nameOptions);
+        } else {
+          console.error('API error:', response.Status, response.Message);
+        }
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+    });
+
     this.whetherOptions = [
       { value: 'Y', label: '是' },
       { value: 'N', label: '否' },
