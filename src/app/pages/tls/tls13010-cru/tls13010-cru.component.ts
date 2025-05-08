@@ -1,15 +1,11 @@
 import { LocationCodeService } from './../../../service/basic/locationcode.service';
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
-import { AuthService } from '../../../service/system/auth.service';
+import { FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { ValidationService } from '../../../shared/service/validation.service';
 import {
-  FunsrightInfo,
   PermissionsInfo,
 } from '../../../shared/models/system/funsrightInfo';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 
 // Importing the specific services for each dropdown
@@ -33,19 +29,35 @@ import { OrganizationNumberService } from '../../../service/basic/organization-n
 import { ProductCategoryService } from '../../../service/basic/product-category.service';
 import { SmallCategoryService } from '../../../service/basic/small-category.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+
+// 資料模型：分類項目
+interface CategoryItem {
+  id: number;
+  bus_type: string; //大分類代碼
+  bus_type_name: string; //大分類名稱
+  bus_class: string; //中分類(商品類別)代碼
+  bus_class_name: string; //中分類(商品類別)名稱
+  bus_sclass: string; //小分類代碼
+  bus_sclass_name: string; //小分類名稱
+  bus_sclass_desc: string; //備註
+  CRT_Date: string;
+  CRT_USR_No: string;
+  CRT_USR_Name: string;
+  UPD_Date: string;
+  UPD_USR_No: string;
+  UPD_USR_Name: string;
+}
+
+const storageKey = 'SYSB920';
+
 @Component({
   selector: 'app-tls13010-cru',
   templateUrl: './tls13010-cru.component.html',
   styleUrls: ['./tls13010-cru.component.scss'],
 })
-export class TLS13010CRUComponent implements OnInit {
-  // Additional component state variables
-  loading: boolean = false;
-  submitted: boolean = false;
-  ProgNo: string = '210010';
-  formTitle: string = '';   //CRU
-  showConfirm: boolean = false;//CRU
-  crudstatus: CRUDStatus = CRUDStatus.Read;//CRU
+export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
+
 
   // Data and columns for the table
   data: any[] = [
@@ -252,28 +264,7 @@ export class TLS13010CRUComponent implements OnInit {
     { value: 3, label: '契約屆滿保證票' },
   ];
 
-
-
-  // Permissions
-  funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
-
   constructor(
-    private formBuilder: FormBuilder,
-    private router: Router,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private validationService: ValidationService,
     private counterCategoryService: CounterCategoryService, // 新增的服務
     private decorationStyleService: DecorationStyleService, // 新增的服務
@@ -298,12 +289,15 @@ export class TLS13010CRUComponent implements OnInit {
     private smallCategoryService: SmallCategoryService,
     private userCodeService: UserCodeService,
     private LocationCodeService: LocationCodeService,
-    private activatedRoute: ActivatedRoute  // 正確的名稱
-  ) { }
+    // private activatedRoute: ActivatedRoute  // 正確的名稱
+  ) {
+    super();
+  }
   onSubmitNext(): void {
     this.router.navigate(['TLS1000/TLS13010NEXT1']);
   }
   ngOnInit(): void {
+    this.initializePage('TLS13010', this.dataForm);
     // 讀取導航狀態中的專櫃招募編號
     const navigation = this.router.getCurrentNavigation();
     const state = navigation?.extras.state as { [key: string]: any };
@@ -420,31 +414,6 @@ export class TLS13010CRUComponent implements OnInit {
       crudstatus: CRUDStatus,
       rowdata: any,
     };//CRU
-
-    switch (state.crudstatus) {
-      case CRUDStatus.Create:
-        this.formTitle = '新增資料';
-        this.showConfirm = this.canAdd();
-        break;
-      case CRUDStatus.Edit:
-        console.log(state.rowdata);
-        this.formTitle = '編輯資料';
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      case CRUDStatus.Read:
-        this.formTitle = '顯示資料';
-        this.Read(state.rowdata);
-        break;
-    }//CRU
-  }
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
   }
 
   // Check if the user has query permission
@@ -452,15 +421,6 @@ export class TLS13010CRUComponent implements OnInit {
     return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
   }
 
-  // Check if the user has add permission
-  canAdd(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
-  }
-
-  // Check if the user has edit permission
-  canEdit(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
-  }
 
   // Form submission logic
   onSubmit(frm: FormGroup) {
@@ -486,44 +446,9 @@ export class TLS13010CRUComponent implements OnInit {
     this.dataForm.reset();  // 重置表單
   }
 
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
-
-  // Navigation method
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
-      },
-    };
-
-    this.router.navigate(['TLS1000/TLS13010'], extras);
-  }
-  get isFormEditable(): boolean {
-    return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());
-  }//CRU
-
   submitForm(frm: FormGroup) {
     // 查詢邏輯
     this.onSubmit(frm);
-  }//CRU
-
-  onCancel() {
-    this.router.navigate(['TLS1000/TLS13010']);
   }//CRU
 
   // 初始化CRU表單

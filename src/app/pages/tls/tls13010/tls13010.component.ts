@@ -374,17 +374,7 @@ export class TLS13010Component extends BasicQueryPageComponent<CategoryItem> imp
     this.loading = false;
     this.messageService.unblockUi();
   }
-  onRowClick(data: any): void {
-    const extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['TLS1000/TLS13010CRU'], extras);
-  }
+
   onSubmitQuery(frm: FormGroup) {
     // 查詢邏輯
     this.onSubmit(frm);
@@ -438,11 +428,11 @@ export class TLS13010Component extends BasicQueryPageComponent<CategoryItem> imp
     // });
   }
   loadData(event: TableLazyLoadEvent) {
-    // const form = this.queryForm.value;
-    // if (this.totalRecords === 0) { return; }
-    // form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    // form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    // form.SortBy = event.multiSortMeta ?? [{ field: 'bus_class', order: 1 }];
-    // this.onSubmit(this.queryForm);
+    const form = this.queryForm.value;
+    if (this.totalRecords === 0) { return; }
+    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
+    form.SortBy = event.multiSortMeta ?? [{ field: 'bus_class', order: 1 }];
+    this.onSubmit(this.queryForm);
   }
 }
