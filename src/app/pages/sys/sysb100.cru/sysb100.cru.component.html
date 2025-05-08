@@ -11,9 +11,9 @@
                 <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="公司編號/店號" controlName="SYS_StoreNo"
-                                [control]="dataForm.controls.SYS_StoreNo" [submitted]="submitted">>
-                            </app-input-number>
+                            <app-input-text label="公司編號/店號" controlName="SYS_StoreNo"
+                                [control]="dataForm.controls.SYS_StoreNo" [submitted]="submitted">
+                            </app-input-text>
                         </div>
                         <div class="col-12 md:col-12 lg:col-4">
                             <app-input-text label="公司名稱(中文)" controlName="SYS_StoreName"
@@ -62,14 +62,14 @@
                     </div>
                     <div class="grid p-fluid">
                         <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="郵遞區號" controlName="STO_PostCode"
-                                [control]="dataForm.controls.STO_PostCode" [submitted]="submitted">>
-                            </app-input-number>
+                            <app-input-text label="郵遞區號" controlName="STO_PostCode"
+                                [control]="dataForm.controls.STO_PostCode" [submitted]="submitted">
+                            </app-input-text>
                         </div>
                         <div class="col-12 md:col-12 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="營業登記證號" controlName="STO_BRN"
-                                [control]="dataForm.controls.STO_BRN" [submitted]="submitted">
-                            </app-input-number>
+                            <app-input-text label="營業登記證號" controlName="STO_BRN" [control]="dataForm.controls.STO_BRN"
+                                [submitted]="submitted">
+                            </app-input-text>
                         </div>
                     </div>
                     <div class="grid p-fluid">
