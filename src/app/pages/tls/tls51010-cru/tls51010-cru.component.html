@@ -18,9 +18,10 @@
         </div>
       </div>
       <hr>
-      <app-editor-text label="說明" controlName="CAT_LRemark" [control]="dataForm.controls.CAT_LRemark"
-        [style]="{ height: '100px' }" [submitted]="submitted">
-      </app-editor-text>
+      <div class="grid p-fluid">
+        <app-input-textarea class="col-12 md:col-6 lg:col-5" label="說明" controlName="textarea"
+          [control]="dataForm.controls.CAT_LRemark" [submitted]="submitted" />
+      </div>
       <hr>
     </form>
     <div class="col pt-4" *ngIf="!isFormReadable">

@@ -265,6 +265,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     });
     this.commissionCalculationService.getCommissionCalculations().subscribe((options) => {
       this.commissionCalculationOptions = options;
+
+
     });
     this.baseTypeService.getBaseTypes().subscribe((options) => {
       this.packageCategoryOptions = options;

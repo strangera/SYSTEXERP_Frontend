@@ -36,10 +36,12 @@ export class SYSB920CRUComponent extends BasicCruPageComponent<CategoryItem> imp
   optionsBig: { value: string, label: string }[] = [];
   optionsMid: { value: string, label: string }[] = [];
   dataForm = this.formBuilder.nonNullable.group({
+    id: [0], // ID
     bus_sclass: ['', [Validators.maxLength(2)]], // 小分類代碼
     bus_sclass_name: ['', [Validators.maxLength(40)]], // 小分類名稱
     bus_type: [''], // 大分類代碼
     bus_class: [''], // 中分類代碼
+    bus_sclass_desc: ['', [Validators.maxLength(200)]], // 備註
   });
   //
   industryTypeOptions: any[] = [];

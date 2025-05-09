@@ -3,11 +3,10 @@
     <div class="col" style="flex: 1">
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <div *appHasPermission="addPermission">
-      <app-button btnType="action" label="下一步(抽成設定)" icon="pi pi-arrow-right" (onClick)="onSubmitNext()"
-        disabled="queryForm.invalid"></app-button>
-      <app-button btnType="cancel" (click)="onCancel()"></app-button>
-    </div>
+    <!-- <div *appHasPermission="addPermission"> -->
+    <app-button btnType="action" label="下一步(抽成設定)" (click)="onSubmitNext()"></app-button>
+    <app-button btnType="cancel" (click)="onCancel()"></app-button>
+    <!-- </div> -->
   </div>
 
   <!-- Scroll Container Wrapper -->
