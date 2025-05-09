@@ -18,46 +18,39 @@
                                 <app-input-text label="扣款項目編號" [control]="queryForm.controls.CAP_Item"
                                     [submitted]="submitted">
                                 </app-input-text>
-                                    </div>
-                                <div class="col-12 md:col-6 lg:col-4">
-                                    <app-multi-select label="扣款類別" [options]="deductionCategoryOptions"
-                                        optionLabel="label" optionValue="value" [control]="queryForm.controls.CAP_Type"
-                                        [submitted]="submitted">
-                                    </app-multi-select>
-                                </div>
-                                <div class="col-12 md:col-6 lg:col-4">
-                                    <app-input-text label="扣款項目名稱" [control]="queryForm.controls.CAP_Name"
-                                        [submitted]="submitted">
-                                    </app-input-text>
-                                </div>
-                                <div class="col-12 md:col-6 lg:col-4">
-                                    <app-input-text label="備註" [control]="queryForm.controls.CAP_Remark"
-                                        [submitted]="submitted">
-                                    </app-input-text>
-                                </div>
                             </div>
-                            <div class="grid justify-content-end">
-                                <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-                                <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
-                                    [loading]="loading"></app-button>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-multi-select label="扣款類別" [options]="deductionCategoryOptions" optionLabel="label"
+                                    optionValue="value" [control]="queryForm.controls.CAP_Type" [submitted]="submitted">
+                                </app-multi-select>
                             </div>
-                        
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="扣款項目名稱" [control]="queryForm.controls.CAP_Name"
+                                    [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                            <div class="col-12 md:col-6 lg:col-4">
+                                <app-input-text label="備註" [control]="queryForm.controls.CAP_Remark"
+                                    [submitted]="submitted">
+                                </app-input-text>
+                            </div>
+                        </div>
+                        <div class="grid justify-content-end">
+                            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                            <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
+                                [loading]="loading"></app-button>
+                        </div>
+
                     </form>
                 </p-accordionTab>
             </p-accordion>
         </div>
         <div class="card">
             <div class="col-13">
-<app-table
-  [columns]="columns"
-  [data]="data"
-  [tableKey]="'tls11020'"
-  [title]="'扣款項目維護'"
-  [totalRecords]="totalRecords"
-  [lazy]="enableLazy"
-  (lazyLoad)="onLazyLoad($event)"
-  (edit)="editRow($event)">
-</app-table>
+                <app-table [columns]="columns" [data]="data" [tableKey]="'tls11020'" [title]="'扣款項目維護'"
+                    [totalRecords]="totalRecords" [lazy]="enableLazy" (lazyLoad)="onLazyLoad($event)"
+                    (edit)="editRow($event)">
+                </app-table>
 
 
             </div>
