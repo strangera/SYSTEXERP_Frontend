@@ -146,4 +146,13 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
         },
       });
   }
+  viewRow(rowdata: any) {
+  this.router.navigate(['/TLS', 'TLS11020CRU'], {
+    state: {
+      crudstatus: 'Read',
+      rowdata: rowdata,
+      fromRoute: this.router.url,
+    },
+  });
+}
 }

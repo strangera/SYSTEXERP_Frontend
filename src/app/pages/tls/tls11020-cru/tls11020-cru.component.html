@@ -3,9 +3,9 @@
     <div class="col" style="flex: 1;">
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-                <div>
-                    <app-button btnType="back" (click)="onCancel()" class="col"></app-button>
-                </div>
+    <div>
+      <app-button btnType="back" (click)="onCancel()" class="col"></app-button>
+    </div>
   </div>
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
@@ -63,13 +63,14 @@
           </app-input-text>
         </div>
       </div>
+      <div class="col pt-4">
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
+          <app-button btnType="cancel" (click)="onCancel()"></app-button>
+          <app-button btnType="submit" (click)="onSubmit()"></app-button>
+        </div>
+      </div>
     </form>
   </p-panel>
 
-  <div class="col pt-4">
-    <div class="grid justify-content-end">
-      <app-button btnType="cancel" (click)="onCancel()"></app-button>
-      <app-button btnType="submit" (click)="onSubmit()"></app-button>
-    </div>
-  </div>
+
 </div>

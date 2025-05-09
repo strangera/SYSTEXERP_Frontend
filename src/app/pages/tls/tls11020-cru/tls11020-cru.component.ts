@@ -32,7 +32,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     AccNo: ['', [Validators.maxLength(14)]],
     GUI_FLAG: ['Y', [Validators.required]],
     CAP_TaxType: ['1', [Validators.required]],
-    IsCommonlyUsed: ['N', [Validators.required]],
+    IsCommonlyUsed: ['Y', [Validators.required]],
     Print_Area: ['', [Validators.maxLength(5)]],
     CAP_Remark: ['', [Validators.maxLength(160)]],
   });
@@ -41,34 +41,25 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     private translate: TranslateService,
     private validationService: ValidationService,
     private deductionCategoryService: DeductionCategoryService,
-    private http: HttpClient
+    private http: HttpClient,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS11020', this.inputForm);
-    this.crudstatus = history.state?.crudstatus ?? CRUDStatus.Create;
-    this.rowdata = history.state?.rowdata ?? null;
-
-    this.deductionCategoryService.getDeductionCategories().subscribe(data => {
+    this.deductionCategoryService.getDeductionCategories().subscribe((data) => {
       this.deductionCategoryOptions = data;
     });
-
-    if (this.crudstatus === CRUDStatus.Edit && this.rowdata) {
-      this.inputForm.patchValue(this.rowdata);
-    } else if (this.crudstatus === CRUDStatus.Read && this.rowdata) {
-      this.inputForm.patchValue(this.rowdata);
-      this.inputForm.disable();
-    }
   }
-
   onSubmit(): void {
     this.messageService.blockUi();
     this.submitted = true;
 
     if (this.inputForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
+      this.messageService.errorBubble(
+        this.translate.instant('form_error_message'),
+      );
       this.messageService.unblockUi();
       return;
     }
@@ -94,36 +85,48 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     };
 
     if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-      this.http.post(`${environment.ApiUrl}/TLS0000/TLS1000/insertTLS11020`, payload).subscribe({
-        next: () => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-          this.router.navigate(['/TLS', 'TLS11020']);
-        },
-        error: () => {
-          this.messageService.errorBubble(this.translate.instant('create_failed'));
-        },
-        complete: () => {
-          this.messageService.unblockUi();
-          this.submitted = false;
-        },
-      });
+      this.http
+        .post(`${environment.ApiUrl}/TLS0000/TLS1000/insertTLS11020`, payload)
+        .subscribe({
+          next: () => {
+            this.messageService.successBubble(
+              this.translate.instant('success_message'),
+            );
+            this.router.navigate(['/TLS', 'TLS11020']);
+          },
+          error: () => {
+            this.messageService.errorBubble(
+              this.translate.instant('create_failed'),
+            );
+          },
+          complete: () => {
+            this.messageService.unblockUi();
+            this.submitted = false;
+          },
+        });
     } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
       payload.id = this.rowdata?.id;
       payload.CAP_Item = this.rowdata?.CAP_Item;
 
-      this.http.post(`${environment.ApiUrl}/TLS0000/TLS1000/updateTLS11020`, payload).subscribe({
-        next: () => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-          this.router.navigate(['/TLS', 'TLS11020']);
-        },
-        error: () => {
-          this.messageService.errorBubble(this.translate.instant('update_failed'));
-        },
-        complete: () => {
-          this.messageService.unblockUi();
-          this.submitted = false;
-        },
-      });
+      this.http
+        .post(`${environment.ApiUrl}/TLS0000/TLS1000/updateTLS11020`, payload)
+        .subscribe({
+          next: () => {
+            this.messageService.successBubble(
+              this.translate.instant('updated-successfully'),
+            );
+            this.router.navigate(['/TLS', 'TLS11020']);
+          },
+          error: () => {
+            this.messageService.errorBubble(
+              this.translate.instant('update_failed'),
+            );
+          },
+          complete: () => {
+            this.messageService.unblockUi();
+            this.submitted = false;
+          },
+        });
     } else {
       this.messageService.unblockUi();
     }
