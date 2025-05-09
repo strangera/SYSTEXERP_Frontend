@@ -53,46 +53,34 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
       this.initializePage('TLS11020', 'TLS/TLS11020CRU');
     });
   }
-
+  enableLazy = false;
   onSubmitQuery(frm: FormGroup) {
     this.submitted = true;
     if (frm.invalid) return;
-    this.loading = true;
-    this.messageService.blockUi();
 
-    const formValue = frm.value;
-    const payload = {
-      PageSize: 10,
-      PageIndex: 1,
-      OrderBy: '',
-      Offset: 0,
-      SortBy: [{ field: 'CAP_Item', order: 1 }],
-      CAP_Item: formValue.CAP_Item,
-      CAP_Type: formValue.CAP_Type,
-      CAP_Name: formValue.CAP_Name,
-      CAP_Remark: formValue.CAP_Remark,
-    };
+    this.enableLazy = true;
 
-    this.http
-      .post<any>(`${environment.ApiUrl}/TLS0000/TLS1000/queryTLS11020`, payload)
-      .subscribe({
-        next: (res) => {
-          this.data = res.Data;
-          this.messageService.successBubble('查詢成功');
-        },
-        error: () => this.messageService.errorBubble('查詢失敗'),
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
+    // ✅ 延遲觸發第一次 lazy load 查詢（確保表格初次顯示即有分頁支援）
+    setTimeout(() => {
+      this.onLazyLoad({
+        first: 0,
+        rows: 10,
+        sortField: '',
+        sortOrder: 1,
+        multiSortMeta: [{ field: 'CAP_Item', order: 1 }],
       });
+    }, 0);
   }
+
   onClearForm() {
     this.queryForm.reset();
+    this.enableLazy = false;
+    this.data = [];
+    this.totalRecords = 0;
   }
-
   onSubmit(frm: FormGroup) {
     this.onSubmitQuery(frm);
+    this.enableLazy = true; // 只有查詢時才啟用 lazy 查詢
   }
   editRow(rowdata: any) {
     this.router.navigate(['/TLS', 'TLS11020CRU'], {
