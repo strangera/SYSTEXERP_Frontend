@@ -6,7 +6,7 @@ import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
+import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
 // 新增：定義數據接口

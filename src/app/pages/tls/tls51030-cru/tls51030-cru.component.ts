@@ -4,7 +4,7 @@ import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BigCategoryCodeService } from './../../../service/basic/big-category-code.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
+import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { MidCategoryCodeService } from '../../../service/basic/mid-category-code.service';
 import { debounceTime } from 'rxjs';
 

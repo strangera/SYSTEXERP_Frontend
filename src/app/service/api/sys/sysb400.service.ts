@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -11,7 +11,7 @@ import { Observable } from 'rxjs';
 export class Sysb400Service {
   apiUrl: string = environment.ApiUrl + '/SYS0000/BAS1000';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // 查詢 SYS3100 資料表
   querySYSB400(body: any): Observable<any> {

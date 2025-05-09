@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { debounceTime } from 'rxjs/operators';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
+import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
@@ -45,8 +45,7 @@ const storageKey = 'TLS51010';
 })
 export class TLS51010Component
   extends BasicQueryPageComponent<CategoryItem>
-  implements OnInit
-{
+  implements OnInit {
   // 查詢表單：包含大分類代碼和名稱
   queryForm = this.formBuilder.nonNullable.group({
     CAT_LNo: [

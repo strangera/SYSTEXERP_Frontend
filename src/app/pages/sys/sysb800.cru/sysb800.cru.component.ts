@@ -4,7 +4,7 @@ import { NavigationExtras } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
+import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
 
 interface CategoryItem {
   id: number;

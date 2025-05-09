@@ -10,8 +10,8 @@ import { ApiItem, SsoDashboardService } from './sso-dashboard.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { EncryptionService } from '../../../shared/service/encryption.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { Sys1000Service } from '../../../service/SYS100/sys1000.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
+import { Sys1000Service } from '../../../service/system/sys1000.service';
 
 @Component({
   selector: 'app-sso-dashboard',

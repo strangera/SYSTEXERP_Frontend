@@ -3,9 +3,9 @@ import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Sysb100m } from '../module/sysb000.module';
-import { Sysb100Service } from '../../../service/sysb/sysb100.service';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
+import { Sysb100Service } from '../../../service/api/sys/sysb100.service';
 
 // 本地儲存鍵：用於儲存查詢狀態
 const storageKey = 'SYSB100';
@@ -18,8 +18,7 @@ const storageKey = 'SYSB100';
 // 公司基本資料維護作業
 export class SYSB100Component
   extends BasicQueryPageComponent<Sysb100m>
-  implements OnInit
-{
+  implements OnInit {
   // 查詢
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({

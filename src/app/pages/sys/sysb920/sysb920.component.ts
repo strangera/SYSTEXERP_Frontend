@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { Sysb800DropdownService } from './../../../service/dropdown/sysb800-dropdown.service';
-import { Sysb900DropdownService } from './../../../service/dropdown/sysb900-dropdown.service';
+import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
+import { Sysb900DropdownService } from '../../../service/api/sys/sysb900-dropdown.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
+import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
 import { IndustryTypeService } from '../../../service/basic/industry-type.service';

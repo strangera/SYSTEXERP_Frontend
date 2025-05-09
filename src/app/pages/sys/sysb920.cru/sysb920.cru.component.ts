@@ -2,10 +2,10 @@ import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { TranslateService } from '@ngx-translate/core';
-import { Sysb800DropdownService } from './../../../service/dropdown/sysb800-dropdown.service';
-import { Sysb900DropdownService } from './../../../service/dropdown/sysb900-dropdown.service';
+import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
+import { Sysb900DropdownService } from '../../../service/api/sys/sysb900-dropdown.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
+import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
 import { debounceTime } from 'rxjs';
 
 // 資料模型：分類項目

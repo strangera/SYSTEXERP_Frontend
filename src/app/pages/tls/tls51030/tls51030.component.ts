@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { TLS5000Service } from '../../../service/API/TLS0000/tls5000.service';
+import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { debounceTime } from 'rxjs';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';

@@ -1,10 +1,10 @@
 import { apiOption, Sysb300m } from './../module/sysb000.module';
-import { Sysb300Service } from './../../../service/sysb/sysb300.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Sysb300Service } from '../../../service/api/sys/sysb300.service';
 
 @Component({
   selector: 'app-sysb300.cru',
@@ -14,8 +14,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 // 組織階層設定作業 CRU
 export class SYSB300CRUComponent
   extends BasicCruPageComponent<Sysb300m>
-  implements OnInit
-{
+  implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // SYS3000 組織階層設定檔

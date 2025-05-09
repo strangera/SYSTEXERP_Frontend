@@ -3,7 +3,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { SortMeta } from 'primeng/api';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { Bas1000Service } from '../../../service/API/SYS0000/bas1000.service';
+import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { Column } from '../../../shared/componentkit/table/table.model';
 
