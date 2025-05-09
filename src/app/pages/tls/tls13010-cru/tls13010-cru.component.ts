@@ -3,12 +3,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ValidationService } from '../../../shared/service/validation.service';
-import {
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
+import { PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-
-// Importing the specific services for each dropdown
 import { BaseTypeService } from '../../../service/basic/base-type-service.service';
 import { ExcessHandlingMethodService } from '../../../service/basic/excess-handling-method.service';
 import { CommissionTypeService } from '../../../service/basic/commission-type.service';
@@ -31,16 +27,15 @@ import { SmallCategoryService } from '../../../service/basic/small-category.serv
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
-// 資料模型：分類項目
 interface CategoryItem {
   id: number;
-  bus_type: string; //大分類代碼
-  bus_type_name: string; //大分類名稱
-  bus_class: string; //中分類(商品類別)代碼
-  bus_class_name: string; //中分類(商品類別)名稱
-  bus_sclass: string; //小分類代碼
-  bus_sclass_name: string; //小分類名稱
-  bus_sclass_desc: string; //備註
+  bus_type: string;
+  bus_type_name: string;
+  bus_class: string;
+  bus_class_name: string;
+  bus_sclass: string;
+  bus_sclass_name: string;
+  bus_sclass_desc: string;
   CRT_Date: string;
   CRT_USR_No: string;
   CRT_USR_Name: string;
@@ -57,9 +52,6 @@ const storageKey = 'SYSB920';
   styleUrls: ['./tls13010-cru.component.scss'],
 })
 export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
-
-
-  // Data and columns for the table
   data: any[] = [
     {
       isNew: false,
@@ -71,7 +63,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       endDate: '',
       performanceShare: 100,
     },
-    // Additional data
   ];
 
   filteredData: any[] = [...this.data];
@@ -87,141 +78,75 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     { field: 'performanceShare', header: '業績分攤(%)', visible: true },
   ];
 
-
-
-  // Form controls
   dataForm = this.formBuilder.group({
-    // 專櫃招募編號
     recruitmentCode: [{ value: '自動給號', disabled: true }],
-    // 專櫃編號
     counterNumber: [{ value: '契約書審核後才給號', disabled: true }],
-    // 廠商統一編號
     vendorCode: [1, Validators.required],
-    // 廠商名稱
     vendorName: ['', Validators.required],
-    // 品牌(專櫃名稱)
     brandName: ['', Validators.required],
-    // 版本編號
     version: ['1'],
-
-    // 營業型態
     businessType: [''],
-    // 組織代碼
     organizationCode: ['', Validators.required],
-    // 業種
     industryType: ['', Validators.required],
-    // 商品類別
     productCategory: ['', Validators.required],
-    // 小分類
     subCategory: ['', Validators.required],
-    // 契約起始日
     contractStartDate: ['', Validators.required],
-    // 契約截止日
     contractEndDate: ['', Validators.required],
-    // 營運起始日
     startBusinessStartDate: ['', Validators.required],
-    // 營運截止日
     startBusinessEndDate: ['', Validators.required],
-    // 回函日期
     callbackDate: [''],
-    // 回函截止日
     callbackEndDate: [''],
-    // 洽談日期
     discussDate: ['', Validators.required],
-    // 洽談者
     discussPerson: ['', Validators.required],
-    // 全館消費滿額集點活動
     activity1: [false],
-    // 滿仟送佰
     activity2: [false],
-    // 有價券
     activity3: [false],
-    // 會員卡
     activity4: [false],
-
-    // 櫃別
     counterCategory: [],
-    // 裝潢方式
     decorationStyle: [''],
-    // 抽成別
     commissionType: [''],
-    // 抽成額計算方式
     commissionCalculation: [''],
-    // 是否使用業主商店代號
     useOwnerStoreCode: [false],
-    // 包底類別
     packageCategory: [''],
-    // 超出部份處理方式
     excessHandlingMethod: [''],
-    // 預收租金
     advanceRent: [false],
-    // 預收租金期數
     advanceRentPeriods: [''],
-    // 固定租金
     fixedRent: [''],
-    // 押金
     deposit: [''],
-    // 是否開立業主發票
     issueOwnerInvoice: [false],
-    // 是否使用業主收銀機
     useOwnerCashRegister: [false],
-    // 是否為業主收現
     isOwnerCashCollection: [false],
-    // 是否為抽成
     isCommission: [false],
-    // 結帳方式
     checkoutMethod: [''],
-    // 配合方式
     cooperationMethod: [''],
-    // 對帳方式
     reconciliationMethod: [''],
-    // 付款方式
     paymentMethod: [''],
-    // 是否配合聯名卡
     isCooperationWithCard: [false],
-    // 聯名卡折數
     cardDiscount: [''],
-    // 年目標營業額(業主)
     annualOwnerTarget: [''],
-    // 年預估營業額(廠商)
     annualVendorEstimate: [''],
-    // 保證金付款方式
     depositPaymentMethod: [''],
-    // 履約保證金
     performanceBond: [''],
-    // 施工保證金付款方式
     constructionDepositPaymentMethod: [''],
-    // 施工保證金
     constructionBond: [''],
-    // 付款期限(天數)
     paymentDaysAfterCheckout: ['', Validators.required],
-    // 請款單據別
     invoiceDocumentType: [1, Validators.required],
-    // 電子郵件
     email: ['', Validators.required],
-    // 發票電子郵件
     invoiceEmail: ['', Validators.required],
-    // 票據抬頭
     billTitle: [''],
-    // 專櫃電話號碼
     counterPhone: [''],
-    // 廠商匯款銀行代號
     bankCode: [''],
-    // 廠商帳戶名稱
     vendorAccountName: [''],
-    // 廠商銀行帳號
     bankAccountNumber: [''],
-    // 公司電話號碼(O)
     companyPhone: ['', Validators.required],
-    // 公司傳真號碼(F)
     companyFax: [''],
-    // 郵寄地址
     mailingAddress: [''],
-    // 備註
     remarks: [''],
+    meterReading: [[]],
+    guaranteeNote: [[]],
+    depositRemarks: ['']
   });
 
-  // Dropdown options populated via individual services
   counterCategoryOptions: any[] = [];
   decorationStyleOptions: any[] = [];
   commissionTypeOptions: any[] = [];
@@ -237,16 +162,12 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   depositPaymentMethodOptions: any[] = [];
   constructionDepositPaymentMethodOptions: any[] = [];
   whetherOptions: any[] = [];
-  vendorIdOptions: any[] = [];
-  businessTypeOptions: any[] = [];
-  organizationCodeOptions: any[] = [];
-  industryTypeOptions: any[] = [];
-  productCategoryOptions: any[] = [];
-  smallCategoryOptions: any[] = [];
-  discussPersonOptions: any[] = [];
   vendorOptions: any[] = [];
+  businessTypeOptions: any[] = [];
   OrganizationNumberOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
+  productCategoryOptions: any[] = [];
+  smallCategoryOptions: any[] = [];
   UserCodeOptions: any[] = [];
   floorOptions: any[] = [];
   LocationCodeOptions: any[] = [];
@@ -255,7 +176,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     { value: 1, label: '水錶' },
     { value: 2, label: '電錶' },
     { value: 3, label: '瓦斯錶' },
-
   ];
 
   options2: any[] = [
@@ -266,21 +186,21 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   constructor(
     private validationService: ValidationService,
-    private counterCategoryService: CounterCategoryService, // 新增的服務
-    private decorationStyleService: DecorationStyleService, // 新增的服務
-    private commissionTypeService: CommissionTypeService, // 新增的服務
-    private commissionCalculationService: CommissionCalculationService, // 新增的服務
-    private baseTypeService: BaseTypeService, // 新增的服務
-    private excessHandlingMethodService: ExcessHandlingMethodService, // 新增的服務
-    private checkoutMethodService: SettlementMethodService, // 結帳方式服務
-    private cooperationMethodService: CooperationMethodService, // 配合方式服務
-    private reconciliationMethodService: ReconciliationMethodService, // 對帳方式服務
-    private paymentMethodService: PaymentMethod2Service, // 付款方式服務
-    private bankAccountCodeService: BankAccountCodeService, // 廠商匯款銀行代號
-    private invoiceDocumentTypeService: PaperTypeService, // 請款單據別
-    private depositPaymentMethodService: PaymentMethod2Service, // 保證金付款方式
-    private constructionDepositPaymentMethodService: PaymentMethod2Service, // 施工保證金付款方式
-    private whetherService: WhetherService, // 是否相關服務
+    private counterCategoryService: CounterCategoryService,
+    private decorationStyleService: DecorationStyleService,
+    private commissionTypeService: CommissionTypeService,
+    private commissionCalculationService: CommissionCalculationService,
+    private baseTypeService: BaseTypeService,
+    private excessHandlingMethodService: ExcessHandlingMethodService,
+    private checkoutMethodService: SettlementMethodService,
+    private cooperationMethodService: CooperationMethodService,
+    private reconciliationMethodService: ReconciliationMethodService,
+    private paymentMethodService: PaymentMethod2Service,
+    private bankAccountCodeService: BankAccountCodeService,
+    private invoiceDocumentTypeService: PaperTypeService,
+    private depositPaymentMethodService: PaymentMethod2Service,
+    private constructionDepositPaymentMethodService: PaymentMethod2Service,
+    private whetherService: WhetherService,
     private vendorService: VendorService,
     private businessTypeService: BusinessTypeService,
     private OrganizationNumberService: OrganizationNumberService,
@@ -289,32 +209,26 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     private smallCategoryService: SmallCategoryService,
     private userCodeService: UserCodeService,
     private LocationCodeService: LocationCodeService,
-    // private activatedRoute: ActivatedRoute  // 正確的名稱
   ) {
     super();
   }
+
   onSubmitNext(): void {
-    this.router.navigate(['TLS1000/TLS13010NEXT1']);
+    this.router.navigate(['TLS/TLS13010NEXT1']);
   }
+
   ngOnInit(): void {
     this.initializePage('TLS13010', this.dataForm);
-    // 讀取導航狀態中的專櫃招募編號
     const navigation = this.router.getCurrentNavigation();
     const state = navigation?.extras.state as { [key: string]: any };
 
-    // 確保使用方括號來存取 rowdata 和 counterName 屬性
     if (state && state['rowdata'] && state['rowdata']['recruitmentCode']) {
-      this.dataForm.controls['recruitmentCode'].setValue(state['rowdata']['recruitmentCode']);  // 自動填入專櫃招募編號
+      this.dataForm.controls['recruitmentCode'].setValue(state['rowdata']['recruitmentCode']);
     }
-    // Fetch user permissions
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    // Fetch dropdown options using individual services
     this.fetchDropdownOptions();
-
   }
 
-  // Fetch options for dropdowns using their respective services
   fetchDropdownOptions() {
     this.counterCategoryService.getCounterCategories().subscribe((options) => {
       this.counterCategoryOptions = options;
@@ -346,117 +260,82 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.vendorService.getVendors().subscribe((data) => {
       this.vendorOptions = data;
     });
-
     this.commissionTypeService.getCommissionTypes().subscribe((options) => {
       this.commissionTypeOptions = options;
     });
+    this.commissionCalculationService.getCommissionCalculations().subscribe((options) => {
+      this.commissionCalculationOptions = options;
 
-    this.commissionCalculationService
-      .getCommissionCalculations()
-      .subscribe((options) => {
-        this.commissionCalculationOptions = options;
-      });
 
+    });
     this.baseTypeService.getBaseTypes().subscribe((options) => {
       this.packageCategoryOptions = options;
     });
-
-    this.excessHandlingMethodService
-      .getExcessHandlingMethods()
-      .subscribe((options) => {
-        this.excessHandlingMethodOptions = options;
-      });
-
+    this.excessHandlingMethodService.getExcessHandlingMethods().subscribe((options) => {
+      this.excessHandlingMethodOptions = options;
+    });
     this.checkoutMethodService.getSettlementMethods().subscribe((options) => {
       this.checkoutMethodOptions = options;
     });
-
-    this.cooperationMethodService
-      .getCooperationMethods()
-      .subscribe((options) => {
-        this.cooperationMethodOptions = options;
-      });
-
-    this.reconciliationMethodService
-      .getReconciliationMethods()
-      .subscribe((options) => {
-        this.reconciliationMethodOptions = options;
-      });
-
+    this.cooperationMethodService.getCooperationMethods().subscribe((options) => {
+      this.cooperationMethodOptions = options;
+    });
+    this.reconciliationMethodService.getReconciliationMethods().subscribe((options) => {
+      this.reconciliationMethodOptions = options;
+    });
     this.paymentMethodService.getPaymentMethods().subscribe((options) => {
       this.paymentMethodOptions = options;
     });
-
     this.bankAccountCodeService.getSystemTypes().subscribe((options) => {
       this.bankCodeOptions = options;
     });
-
     this.invoiceDocumentTypeService.getSystemTypes().subscribe((options) => {
       this.invoiceDocumentTypeOptions = options;
     });
-
-    this.depositPaymentMethodService
-      .getPaymentMethods()
-      .subscribe((options) => {
-        this.depositPaymentMethodOptions = options;
-      });
-
-    this.constructionDepositPaymentMethodService
-      .getPaymentMethods()
-      .subscribe((options) => {
-        this.constructionDepositPaymentMethodOptions = options;
-      });
-
+    this.depositPaymentMethodService.getPaymentMethods().subscribe((options) => {
+      this.depositPaymentMethodOptions = options;
+    });
+    this.constructionDepositPaymentMethodService.getPaymentMethods().subscribe((options) => {
+      this.constructionDepositPaymentMethodOptions = options;
+    });
     this.whetherService.getWhetherOptions().subscribe((options) => {
       this.whetherOptions = options;
     });
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };//CRU
   }
 
-  // Check if the user has query permission
   canQuery(): boolean {
     return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
   }
 
-
-  // Form submission logic
   onSubmit(frm: FormGroup) {
     this.submitted = true;
     this.loading = true;
-    this.messageService.blockUi();
+    // this.messageService.blockUI();
 
     if (frm.valid && this.canQuery()) {
-      // Implement your form submission logic here
       console.log(frm.value);
     }
 
     this.loading = false;
-    this.messageService.unblockUi();
+    // this.messageService.unblockUI();
   }
 
   onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
     this.onSubmit(frm);
   }
 
   onClearForm() {
-    this.dataForm.reset();  // 重置表單
+    this.dataForm.reset();
   }
 
   submitForm(frm: FormGroup) {
-    // 查詢邏輯
     this.onSubmit(frm);
-  }//CRU
+  }
 
-  // 初始化CRU表單
   cruForm = this.formBuilder.group({
-    items: this.formBuilder.array([this.createItem()]), // 項目列表
+    items: this.formBuilder.array([this.createItem()]),
   });
 
-  //
   get items(): FormArray {
     return this.cruForm.get('items') as FormArray;
   }
@@ -465,11 +344,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     return this.items.at(index).get(controlName) as FormControl;
   }
 
-  //
   createItem(): FormGroup {
     return this.formBuilder.group({
-      systemTypeDetailOptions: [], // 系統代碼
-      organizationNumberOptions: [], // 組織代碼
+      systemTypeDetailOptions: [],
+      organizationNumberOptions: [],
       LocationCodeOptions: [],
       useStartDate: [],
       useEndDate: [],
@@ -486,5 +364,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   onRemoveItem(index: number) {
     this.items.removeAt(index);
+  }
+
+  calculatePerformanceShare(): void {
+    console.log('Calculating performance share based on business area');
   }
 }

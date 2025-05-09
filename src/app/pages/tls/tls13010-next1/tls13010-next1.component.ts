@@ -1,11 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { NavigationExtras, Router } from '@angular/router';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { FormGroup } from '@angular/forms';
 import { PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+
+//資料欄位還需要調整 這是一個範例
+interface CategoryItem {
+  id: number;
+  CAT_LNo: string;
+  CAT_LName: string;
+  CAT_LRemark: string | null;
+  CRT_USR_No: string | "";
+  CRT_USR_Name: string | "";
+}
+
 
 interface StockData {
   recruitmentNumber: string;
@@ -92,7 +99,7 @@ interface Deduction3 {
   templateUrl: './tls13010-next1.component.html',
   styleUrls: ['./tls13010-next1.component.scss']
 })
-export class TLS13010Next1Component extends BasicCrupageComponent implements OnInit {
+export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> implements OnInit {
   stocks: StockData[] = [];
   deductions: Deduction[] = [];
   deductions1: Deduction1[] = [];
@@ -105,19 +112,15 @@ export class TLS13010Next1Component extends BasicCrupageComponent implements OnI
   invoiceStatuses = ['開立', '未開立'];
   units = ['坪數', '收銀機台數'];
   calculatedByDayOptions = ['是', '否'];
-  loading: boolean = false;
   dataForm = this.formBuilder.group({})
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    this.ProgNo = '210010';
+    // this.ProgNo = '210010';
+    this.initializePage('TLS13010', this.dataForm);
     this.stocks = [
       {
         recruitmentNumber: '001',
@@ -235,11 +238,9 @@ export class TLS13010Next1Component extends BasicCrupageComponent implements OnI
     this.deductions2.forEach(deduction => deduction.isNew = false);
   }
   onSubmitNext(): void {
-    this.router.navigate(['TLS1000/TLS13010NEXT2']);
+    this.router.navigate(['TLS/TLS13010NEXT2']);
   }
-  onCancel() {
-    this.router.navigate(['TLS1000/TLS13010']);
-  }//CRU
+
   submitForm(frm: FormGroup) {
     // 查詢邏輯
     this.onSubmit(frm);

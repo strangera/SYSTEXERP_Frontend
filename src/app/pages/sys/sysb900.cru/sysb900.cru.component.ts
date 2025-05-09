@@ -27,9 +27,11 @@ interface CategoryItem {
 // 商品類別維護作業 CRU
 export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
+    id: [0], // ID
     bus_class: ['', [Validators.required, Validators.maxLength(2)]], // 中分類代碼
     bus_class_name: ['', [Validators.required, Validators.maxLength(40)]], // 中分類名稱
     bus_type: ['', [Validators.required]], // 所屬大分類
+    bus_class_desc: ['',], // 備註
   });
   option: any[] = [];
 

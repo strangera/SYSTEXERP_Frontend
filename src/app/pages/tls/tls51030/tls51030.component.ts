@@ -192,7 +192,6 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
     this.filteredData = [];
     this.totalRecords = 0;
     this.middleCategoryOptions = [];
-    this.queryStateService.clearQueryState(storageKey);
   }
 
   onDelete(data: CategoryItem | CategoryItem[]): void {

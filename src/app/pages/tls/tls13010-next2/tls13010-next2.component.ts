@@ -3,8 +3,17 @@ import { FormBuilder, FormGroup, FormArray, FormControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+
+//資料欄位還需要調整 這是一個範例
+interface CategoryItem {
+  id: number;
+  CAT_LNo: string;
+  CAT_LName: string;
+  CAT_LRemark: string | null;
+  CRT_USR_No: string | "";
+  CRT_USR_Name: string | "";
+}
 
 interface InventoryItem {
   recruitmentNumber: string;
@@ -25,7 +34,7 @@ interface InventoryItem {
   templateUrl: './tls13010-next2.component.html',
   styleUrls: ['./tls13010-next2.component.scss']
 })
-export class TLS13010Next2Component extends BasicCrupageComponent implements OnInit {
+export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> implements OnInit {
   dataForm: FormGroup;
   selectedRowIndex: number | null = null;
 
@@ -50,9 +59,6 @@ export class TLS13010Next2Component extends BasicCrupageComponent implements OnI
   ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private authService: AuthService,
     private notificationService: NotificationService
   ) {
     super();
@@ -68,7 +74,7 @@ export class TLS13010Next2Component extends BasicCrupageComponent implements OnI
   }
 
   ngOnInit(): void {
-    this.ProgNo = '210010';
+    // this.ProgNo = '210010';
     this.inventoryItems = [{
       recruitmentNumber: '001',
       counterNumber: 'A123',
@@ -299,9 +305,6 @@ export class TLS13010Next2Component extends BasicCrupageComponent implements OnI
     this.items.removeAt(index);
   }
 
-  onCancel(): void {
-    this.router.navigate(['TLS1000/TLS13010']);
-  }
 
   submitForm() {
     if (this.dataForm.valid) {

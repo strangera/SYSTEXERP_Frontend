@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { debounceTime } from 'rxjs/operators';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
@@ -71,12 +70,8 @@ export class TLS51010Component
   ];
 
   // // 分頁和排序參數
-  // pageSize: number = 10;
-  // pageIndex: number = 0;
   totalRecords: number = 0;
-  // lastQueryParams: any = null;
-  // sortField: string = 'CAT_LNo';
-  // sortOrder: number = 1;
+
 
   // 多選項目
   selectedItems: CategoryItem[] = [];
@@ -96,15 +91,6 @@ export class TLS51010Component
     this.handleQueryRestore(this.queryForm, storageKey, (form) =>
       this.onSubmit(form),
     );
-
-    // 監聽表單變化，延遲儲存有效值
-    // this.queryForm.valueChanges
-    //   .pipe(debounceTime(500)) // 延遲 500ms 減少頻繁儲存
-    //   .subscribe(value => {
-    //     if (this.queryForm.valid) {
-    //       this.queryStateService.setQueryState(storageKey, value);
-    //     }
-    //   });
   }
 
   // 提交查詢：處理表單並呼叫查詢 API
@@ -143,15 +129,9 @@ export class TLS51010Component
   // 清空表單：重置表單和表格狀態
   onClearForm(): void {
     this.queryForm.reset();
-    // this.pageIndex = 0;
     this.data = [];
     this.filteredData = [];
-    // this.lastQueryParams = null;
     this.totalRecords = 0;
-    // this.sortField = 'CAT_LNo';
-    // this.sortOrder = 1;
-    // 清空儲存的查詢狀態
-    this.queryStateService.clearQueryState(storageKey);
   }
 
   // 刪除項目

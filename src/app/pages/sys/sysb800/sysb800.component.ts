@@ -106,7 +106,6 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
     this.data = [];
     this.filteredData = [];
     this.totalRecords = 0;
-    this.queryStateService.clearQueryState(storageKey);
   }
 
   onDelete(data: CategoryItem | CategoryItem[]): void {

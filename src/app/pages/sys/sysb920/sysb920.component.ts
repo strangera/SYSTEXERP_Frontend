@@ -45,6 +45,7 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
     bus_sclass_name: ['', [Validators.maxLength(40)]], // 小分類名稱
     bus_type: [[] as string[]], // 大分類代碼
     bus_class: [[] as string[]], // 中分類代碼
+    bus_sclass_desc: ['', [Validators.maxLength(200)]], // 備註
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
     //分頁用
     pageSize: [10],
@@ -59,6 +60,7 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
     { field: 'bus_sclass_name', header: '小分類名稱', visible: true },
     { field: 'bus_type_name', header: '所屬大分類', visible: true },
     { field: 'bus_class_name', header: '中分類名稱', visible: true },
+    { field: 'bus_sclass_desc', header: '備註', visible: true },
     // 其他欄位
   ];
   // ----------------------------------------------------------------
