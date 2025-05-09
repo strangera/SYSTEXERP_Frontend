@@ -48,7 +48,7 @@ export class SYSB100Component
     STO_URL: ['', [Validators.maxLength(100)]], // 公司網址
 
     //分頁查詢
-    pageSize: [10],
+    pageSize: [10], // variable
     pageIndex: [0],
     SortBy: [[{ field: 'SYS_StoreNo', order: 1 }] as SortMeta[]],
   });

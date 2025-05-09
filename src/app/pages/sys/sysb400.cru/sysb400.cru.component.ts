@@ -75,8 +75,8 @@ export class SYSB400CRUComponent
 
     this.sysb400Service.querySYSB400(query_org).subscribe((response) => {
       this.org_Option = response.Data.map((item: Sysb400m) => ({
-        value: item.org_id,
-        label: item.org_name,
+        No: item.org_id,
+        Name: item.org_name,
       }));
       console.log('組織代碼 查詢結果', this.org_Option);
     });

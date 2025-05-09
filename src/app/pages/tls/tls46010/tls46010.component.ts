@@ -1,42 +1,37 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { Tls46010Service } from './../../../service/API/TLS0000/tls46000/tls46010.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Tls46010m } from '../module/tls000/tls000.module';
+import { SortMeta } from 'primeng/api';
+import { option } from '../../sys/module/sysb000.module';
+import { TableLazyLoadEvent } from 'primeng/table';
+
+// 本地儲存鍵：用於儲存查詢狀態
+const storageKey = 'TLS46010';
 
 @Component({
   selector: 'app-tls46010',
   templateUrl: './tls46010.component.html',
-  styleUrl: './tls46010.component.scss'
+  styleUrl: './tls46010.component.scss',
 })
 
 // 2.4.6.1 網路位置設定
-export class TLS46010Component {
-  ProgNo: string = '240019';
-  // 權限
-  funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS46010Component
+  extends BasicQueryPageComponent<Tls46010m>
+  implements OnInit
+{
   queryForm = this.formBuilder.group({
     // POS10015 門市系統主機設定檔
 
     // ID                  NUMERIC(19,0) IDENTITY(1,1) NOT NULL
-    SYS_StoreNo: [, [Validators.maxLength(10)]], // 門市店號
-    SYS_SrvNo: [, [Validators.maxLength(8)]], // 主機編號
-    SYS_SrvIP: [, [Validators.maxLength(40)]], // 主機IP
-    SYS_SrvPort: [20, [Validators.maxLength(40)]], // 主機連接埠 預設值為20
-    SYS_SrvStatus: ['A', [Validators.maxLength(2)]], // 主機狀態 A=啟用 C=停用 預設值為A
+    SYS_StoreNo: ['', [Validators.maxLength(10)]], // 門市店號
+    SYS_SrvNo: ['', [Validators.maxLength(8)]], // 主機編號
+    SYS_SrvIP: ['', [Validators.maxLength(40)]], // 主機IP
+    SYS_SrvPort: [, [Validators.maxLength(6)]], // 主機連接埠 預設值為20
+    SYS_SrvStatus: ['', [Validators.maxLength(2)]], // 主機狀態 A=啟用 C=停用 預設值為A
     SYS_SrvName: ['', [Validators.maxLength(40)]], // 主機名稱
     SYS_SrvUsrID: ['', [Validators.maxLength(20)]], // 主機登入帳號
     SYS_SrvUsrPwd: ['', [Validators.maxLength(20)]], // 主機登入密碼
@@ -49,27 +44,15 @@ export class TLS46010Component {
     SYS_SRVDDirClt: ['', [Validators.maxLength(60)]], // 前台系統下載目錄 預設值為/MyPOSData/PosDown
     SYS_SRVUDirClt: ['', [Validators.maxLength(60)]], // 前台系統上傳目錄 預設值為/MyPOSData/PosUp
 
-    // 以下可以不用顯示於查詢頁
-    CRT_Date: [], // 建立日期
-    CRT_USR_No: [, [Validators.maxLength(8)]], // 建立人員
-    CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-    UPD_Date: [], // 變更日期
-    UPD_USR_No: [, [Validators.maxLength(8)]], // 變更人員
-    UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
+    //分頁查詢
+    pageSize: [10],
+    pageIndex: [0],
+    SortBy: [[{ field: 'SYS_StoreNo', order: 1 }] as SortMeta[]],
   });
   // 表格
   // ----------------------------------------------------------------
-  data: any[] = [
-    {
-      SYS_StoreNo: 'store123', SYS_SrvNo: 'register123', SYS_SrvIP: 'registerIP', SYS_SrvPort: 20, SYS_SrvStatus: 'A',
-      SYS_SrvName: 'machine123', SYS_SrvUsrID: 'machine_Account',
-      SYS_SRVDDir: '/MyPOSData/PosDown  ', SYS_SRVUDir: '/MyPOSData/PosUp',
-      SYS_MyPOSDDir: '/MyPOSData/MyPOSDown', SYS_MyPOSUDir: '/MyPOSData/MyPOSUp',
-      SYS_SRVDDirClt: 'MyPOSData/PosDown', SYS_SRVUDirClt: '/MyPOSData/PosUp',
-    },
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
+  data: Tls46010m[] = [];
+  filteredData: Tls46010m[] = [...this.data];
   columns: any[] = [
     { field: 'SYS_StoreNo', header: '門市店號', visible: true },
     { field: 'SYS_SrvNo', header: '主機編號', visible: true },
@@ -90,55 +73,58 @@ export class TLS46010Component {
     // 其他欄位
   ];
   // ----------------------------------------------------------------
-  SYS_SrvStatus_Option: any[] = [
-    { value: 'A', label: '啟用' },
-    { value: 'C', label: '停用' },
-  ];
 
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-  ) {
+  // // 分頁和排序參數
+  // pageSize: number = 10;
+  // pageIndex: number = 0;
+  totalRecords = 0;
+  // lastQueryParams: any = null;
+  // sortField: string = 'CAT_LNo';
+  // sortOrder: number = 1;
+
+  // 多選項目
+  selectedItems: Tls46010m[] = [];
+
+  //-dropDown-
+  SYS_SrvStatus_Option: option[] = [];
+
+  constructor(private tls46010Service: Tls46010Service) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
+    this.initializePage('TLS46010', 'TLS/TLS46010CRU');
+    this.loadOptions();
+
+    // 恢復查詢狀態並自動查詢
+    this.handleQueryRestore(this.queryForm, storageKey, (form) =>
+      this.onSubmit(form),
+    );
   }
 
-  // 權限
-  // ----------------------------------------------------------------
-  canQuery(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
-  }
-  canAdd(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
-  }
-  canEdit(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
-  }
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      this.tls46010Service.queryTLS46010(frm.value).subscribe({
+        next: (response: any) => {
+          console.log('API response:', response);
+          if (response.Status === '0000') {
+            this.data = response.Data || [];
+            this.filteredData = [...this.data];
+            this.totalRecords = response.TotalCount || response.Data.length;
+            this.queryStateService.setQueryState(storageKey, frm.value);
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
+    });
   }
 
   onSubmitQuery(frm: FormGroup) {
@@ -147,36 +133,74 @@ export class TLS46010Component {
   }
 
   onClearForm() {
-    this.queryForm.reset();  // 重置表單
+    this.queryForm.reset();
+    this.data = [];
+    this.filteredData = [];
+    this.totalRecords = 0;
+    this.queryStateService.clearQueryState(storageKey);
   }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
+
+  // 刪除項目
+  onDelete(data: Tls46010m | Tls46010m[]): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
+
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) {
+      console.error('No items to delete');
+      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+      return;
     }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
+    // 收集所有有效的 ID
+    const idList = items
+      .filter((item) => item && item.id != null && item.id !== undefined)
+      .map((item) => item.id);
+
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
     }
-  }
 
-  onDetail(data: any) {
-    console.log(data);
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
-
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
-      },
+    const deleteBody = {
+      idList: idList, // 符合 API 的 idList 格式
     };
+    this.tls46010Service.deleteTLS46010(deleteBody).subscribe({
+      next: (response: any) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('選中項目刪除成功');
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        }
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗');
+      },
+      complete: () => {
+        this.onSubmit(this.queryForm);
+      },
+    });
 
-    console.log(crudstatus);
+    this.selectedItems = [];
+  }
 
-    this.router.navigate(['/TLS4000/TLS46010CRU'], extras);
+  loadData(event: TableLazyLoadEvent) {
+    const form = this.queryForm.value;
+    if (this.totalRecords === 0) {
+      return;
+    }
+    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
+    form.SortBy = event.multiSortMeta ?? [{ field: 'SYS_StoreNo', order: 1 }];
+    this.onSubmit(this.queryForm);
+  }
+
+  loadOptions() {
+    this.SYS_SrvStatus_Option = [
+      { value: 'A', label: '啟用' },
+      { value: 'C', label: '停用' },
+    ];
   }
 }
