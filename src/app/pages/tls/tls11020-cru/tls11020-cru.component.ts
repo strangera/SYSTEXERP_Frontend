@@ -105,7 +105,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
             this.messageService.successBubble(
               this.translate.instant('success_message'),
             );
-            this.router.navigate(['/TLS11020']);
+            this.router.navigate(['/TLS', 'TLS11020']); // ✅ 修改這行
           },
           error: () => {
             this.messageService.errorBubble(
