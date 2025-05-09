@@ -51,11 +51,15 @@
 
   ul a {
     color: var(--sidebar-text-color);
+    &:hover {
+      color: var(--sidebar-text-color-hover);
+      background-color: var(--sidebar-item-bg-hover);
+      border-left: 1px solid var(--sidebar-text-color);
+    }
   }
 
-  ul a:hover {
-    color: var(--sidebar-text-color-hover);
-    background-color: var(--sidebar-item-bg-hover);
+  .layout-menu ul ul li a {
+    margin-left: 0 !important;
   }
 
   .selected > a {
@@ -63,8 +67,13 @@
   }
 
   .active-menuitem > a {
-    background-color: var(--sidebar-item-bg-active);
     color: var(--sidebar-item-text-active);
+    border-left-color: var(--sidebar-item-text-active);
+    border-left-width: 2px; /* 設定邊框寬度 */
+    border-left-style: solid; /* 設定邊框樣式，例如 solid、dashed、dotted 等 */
+    i {
+      color: var(--sidebar-item-text-active) !important;
+    }
   }
 
   .p-icon-field-right .p-input-icon:last-of-type {
@@ -100,6 +109,11 @@
 
   &::-webkit-scrollbar-thumb:hover {
     background: var(--gray-400); /* 稍微深一點的灰色作為 hover */
+  }
+  .layout-sidebar-sticky {
+    background-color: var(--topbar-sticky-bg);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
   }
 }
 

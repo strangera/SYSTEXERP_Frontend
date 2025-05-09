@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, Renderer2, Type, ViewChild } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
-import { Subscription, filter } from 'rxjs';
+import { Subject, Subscription, filter } from 'rxjs';
 import { UserInfo } from '../shared/models/system/userInfo';
 import { AuthService } from '../service/system/auth.service';
 import { AppMenulistComponent } from './app.menulist/app.menulist.component';
@@ -28,6 +28,10 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
   @ViewChild(AppTopbarComponent) appTopbar!: AppTopbarComponent;
   @ViewChild('layoutMainContainer', { static: false }) layoutMainContainer!: ElementRef;
   @ViewChild('searchInput') searchInput!: ElementRef;
+  @ViewChild('sidebarContainer') sidebarContainer!: ElementRef; // 監聽滾動的容器
+  @ViewChild('scrollContent') scrollContent!: ElementRef;   // 要添加 class 的元素
+  private destroy$ = new Subject<void>();
+
   selectedTopMenuProgNo: string | null = null;
   tabs: TabItem[] = [];
   activeIndex = 2;
@@ -49,11 +53,24 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
     this.subscribeToRouterEvents();
     this.waitForElementsToInitialize();
     this.adjustMainContainerPadding();
+    if (this.sidebarContainer?.nativeElement && this.scrollContent?.nativeElement) {
+      // 添加滾動事件監聽器到滾動容器
+      this.renderer.listen(this.sidebarContainer.nativeElement, 'scroll', () => {
+        const scrollTop = this.sidebarContainer.nativeElement.scrollTop;
+        if (scrollTop > 0) {
+          this.renderer.addClass(this.scrollContent.nativeElement, 'layout-sidebar-sticky');
+        } else {
+          this.renderer.removeClass(this.scrollContent.nativeElement, 'layout-sidebar-sticky');
+        }
+      });
+    }
   }
 
   ngOnDestroy() {
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.clearMenuOutsideClickListener();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
   private waitForElementsToInitialize() {
     const checkTimeout = 5000; // 超時時間，5秒
