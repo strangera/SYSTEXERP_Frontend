@@ -22,9 +22,9 @@
         </p-divider>
         <div class="grid p-fluid">
           <app-dropdown-table class="col-12" label="位置編號" [control]="queryForm.controls.multiLevel"
-            optionLabel="LOCATION_No" optionValue="LOCATION_No" [submitted]="submitted" [suggestions]="suggestions"
+            [submitted]="submitted" optionLabel="LOCATION_No" optionValue="LOCATION_No" [suggestions]="suggestions"
             [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
-            [formGroup]="dialogForm" (formValueChanged)="onformValueChanged($event)" [dialogData]="dialogData"
+            (formValueChanged)="onformValueChanged($event)" [formGroup]="dialogForm" [dialogData]="dialogData"
             [dialogColumns]="dialogColumns" [loading]="dialogloading">
             <app-input-text class="col-12 md:col-6 lg:col-3" label="位置編號" controlName="LOCATION_No"
               [control]="dialogForm.controls.LOCATION_No" />

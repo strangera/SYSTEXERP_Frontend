@@ -1,19 +1,12 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div *appHasPermission="addPermission">
-      <app-button btnType="action" label="匯出申報資料" icon="pi pi-download" (click)="onExportReporting()"
-        class="col"></app-button>
-    </div>
-    <div *appHasPermission="addPermission">
-      <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <!-- <div *appHasPermission="addPermission"> -->
+    <app-button btnType="action" label="匯出申報資料" icon="pi pi-download" (click)="onExportReporting()"></app-button>
+    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
@@ -49,10 +42,11 @@
             </app-calendar-range>
           </div>
         </div>
-        <div *appHasPermission="queryPermission" class="col">
+        <!-- <div *appHasPermission="queryPermission" class="col"> -->
+        <div class="col">
           <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+            <app-button btnType="clear"></app-button>
+            <app-button btnType="query" [loading]="loading"></app-button>
           </div>
         </div>
       </form>
@@ -60,8 +54,5 @@
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-13">
-    <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-    </app-data-table>
-  </div>
+  <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)" />
 </div>

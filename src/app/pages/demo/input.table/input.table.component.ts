@@ -111,14 +111,6 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     AREA_NO: [null], // 區域
   })
   dialogData: LocationData[] = [];// overlayPanel 裡面的table
-  dialogloading = false;
-  onformValueChanged(event: any) { //onformValueChanged的Form如何改變時，也要打API(但跟上面的一樣都用同一支API就可以)
-    this.dialogloading = true;
-    this.locationService.searchLocations(event).subscribe((results) => {
-      this.dialogData = [...results]; // 更新data資料
-      this.dialogloading = false;
-    });
-  }
   // overlayPanel 欄位配置
   dialogColumns: Column[] = [
     { field: 'LOCATION_No', header: '位置編號' },
@@ -127,4 +119,12 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     { field: 'AREA_NO', header: '區域', format: (value: string) => this.RegionCodeOptions.find(option => option.value === value)?.label || value },
     { field: 'GROSS_SPACE', header: '營業坪數' },
   ];
+  dialogloading = false;
+  onformValueChanged(event: any) { //onformValueChanged的Form如何改變時，也要打API(但跟上面的一樣都用同一支API就可以)
+    this.dialogloading = true;
+    this.locationService.searchLocations(event).subscribe((results) => {
+      this.dialogData = [...results]; // 更新data資料
+      this.dialogloading = false;
+    });
+  }
 }

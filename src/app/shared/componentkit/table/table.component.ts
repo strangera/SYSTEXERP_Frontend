@@ -18,9 +18,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 基本設置
   @ViewChild('dt', { static: false }) dt!: Table;                               // table 元件
   @ViewChild('fileUpload') fileUpload!: FileUpload;                             // 檔案上傳 元件
-  @Input() dataKey = 'id';                                                               // table 資料key
+  @Input() dataKey = 'id';                                                      // table 資料key
   @Input() tableKey: string | undefined = undefined;                            // table 唯一標識 (必填)
-  @Input() title: string | undefined = undefined;                               // table 標題 (必填)
+  @Input() title: string | undefined = undefined;                               // table 標題
   @Input() columns!: Column[];                                                  // table 欄位配置 (必填)
   @Input() printColumns: Column[] = [];                                         // table 列印模式需要的欄位
   selectedColumns!: Column[];                                                   // table 預設顯示欄位
