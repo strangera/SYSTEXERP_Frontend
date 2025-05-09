@@ -21,7 +21,7 @@ export class SYSB100CRUComponent
     STR_Uniform: ['', [Validators.maxLength(8)]], // 統一編號
     SYS_StoreName: ['', [Validators.maxLength(60)]], // 公司名稱(中文)
     SYS_StoreNameENG: ['', [Validators.maxLength(60)]], // 公司名稱(英文)
-    STO_TaxNo: [, [Validators.maxLength(10)]], // 稅籍編號
+    STO_TaxNo: ['', [Validators.maxLength(10)]], // 稅籍編號
     STO_ManagerName: ['', [Validators.maxLength(12)]], // 負責人
     STO_ContactName: ['', [Validators.maxLength(12)]], // 聯絡人
     STO_ContactTel: ['', [Validators.maxLength(15)]], // 聯絡人電話

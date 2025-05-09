@@ -1,7 +1,8 @@
 <div class="card">
     <div class="grid align-items-center">
-        <div class="col" style="flex: 1;">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        <div class="flex gap-2 mb-2">
+            <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+            <app-button btnType="back" (click)="onCancel()"></app-button>
         </div>
     </div>
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
@@ -29,10 +30,10 @@
             <li>1.若上層組織階層為空，表示此階層為公司組織階層之最上層。</li>
             <li>2.代碼大小順序表示階層上下關係(例：全公司為10、本部為20...)</li>
         </ul>
-        <div class="col pt-4">
+        <div class="col pt-4" *ngIf="isFormEditable">
             <div class="grid justify-content-end">
                 <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="!isFormReadable"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
             </div>
         </div>
     </p-panel>
