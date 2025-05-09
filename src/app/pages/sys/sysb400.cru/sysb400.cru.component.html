@@ -1,10 +1,9 @@
 <div class="grid">
   <div class="col-12">
     <div class="card">
-      <div class="grid p-fluid ">
-        <div class="col-20 md:col-10 lg:col-12">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
+      <div class="flex gap-2 mb-2">
+        <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+        <app-button btnType="back" (click)="onCancel()"></app-button>
       </div>
       <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
@@ -15,40 +14,25 @@
               </app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="上層組織" controlName="p_org_id" [options]="org_Option" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.p_org_id" [submitted]="submitted">
+              <app-dropdown label="上層組織" controlName="p_org_id" [options]="org_Option" optionLabel="Label"
+                optionValue="No" [control]="dataForm.controls.p_org_id" [submitted]="submitted">
               </app-dropdown>
             </div>
-            <!-- <div class="col-12 md:col-12 lg:col-4">
-              <app-input-text label="上層組織" controlName="p_org_id" [control]="dataForm.controls.p_org_id"
-                [submitted]="submitted" [disabled]="true">
-              </app-input-text>
-            </div> -->
           </div>
           <div class="grid p-fluid">
             <div class="col-12 md:col-12 lg:col-4">
-              <app-dropdown label="組織階層代碼" controlName="level_id" [options]="upgroup_Options" optionLabel="Name"
+              <app-dropdown label="組織階層代碼" controlName="level_id" [options]="upgroup_Options" optionLabel="Label"
                 optionValue="No" [control]="dataForm.controls.level_id" [submitted]="submitted">
               </app-dropdown>
             </div>
-            <!-- <div class="col-12 md:col-12 lg:col-4">
-              <app-input-text label="組織階層名稱" controlName="level_name" [control]="dataForm.controls.level_name"
-                [submitted]="submitted" [disabled]="true">
-              </app-input-text>
-            </div> -->
           </div>
           <!-- 上層組織代碼區域：僅當 org_id 不為零時顯示 -->
           <div class="grid p-fluid" *ngIf="dataForm.get('org_id')?.value !== '100000'">
             <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="上層組織階層代碼" controlName="p_level_id" [options]="upgroup_Options" optionLabel="Name"
+              <app-dropdown label="上層組織階層代碼" controlName="p_level_id" [options]="upgroup_Options" optionLabel="Label"
                 optionValue="No" [control]="dataForm.controls.p_level_id" [submitted]="submitted">
               </app-dropdown>
             </div>
-            <!-- <div class="col-12 md:col-12 lg:col-4">
-              <app-input-text label="上層組織階層名稱名稱" controlName="p_level_name" [control]="dataForm.controls.p_level_name"
-                [submitted]="submitted" [disabled]="true">
-              </app-input-text>
-            </div> -->
           </div>
           <div class="grid p-fluid">
             <div class="col-12 md:col-6 lg:col-4">
@@ -59,10 +43,10 @@
             </div>
           </div>
         </form>
-        <div class="col pt-4">
+        <div class="col pt-4" *ngIf="!isFormReadable">
           <div class="grid justify-content-end">
             <app-button btnType="cancel" (click)="onCancel()"></app-button>
-            <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="!isFormReadable"></app-button>
+            <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
           </div>
         </div>
       </p-panel>

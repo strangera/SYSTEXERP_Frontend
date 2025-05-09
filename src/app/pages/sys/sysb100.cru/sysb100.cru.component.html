@@ -2,9 +2,9 @@
     <div class="col-12">
         <div class="card">
             <div class="grid p-fluid ">
-                <div class="col-20 md:col-10 lg:col-12">
-                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
-
+                <div class="flex gap-2 mb-2">
+                    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+                    <app-button btnType="back" (click)="onCancel()"></app-button>
                 </div>
             </div>
             <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
@@ -143,11 +143,10 @@
                         </div>
                     </div>
                 </form>
-                <div class="col pt-4">
+                <div class="col pt-4" *ngIf="isFormEditable">
                     <div class="grid justify-content-end">
                         <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                        <app-button btnType="submit" (click)="submitForm(dataForm)"
-                            *ngIf="!isFormReadable"></app-button>
+                        <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
                     </div>
                 </div>
             </p-panel>

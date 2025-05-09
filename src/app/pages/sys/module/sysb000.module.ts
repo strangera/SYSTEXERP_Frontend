@@ -82,6 +82,7 @@ export class Sysb300m {
   'UPD_USR_Name': string;
 }
 
+// SYS3100 組織碼設定作業
 export class Sysb400m {
   'id': string;
   'org_id': string;
@@ -127,6 +128,7 @@ export class Sysb600m {
 export interface apiOption {
   No: string;
   Name: string;
+  Label?: string;
 }
 
 export interface option {

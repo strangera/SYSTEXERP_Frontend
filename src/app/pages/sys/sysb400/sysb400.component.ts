@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Sysb400m } from '../module/sysb000.module';
+import { option, Sysb400m } from '../module/sysb000.module';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
 import { Sysb300Service } from '../../../service/api/sys/sysb300.service';
@@ -24,7 +24,14 @@ export class SYSB400Component
   columns: any[] = [
     { field: 'org_id', header: '組織代碼', visible: true },
     { field: 'org_name', header: '組織名稱', visible: true },
-    { field: 'level_id', header: '組織階層代碼', visible: true },
+    {
+      field: 'level_id',
+      header: '組織階層代碼',
+      visible: true,
+      format: (value: string) =>
+        this.level_nameOptions.find((option) => option.value === value)
+          ?.label || value,
+    },
     { field: 'p_org_id', header: '上層組織代碼', visible: true },
     { field: 'p_level_id', header: '上層組織階層代碼', visible: true },
     { field: 'stop_flag', header: '是否停用', visible: true },
@@ -42,10 +49,8 @@ export class SYSB400Component
     SortBy: [[{ field: 'org_id', order: 1 }] as SortMeta[]],
   });
 
-  rowsPerPageOptions: any = [];
-  rowsPerPageDropdownOptions: any = [];
-  level_nameOptions: any[] = [];
-  whetherOptions: any[] = [];
+  level_nameOptions: option[] = [];
+  whetherOptions: option[] = [];
 
   // // 分頁和排序參數
   // pageSize: number = 10;
@@ -160,14 +165,6 @@ export class SYSB400Component
   }
 
   loadOptions() {
-    this.rowsPerPageOptions = [10, 25, 50, 100];
-    this.rowsPerPageDropdownOptions = [
-      { label: '10', value: 10 },
-      { label: '25', value: 25 },
-      { label: '50', value: 50 },
-      { label: '100', value: 100 },
-    ];
-
     //階層作業
     const queryLevel = {
       level_id: '',
