@@ -15,7 +15,7 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     CAP_Item: [
       '',
-      [this.validationService.numberValidator, Validators.maxLength(3)],
+      [ Validators.maxLength(3)],
     ],
     CAP_Name: ['', [Validators.maxLength(40)]],
     CAP_Type: [[] as string[]], // 多選類別
