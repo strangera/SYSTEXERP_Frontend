@@ -1,3 +1,4 @@
+import { option } from './../module/sysb000.module';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 // Permissions
@@ -7,6 +8,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { apiOption, Sysb300m } from '../module/sysb000.module';
 import { SortMeta } from 'primeng/api';
 import { TableLazyLoadEvent } from 'primeng/table';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
 // 本地儲存鍵：用於儲存查詢狀態
 const storageKey = 'SYSB300';
@@ -22,6 +24,8 @@ export class SYSB300Component
   extends BasicQueryPageComponent<Sysb300m>
   implements OnInit
 {
+  upgroup_Options: apiOption[] = [];
+
   // 查詢
   queryForm = this.formBuilder.group({
     // SYS3000 組織階層設定檔
@@ -38,10 +42,17 @@ export class SYSB300Component
   // ----------------------------------------------------------------
   data: Sysb300m[] = [];
   filteredData: Sysb300m[] = [...this.data];
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'level_id', header: '階層代碼', visible: true },
     { field: 'level_name', header: '階層名稱', visible: true },
-    { field: 'p_level_id', header: '上層組織', visible: true },
+    {
+      field: 'p_level_id',
+      header: '上層組織',
+      visible: true,
+      format: (value: string) =>
+        this.upgroup_Options.find((option) => option.No === value)?.Name ||
+        value,
+    },
     // 其他欄位
   ];
 
@@ -57,7 +68,6 @@ export class SYSB300Component
   selectedItems: Sysb300m[] = [];
 
   // ----------------------------------------------------------------
-  upgroup_Options: apiOption[] = [];
 
   constructor(private sysb300Service: Sysb300Service) {
     super();

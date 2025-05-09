@@ -24,7 +24,6 @@ export class SYSB400CRUComponent
     org_name: ['', [Validators.required, Validators.maxLength(40)]], // 組織名稱
     p_org_id: ['', [Validators.required, Validators.maxLength(20)]], // 上層組織代碼
     level_id: ['', [Validators.required, Validators.maxLength(2)]], // 組織階層代碼
-    level_name: ['', [Validators.required, Validators.maxLength(40)]], // 組織階層名稱
     p_level_id: ['', [Validators.required, Validators.maxLength(2)]], // 上層組織階層代碼
     p_level_name: ['', [Validators.required, Validators.maxLength(40)]], // 上層組織階層名稱
     stop_flag: ['N', [Validators.required, Validators.maxLength(1)]], // 是否停用
@@ -58,6 +57,7 @@ export class SYSB400CRUComponent
       this.upgroup_Options = response.Data.map((item: apiOption) => ({
         No: item.No,
         Name: item.Name,
+        Label: item.No + ' ' + item.Name,
       }));
       console.log('組織階層', this.upgroup_Options);
     });
@@ -77,6 +77,7 @@ export class SYSB400CRUComponent
       this.org_Option = response.Data.map((item: Sysb400m) => ({
         No: item.org_id,
         Name: item.org_name,
+        Label: item.org_id + ' ' + item.org_name,
       }));
       console.log('組織代碼 查詢結果', this.org_Option);
     });
@@ -96,10 +97,11 @@ export class SYSB400CRUComponent
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            this.sysb400Service.updateSYSB400(frm.value).subscribe(() => {
-              this.messageService.successBubble('更新成功');
-              this.onCancel(); // 更新成功後返回查詢頁面
-            });
+            console.log('frm.value', frm.value);
+            // this.sysb400Service.updateSYSB400(frm.value).subscribe(() => {
+            //   this.messageService.successBubble('更新成功');
+            //   this.onCancel(); // 更新成功後返回查詢頁面
+            // });
           }
           break;
       }
