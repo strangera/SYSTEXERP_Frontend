@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
@@ -19,7 +19,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
   deductionCategoryOptions: any[] = [];
 
   inputForm = this.formBuilder.group({
-    deductionItemNumber: [
+    CAP_Item: [
       { value: '由系統帶入', disabled: true },
       [
         Validators.required,
@@ -27,40 +27,40 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
         Validators.maxLength(3),
       ],
     ],
-    deductionItemName: ['', [Validators.required, Validators.maxLength(40)]],
-    deductionCategory: [null, [Validators.required]],
-    accNo: ['', [Validators.maxLength(14)]],
-    guiFlag: ['Y', [Validators.required]],
-    capTaxType: ['1', [Validators.required]],
-    isCommonlyUsed: ['N', [Validators.required]],
-    printArea: ['', [Validators.maxLength(5)]],
-    remark: ['', [Validators.maxLength(160)]],
+    CAP_Name: ['', [Validators.required, Validators.maxLength(40)]],
+    CAP_Type: [null, [Validators.required]],
+    AccNo: ['', [Validators.maxLength(14)]],
+    GUI_FLAG: ['Y', [Validators.required]],
+    CAP_TaxType: ['1', [Validators.required]],
+    IsCommonlyUsed: ['N', [Validators.required]],
+    Print_Area: ['', [Validators.maxLength(5)]],
+    CAP_Remark: ['', [Validators.maxLength(160)]],
   });
 
   constructor(
     private translate: TranslateService,
-
     private validationService: ValidationService,
     private deductionCategoryService: DeductionCategoryService,
-    private http: HttpClient,
+    private http: HttpClient
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS11020', this.inputForm);
+    this.crudstatus = history.state?.crudstatus ?? CRUDStatus.Create;
+    this.rowdata = history.state?.rowdata ?? null;
 
-    this.deductionCategoryService.getDeductionCategories().subscribe((data) => {
+    this.deductionCategoryService.getDeductionCategories().subscribe(data => {
       this.deductionCategoryOptions = data;
     });
-  }
-  Edit(rowdata: any) {
-    this.inputForm.patchValue(rowdata);
-  }
 
-  Read(rowdata: any) {
-    this.inputForm.patchValue(rowdata);
-    this.inputForm.disable();
+    if (this.crudstatus === CRUDStatus.Edit && this.rowdata) {
+      this.inputForm.patchValue(this.rowdata);
+    } else if (this.crudstatus === CRUDStatus.Read && this.rowdata) {
+      this.inputForm.patchValue(this.rowdata);
+      this.inputForm.disable();
+    }
   }
 
   onSubmit(): void {
@@ -68,15 +68,13 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     this.submitted = true;
 
     if (this.inputForm.invalid) {
-      this.messageService.errorBubble(
-        this.translate.instant('form_error_message'),
-      );
+      this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;
     }
 
     const raw = this.inputForm.getRawValue();
-    const capType = (raw.deductionCategory ?? '') as string;
+    const capType = (raw.CAP_Type ?? '') as string;
 
     if (capType.length !== 1) {
       this.messageService.errorBubble('扣款類別(CAP_Type) 必須是一個單一字元');
@@ -84,56 +82,59 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
       return;
     }
 
-    const payload = {
- 
-        CAP_Type: capType,
-        CAP_Name: raw.deductionItemName,
-        AccNo: raw.accNo,
-        GUI_FLAG: raw.guiFlag,
-        CAP_TaxType: raw.capTaxType,
-        IsCommonlyUsed: raw.isCommonlyUsed,
-        Print_Area: raw.printArea,
-        CAP_Remark: raw.remark,
-      
+    const payload: any = {
+      CAP_Type: capType,
+      CAP_Name: raw.CAP_Name,
+      AccNo: raw.AccNo,
+      GUI_FLAG: raw.GUI_FLAG,
+      CAP_TaxType: raw.CAP_TaxType,
+      IsCommonlyUsed: raw.IsCommonlyUsed,
+      Print_Area: raw.Print_Area,
+      CAP_Remark: raw.CAP_Remark,
     };
-    console.log('🚀 送出 payload:', payload);
+
     if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-      this.http
-        .post(`${environment.ApiUrl}/TLS0000/TLS1000/insertTLS11020`, payload)
-        .subscribe({
-          next: () => {
-            this.messageService.successBubble(
-              this.translate.instant('success_message'),
-            );
-            this.router.navigate(['/TLS', 'TLS11020']); // ✅ 修改這行
-          },
-          error: () => {
-            this.messageService.errorBubble(
-              this.translate.instant('create_failed'),
-            );
-          },
-          complete: () => {
-            this.messageService.unblockUi();
-            this.submitted = false;
-          },
-        });
+      this.http.post(`${environment.ApiUrl}/TLS0000/TLS1000/insertTLS11020`, payload).subscribe({
+        next: () => {
+          this.messageService.successBubble(this.translate.instant('success_message'));
+          this.router.navigate(['/TLS', 'TLS11020']);
+        },
+        error: () => {
+          this.messageService.errorBubble(this.translate.instant('create_failed'));
+        },
+        complete: () => {
+          this.messageService.unblockUi();
+          this.submitted = false;
+        },
+      });
     } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-      this.messageService.successBubble(
-        this.translate.instant('updated-successfully'),
-      );
-      this.messageService.unblockUi();
-      this.submitted = false;
+      payload.id = this.rowdata?.id;
+      payload.CAP_Item = this.rowdata?.CAP_Item;
+
+      this.http.post(`${environment.ApiUrl}/TLS0000/TLS1000/updateTLS11020`, payload).subscribe({
+        next: () => {
+          this.messageService.successBubble(this.translate.instant('updated-successfully'));
+          this.router.navigate(['/TLS', 'TLS11020']);
+        },
+        error: () => {
+          this.messageService.errorBubble(this.translate.instant('update_failed'));
+        },
+        complete: () => {
+          this.messageService.unblockUi();
+          this.submitted = false;
+        },
+      });
     } else {
       this.messageService.unblockUi();
     }
   }
 
-  onClearForm() {
+  onClearForm(): void {
     this.inputForm.reset({
-      deductionItemNumber: '由系統帶入',
-      guiFlag: 'Y',
-      capTaxType: '1',
-      isCommonlyUsed: 'N',
+      CAP_Item: '由系統帶入',
+      GUI_FLAG: 'Y',
+      CAP_TaxType: '1',
+      IsCommonlyUsed: 'N',
     });
   }
 }
