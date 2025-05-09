@@ -3,6 +3,9 @@
     <div class="col" style="flex: 1;">
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
+                <div>
+                    <app-button btnType="back" (click)="onCancel()" class="col"></app-button>
+                </div>
   </div>
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
