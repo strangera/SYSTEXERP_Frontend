@@ -60,13 +60,12 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
       visible: true,
       sortField: 'CAT_LNo' // 強制添加 sortField
     } as Column & { sortField: string }, // 使用類型斷言
-    { field: 'CAT_MRemark', header: '備註', visible: true },
+    { field: 'CAT_MRemark', header: '備註', visible: true, type: 'html' }, // 說明
     // 其他欄位CAT_MRemark
   ];
 
   totalRecords: number = 0;
 
-  // bigCategoryOptions: any[] = [];
   // 多選項目
   selectedItems: CategoryItem[] = [];
 
@@ -137,8 +136,6 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
     this.data = [];
     this.filteredData = [];
     this.totalRecords = 0;
-    // 清空儲存的查詢狀態
-    this.queryStateService.clearQueryState(storageKey);
   }
 
   onDelete(data: CategoryItem | CategoryItem[]): void {
