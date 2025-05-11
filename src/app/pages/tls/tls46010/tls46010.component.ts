@@ -21,8 +21,7 @@ const storageKey = 'TLS46010';
 // 2.4.6.1 網路位置設定
 export class TLS46010Component
   extends BasicQueryPageComponent<Tls46010m>
-  implements OnInit
-{
+  implements OnInit {
   queryForm = this.formBuilder.group({
     // POS10015 門市系統主機設定檔
 
@@ -44,10 +43,6 @@ export class TLS46010Component
     SYS_SRVDDirClt: ['', [Validators.maxLength(60)]], // 前台系統下載目錄 預設值為/MyPOSData/PosDown
     SYS_SRVUDirClt: ['', [Validators.maxLength(60)]], // 前台系統上傳目錄 預設值為/MyPOSData/PosUp
 
-    //分頁查詢
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'SYS_StoreNo', order: 1 }] as SortMeta[]],
   });
   // 表格
   // ----------------------------------------------------------------
@@ -184,17 +179,6 @@ export class TLS46010Component
     });
 
     this.selectedItems = [];
-  }
-
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) {
-      return;
-    }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'SYS_StoreNo', order: 1 }];
-    this.onSubmit(this.queryForm);
   }
 
   loadOptions() {

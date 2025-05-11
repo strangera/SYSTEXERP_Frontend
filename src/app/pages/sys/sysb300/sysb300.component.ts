@@ -30,11 +30,6 @@ export class SYSB300Component
     level_id: ['', [Validators.maxLength(2)]], // 組織階層代碼
     level_name: ['', [Validators.maxLength(30)]], // 組織階層名稱
     p_level_id: ['', [Validators.maxLength(2)]], // 上層組織階層代碼
-
-    //分頁查詢
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'level_id', order: 1 }] as SortMeta[]],
   });
   // 表格
   // ----------------------------------------------------------------
@@ -169,16 +164,5 @@ export class SYSB300Component
           }));
         });
     }
-  }
-
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) {
-      return;
-    }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'level_id', order: 1 }];
-    this.onSubmit(this.queryForm);
   }
 }

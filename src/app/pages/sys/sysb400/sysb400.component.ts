@@ -42,11 +42,6 @@ export class SYSB400Component
     org_id: ['', Validators.maxLength(20)], // 組織代碼
     org_name: ['', Validators.maxLength(40)], // 組織名稱
     level_id: ['', Validators.maxLength(2)], // 組織階層代碼
-
-    //分頁查詢
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'org_id', order: 1 }] as SortMeta[]],
   });
 
   level_nameOptions: option[] = [];
@@ -192,16 +187,5 @@ export class SYSB400Component
       { value: 'Y', label: '是' },
       { value: 'N', label: '否' },
     ];
-  }
-
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) {
-      return;
-    }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'org_id', order: 1 }];
-    this.onSubmit(this.queryForm);
   }
 }

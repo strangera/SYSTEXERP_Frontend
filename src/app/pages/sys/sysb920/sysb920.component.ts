@@ -47,10 +47,6 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
     bus_class: [[] as string[]], // 中分類代碼
     bus_sclass_desc: ['', [Validators.maxLength(200)]], // 備註
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
-    //分頁用
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'bus_class', order: 1 }] as SortMeta[]],
   });
 
   data: CategoryItem[] = [];
@@ -204,14 +200,4 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
       }
     });
   }
-
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) { return; }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'bus_class', order: 1 }];
-    this.onSubmit(this.queryForm);
-  }
-
 }

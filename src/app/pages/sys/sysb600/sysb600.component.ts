@@ -5,7 +5,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { Sysb600m } from '../module/sysb000.module';
 import { SortMeta } from 'primeng/api';
 import { TableLazyLoadEvent } from 'primeng/table';
-import { Sysb600Service } from '../../../service/api/sys/sysb600.service';
+import { Sysb600Service } from '../../../service/API/sys/sysb600.service';
 
 // 本地儲存鍵：用於儲存查詢狀態
 const storageKey = 'SYSB600';
@@ -24,11 +24,6 @@ export class SYSB600Component
   queryForm = this.formBuilder.group({
     floor_no: ['', [Validators.maxLength(2)]], // 樓層編號
     floor_desc: ['', [Validators.maxLength(30)]], //樓層名稱
-
-    //分頁查詢
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'floor_no', order: 1 }] as SortMeta[]],
   });
   // 表格
   // ----------------------------------------------------------------
@@ -142,16 +137,5 @@ export class SYSB600Component
     });
 
     this.selectedItems = [];
-  }
-
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) {
-      return;
-    }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'floor_no', order: 1 }];
-    this.onSubmit(this.queryForm);
   }
 }

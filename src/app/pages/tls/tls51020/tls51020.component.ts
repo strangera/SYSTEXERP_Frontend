@@ -4,8 +4,6 @@ import { FormGroup, Validators } from '@angular/forms';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
-import { TableLazyLoadEvent } from 'primeng/table';
-import { SortMeta } from 'primeng/api';
 import { Column } from '../../../shared/componentkit/table/table.model';
 
 interface CategoryItem {
@@ -41,9 +39,6 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
     CAT_MName: ['', [Validators.maxLength(32)]], // 中分類名稱
     CAT_LNo: [''], // 大分類代碼 / 名稱
     // CAT_MRemark: [,], // 說明
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'CAT_MNo', order: 1 }] as SortMeta[]],
   });
   // 表格
   // ----------------------------------------------------------------
@@ -64,7 +59,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
     // 其他欄位CAT_MRemark
   ];
 
-  totalRecords: number = 0;
+  totalRecords = 0;
 
   // 多選項目
   selectedItems: CategoryItem[] = [];
@@ -183,18 +178,5 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
     });
 
     this.selectedItems = [];
-  }
-
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) { return; }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    // form.SortBy = event.multiSortMeta ?? [{ field: 'CAT_MNo', order: 1 }];
-    form.SortBy = (event.multiSortMeta ?? [{ field: 'CAT_MNo', order: 1 }]).map(sort => ({
-      ...sort,
-      field: sort.field === 'CAT_LDisplay' ? 'CAT_LNo' : sort.field // 將 CAT_LDisplay 替換為 CAT_LNo
-    }));
-    this.onSubmit(this.queryForm);
   }
 }

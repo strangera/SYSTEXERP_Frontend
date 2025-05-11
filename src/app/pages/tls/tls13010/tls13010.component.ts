@@ -105,10 +105,6 @@ export class TLS13010Component extends BasicQueryPageComponent<CategoryItem> imp
     businessTypeCodeOptions: [],
     isMeterReadOption: [],
     isGuaranteedByNoteOption: [],
-    //分頁
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'TEST', order: 1 }] as SortMeta[]],
   });
   // 表格
 
@@ -426,13 +422,5 @@ export class TLS13010Component extends BasicQueryPageComponent<CategoryItem> imp
     //     this.selectedItems = [];
     //   }
     // });
-  }
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) { return; }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'bus_class', order: 1 }];
-    this.onSubmit(this.queryForm);
   }
 }

@@ -3,9 +3,9 @@ import { FormGroup, Validators } from '@angular/forms';
 import { SortMeta } from 'primeng/api';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { Column } from '../../../shared/componentkit/table/table.model';
+import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -34,10 +34,6 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
     bus_type_name: ['', [Validators.maxLength(40)]], // 大分類名稱
     bus_type_desc: ['', [Validators.maxLength(160)]], // 備註
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
-    //分頁查詢
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'bus_type', order: 1 }] as SortMeta[]],
   });
 
   data: CategoryItem[] = [];
@@ -151,14 +147,4 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
       }
     });
   }
-
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) { return; }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'bus_type', order: 1 }];
-    this.onSubmit(this.queryForm);
-  }
-
 }

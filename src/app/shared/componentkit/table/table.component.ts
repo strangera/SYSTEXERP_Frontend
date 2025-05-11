@@ -8,6 +8,8 @@ import { NotificationService } from '../../component/notification-message/notifi
 import { QueryStateService } from '../../service/query-state.service';
 import { ReportHead } from '../../models/ReportHead';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
+import { FormBuilder, FormGroup } from '@angular/forms';
+
 @Component({
   selector: 'app-table',
   templateUrl: './table.component.html',
@@ -83,6 +85,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() scrollHeight = '600px';                  // table 高度
   @Input() scrollable = true                        // 是否要滾輪
   @Input() showPaginator = true;                    // 是否顯示 分頁器
+  @Input() form!: FormGroup;                        // 表單物件
   @Input() totalRecords = 0;                        // 記錄總數
   totalPages = 0;                                   // 共幾頁數
   rows = 10;                                        // 每頁顯示的行數
@@ -90,13 +93,16 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   pages: { label: string, value: number }[] = [];   // (右上)下拉選單 頁數選項
   selectedPage: number | null = 1;                  // (右上)下拉選單 當前選擇的頁數
   @Input() lazy = false;                                      // 是否啟用 Lazy 加載
-  @Output() lazyLoad = new EventEmitter<TableLazyLoadEvent>(); // Lazy 加載事件
+  @Output() lazyLoadData = new EventEmitter<FormGroup>(); // 修改輸出事件類型
   // 其他
   @Input() emptyMessage = '查無資料';                // table 無資料時顯示文字
   constructor(
     private readonly queryStateService: QueryStateService,
     private readonly messageService: NotificationService,
-  ) { super(); }
+    private readonly fb: FormBuilder
+  ) {
+    super();
+  }
   // 當 data 發生變化時，重置分頁與頁碼
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
@@ -113,6 +119,19 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
       this.multiSortMeta = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta; // 取得排序歷史紀錄
       this.selectedColumns = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value ?? this.columns.filter(col => col.visible !== false); // 取得顯示欄位
     }
+    if (changes['form']) {
+      this.form = this.form || this.fb.group({}); // 確保 form 不為 undefined
+      this.lazy = true; // 啟用 Lazy 加載
+      // form加入分頁與排序的相關控制項
+      this.form.addControl('pageSize', this.fb.control(this.rows));
+      this.form.addControl('pageIndex', this.fb.control(this.selectedPage));
+      this.form.addControl('SortBy', this.fb.control(this.multiSortMeta));
+      this.form.patchValue({
+        pageSize: this.rows,
+        pageIndex: this.selectedPage,
+        SortBy: this.multiSortMeta,
+      });
+    }
   }
   // 計算總頁數並生成頁面選項
   calculateTotalPages() {
@@ -122,6 +141,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
       this.pages = Array.from({ length: this.totalPages }, (_, index) => ({ label: `第 ${index + 1} 頁`, value: index + 1 }));
       // 若當前頁數超過最大頁數，則移動到最大頁數，但至少為 1
       if (this.selectedPage && this.selectedPage > this.totalPages) { this.goToPage(Math.max(this.totalPages, 1)); }
+      this.cdr.detectChanges(); // 手動觸發變更檢測
     }, 0);
   }
   // 右上dropdown 跳轉頁數
@@ -130,7 +150,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     this.selectedPage = pageNumber; // 更新選擇的頁數
     this.queryStateService.setQueryState(this.tableKey + 'Page', this.selectedPage);
     this.queryStateService.setQueryState(this.tableKey + 'First', this.first);
-    this.lazyLoad.emit({ first: this.first, rows: this.rows, multiSortMeta: this.multiSortMeta });
+    this.form.patchValue({ pageIndex: this.selectedPage, pageSize: this.rows });
+    this.lazyLoadData.emit(this.form); // 發射事件
   }
   // Table內建 分頁器變動
   onPageChange(event: TablePageEvent) {
@@ -146,9 +167,16 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     this.queryStateService.setQueryState(this.tableKey + 'Sort', this.multiSortMeta);
   }
   loadDataLazy(event: TableLazyLoadEvent) {
-    setTimeout(() => {
-      this.lazyLoad.emit(event);
+    this.rows = event.rows || 10;
+    this.selectedPage = Math.ceil(((event.first || 0) / this.rows) + 1) || 1;
+    this.multiSortMeta = event.multiSortMeta || [{ field: this.dataKey, order: 1 }];
+    // 你可能需要在 form 中更新分頁和排序的相關控制項
+    this.form.patchValue({
+      pageSize: this.rows,
+      pageIndex: this.selectedPage,
+      SortBy: this.multiSortMeta,
     });
+    this.lazyLoadData.emit(this.form); // 直接發射 form
   }
   /* =================================核心程式碼======================================= */
   // 行追蹤

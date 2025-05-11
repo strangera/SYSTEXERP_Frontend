@@ -22,8 +22,7 @@ const storageKey = 'SYSB200';
 // 廠商基本資料維護作業
 export class SYSB200Component
   extends BasicQueryPageComponent<Sysb200m>
-  implements OnInit
-{
+  implements OnInit {
   // 查詢
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
@@ -51,11 +50,6 @@ export class SYSB200Component
       ,
       [this.validationService.numberValidator, Validators.max(9999999)],
     ], // 廠商匯款銀行代號
-
-    //分頁查詢
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'manufacturerID', order: 1 }] as SortMeta[]],
   });
   // 表格
   // ----------------------------------------------------------------
@@ -235,18 +229,5 @@ export class SYSB200Component
     // });
 
     this.selectedItems = [];
-  }
-
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) {
-      return;
-    }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [
-      { field: 'manufacturerID', order: 1 },
-    ];
-    this.onSubmit(this.queryForm);
   }
 }

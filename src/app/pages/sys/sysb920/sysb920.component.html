@@ -45,7 +45,7 @@
 <div class="card">
   <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-    [showCheckBox]="true" dataKey="id" [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
-    (lazyLoad)="loadData($event)" [lazy]="true" [loading]="loading">
+    [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'bus_class', order: 1 }]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onSubmit($event)" [form]="queryForm" [loading]="loading">
   </app-table>
 </div>

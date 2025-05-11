@@ -47,8 +47,8 @@
       <div class="col-13">
         <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (delete)="onDelete($event)"
           (detail)="onDetail($event)" [showCheckBox]="true" dataKey="id"
-          [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords" (lazyLoad)="loadData($event)"
-          [lazy]="true" [loading]="loading">
+          [multiSortMeta]="[{ field: 'CAT_MNo', order: 1 }]" [totalRecords]="totalRecords"
+          (lazyLoadData)="onSubmit($event)" [form]="queryForm" [loading]="loading">
         </app-table>
       </div>
     </div>

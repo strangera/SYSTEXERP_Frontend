@@ -21,7 +21,7 @@
         </div>
         <!-- <div *appHasPermission="queryPermission" class="col"> -->
         <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
         <!-- </div> -->
@@ -31,12 +31,10 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <!-- <app-data-table-check [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-        </app-data-table-check> -->
     <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
       [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-      [showCheckBox]="true" dataKey="id" [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
-      (lazyLoad)="loadData($event)" [lazy]="true" [loading]="loading">
+      [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'CAT_LNo', order: 1 }]"
+      [totalRecords]="totalRecords" (lazyLoadData)="onSubmit($event)" [form]="queryForm" [loading]="loading">
     </app-table>
   </div>
 </div>

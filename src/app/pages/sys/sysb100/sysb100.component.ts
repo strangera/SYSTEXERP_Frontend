@@ -46,10 +46,6 @@ export class SYSB100Component
     STO_Email: ['', [Validators.maxLength(100)]], // 電子郵件
     STO_URL: ['', [Validators.maxLength(100)]], // 公司網址
 
-    //分頁查詢
-    pageSize: [10], // variable
-    pageIndex: [0],
-    SortBy: [[{ field: 'SYS_StoreNo', order: 1 }] as SortMeta[]],
   });
   // 表格
   // ----------------------------------------------------------------
@@ -191,16 +187,5 @@ export class SYSB100Component
     });
 
     this.selectedItems = [];
-  }
-
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) {
-      return;
-    }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'SYS_StoreNo', order: 1 }];
-    this.onSubmit(this.queryForm);
   }
 }

@@ -5,8 +5,6 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { debounceTime } from 'rxjs';
-import { TableLazyLoadEvent } from 'primeng/table';
-import { SortMeta } from 'primeng/api';
 import { MidCategoryCodeService } from '../../../service/basic/mid-category-code.service';
 import { Column } from '../../../shared/componentkit/table/table.model';
 
@@ -42,9 +40,6 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
     CAT_SName: ['', [Validators.maxLength(32)]],
     CAT_LNo: [''],
     CAT_MNo: [''],
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'CAT_SNo', order: 1 }] as SortMeta[]],
   });
 
   data: CategoryItem[] = [];
@@ -67,7 +62,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
     { field: 'CAT_SRemark', header: '說明', visible: true }
   ];
 
-  totalRecords: number = 0;
+  totalRecords = 0;
   selectedItems: CategoryItem[] = [];
   bigCategoryOptions: { value: string, label: string }[] = [];
   middleCategoryOptions: { value: string, label: string }[] = [];
@@ -234,17 +229,5 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
         this.selectedItems = [];
       }
     });
-  }
-
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) { return; }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = (event.multiSortMeta ?? [{ field: 'CAT_SNo', order: 1 }]).map(sort => ({
-      ...sort,
-      field: sort.field === 'CAT_LDisplay' ? 'CAT_LNo' : sort.field === 'CAT_MDisplay' ? 'CAT_MNo' : sort.field
-    }));
-    this.onSubmit(this.queryForm);
   }
 }

@@ -24,11 +24,6 @@ export class SYSB500Component
   queryForm = this.formBuilder.group({
     area_no: ['', [Validators.maxLength(2)]], // 區域別編號
     area_desc: ['', [Validators.maxLength(30)]], // 區域別名稱
-
-    //分頁查詢
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'area_no', order: 1 }] as SortMeta[]],
   });
   // 表格
   // ----------------------------------------------------------------
@@ -143,16 +138,5 @@ export class SYSB500Component
     });
 
     this.selectedItems = [];
-  }
-
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) {
-      return;
-    }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'area_no', order: 1 }];
-    this.onSubmit(this.queryForm);
   }
 }
