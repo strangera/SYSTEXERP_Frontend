@@ -1,32 +1,28 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
+import { SortMeta } from 'primeng/api';
+import { TableLazyLoadEvent } from 'primeng/table';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Sysb500m } from '../../sys/module/sysb000.module';
+
+// 本地儲存鍵：用於儲存查詢狀態
+const storageKey = 'TLS41020';
 
 // 2.4.1.2 收銀機EDC資料維護
 @Component({
   selector: 'app-tls41020',
   templateUrl: './tls41020.component.html',
-  styleUrl: './tls41020.component.scss'
+  styleUrl: './tls41020.component.scss',
 })
-export class TLS41020Component {
-  ProgNo: string = '240002';
-  // 權限
-  funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+export class TLS41020Component
+  extends BasicQueryPageComponent<any>
+  implements OnInit
+{
   // 查詢
   // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
   queryForm = this.formBuilder.group({
     // POS1002EDC 收銀機EDC設定檔
     SYS_StoreNo: [, [Validators.maxLength(10)]], // 收銀機所屬門市店號
@@ -48,21 +44,24 @@ export class TLS41020Component {
     EDC_TmID2: [, [Validators.maxLength(8)]], // 第二台信用卡刷卡機端末機代碼
     EDC_TmID3: [, [Validators.maxLength(8)]], // 第三台信用卡刷卡機端末機代碼
 
-    // 以下可以不用顯示於查詢頁
-    CRT_Date: [], // 建立日期
-    CRT_USR_No: ['', [Validators.maxLength(8)]], // 建立人員
-    CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-    UPD_Date: [], // 變更日期
-    UPD_USR_No: ['', [Validators.maxLength(8)]], // 變更人員
-    UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
+    //分頁查詢
+    pageSize: [10],
+    pageIndex: [0],
+    SortBy: [[{ field: 'area_no', order: 1 }] as SortMeta[]],
   });
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
     {
-      SYS_StoreNo: 'strore123', ECR_No: 'register123', EDC_No: 'edc123',
-      EDC_BegDate: '2024/01/01', EDC_EdnDate: '2024/02/02', EDC_Status: 'A',
-      ECR_TLT_No: 'counter123', ECR_TLT_Name: '測試專櫃', EDC_IP1: 'EDCcasher123'
+      SYS_StoreNo: 'strore123',
+      ECR_No: 'register123',
+      EDC_No: 'edc123',
+      EDC_BegDate: '2024/01/01',
+      EDC_EdnDate: '2024/02/02',
+      EDC_Status: 'A',
+      ECR_TLT_No: 'counter123',
+      ECR_TLT_Name: '測試專櫃',
+      EDC_IP1: 'EDCcasher123',
     },
     // 其他資料
   ];
@@ -82,55 +81,61 @@ export class TLS41020Component {
     // 其他欄位
   ];
   // ----------------------------------------------------------------
+
+  // 表格數據和篩選數據
+  // // 分頁和排序參數
+  // pageSize: number = 10;
+  // pageIndex: number = 0;
+  totalRecords = 0;
+  // lastQueryParams: any = null;
+  // sortField: string = 'CAT_LNo';
+  // sortOrder: number = 1;
+
+  // 多選項目
+  selectedItems: any[] = [];
+
   EDC_Status_Option: any[] = [
     { value: 'A', label: '啟用' },
     { value: 'C', label: '停用' },
   ];
 
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-  ) {
+  constructor(private validationService: ValidationService) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-  }
+    this.initializePage('TLS41020', 'TLS/TLS41020CRU');
 
-  // 權限
-  // ----------------------------------------------------------------
-  canQuery(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
-  }
-  canAdd(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
-  }
-  canEdit(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
+    // 恢復查詢狀態並自動查詢
+    this.handleQueryRestore(this.queryForm, storageKey, (form) =>
+      this.onSubmit(form),
+    );
   }
   // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
+    this.handleSubmit(frm, () => {
+      console.log('queryForm', frm.value);
+      // this.sysb500Service.querySYSB500(frm.value).subscribe({
+      //   next: (response: any) => {
+      //     console.log('API response:', response);
+      //     if (response.Status === '0000') {
+      //       this.data = response.Data || [];
+      //       this.filteredData = [...this.data];
+      //       this.totalRecords = response.TotalCount || response.Data.length;
+      //       this.queryStateService.setQueryState(storageKey, frm.value);
+      //     } else {
+      //       console.error('API error:', response.Status, response.Message);
+      //     }
+      //     this.loading = false;
+      //     this.messageService.unblockUi();
+      //   },
+      //   error: (err: string) => {
+      //     console.error('API error:', err);
+      //     this.loading = false;
+      //     this.messageService.unblockUi();
+      //   },
       // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    });
   }
 
   onSubmitQuery(frm: FormGroup) {
@@ -138,37 +143,61 @@ export class TLS41020Component {
     this.onSubmit(frm);
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
+  // 刪除項目
+  onDelete(data: Sysb500m | Sysb500m[]): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
+
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) {
+      console.error('No items to delete');
+      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+      return;
     }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
+    // 收集所有有效的 ID
+    const idList = items
+      .filter((item) => item && item.id != null && item.id !== undefined)
+      .map((item) => item.id);
+
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
     }
-  }
 
-  onDetail(data: any) {
-    console.log(data);
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
-
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
-      },
+    const deleteBody = {
+      idList: idList, // 符合 API 的 idList 格式
     };
 
-    console.log(crudstatus);
+    // this.sysb500Service.deleteSYSB500(deleteBody).subscribe({
+    //   next: (response: any) => {
+    //     if (response.Status === '0000') {
+    //       this.messageService.successBubble('選中項目刪除成功');
+    //     } else {
+    //       console.error('API error:', response.Status, response.Message);
+    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+    //     }
+    //   },
+    //   error: (err: string) => {
+    //     console.error('API error:', err);
+    //     this.messageService.errorBubble('刪除失敗');
+    //   },
+    //   complete: () => {
+    //     this.onSubmit(this.queryForm);
+    //   },
+    // });
 
-    this.router.navigate(['/TLS4000/TLS41020CRU'], extras);
+    this.selectedItems = [];
+  }
+
+  loadData(event: TableLazyLoadEvent) {
+    const form = this.queryForm.value;
+    if (this.totalRecords === 0) {
+      return;
+    }
+    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
+    form.SortBy = event.multiSortMeta ?? [{ field: 'area_no', order: 1 }];
+    this.onSubmit(this.queryForm);
   }
 }

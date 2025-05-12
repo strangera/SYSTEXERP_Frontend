@@ -44,4 +44,5 @@ export interface Option {
 export interface apiOption {
   No: string;
   Name: string;
+  Label?: string;
 }
