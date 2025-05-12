@@ -15,15 +15,14 @@ import { Sysb500Service } from '../../../service/api/sys/sysb500.service';
 // 區域基本資料維護作業 CRU
 export class SYSB500CRUComponent
   extends BasicCruPageComponent<Sysb500m>
-  implements OnInit {
+  implements OnInit
+{
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [],
     area_no: ['', [Validators.required, Validators.maxLength(2)]], // 區域別編號
     area_desc: ['', [Validators.required, Validators.maxLength(30)]], // 區域別名稱
   });
-  //
-  // upperLevelOrgOptions: any[]=[];
   // ----------------------------------------------------------------
   constructor(
     private sysb500Service: Sysb500Service,

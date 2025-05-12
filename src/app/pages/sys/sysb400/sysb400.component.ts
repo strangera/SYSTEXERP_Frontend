@@ -5,8 +5,8 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { option, Sysb400m } from '../module/sysb000.module';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
-import { Sysb300Service } from '../../../service/api/sys/sysb300.service';
-import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
+import { Sysb300Service } from '../../../service/API/sys/sysb300.service';
+import { Sysb400Service } from '../../../service/API/sys/sysb400.service';
 
 // 本地儲存鍵：用於儲存查詢狀態
 const storageKey = 'SYSB400';
@@ -18,7 +18,8 @@ const storageKey = 'SYSB400';
 })
 export class SYSB400Component
   extends BasicQueryPageComponent<Sysb400m>
-  implements OnInit {
+  implements OnInit
+{
   data: Sysb400m[] = [];
   filteredData: Sysb400m[] = [...this.data];
   columns: any[] = [

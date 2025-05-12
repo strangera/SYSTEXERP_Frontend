@@ -1,4 +1,3 @@
-import { option } from './../module/sysb000.module';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 // Permissions
@@ -7,7 +6,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { apiOption, Sysb300m } from '../module/sysb000.module';
 import { SortMeta } from 'primeng/api';
 import { TableLazyLoadEvent } from 'primeng/table';
-import { Sysb300Service } from '../../../service/api/sys/sysb300.service';
+import { Sysb300Service } from '../../../service/API/sys/sysb300.service';
 import { Column } from '../../../shared/componentkit/table/table.model';
 
 // 本地儲存鍵：用於儲存查詢狀態
@@ -22,7 +21,8 @@ const storageKey = 'SYSB300';
 // 組織階層設定作業
 export class SYSB300Component
   extends BasicQueryPageComponent<Sysb300m>
-  implements OnInit {
+  implements OnInit
+{
   upgroup_Options: apiOption[] = [];
   // 查詢
   queryForm = this.formBuilder.group({

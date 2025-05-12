@@ -4,7 +4,7 @@ import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Sysb300Service } from '../../../service/api/sys/sysb300.service';
+import { Sysb300Service } from '../../../service/API/sys/sysb300.service';
 
 @Component({
   selector: 'app-sysb300.cru',
@@ -14,14 +14,15 @@ import { Sysb300Service } from '../../../service/api/sys/sysb300.service';
 // 組織階層設定作業 CRU
 export class SYSB300CRUComponent
   extends BasicCruPageComponent<Sysb300m>
-  implements OnInit {
+  implements OnInit
+{
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // SYS3000 組織階層設定檔
     id: [],
     level_id: ['', [Validators.required, Validators.maxLength(2)]], // 組織階層代碼
     level_name: ['', [Validators.required, Validators.maxLength(30)]], // 組織階層名稱
-    p_level_id: [, [Validators.maxLength(2)]], // 上層組織階層代碼(空白代表第一層)
+    p_level_id: ['', [Validators.maxLength(2)]], // 上層組織階層代碼(空白代表第一層)
   });
   //
   upgroup_Options: apiOption[] = [];

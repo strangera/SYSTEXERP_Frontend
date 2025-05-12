@@ -25,7 +25,6 @@ export class SYSB600CRUComponent
     floor_desc: ['', [Validators.required, Validators.maxLength(30)]], // 樓層名稱
   });
   //
-  // upperLevelOrgOptions: any[]=[];
   // ----------------------------------------------------------------
   constructor(
     private sysb600Service: Sysb600Service,
