@@ -13,10 +13,7 @@ import { environment } from '../../../../environments/environment';
 })
 export class TLS11020Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    CAP_Item: [
-      '',
-      [ Validators.maxLength(3)],
-    ],
+    CAP_Item: ['', [Validators.maxLength(3)]],
     CAP_Name: ['', [Validators.maxLength(40)]],
     CAP_Type: [[] as string[]], // 多選類別
     CAP_Remark: ['', [Validators.maxLength(160)]],
@@ -35,7 +32,7 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
     { field: 'Print_Area', header: '扣款項目合約列印區分', visible: true },
     { field: 'CAP_Remark', header: '備註', visible: true },
   ];
-
+  selectedItems: any[] = [];
   deductionCategoryOptions: any[] = [];
 
   constructor(
@@ -147,12 +144,30 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
       });
   }
   viewRow(rowdata: any) {
-  this.router.navigate(['/TLS', 'TLS11020CRU'], {
-    state: {
-      crudstatus: 'Read',
-      rowdata: rowdata,
-      fromRoute: this.router.url,
-    },
-  });
-}
+    this.router.navigate(['/TLS', 'TLS11020CRU'], {
+      state: {
+        crudstatus: 'Read',
+        rowdata: rowdata,
+        fromRoute: this.router.url,
+      },
+    });
+  }
+  onDelete(selectedItems: any[]) {
+    if (!selectedItems.length) return;
+    const confirm = window.confirm('是否確定刪除選取項目？');
+    if (!confirm) return;
+
+    const idList = selectedItems.map((item) => item.id); // 注意 key 要叫 idList
+    this.http
+      .post(`${environment.ApiUrl}/TLS0000/TLS1000/deleteTLS11020`, { idList })
+      .subscribe({
+        next: () => {
+          this.messageService.successBubble('刪除成功');
+          this.onSubmitQuery(this.queryForm); // 重新查詢
+        },
+        error: () => {
+          this.messageService.errorBubble('刪除失敗');
+        },
+      });
+  }
 }
