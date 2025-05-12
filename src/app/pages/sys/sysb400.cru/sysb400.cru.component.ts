@@ -4,8 +4,8 @@ import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption, option, Sysb400m } from '../module/sysb000.module';
-import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
-import { Sysb300Service } from '../../../service/api/sys/sysb300.service';
+import { Sysb400Service } from '../../../service/API/sys/sysb400.service';
+import { Sysb300Service } from '../../../service/API/sys/sysb300.service';
 
 @Component({
   selector: 'app-sysb400.cru',
@@ -15,7 +15,8 @@ import { Sysb300Service } from '../../../service/api/sys/sysb300.service';
 // 組織碼設定作業 CRU
 export class SYSB400CRUComponent
   extends BasicCruPageComponent<Sysb400m>
-  implements OnInit {
+  implements OnInit
+{
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [], // ID

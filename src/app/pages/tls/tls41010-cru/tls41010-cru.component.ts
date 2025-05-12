@@ -1,11 +1,7 @@
-import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 //
 import { InvoiceCategoryService } from './../../../service/basic/invoice-category.service';
 import { CahserTypeService } from './../../../service/basic/cahser-type.service';
@@ -15,75 +11,18 @@ import { PosStatusService } from './../../../service/basic/pos-status.service';
 import { LocationService } from './../../../service/basic/location.service';
 import { FloorService } from './../../../service/basic/floor.service';
 import { CounterCodeService } from './../../../service/basic/counter-code.service';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
 // 2.4.1.1 收銀機基本資料維護 CRU
 @Component({
   selector: 'app-tls41010-cru',
   templateUrl: './tls41010-cru.component.html',
-  styleUrl: './tls41010-cru.component.scss'
+  styleUrl: './tls41010-cru.component.scss',
 })
-export class TLS41010CRUComponent extends BasicCrupageComponent implements OnInit {
-  counterIDOptions: any[] = [];
-  registerIDOptions: any[] = [];
-  locatioIDOptions: any[] = [];
-  posStatusOptions: any[] = [];
-  regionOptions: any[] = [];
-  floorOptions: any[] = [];
-  posServerOptions: any[] = [];
-  categoryOptions: any[] = [];
-  invoiceCategoryOptions: any[] = [];
-
-  ECR_Type_Option: any[] = [
-    { value: 1, label: '集中收銀(統收)' },
-    { value: 2, label: '專櫃機台(自收)' },
-    { value: 7, label: '它社機台(不使用商場系統但開立商場發票)' },
-  ];
-  ECR_GUI_Type_Option: any[] = [
-    { value: 0, label: '不開發票' },
-    { value: 3, label: '二聯式收銀機發票' },
-    { value: 7, label: '電子發票' },
-  ];
-
-  ECR_Status_Option: any[] = [
-    { value: 'A', label: '啟用' },
-    { value: 'C', label: '停用' },
-    { value: 'S', label: '電子發票(強制停用)' },
-    { value: 'T', label: '訓練' },
-  ];
-
-  ECR_SernoType_Option: any[] = [
-    { value: 1, label: '循環使用' },
-    { value: 2, label: '每日重計' },
-    { value: 3, label: '每月重計' },
-  ];
-
-  YN_Option: any[] = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-  ];
-
-  ECR_SrvIP_Option: any[] = [
-    { value: 'LINE1', label: 'LINE1 / 10.3.50.1' },
-    { value: 'LINE2', label: 'LINE2 / 10.3.50.2' },
-    { value: 'LINE3', label: 'LINE3 / 10.3.50.3' },
-  ];
-
-  ECR_TmplNo_Option: any[] = [
-    { value: 1, label: '周邊編號1' },
-    { value: 2, label: '周邊編號2' },
-    { value: 3, label: '周邊編號3' },
-  ];
-
-  ECR_SettleDD_Option: any[] = [
-    { value: 'T', label: '當天' },
-    { value: 'N', label: '隔天' },
-  ];
-
-  ECR_UseType_Option: any[] = [
-    { value: 'PK', label: '停車場機台' },
-  ];
-
-  // ----------------------------------------------------------------
+export class TLS41010CRUComponent
+  extends BasicCruPageComponent<any>
+  implements OnInit
+{
   dataForm = this.formBuilder.nonNullable.group({
     // POS1002 收銀機設定檔
 
@@ -208,25 +147,30 @@ export class TLS41010CRUComponent extends BasicCrupageComponent implements OnIni
     ECR_Device9Com: [0, [Validators.maxLength(2)]], // 週邊裝置9 連接埠，預設值為0(未啟用)
     ECR_Device10Name: ['', [Validators.maxLength(20)]], // 週邊裝置10 名稱，預設值空白代表未設定
     ECR_Device10Com: [0, [Validators.maxLength(2)]], // 週邊裝置10 連接埠，預設值為0(未啟用)
-
-    // 以下可以不用顯示於查詢頁
-    CRT_Date: [], // 建立日期
-    CRT_USR_No: [, [Validators.maxLength(8)]], // 建立人員
-    CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-    UPD_Date: [], // 變更日期
-    UPD_USR_No: [, [Validators.maxLength(8)]], // 變更人員
-    UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
   });
   // ----------------------------------------------------------------
+
+  counterIDOptions: any[] = [];
+  registerIDOptions: any[] = [];
+  locatioIDOptions: any[] = [];
+  posStatusOptions: any[] = [];
+  regionOptions: any[] = [];
+  floorOptions: any[] = [];
+  posServerOptions: any[] = [];
+  categoryOptions: any[] = [];
+  invoiceCategoryOptions: any[] = [];
+
+  ECR_Type_Option: any[] = [];
+  ECR_GUI_Type_Option: any[] = [];
+  ECR_Status_Option: any[] = [];
+  ECR_SernoType_Option: any[] = [];
+  YN_Option: any[] = [];
+  ECR_SrvIP_Option: any[] = [];
+  ECR_TmplNo_Option: any[] = [];
+  ECR_SettleDD_Option: any[] = [];
+  ECR_UseType_Option: any[] = [];
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private translate: TranslateService,
     //
     private counterCodeService: CounterCodeService,
@@ -238,46 +182,78 @@ export class TLS41010CRUComponent extends BasicCrupageComponent implements OnIni
     private cahserTypeService: CahserTypeService,
     private invoiceCategoryService: InvoiceCategoryService,
   ) {
-    super();  // 呼叫父類建構子
+    super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '240001';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.counterCodeService.getCounterCodes().subscribe(data => {
+    this.initializePage('TLS41010', this.dataForm);
+    this.loadOptions();
+  }
+
+  onSubmit(frm: FormGroup) {
+    // 修改：使用父類的 handleSubmit 方法
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            // this.sysb400Service.insertSYSB400(frm.value).subscribe(() => {
+            //   this.messageService.successBubble('新增成功');
+            //   this.onCancel(); // 新增成功後返回查詢頁面
+            // });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            console.log('frm.value', frm.value);
+            // this.sysb400Service.updateSYSB400(frm.value).subscribe(() => {
+            //   this.messageService.successBubble('更新成功');
+            //   this.onCancel(); // 更新成功後返回查詢頁面
+            // });
+          }
+          break;
+      }
+    });
+  }
+
+  submitForm(frm: FormGroup) {
+    this.onSubmit(frm);
+  }
+
+  onClearForm() {
+    this.dataForm.reset(); // 重置表單
+  }
+
+  loadOptions() {
+    this.counterCodeService.getCounterCodes().subscribe((data) => {
       this.counterIDOptions = data;
     });
     //
-    this.floorService.getFloors().subscribe(data => {
+    this.floorService.getFloors().subscribe((data) => {
       this.registerIDOptions = data;
       this.floorOptions = data;
     });
     //
-    this.locationService.getLocations().subscribe(data => {
+    this.locationService.getLocations().subscribe((data) => {
       this.locatioIDOptions = data;
     });
     //
-    this.posStatusService.getSystemTypes().subscribe(data => {
+    this.posStatusService.getSystemTypes().subscribe((data) => {
       this.posStatusOptions = data;
     });
     //
-    this.regionCodeService.getRegionCodes().subscribe(data => {
+    this.regionCodeService.getRegionCodes().subscribe((data) => {
       this.regionOptions = data;
     });
     //
-    this.posServerService.getSystemTypes().subscribe(data => {
+    this.posServerService.getSystemTypes().subscribe((data) => {
       this.posServerOptions = data;
     });
     //
-    this.cahserTypeService.getSystemTypes().subscribe(data => {
+    this.cahserTypeService.getSystemTypes().subscribe((data) => {
       this.categoryOptions = data;
     });
     //
-    this.invoiceCategoryService.getSystemTypes().subscribe(data => {
+    this.invoiceCategoryService.getSystemTypes().subscribe((data) => {
       this.invoiceCategoryOptions = data;
       // 全選填入
       // let allSystemValues = this.invoiceCategoryOptions.map(system => system.value);
@@ -285,105 +261,53 @@ export class TLS41010CRUComponent extends BasicCrupageComponent implements OnIni
       //   invoiceCategory: allSystemValues
       // });
     });
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
 
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
+    this.ECR_Type_Option = [
+      { value: 1, label: '集中收銀(統收)' },
+      { value: 2, label: '專櫃機台(自收)' },
+      { value: 7, label: '它社機台(不使用商場系統但開立商場發票)' },
+    ];
+    this.ECR_GUI_Type_Option = [
+      { value: 0, label: '不開發票' },
+      { value: 3, label: '二聯式收銀機發票' },
+      { value: 7, label: '電子發票' },
+    ];
 
-    console.log(this.accordionTabCss);
-  }
+    this.ECR_Status_Option = [
+      { value: 'A', label: '啟用' },
+      { value: 'C', label: '停用' },
+      { value: 'S', label: '電子發票(強制停用)' },
+      { value: 'T', label: '訓練' },
+    ];
 
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
+    this.ECR_SernoType_Option = [
+      { value: 1, label: '循環使用' },
+      { value: 2, label: '每日重計' },
+      { value: 3, label: '每月重計' },
+    ];
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      // name: ['', [Validators.required, Validators.maxLength(14)]], // Input Text
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
+    this.YN_Option = [
+      { value: 1, label: '是' },
+      { value: 2, label: '否' },
+    ];
 
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
+    this.ECR_SrvIP_Option = [
+      { value: 'LINE1', label: 'LINE1 / 10.3.50.1' },
+      { value: 'LINE2', label: 'LINE2 / 10.3.50.2' },
+      { value: 'LINE3', label: 'LINE3 / 10.3.50.3' },
+    ];
 
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
+    this.ECR_TmplNo_Option = [
+      { value: 1, label: '周邊編號1' },
+      { value: 2, label: '周邊編號2' },
+      { value: 3, label: '周邊編號3' },
+    ];
 
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
+    this.ECR_SettleDD_Option = [
+      { value: 'T', label: '當天' },
+      { value: 'N', label: '隔天' },
+    ];
 
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
-
-  onCancel() {
-    this.router.navigate(['/TLS4000/TLS41010']);
+    this.ECR_UseType_Option = [{ value: 'PK', label: '停車場機台' }];
   }
 }

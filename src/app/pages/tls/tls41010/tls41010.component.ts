@@ -6,35 +6,31 @@ import { PosStatusService } from './../../../service/basic/pos-status.service';
 import { LocationService } from './../../../service/basic/location.service';
 import { FloorService } from './../../../service/basic/floor.service';
 import { CounterCodeService } from './../../../service/basic/counter-code.service';
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { SortMeta } from 'primeng/api';
+import { TableLazyLoadEvent } from 'primeng/table';
+import { Sysb400m } from '../../sys/module/sysb000.module';
+
+// 本地儲存鍵：用於儲存查詢狀態
+const storageKey = 'TLS41010';
 
 // 2.4.1.1 收銀機基本資料維護
 @Component({
   selector: 'app-tls41010',
   templateUrl: './tls41010.component.html',
-  styleUrl: './tls41010.component.scss'
+  styleUrl: './tls41010.component.scss',
 })
-export class TLS41010Component {
-  ProgNo: string = '240001';
-  // 權限
-  funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+export class TLS41010Component
+  extends BasicQueryPageComponent<any>
+  implements OnInit
+{
   // 查詢
   // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
   queryForm = this.formBuilder.group({
     // POS1002 收銀機設定檔
     iD: [, [Validators.required, Validators.maxLength(19)]], // iD
@@ -146,18 +142,30 @@ export class TLS41010Component {
 
     // 可以從10015知道獲取 主機、主機後台ip，不使用原網頁的Server欄位
     // server: [], // POS SERVER
+
+    //分頁查詢
+    pageSize: [10],
+    pageIndex: [0],
+    SortBy: [[{ field: 'SYS_StoreNo', order: 1 }] as SortMeta[]],
   });
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
     {
-      ECR_Group: 'B1', ECR_AreaNo: 'A區', ECR_LocNo: 'B1A01', ECR_No: '000011', ECR_TLT_No: '000001',
-      ECR_TLT_Name: '小騎士', ECR_ActiveDate: '2014/12/28', ECR_CloseDate: '2014/12/31', posServer: 'LINE3', ECR_Status: '停用',
-      ECR_Type: '自收', ECR_IP: '10.3.50.1', ECR_GUI_Type: '二聯式收銀機發票',
+      ECR_Group: 'B1',
+      ECR_AreaNo: 'A區',
+      ECR_LocNo: 'B1A01',
+      ECR_No: '000011',
+      ECR_TLT_No: '000001',
+      ECR_TLT_Name: '小騎士',
+      ECR_ActiveDate: '2014/12/28',
+      ECR_CloseDate: '2014/12/31',
+      posServer: 'LINE3',
+      ECR_Status: '停用',
+      ECR_Type: '自收',
+      ECR_IP: '10.3.50.1',
+      ECR_GUI_Type: '二聯式收銀機發票',
     },
-    //{ contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    //{ contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
@@ -187,63 +195,28 @@ export class TLS41010Component {
   categoryOptions: any[] = [];
   invoiceCategoryOptions: any[] = [];
 
-  ECR_Type_Option: any[] = [
-    { value: 1, label: '集中收銀(統收)' },
-    { value: 2, label: '專櫃機台(自收)' },
-    { value: 7, label: '它社機台(不使用商場系統但開立商場發票)' },
-  ];
-  ECR_GUI_Type_Option: any[] = [
-    { value: 0, label: '不開發票' },
-    { value: 3, label: '二聯式收銀機發票' },
-    { value: 7, label: '電子發票(預設值)' },
-  ];
+  ECR_Type_Option: any[] = [];
+  ECR_GUI_Type_Option: any[] = [];
+  ECR_Status_Option: any[] = [];
+  ECR_SernoType_Option: any[] = [];
+  YN_Option: any[] = [];
+  ECR_SrvIP_Option: any[] = [];
+  ECR_TmplNo_Option: any[] = [];
+  ECR_SettleDD_Option: any[] = [];
+  ECR_UseType_Option: any[] = [];
 
-  ECR_Status_Option: any[] = [
-    { value: 'A', label: '啟用(預設值)' },
-    { value: 'C', label: '停用' },
-    { value: 'S', label: '電子發票(強制停用)' },
-    { value: 'T', label: '訓練' },
-  ];
+  // // 分頁和排序參數
+  // pageSize: number = 10;
+  // pageIndex: number = 0;
+  totalRecords = 0;
+  // lastQueryParams: any = null;
+  // sortField: string = 'CAT_LNo';
+  // sortOrder: number = 1;
 
-  ECR_SernoType_Option: any[] = [
-    { value: 1, label: '循環使用' },
-    { value: 2, label: '每日重計' },
-    { value: 3, label: '每月重計' },
-  ];
-
-  YN_Option: any[] = [
-    { value: 1, label: 'Y' },
-    { value: 2, label: 'N' },
-  ];
-
-  ECR_SrvIP_Option: any[] = [
-    { value: 'LINE1', label: 'LINE1 / 10.3.50.1' },
-    { value: 'LINE2', label: 'LINE2 / 10.3.50.2' },
-    { value: 'LINE3', label: 'LINE3 / 10.3.50.3' },
-  ];
-
-  ECR_TmplNo_Option: any[] = [
-    { value: 1, label: '周邊編號1' },
-    { value: 2, label: '周邊編號2' },
-    { value: 3, label: '周邊編號3' },
-  ];
-
-  ECR_SettleDD_Option: any[] = [
-    { value: 'T', label: '當天' },
-    { value: 'N', label: '隔天' },
-  ];
-
-  ECR_UseType_Option: any[] = [
-    { value: 'PK', label: '停車場機台' },
-  ];
-
+  // 多選項目
+  selectedItems: Sysb400m[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
     private counterCodeService: CounterCodeService,
     private floorService: FloorService,
     private locationService: LocationService,
@@ -253,81 +226,43 @@ export class TLS41010Component {
     private cahserTypeService: CahserTypeService,
     private invoiceCategoryService: InvoiceCategoryService,
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    // ----------------------------------------------------------------
-    this.counterCodeService.getCounterCodes().subscribe(data => {
-      this.counterIDOptions = data;
-    });
-    //
-    this.floorService.getFloors().subscribe(data => {
-      this.registerIDOptions = data;
-      this.floorOptions = data;
-    });
-    //
-    this.locationService.getLocations().subscribe(data => {
-      this.locatioIDOptions = data;
-    });
-    //
-    this.posStatusService.getSystemTypes().subscribe(data => {
-      this.posStatusOptions = data;
-    });
-    //
-    this.regionCodeService.getRegionCodes().subscribe(data => {
-      this.regionOptions = data;
-    });
-    //
-    this.posServerService.getSystemTypes().subscribe(data => {
-      this.posServerOptions = data;
-    });
-    //
-    this.cahserTypeService.getSystemTypes().subscribe(data => {
-      this.categoryOptions = data;
-    });
-    //
-    this.invoiceCategoryService.getSystemTypes().subscribe(data => {
-      this.invoiceCategoryOptions = data;
-      // 全選填入
-      // let allSystemValues = this.invoiceCategoryOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   invoiceCategory: allSystemValues
-      // });
-    });
+    this.initializePage('TLS41010', 'TLS/TLS41010CRU');
+    this.loadOptions();
+
+    // 恢復查詢狀態並自動查詢
+    this.handleQueryRestore(this.queryForm, storageKey, (form) =>
+      this.onSubmit(form),
+    );
   }
 
-  // 權限
-  // ----------------------------------------------------------------
-  canQuery(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
-  }
-  canAdd(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
-  }
-  canEdit(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
-  }
   // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
+    this.handleSubmit(frm, () => {
+      // this.sysb400Service.querySYSB400(frm.value).subscribe({
+      //   next: (response: any) => {
+      //     console.log('API response:', response);
+      //     if (response.Status === '0000') {
+      //       this.data = response.Data || [];
+      //       this.filteredData = [...this.data];
+      //       this.totalRecords = response.TotalCount || response.Data.length;
+      //       this.queryStateService.setQueryState(storageKey, frm.value);
+      //     } else {
+      //       console.error('API error:', response.Status, response.Message);
+      //     }
+      //     this.loading = false;
+      //     this.messageService.unblockUi();
+      //   },
+      //   error: (err: string) => {
+      //     console.error('API error:', err);
+      //     this.loading = false;
+      //     this.messageService.unblockUi();
+      //   },
       // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    });
   }
 
   onSubmitQuery(frm: FormGroup) {
@@ -336,36 +271,151 @@ export class TLS41010Component {
   }
 
   onClearForm() {
-    this.queryForm.reset();  // 重置表單
+    this.queryForm.reset();
+    this.data = [];
+    this.filteredData = [];
+    this.totalRecords = 0;
+    this.queryStateService.clearQueryState(storageKey);
   }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
+
+  // 刪除項目
+  onDelete(data: any | any[]): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
+
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) {
+      console.error('No items to delete');
+      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+      return;
     }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
+    // 收集所有有效的 ID
+    const idList = items
+      .filter((item) => item && item.id != null && item.id !== undefined)
+      .map((item) => item.id);
+
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
     }
-  }
 
-  onDetail(data: any) {
-    console.log(data);
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
-
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
-      },
+    const deleteBody = {
+      idList: idList, // 符合 API 的 idList 格式
     };
+    //  this.sysb400Service.deleteSYSB400(deleteBody).subscribe({
+    //    next: (response: any) => {
+    //      if (response.Status === '0000') {
+    //        this.messageService.successBubble('選中項目刪除成功');
+    //      } else {
+    //        console.error('API error:', response.Status, response.Message);
+    //        this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+    //      }
+    //    },
+    //    error: (err: string) => {
+    //      console.error('API error:', err);
+    //      this.messageService.errorBubble('刪除失敗');
+    //    },
+    //    complete: () => {
+    //      this.onSubmit(this.queryForm);
+    //    },
+    //  });
 
-    console.log(crudstatus);
+    this.selectedItems = [];
+  }
 
-    this.router.navigate(['/TLS4000/TLS41010CRU'], extras);
+  loadOptions() {
+    // ----------------------------------------------------------------
+    this.counterCodeService.getCounterCodes().subscribe((data) => {
+      this.counterIDOptions = data;
+    });
+    //
+    this.floorService.getFloors().subscribe((data) => {
+      this.registerIDOptions = data;
+      this.floorOptions = data;
+    });
+    //
+    this.locationService.getLocations().subscribe((data) => {
+      this.locatioIDOptions = data;
+    });
+    //
+    this.posStatusService.getSystemTypes().subscribe((data) => {
+      this.posStatusOptions = data;
+    });
+    //
+    this.regionCodeService.getRegionCodes().subscribe((data) => {
+      this.regionOptions = data;
+    });
+    //
+    this.posServerService.getSystemTypes().subscribe((data) => {
+      this.posServerOptions = data;
+    });
+    //
+    this.cahserTypeService.getSystemTypes().subscribe((data) => {
+      this.categoryOptions = data;
+    });
+    //
+    this.invoiceCategoryService.getSystemTypes().subscribe((data) => {
+      this.invoiceCategoryOptions = data;
+    });
+
+    this.ECR_Type_Option = [
+      { value: 1, label: '集中收銀(統收)' },
+      { value: 2, label: '專櫃機台(自收)' },
+      { value: 7, label: '它社機台(不使用商場系統但開立商場發票)' },
+    ];
+    this.ECR_GUI_Type_Option = [
+      { value: 0, label: '不開發票' },
+      { value: 3, label: '二聯式收銀機發票' },
+      { value: 7, label: '電子發票(預設值)' },
+    ];
+
+    this.ECR_Status_Option = [
+      { value: 'A', label: '啟用(預設值)' },
+      { value: 'C', label: '停用' },
+      { value: 'S', label: '電子發票(強制停用)' },
+      { value: 'T', label: '訓練' },
+    ];
+
+    this.ECR_SernoType_Option = [
+      { value: 1, label: '循環使用' },
+      { value: 2, label: '每日重計' },
+      { value: 3, label: '每月重計' },
+    ];
+
+    this.YN_Option = [
+      { value: 1, label: 'Y' },
+      { value: 2, label: 'N' },
+    ];
+
+    this.ECR_SrvIP_Option = [
+      { value: 'LINE1', label: 'LINE1 / 10.3.50.1' },
+      { value: 'LINE2', label: 'LINE2 / 10.3.50.2' },
+      { value: 'LINE3', label: 'LINE3 / 10.3.50.3' },
+    ];
+
+    this.ECR_TmplNo_Option = [
+      { value: 1, label: '周邊編號1' },
+      { value: 2, label: '周邊編號2' },
+      { value: 3, label: '周邊編號3' },
+    ];
+
+    this.ECR_SettleDD_Option = [
+      { value: 'T', label: '當天' },
+      { value: 'N', label: '隔天' },
+    ];
+
+    this.ECR_UseType_Option = [{ value: 'PK', label: '停車場機台' }];
+  }
+
+  loadData(event: TableLazyLoadEvent) {
+    const form = this.queryForm.value;
+    if (this.totalRecords === 0) {
+      return;
+    }
+    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
+    form.SortBy = event.multiSortMeta ?? [{ field: 'org_id', order: 1 }];
+    this.onSubmit(this.queryForm);
   }
 }

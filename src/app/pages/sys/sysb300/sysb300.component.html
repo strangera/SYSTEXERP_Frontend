@@ -1,58 +1,52 @@
-<div class="grid">
-    <div class="col-12">
-        <div class="card">
-            <div class="grid align-items-center">
-                <div class="col" style="flex: 1;">
-                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1;">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+        <!-- <div *appHasPermission="addPermission"> -->
+        <div>
+            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
+        </div>
+        <!-- </div> -->
+    </div>
+    <p-accordion>
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+            [headerStyleClass]="'query-accordionTab'">
+            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+                <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-input-text label="組織階層代碼" controlName="level_id" [control]="queryForm.controls.level_id"
+                            [submitted]="submitted">>
+                        </app-input-text>
+                    </div>
+                    <div class="col-12 md:col-12 lg:col-4">
+                        <app-input-text label="組織階層名稱" controlName="level_name"
+                            [control]="queryForm.controls.level_name" [submitted]="submitted">
+                        </app-input-text>
+                    </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+                        <app-dropdown label="上層組織" controlName="p_level_id" [options]="upgroup_Options"
+                            optionLabel="Label" optionValue="No" [control]="queryForm.controls.p_level_id"
+                            [submitted]="submitted">
+                        </app-dropdown>
+                    </div>
                 </div>
-                <!-- <div *appHasPermission="addPermission"> -->
-                <div>
-                    <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
+                <!-- <div *appHasPermission="queryPermission" class="col"> -->
+                <div class="grid justify-content-end">
+                    <app-button btnType="clear"></app-button>
+                    <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
                 </div>
                 <!-- </div> -->
-            </div>
-            <p-accordion>
-                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true"
-                    class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
-                    <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
-                        <div class="grid p-fluid">
-                            <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-text label="組織階層代碼" controlName="level_id"
-                                    [control]="queryForm.controls.level_id" [submitted]="submitted">>
-                                </app-input-text>
-                            </div>
-                            <div class="col-12 md:col-12 lg:col-4">
-                                <app-input-text label="組織階層名稱" controlName="level_name"
-                                    [control]="queryForm.controls.level_name" [submitted]="submitted">
-                                </app-input-text>
-                            </div>
-                            <div class="col-12 md:col-6 lg:col-4">
-                                <app-dropdown label="上層組織" controlName="p_level_id" [options]="upgroup_Options"
-                                    optionLabel="Name" optionValue="No" [control]="queryForm.controls.p_level_id"
-                                    [submitted]="submitted">
-                                </app-dropdown>
-                            </div>
-                        </div>
-                        <!-- <div *appHasPermission="queryPermission" class="col"> -->
-                        <div class="grid justify-content-end">
-                            <app-button btnType="clear"></app-button>
-                            <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
-                                [loading]="loading"></app-button>
-                        </div>
-                        <!-- </div> -->
-                    </form>
-                </p-accordionTab>
-            </p-accordion>
-        </div>
-        <div class="card">
-            <div class="col-13">
-                <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-                    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-                    (delete)="onDelete($event)" [showCheckBox]="true" dataKey="id"
-                    [multiSortMeta]="queryForm.controls.SortBy.value ?? []" [totalRecords]="totalRecords"
-                    (lazyLoad)="loadData($event)" [lazy]="true" [loading]="loading">
-                </app-table>
-            </div>
-        </div>
+            </form>
+        </p-accordionTab>
+    </p-accordion>
+</div>
+<div class="card">
+    <div class="col-13">
+        <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+            [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
+            [showCheckBox]="true" dataKey="id" [multiSortMeta]="queryForm.controls.SortBy.value ?? []"
+            [totalRecords]="totalRecords" (lazyLoad)="loadData($event)" [lazy]="true" [loading]="loading">
+        </app-table>
     </div>
 </div>

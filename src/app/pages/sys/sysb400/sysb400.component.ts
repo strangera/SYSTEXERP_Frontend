@@ -5,8 +5,9 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { option, Sysb400m } from '../module/sysb000.module';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
-import { Sysb300Service } from '../../../service/api/sys/sysb300.service';
-import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
+import { Sysb300Service } from '../../../service/API/sys/sysb300.service';
+import { Sysb400Service } from '../../../service/API/sys/sysb400.service';
+import { apiOption } from '../../tls/module/tls000/tls000.module';
 
 // 本地儲存鍵：用於儲存查詢狀態
 const storageKey = 'SYSB400';
@@ -18,7 +19,8 @@ const storageKey = 'SYSB400';
 })
 export class SYSB400Component
   extends BasicQueryPageComponent<Sysb400m>
-  implements OnInit {
+  implements OnInit
+{
   data: Sysb400m[] = [];
   filteredData: Sysb400m[] = [...this.data];
   columns: any[] = [
@@ -29,12 +31,26 @@ export class SYSB400Component
       header: '組織階層代碼',
       visible: true,
       format: (value: string) =>
-        this.level_nameOptions.find((option) => option.value === value)
-          ?.label || value,
+        this.upgroup_Options.find((option) => option.No === value)?.Name ||
+        value,
     },
     { field: 'p_org_id', header: '上層組織代碼', visible: true },
-    { field: 'p_level_id', header: '上層組織階層代碼', visible: true },
-    { field: 'stop_flag', header: '是否停用', visible: true },
+    {
+      field: 'p_level_id',
+      header: '上層組織階層代碼',
+      visible: true,
+      format: (value: string) =>
+        this.upgroup_Options.find((option) => option.No === value)?.Name ||
+        value,
+    },
+    {
+      field: 'stop_flag',
+      header: '是否停用',
+      visible: true,
+      format: (value: string) =>
+        this.whetherOptions.find((option) => option.value === value)?.label ||
+        value,
+    },
   ];
 
   queryForm = this.formBuilder.group({
@@ -49,7 +65,7 @@ export class SYSB400Component
     SortBy: [[{ field: 'org_id', order: 1 }] as SortMeta[]],
   });
 
-  level_nameOptions: option[] = [];
+  upgroup_Options: apiOption[] = [];
   whetherOptions: option[] = [];
 
   // // 分頁和排序參數
@@ -166,26 +182,12 @@ export class SYSB400Component
 
   loadOptions() {
     //階層作業
-    const queryLevel = {
-      level_id: '',
-      level_name: '',
-      p_level_id: '',
-    };
-    this.sysb300Service.querySYSB300(queryLevel).subscribe({
-      next: (response: any) => {
-        console.log('API response:', response);
-        if (response.Status === '0000') {
-          this.level_nameOptions = response.Data || [];
-          console.log('取得內容', this.level_nameOptions);
-        } else {
-          console.error('API error:', response.Status, response.Message);
-        }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
+    this.sysb300Service.querySYSB300_DropDownList({}).subscribe((response) => {
+      this.upgroup_Options = response.Data.map((item: apiOption) => ({
+        No: item.No,
+        Name: item.Name,
+        Label: item.No + ' ' + item.Name,
+      }));
     });
 
     this.whetherOptions = [

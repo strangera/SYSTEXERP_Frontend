@@ -11,7 +11,7 @@ import { environment } from '../../../../environments/environment';
 export class Sysb400Service {
   apiUrl: string = environment.ApiUrl + '/SYS0000/BAS1000';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   // 查詢 SYS3100 資料表
   querySYSB400(body: any): Observable<any> {
