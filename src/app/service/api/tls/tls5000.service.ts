@@ -20,7 +20,7 @@ export class TLS5000Service {
   // 查詢 51010
   queryTLS51010(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS51010`, data).pipe(
-      tap((data) => console.debug('TLS5000 queryTLS51010 response', data)),
+      // tap((data) => console.debug('TLS5000 queryTLS51010 response', data)),
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }

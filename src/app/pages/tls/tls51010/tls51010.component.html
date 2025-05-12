@@ -31,10 +31,11 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    <app-table tableKey="TLS51010" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
       [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
       [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'CAT_LNo', order: 1 }]"
-      [totalRecords]="totalRecords" (lazyLoadData)="onSubmit($event)" [form]="queryForm" [loading]="loading">
+      [totalRecords]="totalRecords" (lazyLoadData)="onSubmit($event)" [isPaginated]="true" [form]="queryForm"
+      [loading]="loading">
     </app-table>
   </div>
 </div>

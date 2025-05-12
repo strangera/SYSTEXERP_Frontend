@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, EventEmitter, Input, SimpleChanges, OnChanges, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, SimpleChanges, OnChanges, Output, ViewChild, OnInit } from '@angular/core';
 import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
 import { AddButton, Column, FieldChangeEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
@@ -16,7 +16,7 @@ import { FormBuilder, FormGroup } from '@angular/forms';
   styleUrl: './table.component.scss',
   animations: [toggleButtons],
 })
-export class TableComponent extends BasicPrintDataComponent implements OnChanges {
+export class TableComponent extends BasicPrintDataComponent implements OnInit, OnChanges {
   // 基本設置
   @ViewChild('dt', { static: false }) dt!: Table;                               // table 元件
   @ViewChild('fileUpload') fileUpload!: FileUpload;                             // 檔案上傳 元件
@@ -93,6 +93,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   pages: { label: string, value: number }[] = [];   // (右上)下拉選單 頁數選項
   selectedPage: number | null = 1;                  // (右上)下拉選單 當前選擇的頁數
   @Input() lazy = false;                                      // 是否啟用 Lazy 加載
+  @Input() isPaginated = false;                                 // 是否啟用 Lazy 加載
   @Output() lazyLoadData = new EventEmitter<FormGroup>(); // 修改輸出事件類型
   // 其他
   @Input() emptyMessage = '查無資料';                // table 無資料時顯示文字
@@ -103,34 +104,40 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   ) {
     super();
   }
+  ngOnInit() {
+    this.columns = this.columns.filter(col => !col.hidden);
+    this.first = this.queryStateService.getQueryState(this.tableKey + 'First')?.value ?? 0; // 取得起始索引
+    this.selectedPage = this.queryStateService.getQueryState(this.tableKey + 'Page')?.value ?? 1; // 取得頁數
+    this.rows = this.queryStateService.getQueryState(this.tableKey + 'PageSize')?.value ?? this.rows; // 取得每頁行數
+    this.multiSortMeta = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta; // 取得排序歷史紀錄
+    this.selectedColumns = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value ?? this.columns; // 取得顯示欄位
+    const queryHistory = this.queryStateService.getQueryState(this.tableKey + 'QueryForm')?.value;
+    if (queryHistory) {
+      this.form.patchValue(queryHistory); // 恢復表單狀態
+      if (this.isPaginated) {
+        this.lazy = true;
+      }
+    } else {
+      if (this.isPaginated) {
+        this.lazy = true;
+      } // 啟用 Lazy 加載
+      this.form.addControl('pageSize', this.fb.control(this.rows));
+      this.form.addControl('pageIndex', this.fb.control(this.selectedPage));
+      this.form.addControl('SortBy', this.fb.control(this.multiSortMeta));
+      this.form.patchValue({ pageSize: this.rows, pageIndex: this.selectedPage, SortBy: this.multiSortMeta });
+    }
+  }
   // 當 data 發生變化時，重置分頁與頁碼
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data']) {
+    if (changes['data'] && this.data.length > 0) {
+      this.queryStateService.setQueryState(this.tableKey + 'QueryForm', this.form); // 儲存表單狀態
+      console.log(this.form);
+
       this.calculateTotalPages(); // 計算總頁數
-      this.selectedPage = this.queryStateService.getQueryState(this.tableKey + 'Page')?.value ?? 1; // 取得頁數
-      this.first = this.queryStateService.getQueryState(this.tableKey + 'First')?.value ?? 0; // 取得起始索引
       setTimeout(() => {
         this.selectionChange.emit(this.selectedItems);
         this.cdr.detectChanges();
       }, 0);
-    }
-    if (changes['columns']) {
-      this.columns = this.columns.filter(col => !col.hidden);
-      this.multiSortMeta = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta; // 取得排序歷史紀錄
-      this.selectedColumns = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value ?? this.columns.filter(col => col.visible !== false); // 取得顯示欄位
-    }
-    if (changes['form']) {
-      this.form = this.form || this.fb.group({}); // 確保 form 不為 undefined
-      this.lazy = true; // 啟用 Lazy 加載
-      // form加入分頁與排序的相關控制項
-      this.form.addControl('pageSize', this.fb.control(this.rows));
-      this.form.addControl('pageIndex', this.fb.control(this.selectedPage));
-      this.form.addControl('SortBy', this.fb.control(this.multiSortMeta));
-      this.form.patchValue({
-        pageSize: this.rows,
-        pageIndex: this.selectedPage,
-        SortBy: this.multiSortMeta,
-      });
     }
   }
   // 計算總頁數並生成頁面選項
@@ -140,18 +147,18 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
       this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
       this.pages = Array.from({ length: this.totalPages }, (_, index) => ({ label: `第 ${index + 1} 頁`, value: index + 1 }));
       // 若當前頁數超過最大頁數，則移動到最大頁數，但至少為 1
-      if (this.selectedPage && this.selectedPage > this.totalPages) { this.goToPage(Math.max(this.totalPages, 1)); }
-      this.cdr.detectChanges(); // 手動觸發變更檢測
+      if (this.selectedPage && (this.selectedPage > this.totalPages)) { this.goToPage(Math.max(this.totalPages, 1)); }
     }, 0);
   }
   // 右上dropdown 跳轉頁數
   goToPage(pageNumber: number) {
     this.first = (pageNumber - 1) * this.rows; // 計算起始索引
-    this.selectedPage = pageNumber; // 更新選擇的頁數
     this.queryStateService.setQueryState(this.tableKey + 'Page', this.selectedPage);
     this.queryStateService.setQueryState(this.tableKey + 'First', this.first);
-    this.form.patchValue({ pageIndex: this.selectedPage, pageSize: this.rows });
-    this.lazyLoadData.emit(this.form); // 發射事件
+    if (this.lazy) {
+      this.form.patchValue({ pageIndex: pageNumber, pageSize: this.rows });
+      this.lazyLoadData.emit(this.form); // 發射事件
+    }
   }
   // Table內建 分頁器變動
   onPageChange(event: TablePageEvent) {
@@ -167,16 +174,43 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     this.queryStateService.setQueryState(this.tableKey + 'Sort', this.multiSortMeta);
   }
   loadDataLazy(event: TableLazyLoadEvent) {
-    this.rows = event.rows || 10;
-    this.selectedPage = Math.ceil(((event.first || 0) / this.rows) + 1) || 1;
-    this.multiSortMeta = event.multiSortMeta || [{ field: this.dataKey, order: 1 }];
-    // 你可能需要在 form 中更新分頁和排序的相關控制項
-    this.form.patchValue({
-      pageSize: this.rows,
-      pageIndex: this.selectedPage,
-      SortBy: this.multiSortMeta,
-    });
-    this.lazyLoadData.emit(this.form); // 直接發射 form
+    const newPageSize = event.rows || 10;
+    const newPageIndex = Math.ceil(((event.first || 0) / this.rows) + 1) || 1;
+    const newSortBy = event.multiSortMeta || [{ field: this.dataKey, order: 1 }];
+    // 檢查是否有任何值發生變化
+    if (
+      this.form.get('pageSize')?.value !== newPageSize ||
+      this.form.get('pageIndex')?.value !== newPageIndex ||
+      !this.areSortMetaEqual(this.form.get('SortBy')?.value, newSortBy)
+    ) {
+      this.form.patchValue({
+        pageSize: newPageSize,
+        pageIndex: newPageIndex,
+        SortBy: newSortBy,
+      });
+      this.lazyLoadData.emit(this.form); // 直接發射 form
+    } else if (!this.lazy) {
+      // 如果不是 lazy 加載，並且是首次載入（沒有觸發分頁/排序事件），
+      // 則發射包含初始查詢條件的 form
+      this.lazyLoadData.emit(this.form);
+      this.lazy = true; // 避免重複發射
+    }
+  }
+
+  // 輔助函數，用於比較 multiSortMeta 陣列
+  private areSortMetaEqual(arr1: any[], arr2: any[]): boolean {
+    if (!arr1 && !arr2) {
+      return true;
+    }
+    if (!arr1 || !arr2 || arr1.length !== arr2.length) {
+      return false;
+    }
+    for (let i = 0; i < arr1.length; i++) {
+      if (arr1[i].field !== arr2[i].field || arr1[i].order !== arr2[i].order) {
+        return false;
+      }
+    }
+    return true;
   }
   /* =================================核心程式碼======================================= */
   // 行追蹤

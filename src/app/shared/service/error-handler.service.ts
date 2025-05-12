@@ -19,18 +19,17 @@ export class ErrorHandlerService {
   handleError(error: HttpErrorResponse): Observable<never> {
     // http status error
     let errorMessage = '';
-
     if (error.status === 0) {
       // Network error or timeout
-      errorMessage = 'Network error or timeout occurred. Please try again later.';
+      errorMessage = '發生網路錯誤或逾時。請稍後重試。';
     } else if (error.status === 401) {
-      errorMessage = 'Unauthorized access. Please login again.';
+      errorMessage = '未經授權的存取，請重新登入。';
       this.router.navigate(['/account/login']);
     } else if (error.status === 404) {
-      errorMessage = 'Resource not found.';
+      errorMessage = '找不到資源，請檢查網址或稍後再試。';
     } else if (error.status === 500) {
       // Server error
-      errorMessage = 'Internal server error.';
+      errorMessage = '伺服器內部錯誤，請稍後再試。';
     } else {
       console.log(error);
       errorMessage = error.error.Message

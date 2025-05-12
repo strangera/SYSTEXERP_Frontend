@@ -45,11 +45,8 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
 
   ngOnInit(): void {
     this.initializePage('TLS51010', '/TLS/TLS51010CRU');
-    // 恢復查詢狀態並自動查詢
-    // this.handleQueryRestore(this.queryForm, storageKey, (form) =>
-    //   this.onSubmit(form),
-    // );
   }
+  tableKey = 'TLS51010';// 表格鍵：用於儲存查詢狀態
   // 提交查詢：處理表單並呼叫查詢 API
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
@@ -58,7 +55,7 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
           if (response.Status === '0000') {
             this.data = response.Data || [];
             this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(storageKey, frm.value);
+            this.queryStateService.setQueryState(this.tableKey + 'QueryForm', frm.value); // 後綴固定寫'QueryForm'
           }
           this.loading = false;
           this.messageService.unblockUi();

@@ -75,8 +75,6 @@ export class AppMenulistService {
     sortMenuItems(dynamicMenu); // 排序第一層選單及其子項目
     const combinedMenu = [...this.fixedMenuItems, ...dynamicMenu];
     this.menuUpdatedSource.next(combinedMenu);
-    console.log(combinedMenu);
-
     return combinedMenu;
   }
 }
