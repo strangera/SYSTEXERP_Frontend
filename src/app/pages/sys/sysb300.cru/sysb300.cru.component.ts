@@ -82,14 +82,8 @@ export class SYSB300CRUComponent
         switch (this.crudstatus) {
           case CRUDStatus.Create:
             if (this.canAdd()) {
-              const insert = {
-                level_id: this.dataForm.controls.level_id.value,
-                level_name: this.dataForm.controls.level_name.value,
-                p_level_id: this.dataForm.controls.p_level_id.value,
-              };
-
-              console.log('insert', insert);
-              this.sysb300Service.insertSYSB300(insert).subscribe(() => {
+              console.log('insert', frm.value);
+              this.sysb300Service.insertSYSB300(frm.value).subscribe(() => {
                 this.messageService.successBubble('新增成功');
                 this.onCancel();
               });
@@ -97,15 +91,8 @@ export class SYSB300CRUComponent
             break;
           case CRUDStatus.Edit:
             if (this.canEdit()) {
-              const update = {
-                id: this.dataForm.controls.id.value,
-                level_id: this.dataForm.controls.level_id.value,
-                level_name: this.dataForm.controls.level_name.value,
-                p_level_id: this.dataForm.controls.p_level_id.value,
-              };
-
-              console.log('update', update);
-              this.sysb300Service.updateSYSB300(update).subscribe(() => {
+              console.log('update', frm.value);
+              this.sysb300Service.updateSYSB300(frm.value).subscribe(() => {
                 this.messageService.successBubble('更新成功');
                 this.onCancel();
               });
@@ -135,6 +122,7 @@ export class SYSB300CRUComponent
           this.upgroup_Options = response.Data.map((item: apiOption) => ({
             No: item.No,
             Name: item.Name,
+            Label: item.No + ' ' + item.Name,
           }));
         });
     }
