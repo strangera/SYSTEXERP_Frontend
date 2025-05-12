@@ -12,6 +12,7 @@ import { UserInfo } from '../../models/system/userInfo';
 import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { CRUDStatus } from '../../enum/CRUDstatus';
+import { LazyLoadEvent } from '../../componentkit/table/table.model';
 
 export class BasicQueryPageComponent<T> {
   ProgNo = '';
@@ -36,7 +37,7 @@ export class BasicQueryPageComponent<T> {
   editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
 
   // 初始化頁面
-  initializePage(progNo: string, cruPage?: string) {
+  initializePage(progNo: string, cruPage?: string, queryForm?: FormGroup, onSubmit?: (form: FormGroup) => void) {
     this.ProgNo = progNo; // 程式編號
     this.cruPage = cruPage ?? ''; // CRU路徑
     this.funInfo = this.authService.getUserPermissions(this.ProgNo); // 取得權限
@@ -44,6 +45,15 @@ export class BasicQueryPageComponent<T> {
     // this.funInfo?.PrivilegeBehavior = [PermissionsInfo.query, PermissionsInfo.add, PermissionsInfo.edit, PermissionsInfo.delete, PermissionsInfo.export, PermissionsInfo.report, PermissionsInfo.print];
     // 在初始化頁面後，通知選單更新選中狀態
     this.currentPageService.setCurrentProgNo(this.ProgNo);
+    // 取得歷史紀錄(如果有的話)
+    if (this.canPerformAction(PermissionsInfo.query)) {
+      this.queryStateService.getQueryState(this.ProgNo)?.pipe(take(1)).subscribe((query) => {
+        if (query && queryForm && onSubmit) {
+          queryForm?.patchValue(query);
+          onSubmit(queryForm);
+        }
+      });
+    }
   }
 
   hasPermission(permission: PermissionsInfo): boolean {
@@ -112,5 +122,13 @@ export class BasicQueryPageComponent<T> {
         }
       });
     }
+  }
+
+  onLazyLoadData(event: LazyLoadEvent, queryForm: FormGroup) {
+    queryForm.patchValue({
+      pageSize: event.pageSize,
+      pageIndex: event.pageIndex,
+      SortBy: event.SortBy
+    });
   }
 }

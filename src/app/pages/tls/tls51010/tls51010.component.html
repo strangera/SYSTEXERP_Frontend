@@ -34,7 +34,7 @@
     <app-table tableKey="TLS51010" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
       [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
       [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'CAT_LNo', order: 1 }]"
-      [totalRecords]="totalRecords" (lazyLoadData)="onSubmit($event)" [isPaginated]="true" [form]="queryForm"
+      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm);onSubmit(queryForm)" [lazy]="true"
       [loading]="loading">
     </app-table>
   </div>

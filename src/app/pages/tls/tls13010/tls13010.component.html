@@ -266,7 +266,7 @@
     <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
       [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
       [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'TEST', order: 1 }]" [totalRecords]="totalRecords"
-      (lazyLoadData)="onSubmit($event)" [form]="queryForm" [loading]="loading">
+      [loading]="loading">
     </app-table>
   </div>
 </div>

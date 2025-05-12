@@ -3,7 +3,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -18,7 +18,6 @@ interface CategoryItem {
   UPD_USR_No?: string;
   UPD_USR_Name?: string;
 }
-const storageKey = 'TLS51010';// 本地儲存鍵：用於儲存查詢狀態
 @Component({
   selector: 'app-tls51010',
   templateUrl: './tls51010.component.html',
@@ -26,9 +25,10 @@ const storageKey = 'TLS51010';// 本地儲存鍵：用於儲存查詢狀態
 })
 export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
   // 查詢表單：包含大分類代碼和名稱
-  queryForm = this.formBuilder.nonNullable.group({
+  queryForm = this.formBuilder.group({
     CAT_LNo: ['', [Validators.maxLength(2), this.validationService.numberValidator]],
     CAT_LName: ['', [Validators.maxLength(32)]],
+    ...createPaginationConfig([{ field: 'CAT_LNo', order: 1 }]), // 分頁和排序參數
   });
   data: CategoryItem[] = [];// 表格數據和篩選數據
   columns: Column[] = [// 表格欄位定義
@@ -38,15 +38,15 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
   ];
   totalRecords = 0;// 分頁和排序參數
   selectedItems: CategoryItem[] = [];// 多選項目
+
   constructor(
     private validationService: ValidationService,
     private apiService: TLS5000Service,
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS51010', '/TLS/TLS51010CRU');
+    this.initializePage('TLS51010', '/TLS/TLS51010CRU', this.queryForm, (form) => this.onSubmit(form));
   }
-  tableKey = 'TLS51010';// 表格鍵：用於儲存查詢狀態
   // 提交查詢：處理表單並呼叫查詢 API
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
@@ -55,7 +55,7 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
           if (response.Status === '0000') {
             this.data = response.Data || [];
             this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(this.tableKey + 'QueryForm', frm.value); // 後綴固定寫'QueryForm'
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
           }
           this.loading = false;
           this.messageService.unblockUi();
