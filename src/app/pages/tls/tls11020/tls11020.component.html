@@ -41,10 +41,8 @@
 <div class="card">
     <div class="col-13">
         <app-table [columns]="columns" [data]="data" [tableKey]="'tls11020'" [title]="'扣款項目維護'"
-            [totalRecords]="totalRecords" [lazy]="enableLazy" (lazyLoad)="onLazyLoad($event)" (edit)="editRow($event)"
-            (detail)="viewRow($event)">
+            [totalRecords]="totalRecords" [lazy]="enableLazy" [showCheckBox]="true" [selectedItems]="selectedItems"
+            (lazyLoad)="onLazyLoad($event)" (edit)="editRow($event)" (detail)="viewRow($event)"
+            (delete)="onDelete($event)">
         </app-table>
-
-
-
     </div>
