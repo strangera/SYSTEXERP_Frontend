@@ -84,31 +84,26 @@ export class Tls11010Service {
       .pipe(catchError(this.errorHandler.handleError));
   }
 
- buildQueryPayload(
-  formValue: any,
-  pageIndex: number = 1,
-  pageSize: number = 10,
-  sortField = '',
-  multiSortMeta: any[] = []
-): any {
-  return {
-    request: {
-      PageSize: pageSize,
-      PageIndex: pageIndex,
-      OrderBy: sortField,
-      Offset: (pageIndex - 1) * pageSize,
-      SortBy: multiSortMeta.length ? multiSortMeta : [{ field: 'LOCATION_No', order: 1 }],
-      LOCATION_No: [formValue.LOCATION_No ?? ''],
-      org_id: formValue.ORG_No?.[0] ?? '', // ❗ 改為單一字串
-      building_no: formValue.BUILDING_NO ?? '',
-      FLOOR_NO: formValue.FLOOR_NO ?? [],
-      AREA_NO: formValue.AREA_NO ?? [],
-      GROSS_SPACE: formValue.GROSS_SPACE || null,
-      NET_SPACE: formValue.NET_SPACE || null,
-      LOCATION_Status: formValue.LOCATION_Status ?? null,
-      Purpose_no: formValue.Location_Purpose ?? [],
-    },
-  };
-}
+  buildQueryPayload(formValue: any, PageIndex = 1, PageSize = 10, SortBy: any[] = []): any {
+
+    return {
+      request: {
+        PageSize: formValue.pageSize,
+        PageIndex: formValue.pageIndex,
+        SortBy: formValue.SortBy?.length ? formValue.SortBy : [{ field: 'LOCATION_No', order: 1 }],
+        LOCATION_No: [formValue.LOCATION_No ?? ''],
+        org_id: formValue.ORG_No ?? [],
+        building_no: formValue.BUILDING_NO ?? '',
+        FLOOR_NO: formValue.FLOOR_NO ?? [],
+        AREA_NO: formValue.AREA_NO ?? [],
+        GROSS_SPACE: formValue.GROSS_SPACE || null,
+        NET_SPACE: formValue.NET_SPACE || null,
+        LOCATION_Status: formValue.LOCATION_Status ?? null,
+        Purpose_no: formValue.Location_Purpose ?? [],
+      }
+    };
+
+  }
+
 
 }

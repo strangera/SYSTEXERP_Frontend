@@ -3,6 +3,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls11010',
@@ -24,7 +25,7 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     X_coordinate: [''],
     Y_coordinate: [''],
     Location_Remark: [''],
-    ...createPaginationConfig, // 分頁和排序參數 // 排序需要
+    ...createPaginationConfig([{ field: 'LOCATION_No', order: 1 }]), // 分頁和排序參數 // 排序需要
   });
 
   data: any[] = [];
@@ -71,31 +72,35 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
   }
 
-  onSubmit(frm: FormGroup): void {
-    this.handleSubmit(frm, () => {
-      const payload = this.tls11010Service.buildQueryPayload(frm.value);
+onSubmit(frm: FormGroup, pageIndex: number = 1, pageSize: number = 10): void {
+  this.handleSubmit(frm, () => {
+    console.log('送出查詢 PageIndex:', pageIndex, 'PageSize:', pageSize); // ✅ 加這行
 
-      this.loading = true;
-      this.messageService.blockUi();
+    const payload = this.tls11010Service.buildQueryPayload(frm.value, pageIndex, pageSize);
 
-      this.tls11010Service.queryData(payload).subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
+    this.loading = true;
+    this.messageService.blockUi();
+
+    this.tls11010Service.queryData(payload).subscribe({
+      next: (res) => {
+        if (res.Status === '0000') {
           this.data = res?.Data || [];
-          this.totalRecords = res?.TotalCount || this.data.length;     
+          this.totalRecords = res?.TotalCount || this.data.length;
+          console.log('✅ totalRecords =', this.totalRecords); // ✅ 已有的 log 保留
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: () => { },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
+        }
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+      error: () => {},
+      complete: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
     });
-  }
+  });
+}
+
 
 
   onDelete(selectedItems: any[]) {
@@ -112,4 +117,5 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       error: () => this.messageService.errorBubble('刪除失敗'),
     });
   }
+
 }
