@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, EventEmitter, Input, SimpleChanges, OnChanges, Output, ViewChild, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, SimpleChanges, OnChanges, Output, ViewChild } from '@angular/core';
 import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
 import { AddButton, Column, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
@@ -14,7 +14,7 @@ import { BasicPrintDataComponent } from '../../componentextends/basic-print/basi
   styleUrl: './table.component.scss',
   animations: [toggleButtons],
 })
-export class TableComponent extends BasicPrintDataComponent implements OnInit, OnChanges {
+export class TableComponent extends BasicPrintDataComponent implements OnChanges {
   // 基本設置
   @ViewChild('dt', { static: false }) dt!: Table;                               // table 元件
   @ViewChild('fileUpload') fileUpload!: FileUpload;                             // 檔案上傳 元件
@@ -97,12 +97,11 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     private readonly queryStateService: QueryStateService,
     private readonly messageService: NotificationService,
   ) { super(); }
-  ngOnInit(): void {
-
-  }
   // 當 data 發生變化時，重置分頁與頁碼
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data']) {
+    if (changes['data'] && this.data.length > 0) {
+      console.log('當 data 發生變化時');
+
       this.calculateTotalPages(); // 計算總頁數
       setTimeout(() => {
         this.selectionChange.emit(this.selectedItems);
@@ -117,36 +116,35 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   }
   // 計算總頁數並生成頁面選項
   calculateTotalPages() {
-    setTimeout(() => {
-      console.log('calculateTotalPages', this.data);
-
-      this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-      this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
-      this.pages = Array.from({ length: this.totalPages }, (_, index) => ({ label: `第 ${index + 1} 頁`, value: index + 1 }));
-      // 若當前頁數超過最大頁數，則移動到最大頁數，但至少為 1
-      if (this.selectedPage && this.selectedPage > this.totalPages) { this.goToPage(Math.max(this.totalPages, 1)); }
-    }, 0);
+    console.log('加總頁數', this.data);
+    this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+    this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
+    this.pages = Array.from({ length: this.totalPages }, (_, index) => ({ label: `第 ${index + 1} 頁`, value: index + 1 }));
+    // 若當前頁數超過最大頁數，則移動到最大頁數，但至少為 1
+    if (this.selectedPage && this.selectedPage > this.totalPages) { this.goToPage(Math.max(this.totalPages, 1)); }
   }
   // 右上dropdown 跳轉頁數
   goToPage(pageNumber: number) {
-    console.log('goToPage', pageNumber);
+    console.log('右上dropdown 跳轉頁數', pageNumber);
     this.first = (pageNumber - 1) * this.rows; // 計算起始索引
     this.selectedPage = pageNumber; // 更新選擇的頁數
     this.lazyLoadData.emit({ pageIndex: this.selectedPage, pageSize: this.rows, SortBy: this.multiSortMeta });
   }
   // Table內建 分頁器變動
   onPageChange(event: TablePageEvent) {
+    console.log('Table內建 分頁器變動', event);
     this.first = event.first;   // 更新當前起始索引
     this.rows = event.rows;     // 更新每頁行數
     this.selectedPage = Math.ceil((event.first / event.rows) + 1); // 更新下拉選單中的頁碼
     this.calculateTotalPages();
   }
   onSort(event: any) {
+    console.log('onSort', event);
     this.multiSortMeta = event.multisortmeta;
     this.queryStateService.setQueryState(this.tableKey + 'Sort', this.multiSortMeta);
   }
   loadDataLazy(event: TableLazyLoadEvent) {
-    console.log('loadDataLazy', event);
+    console.log('執行 Lazy 加載', event);
     setTimeout(() => {
       if (this.totalRecords === 0) { return; }
       const pageSize = event.rows && event.rows > 0 ? event.rows : 10;

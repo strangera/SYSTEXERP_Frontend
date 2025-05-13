@@ -49,6 +49,7 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
   }
   // 提交查詢：處理表單並呼叫查詢 API
   onSubmit(frm: FormGroup): void {
+    console.log('呼叫查詢 API');
     this.handleSubmit(frm, () => {
       this.apiService.queryTLS51010(frm.value).subscribe({
         next: (response) => {

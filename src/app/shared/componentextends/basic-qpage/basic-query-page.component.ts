@@ -50,6 +50,7 @@ export class BasicQueryPageComponent<T> {
       this.queryStateService.getQueryState(this.ProgNo)?.pipe(take(1)).subscribe((query) => {
         if (query && queryForm && onSubmit) {
           queryForm?.patchValue(query);
+          queryForm?.patchValue({ pageIndex: 1 });
           onSubmit(queryForm);
         }
       });
