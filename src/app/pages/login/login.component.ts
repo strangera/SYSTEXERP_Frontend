@@ -52,7 +52,6 @@ export class LoginComponent implements OnInit {
       },
       error: () => {
         this.loginForm.patchValue({ password: '' }); //清空密碼
-        this.notemessage.errorBubble('登入失敗'); //顯示錯誤訊息
         this.loading = false;
       }
     });

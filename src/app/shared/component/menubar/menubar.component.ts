@@ -62,8 +62,6 @@ export class MenubarComponent implements OnInit, OnDestroy {
   }
 
   getMenuName(funs: FunsrightInfo[], progNo: string) {
-    console.log(funs);
-    console.log(progNo);
     const prog = funs.filter(x => x.prog_no == progNo);
     if (prog.length > 0) {
       if (prog[0].prog_up !== '') {

@@ -22,8 +22,7 @@ const storageKey = 'SYSB200';
 // 廠商基本資料維護作業
 export class SYSB200Component
   extends BasicQueryPageComponent<Sysb200m>
-  implements OnInit
-{
+  implements OnInit {
   // 查詢
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({

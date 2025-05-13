@@ -18,8 +18,7 @@ const storageKey = 'SYSB600';
 // 樓層基本資料維護作業
 export class SYSB600Component
   extends BasicQueryPageComponent<Sysb600m>
-  implements OnInit
-{
+  implements OnInit {
   // 查詢
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({

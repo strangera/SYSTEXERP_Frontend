@@ -18,8 +18,7 @@ const storageKey = 'SYSB500';
 // 區域基本資料維護作業
 export class SYSB500Component
   extends BasicQueryPageComponent<Sysb500m>
-  implements OnInit
-{
+  implements OnInit {
   // 查詢
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({

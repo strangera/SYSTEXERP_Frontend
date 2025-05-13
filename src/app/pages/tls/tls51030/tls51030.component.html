@@ -40,8 +40,8 @@
             <!-- <hr> -->
             <!-- <div *appHasPermission="queryPermission" class="col"> -->
             <div class="grid justify-content-end">
-              <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-              <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+              <app-button btnType="clear"></app-button>
+              <app-button btnType="query" [loading]="loading"></app-button>
             </div>
             <!-- </div> -->
           </form>
@@ -52,8 +52,8 @@
       <div class="col-13">
         <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
           (delete)="onDelete($event)" [showCheckBox]="true" dataKey="id"
-          [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords" (lazyLoad)="loadData($event)"
-          [lazy]="true" [loading]="loading">
+          [multiSortMeta]="[{ field: 'CAT_SNo', order: 1 }]" [totalRecords]="totalRecords"
+          (lazyLoadData)="onLazyLoadData($event, queryForm)" [lazy]="true" [loading]="loading">
         </app-table>
       </div>
     </div>

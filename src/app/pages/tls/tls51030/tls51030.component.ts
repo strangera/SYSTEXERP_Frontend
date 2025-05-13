@@ -5,10 +5,8 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { debounceTime } from 'rxjs';
-import { TableLazyLoadEvent } from 'primeng/table';
-import { SortMeta } from 'primeng/api';
 import { MidCategoryCodeService } from '../../../service/basic/mid-category-code.service';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 interface CategoryItem {
   id: number;
@@ -42,9 +40,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
     CAT_SName: ['', [Validators.maxLength(32)]],
     CAT_LNo: [''],
     CAT_MNo: [''],
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'CAT_SNo', order: 1 }] as SortMeta[]],
+    ...createPaginationConfig([{ field: 'CAT_SNo', order: 1 }]), // 分頁和排序參數
   });
 
   data: CategoryItem[] = [];
@@ -52,22 +48,12 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
   columns: Column[] = [
     { field: 'CAT_SNo', header: '小分類代碼', visible: true },
     { field: 'CAT_SName', header: '小分類名稱', visible: true },
-    {
-      field: 'CAT_MDisplay',
-      header: '中分類代碼 / 名稱',
-      visible: true,
-      sortField: 'CAT_MNo'
-    } as Column & { sortField: string },
-    {
-      field: 'CAT_LDisplay',
-      header: '大分類代碼 / 名稱',
-      visible: true,
-      sortField: 'CAT_LNo'
-    } as Column & { sortField: string },
+    { field: 'CAT_MDisplay', header: '中分類代碼 / 名稱', visible: true, sortField: 'CAT_MNo' },
+    { field: 'CAT_LDisplay', header: '大分類代碼 / 名稱', visible: true, sortField: 'CAT_LNo' },
     { field: 'CAT_SRemark', header: '說明', visible: true }
   ];
 
-  totalRecords: number = 0;
+  totalRecords = 0;
   selectedItems: CategoryItem[] = [];
   bigCategoryOptions: { value: string, label: string }[] = [];
   middleCategoryOptions: { value: string, label: string }[] = [];
@@ -82,7 +68,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS51030', '/TLS/TLS51030CRU');
+    this.initializePage('TLS51030', '/TLS/TLS51030CRU', this.queryForm, (form) => this.onSubmit(form));
     // 載入大分類代碼
     this.bigCategoryCodeService.getSystemTypes().subscribe({
       next: (response) => {
@@ -141,9 +127,9 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       this.apiService.queryTLS51030(frm.value).subscribe({
-        next: (response: any) => {
+        next: (response) => {
           if (response.Status === '0000') {
-            this.data = (response.Data || []).map((item: CategoryItem) => {
+            this.data = response.Data.map((item: CategoryItem) => {
               const catLDisplay = this.getCategoryDisplayName(item.CAT_LNo, this.bigCategoryOptions);
               const catMDisplay = item.CAT_MName ? `${item.CAT_MNo} - ${item.CAT_MName}` : item.CAT_MNo;
               return {
@@ -152,9 +138,8 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
                 CAT_MDisplay: catMDisplay
               };
             });
-            this.filteredData = [...this.data];
-            this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(storageKey, frm.value);
+            this.totalRecords = response.TotalCount;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
             if (this.data.length === 0) {
               console.log('查詢結果為空');
               this.messageService.infoBubble('查詢結果為空');
@@ -166,7 +151,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
           this.loading = false;
           this.messageService.unblockUi();
         },
-        error: (err: any) => {
+        error: (err) => {
           console.error('API error:', err.status, err.message, err.error);
           this.messageService.errorBubble(`查詢失敗: ${err.message || '請檢查網路連線或聯繫管理員'}`);
           this.loading = false;
@@ -180,20 +165,6 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
     const option = options.find(opt => opt.value === code);
     return option ? option.label : code;
   }
-
-  onSubmitQuery(frm: FormGroup): void {
-    console.log('onSubmitQuery triggered');
-    this.onSubmit(frm);
-  }
-
-  onClearForm(): void {
-    this.queryForm.reset();
-    this.data = [];
-    this.filteredData = [];
-    this.totalRecords = 0;
-    this.middleCategoryOptions = [];
-  }
-
   onDelete(data: CategoryItem | CategoryItem[]): void {
     const items = Array.isArray(data) ? data : [data];
     if (items.length === 0) {
@@ -217,7 +188,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
     };
 
     this.apiService.deleteTLS51030(requestBody).subscribe({
-      next: (response: any) => {
+      next: (response) => {
         if (response.Status === '0000') {
           this.messageService.successBubble(`成功刪除 ${idList.length} 個項目`);
           this.onSubmit(this.queryForm);
@@ -226,7 +197,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
           this.messageService.errorBubble(`刪除失敗: ${response.Message || '未知錯誤'}`);
         }
       },
-      error: (err: any) => {
+      error: (err) => {
         console.error('API error:', err.status, err.message, err.error);
         this.messageService.errorBubble('刪除失敗，請檢查網路連線或聯繫管理員');
       },
@@ -234,17 +205,5 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
         this.selectedItems = [];
       }
     });
-  }
-
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) { return; }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = (event.multiSortMeta ?? [{ field: 'CAT_SNo', order: 1 }]).map(sort => ({
-      ...sort,
-      field: sort.field === 'CAT_LDisplay' ? 'CAT_LNo' : sort.field === 'CAT_MDisplay' ? 'CAT_MNo' : sort.field
-    }));
-    this.onSubmit(this.queryForm);
   }
 }

@@ -19,8 +19,7 @@ const storageKey = 'SYSB400';
 })
 export class SYSB400Component
   extends BasicQueryPageComponent<Sysb400m>
-  implements OnInit
-{
+  implements OnInit {
   data: Sysb400m[] = [];
   filteredData: Sysb400m[] = [...this.data];
   columns: any[] = [
