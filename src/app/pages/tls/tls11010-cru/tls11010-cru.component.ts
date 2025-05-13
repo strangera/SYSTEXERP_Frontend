@@ -6,8 +6,7 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { TranslateService } from '@ngx-translate/core';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
+import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 
 @Component({
   selector: 'app-tls11010-cru',
@@ -47,7 +46,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
   constructor(
     private validationService: ValidationService,
     private translate: TranslateService,
-    private http: HttpClient
+    private tls11010Service: Tls11010Service
   ) {
     super();
   }
@@ -55,45 +54,11 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS11010', this.inputForm);
 
-    this.http
-      .post<any>(`${environment.ApiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3900_DropDownList`, {})
-      .subscribe(res => {
-        this.floorOptions = Array.isArray(res?.Data)
-          ? res.Data.map((i: { No: string; Name: string }) => ({ label: i.Name, value: i.No }))
-          : [];
-      });
-
-    this.http
-      .post<any>(`${environment.ApiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3A00_DropDownList`, {})
-      .subscribe(res => {
-        this.RegionCodeOptions = Array.isArray(res?.Data)
-          ? res.Data.map((i: { No: string; Name: string }) => ({ label: i.Name, value: i.No }))
-          : [];
-      });
-
-    this.http
-      .post<any>(`${environment.ApiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3100_DropDownList`, {})
-      .subscribe(res => {
-        this.OrganizationCodeOptions = Array.isArray(res?.Data)
-          ? res.Data.map((i: { No: string; Name: string }) => ({ label: i.Name, value: i.No }))
-          : [];
-      });
-
-    this.http
-      .post<any>(`${environment.ApiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3F00_DropDownList`, {})
-      .subscribe(res => {
-        this.usageOptions = Array.isArray(res?.Data)
-          ? res.Data.map((i: { No: string; Name: string }) => ({ label: i.Name, value: i.No }))
-          : [];
-      });
-
-    this.http
-      .post<any>(`${environment.ApiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3800_DropDownList`, {})
-      .subscribe(res => {
-        this.BUILDING_NO_Options = Array.isArray(res?.Data)
-          ? res.Data.map((i: { No: string; Name: string }) => ({ label: i.Name, value: i.No }))
-          : [];
-      });
+    this.tls11010Service.getFloorOptions().subscribe(res => this.floorOptions = res);
+    this.tls11010Service.getRegionOptions().subscribe(res => this.RegionCodeOptions = res);
+    this.tls11010Service.getOrgOptions().subscribe(res => this.OrganizationCodeOptions = res);
+    this.tls11010Service.getUsageOptions().subscribe(res => this.usageOptions = res);
+    this.tls11010Service.getBuildingOptions().subscribe(res => this.BUILDING_NO_Options = res);
   }
 
   onSubmit(): void {
@@ -115,7 +80,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
       };
 
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        this.http.post(`${environment.ApiUrl}/TLS0000/TLS1000/insertTLS11010`, payload).subscribe({
+        this.tls11010Service.insertData(payload).subscribe({
           next: () => {
             this.messageService.successBubble(this.translate.instant('success_message'));
             this.router.navigate(['/TLS', 'TLS11010']);
@@ -128,7 +93,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
         payload.id = this.rowdata?.id;
         payload.LOCATION_No = this.rowdata?.LOCATION_No;
 
-        this.http.post(`${environment.ApiUrl}/TLS0000/TLS1000/updateTLS11010`, payload).subscribe({
+        this.tls11010Service.updateData(payload).subscribe({
           next: () => {
             this.messageService.successBubble(this.translate.instant('updated-successfully'));
             this.router.navigate(['/TLS', 'TLS11010']);

@@ -1,12 +1,7 @@
 import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { FloorService } from './../../../service/basic/floor.service';
-import { RegionCodeService } from './../../../service/basic/region-code.service';
-import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
-import { UsageService } from './../../../service/basic/usage.service';
+import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 
 @Component({
   selector: 'app-tls11010',
@@ -33,9 +28,6 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
-  enableLazy = false;
-  hasQueried = false;
-  initialized = false;
 
   columns: any[] = [
     { field: 'building_no', header: '館別', visible: true },
@@ -55,191 +47,76 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
   RegionCodeOptions: any[] = [];
   OrganizationCodeOptions: any[] = [];
   usageOptions: any[] = [];
-  LOCATION_Status_Options: any[] = [];
+  LOCATION_Status_Options: any[] = [
+    { value: 0, label: '空位' },
+    { value: 1, label: '使用中' },
+    { value: 2, label: '保留(不使用)' },
+    { value: 3, label: '停用' },
+  ];
   BUILDING_NO_Options: any[] = [];
 
-  constructor(
-    private http: HttpClient,
-    private floorService: FloorService,
-    private regionCodeService: RegionCodeService,
-    private organizationNumberService: OrganizationNumberService,
-    private usageService: UsageService,
-  ) {
+  constructor(private tls11010Service: Tls11010Service) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS11010', 'TLS/TLS11010CRU');
+    this.initializePage('TLS11010', 'TLS/TLS11010CRU', this.queryForm, (form) => this.onSubmit(form));
 
-    this.http
-      .post<any>(
-        `${environment.ApiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3900_DropDownList`,
-        {},
-      )
-      .subscribe((res) => {
-        this.floorOptions = Array.isArray(res?.Data)
-          ? res.Data.map((i: { No: string; Name: string }) => ({
-              label: i.Name,
-              value: i.No,
-            }))
-          : [];
-      });
-
-    this.http
-      .post<any>(
-        `${environment.ApiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3A00_DropDownList`,
-        {},
-      )
-      .subscribe((res) => {
-        this.RegionCodeOptions = Array.isArray(res?.Data)
-          ? res.Data.map((i: { No: string; Name: string }) => ({
-              label: i.Name,
-              value: i.No,
-            }))
-          : [];
-      });
-
-    this.http
-      .post<any>(
-        `${environment.ApiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3100_DropDownList`,
-        {},
-      )
-      .subscribe((res) => {
-        this.OrganizationCodeOptions = Array.isArray(res?.Data)
-          ? res.Data.map((i: { No: string; Name: string }) => ({
-              label: i.Name,
-              value: i.No,
-            }))
-          : [];
-      });
-
-    this.http
-      .post<any>(
-        `${environment.ApiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3F00_DropDownList`,
-        {},
-      )
-      .subscribe((res) => {
-        this.usageOptions = Array.isArray(res?.Data)
-          ? res.Data.map((i: { No: string; Name: string }) => ({
-              label: i.Name,
-              value: i.No,
-            }))
-          : [];
-      });
-
-    this.LOCATION_Status_Options = [
-      { value: 0, label: '空位' },
-      { value: 1, label: '使用中' },
-      { value: 2, label: '保留(不使用)' },
-      { value: 3, label: '停用' },
-    ];
-
-    this.http
-      .post<any>(
-        `${environment.ApiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3800_DropDownList`,
-        {},
-      )
-      .subscribe((res) => {
-        this.BUILDING_NO_Options = Array.isArray(res?.Data)
-          ? res.Data.map((i: { No: string; Name: string }) => ({
-              label: i.Name,
-              value: i.No,
-            }))
-          : [];
-      });
+    this.tls11010Service.getFloorOptions().subscribe((res) => (this.floorOptions = res));
+    this.tls11010Service.getRegionOptions().subscribe((res) => (this.RegionCodeOptions = res));
+    this.tls11010Service.getOrgOptions().subscribe((res) => (this.OrganizationCodeOptions = res));
+    this.tls11010Service.getUsageOptions().subscribe((res) => (this.usageOptions = res));
+    this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    this.submitted = true;
-    if (frm.invalid) return;
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const payload = this.tls11010Service.buildQueryPayload(frm.value);
 
-    this.enableLazy = true;
+      this.loading = true;
+      this.messageService.blockUi();
 
-    // ✅ 延遲觸發第一次 lazy load 查詢（確保表格初次顯示即有分頁支援）
-    setTimeout(() => {
-      this.onLazyLoad({
-        first: 0,
-        rows: 10,
-        sortField: '',
-        sortOrder: 1,
-        multiSortMeta: [{ field: 'LOCATION_No', order: 1 }],
-      });
-    }, 0);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();
-    this.enableLazy = false;
-    this.hasQueried = false;
-    this.initialized = false;
-    this.data = [];
-    this.totalRecords = 0;
-  }
-
-  onLazyLoad(event: any) {
-    if (!this.initialized) {
-      this.initialized = true;
-      return;
-    }
-
-    const { first, rows, sortField, multiSortMeta } = event;
-    const pageIndex = Math.floor((first ?? 0) / (rows ?? 10)) + 1;
-
-    const formValue = this.queryForm.value;
-    const hasFilter =
-      formValue.LOCATION_No ||
-      formValue.ORG_No ||
-      formValue.BUILDING_NO ||
-      formValue.FLOOR_NO ||
-      formValue.AREA_NO ||
-      formValue.GROSS_SPACE ||
-      formValue.NET_SPACE ||
-      formValue.LOCATION_Status ||
-      formValue.Location_Purpose;
-
-    if (!hasFilter) {
-      this.data = [];
-      this.totalRecords = 0;
-      return;
-    }
-
-    const payload = {
-      request: {
-        PageSize: rows ?? 10,
-        PageIndex: pageIndex,
-        OrderBy: sortField ?? '',
-        Offset: first ?? 0,
-        SortBy: multiSortMeta ?? [{ field: 'LOCATION_No', order: 1 }],
-        LOCATION_No: [formValue.LOCATION_No],
-        org_id: formValue.ORG_No,
-        building_no: formValue.BUILDING_NO,
-        FLOOR_NO: formValue.FLOOR_NO,
-        AREA_NO: formValue.AREA_NO,
-        GROSS_SPACE: formValue.GROSS_SPACE || null,
-        NET_SPACE: formValue.NET_SPACE || null,
-        LOCATION_Status: formValue.LOCATION_Status,
-        Purpose_no: formValue.Location_Purpose,
-      },
-    };
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.http
-      .post<any>(`${environment.ApiUrl}/TLS0000/TLS1000/queryTLS11010`, payload)
-      .subscribe({
+      this.tls11010Service.queryData(payload).subscribe({
         next: (res) => {
-          this.data = Array.isArray(res?.Data) ? res.Data : [];
-          this.totalRecords = res.totalCount ?? this.data.length;
-          console.log('總筆數 totalRecords =', this.totalRecords);
-          this.messageService.successBubble('查詢成功');
+          this.data = res?.Data || [];
+          this.totalRecords = res?.totalCount || this.data.length;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
         },
-        error: () => this.messageService.errorBubble('查詢失敗'),
+        error: () => {},
         complete: () => {
           this.loading = false;
           this.messageService.unblockUi();
         },
       });
+    });
+  }
+
+  onClearForm() {
+    this.queryForm.reset();
+    this.data = [];
+    this.totalRecords = 0;
+  }
+
+  onLazyLoad(event: any) {
+    const { first, rows, sortField, multiSortMeta } = event;
+    const pageIndex = Math.floor((first ?? 0) / (rows ?? 10)) + 1;
+    const payload = this.tls11010Service.buildQueryPayload(this.queryForm.value, pageIndex, rows, sortField, multiSortMeta);
+
+    this.loading = true;
+    this.messageService.blockUi();
+
+    this.tls11010Service.queryData(payload).subscribe({
+      next: (res) => {
+        this.data = Array.isArray(res?.Data) ? res.Data : [];
+        this.totalRecords = res.totalCount ?? this.data.length;
+        this.messageService.successBubble('查詢成功');
+      },
+      error: () => this.messageService.errorBubble('查詢失敗'),
+      complete: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+    });
   }
 
   onDelete(selectedItems: any[]) {
@@ -248,14 +125,12 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     if (!confirm) return;
 
     const idList = selectedItems.map((item) => item.id);
-    this.http
-      .post(`${environment.ApiUrl}/TLS0000/TLS1000/deleteTLS11010`, { idList })
-      .subscribe({
-        next: () => {
-          this.messageService.successBubble('刪除成功');
-          this.onSubmitQuery(this.queryForm);
-        },
-        error: () => this.messageService.errorBubble('刪除失敗'),
-      });
+    this.tls11010Service.deleteData(idList).subscribe({
+      next: () => {
+        this.messageService.successBubble('刪除成功');
+        this.onSubmit(this.queryForm);
+      },
+      error: () => this.messageService.errorBubble('刪除失敗'),
+    });
   }
 }
