@@ -101,7 +101,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] && this.data.length > 0) {
       console.log('當 data 發生變化時');
-
       this.calculateTotalPages(); // 計算總頁數
       setTimeout(() => {
         this.selectionChange.emit(this.selectedItems);

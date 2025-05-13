@@ -4,7 +4,7 @@
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
     <div *appHasPermission="addPermission">
-      <app-button btnType="action" label="調出預約用品資料" icon="pi pi-book" (click)="trsData()" class="col"></app-button>
+      <app-button btnType="create" label="調出預約用品資料" icon="pi pi-book" (click)="trsData()" class="col"></app-button>
     </div>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">

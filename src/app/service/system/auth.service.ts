@@ -101,9 +101,10 @@ export class AuthService {
       error: (error) => { console.error('Logout error:', error); }
     });
   }
+  // 獲取使用者權限
   getUserPermissions(progNo: string): FunsrightInfo | undefined {
     try {
-      const funs: FunsrightInfo[] = JSON.parse(sessionStorage.getItem("FunRightsInfo") || '[]');
+      const funs = this._menuUpdated.getValue();
       return funs.find(fun => fun.prog_no === progNo);
     } catch (error) {
       console.error('Error parsing FunRightsInfo from sessionStorage', error);

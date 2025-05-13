@@ -1,11 +1,9 @@
 import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
 import { AuthService } from '../../service/system/auth.service';
-
 export interface HasPermissionsValue {
   progNo: string;
   permission: string;
 }
-
 @Directive({
   selector: '[appHasPermission]',
 })
