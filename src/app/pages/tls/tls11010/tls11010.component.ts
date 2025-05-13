@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls11010',
@@ -23,6 +24,7 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     X_coordinate: [''],
     Y_coordinate: [''],
     Location_Remark: [''],
+    ...createPaginationConfig, // 分頁和排序參數 // 排序需要
   });
 
   data: any[] = [];
@@ -78,11 +80,15 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
 
       this.tls11010Service.queryData(payload).subscribe({
         next: (res) => {
+          if (res.Status === '0000') {
           this.data = res?.Data || [];
-          this.totalRecords = res?.totalCount || this.data.length;
+          this.totalRecords = res?.TotalCount || this.data.length;     
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
         },
-        error: () => {},
+        error: () => { },
         complete: () => {
           this.loading = false;
           this.messageService.unblockUi();
@@ -91,33 +97,6 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  onClearForm() {
-    this.queryForm.reset();
-    this.data = [];
-    this.totalRecords = 0;
-  }
-
-  onLazyLoad(event: any) {
-    const { first, rows, sortField, multiSortMeta } = event;
-    const pageIndex = Math.floor((first ?? 0) / (rows ?? 10)) + 1;
-    const payload = this.tls11010Service.buildQueryPayload(this.queryForm.value, pageIndex, rows, sortField, multiSortMeta);
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.tls11010Service.queryData(payload).subscribe({
-      next: (res) => {
-        this.data = Array.isArray(res?.Data) ? res.Data : [];
-        this.totalRecords = res.totalCount ?? this.data.length;
-        this.messageService.successBubble('查詢成功');
-      },
-      error: () => this.messageService.errorBubble('查詢失敗'),
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
-    });
-  }
 
   onDelete(selectedItems: any[]) {
     if (!selectedItems.length) return;
