@@ -68,7 +68,7 @@
 
 <div class="card">
     <div class="col-13">
-        <app-table [columns]="columns" [data]="data" [title]="'專櫃位置資料維護'" [totalRecords]="totalRecords"
+        <app-table [columns]="columns" [data]="data"  [totalRecords]="totalRecords"
             [lazy]="enableLazy" [showCheckBox]="true" [selectedItems]="selectedItems" (lazyLoad)="onLazyLoad($event)"
             (edit)="onEdit($event)" (detail)="onDetail($event)" (delete)="onDelete($event)">
         </app-table>
