@@ -1,5 +1,6 @@
 import { animate, state, style, transition, trigger } from "@angular/animations";
 import { NotificationService } from "../../component/notification-message/notification.service";
+import { SortMeta } from "primeng/api";
 export interface Column {
   field: string;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
@@ -29,6 +30,20 @@ export interface Column {
   frozen?: boolean;  // 是否凍結 (是否為凍結欄位)
   alignFrozen?: string; // 凍結欄位對齊方式
 
+}
+
+export interface LazyLoadEvent {
+  pageIndex: number; // 當前頁碼
+  pageSize: number; // 每頁顯示的數量
+  SortBy: SortMeta[]; // 排序欄位
+}
+
+export function createPaginationConfig(defaultSortBy: SortMeta[] = [{ field: 'id', order: 1 }]): { [key: string]: any } {
+  return {
+    pageSize: [10],
+    pageIndex: [1],
+    SortBy: [defaultSortBy],
+  };
 }
 
 export const toggleButtons = trigger('toggleButtons', [

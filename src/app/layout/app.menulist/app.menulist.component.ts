@@ -75,7 +75,6 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
   private markParentsActiveRecursive(item: MenuItem | null) {
     if (item && item['parent_id'] !== '') {
       const parent = this.findItemRecursive(this.model, item['parent_id']);
-      console.log(parent);
       if (parent) {
         parent['selected'] = true;
         parent.expanded = true;

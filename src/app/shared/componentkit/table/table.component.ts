@@ -2,7 +2,7 @@
 import { Component, EventEmitter, Input, SimpleChanges, OnChanges, Output, ViewChild } from '@angular/core';
 import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
-import { AddButton, Column, FieldChangeEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
+import { AddButton, Column, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
 import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { QueryStateService } from '../../service/query-state.service';
@@ -90,7 +90,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   pages: { label: string, value: number }[] = [];   // (右上)下拉選單 頁數選項
   selectedPage: number | null = 1;                  // (右上)下拉選單 當前選擇的頁數
   @Input() lazy = false;                                      // 是否啟用 Lazy 加載
-  @Output() lazyLoad = new EventEmitter<TableLazyLoadEvent>(); // Lazy 加載事件
+  @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>(); // Lazy 加載事件
   // 其他
   @Input() emptyMessage = '查無資料';                // table 無資料時顯示文字
   constructor(
@@ -99,10 +99,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   ) { super(); }
   // 當 data 發生變化時，重置分頁與頁碼
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data']) {
+    if (changes['data'] && this.data.length > 0) {
+      console.log('當 data 發生變化時');
+
       this.calculateTotalPages(); // 計算總頁數
-      this.selectedPage = this.queryStateService.getQueryState(this.tableKey + 'Page')?.value ?? 1; // 取得頁數
-      this.first = this.queryStateService.getQueryState(this.tableKey + 'First')?.value ?? 0; // 取得起始索引
       setTimeout(() => {
         this.selectionChange.emit(this.selectedItems);
         this.cdr.detectChanges();
@@ -116,38 +116,41 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   }
   // 計算總頁數並生成頁面選項
   calculateTotalPages() {
-    setTimeout(() => {
-      this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-      this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
-      this.pages = Array.from({ length: this.totalPages }, (_, index) => ({ label: `第 ${index + 1} 頁`, value: index + 1 }));
-      // 若當前頁數超過最大頁數，則移動到最大頁數，但至少為 1
-      if (this.selectedPage && this.selectedPage > this.totalPages) { this.goToPage(Math.max(this.totalPages, 1)); }
-    }, 0);
+    console.log('加總頁數', this.data);
+    this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+    this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
+    this.pages = Array.from({ length: this.totalPages }, (_, index) => ({ label: `第 ${index + 1} 頁`, value: index + 1 }));
+    // 若當前頁數超過最大頁數，則移動到最大頁數，但至少為 1
+    if (this.selectedPage && this.selectedPage > this.totalPages) { this.goToPage(Math.max(this.totalPages, 1)); }
   }
   // 右上dropdown 跳轉頁數
   goToPage(pageNumber: number) {
+    console.log('右上dropdown 跳轉頁數', pageNumber);
     this.first = (pageNumber - 1) * this.rows; // 計算起始索引
     this.selectedPage = pageNumber; // 更新選擇的頁數
-    this.queryStateService.setQueryState(this.tableKey + 'Page', this.selectedPage);
-    this.queryStateService.setQueryState(this.tableKey + 'First', this.first);
-    this.lazyLoad.emit({ first: this.first, rows: this.rows, multiSortMeta: this.multiSortMeta });
+    this.lazyLoadData.emit({ pageIndex: this.selectedPage, pageSize: this.rows, SortBy: this.multiSortMeta });
   }
   // Table內建 分頁器變動
   onPageChange(event: TablePageEvent) {
+    console.log('Table內建 分頁器變動', event);
     this.first = event.first;   // 更新當前起始索引
     this.rows = event.rows;     // 更新每頁行數
     this.selectedPage = Math.ceil((event.first / event.rows) + 1); // 更新下拉選單中的頁碼
     this.calculateTotalPages();
-    this.queryStateService.setQueryState(this.tableKey + 'Page', this.selectedPage);
-    this.queryStateService.setQueryState(this.tableKey + 'First', this.first);
   }
   onSort(event: any) {
+    console.log('onSort', event);
     this.multiSortMeta = event.multisortmeta;
     this.queryStateService.setQueryState(this.tableKey + 'Sort', this.multiSortMeta);
   }
   loadDataLazy(event: TableLazyLoadEvent) {
+    console.log('執行 Lazy 加載', event);
     setTimeout(() => {
-      this.lazyLoad.emit(event);
+      if (this.totalRecords === 0) { return; }
+      const pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+      const pageIndex = (event.first ?? 0) / pageSize + 1;
+      const SortBy = event.multiSortMeta ?? [{ field: this.dataKey, order: 1 }];
+      this.lazyLoadData.emit({ pageIndex, pageSize, SortBy });
     });
   }
   /* =================================核心程式碼======================================= */

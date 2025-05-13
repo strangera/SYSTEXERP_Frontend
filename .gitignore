@@ -42,5 +42,3 @@ testem.log
 Thumbs.db
 
 *.ps1
-# Angular Environment files
-src/environments/environment*.ts
