@@ -17,12 +17,14 @@ export interface Column {
 
   validate?: ((value: string, rowData: any, data: any[], field: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
 
-  type?: string;     // 欄位類型 input、inputNumber、dropdown、default、html
+  type?: string;     // 欄位類型 input inputNumber dropdown default html
   prefix?: string;
   fractionDigits?: number;
+
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
   optionLabel?: string; // 下拉選單 optionLabel
   optionValue?: string; // 下拉選單 optionValue
+
   buttonLabel?: string; // 選擇按鈕 label
   chipLabel?: string | undefined; // chips 顯示的 label
   checkboxValue?: string; // checkbox 顯示的 ngModel

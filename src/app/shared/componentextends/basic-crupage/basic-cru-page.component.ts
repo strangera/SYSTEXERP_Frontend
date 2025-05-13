@@ -45,12 +45,12 @@ export class BasicCruPageComponent<T> {
   }
   // ----------------------------------------------------------------
   canAdd(): boolean {
-    // return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
+    // return true;
     return true; // 暫時設置為 true，實際應根據權限設置
   }
 
   canEdit(): boolean {
-    // return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
+    // return true;
     return true; // 暫時設置為 true，實際應根據權限設置
   }
   initializePage(progNo: string, form?: FormGroup) {

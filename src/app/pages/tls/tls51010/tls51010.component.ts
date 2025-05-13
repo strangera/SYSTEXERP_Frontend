@@ -28,7 +28,7 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
   queryForm = this.formBuilder.group({
     CAT_LNo: ['', [Validators.maxLength(2), this.validationService.numberValidator]],
     CAT_LName: ['', [Validators.maxLength(32)]],
-    ...createPaginationConfig, // 分頁和排序參數 // 排序需要
+    ...createPaginationConfig([{ field: 'CAT_LNo', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 

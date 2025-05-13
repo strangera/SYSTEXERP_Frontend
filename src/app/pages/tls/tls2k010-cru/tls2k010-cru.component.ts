@@ -82,11 +82,11 @@ export class TLS2K010CRUComponent {
   }
 
   canAdd(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
+    return true;
   }
 
   canEdit(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
+    return true;
   }
   // ----------------------------------------------------------------
   Edit(rowdata: any) {

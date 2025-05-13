@@ -13,6 +13,15 @@ export enum PermissionsInfo {
   report = 'REPORT',
 }
 
+export interface BehaviorType {
+  function_code: string,
+  function_desc: string,
+  sort: number,
+  CRT_Date: string,
+  CRT_USR_No: string,
+  CRT_USR_Name: string
+}
+
 export interface FunsrightInfo {
   id: string,
   prog_no: string,
@@ -27,5 +36,5 @@ export interface FunsrightInfo {
 
   label?: string  // 程式代號 + 程式名稱
 
-  PrivilegeBehavior?: PermissionsInfo[] // 先不理會
+  PrivilegeBehavior?: BehaviorType[] // 先不理會
 }

@@ -6,7 +6,7 @@ import { EncryptionService } from '../../shared/service/encryption.service';
 import { catchError, map } from 'rxjs/operators';
 import { userLogin } from '../../shared/models/system/userLogin';
 import { environment } from '../../../environments/environment';
-import { FunsrightInfo } from '../../shared/models/system/funsrightInfo';
+import { BehaviorType, FunsrightInfo } from '../../shared/models/system/funsrightInfo';
 import { UserInfo } from '../../shared/models/system/userInfo';
 import { NotificationService } from '../../shared/component/notification-message/notification.service';
 
@@ -101,27 +101,13 @@ export class AuthService {
       error: (error) => { console.error('Logout error:', error); }
     });
   }
-  getUserPermissions(progNo: string): FunsrightInfo {
-    const initialFunsrightInfo: FunsrightInfo = {
-      id: "",
-      prog_no: '',
-      prog_id: '',
-      prog_name: '',
-      prog_up: '',
-      module_no: '',
-      sub_module_no: '',
-      prog_ispage: '',
-      prog_stopflag: '',
-      prog_sort: "",
-      label: '',
-      PrivilegeBehavior: [],
-    };
+  getUserPermissions(progNo: string): FunsrightInfo | undefined {
     try {
-      const funs: FunsrightInfo[] = JSON.parse(sessionStorage.getItem("FunRightsInfo") || '');
-      return initialFunsrightInfo;
+      const funs: FunsrightInfo[] = JSON.parse(sessionStorage.getItem("FunRightsInfo") || '[]');
+      return funs.find(fun => fun.prog_no === progNo);
     } catch (error) {
-      console.error('Error', error);
-      return initialFunsrightInfo;
+      console.error('Error parsing FunRightsInfo from sessionStorage', error);
+      return undefined;
     }
   }
   // 獲取我的最愛

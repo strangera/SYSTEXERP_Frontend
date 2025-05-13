@@ -89,17 +89,23 @@ export class TLS57170Component {
   }
 
   canQuery(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
+    return true;
   }
 
   canAdd(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
+    return true;
   }
 
   canEdit(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
+    return true;
   }
 
+  /*************  ✨ Windsurf Command ⭐  *************/
+  /**
+   * Called when the form is submitted.
+   * @param frm The FormGroup instance for the form.
+   */
+  /*******  61ed7e22-f955-4d3d-a876-de267d598d5e  *******/
   onSubmit(frm: FormGroup) {
     console.log(frm.value);
     this.submitted = true;

@@ -94,10 +94,10 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   //   return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());
   // }
   // canAdd(): boolean {
-  //   return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
+  //   return true;
   // }
   // canEdit(): boolean {
-  //   return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
+  //   return true;
   // }
 
   // 移除：Edit 和 Read 方法由父類 initializePage 處理

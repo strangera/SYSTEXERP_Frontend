@@ -116,6 +116,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   }
   // 計算總頁數並生成頁面選項
   calculateTotalPages() {
+    this.cdr.detectChanges();
     console.log('加總頁數', this.data);
     this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
     this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
