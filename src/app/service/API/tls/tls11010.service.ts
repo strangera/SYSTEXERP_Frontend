@@ -84,26 +84,28 @@ export class Tls11010Service {
       .pipe(catchError(this.errorHandler.handleError));
   }
 
-  buildQueryPayload(formValue: any, PageIndex = 1, PageSize = 10, SortBy: any[] = []): any {
+buildQueryPayload(formValue: any, PageIndex = 1, PageSize = 10, SortBy: any[] = []): any {
+  return {
+    request: {
+      PageSize,
+      PageIndex,
+      OrderBy: '',
+      Offset: (PageIndex - 1) * PageSize,
+      SortBy: SortBy.length ? SortBy : [{ field: 'LOCATION_No', order: 1 }],
+      LOCATION_No: [formValue.LOCATION_No ?? ''],
+      org_id: formValue.ORG_No ?? [],
+      building_no: formValue.BUILDING_NO?.[0] ?? null, // ✅ 僅傳單一字元
+      FLOOR_NO: formValue.FLOOR_NO ?? [],
+      AREA_NO: formValue.AREA_NO ?? [],
+      GROSS_SPACE: formValue.GROSS_SPACE || null,
+      NET_SPACE: formValue.NET_SPACE || null,
+      LOCATION_Status: formValue.LOCATION_Status ?? null,
+      Purpose_no: formValue.Location_Purpose ?? [],
+    },
+  };
+}
 
-    return {
-      request: {
-        PageSize: formValue.pageSize,
-        PageIndex: formValue.pageIndex,
-        SortBy: formValue.SortBy?.length ? formValue.SortBy : [{ field: 'LOCATION_No', order: 1 }],
-        LOCATION_No: [formValue.LOCATION_No ?? ''],
-        org_id: formValue.ORG_No ?? [],
-        building_no: formValue.BUILDING_NO ?? '',
-        FLOOR_NO: formValue.FLOOR_NO ?? [],
-        AREA_NO: formValue.AREA_NO ?? [],
-        GROSS_SPACE: formValue.GROSS_SPACE || null,
-        NET_SPACE: formValue.NET_SPACE || null,
-        LOCATION_Status: formValue.LOCATION_Status ?? null,
-        Purpose_no: formValue.Location_Purpose ?? [],
-      }
-    };
 
-  }
 
 
 }
