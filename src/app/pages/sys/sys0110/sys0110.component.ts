@@ -1,155 +1,178 @@
-import { UserLevelService } from './../../../service/basic/user-level.service';
+import { Sys0110Service } from './../../../service/API/sys/sys0110.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { FormGroup, Validators } from '@angular/forms';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { UserTypeService } from '../../../service/basic/user-type.service';
-import { UserStatusService } from '../../../service/basic/user-status.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { apiOption, option, Sysb400m, tblUser } from '../module/sysb000.module';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Sysb400Service } from '../../../service/API/sys/sysb400.service';
 
-// 4-2-1-1使用者基本資料維護
+// 4-2-1-1 使用者基本資料維護
 @Component({
   selector: 'app-sys0110',
   templateUrl: './sys0110.component.html',
   styleUrls: ['./sys0110.component.scss'],
 })
 
-export class SYS0110Component extends BasicQpageComponent implements OnInit {
+export class SYS0110Component extends BasicQueryPageComponent<tblUser> implements OnInit {
   // 表單控制
   queryForm = this.formBuilder.group({
-    userCode: [], // 使用者編號
-    userAlias: [''], // 使用者名稱
-    userLevel: [''], // 使用者等級
-    organizationNumber: [''], // 組織編號
-    startDate: [''], // 帳號有效開始日期
-    endDate: [''], // 帳號有效結束日期
-    lastLoginStartTime: [''], // 上次登入開始時間
-    lastLoginEndTime: [''], // 上次登入結束時間
-    userStatus: [''], // 使用者狀態
-    userType: [''], // 使用者型態
+    ID: [], //ID
+    User_No: ['', Validators.maxLength(10)], // 使用者編號
+    User_Name: ['', Validators.maxLength(20)], // 使用者名稱
+    // user_Password: ['', Validators.maxLength(32)], // 使用者密碼-加密
+    title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000
+    Org_ID: ['', Validators.maxLength(20)], // 組織編號 (SYSB400_SYS3100)
+    str_date: [null], // 帳號有效開始日期
+    end_date: [null], // 帳號有效結束日期
+    status: [1, Validators.maxLength(1)], // 使用者狀態 1=有效 2=停用
+    user_type: ['', Validators.maxLength(1)], // 使用者型態 1=公司內部人員(default) 2=專櫃人員 3=其他
+    user_email: ['', Validators.maxLength(100)], // 使用者email帳號
+    TLT_No: ['', Validators.maxLength(12)], // 所屬專櫃編號
+    remarks: ['', Validators.maxLength(100)], // 備註
+    user_priority: ['', Validators.maxLength(1)], // 使用者等級
+    USER_PwdExpireDate: [''], // 密碼到期日 YYYY/MM/DD HH:NN:SS，若使用者登入系統的時間大於此日期，則需強制使用者變更密碼
+
+    ...createPaginationConfig, // 分頁和排序參數 // 排序需要
   });
 
-  // 表格資料
-  data: any[] = [];
-  filteredData: any[] = [...this.data];
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
 
-  columns: any[] = [
-    { field: 'userId', header: '使用者編號', visible: true },
-    { field: 'userName', header: '使用者名稱', visible: true },
-    { field: 'organizationId', header: '組織編號', visible: true },
-    { field: 'accountExpiryDate', header: '帳號有效截止日', visible: true },
-    { field: 'accountLockDate', header: '帳號終止日', visible: true },
-    { field: 'lastLoginTime', header: '上次登入時間', visible: true },
-    { field: 'userStatus', header: '使用者狀態', visible: true },
-    { field: 'userType', header: '使用者型態', visible: true },
-    { field: 'userLevel', header: '使用者等級', visible: true },
-    { field: 'remark', header: '備註', visible: true },
+  // 表格資料
+  data: tblUser[] = [];
+  columns: Column[] = [
+    { field: 'User_No', header: '使用者編號', visible: true },
+    { field: 'User_Name', header: '使用者名稱', visible: true },
+    { field: 'title', header: '職稱代碼', visible: true },
+    { field: 'Org_ID', header: '組織編號', visible: true },
+    { field: 'str_date', header: '帳號有效開始日期', visible: true },
+    { field: 'end_date', header: '帳號有效結束日期', visible: true },
+    { field: 'status', header: '使用者狀態', visible: true },
+    { field: 'user_type', header: '使用者型態', visible: true },
+    { field: 'user_email', header: '使用者email帳號', visible: true },
+    { field: 'TLT_No', header: '備註', visible: true },
+    { field: 'user_priority', header: '使用者等級', visible: true },
+    { field: 'USER_PwdExpireDate', header: '密碼到期日', visible: true },
   ];
+  selectedItems: tblUser[] = [];// 多選項目
 
   // 下拉選單選項
-  userLevelOptions: any[] = [];
-  organizationNumberOptions: any[] = [];
-  userStatusOptions: any[] = [];
-  userTypeOptions: any[] = [];
+  titleOptions: option[] = [];
+  SYS3100_Options: apiOption[] = [];
+  userStatusOptions: option[] = [];
+  userTypeOptions: option[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private userLevelService: UserLevelService,
-    private organizationNumberService: OrganizationNumberService,
-    private userTypeService: UserTypeService,
-    private userStatusService: UserStatusService
+    private sysb400Service: Sysb400Service,
+    private sys0110Service: Sys0110Service,
   ) {
     super(); // 呼叫父類別建構子
   }
 
   ngOnInit(): void {
-    this.ProgNo = '420001';
-    // 權限資訊
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    // 初始化下拉選單選項
-    this.userLevelService.getUserlevel().subscribe((data) => {
-      this.userLevelOptions = data;
-    });
-
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
-      this.organizationNumberOptions = data;
-    });
-
-    this.userTypeService.getUserTypes().subscribe((data) => {
-      this.userTypeOptions = data;
-    });
-
-    this.userStatusService.getUserStatus().subscribe((data) => {
-      this.userStatusOptions = data;
-    });
+    this.initializePage('SYS0110', '/SYS/SYS0110', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+  // 初始化下拉選單選項
+  loadOptions() {
+    // *職稱代碼-SYS1000
+    this.titleOptions = [
+      // SYS1000
+      { value: '1', label: 'SYS10001' },
+      // { value: '2', label: 'SYS10002' },
+      // { value: '3', label: 'SYS10003' },
+    ]
 
-    if (frm.valid && this.canQuery()) {
-      // 執行查詢邏輯
-    }
+    //建立組織下拉清單(SYS3100) 查詢全部
+    const query_org = {
+      level_id: '',
+      org_id: '',
+      org_name: '',
 
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm); // 呼叫查詢邏輯
-  }
-
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['SYS0000/SYS0110CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['SYS0000/SYS0110CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
+      //分頁查詢
+      pageSize: 1000,
+      pageIndex: 0,
+      SortBy: [{ field: 'org_id', order: 1 }],
     };
-    this.router.navigate(['SYS0000/SYS0110CRU'], extras);
+
+    this.sysb400Service.querySYSB400(query_org).subscribe((response) => {
+      this.SYS3100_Options = response.Data.map((item: Sysb400m) => ({
+        No: item.org_id,
+        Name: item.org_name,
+        Label: item.org_id + ' ' + item.org_name,
+      }));
+    });
+
+    this.userTypeOptions = [
+      // 使用者型態 1=公司內部人員(default) 2=專櫃人員 3=其他
+      { value: '1', label: '公司內部人員' },
+      { value: '2', label: '專櫃人員' },
+      { value: '3', label: '其他' },
+    ]
+
+    this.userStatusOptions = [
+      // 1=有效 2=停用
+      { value: '1', label: '有效' },
+      { value: '2', label: '停用' },
+    ]
+  }
+
+  // 提交查詢：處理表單並呼叫查詢 API
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      console.log('查詢表單', frm.value);
+      // this.sys0110Service.queryUser(frm.value).subscribe({
+      //   next: (response) => {
+      //     if (response.Status === '0000') {
+      //       this.data = response.Data || [];
+      //       this.totalRecords = response.TotalCount || response.Data.length; // 排序需要
+      //       this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      //       console.log('查詢結果', this.data);
+      //     }
+      //     this.loading = false;
+      //     this.messageService.unblockUi();
+      //   },
+      //   error: () => {
+      //     this.loading = false;
+      //     this.messageService.unblockUi();
+      //   },
+      // });
+    });
+  }
+  // 刪除項目
+  onDelete(data: tblUser | tblUser[]): void {
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) return;
+    // 收集所有有效的 ID
+    const idList = items.filter((item) => item && item.id != null && item.id !== undefined).map((item) => item.id);
+    if (idList.length === 0) {
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
+    }
+    // 構建新的 requestBody 格式
+    // const requestBody = {
+    //   idList: idList, // 符合 API 的 idList 格式
+    // };
+    // 調用 API
+    // this.apiService.deleteTLS51010(requestBody).subscribe({
+    //   next: (response) => {
+    //     if (response.Status === '0000') {
+    //       this.messageService.successBubble('選中項目刪除成功');
+    //     } else {
+    //       console.error('API error:', response.Status, response.Message);
+    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+    //     }
+    //   },
+    //   error: (err: string) => {
+    //     console.error('API error:', err);
+    //     this.messageService.errorBubble('刪除失敗');
+    //   },
+    //   complete: () => {
+    //     this.onSubmit(this.queryForm);
+    //   },
+    // });
+    this.selectedItems = [];
   }
 }
