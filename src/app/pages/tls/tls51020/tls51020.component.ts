@@ -4,9 +4,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
-import { TableLazyLoadEvent } from 'primeng/table';
-import { SortMeta } from 'primeng/api';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 interface CategoryItem {
   id: number;
@@ -41,9 +39,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
     CAT_MName: ['', [Validators.maxLength(32)]], // 中分類名稱
     CAT_LNo: [''], // 大分類代碼 / 名稱
     // CAT_MRemark: [,], // 說明
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'CAT_MNo', order: 1 }] as SortMeta[]],
+    ...createPaginationConfig([{ field: 'CAT_MNo', order: 1 }]), // 分頁和排序參數
   });
   // 表格
   // ----------------------------------------------------------------
@@ -53,18 +49,11 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
   columns: Column[] = [
     { field: 'CAT_MNo', header: '中分類代碼', visible: true },
     { field: 'CAT_MName', header: '中分類名稱', visible: true },
-    // { field: 'CAT_LDisplay', header: '大分類代碼 / 名稱', visible: true },
-    {
-      field: 'CAT_LDisplay',
-      header: '大分類代碼 / 名稱',
-      visible: true,
-      sortField: 'CAT_LNo' // 強制添加 sortField
-    } as Column & { sortField: string }, // 使用類型斷言
-    { field: 'CAT_MRemark', header: '備註', visible: true, type: 'html' }, // 說明
-    // 其他欄位CAT_MRemark
+    { field: 'CAT_LDisplay', header: '大分類代碼 / 名稱', visible: true, sortField: 'CAT_LNo' }, // 使用類型斷言
+    { field: 'CAT_MRemark', header: '備註', visible: true }, // 說明
   ];
 
-  totalRecords: number = 0;
+  totalRecords = 0;
 
   // 多選項目
   selectedItems: CategoryItem[] = [];
@@ -78,7 +67,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS51020', '/TLS/TLS51020CRU');
+    this.initializePage('TLS51020', '/TLS/TLS51020CRU', this.queryForm, (form) => this.onSubmit(form));
     // 獲取大分類代碼
     this.bigCategoryCodeService.getSystemTypes().subscribe({
       next: (response) => {
@@ -89,18 +78,15 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
         this.messageService.errorBubble('無法載入大分類代碼，請稍後重試');
       }
     });
-
-    // 恢復查詢狀態並自動查詢
-    this.handleQueryRestore(this.queryForm, storageKey, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       this.apiService.queryTLS51020(frm.value).subscribe({
-        next: (response: any) => {
+        next: (response) => {
           if (response.Status === '0000') {
             // this.data = response.Data || [];
-            this.data = (response.Data || []).map((item: CategoryItem) => ({
+            this.data = response.Data.map((item: CategoryItem) => ({
               ...item,
               CAT_LDisplay: `${item.CAT_LNo || ''} - ${item.CAT_LName || ''}`
             }));
@@ -124,20 +110,6 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
       });
     });
   }
-
-
-  // 查詢按鈕：重置分頁並提交查詢
-  onSubmitQuery(frm: FormGroup): void {
-    this.onSubmit(frm);
-  }
-
-  onClearForm(): void {
-    this.queryForm.reset();
-    this.data = [];
-    this.filteredData = [];
-    this.totalRecords = 0;
-  }
-
   onDelete(data: CategoryItem | CategoryItem[]): void {
     console.log('Delete data:', JSON.stringify(data, null, 2));
 
@@ -165,7 +137,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
     };
     // 調用 API
     this.apiService.deleteTLS51020(requestBody).subscribe({
-      next: (response: any) => {
+      next: (response) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('選中項目刪除成功');
         } else {
@@ -183,18 +155,5 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
     });
 
     this.selectedItems = [];
-  }
-
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) { return; }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    // form.SortBy = event.multiSortMeta ?? [{ field: 'CAT_MNo', order: 1 }];
-    form.SortBy = (event.multiSortMeta ?? [{ field: 'CAT_MNo', order: 1 }]).map(sort => ({
-      ...sort,
-      field: sort.field === 'CAT_LDisplay' ? 'CAT_LNo' : sort.field // 將 CAT_LDisplay 替換為 CAT_LNo
-    }));
-    this.onSubmit(this.queryForm);
   }
 }

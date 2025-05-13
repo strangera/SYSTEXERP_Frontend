@@ -8,6 +8,7 @@ export interface Column {
   hidden?: boolean;  // 是否隱藏 (是否為無法篩選欄位)
   format?: (value: any) => string | number | null; // 格式化(日期、時間...)
 
+  sortField?: string; // 排序欄位(預設為 field)
 
   disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
 
@@ -38,13 +39,13 @@ export interface LazyLoadEvent {
   SortBy: SortMeta[]; // 排序欄位
 }
 
-export function createPaginationConfig(defaultSortBy: SortMeta[] = [{ field: 'id', order: 1 }]): { [key: string]: any } {
+export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
   return {
     pageSize: [10],
-    pageIndex: [1],
+    pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [defaultSortBy],
   };
-}
+};
 
 export const toggleButtons = trigger('toggleButtons', [
   state('hidden', style({ transform: 'translateX(-10px)', width: '0px', opacity: 0 })),

@@ -28,15 +28,16 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
   queryForm = this.formBuilder.group({
     CAT_LNo: ['', [Validators.maxLength(2), this.validationService.numberValidator]],
     CAT_LName: ['', [Validators.maxLength(32)]],
-    ...createPaginationConfig([{ field: 'CAT_LNo', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig, // 分頁和排序參數 // 排序需要
   });
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
+
   data: CategoryItem[] = [];// 表格數據和篩選數據
   columns: Column[] = [// 表格欄位定義
     { field: 'CAT_LNo', header: '大分類代碼', visible: true },
     { field: 'CAT_LName', header: '大分類名稱', visible: true },
     { field: 'CAT_LRemark', header: '備註', visible: true, type: 'html' },
   ];
-  totalRecords = 0;// 分頁和排序參數
   selectedItems: CategoryItem[] = [];// 多選項目
 
   constructor(
@@ -49,13 +50,12 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
   }
   // 提交查詢：處理表單並呼叫查詢 API
   onSubmit(frm: FormGroup): void {
-    console.log('呼叫查詢 API');
     this.handleSubmit(frm, () => {
       this.apiService.queryTLS51010(frm.value).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.data = response.Data || [];
-            this.totalRecords = response.TotalCount || response.Data.length;
+            this.totalRecords = response.TotalCount || response.Data.length; // 排序需要
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           }
           this.loading = false;
