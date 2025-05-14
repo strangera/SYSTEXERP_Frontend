@@ -4,7 +4,8 @@ import { HttpClient } from '@angular/common/http';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { DeductionCategoryService } from '../../../service/basic/deduction-category.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { environment } from '../../../../environments/environment';
+import { TLS11020Service } from '../../../service/API/tls/tls11020.service';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls11020',
@@ -15,11 +16,12 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     CAP_Item: ['', [Validators.maxLength(3)]],
     CAP_Name: ['', [Validators.maxLength(40)]],
-    CAP_Type: [[] as string[]], // 多選類別
+    CAP_Type: [[] as string[]],
     CAP_Remark: ['', [Validators.maxLength(160)]],
+    ...createPaginationConfig([{ field: 'CAP_Item', order: 1 }]), // 分頁與排序
   });
-  totalRecords = 0;
 
+  totalRecords = 0;
   data: any[] = [];
   columns: any[] = [
     { field: 'CAP_Item', header: '扣款代碼', visible: true },
@@ -38,136 +40,78 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
   constructor(
     private validationService: ValidationService,
     private deductionCategoryService: DeductionCategoryService,
-    private http: HttpClient,
+    private tls11020Service: TLS11020Service,
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+   this.initializePage('TLS11020', 'TLS/TLS11020CRU', this.queryForm, (f) => this.onSubmit(f));
     this.deductionCategoryService.getDeductionCategories().subscribe((data) => {
       this.deductionCategoryOptions = data;
-      this.initializePage('TLS11020', 'TLS/TLS11020CRU');
-    });
-  }
-  enableLazy = false;
-  onSubmitQuery(frm: FormGroup) {
-    this.submitted = true;
-    if (frm.invalid) return;
-
-    this.enableLazy = true;
-
-    // ✅ 延遲觸發第一次 lazy load 查詢（確保表格初次顯示即有分頁支援）
-    setTimeout(() => {
-      this.onLazyLoad({
-        first: 0,
-        rows: 10,
-        sortField: '',
-        sortOrder: 1,
-        multiSortMeta: [{ field: 'CAP_Item', order: 1 }],
-      });
-    }, 0);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();
-    this.enableLazy = false;
-    this.data = [];
-    this.totalRecords = 0;
-  }
-  onSubmit(frm: FormGroup) {
-    this.onSubmitQuery(frm);
-    this.enableLazy = true; // 只有查詢時才啟用 lazy 查詢
-  }
-  editRow(rowdata: any) {
-    this.router.navigate(['/TLS', 'TLS11020CRU'], {
-      state: {
-        crudstatus: 'Edit',
-        rowdata: rowdata,
-        fromRoute: this.router.url, // 儲存前一個頁面，供返回用
-      },
+      
     });
   }
 
-  initialized = false;
-
-  onLazyLoad(event: any) {
-    if (!this.initialized) {
-      this.initialized = true;
-      return;
-    }
-
-    const { first, rows, sortField, sortOrder, multiSortMeta } = event;
-    const pageIndex = Math.floor((first ?? 0) / (rows ?? 10)) + 1;
-
-    const formValue = this.queryForm.value;
-    const hasFilter =
-      formValue.CAP_Item ||
-      formValue.CAP_Type ||
-      formValue.CAP_Name ||
-      formValue.CAP_Remark;
-
-    const payload = {
-      PageSize: rows ?? 10,
-      PageIndex: pageIndex,
-      OrderBy: sortField ?? '',
-      Offset: first ?? 0,
-      SortBy: multiSortMeta ?? [{ field: 'CAP_Item', order: 1 }],
-      CAP_Item: formValue.CAP_Item,
-      CAP_Type: formValue.CAP_Type,
-      CAP_Name: formValue.CAP_Name,
-      CAP_Remark: formValue.CAP_Remark,
-    };
-
-    if (!hasFilter) {
-      this.data = [];
-      this.totalRecords = 0;
-      return;
-    }
-
+  onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
     this.loading = true;
     this.messageService.blockUi();
 
-    this.http
-      .post<any>(`${environment.ApiUrl}/TLS0000/TLS1000/queryTLS11020`, payload)
-      .subscribe({
-        next: (res) => {
-          this.data = res.Data;
-          this.totalRecords = res.TotalCount ?? res.Data.length;
+    const formValue = { ...form.value };
+
+    // 將空字串轉為 null（配合後端 char? 欄位處理）
+    if (formValue.CAP_Item === '') formValue.CAP_Item = null;
+    if (formValue.CAP_Name === '') formValue.CAP_Name = null;
+    if (formValue.CAP_Remark === '') formValue.CAP_Remark = null;
+
+    // ✅ 補上固定分頁與排序欄位（或視情況動態指定）
+    formValue.PageSize = 10;
+    formValue.PageIndex = 1;
+    formValue.OrderBy = '';
+    formValue.Offset = 0;
+    formValue.SortBy = [{ field: 'CAP_Item', order: 1 }];
+
+    console.log('🔍 查詢條件 request payload:', formValue);
+
+    this.tls11020Service.queryTLS11020(formValue).subscribe({
+      next: (res) => {
+        if (res.Status === '0000') {
+          this.data = res?.Data || [];
+          this.totalRecords = res?.TotalCount || this.data.length;
+          this.queryStateService.setQueryState(this.ProgNo, formValue);
           this.messageService.successBubble('查詢成功');
-        },
-        error: () => this.messageService.errorBubble('查詢失敗'),
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
-  }
-  viewRow(rowdata: any) {
-    this.router.navigate(['/TLS', 'TLS11020CRU'], {
-      state: {
-        crudstatus: 'Read',
-        rowdata: rowdata,
-        fromRoute: this.router.url,
+        } else {
+          this.messageService.errorBubble('查詢失敗');
+        }
+      },
+      error: () => {
+        this.messageService.errorBubble('查詢錯誤');
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
       },
     });
-  }
+  });
+}
+
+
   onDelete(selectedItems: any[]) {
     if (!selectedItems.length) return;
     const confirm = window.confirm('是否確定刪除選取項目？');
     if (!confirm) return;
 
-    const idList = selectedItems.map((item) => item.id); // 注意 key 要叫 idList
-    this.http
-      .post(`${environment.ApiUrl}/TLS0000/TLS1000/deleteTLS11020`, { idList })
-      .subscribe({
-        next: () => {
-          this.messageService.successBubble('刪除成功');
-          this.onSubmitQuery(this.queryForm); // 重新查詢
-        },
-        error: () => {
-          this.messageService.errorBubble('刪除失敗');
-        },
-      });
+    const idList = selectedItems.map((item) => item.id);
+
+    this.tls11020Service.deleteTLS11020(idList).subscribe({
+      next: () => {
+        this.messageService.successBubble('刪除成功');
+        this.onSubmit(this.queryForm);
+      },
+      error: () => {
+        this.messageService.errorBubble('刪除失敗');
+      },
+    });
   }
 }

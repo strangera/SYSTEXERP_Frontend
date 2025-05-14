@@ -56,7 +56,9 @@ queryForm = this.formBuilder.group({
   ];
   BUILDING_NO_Options: any[] = [];
 
-  constructor(private tls11010Service: Tls11010Service) {
+  constructor(private tls11010Service: Tls11010Service,
+     
+  ) {
     super();
   }
 
@@ -70,7 +72,7 @@ queryForm = this.formBuilder.group({
     this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
   }
 
-  onSubmit(frm: FormGroup, pageIndex: number = 1, pageSize: number = 10): void {
+  onSubmit(frm: FormGroup): void {
   this.handleSubmit(frm, () => {
     this.loading = true;
     this.messageService.blockUi();
