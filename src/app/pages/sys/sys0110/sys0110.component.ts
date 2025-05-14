@@ -82,7 +82,7 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
   }
 
   ngOnInit(): void {
-    this.initializePage('SYS0110', '/SYS/SYS0110', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('SYS0110', '/SYS/SYS0110CRU', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 
@@ -123,13 +123,13 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
       { value: '1', label: '公司內部人員' },
       { value: '2', label: '專櫃人員' },
       { value: '3', label: '其他' },
-    ]
+    ];
 
     this.userStatusOptions = [
       // 1=有效 2=停用
       { value: '1', label: '有效' },
       { value: '2', label: '停用' },
-    ]
+    ];
   }
 
   // 提交查詢：處理表單並呼叫查詢 API
