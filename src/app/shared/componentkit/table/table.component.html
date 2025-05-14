@@ -172,8 +172,8 @@
             (click)="onRowEditSave(rowData, ri, htmlTableRowElement)" />
           <p-button *ngIf="editing" icon="pi pi-times text-red-500" (click)="onRowEditCancel(rowData, ri)" />
         </div>
-        <p-button [text]="true" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pencil" (click)="editRow(rowData)"
-          *ngIf="showEdit" [disabled]="!isRowSelectable(rowData)" />
+        <p-button [text]="true" [outlined]="true" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pencil"
+          (click)="editRow(rowData)" *ngIf="showEdit" [disabled]="!isRowSelectable(rowData)" />
         <p-button pTooltip="查看" tooltipPosition="top" icon="pi pi-eye" (click)="detailRow(rowData)"
           *ngIf="showDetail" />
         <p-button *ngFor="let btn of addButton" pTooltip="{{ btn.label }}" tooltipPosition="top" [icon]="btn.icon"

@@ -156,6 +156,7 @@
     }
     .p-paginator {
       padding: 0.2rem 0.2rem;
+      background: transparent;
     }
 
     .p-scroller .p-scroller-inline {
@@ -213,5 +214,17 @@
 
   .p-datatable .p-datatable-tbody > tr:nth-child(even) {
     background: #eef2ff;
+  }
+
+  .icon-button button {
+    background-color: rgba(239, 246, 255);
+    border-radius: 5px;
+    border: 1px solid rgb(212 212 212);
+    &:hover {
+      background-color: rgba(0, 123, 255, 0.2);
+    }
+    span.p-button-icon.pi {
+      color: #007bff;
+    }
   }
 }

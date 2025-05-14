@@ -66,7 +66,7 @@
   --blue-200:#a0d2fa;
   --blue-300:#75bef8;
   --blue-400:#4baaf5;
-  --blue-500:#2196f3;
+  --blue-500:#2196F3;
   --blue-600:#1c80cf;
   --blue-700:#1769aa;
   --blue-800:#125386;
@@ -176,7 +176,7 @@
   --primary-200:#a0d2fa;
   --primary-300:#75bef8;
   --primary-400:#4baaf5;
-  --primary-500:#2196f3;
+  --primary-500:#2196F3;
   --primary-600:#1c80cf;
   --primary-700:#1769aa;
   --primary-800:#125386;
@@ -2224,8 +2224,8 @@
 .p-buttonset.p-button-info > .p-button,
 .p-splitbutton.p-button-info > .p-button {
     color: #ffffff;
-    background: #0288d1;
-    border: 1px solid #0288d1;
+    background: #2196F3;
+    border: 1px solid #2196F3;
   }
   .p-button.p-button-info:not(:disabled):hover,
 .p-buttonset.p-button-info > .p-button:not(:disabled):hover,
@@ -2250,28 +2250,28 @@
 .p-buttonset.p-button-info > .p-button.p-button-outlined,
 .p-splitbutton.p-button-info > .p-button.p-button-outlined {
     background-color: transparent;
-    color: #0288d1;
+    color: #2196F3;
     border: 1px solid;
   }
   .p-button.p-button-info.p-button-outlined:not(:disabled):hover,
 .p-buttonset.p-button-info > .p-button.p-button-outlined:not(:disabled):hover,
 .p-splitbutton.p-button-info > .p-button.p-button-outlined:not(:disabled):hover {
     background: rgba(2, 136, 209, 0.04);
-    color: #0288d1;
+    color: #2196F3;
     border: 1px solid;
   }
   .p-button.p-button-info.p-button-outlined:not(:disabled):active,
 .p-buttonset.p-button-info > .p-button.p-button-outlined:not(:disabled):active,
 .p-splitbutton.p-button-info > .p-button.p-button-outlined:not(:disabled):active {
     background: rgba(2, 136, 209, 0.16);
-    color: #0288d1;
+    color: #2196F3;
     border: 1px solid;
   }
   .p-button.p-button-info.p-button-text,
 .p-buttonset.p-button-info > .p-button.p-button-text,
 .p-splitbutton.p-button-info > .p-button.p-button-text {
     background-color: transparent;
-    color: #0288d1;
+    color: #2196F3;
     border-color: transparent;
   }
   .p-button.p-button-info.p-button-text:not(:disabled):hover,
@@ -2279,14 +2279,14 @@
 .p-splitbutton.p-button-info > .p-button.p-button-text:not(:disabled):hover {
     background: rgba(2, 136, 209, 0.04);
     border-color: transparent;
-    color: #0288d1;
+    color: #2196F3;
   }
   .p-button.p-button-info.p-button-text:not(:disabled):active,
 .p-buttonset.p-button-info > .p-button.p-button-text:not(:disabled):active,
 .p-splitbutton.p-button-info > .p-button.p-button-text:not(:disabled):active {
     background: rgba(2, 136, 209, 0.16);
     border-color: transparent;
-    color: #0288d1;
+    color: #2196F3;
   }
 
   .p-button.p-button-success,
@@ -2776,31 +2776,31 @@
 
   .p-splitbutton.p-button-info.p-button-outlined > .p-button {
     background-color: transparent;
-    color: #0288d1;
+    color: #2196F3;
     border: 1px solid;
   }
   .p-splitbutton.p-button-info.p-button-outlined > .p-button:not(:disabled):hover {
     background: rgba(2, 136, 209, 0.04);
-    color: #0288d1;
+    color: #2196F3;
   }
   .p-splitbutton.p-button-info.p-button-outlined > .p-button:not(:disabled):active {
     background: rgba(2, 136, 209, 0.16);
-    color: #0288d1;
+    color: #2196F3;
   }
   .p-splitbutton.p-button-info.p-button-text > .p-button {
     background-color: transparent;
-    color: #0288d1;
+    color: #2196F3;
     border-color: transparent;
   }
   .p-splitbutton.p-button-info.p-button-text > .p-button:not(:disabled):hover {
     background: rgba(2, 136, 209, 0.04);
     border-color: transparent;
-    color: #0288d1;
+    color: #2196F3;
   }
   .p-splitbutton.p-button-info.p-button-text > .p-button:not(:disabled):active {
     background: rgba(2, 136, 209, 0.16);
     border-color: transparent;
-    color: #0288d1;
+    color: #2196F3;
   }
 
   .p-splitbutton.p-button-success.p-button-outlined > .p-button {
@@ -6172,7 +6172,7 @@
     color: #ffffff;
   }
   .p-badge.p-badge-info {
-    background-color: #0288d1;
+    background-color: #2196F3;
     color: #ffffff;
   }
   .p-badge.p-badge-warning {
@@ -6306,7 +6306,7 @@
     color: #ffffff;
   }
   .p-tag.p-tag-info {
-    background-color: #0288d1;
+    background-color: #2196F3;
     color: #ffffff;
   }
   .p-tag.p-tag-warning {

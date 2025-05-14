@@ -3,7 +3,7 @@
     <li class="layout-root-menuitem" *ngIf="!activeTopMenuProgNo">
       <div class="layout-menuitem-root-text">{{level1.label}}</div>
     </li>
-    <ul *ngIf="level1.items">
+    <ul class="layout-submenu" *ngIf="level1.items">
       <ng-container *ngFor="let level2 of level1.items">
         <app-menu-item [item]="level2"></app-menu-item>
       </ng-container>
