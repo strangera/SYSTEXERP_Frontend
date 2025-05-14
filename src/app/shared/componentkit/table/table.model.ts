@@ -17,7 +17,7 @@ export interface Column {
 
   validate?: ((value: string, rowData: any, data: any[], field: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
 
-  type?: string;     // 欄位類型 input、inputNumber、dropdown、default、html
+  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'chips' | 'checkbox' | 'date' | 'default'; // 欄位類型
   prefix?: string;
   fractionDigits?: number;
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
@@ -25,9 +25,11 @@ export interface Column {
   optionValue?: string; // 下拉選單 optionValue
   buttonLabel?: string; // 選擇按鈕 label
   chipLabel?: string | undefined; // chips 顯示的 label
-  checkboxValue?: string; // checkbox 顯示的 ngModel
-  checkboxLabel?: (value: any) => string; // checkbox 顯示的 label
-
+  checkboxValue?: string; // checkbox 顯示的 ngModel（適用於陣列資料）
+  checkboxLabel?: (value: any) => string; // checkbox 顯示的 label（適用於陣列資料）
+  checkboxTrueLabel?: string; // checkbox 非編輯模式 true 顯示文字（適用於單一布林值）
+  checkboxFalseLabel?: string; // checkbox 非編輯模式 false 顯示文字（適用於單一布林值）
+  dateFormat?: string; // 日期格式（例如 'yy-mm-dd'，僅適用於 type='date'）
   frozen?: boolean;  // 是否凍結 (是否為凍結欄位)
   alignFrozen?: string; // 凍結欄位對齊方式
 

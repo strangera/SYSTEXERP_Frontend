@@ -105,20 +105,28 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   deductionColumns: Column[] = [// 表格欄位定義
     {
-      field: 'isNew', header: '是否新增', visible: true, type: 'dropdown', options: [
-        { label: '是', value: 'Y' },
-        { label: '否', value: 'N' },
-      ],
+      field: 'isNew',
+      header: '是否新增',
+      visible: true,
+      type: 'checkbox',
+      checkboxTrueLabel: '是', // 非編輯模式顯示「新增」表示 true
+      checkboxFalseLabel: '否', // 非編輯模式顯示「非新增」表示 false
+      maxWidth: '150px' // 可選：確保單元格寬度
     },
     { field: 'deductionCode', header: '扣款代號', visible: true, type: 'input' },
     { field: 'deductionName', header: '扣款名稱', visible: true, type: 'input' },
-    { field: 'startDate', header: '扣款起始年月', visible: true },
+    { field: 'startDate', header: '扣款起始年月', visible: true, type: 'date' },
     { field: 'unit', header: '單位', visible: true, type: 'input' },
     { field: 'unitPrice', header: '單價', visible: true, type: 'inputNumber' },
     { field: 'quantity', header: '數量', visible: true, type: 'inputNumber' },
     { field: 'amount', header: '扣款金額', visible: true, type: 'inputNumber' },
     { field: 'organization', header: '組織', visible: true, type: 'input' },
-    { field: 'invoiceStatus', header: '是否開立發票', visible: true, type: 'dropdown' },
+    {
+      field: 'invoiceStatus', header: '是否開立發票', visible: true, type: 'checkbox',
+      checkboxTrueLabel: '是', // 非編輯模式顯示「新增」表示 true
+      checkboxFalseLabel: '否', // 非編輯模式顯示「非新增」表示 false
+      maxWidth: '150px' // 可選：確保單元格寬度
+    },
   ];
 
 

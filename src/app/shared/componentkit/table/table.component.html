@@ -137,6 +137,19 @@
             </p-dropdown>
           </ng-template>
         </p-cellEditor>
+        <p-cellEditor *ngIf="col.type === 'date'">
+          <ng-template pTemplate="input">
+            <p-calendar [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" class="w-full"
+              styleClass="min-w-max" placeholder="請選擇{{ col.header }}" [dateFormat]="col.dateFormat || 'yy-mm-dd'"
+              [showIcon]="true" appendTo="body" [disabled]="col.disabled ? col.disabled(rowData) : false"
+              [minDate]="col.minDate" [maxDate]="col.maxDate"
+              (ngModelChange)="onFieldChange(rowData, col.field, $event)">
+            </p-calendar>
+          </ng-template>
+          <ng-template pTemplate="output">
+            <span class="w-full min-w-max">{{ rowData[col.field] | date:'yyyy/MM/dd' }}</span>
+          </ng-template>
+        </p-cellEditor>
         <ng-container *ngIf="col.type === 'button'">
           <p-button *ngIf="IsPrint" label="{{ col.buttonLabel }}" severity="info" (click)="onSelectButton(rowData)"
             [disabled]="col.disabled ? col.disabled(rowData) : false"></p-button>
@@ -149,13 +162,16 @@
             <p-chip *ngFor="let item of rowData[col.field]" [label]="item[col.chipLabel || 'label']"></p-chip>
           </div>
         </ng-container>
-        <ng-container *ngIf="col.type === 'checkbox'">
-          <div class="flex flex-wrap gap-2">
-            <p-checkbox *ngFor="let item of rowData[col.field]; let i = index"
-              [(ngModel)]="rowData[col.field][i][col.checkboxValue]" [binary]="true"
-              [label]="col.checkboxLabel(rowData[col.field][i])" [name]="rowData[col.field]" [value]="item" />
-          </div>
-        </ng-container>
+        <p-cellEditor *ngIf="col.type === 'checkbox'">
+          <ng-template pTemplate="input">
+            <p-checkbox [(ngModel)]="rowData[col.field]" [binary]="true" [label]="col.label"
+              [ngModelOptions]="{ standalone: true }" [disabled]="col.disabled ? col.disabled(rowData) : false"
+              (ngModelChange)="onFieldChange(rowData, col.field, $event)" />
+          </ng-template>
+          <ng-template pTemplate="output">
+            <span>{{ rowData[col.field] ? (col.checkboxTrueLabel || '是') : (col.checkboxFalseLabel || '否') }}</span>
+          </ng-template>
+        </p-cellEditor>
         <span *ngIf="rowData[col.field] !== undefined && rowData[col.field] !== null && !col.type">
           {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
         </span>
