@@ -3,7 +3,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
+
 
 @Component({
   selector: 'app-tls11010',
@@ -11,39 +11,37 @@ import { LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
   styleUrls: ['./tls11010.component.scss'],
 })
 export class TLS11010Component extends BasicQueryPageComponent<any> {
-  queryForm = this.formBuilder.group({
-    LOCATION_No: ['', [Validators.maxLength(10)]],
-    LOCATION_Name: ['', [Validators.maxLength(30)]],
-    BUILDING_NO: [[] as string[]],
-    FLOOR_NO: [[] as string[]],
-    AREA_NO: [[] as string[]],
-    GROSS_SPACE: [''],
-    NET_SPACE: [''],
-    LOCATION_Status: [[] as number[]],
-    ORG_No: [[] as string[]],
-    Location_Purpose: [[] as string[]],
-    X_coordinate: [''],
-    Y_coordinate: [''],
-    Location_Remark: [''],
-    ...createPaginationConfig([{ field: 'LOCATION_No', order: 1 }]), // 分頁和排序參數 // 排序需要
-  });
+queryForm = this.formBuilder.group({
+  LOCATION_No: [[] as string[], [Validators.maxLength(10)]],      // 陣列中每個值最多10字元
+  org_id: [[] as string[], [Validators.maxLength(20)]],           // 陣列中每個值最多20字元
+  building_no: ['', [Validators.maxLength(1)]],                   // 單值, 最多1字元
+  FLOOR_NO: [[] as string[], [Validators.maxLength(2)]],          // 陣列中每個值最多2字元
+  AREA_NO: [[] as string[], [Validators.maxLength(2)]],           // 陣列中每個值最多2字元
+  GROSS_SPACE: [null, [Validators.min(0), Validators.max(9999.999)]], // 數值, 有上下限
+  NET_SPACE: [null, [Validators.min(0), Validators.max(9999.999)]],   // 數值, 有上下限
+  LOCATION_Status: ['', [Validators.maxLength(1)]],               // 單值, 最多1字元
+  Purpose_no: [[] as string[], [Validators.maxLength(2)]],        // 陣列中每個值最多2字元
+  ...createPaginationConfig([{ field: 'LOCATION_No', order: 1 }]), // 分頁與排序
+});
+
 
   data: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
 
   columns: any[] = [
-    { field: 'building_no', header: '館別', visible: true },
-    { field: 'FLOOR_NO', header: '樓層', visible: true },
-    { field: 'AREA_NO', header: '區域', visible: true },
-    { field: 'LOCATION_No', header: '位置代碼', visible: true },
-    { field: 'GROSS_SPACE', header: '營業坪數', visible: true },
-    { field: 'NET_SPACE', header: '簽約坪數', visible: true },
-    { field: 'Location_Purpose', header: '用途', visible: true },
-    { field: 'LOCATION_Status', header: '狀態', visible: true },
-    { field: 'X_coordinate', header: '平面圖X座標', visible: true },
-    { field: 'Y_coordinate', header: '平面圖Y座標', visible: true },
-    { field: 'Location_Remark', header: '備註', visible: true },
+    { field: 'LOCATION_No', header: '店位代碼', visible: true },
+    { field: 'LOCATION_Name', header: '店位說明', visible: true },
+    { field: 'org_id', header: '組織代碼', visible: true },
+    { field: 'building_no', header: '館別代碼', visible: true },
+    { field: 'FLOOR_NO', header: '樓層代碼', visible: true },
+    { field: 'AREA_NO', header: '區域代碼', visible: true },
+    { field: 'GROSS_SPACE', header: '簽約坪數', visible: true },
+    { field: 'NET_SPACE', header: '營業坪數', visible: true },
+    { field: 'LOCATION_Status', header: '使用狀態', visible: true },
+    { field: 'Purpose_no', header: '用途代碼', visible: true },
+    { field: 'Draw_X', header: 'X 軸', visible: true },
+    { field: 'Draw_Y', header: 'Y 軸', visible: true }
   ];
 
   floorOptions: any[] = [];
@@ -72,22 +70,31 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
   }
 
-onSubmit(frm: FormGroup, pageIndex: number = 1, pageSize: number = 10): void {
+  onSubmit(frm: FormGroup, pageIndex: number = 1, pageSize: number = 10): void {
   this.handleSubmit(frm, () => {
-    console.log('送出查詢 PageIndex:', pageIndex, 'PageSize:', pageSize); // ✅ 加這行
-
-    const payload = this.tls11010Service.buildQueryPayload(frm.value, pageIndex, pageSize);
-
     this.loading = true;
     this.messageService.blockUi();
 
-    this.tls11010Service.queryData(payload).subscribe({
+    const formValue = { ...frm.value };
+
+    // 將空字串欄位轉為 null，以符合後端 char? 要求
+    if (formValue.building_no === '') {
+      formValue.building_no = null;
+    }
+    if (formValue.LOCATION_Status === '') {
+      formValue.LOCATION_Status = null;
+    }
+
+    console.log('🔍 查詢條件 request payload:', formValue);
+
+    // ✅ 使用修正後的 formValue
+    this.tls11010Service.queryData(formValue).subscribe({
       next: (res) => {
         if (res.Status === '0000') {
           this.data = res?.Data || [];
           this.totalRecords = res?.TotalCount || this.data.length;
-          console.log('✅ totalRecords =', this.totalRecords); // ✅ 已有的 log 保留
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          console.log('✅ totalRecords =', this.totalRecords);
+          this.queryStateService.setQueryState(this.ProgNo, formValue);
         }
         this.loading = false;
         this.messageService.unblockUi();
@@ -100,8 +107,6 @@ onSubmit(frm: FormGroup, pageIndex: number = 1, pageSize: number = 10): void {
     });
   });
 }
-
-
 
   onDelete(selectedItems: any[]) {
     if (!selectedItems.length) return;
@@ -117,5 +122,4 @@ onSubmit(frm: FormGroup, pageIndex: number = 1, pageSize: number = 10): void {
       error: () => this.messageService.errorBubble('刪除失敗'),
     });
   }
-
 }

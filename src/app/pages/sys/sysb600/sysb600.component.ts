@@ -3,9 +3,8 @@ import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Sysb600m } from '../module/sysb000.module';
-import { SortMeta } from 'primeng/api';
 import { Sysb600Service } from '../../../service/API/sys/sysb600.service';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-sysb600',
@@ -23,9 +22,7 @@ export class SYSB600Component
     floor_desc: ['', [Validators.maxLength(30)]], //樓層名稱
 
     //分頁查詢
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'floor_no', order: 1 }] as SortMeta[]],
+    ...createPaginationConfig([{ field: 'floor_no', order: 1 }]), // 分頁和排序參數
   });
   // 表格
   // ----------------------------------------------------------------

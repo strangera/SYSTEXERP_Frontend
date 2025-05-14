@@ -43,7 +43,7 @@ export class SYSB100Component
     STO_URL: ['', [Validators.maxLength(100)]], // 公司網址
 
     //分頁查詢
-    ...createPaginationConfig, // 分頁和排序參數 // 排序需要
+    ...createPaginationConfig([{ field: 'SYS_StoreNo', order: 1 }]), // 分頁和排序參數
   });
 
   // ----------------------------------------------------------------

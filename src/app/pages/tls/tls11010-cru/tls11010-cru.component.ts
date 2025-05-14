@@ -1,11 +1,10 @@
 import { Component } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { TranslateService } from '@ngx-translate/core';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { HttpClient } from '@angular/common/http';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 
 @Component({
@@ -14,21 +13,19 @@ import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
   styleUrls: ['./tls11010-cru.component.scss'],
 })
 export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
-  inputForm = this.formBuilder.nonNullable.group({
-    LOCATION_No: [{ value: '', disabled: true }, [Validators.maxLength(10)]],
-    LOCATION_Name: ['', [Validators.required, Validators.maxLength(30)]],
-    BUILDING_NO: ['', [Validators.required, Validators.maxLength(2)]],
-    FLOOR_NO: ['', [Validators.required, Validators.maxLength(2)]],
-    AREA_NO: ['', [Validators.required, Validators.maxLength(2)]],
-    GROSS_SPACE: ['', [Validators.required, Validators.maxLength(7)]],
-    NET_SPACE: ['', [Validators.required, Validators.maxLength(7)]],
-    LOCATION_Status: ['', [Validators.required]],
-    ORG_No: ['', [Validators.required, Validators.maxLength(6)]],
-    Location_Purpose: ['', [Validators.required, Validators.maxLength(2)]],
-    X_coordinate: ['', [Validators.maxLength(10)]],
-    Y_coordinate: ['', [Validators.maxLength(10)]],
-    Location_Remark: [''],
-  });
+inputForm = this.formBuilder.nonNullable.group({
+  LOCATION_Name: ['', [Validators.required, Validators.maxLength(30)]],
+  org_id: ['', [Validators.required, Validators.maxLength(20)]],
+  building_no: ['', [Validators.required, Validators.maxLength(1)]],
+  FLOOR_NO: ['', [Validators.required, Validators.maxLength(2)]],
+  AREA_NO: ['', [Validators.required, Validators.maxLength(2)]],
+  GROSS_SPACE: [null, [Validators.required, Validators.min(0), Validators.max(9999.999)]],
+  NET_SPACE: [null, [Validators.required, Validators.min(0), Validators.max(9999.999)]],
+  LOCATION_Status: [0, [Validators.required, Validators.maxLength(1)]],
+  Purpose_no: ['', [Validators.required, Validators.maxLength(2)]],
+  Draw_X: ['', [Validators.maxLength(255)]],
+  Draw_Y: ['', [Validators.maxLength(255)]],
+});
 
   floorOptions: any[] = [];
   RegionCodeOptions: any[] = [];
@@ -46,6 +43,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
   constructor(
     private validationService: ValidationService,
     private translate: TranslateService,
+    private http: HttpClient,
     private tls11010Service: Tls11010Service
   ) {
     super();
@@ -53,6 +51,12 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS11010', this.inputForm);
+
+    if (this.crudstatus === CRUDStatus.Create) {
+      this.inputForm.patchValue({
+        LOCATION_Status: 0,
+      });
+    }
 
     this.tls11010Service.getFloorOptions().subscribe(res => this.floorOptions = res);
     this.tls11010Service.getRegionOptions().subscribe(res => this.RegionCodeOptions = res);
@@ -64,23 +68,15 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
   onSubmit(): void {
     this.handleSubmit(this.inputForm, () => {
       const raw = this.inputForm.getRawValue();
-      const payload: any = {
-        LOCATION_Name: raw.LOCATION_Name,
-        BUILDING_NO: raw.BUILDING_NO,
-        FLOOR_NO: raw.FLOOR_NO,
-        AREA_NO: raw.AREA_NO,
-        GROSS_SPACE: raw.GROSS_SPACE,
-        NET_SPACE: raw.NET_SPACE,
-        LOCATION_Status: raw.LOCATION_Status,
-        ORG_No: raw.ORG_No,
-        Location_Purpose: raw.Location_Purpose,
-        X_coordinate: raw.X_coordinate,
-        Y_coordinate: raw.Y_coordinate,
-        Location_Remark: raw.Location_Remark,
-      };
+   
+    (raw as any).GROSS_SPACE = Number(raw.GROSS_SPACE);
+    (raw as any).NET_SPACE = Number(raw.NET_SPACE);
+    (raw as any).LOCATION_Status = String(raw.LOCATION_Status);
 
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        this.tls11010Service.insertData(payload).subscribe({
+         console.log('📤 新增送出的 payload：', raw);
+
+        this.tls11010Service.insertData(raw).subscribe({
           next: () => {
             this.messageService.successBubble(this.translate.instant('success_message'));
             this.router.navigate(['/TLS', 'TLS11010']);
@@ -90,10 +86,11 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
           },
         });
       } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-        payload.id = this.rowdata?.id;
-        payload.LOCATION_No = this.rowdata?.LOCATION_No;
+        // ✅ 加入 id 與 LOCATION_No 傳給後端
+       (raw as any).id = this.rowdata?.id;
+        (raw as any).LOCATION_No = this.rowdata?.LOCATION_No;
 
-        this.tls11010Service.updateData(payload).subscribe({
+        this.tls11010Service.updateData(raw).subscribe({
           next: () => {
             this.messageService.successBubble(this.translate.instant('updated-successfully'));
             this.router.navigate(['/TLS', 'TLS11010']);
@@ -106,9 +103,25 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
     });
   }
 
-  onClearForm(): void {
-    this.inputForm.reset({
-      LOCATION_Status: '',
+  // ✅ 新增刪除方法
+  onDelete(): void {
+    const id = this.rowdata?.id;
+    if (!id) {
+      this.messageService.warnBubble('無有效資料可刪除');
+      return;
+    }
+
+    const confirmDelete = window.confirm('是否確認刪除此筆資料？');
+    if (!confirmDelete) return;
+
+    this.tls11010Service.deleteData([id]).subscribe({
+      next: () => {
+        this.messageService.successBubble('刪除成功');
+        this.router.navigate(['/TLS', 'TLS11010']);
+      },
+      error: () => {
+        this.messageService.errorBubble('刪除失敗');
+      },
     });
   }
 }

@@ -11,74 +11,57 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="inputForm">
       <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="店位說明" [control]="inputForm.controls.LOCATION_Name" [submitted]="submitted">
+          </app-input-text>
+        </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="館別" [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
-            [control]="inputForm.controls.BUILDING_NO" [submitted]="submitted">
+          <app-dropdown label="組織代碼" [options]="OrganizationCodeOptions" optionLabel="label" optionValue="value"
+            [control]="inputForm.controls.org_id" [submitted]="submitted">
           </app-dropdown>
         </div>
-
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="館別" [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
+            [control]="inputForm.controls.building_no" [submitted]="submitted">
+          </app-dropdown>
+        </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="樓層代碼" [options]="floorOptions" optionLabel="label" optionValue="value"
             [control]="inputForm.controls.FLOOR_NO" [submitted]="submitted">
           </app-dropdown>
         </div>
-
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="區域代碼" [options]="RegionCodeOptions" optionLabel="label" optionValue="value"
             [control]="inputForm.controls.AREA_NO" [submitted]="submitted">
           </app-dropdown>
         </div>
-
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="位置編號" [control]="inputForm.controls.LOCATION_No" [submitted]="submitted">
+          <app-input-text label="簽約坪數" [control]="inputForm.controls.GROSS_SPACE" [submitted]="submitted">
           </app-input-text>
         </div>
-
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="組織代碼" [options]="OrganizationCodeOptions" optionLabel="label" optionValue="value"
-            [control]="inputForm.controls.ORG_No" [submitted]="submitted">
-          </app-dropdown>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="營業坪數(坪)" [control]="inputForm.controls.GROSS_SPACE" [submitted]="submitted">
+          <app-input-text label="營業坪數" [control]="inputForm.controls.NET_SPACE" [submitted]="submitted">
           </app-input-text>
         </div>
-
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="簽約坪數(坪)" [control]="inputForm.controls.NET_SPACE" [submitted]="submitted">
-          </app-input-text>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="用途" [options]="usageOptions" optionLabel="label" optionValue="value"
-            [control]="inputForm.controls.Location_Purpose" [submitted]="submitted">
-          </app-dropdown>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="狀態" [options]="LOCATION_Status_Options" optionLabel="label" optionValue="value"
+          <app-dropdown label="使用狀態" [options]="LOCATION_Status_Options" optionLabel="label" optionValue="value"
             [control]="inputForm.controls.LOCATION_Status" [submitted]="submitted">
           </app-dropdown>
         </div>
-
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="平面圖X座標" [control]="inputForm.controls.X_coordinate" [submitted]="submitted">
+          <app-dropdown label="用途代碼" [options]="usageOptions" optionLabel="label" optionValue="value"
+            [control]="inputForm.controls.Purpose_no" [submitted]="submitted">
+          </app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="平面圖X座標" [control]="inputForm.controls.Draw_X" [submitted]="submitted">
           </app-input-text>
         </div>
-
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="平面圖Y座標" [control]="inputForm.controls.Y_coordinate" [submitted]="submitted">
-          </app-input-text>
-        </div>
-
-        <div class="col-12">
-          <app-input-text label="備註" [control]="inputForm.controls.Location_Remark" [style]="{ height: '100px' }"
-            [submitted]="submitted">
+          <app-input-text label="平面圖Y座標" [control]="inputForm.controls.Draw_Y" [submitted]="submitted">
           </app-input-text>
         </div>
       </div>
-
       <div class="col pt-4">
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
           <app-button btnType="cancel" (click)="onCancel()"></app-button>
