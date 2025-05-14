@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { ErrorHandlerService } from '../../shared/service/error-handler.service';
 import { catchError, Observable, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { SYS1000, SYS1000Response } from '../../shared/models/SYS/SYS1000';
+import { SYS1000, SYS1000Response } from '../../shared/models/system/SYS1000';
 
 @Injectable({
   providedIn: 'root',
@@ -22,7 +22,7 @@ export class Sys1000Service {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService,
-  ) {}
+  ) { }
 
   // 獲取本地下拉選單數據
   getData(): Observable<SYS1000Response[]> {

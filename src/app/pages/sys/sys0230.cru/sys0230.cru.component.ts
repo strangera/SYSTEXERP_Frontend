@@ -12,7 +12,6 @@ import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { KeyValue } from '@angular/common';
-import { RowCheckData } from '../../../shared/models/rowData';
 import { TreeNode } from 'primeng/api';
 
 interface Column {

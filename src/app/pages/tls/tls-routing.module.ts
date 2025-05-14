@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { NotfoundComponent } from '../notfound/notfound.component';
 import { TLS11010CRUComponent } from './tls11010-cru/tls11010-cru.component';
 import { TLS11010Component } from './tls11010/tls11010.component';
 import { TLS11020CRUComponent } from './tls11020-cru/tls11020-cru.component';
@@ -392,6 +391,7 @@ import { TLS57140Component } from './tls57140/tls57140.component';
 import { TLS57150Component } from './tls57150/tls57150.component';
 import { TLS57160Component } from './tls57160/tls57160.component';
 import { TLS57170Component } from './tls57170/tls57170.component';
+import { NotfoundComponent } from '../base/notfound/notfound.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '404', pathMatch: 'full' },

@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
-import { NotfoundComponent } from '../notfound/notfound.component';
+import { NotfoundComponent } from '../base/notfound/notfound.component';
 import { FIN11010CRUComponent } from './fin11010-cru/fin11010-cru.component';
 import { FIN11010Component } from './fin11010/fin11010.component';
 import { FIN11020CRUComponent } from './fin11020-cru/fin11020-cru.component';

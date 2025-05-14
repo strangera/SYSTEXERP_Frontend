@@ -13,8 +13,6 @@ import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { RoleDataPermissions } from '../../../shared/models/SYS/RoleDataPermissions';
-import { Store, StoreM } from '../../../shared/models/SYS/StoreM';
 import { KeyValue } from '@angular/common';
 import { TreeNode } from 'primeng/api';
 
@@ -36,7 +34,7 @@ interface RowData {
 // 角色系統權限設定 CRU
 export class SYS0310CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
-  sourceProducts: Store[] = [{
+  sourceProducts: any[] = [{
     id: 1,
     cName: 'agnès b.',
     area: 'A1館',
@@ -52,7 +50,7 @@ export class SYS0310CRUComponent extends BasicCrupageComponent implements OnInit
     area: 'A1館',
     floor: '1F',
   },];
-  targetProducts: Store[] = [];
+  targetProducts: any[] = [];
 
   // ----------------------------------------------------------------
   selectedFiles: TreeNode[] = [];
