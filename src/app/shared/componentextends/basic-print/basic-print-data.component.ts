@@ -31,11 +31,22 @@ export class BasicPrintDataComponent {
   tableService = inject(TableService);
   authService = inject(AuthService);
 
-  exportPDFDownload(columns: Column[]): void {
+  exportPDFDownload(columns: Column[],): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const queryState = this.queryState.getQueryState(ProgNo);
     const userInfo = this.authService.currentUserValue;
-    console.log(userInfo);
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = (today.getMonth() + 1).toString().padStart(2, '0'); // getMonth() 返回 0-11，所以要 +1
+    const day = today.getDate().toString().padStart(2, '0');
+    const formattedToday = `${year}${month}${day}`;
+    const pdfColumns = columns.map(col => {
+      return {
+        field: col.field,
+        header: col.header,
+        visible: col.visible !== undefined ? col.visible : true
+      };
+    });
 
 
     const body = {
@@ -44,24 +55,7 @@ export class BasicPrintDataComponent {
         Conditions: queryState
       },
       "report_title": "PDF測試",
-      "columns": [
-        { "field": "CAT_MNo", "header": "中分類代碼", "visible": true },
-        { "field": "CAT_MName", "header": "中分類名稱", "visible": true },
-        {
-          "field": "CAT_LNo", "header": "大分類名稱", "visible": true,
-          "format": [
-            { "value": "01", "label": "化妝品" },
-            { "value": "02", "label": "電子商務EC" },
-            { "value": "04", "label": "電子商務EC-萊雅" },
-            { "value": "05", "label": "電子商務EC-臺鹽" }
-          ]
-        },
-        {
-          "field": "CAT_LRemark",
-          "header": "備註",
-          "visible": true
-        }
-      ],
+      columns: pdfColumns,
       "config": {
         "print_reportTitle": "Y",
         "print_reportTitle_per_page": "Y",
@@ -71,7 +65,7 @@ export class BasicPrintDataComponent {
         "print_reportFooter_per_page": "Y",
         "page_lines": 30
       },
-      "file_name": "admin_TLS51010_20250514"
+      file_name: `${userInfo?.user_No}_${ProgNo}_${formattedToday}`
     }
 
     this.tableService.exportPDF(body).subscribe({
