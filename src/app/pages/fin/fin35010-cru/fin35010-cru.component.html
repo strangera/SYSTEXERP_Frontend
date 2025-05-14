@@ -4,11 +4,11 @@
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
     <div>
-      <app-button btnType="action" label="專櫃履約保證金" icon="" (onClick)="onSubmit(dataForm)"
+      <app-button btnType="create" label="專櫃履約保證金" icon="" (onClick)="onSubmit(dataForm)"
         disabled="isDisabled"></app-button>
     </div>
     <div>
-      <app-button btnType="action" label="專櫃押金" icon="" (onClick)="onSubmit(dataForm)" disabled="true"></app-button>
+      <app-button btnType="create" label="專櫃押金" icon="" (onClick)="onSubmit(dataForm)" disabled="true"></app-button>
     </div>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">

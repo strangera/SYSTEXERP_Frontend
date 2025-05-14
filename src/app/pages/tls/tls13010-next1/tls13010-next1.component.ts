@@ -260,6 +260,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
   // Check if the user has query permission
   canQuery(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
+    return true;
   }
 }

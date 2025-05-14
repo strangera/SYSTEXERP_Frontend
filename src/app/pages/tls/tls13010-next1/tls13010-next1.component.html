@@ -4,7 +4,7 @@
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
     <!-- <div *appHasPermission="addPermission"> -->
-    <app-button btnType="action" label="下一步(抽成設定)" (click)="onSubmitNext()"></app-button>
+    <app-button btnType="create" label="下一步(抽成設定)" (click)="onSubmitNext()"></app-button>
     <app-button btnType="cancel" (click)="onCancel()"></app-button>
     <!-- </div> -->
   </div>
@@ -233,8 +233,8 @@
           <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
             <span>比率分攤(比率或元欄位如輸入比率請輸入1以下數字,如2%請輸入0.02!!)</span>
             <div class="button-container" style="display: flex; gap: 10px;">
-              <app-button btnType="action" label="顯示所有扣款項目" icon="pi pi-filter-fill"></app-button>
-              <app-button btnType="action" label="顯示已勾選項目" icon="pi pi-check-square"></app-button>
+              <app-button btnType="create" label="顯示所有扣款項目" icon="pi pi-filter-fill"></app-button>
+              <app-button btnType="create" label="顯示已勾選項目" icon="pi pi-check-square"></app-button>
             </div>
           </div>
         </ng-template>

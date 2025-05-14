@@ -27,10 +27,10 @@ export class BasicCrupageComponent {
   }
   // ----------------------------------------------------------------
   canAdd(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
+    return true
   }
 
   canEdit(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
+    return true
   }
 }

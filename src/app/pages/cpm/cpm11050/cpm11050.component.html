@@ -7,13 +7,13 @@
             <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
         </div> -->
     <div *appHasPermission="addPermission">
-      <app-button btnType="action" label="未領取報表" icon="pi pi-book" (click)="onUnclaimed()" class="col"></app-button>
+      <app-button btnType="create" label="未領取報表" icon="pi pi-book" (click)="onUnclaimed()" class="col"></app-button>
     </div>
     <div *appHasPermission="addPermission">
-      <app-button btnType="action" label="新增遺失" icon="pi pi-question" (click)="onLost()" class="col"></app-button>
+      <app-button btnType="create" label="新增遺失" icon="pi pi-question" (click)="onLost()" class="col"></app-button>
     </div>
     <div *appHasPermission="addPermission">
-      <app-button btnType="action" label="新增拾獲" icon="pi pi-shopping-bag" (click)="onFound()" class="col"></app-button>
+      <app-button btnType="create" label="新增拾獲" icon="pi pi-shopping-bag" (click)="onFound()" class="col"></app-button>
     </div>
   </div>
   <p-accordion>

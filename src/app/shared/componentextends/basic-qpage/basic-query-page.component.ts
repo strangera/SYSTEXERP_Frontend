@@ -1,6 +1,3 @@
-// !!! TMS底層寫法
-// !!! 看是要用這個底層還是原本的
-import { HasPermissionsValue } from '../../directive/has-permission.directive';
 import { NavigationExtras, Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { NotificationService } from '../../component/notification-message/notification.service';
@@ -9,7 +6,7 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { QueryStateService } from '../../service/query-state.service';
 import { take } from 'rxjs';
 import { UserInfo } from '../../models/system/userInfo';
-import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
+import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { CRUDStatus } from '../../enum/CRUDstatus';
 import { LazyLoadEvent } from '../../componentkit/table/table.model';
@@ -31,22 +28,17 @@ export class BasicQueryPageComponent<T> {
   language = navigator.language;
   loading = false;
   submitted = false;
-
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
-
   // 初始化頁面
   initializePage(progNo: string, cruPage?: string, queryForm?: FormGroup, onSubmit?: (form: FormGroup) => void) {
     this.ProgNo = progNo; // 程式編號
     this.cruPage = cruPage ?? ''; // CRU路徑
     this.funInfo = this.authService.getUserPermissions(this.ProgNo); // 取得權限
-    // 無API測試用
-    // this.funInfo?.PrivilegeBehavior = [PermissionsInfo.query, PermissionsInfo.add, PermissionsInfo.edit, PermissionsInfo.delete, PermissionsInfo.export, PermissionsInfo.report, PermissionsInfo.print];
+    console.log(this.funInfo);
+
     // 在初始化頁面後，通知選單更新選中狀態
     this.currentPageService.setCurrentProgNo(this.ProgNo);
     // 取得歷史紀錄(如果有的話)
-    if (this.canPerformAction(PermissionsInfo.query)) {
+    if (this.canPerformAction('10')) { // '查詢' 的 function_code 是 "10"
       this.queryStateService.getQueryState(this.ProgNo)?.pipe(take(1)).subscribe((query) => {
         if (query && queryForm && onSubmit) {
           queryForm?.patchValue(query);
@@ -56,13 +48,8 @@ export class BasicQueryPageComponent<T> {
       });
     }
   }
-
-  hasPermission(permission: PermissionsInfo): boolean {
-    // return this.funInfo?.PrivilegeBehavior?.includes(permission); // !!! 後端權限調整後再使用
-    return true; // 測試用
-  }
-  canPerformAction(action: PermissionsInfo): boolean {
-    return this.hasPermission(action);
+  canPerformAction(action: string): boolean {
+    return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
   navigateWithState(crudstatus: CRUDStatus, rowdata?: T, pageroute?: string) {
     const extras: NavigationExtras = {
@@ -76,22 +63,22 @@ export class BasicQueryPageComponent<T> {
   }
   // 移動路由
   onCreate() {
-    if (this.canPerformAction(PermissionsInfo.add)) {
+    if (this.canPerformAction('20')) { // '新增' 的 function_code 是 "20"
       this.navigateWithState(CRUDStatus.Create);
     }
   }
   onEdit(data: T) {
-    if (this.canPerformAction(PermissionsInfo.edit)) {
+    if (this.canPerformAction('30')) { // '修改' 的 function_code 是 "30"
       this.navigateWithState(CRUDStatus.Edit, data);
     }
   }
   onDetail(data: T) {
-    if (this.canPerformAction(PermissionsInfo.query)) {
+    if (this.canPerformAction('10')) { // '查詢' 的 function_code 是 "10"
       this.navigateWithState(CRUDStatus.Read, data);
     }
   }
   canDelete() {
-    if (this.canPerformAction(PermissionsInfo.query)) {
+    if (this.canPerformAction('40')) { // '刪除' 的 function_code 是 "40"
       this.navigateWithState(CRUDStatus.Delete);
     }
   }
@@ -115,7 +102,7 @@ export class BasicQueryPageComponent<T> {
     storageKey: string,
     onSubmit: (form: FormGroup) => void,
   ) {
-    if (this.canPerformAction(PermissionsInfo.query)) {
+    if (this.canPerformAction('10')) { // '查詢' 的 function_code 是 "10"
       this.queryStateService.getQueryState(storageKey)?.pipe(take(1)).subscribe((query) => {
         if (query) {
           queryForm.patchValue(query);
