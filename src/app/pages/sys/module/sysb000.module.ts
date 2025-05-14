@@ -128,11 +128,11 @@ export class Sysb600m {
 // tblUser 使用者設定檔
 export class tblUser {
   'id': string;
-  'User_No': string;
-  'User_Name': string;
+  'user_No': string;
+  'user_Name': string;
   'user_Password': string;
   'title': string;
-  'Org_ID': string;
+  'org_ID': string;
 
   'str_date': Date;
   'end_date': Date;
@@ -144,6 +144,23 @@ export class tblUser {
   'remarks': string;
   'user_priority': string;
   'USER_PwdExpireDate': Date;
+
+  'CRT_Date': Date;
+  'CRT_USR_No': string;
+  'CRT_USR_Name': string;
+  'UPD_Date': Date;
+  'UPD_USR_No': string;
+  'UPD_USR_Name': string;
+}
+
+// SYS1000代碼檔案
+export interface SYS1000 {
+  'ID': number;
+  'SYS_Code': string;
+  'SYS_Name': string;
+  'SYS_Enabled': string;
+  'SYS_Sort': number;
+  'SYS_Type': string;
 
   'CRT_Date': Date;
   'CRT_USR_No': string;
