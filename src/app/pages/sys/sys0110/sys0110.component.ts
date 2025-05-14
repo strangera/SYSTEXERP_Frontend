@@ -34,7 +34,7 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     user_priority: ['', Validators.maxLength(1)], // 使用者等級
     USER_PwdExpireDate: [''], // 密碼到期日 YYYY/MM/DD HH:NN:SS，若使用者登入系統的時間大於此日期，則需強制使用者變更密碼
 
-    ...createPaginationConfig, // 分頁和排序參數 // 排序需要
+    ...createPaginationConfig([{ field: 'User_No', order: 1 }]), // 分頁和排序參數
   });
 
   totalRecords = 0;// 分頁和排序參數 // 排序需要

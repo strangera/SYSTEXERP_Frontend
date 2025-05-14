@@ -24,7 +24,7 @@ export class SYSB400Component
     level_id: ['', Validators.maxLength(2)], // 組織階層代碼
 
     //分頁查詢
-    ...createPaginationConfig, // 分頁和排序參數 // 排序需要
+    ...createPaginationConfig([{ field: 'org_id', order: 1 }]), // 分頁和排序參數
   });
 
   upgroup_Options: apiOption[] = [];
