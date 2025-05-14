@@ -63,7 +63,7 @@ export class BasicQueryPageComponent<T> {
   }
   // 移動路由
   onCreate() {
-    if (this.canPerformAction('20')) { // '新增' 的 function_code 假設是 "20"
+    if (this.canPerformAction('20')) { // '新增' 的 function_code 是 "20"
       this.navigateWithState(CRUDStatus.Create);
     }
   }
@@ -78,7 +78,7 @@ export class BasicQueryPageComponent<T> {
     }
   }
   canDelete() {
-    if (this.canPerformAction('40')) { // '刪除' 的 function_code 假設是 "40"
+    if (this.canPerformAction('40')) { // '刪除' 的 function_code 是 "40"
       this.navigateWithState(CRUDStatus.Delete);
     }
   }

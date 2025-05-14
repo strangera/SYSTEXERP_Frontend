@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, EventEmitter, Input, SimpleChanges, OnChanges, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, SimpleChanges, OnChanges, Output, ViewChild, ContentChild, TemplateRef, OnDestroy, OnInit } from '@angular/core';
 import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
 import { AddButton, Column, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
@@ -8,13 +8,17 @@ import { NotificationService } from '../../component/notification-message/notifi
 import { QueryStateService } from '../../service/query-state.service';
 import { ReportHead } from '../../models/ReportHead';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
+import { AuthService } from '../../../service/system/auth.service';
+import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
+import { Subject, takeUntil } from 'rxjs';
+import { FunsrightInfo } from '../../models/system/funsrightInfo';
 @Component({
   selector: 'app-table',
   templateUrl: './table.component.html',
   styleUrl: './table.component.scss',
   animations: [toggleButtons],
 })
-export class TableComponent extends BasicPrintDataComponent implements OnChanges {
+export class TableComponent extends BasicPrintDataComponent implements OnInit, OnChanges, OnDestroy {
   // 基本設置
   @ViewChild('dt', { static: false }) dt!: Table;                               // table 元件
   @ViewChild('fileUpload') fileUpload!: FileUpload;                             // 檔案上傳 元件
@@ -93,10 +97,27 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>(); // Lazy 加載事件
   // 其他
   @Input() emptyMessage = '查無資料';                // table 無資料時顯示文字
+  // 權限
+  @ContentChild('captionTemplate') captionTemplate: TemplateRef<any> | undefined;
+  private ngUnsubscribe = new Subject<void>();
+  public funInfo: FunsrightInfo | undefined;
+
   constructor(
     private readonly queryStateService: QueryStateService,
     private readonly messageService: NotificationService,
+    private readonly authService: AuthService,
+    private readonly currentPageService: CurrentPageService,
+
   ) { super(); }
+  ngOnInit(): void {
+    this.currentPageService.currentPageProgNo$.pipe(takeUntil(this.ngUnsubscribe)).subscribe(progNo => {
+      if (progNo) {
+        this.funInfo = this.authService.getUserPermissions(progNo);
+      } else {
+        this.funInfo = undefined;
+      }
+    });
+  }
   // 當 data 發生變化時，重置分頁與頁碼
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] && this.data.length > 0) {
@@ -112,6 +133,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
       this.multiSortMeta = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta; // 取得排序歷史紀錄
       this.selectedColumns = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value ?? this.columns.filter(col => col.visible !== false); // 取得顯示欄位
     }
+  }
+  ngOnDestroy(): void {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
   // 計算總頁數並生成頁面選項
   calculateTotalPages() {
@@ -221,5 +246,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   onImportExcel(event: FileSelectEvent) {                           // 匯入Excel
     this.importExcel.emit(event);
     this.fileUpload.clear();
+  }
+  // 權限
+  canPerformAction(action: string): boolean {
+    return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
 }

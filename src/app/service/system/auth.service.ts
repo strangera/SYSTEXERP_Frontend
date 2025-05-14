@@ -9,6 +9,7 @@ import { environment } from '../../../environments/environment';
 import { BehaviorType, FunsrightInfo } from '../../shared/models/system/funsrightInfo';
 import { UserInfo } from '../../shared/models/system/userInfo';
 import { NotificationService } from '../../shared/component/notification-message/notification.service';
+import { QueryStateService } from '../../shared/service/query-state.service';
 
 export interface ApiResponse<T> {
   Status: string;
@@ -42,6 +43,7 @@ export class AuthService {
     private http: HttpClient,
     private encrypt: EncryptionService,
     private notemessage: NotificationService,
+    private queryStateService: QueryStateService
   ) {
     const userStorage: any = this.getUserInfo();
     this.userSubject = new BehaviorSubject(userStorage);
@@ -83,6 +85,7 @@ export class AuthService {
       sessionStorage.clear();
       this.userSubject.next(null);
       this.router.navigate(['/account/login'], { replaceUrl: true });
+      this.queryStateService.clearAllQueryStates();
       this.notemessage.infoBubble('已成功登出');
       return;
     }
@@ -97,6 +100,7 @@ export class AuthService {
         this.userSubject.next(null);
         this.router.navigate(['/account/login'], { replaceUrl: true });
         this.notemessage.infoBubble('已成功登出');
+        this.queryStateService.clearAllQueryStates();
       },
       error: (error) => { console.error('Logout error:', error); }
     });
