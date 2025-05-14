@@ -17,14 +17,14 @@
           </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="大分類代碼" controlName="CAT_LNo" [options]="bigCategoryOptions" optionLabel="label"
+          <app-dropdown label="大分類代碼/名稱" controlName="CAT_LNo" [options]="bigCategoryOptions" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.CAT_LNo" [submitted]="submitted">
           </app-dropdown>
         </div>
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="中分類代碼" controlName="CAT_MNo" [options]="middleCategoryOptions" optionLabel="label"
+          <app-dropdown label="中分類代碼/名稱" controlName="CAT_MNo" [options]="middleCategoryOptions" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.CAT_MNo" [submitted]="submitted">
           </app-dropdown>
         </div>
