@@ -28,7 +28,7 @@
           [outlined]="!IsPrint" [disabled]="!canPerformAction('50')" />
         <div [@toggleButtons]="!IsPrint ? 'visible' : 'hidden'" [ngClass]="IsPrint ? 'hidden' : 'flex'" class="gap-2">
           <p-button pButton tooltipPosition="top" pTooltip="列印PDF" class="p-button-rounded p-button-text p-button-info"
-            icon="fa-regular fa-file-pdf" (click)="exportPDFDownload()" [disabled]="!canPerformAction('60')" />
+            icon="fa-regular fa-file-pdf" (click)="exportPDFDownload(columns)" [disabled]="!canPerformAction('60')" />
           <p-button pButton tooltipPosition="top" pTooltip="匯出Excel"
             class="p-button-rounded p-button-text p-button-info" icon="fa-regular fa-file-lines"
             (click)="exportExcelDownload()" [disabled]="!canPerformAction('70')" />

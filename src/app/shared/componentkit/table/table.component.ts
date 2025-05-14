@@ -8,7 +8,6 @@ import { NotificationService } from '../../component/notification-message/notifi
 import { QueryStateService } from '../../service/query-state.service';
 import { ReportHead } from '../../models/ReportHead';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
-import { AuthService } from '../../../service/system/auth.service';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { Subject, takeUntil } from 'rxjs';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
@@ -105,7 +104,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   constructor(
     private readonly queryStateService: QueryStateService,
     private readonly messageService: NotificationService,
-    private readonly authService: AuthService,
     private readonly currentPageService: CurrentPageService,
 
   ) { super(); }
