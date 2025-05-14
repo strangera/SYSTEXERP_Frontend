@@ -65,12 +65,6 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
     if (formValue.CAP_Name === '') formValue.CAP_Name = null;
     if (formValue.CAP_Remark === '') formValue.CAP_Remark = null;
 
-    // ✅ 補上固定分頁與排序欄位（或視情況動態指定）
-    formValue.PageSize = 10;
-    formValue.PageIndex = 1;
-    formValue.OrderBy = '';
-    formValue.Offset = 0;
-    formValue.SortBy = [{ field: 'CAP_Item', order: 1 }];
 
     console.log('🔍 查詢條件 request payload:', formValue);
 
