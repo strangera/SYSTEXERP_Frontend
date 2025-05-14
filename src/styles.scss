@@ -152,3 +152,8 @@ input[disabled],
     flex-grow: 1;
   }
 }
+
+.p-inputtext,
+.p-dropdown {
+  background-color: transparent;
+}

@@ -43,7 +43,8 @@ export class AppMenulistService {
         hasChildrenOnly: false,
         prog_ispage: prog_ispage,
         prog_sort: prog_sort || 0, // 確保 prog_sort 有預設值，方便排序
-        selected: false
+        selected: false,
+        isSubModule: sub_module_no === "" && prog_up !== "" // 判斷是否為第一個子模組
       };
       menuLookup.set(prog_no, menuItem);
     });

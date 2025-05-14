@@ -1,5 +1,6 @@
 <div class="menuitem ml-2">
-  <li [ngClass]="{'active-menuitem': item.expanded}" *ngIf="item.items; else noHasSubmenu">
+  <li [ngClass]="{'active-menuitem': item.expanded, 'active-menuitem-bg': item['isSubModule'] && item.expanded}"
+    *ngIf="item.items; else noHasSubmenu">
     <a (click)="toggleActive(item)" [attr.href]="null" pRipple>
       <i [ngClass]="item.icon" class="layout-menuitem-icon"></i>
       <span class="layout-menuitem-text">{{item.label}}</span>

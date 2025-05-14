@@ -6,6 +6,8 @@ interface ButtonConfig {
   label: string;
   icon?: string;
   class?: string;
+  text?: boolean;
+  outlined?: boolean;
   disabled?: boolean;
   type?: 'button' | 'submit' | 'reset';
   severity?: 'success' | 'info' | 'warning' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' | null;
@@ -27,23 +29,25 @@ export class ButtonComponent implements OnInit, OnDestroy {
   @Input() class: string | undefined;
   @Input() disabled: boolean | undefined | string;
   @Input() type: 'button' | 'submit' | 'reset' = 'button'; // 原始html的type
+  @Input() text: boolean | undefined; // 是否為文字按鈕
+  @Input() outlined: boolean | undefined; // 是否為輪廓按鈕
 
   private authService: AuthService = inject(AuthService);
   private currentPageService: CurrentPageService = inject(CurrentPageService);
   private ngUnsubscribe = new Subject<void>();
 
   private readonly buttonConfig: Record<string, ButtonConfig> = {
-    default: { label: '標籤', icon: 'pi pi-check', class: 'button-submit', disabled: false, type: 'button', severity: 'info' },           // 預設
-    create: { label: '新增', icon: 'pi pi-plus', class: 'button-create', disabled: false, type: 'button', severity: 'info', permissionCode: '20' },   // 新增
-    clear: { label: '清除', icon: undefined, class: 'button-clear', disabled: false, type: 'reset', severity: 'info' },                   // 清除
-    cancel: { label: '取消', icon: 'pi pi-times', class: 'button-cancel', disabled: false, type: 'button', severity: 'secondary' },       // 取消
-    delete: { label: '刪除', icon: 'pi pi-trash', class: 'button-delete', disabled: false, type: 'button', severity: 'danger', permissionCode: '40' },// 刪除
-    edit: { label: '編輯', icon: 'pi pi-pencil', class: 'button-edit', disabled: false, type: 'button', severity: 'info', permissionCode: '30' },     // 編輯
-    query: { label: '查詢', icon: 'pi pi-search', class: 'button-query', disabled: false, type: 'submit', severity: 'info', permissionCode: '10' },   // 查詢
-    submit: { label: '確認', icon: 'pi pi-check', class: 'button-submit', disabled: false, type: 'submit', severity: 'info' },            // 確認
-    next: { label: '下一步', icon: 'pi pi-arrow-right', class: 'button-next', disabled: false, type: 'button', severity: 'info' },        // 下一步
-    previous: { label: '上一步', icon: 'pi pi-arrow-left', class: 'button-previous', disabled: false, type: 'button', severity: 'info' }, // 上一步
-    back: { label: '離開', icon: 'pi pi-arrow-left', class: 'button-back', disabled: false, type: 'button', severity: 'secondary' },      // 離開
+    default: { label: '標籤', icon: 'pi pi-check', class: '', disabled: false, type: 'button', severity: 'info' },           // 預設
+    create: { label: '新增', icon: 'pi pi-plus', class: '', disabled: false, type: 'button', severity: 'info', permissionCode: '20' },   // 新增
+    clear: { label: '清除', icon: undefined, class: 'button-clear', text: true, disabled: false, type: 'reset', severity: 'info' },                   // 清除
+    cancel: { label: '取消', icon: 'pi pi-times', class: 'button-cancel', outlined: true, disabled: false, type: 'button', severity: 'secondary' },       // 取消
+    delete: { label: '刪除', icon: 'pi pi-trash', class: 'p-button-danger', disabled: false, type: 'button', severity: 'danger', permissionCode: '40' },// 刪除
+    edit: { label: '編輯', icon: 'pi pi-pencil', class: '', disabled: false, type: 'button', severity: 'info', permissionCode: '30' },     // 編輯
+    query: { label: '查詢', icon: 'pi pi-search', class: '', disabled: false, type: 'submit', severity: 'info', permissionCode: '10' },   // 查詢
+    submit: { label: '確認', icon: 'pi pi-check', class: '', disabled: false, type: 'submit', severity: 'info' },            // 確認
+    next: { label: '下一步', icon: 'pi pi-arrow-right', class: '', disabled: false, type: 'button', severity: 'info' },        // 下一步
+    previous: { label: '上一步', icon: 'pi pi-arrow-left', class: 'button-previous', outlined: true, disabled: false, type: 'button', severity: 'info' }, // 上一步
+    back: { label: '離開', icon: 'pi pi-arrow-left', class: 'button-back', outlined: true, disabled: false, type: 'button', severity: 'secondary' },      // 離開
   };
 
   ngOnInit() {
@@ -52,6 +56,8 @@ export class ButtonComponent implements OnInit, OnDestroy {
     if (this.icon === undefined) this.icon = config.icon;
     if (this.class === undefined) this.class = config.class;
     if (this.disabled === undefined) this.disabled = config.disabled;
+    if (this.text === undefined) this.text = config.text;
+    if (this.outlined === undefined) this.outlined = config.outlined;
     this.severity = config.severity as 'success' | 'info' | 'warning' | 'danger' | 'help' | 'primary' | 'secondary' | 'contrast' | null | undefined;
     this.type = config.type as 'button' | 'submit' | 'reset';
 

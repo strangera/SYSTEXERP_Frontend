@@ -1,62 +1,9 @@
-$border-radius: 5px;
-$padding: 1rem;
-$button-background: rgb(0, 180, 210);
-$button-border: 1px solid rgb(0, 180, 210);
-$button-clear-color: #00b4d2;
-$button-clear-background: white;
-$button-cancel-color: black;
-$button-cancel-background: white;
-$button-cancel-border: 1px solid rgb(209, 209, 209);
-$button-cancel-hover-background: rgb(230, 230, 230);
-$button-submit-border: 1px solid rgb(255, 255, 255);
-$button-delete-color: white;
-$button-delete-background: #ff0000;
-$button-delete-hover-background: #ff0000aa;
-
 ::ng-deep {
   #customButton .p-button {
-    border-radius: $border-radius;
-    padding: $padding;
-  }
-
-  #customButton.button-create .p-button,
-  #customButton.button-query .p-button {
-    background: $button-background;
-    border: $button-border;
-  }
-
-  #customButton.button-clear .p-button {
-    color: $button-clear-color;
-    background-color: $button-clear-background;
-    border: none !important;
-  }
-
-  #customButton.button-cancel .p-button,
-  #customButton.button-back .p-button,
-  #customButton.button-previous .p-button {
-    color: $button-cancel-color;
-    background: $button-cancel-background;
-    border: $button-cancel-border !important;
-  }
-
-  #customButton.button-cancel .p-button:hover,
-  #customButton.button-back .p-button:hover,
-  #customButton.button-previous .p-button:hover {
-    background: $button-cancel-hover-background;
-  }
-
-  #customButton.button-submit .p-button,
-  #customButton.button-next .p-button {
-    border: $button-submit-border;
-  }
-
-  #customButton.button-delete .p-button {
-    color: $button-delete-color;
-    background: $button-delete-background;
-    border: $button-cancel-border !important;
-  }
-
-  #customButton.button-delete .p-button:hover {
-    background: $button-delete-hover-background;
+    border-radius: 3px;
+    padding: 1rem;
+    &.p-button-outlined {
+      border: 1px solid var(--surface-border);
+    }
   }
 }

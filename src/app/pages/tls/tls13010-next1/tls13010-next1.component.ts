@@ -1,3 +1,4 @@
+import { Column } from './../../../shared/componentkit/table/table.model';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -33,8 +34,9 @@ interface Deduction {
   isNew: boolean;
   deductionCode: string;
   deductionName: string;
-  startYear: number;
-  startMonth: string;
+  // startYear: number;
+  // startMonth: string;
+  startDate: string;
   unit: string;
   unitPrice: number;
   quantity: number;
@@ -100,6 +102,35 @@ interface Deduction3 {
   styleUrls: ['./tls13010-next1.component.scss']
 })
 export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> implements OnInit {
+
+  deductionColumns: Column[] = [// 表格欄位定義
+    {
+      field: 'isNew',
+      header: '是否新增',
+      visible: true,
+      type: 'checkbox',
+      checkboxTrueLabel: '是', // 非編輯模式顯示「新增」表示 true
+      checkboxFalseLabel: '否', // 非編輯模式顯示「非新增」表示 false
+      maxWidth: '150px' // 可選：確保單元格寬度
+    },
+    { field: 'deductionCode', header: '扣款代號', visible: true, type: 'input' },
+    { field: 'deductionName', header: '扣款名稱', visible: true, type: 'input' },
+    { field: 'startDate', header: '扣款起始年月', visible: true, type: 'date' },
+    { field: 'unit', header: '單位', visible: true, type: 'input' },
+    { field: 'unitPrice', header: '單價', visible: true, type: 'inputNumber' },
+    { field: 'quantity', header: '數量', visible: true, type: 'inputNumber' },
+    { field: 'amount', header: '扣款金額', visible: true, type: 'inputNumber' },
+    { field: 'organization', header: '組織', visible: true, type: 'input' },
+    {
+      field: 'invoiceStatus', header: '是否開立發票', visible: true, type: 'checkbox',
+      checkboxTrueLabel: '是', // 非編輯模式顯示「新增」表示 true
+      checkboxFalseLabel: '否', // 非編輯模式顯示「非新增」表示 false
+      maxWidth: '150px' // 可選：確保單元格寬度
+    },
+  ];
+
+
+
   stocks: StockData[] = [];
   deductions: Deduction[] = [];
   deductions1: Deduction1[] = [];
@@ -140,11 +171,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     // 一次扣款資料
     this.deductions = [
-      { serialNumber: 1, isNew: true, deductionCode: 'A01', deductionName: '開標費財費', startYear: 2015, startMonth: '1月', unit: '', unitPrice: 10000, quantity: 1, amount: 10000, organization: 102220, invoiceStatus: '開立' },
-      { serialNumber: 2, isNew: false, deductionCode: 'A02', deductionName: '識別證', startYear: 2014, startMonth: '12月', unit: '', unitPrice: 0, quantity: 0, amount: 0, organization: 102220, invoiceStatus: '開立' },
-      { serialNumber: 3, isNew: false, deductionCode: 'A03', deductionName: '影印費', startYear: 2014, startMonth: '12月', unit: '', unitPrice: 0, quantity: 0, amount: 0, organization: 102220, invoiceStatus: '開立' },
-      { serialNumber: 4, isNew: false, deductionCode: 'A04', deductionName: '紙袋、包裝費', startYear: 2014, startMonth: '12月', unit: '', unitPrice: 0, quantity: 0, amount: 0, organization: 102220, invoiceStatus: '開立' },
-      { serialNumber: 5, isNew: false, deductionCode: 'A05', deductionName: '簽票費用', startYear: 2014, startMonth: '12月', unit: '', unitPrice: 0, quantity: 0, amount: 0, organization: 102220, invoiceStatus: '開立' }
+      { serialNumber: 1, isNew: true, deductionCode: 'A01', deductionName: '開標費財費', startDate: '2015/1', unit: '', unitPrice: 10000, quantity: 1, amount: 10000, organization: 102220, invoiceStatus: '開立' },
+      // { serialNumber: 2, isNew: false, deductionCode: 'A02', deductionName: '識別證', startYear: 2014, startMonth: '12月', unit: '', unitPrice: 0, quantity: 0, amount: 0, organization: 102220, invoiceStatus: '開立' },
+      // { serialNumber: 3, isNew: false, deductionCode: 'A03', deductionName: '影印費', startYear: 2014, startMonth: '12月', unit: '', unitPrice: 0, quantity: 0, amount: 0, organization: 102220, invoiceStatus: '開立' },
+      // { serialNumber: 4, isNew: false, deductionCode: 'A04', deductionName: '紙袋、包裝費', startYear: 2014, startMonth: '12月', unit: '', unitPrice: 0, quantity: 0, amount: 0, organization: 102220, invoiceStatus: '開立' },
+      // { serialNumber: 5, isNew: false, deductionCode: 'A05', deductionName: '簽票費用', startYear: 2014, startMonth: '12月', unit: '', unitPrice: 0, quantity: 0, amount: 0, organization: 102220, invoiceStatus: '開立' }
     ];
 
     // 每月扣款資料
