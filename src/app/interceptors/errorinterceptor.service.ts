@@ -17,7 +17,7 @@ export class ErrorinterceptorService implements HttpInterceptor {
       retryWhen(errors =>
         errors.pipe(
           tap(error => {
-            if (error.status !== 0) {
+            if (error && error.status && error.status !== 0) {
               // Only retry on timeout errors
               throw error;
             }

@@ -120,13 +120,15 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   }
   // 當 data 發生變化時，重置分頁與頁碼
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data'] && this.data.length > 0) {
-      console.log('當 data 發生變化時');
-      this.calculateTotalPages(); // 計算總頁數
+    if (changes['data']) {
       setTimeout(() => {
+        console.log('當 data 發生變化時');
+        const dataLength = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+        if (dataLength > 0) {
+          this.calculateTotalPages(); // 計算總頁數
+        }
         this.selectionChange.emit(this.selectedItems);
-        this.cdr.detectChanges();
-      }, 0);
+      });
     }
     if (changes['columns']) {
       this.columns = this.columns.filter(col => !col.hidden);
@@ -140,13 +142,13 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   }
   // 計算總頁數並生成頁面選項
   calculateTotalPages() {
-    this.cdr.detectChanges();
     console.log('加總頁數', this.data);
     this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
     this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
     this.pages = Array.from({ length: this.totalPages }, (_, index) => ({ label: `第 ${index + 1} 頁`, value: index + 1 }));
     // 若當前頁數超過最大頁數，則移動到最大頁數，但至少為 1
     if (this.selectedPage && this.selectedPage > this.totalPages) { this.goToPage(Math.max(this.totalPages, 1)); }
+    this.cdr.detectChanges(); // 在计算完所有页面信息后，通知 Angular 更新 UI
   }
   // 右上dropdown 跳轉頁數
   goToPage(pageNumber: number) {
