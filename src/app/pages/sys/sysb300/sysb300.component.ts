@@ -25,7 +25,7 @@ export class SYSB300Component
     level_name: ['', [Validators.maxLength(30)]], // 組織階層名稱
     p_level_id: ['', [Validators.maxLength(2)]], // 上層組織階層代碼
     //分頁查詢
-    ...createPaginationConfig, // 分頁和排序參數 // 排序需要
+    ...createPaginationConfig([{ field: 'level_id', order: 1 }]), // 分頁和排序參數
   });
   // 表格
   // ----------------------------------------------------------------

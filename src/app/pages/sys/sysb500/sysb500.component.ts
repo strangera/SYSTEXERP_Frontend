@@ -22,7 +22,7 @@ export class SYSB500Component
     area_desc: ['', [Validators.maxLength(30)]], // 區域別名稱
 
     //分頁查詢
-    ...createPaginationConfig, // 分頁和排序參數 // 排序需要
+    ...createPaginationConfig([{ field: 'area_no', order: 1 }]), // 分頁和排序參數
   });
   // 表格
   // ----------------------------------------------------------------
