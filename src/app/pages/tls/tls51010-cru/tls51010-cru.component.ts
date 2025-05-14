@@ -1,10 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { NavigationExtras, Router } from '@angular/router';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -94,10 +90,10 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   //   return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());
   // }
   // canAdd(): boolean {
-  //   return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
+  //   return true;
   // }
   // canEdit(): boolean {
-  //   return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
+  //   return true;
   // }
 
   // 移除：Edit 和 Read 方法由父類 initializePage 處理
@@ -133,14 +129,5 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
           break;
       }
     });
-  }
-
-  // 修改：submitForm 調用父類 handleSubmit
-  submitForm(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.dataForm.reset(); // 重置表單
   }
 }

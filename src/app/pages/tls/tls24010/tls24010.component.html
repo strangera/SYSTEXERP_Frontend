@@ -5,14 +5,14 @@
     </div>
 
     <div *appHasPermission="addPermission">
-      <app-button btnType="action" (click)="onCreate()" class="col" label="新增補登" icon=""></app-button>
-      <app-button btnType="action" (click)="onCreate()" class="col" label="取消補登" icon=""></app-button>
+      <app-button btnType="create" (click)="onCreate()" class="col" label="新增補登" icon=""></app-button>
+      <app-button btnType="create" (click)="onCreate()" class="col" label="取消補登" icon=""></app-button>
 
 
-      <app-button btnType="action" (click)="onCreate()" class="col" label="非業主發票業績匯入"
+      <app-button btnType="create" (click)="onCreate()" class="col" label="非業主發票業績匯入"
         icon="pi pi-spin pi-cog"></app-button>
 
-      <app-button btnType="action" (click)="onCreate()" class="col" label="修改" icon="pi pi-check"
+      <app-button btnType="create" (click)="onCreate()" class="col" label="修改" icon="pi pi-check"
         severity="danger"></app-button>
     </div>
   </div>

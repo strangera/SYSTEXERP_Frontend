@@ -4,7 +4,7 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <div *appHasPermission="addPermission">
-            <app-button btnType="action" label="高權限查詢" icon="pi pi-user-plus" (click)="onSupremeAuthority()"
+            <app-button btnType="create" label="高權限查詢" icon="pi pi-user-plus" (click)="onSupremeAuthority()"
                 class="col"></app-button>
         </div>
         <div *appHasPermission="addPermission">

@@ -20,9 +20,11 @@ export interface Column {
   type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'chips' | 'checkbox' | 'date' | 'default'; // 欄位類型
   prefix?: string;
   fractionDigits?: number;
+
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
   optionLabel?: string; // 下拉選單 optionLabel
   optionValue?: string; // 下拉選單 optionValue
+
   buttonLabel?: string; // 選擇按鈕 label
   chipLabel?: string | undefined; // chips 顯示的 label
   checkboxValue?: string; // checkbox 顯示的 ngModel（適用於陣列資料）

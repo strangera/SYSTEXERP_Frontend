@@ -25,20 +25,22 @@
           pTooltip="過濾欄位" tooltipPosition="top" (onChange)="onFilterChange($event)" />
         <p-button [icon]="IsPrint ? 'pi pi-file' : 'pi pi-times'" [rounded]="true" *ngIf="data.length > 0"
           (click)="toggleVisibility()" [pTooltip]="IsPrint ? '報表模式' : '關閉報表模式'" tooltipPosition="top"
-          [outlined]="!IsPrint" />
+          [outlined]="!IsPrint" [disabled]="!canPerformAction('50')" />
         <div [@toggleButtons]="!IsPrint ? 'visible' : 'hidden'" [ngClass]="IsPrint ? 'hidden' : 'flex'" class="gap-2">
           <p-button pButton tooltipPosition="top" pTooltip="列印PDF" class="p-button-rounded p-button-text p-button-info"
-            icon="fa-regular fa-file-pdf" (click)="BasicPrinting(columns, data, reportHead,printColumns)" />
+            icon="fa-regular fa-file-pdf" (click)="BasicPrinting(columns, data, reportHead,printColumns)"
+            [disabled]="!canPerformAction('60')" />
           <p-button pButton tooltipPosition="top" pTooltip="匯出Excel"
             class="p-button-rounded p-button-text p-button-info" icon="fa-regular fa-file-lines"
-            (click)="exportFunction( columns, data, exportFilename,printColumns)" />
+            (click)="exportFunction( columns, data, exportFilename,printColumns)"
+            [disabled]="!canPerformAction('70')" />
         </div>
         <p-button *ngIf="IsPrint && showInsert && !rowEditing" (click)="insertRow()" pTooltip="新增" tooltipPosition="top"
           pButton icon="pi pi-plus" severity="success" class="p-button-rounded p-button-text"
-          [disabled]="insertDisabled" />
+          [disabled]="insertDisabled || !canPerformAction('20')" />
         <p-button *ngIf="IsPrint && showCheckBox && !rowEditing" (click)="deleteRow(selectedItems)" pTooltip="刪除"
           tooltipPosition="top" pButton icon="pi pi-trash" severity="danger" class="p-button-text" [rounded]="true"
-          [disabled]="selectedItems.length <= 0" />
+          [disabled]="selectedItems.length <= 0 || !canPerformAction('40')" />
       </div>
       <div *ngIf="IsPrint" class="flex-grow-1 p-2"><ng-content select="header"></ng-content></div>
       <div *ngIf="IsPrint" class="flex gap-2 py-2">
@@ -186,8 +188,8 @@
             (click)="onRowEditSave(rowData, ri, htmlTableRowElement)" />
           <p-button *ngIf="editing" icon="pi pi-times text-red-500" (click)="onRowEditCancel(rowData, ri)" />
         </div>
-        <p-button [text]="true" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pencil" (click)="editRow(rowData)"
-          *ngIf="showEdit" [disabled]="!isRowSelectable(rowData)" />
+        <p-button [text]="true" [outlined]="true" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pencil"
+          (click)="editRow(rowData)" *ngIf="showEdit" [disabled]="!isRowSelectable(rowData)" />
         <p-button pTooltip="查看" tooltipPosition="top" icon="pi pi-eye" (click)="detailRow(rowData)"
           *ngIf="showDetail" />
         <p-button *ngFor="let btn of addButton" pTooltip="{{ btn.label }}" tooltipPosition="top" [icon]="btn.icon"

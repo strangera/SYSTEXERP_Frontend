@@ -25,13 +25,16 @@ export class BasicQpageComponent {
   // 權限
   // ----------------------------------------------------------------
   canQuery(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
+    return true
+    // return true;
   }
   canAdd(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
+    return true
+    // return true;
   }
   canEdit(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
+    return true
+    // return true;
   }
   // 傳送的資料
   // ----------------------------------------------------------------

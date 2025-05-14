@@ -3,12 +3,8 @@ import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Sysb500m } from '../module/sysb000.module';
-import { TableLazyLoadEvent } from 'primeng/table';
-import { SortMeta } from 'primeng/api';
 import { Sysb500Service } from '../../../service/API/sys/sysb500.service';
-
-// 本地儲存鍵：用於儲存查詢狀態
-const storageKey = 'SYSB500';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-sysb500',
@@ -26,29 +22,16 @@ export class SYSB500Component
     area_desc: ['', [Validators.maxLength(30)]], // 區域別名稱
 
     //分頁查詢
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'area_no', order: 1 }] as SortMeta[]],
+    ...createPaginationConfig([{ field: 'area_no', order: 1 }]), // 分頁和排序參數
   });
   // 表格
   // ----------------------------------------------------------------
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: Sysb500m[] = [];
-  filteredData: Sysb500m[] = [...this.data];
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'area_no', header: '區域別編號', visible: true },
     { field: 'area_desc', header: '區域別名稱', visible: true },
-    // 其他欄位
   ];
-
-  // 表格數據和篩選數據
-  // // 分頁和排序參數
-  // pageSize: number = 10;
-  // pageIndex: number = 0;
-  totalRecords = 0;
-  // lastQueryParams: any = null;
-  // sortField: string = 'CAT_LNo';
-  // sortOrder: number = 1;
-
   // 多選項目
   selectedItems: Sysb500m[] = [];
 
@@ -59,25 +42,19 @@ export class SYSB500Component
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSB500', 'SYS/SYSB500CRU');
-
-    // 恢復查詢狀態並自動查詢
-    this.handleQueryRestore(this.queryForm, storageKey, (form) =>
-      this.onSubmit(form),
-    );
+    this.initializePage('SYSB500', 'SYS/SYSB500CRU', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       console.log('queryForm', frm.value);
       this.sysb500Service.querySYSB500(frm.value).subscribe({
-        next: (response: any) => {
+        next: (response) => {
           console.log('API response:', response);
           if (response.Status === '0000') {
             this.data = response.Data || [];
-            this.filteredData = [...this.data];
             this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(storageKey, frm.value);
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {
             console.error('API error:', response.Status, response.Message);
           }
@@ -91,11 +68,6 @@ export class SYSB500Component
         },
       });
     });
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
   }
 
   // 刪除項目
@@ -125,7 +97,7 @@ export class SYSB500Component
     };
 
     this.sysb500Service.deleteSYSB500(deleteBody).subscribe({
-      next: (response: any) => {
+      next: (response) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('選中項目刪除成功');
         } else {
@@ -143,16 +115,5 @@ export class SYSB500Component
     });
 
     this.selectedItems = [];
-  }
-
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) {
-      return;
-    }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'area_no', order: 1 }];
-    this.onSubmit(this.queryForm);
   }
 }

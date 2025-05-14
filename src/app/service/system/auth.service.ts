@@ -6,9 +6,10 @@ import { EncryptionService } from '../../shared/service/encryption.service';
 import { catchError, map } from 'rxjs/operators';
 import { userLogin } from '../../shared/models/system/userLogin';
 import { environment } from '../../../environments/environment';
-import { FunsrightInfo } from '../../shared/models/system/funsrightInfo';
+import { BehaviorType, FunsrightInfo } from '../../shared/models/system/funsrightInfo';
 import { UserInfo } from '../../shared/models/system/userInfo';
 import { NotificationService } from '../../shared/component/notification-message/notification.service';
+import { QueryStateService } from '../../shared/service/query-state.service';
 
 export interface ApiResponse<T> {
   Status: string;
@@ -42,6 +43,7 @@ export class AuthService {
     private http: HttpClient,
     private encrypt: EncryptionService,
     private notemessage: NotificationService,
+    private queryStateService: QueryStateService
   ) {
     const userStorage: any = this.getUserInfo();
     this.userSubject = new BehaviorSubject(userStorage);
@@ -83,6 +85,7 @@ export class AuthService {
       sessionStorage.clear();
       this.userSubject.next(null);
       this.router.navigate(['/account/login'], { replaceUrl: true });
+      this.queryStateService.clearAllQueryStates();
       this.notemessage.infoBubble('已成功登出');
       return;
     }
@@ -97,31 +100,19 @@ export class AuthService {
         this.userSubject.next(null);
         this.router.navigate(['/account/login'], { replaceUrl: true });
         this.notemessage.infoBubble('已成功登出');
+        this.queryStateService.clearAllQueryStates();
       },
       error: (error) => { console.error('Logout error:', error); }
     });
   }
-  getUserPermissions(progNo: string): FunsrightInfo {
-    const initialFunsrightInfo: FunsrightInfo = {
-      id: "",
-      prog_no: '',
-      prog_id: '',
-      prog_name: '',
-      prog_up: '',
-      module_no: '',
-      sub_module_no: '',
-      prog_ispage: '',
-      prog_stopflag: '',
-      prog_sort: "",
-      label: '',
-      PrivilegeBehavior: [],
-    };
+  // 獲取使用者權限
+  getUserPermissions(progNo: string): FunsrightInfo | undefined {
     try {
-      const funs: FunsrightInfo[] = JSON.parse(sessionStorage.getItem("FunRightsInfo") || '');
-      return initialFunsrightInfo;
+      const funs = this._menuUpdated.getValue();
+      return funs.find(fun => fun.prog_no === progNo);
     } catch (error) {
-      console.error('Error', error);
-      return initialFunsrightInfo;
+      console.error('Error parsing FunRightsInfo from sessionStorage', error);
+      return undefined;
     }
   }
   // 獲取我的最愛

@@ -125,6 +125,34 @@ export class Sysb600m {
   'UPD_USR_Name': string;
 }
 
+// tblUser 使用者設定檔
+export class tblUser {
+  'id': string;
+  'User_No': string;
+  'User_Name': string;
+  'user_Password': string;
+  'title': string;
+  'Org_ID': string;
+
+  'str_date': Date;
+  'end_date': Date;
+
+  'status': string;
+  'user_type': string;
+  'user_email': string;
+  'TLT_No': string;
+  'remarks': string;
+  'user_priority': string;
+  'USER_PwdExpireDate': Date;
+
+  'CRT_Date': Date;
+  'CRT_USR_No': string;
+  'CRT_USR_Name': string;
+  'UPD_Date': Date;
+  'UPD_USR_No': string;
+  'UPD_USR_Name': string;
+}
+
 export interface apiOption {
   No: string;
   Name: string;

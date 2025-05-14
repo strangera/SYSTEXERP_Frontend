@@ -3,14 +3,10 @@ import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { option, Sysb400m } from '../module/sysb000.module';
-import { TableLazyLoadEvent } from 'primeng/table';
-import { SortMeta } from 'primeng/api';
 import { Sysb300Service } from '../../../service/API/sys/sysb300.service';
 import { Sysb400Service } from '../../../service/API/sys/sysb400.service';
 import { apiOption } from '../../tls/module/tls000/tls000.module';
-
-// 本地儲存鍵：用於儲存查詢狀態
-const storageKey = 'SYSB400';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-sysb400',
@@ -20,9 +16,23 @@ const storageKey = 'SYSB400';
 export class SYSB400Component
   extends BasicQueryPageComponent<Sysb400m>
   implements OnInit {
+
+  queryForm = this.formBuilder.group({
+    // SYS3100 + SYS3000
+    org_id: ['', Validators.maxLength(20)], // 組織代碼
+    org_name: ['', Validators.maxLength(40)], // 組織名稱
+    level_id: ['', Validators.maxLength(2)], // 組織階層代碼
+
+    //分頁查詢
+    ...createPaginationConfig([{ field: 'org_id', order: 1 }]), // 分頁和排序參數
+  });
+
+  upgroup_Options: apiOption[] = [];
+  whetherOptions: option[] = [];
+
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: Sysb400m[] = [];
-  filteredData: Sysb400m[] = [...this.data];
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'org_id', header: '組織代碼', visible: true },
     { field: 'org_name', header: '組織名稱', visible: true },
     {
@@ -51,32 +61,7 @@ export class SYSB400Component
         value,
     },
   ];
-
-  queryForm = this.formBuilder.group({
-    // SYS3100 + SYS3000
-    org_id: ['', Validators.maxLength(20)], // 組織代碼
-    org_name: ['', Validators.maxLength(40)], // 組織名稱
-    level_id: ['', Validators.maxLength(2)], // 組織階層代碼
-
-    //分頁查詢
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'org_id', order: 1 }] as SortMeta[]],
-  });
-
-  upgroup_Options: apiOption[] = [];
-  whetherOptions: option[] = [];
-
-  // // 分頁和排序參數
-  // pageSize: number = 10;
-  // pageIndex: number = 0;
-  totalRecords = 0;
-  // lastQueryParams: any = null;
-  // sortField: string = 'CAT_LNo';
-  // sortOrder: number = 1;
-
-  // 多選項目
-  selectedItems: Sysb400m[] = [];
+  selectedItems: Sysb400m[] = []; // 多選項目
 
   constructor(
     private sysb300Service: Sysb300Service,
@@ -86,25 +71,19 @@ export class SYSB400Component
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSB400', 'SYS/SYSB400CRU');
+    this.initializePage('SYSB400', 'SYS/SYSB400CRU', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
-
-    // 恢復查詢狀態並自動查詢
-    this.handleQueryRestore(this.queryForm, storageKey, (form) =>
-      this.onSubmit(form),
-    );
   }
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       this.sysb400Service.querySYSB400(frm.value).subscribe({
-        next: (response: any) => {
+        next: (response) => {
           console.log('API response:', response);
           if (response.Status === '0000') {
             this.data = response.Data || [];
-            this.filteredData = [...this.data];
             this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(storageKey, frm.value);
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {
             console.error('API error:', response.Status, response.Message);
           }
@@ -118,19 +97,6 @@ export class SYSB400Component
         },
       });
     });
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();
-    this.data = [];
-    this.filteredData = [];
-    this.totalRecords = 0;
-    this.queryStateService.clearQueryState(storageKey);
   }
 
   // 刪除項目
@@ -159,7 +125,7 @@ export class SYSB400Component
       idList: idList, // 符合 API 的 idList 格式
     };
     this.sysb400Service.deleteSYSB400(deleteBody).subscribe({
-      next: (response: any) => {
+      next: (response) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('選中項目刪除成功');
         } else {
@@ -193,16 +159,5 @@ export class SYSB400Component
       { value: 'Y', label: '是' },
       { value: 'N', label: '否' },
     ];
-  }
-
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) {
-      return;
-    }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'org_id', order: 1 }];
-    this.onSubmit(this.queryForm);
   }
 }

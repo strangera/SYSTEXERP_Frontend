@@ -4,10 +4,10 @@
             <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <div *appHasPermission="addPermission">
-            <app-button btnType="action" label="重新廣播" icon="pi pi-book" class="col"></app-button>
+            <app-button btnType="create" label="重新廣播" icon="pi pi-book" class="col"></app-button>
         </div>
         <div *appHasPermission="addPermission">
-            <app-button btnType="action" label="已領回" icon="pi pi-book" class="col"></app-button>
+            <app-button btnType="create" label="已領回" icon="pi pi-book" class="col"></app-button>
         </div>
     </div>
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
