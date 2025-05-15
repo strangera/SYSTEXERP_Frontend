@@ -17,7 +17,7 @@
           </app-input-text>
         </div>
         <div class="col-12 md:col-12 lg:col-4">
-          <app-dropdown label="組織階層代碼" controlName="level_id" [options]="upgroup_Options" optionLabel="Label"
+          <app-dropdown label="組織階層代碼/名稱" controlName="level_id" [options]="upgroup_Options" optionLabel="Label"
             optionValue="No" [control]="dataForm.controls.level_id" [submitted]="submitted">
           </app-dropdown>
         </div>
@@ -25,12 +25,12 @@
       <!-- 上層組織代碼區域：僅當 org_id 不為零時顯示 -->
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4" *ngIf="dataForm.get('org_id')?.value !== '100000'">
-          <app-dropdown label="上層組織" controlName="p_org_id" [options]="org_Option" optionLabel="Label" optionValue="No"
-            [control]="dataForm.controls.p_org_id" [submitted]="submitted">
+          <app-dropdown label="上層組織代碼/名稱" controlName="p_org_id" [options]="org_Option" optionLabel="Label"
+            optionValue="No" [control]="dataForm.controls.p_org_id" [submitted]="submitted">
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4" *ngIf="dataForm.get('org_id')?.value !== '100000'">
-          <app-dropdown label="上層組織階層代碼" controlName="p_level_id" [options]="upgroup_Options" optionLabel="Label"
+          <app-dropdown label="上層組織階層代碼/名稱" controlName="p_level_id" [options]="upgroup_Options" optionLabel="Label"
             optionValue="No" [control]="dataForm.controls.p_level_id" [submitted]="submitted">
           </app-dropdown>
         </div>
