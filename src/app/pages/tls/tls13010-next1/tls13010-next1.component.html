@@ -1,12 +1,9 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div *appHasPermission="addPermission"> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
     <app-button btnType="create" label="下一步(抽成設定)" (click)="onSubmitNext()"></app-button>
     <app-button btnType="cancel" (click)="onCancel()"></app-button>
-    <!-- </div> -->
   </div>
 
   <!-- Scroll Container Wrapper -->
@@ -14,7 +11,7 @@
     <!-- 專櫃契約書資訊表格 -->
     <p-accordion>
       <p-accordionTab header="專櫃契約書資訊" [selected]="true" class="line-height-3 m-0">
-        <div class="col-12">
+        <div class="col-12 custom-table-red">
           <app-table tableKey="stocks" [lazy]="true" [loading]="loading" [showEdit]="false" [showDetail]="false"
             [showRowEdit]="false" [data]="stocks" [columns]="stocksColumns" [showManage]="false">
           </app-table>

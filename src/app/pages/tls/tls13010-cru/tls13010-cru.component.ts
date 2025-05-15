@@ -55,12 +55,12 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   data: any[] = [
     {
       isNew: false,
-      locationCode: '',
-      floor: '',
-      area: '',
-      businessArea: '',
-      startDate: '',
-      endDate: '',
+      locationCode: 'B123',
+      floor: '2樓',
+      area: 'B區',
+      businessArea: '100坪',
+      startDate: '2023/12/01',
+      endDate: '2024/11/30',
       performanceShare: 100,
     },
   ];
@@ -68,14 +68,35 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   filteredData: any[] = [...this.data];
 
   columns: any[] = [
-    { field: 'isNew', header: '是否新增', visible: true },
-    { field: 'locationCode', header: '位置編號', visible: true },
-    { field: 'floor', header: '樓層', visible: true },
-    { field: 'area', header: '區域', visible: true },
-    { field: 'businessArea', header: '營業坪數', visible: true },
-    { field: 'startDate', header: '使用起始日', visible: true },
-    { field: 'endDate', header: '使用截止日', visible: true },
-    { field: 'performanceShare', header: '業績分攤(%)', visible: true },
+    {
+      field: 'isNew', header: '是否新增', visible: true,
+      type: 'checkbox',
+      checkboxTrueLabel: '是', // 非編輯模式顯示「新增」表示 true
+      checkboxFalseLabel: '否', // 非編輯模式顯示「非新增」表示 false
+    },
+    {
+      field: 'locationCode', header: '位置編號', visible: true, type: 'dropdown',
+      options: [
+        { label: 'B123', value: 'B123' },
+        { label: 'C234', value: 'C234' },
+      ],
+    },
+    {
+      field: 'floor', header: '樓層', visible: true,
+      type: 'dropdown',
+      options: [
+        { label: '1樓', value: '1樓' },
+        { label: '2樓', value: '2樓' },
+        { label: '3樓', value: '3樓' },
+        { label: '4樓', value: '4樓' },
+        { label: '5樓', value: '5樓' },
+      ],
+    },
+    { field: 'area', header: '區域', visible: true, type: 'input', },
+    { field: 'businessArea', header: '營業坪數', visible: true, type: 'input' },
+    { field: 'startDate', header: '使用起始日', visible: true, type: 'date' },
+    { field: 'endDate', header: '使用截止日', visible: true, type: 'date' },
+    { field: 'performanceShare', header: '業績分攤(%)', visible: true, type: 'input' },
   ];
 
   dataForm = this.formBuilder.group({

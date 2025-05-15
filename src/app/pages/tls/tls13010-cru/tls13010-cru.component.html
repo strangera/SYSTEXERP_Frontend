@@ -1,14 +1,11 @@
 <div class="card">
   <!-- 固定操作按鈕 -->
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
     <app-button btnType="next" label="下一步(代扣款)" (click)="onSubmitNext()"></app-button>
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
-
   <!-- 表單內容 -->
   <p-accordion [multiple]="true">
     <!-- 基本資訊 -->
@@ -52,7 +49,7 @@
       [headerStyleClass]="'query-accordionTab'">
       <div class="col-12">
         <app-table [data]="filteredData" [columns]="columns" [showCheckBox]="true" dataKey="locationCode"
-          [loading]="loading">
+          [loading]="loading" [showDetail]="false" [showRowEdit]="true" [showInsert]="true" [showEdit]="false">
           <ng-template pTemplate="caption">
             <div class="flex justify-content-end">
               <app-button btnType="create" label="依營業坪數計算業績分攤" icon=""
