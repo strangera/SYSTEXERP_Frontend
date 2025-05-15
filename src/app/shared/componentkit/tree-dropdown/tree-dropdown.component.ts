@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { TreeNode } from 'primeng/api';
 
 @Component({
   selector: 'app-tree-dropdown',
@@ -15,6 +16,15 @@ export class TreeDropdownComponent implements OnInit {
     { id: '5', department: 'Department B', role: 'Reviewer', name: 'Elwin Sharvill', email: 'elwin@email.com', phone: '0955555555' },
   ];
 
+  //外部提供顯示名稱
+  Columns = [
+    { 'value': 'department', 'label': '部門' },
+    { 'value': 'role', 'label': '角色' },
+    { 'value': 'member', 'label': '成員' }
+  ];
+
+  isAllExpanded = false;
+
   selectedMembers: any[] = [];
   treeData: any[] = [];
 
@@ -22,6 +32,7 @@ export class TreeDropdownComponent implements OnInit {
     this.treeData = this.groupByDepartment();
   }
 
+  // 將扁平化資料轉成樹狀
   groupByDepartment(): any[] {
     const grouped: any = {};
     this.members.forEach(member => {
@@ -78,6 +89,54 @@ export class TreeDropdownComponent implements OnInit {
     return result;
   }
 
+  //顯示欄位名稱
+  get columnsLabel(): string {
+    return this.Columns.map(col => col.label).join(' / ');
+  }
+
+  //展開全部
+  expandAll() {
+    this.treeData.forEach((node) => {
+      this.expandRecursive(node, true);
+    });
+  }
+
+  //收闔全部
+  collapseAll() {
+    this.treeData.forEach((node) => {
+      this.expandRecursive(node, false);
+    });
+  }
+
+  // 展開樹狀至目標層級（層級從0開始）
+  expandToLevel(level: number) {
+    // console.log('level', level);
+    this.treeData.forEach(node => {
+      this.expandToLevelRecursive(node, 0, level - 1);
+    });
+  }
+
+  // 只能展開到 maxLevel 層，超過就不展開
+  private expandToLevelRecursive(node: TreeNode, currentLevel: number, maxLevel: number) {
+    node.expanded = currentLevel < maxLevel; // 當前層小於目標層數才展開
+    if (node.children) {
+      node.children.forEach(child => {
+        this.expandToLevelRecursive(child, currentLevel + 1, maxLevel);
+      });
+    }
+  }
+
+  //展開控制
+  private expandRecursive(node: TreeNode, isExpand: boolean) {
+    node.expanded = isExpand;
+    if (node.children) {
+      node.children.forEach((childNode) => {
+        this.expandRecursive(childNode, isExpand);
+      });
+    }
+  }
+
+  // 送出元件
   inviteMembers() {
     // 過濾出 leaf 節點 (會員層)
     const invited = this.selectedMembers
@@ -90,5 +149,13 @@ export class TreeDropdownComponent implements OnInit {
       }));
 
     console.log('Invited members:', invited);
+  }
+
+  //鍵盤事件
+  onKeyDownExpand(event: KeyboardEvent, level: number) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      this.expandToLevel(level);
+    }
   }
 }

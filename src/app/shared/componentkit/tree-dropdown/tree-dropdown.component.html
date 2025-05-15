@@ -4,13 +4,29 @@
         <div class="flex flex-column gap-3 w-25rem">
             <span class="font-medium text-900 block mb-2">樹狀顯示資料</span>
 
-            <!-- 層級展示 -->
-
-            <!-- 樹狀展開層 -->
-            <div class="card">
-                <p-tree [value]="treeData" selectionMode="checkbox" styleClass="w-full md:w-[30rem]"
-                    [(selection)]="selectedMembers" [filter]="true" filterPlaceholder="Strict Filter" />
+            <!-- 展開/收合 按鈕 -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <p-button icon="pi pi-plus" label="全部展開" (click)="expandAll()" />
+                <p-button icon="pi pi-minus" label="全部收合" (click)="collapseAll()" />
             </div>
+
+            <!-- 顯示所有label (department,role,name)-->
+            <!-- <div class="font-bold mb-2">
+                {{ columnsLabel }}
+            </div> -->
+
+            <div class="font-bold mb-2 flex gap-4">
+                <ng-container *ngFor="let col of Columns; let i = index">
+                    <span tabindex="0" (click)="expandToLevel(i + 1)" (keydown)="onKeyDownExpand($event, i + 1)"
+                        role="button" class="cursor-pointer text-primary">
+                        {{ col.label }}
+                    </span>
+                    <span *ngIf="i < Columns.length - 1"> / </span>
+                </ng-container>
+            </div>
+            <!-- 樹狀展開層 -->
+            <p-tree [value]="treeData" selectionMode="checkbox" styleClass="w-full md:w-[30rem]"
+                [(selection)]="selectedMembers" [filter]="true" filterPlaceholder="Strict Filter" />
 
             <p-button label="確定" icon="pi pi-users" (onClick)="inviteMembers()" class="align-self-end" />
         </div>
