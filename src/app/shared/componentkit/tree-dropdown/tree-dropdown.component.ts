@@ -6,7 +6,6 @@ import { Component } from '@angular/core';
   styleUrls: ['./tree-dropdown.component.scss'],
 })
 export class TreeDropdownComponent {
-  // 樹狀結構資料
   members = [
     {
       department: 'Department A',
@@ -14,18 +13,14 @@ export class TreeDropdownComponent {
         {
           role: 'Owner',
           members: [
-            { name: 'Amy Elsner', email: 'amy@email.com', role: 'Owner' },
-            {
-              name: 'Bernardo Dominic',
-              email: 'bernardo@email.com',
-              role: 'Owner',
-            },
+            { id: '1', name: 'Amy Elsner', email: 'amy@email.com', phone: '0911111111' },
+            { id: '2', name: 'Anna Fali', email: 'anna@email.com', phone: '0922222222' },
           ],
         },
         {
           role: 'Viewer',
           members: [
-            { name: 'Ioni Bowcher', email: 'ioni@email.com', role: 'Viewer' },
+            { id: '3', name: 'Asiya Javayant', email: 'asiya@email.com', phone: '0933333333' },
           ],
         },
       ],
@@ -36,17 +31,13 @@ export class TreeDropdownComponent {
         {
           role: 'Examiner',
           members: [
-            {
-              name: 'Super Man',
-              email: 'superman@email.com',
-              role: 'Examiner',
-            },
+            { id: '4', name: 'Bernardo Dominic', email: 'bernardo@email.com', phone: '0944444444' },
           ],
         },
         {
           role: 'Reviewer',
           members: [
-            { name: 'Spider Man', email: 'spider@email.com', role: 'Reviewer' },
+            { id: '5', name: 'Elwin Sharvill', email: 'elwin@email.com', phone: '0955555555' }
           ],
         },
       ],
@@ -55,7 +46,6 @@ export class TreeDropdownComponent {
 
   selectedMembers: any[] = [];
 
-  // 將樹狀結構展平成一維陣列以便於選擇
   flattenMembers(members: any[]): any[] {
     let flattened: any[] = [];
     members.forEach((dept) => {
@@ -66,95 +56,65 @@ export class TreeDropdownComponent {
     return flattened;
   }
 
-  // 邀請選中的成員
   inviteMembers() {
     console.log('Invited members:', this.selectedMembers);
-    // 這裡可以實作邀請邏輯
+    // 實作邀請邏輯
   }
 
-  // 切換選擇狀態
   toggleSelection(item: any) {
-    // const index = this.selectedMembers.findIndex((m) => m.name === member.name);
-
-    // if (index === -1) {
-    //   // 如果成員沒有被選中，就加入選擇列表
-    //   this.selectedMembers.push(member);
-    // } else {
-    //   // 如果成員已經被選中，就移除它
-    //   this.selectedMembers.splice(index, 1);
-    // }
-
-    // // 強制刷新 p-multiSelect 顯示
-    // setTimeout(() => {
-    //   // 使用 ngModel 更新後，強制刷新顯示
-    //   this.selectedMembers = [...this.selectedMembers];
-    // }, 0);
-
     let membersToToggle: any[] = [];
 
     if (item.roles) {
-      // 部門
       item.roles.forEach((role: { members: any[] }) => {
         membersToToggle.push(...role.members);
       });
     } else if (item.members) {
-      // 角色
       membersToToggle = item.members;
     } else {
-      // 單一成員
       membersToToggle = [item];
     }
 
     const allSelected = membersToToggle.every((member) =>
-      this.selectedMembers.some((selected) => selected.name === member.name),
+      this.selectedMembers.some((selected) => selected.id === member.id)
     );
 
     if (allSelected) {
-      // 移除所有成員
       this.selectedMembers = this.selectedMembers.filter(
         (selected) =>
-          !membersToToggle.some((member) => member.name === selected.name),
+          !membersToToggle.some((member) => member.id === selected.id)
       );
     } else {
-      // 加入尚未被選擇的成員
       const newMembers = membersToToggle.filter(
         (member) =>
-          !this.selectedMembers.some(
-            (selected) => selected.name === member.name,
-          ),
+          !this.selectedMembers.some((selected) => selected.id === member.id)
       );
       this.selectedMembers = [...this.selectedMembers, ...newMembers];
     }
 
-    // 強制刷新 UI
     setTimeout(() => {
       this.selectedMembers = [...this.selectedMembers];
     }, 0);
   }
 
-  // 鍵盤事件處理
   onKeyDown(event: KeyboardEvent, member: any) {
     if (event.key === 'Enter' || event.key === ' ') {
       this.toggleSelection(member);
     }
   }
 
-  // 父項目顏色切換
   isAnyMemberSelected(item: any): boolean {
     let members: any[] = [];
 
     if (item.roles) {
-      // 部門
       item.roles.forEach((role: { members: any }) => {
         members.push(...role.members);
       });
     } else if (item.members) {
-      // 角色
       members = item.members;
     }
 
     return members.some((member) =>
-      this.selectedMembers.find((m) => m.name === member.name),
+      this.selectedMembers.some((m) => m.id === member.id)
     );
   }
 }

@@ -2,20 +2,18 @@
     <p-button (onClick)="op.toggle($event)" icon="pi pi-share-alt" label="Share" />
     <p-overlayPanel #op>
         <div class="flex flex-column gap-3 w-25rem">
-
             <!-- 選擇框 -->
             <div>
                 <span class="font-medium text-900 block mb-2">Select Members</span>
                 <div class="flex flex-column gap-3 w-25rem">
                     <p-multiSelect [options]="flattenMembers(members)" [(ngModel)]="selectedMembers" optionLabel="name"
                         placeholder="Select members" display="chip" class="w-full" panelClass="custom-panel"
-                        [filter]="true" filterBy="name,role" [filterMatchMode]="'contains'"
-                        [style]="{'display': 'flex'}">
-
+                        [filter]="true" filterBy="name,email,phone" [style]="{'display': 'flex'}">
                         <ng-template let-member pTemplate="item">
                             <div class="flex flex-column">
                                 <span>{{ member.name }}</span>
-                                <small class="text-color-secondary">{{ member.role }}</small>
+                                <small class="text-color-secondary">{{ member.email }}</small>
+                                <small class="text-color-secondary">{{ member.phone }}</small>
                             </div>
                         </ng-template>
                     </p-multiSelect>
@@ -42,14 +40,12 @@
                                 <li *ngFor="let member of role.members"
                                     class="clickable-item flex align-items-center gap-2 pl-1"
                                     (click)="toggleSelection(member)" (keydown)="onKeyDown($event, member)" tabindex="0"
-                                    [ngClass]="{'selected': selectedMembers.includes(member)}">
+                                    [ngClass]="{'selected': isAnyMemberSelected(member)}">
                                     <i class="pi pi-user text-sm mr-2 text-gray-500"></i>
                                     <div>
                                         <span class="font-medium">{{ member.name }}</span>
                                         <div class="text-sm text-color-secondary">{{ member.email }}</div>
-                                    </div>
-                                    <div class="flex align-items-center gap-2 text-color-secondary ml-auto text-sm">
-                                        <span>{{ member.role }}</span>
+                                        <div class="text-sm text-color-secondary">{{ member.phone }}</div>
                                     </div>
                                 </li>
                             </ul>
