@@ -46,7 +46,7 @@ export class TLS2E090Component {
     organizationCode: [], // 組織代碼
     commissionMethod: [], // 抽成方式
     floor: [], // 樓層
-    industry: [], // 大分類 / 商品類別
+    industry: [], // 大分類 / 中分類
     vendorInvoice: [[] as number[]], // 是否使用業主發票
     showAccount: [,], // 只顯示應付帳款小於0
     showStock: [,], // 只顯示進貨總額小於0

@@ -32,7 +32,7 @@ export class TLS2G040Component {
   queryForm = this.formBuilder.group({
     onedatemm: [], // 年月
     industryCode: [], // 大分類
-    productCategory: [], // 商品類別
+    productCategory: [], // 中分類
     smallCategory: [], // 小分類
     counter: [], // DropDown
     OrganizationType: [], // 組織

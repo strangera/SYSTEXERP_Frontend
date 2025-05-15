@@ -74,7 +74,7 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
     businessType: [,], // 營業型態
     organizationCode: [, [Validators.required]], // 組織代碼
     industryCode: [, [Validators.required]], // 大分類
-    productCategory: [, [Validators.required]], // 商品類別
+    productCategory: [, [Validators.required]], // 中分類
 
     negotiator: [, [Validators.required]], // 洽談者
     counterType: [,], // 櫃別

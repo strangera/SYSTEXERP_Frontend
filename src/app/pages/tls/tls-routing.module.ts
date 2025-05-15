@@ -459,7 +459,7 @@ const routes: Routes = [
   { path: 'TLS24020', component: TLS24020Component }, // 專櫃編號修正作業
   { path: 'TLS24030', component: TLS24030Component }, // 折扣別資料修正作業
   { path: 'TLS24040', component: TLS24040Component }, // 付款別資料修正作業
-  { path: 'TLS24050', component: TLS24050Component }, // 商品類別資料修正作業
+  { path: 'TLS24050', component: TLS24050Component }, // 中分類資料修正作業
   { path: 'TLS24060', component: TLS24060Component }, // 交易資料作廢作業
   { path: 'TLS24070', component: TLS24070Component }, // 發票修正作業
   { path: 'TLS24080', component: TLS24080Component }, // 交易資料修正報表
@@ -545,7 +545,7 @@ const routes: Routes = [
   { path: 'TLS24020CRU', component: TLS24020CRUComponent }, // 專櫃編號修正作業 CRU
   { path: 'TLS24030CRU', component: TLS24030CRUComponent }, // 折扣別資料修正作業 CRU
   { path: 'TLS24040CRU', component: TLS24040CRUComponent }, // 付款別資料修正作業 CRU
-  { path: 'TLS24050CRU', component: TLS24050CRUComponent }, // 商品類別資料修正作業 CRU
+  { path: 'TLS24050CRU', component: TLS24050CRUComponent }, // 中分類資料修正作業 CRU
   { path: 'TLS24060CRU', component: TLS24060CRUComponent }, // 交易資料作廢作業 CRU
   { path: 'TLS24070CRU', component: TLS24070CRUComponent }, // 發票修正作業 CRU
   { path: 'TLS24080CRU', component: TLS24080CRUComponent }, // 交易資料修正報表 CRU

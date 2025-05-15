@@ -46,7 +46,7 @@ export class TLS29010Component {
   queryForm = this.formBuilder.group({
     counterCode: [],  // 專櫃編號
     counterLocationCode: [],  // 專櫃位置編號
-    productCategory: [],  // 商品類別
+    productCategory: [],  // 中分類
     discount: [],  // 折扣別
     startDate: [now],  // 開放起始日
     endDate: [now],  // 開放結束日
@@ -63,8 +63,8 @@ export class TLS29010Component {
   columns: any[] = [
     { field: 'specialCounterNumber', header: '專櫃編號', visible: true },
     { field: 'specialCounterName', header: '專櫃名稱', visible: true },
-    { field: 'productCategory', header: '商品類別', visible: true },
-    { field: 'productCategoryName', header: '商品類別名稱', visible: true },
+    { field: 'productCategory', header: '中分類', visible: true },
+    { field: 'productCategoryName', header: '中分類名稱', visible: true },
     { field: 'discountType', header: '折扣別', visible: true },
     { field: 'drawRate', header: '抽成率', visible: true },
     { field: 'openStartDate', header: '開放起始日', visible: true },

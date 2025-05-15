@@ -11,11 +11,11 @@ import { TableLazyLoadEvent } from 'primeng/table';
 interface CategoryItem {
   id: number;
   bus_type: string; //大分類代碼
-  bus_class: string; //中分類(商品類別)代碼
-  bus_class_name: string; //中分類(商品類別)名稱
+  bus_class: string; //中分類(中分類)代碼
+  bus_class_name: string; //中分類(中分類)名稱
   bus_type_name: string; //大分類名稱
   bus_type_desc: string; //大分類說明(不過好像沒用到)
-  bus_class_desc: string; //中分類(商品類別)說明
+  bus_class_desc: string; //中分類(中分類)說明
   CRT_Date: string;
   CRT_USR_No: string;
   CRT_USR_Name: string;
@@ -31,7 +31,7 @@ const storageKey = 'SYSB900';
   templateUrl: './sysb900.component.html',
   styleUrl: './sysb900.component.scss'
 })
-// 商品類別維護作業
+// 中分類維護作業
 export class SYSB900Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
   Options: { value: string, label: string }[] = [];
   queryForm = this.formBuilder.nonNullable.group({

@@ -95,7 +95,7 @@ import { SharedModule } from '../../shared/shared.module';
     SYSB500Component, // 區域基本資料維護作業
     SYSB600Component, // 樓層基本資料維護作業
     SYSB800Component, // 大分類基本資料維護作業
-    SYSB900Component, // 商品類別維護作業
+    SYSB900Component, // 中分類維護作業
     SYSB920Component, // 小分類維護作業
     SYSBC00Component, // 銀行基本資料維護作業
     SYSBP00Component, // 參數資料設定維護
@@ -109,7 +109,7 @@ import { SharedModule } from '../../shared/shared.module';
     SYSB500CRUComponent, // 區域基本資料維護作業
     SYSB600CRUComponent, // 樓層基本資料維護作業
     SYSB800CRUComponent, // 大分類基本資料維護作業
-    SYSB900CRUComponent, // 商品類別維護作業
+    SYSB900CRUComponent, // 中分類維護作業
     SYSB920CRUComponent, // 小分類維護作業
     SYSBC00CRUComponent, // 銀行基本資料維護作業
     SYSBP00CRUComponent, // 參數資料設定維護

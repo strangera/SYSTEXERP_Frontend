@@ -33,8 +33,8 @@ export class TLS2G040CRUComponent
 
     { field: 'industryCode', header: '大分類類別代碼', visible: true },
     { field: 'industryName', header: '大分類類別名稱', visible: true },
-    { field: 'productCode', header: '商品類別代碼', visible: true },
-    { field: 'productName', header: '商品類別名稱', visible: true },
+    { field: 'productCode', header: '中分類代碼', visible: true },
+    { field: 'productName', header: '中分類名稱', visible: true },
     { field: 'code', header: '小分類別代碼', visible: true },
     { field: 'name', header: '小分類名稱', visible: true },
   ];
@@ -115,8 +115,8 @@ export class TLS2G040CRUComponent
   searchFields = [
     { field: 'industryCode', placeholder: '輸入大分類類別代碼' },
     { field: 'industryName', placeholder: '輸入大分類類別名稱' },
-    { field: 'productCode', placeholder: '輸入商品類別代碼' },
-    { field: 'productName', placeholder: '輸入商品類別名稱' },
+    { field: 'productCode', placeholder: '輸入中分類代碼' },
+    { field: 'productName', placeholder: '輸入中分類名稱' },
     { field: 'code', placeholder: '輸入小分類代碼' },
     { field: 'name', placeholder: '輸入小分類名稱' },
   ];
