@@ -27,6 +27,7 @@ export class BasicPrintDataComponent {
   isPDFDownloading = false;
   isExcelDownloading = false;
   exportDialog = false;
+  exportStatus: 'PDF' | 'Excel' = 'PDF';
 
   cdr = inject(ChangeDetectorRef);
   queryState = inject(QueryStateService);
@@ -89,8 +90,61 @@ export class BasicPrintDataComponent {
       }
     });
   }
-  exportExcelDownload(): void {
+  exportExcelDownload(event: TableExport, columns: Column[],): void {
+    const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
+    const queryState = this.queryState.getQueryState(ProgNo);
+    const userInfo = this.authService.currentUserValue;
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = (today.getMonth() + 1).toString().padStart(2, '0'); // getMonth() 返回 0-11，所以要 +1
+    const day = today.getDate().toString().padStart(2, '0');
+    const formattedToday = `${year}${month}${day}`;
+    const excelColumns = columns.map(col => {
+      return {
+        field: col.field,
+        header: col.header,
+        visible: col.visible !== undefined ? col.visible : true
+      };
+    });
 
+    const body = {
+      query_condition: {
+        ServiceName: `query${ProgNo}`,
+        Conditions: queryState
+      },
+      report_title: REPORT_TITLES[`query${ProgNo}`] || 'Report',
+      columns: excelColumns,
+      config: event,
+      file_name: `${userInfo?.user_No}_${ProgNo}_${formattedToday}`
+    };
+    this.tableService.exportExcel(body).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        if (response.body) {
+          const contentDisposition = response.headers.get('content-disposition');
+          let filename = `${body.file_name}.xlsx`; // 副檔名改為 .xlsx
+          if (contentDisposition) {
+            const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/;  //  正則匹配.xlsx
+            const matches = contentDisposition.match(filenameRegex);
+            if (matches) {
+              filename = matches[1] || matches[2] || filename;
+              filename = decodeURIComponent(filename);
+            }
+            filename = filename.replace(/["']/g, '');
+          }
+          const blob = new Blob([response.body], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }); // 正確的 MIME 類型
+          saveAs(blob, filename);
+        } else {
+          console.error("Response body is empty!");
+        }
+        this.exportDialog = false;
+        this.cdr.detectChanges(); // 手动触发变更检测
+      },
+      error: (err: any) => {
+        console.error('Error downloading Excel:', err);
+        this.exportDialog = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
   toggleVisibility(): void {
     this.IsPrint = !this.IsPrint;

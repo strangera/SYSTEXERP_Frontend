@@ -21,6 +21,7 @@ export class TableExportComponent implements OnInit, OnDestroy {
   @Input() visible = true;
   @Input() header = 'header';
   @Input() disable = false;
+  @Input() exportStatus: 'PDF' | 'Excel' = 'PDF';
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() save = new EventEmitter<TableExport>();
 
@@ -84,9 +85,9 @@ export class TableExportComponent implements OnInit, OnDestroy {
       print_reportTitle_per_page: this.form.value.print_reportTitle_per_page || 'N',
       print_eject: this.form.value.print_eject || 'Y',
       print_field_title: this.form.value.print_field_title || 'Y',
+      page_lines: this.form.value.page_lines || 0,
       print_reportFooter: this.form.value.print_reportFooter || 'Y',
       print_reportFooter_per_page: this.form.value.print_reportFooter_per_page || 'N',
-      page_lines: this.form.value.page_lines || 0,
     };
     this.save.emit(tableExportData);
   }

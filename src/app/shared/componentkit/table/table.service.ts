@@ -20,7 +20,13 @@ export class TableService {
       }
     );
   }
-  exportExcel(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/exportExcel`, data);
+  exportExcel(data: any): Observable<HttpResponse<Blob>> {
+    return this.http.post(
+      `${this.apiUrl}/exportExcel`, data,
+      {
+        responseType: 'blob',
+        observe: 'response'
+      }
+    );
   }
 }

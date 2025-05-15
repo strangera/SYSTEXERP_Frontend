@@ -28,10 +28,11 @@
           [outlined]="!IsPrint" [disabled]="!canPerformAction('50')" />
         <div [@toggleButtons]="!IsPrint ? 'visible' : 'hidden'" [ngClass]="IsPrint ? 'hidden' : 'flex'" class="gap-2">
           <p-button pButton tooltipPosition="top" pTooltip="列印PDF" class="p-button-rounded p-button-text p-button-info"
-            icon="fa-regular fa-file-pdf" (click)="exportDialog = true" [disabled]="!canPerformAction('60')" />
+            icon="fa-regular fa-file-pdf" (click)="exportStatus = 'PDF'; exportDialog = true"
+            [disabled]="!canPerformAction('60')" />
           <p-button pButton tooltipPosition="top" pTooltip="匯出Excel"
             class="p-button-rounded p-button-text p-button-info" icon="fa-regular fa-file-lines"
-            (click)="exportExcelDownload()" [disabled]="!canPerformAction('70')" />
+            (click)="exportStatus = 'Excel'; exportDialog = true" [disabled]="!canPerformAction('70')" />
         </div>
         <p-button *ngIf="IsPrint && showInsert && !rowEditing" (click)="insertRow()" pTooltip="新增" tooltipPosition="top"
           pButton icon="pi pi-plus" severity="success" class="p-button-rounded p-button-text"
@@ -226,4 +227,5 @@
 </p-table>
 
 <app-table-export [visible]="exportDialog" header="列印選項" (visibleChange)="exportDialog = $event"
-  (save)="exportPDFDownload($event,columns)"></app-table-export>
+  (save)="exportStatus === 'PDF' ? exportPDFDownload($event, columns) : exportExcelDownload($event, columns)"
+  [exportStatus]="exportStatus"></app-table-export>
