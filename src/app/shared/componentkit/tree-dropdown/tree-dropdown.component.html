@@ -1,62 +1,34 @@
 <div class="card flex justify-content-center">
     <p-button (onClick)="op.toggle($event)" icon="pi pi-share-alt" label="Share" />
-    <p-overlayPanel #op>
+    <p-overlayPanel #op [appendTo]="'body'">
         <div class="flex flex-column gap-3 w-25rem">
+            <span class="font-medium text-900 block mb-2">樹狀顯示資料</span>
 
-            <!-- 選擇框 -->
-            <div>
-                <span class="font-medium text-900 block mb-2">Select Members</span>
-                <div class="flex flex-column gap-3 w-25rem">
-                    <p-multiSelect [options]="flattenMembers(members)" [(ngModel)]="selectedMembers" optionLabel="name"
-                        placeholder="Select members" display="chip" class="w-full" panelClass="custom-panel"
-                        [filter]="true" filterBy="name,role" [filterMatchMode]="'contains'"
-                        [style]="{'display': 'flex'}">
-
-                        <ng-template let-member pTemplate="item">
-                            <div class="flex flex-column">
-                                <span>{{ member.name }}</span>
-                                <small class="text-color-secondary">{{ member.role }}</small>
-                            </div>
-                        </ng-template>
-                    </p-multiSelect>
-                    <p-button label="確定" icon="pi pi-users" (onClick)="inviteMembers()" class="align-self-end" />
-                </div>
+            <!-- 展開/收合 按鈕 -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <p-button icon="pi pi-plus" label="全部展開" (click)="expandAll()" />
+                <p-button icon="pi pi-minus" label="全部收合" (click)="collapseAll()" />
             </div>
 
-            <!-- 顯示 Team Members -->
-            <ul class="list-none p-0 m-0 flex flex-column gap-3">
-                <li *ngFor="let dept of members" class="flex flex-column gap-2">
-                    <div class="clickable-item font-bold text-primary pl-1" tabindex="0" (click)="toggleSelection(dept)"
-                        (keydown)="onKeyDown($event, dept)"
-                        [ngClass]="{'bg-primary-reverse': isAnyMemberSelected(dept)}">
-                        <i class="pi pi-folder-open mr-2"></i>{{ dept.department }}
-                    </div>
-                    <ul class="list-none p-0 m-0 flex flex-column gap-2 pl-4 border-left-2 border-gray-300">
-                        <li *ngFor="let role of dept.roles" class="flex flex-column gap-2">
-                            <div class="clickable-item font-medium text-900 pl-1" tabindex="0"
-                                (click)="toggleSelection(role)" (keydown)="onKeyDown($event, role)"
-                                [ngClass]="{'bg-primary-reverse': isAnyMemberSelected(role)}">
-                                <i class="pi pi-users mr-2 text-sm"></i>{{ role.role }}
-                            </div>
-                            <ul class="list-none p-0 m-0 flex flex-column gap-2 pl-4 border-left-1 border-gray-200">
-                                <li *ngFor="let member of role.members"
-                                    class="clickable-item flex align-items-center gap-2 pl-1"
-                                    (click)="toggleSelection(member)" (keydown)="onKeyDown($event, member)" tabindex="0"
-                                    [ngClass]="{'selected': selectedMembers.includes(member)}">
-                                    <i class="pi pi-user text-sm mr-2 text-gray-500"></i>
-                                    <div>
-                                        <span class="font-medium">{{ member.name }}</span>
-                                        <div class="text-sm text-color-secondary">{{ member.email }}</div>
-                                    </div>
-                                    <div class="flex align-items-center gap-2 text-color-secondary ml-auto text-sm">
-                                        <span>{{ member.role }}</span>
-                                    </div>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
+            <!-- 顯示所有label (department,role,name)-->
+            <!-- <div class="font-bold mb-2">
+                {{ columnsLabel }}
+            </div> -->
+
+            <div class="font-bold mb-2 flex gap-4">
+                <ng-container *ngFor="let col of Columns; let i = index">
+                    <span tabindex="0" (click)="expandToLevel(i + 1)" (keydown)="onKeyDownExpand($event, i + 1)"
+                        role="button" class="cursor-pointer text-primary">
+                        {{ col.label }}
+                    </span>
+                    <span *ngIf="i < Columns.length - 1"> / </span>
+                </ng-container>
+            </div>
+            <!-- 樹狀展開層 -->
+            <p-tree [value]="treeData" selectionMode="checkbox" styleClass="w-full md:w-[30rem]"
+                [(selection)]="selectedMembers" [filter]="true" filterPlaceholder="Strict Filter" />
+
+            <p-button label="確定" icon="pi pi-users" (onClick)="inviteMembers()" class="align-self-end" />
         </div>
     </p-overlayPanel>
 </div>
