@@ -7,6 +7,7 @@ import { Component, OnInit } from '@angular/core';
 })
 export class TreeDropdownComponent implements OnInit {
   members = [
+    // department > role > member (其他細項)
     { id: '1', department: 'Department A', role: 'Owner', name: 'Amy Elsner', email: 'amy@email.com', phone: '0911111111' },
     { id: '2', department: 'Department A', role: 'Owner', name: 'Anna Fali', email: 'anna@email.com', phone: '0922222222' },
     { id: '3', department: 'Department A', role: 'Viewer', name: 'Asiya Javayant', email: 'asiya@email.com', phone: '0933333333' },
@@ -33,71 +34,61 @@ export class TreeDropdownComponent implements OnInit {
       grouped[member.department][member.role].push(member);
     });
 
-    return Object.keys(grouped).map(deptName => ({
-      name: deptName,
-      roles: Object.keys(grouped[deptName]).map(roleName => ({
-        name: roleName,
-        members: grouped[deptName][roleName]
-      }))
-    }));
+    let deptIndex = 0;
+    const result = Object.keys(grouped).map(deptName => {
+      const rolesObj = grouped[deptName];
+      let roleIndex = 0;
+
+      const roles = Object.keys(rolesObj).map(roleName => {
+        const members = rolesObj[roleName];
+        let memberIndex = 0;
+
+        const memberNodes = members.map((member: { name: any; email: any; phone: any; id: any; }) => ({
+          key: `d${deptIndex}-r${roleIndex}-m${memberIndex++}`,
+          label: member.name,
+          data: {
+            email: member.email,
+            phone: member.phone,
+            id: member.id
+          },
+          icon: 'pi pi-user',
+          leaf: true
+        }));
+
+        roleIndex++;
+
+        return {
+          key: `d${deptIndex}-r${roleIndex}`,
+          label: roleName,
+          children: memberNodes,
+          icon: 'pi pi-users'
+        };
+      });
+
+      deptIndex++;
+
+      return {
+        key: `d${deptIndex}`,
+        label: deptName,
+        children: roles,
+        icon: 'pi pi-folder'
+      };
+    });
+
+    return result;
   }
 
   inviteMembers() {
-    console.log('Invited members:', this.selectedMembers);
-    // 實作邀請邏輯
-  }
+    // 過濾出 leaf 節點 (會員層)
+    const invited = this.selectedMembers
+      .filter(node => node.leaf)
+      .map(node => ({
+        id: node.data.id,
+        name: node.label,
+        email: node.data.email,
+        phone: node.data.phone
+      }));
 
-  toggleSelection(item: any) {
-    console.log('點到囉！', item);
-    let membersToToggle: any[] = [];
-
-    if (item.roles) {
-      item.roles.forEach((role: any) => {
-        membersToToggle.push(...role.members);
-      });
-    } else if (item.members) {
-      membersToToggle = item.members;
-    } else {
-      membersToToggle = [item];
-    }
-
-    const allSelected = membersToToggle.every((member) =>
-      this.selectedMembers.some((selected) => selected.id === member.id)
-    );
-
-    if (allSelected) {
-      this.selectedMembers = this.selectedMembers.filter(
-        (selected) => !membersToToggle.some((member) => member.id === selected.id)
-      );
-    } else {
-      const newMembers = membersToToggle.filter(
-        (member) => !this.selectedMembers.some((selected) => selected.id === member.id)
-      );
-      this.selectedMembers = [...this.selectedMembers, ...newMembers];
-    }
-  }
-
-  onKeyDown(event: KeyboardEvent, item: any) {
-    if (event.key === 'Enter' || event.key === ' ') {
-      this.toggleSelection(item);
-    }
-  }
-
-  isAnyMemberSelected(item: any): boolean {
-    let members: any[] = [];
-
-    if (item.roles) {
-      item.roles.forEach((role: any) => {
-        members.push(...role.members);
-      });
-    } else if (item.members) {
-      members = item.members;
-    } else {
-      members = [item];
-    }
-
-    return members.some((member) =>
-      this.selectedMembers.some((selected) => selected.id === member.id)
-    );
+    console.log('Invited members:', invited);
   }
 }
