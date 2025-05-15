@@ -48,7 +48,7 @@ export class BasicPrintDataComponent {
       return {
         field: col.field,
         header: col.header,
-        visible: col.visible !== undefined ? col.visible : true
+        visible: col.visible ? col.visible : true,
       };
     });
 
@@ -103,7 +103,7 @@ export class BasicPrintDataComponent {
       return {
         field: col.field,
         header: col.header,
-        visible: col.visible !== undefined ? col.visible : true
+        visible: col.visible ? col.visible : true,
       };
     });
 
@@ -115,7 +115,8 @@ export class BasicPrintDataComponent {
       report_title: REPORT_TITLES[`query${ProgNo}`] || 'Report',
       columns: excelColumns,
       config: event,
-      file_name: `${userInfo?.user_No}_${ProgNo}_${formattedToday}`
+      file_name: `${userInfo?.user_No}_${ProgNo}_${formattedToday}`,
+      allColumns: event.allColumns, // 是否匯出所有欄位
     };
     this.tableService.exportExcel(body).subscribe({
       next: (response: HttpResponse<Blob>) => {

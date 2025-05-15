@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormControl } from '@angular/forms';
+import { FormBuilder, FormControl, Validators } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 
 export interface TableExport {
@@ -7,9 +7,10 @@ export interface TableExport {
   print_reportTitle_per_page: string;
   print_eject: string;
   print_field_title: string;
-  print_reportFooter: string;
-  print_reportFooter_per_page: string;
+  print_reportFooter?: string;
+  print_reportFooter_per_page?: string;
   page_lines: number;
+  allColumns?: string;
 }
 
 @Component({
@@ -28,13 +29,14 @@ export class TableExportComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   form = this.formBuilder.nonNullable.group({
-    print_reportTitle: ['Y'],
-    print_reportTitle_per_page: ['N'],
-    print_eject: ['Y'],
-    print_field_title: ['Y'],
-    print_reportFooter: ['Y'],
-    print_reportFooter_per_page: ['N'],
-    page_lines: [0]
+    print_reportTitle: ['Y'], // 報表標題
+    print_reportTitle_per_page: ['N'], // 報表標題每頁
+    print_eject: ['Y'], // 是否分頁
+    print_field_title: ['Y'], // 是否顯示欄位標題
+    print_reportFooter: ['Y'], // 報表頁尾
+    print_reportFooter_per_page: ['N'], // 報表頁尾每頁
+    page_lines: [10, [Validators.min(10)]], // 每頁行數
+    allColumns: ['N'],  // 是否匯出所有欄位
   });
   constructor(private formBuilder: FormBuilder) { };
   ngOnInit() {
@@ -47,8 +49,6 @@ export class TableExportComponent implements OnInit, OnDestroy {
   }
   private setupValueChangeListeners() {
     const printReportTitleControl = this.form.get('print_reportTitle') as FormControl;
-    const printReportFooterControl = this.form.get('print_reportFooter') as FormControl;
-
     if (printReportTitleControl) {
       printReportTitleControl.valueChanges
         .pipe(takeUntil(this.destroy$)) // 使用 takeUntil 在組件銷毀時取消訂閱
@@ -62,6 +62,23 @@ export class TableExportComponent implements OnInit, OnDestroy {
         });
     }
 
+    const printEjectControl = this.form.get('print_eject') as FormControl;
+    if (printEjectControl) {
+      printEjectControl.valueChanges
+        .pipe(takeUntil(this.destroy$)) // 使用 takeUntil 在組件銷毀時取消訂閱
+        .subscribe((value: string) => {
+          if (value === 'N') {
+            this.form.get('page_lines')?.setValue(0);
+            this.form.get('page_lines')?.disable();
+          } else {
+            this.form.get('page_lines')?.setValue(10);
+            this.form.get('page_lines')?.enable();
+          }
+        });
+    }
+
+    if (this.exportStatus === 'Excel') { return; }
+    const printReportFooterControl = this.form.get('print_reportFooter') as FormControl;
     if (printReportFooterControl) {
       printReportFooterControl.valueChanges
         .pipe(takeUntil(this.destroy$)) // 使用 takeUntil 在組件銷毀時取消訂閱
@@ -74,10 +91,30 @@ export class TableExportComponent implements OnInit, OnDestroy {
           }
         });
     }
+
+    const printFieldTitleControl = this.form.get('print_field_title') as FormControl;
+    if (printFieldTitleControl) {
+      printFieldTitleControl.valueChanges
+        .pipe(takeUntil(this.destroy$)) // 使用 takeUntil 在組件銷毀時取消訂閱
+        .subscribe((value: string) => {
+          if (value === 'N') {
+            this.form.get('allColumns')?.setValue('N');
+            this.form.get('allColumns')?.disable();
+          } else {
+            this.form.get('allColumns')?.enable();
+          }
+        });
+    }
   }
 
   saveDialog() {
     if (this.disable) {
+      return;
+    }
+    console.log('saveDialog', this.form.value);
+
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
       return;
     }
     const tableExportData: TableExport = {
@@ -86,9 +123,12 @@ export class TableExportComponent implements OnInit, OnDestroy {
       print_eject: this.form.value.print_eject || 'Y',
       print_field_title: this.form.value.print_field_title || 'Y',
       page_lines: this.form.value.page_lines || 0,
-      print_reportFooter: this.form.value.print_reportFooter || 'Y',
-      print_reportFooter_per_page: this.form.value.print_reportFooter_per_page || 'N',
+      print_reportFooter: this.exportStatus === 'PDF' ? (this.form.value.print_reportFooter || 'Y') : undefined,
+      print_reportFooter_per_page: this.exportStatus === 'PDF' ? (this.form.value.print_reportFooter_per_page || 'N') : undefined,
+      allColumns: this.exportStatus === 'Excel' ? (this.form.value.allColumns || 'N') : undefined,
     };
     this.save.emit(tableExportData);
+    this.visible = false;
+    this.form.reset();
   }
 }
