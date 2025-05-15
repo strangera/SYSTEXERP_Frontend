@@ -135,7 +135,7 @@ export class SYSB300Component
           this.upgroup_Options = response.Data.map((item: apiOption) => ({
             No: item.No,
             Name: item.Name,
-            Label: item.No + ' ' + item.Name,
+            Label: item.No + '-' + item.Name,
           }));
         });
     }

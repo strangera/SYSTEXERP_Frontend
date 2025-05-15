@@ -14,8 +14,7 @@ import { Sysb300Service } from '../../../service/API/sys/sysb300.service';
 // 組織階層設定作業 CRU
 export class SYSB300CRUComponent
   extends BasicCruPageComponent<Sysb300m>
-  implements OnInit
-{
+  implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // SYS3000 組織階層設定檔
@@ -122,7 +121,7 @@ export class SYSB300CRUComponent
           this.upgroup_Options = response.Data.map((item: apiOption) => ({
             No: item.No,
             Name: item.Name,
-            Label: item.No + ' ' + item.Name,
+            Label: item.No + '-' + item.Name,
           }));
         });
     }
