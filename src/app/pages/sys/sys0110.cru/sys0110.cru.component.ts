@@ -17,7 +17,7 @@ import { OrganizationNumberService } from '../../../service/basic/organization-n
 import { UserTypeService } from '../../../service/basic/user-type.service';
 import { UserStatusService } from '../../../service/basic/user-status.service';
 import { FloorService } from '../../../service/basic/floor.service';
-import { RegionCodeService } from '../../../service/basic/region-code.service';
+import { RegionService } from '../../../service/basic/region-code.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
 import { SystemTypeDetailService } from '../../../service/basic/system-type-detail.service';
@@ -160,7 +160,7 @@ export class SYS0110CRUComponent extends BasicCrupageComponent implements OnInit
     private userTypeService: UserTypeService,
     private userStatusService: UserStatusService,
     private floorService: FloorService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private businessTypeCodeService: BusinessTypeCodeService,
     private counterCodeService: CounterCodeService,
     private systemTypeDetailService: SystemTypeDetailService
@@ -188,8 +188,8 @@ export class SYS0110CRUComponent extends BasicCrupageComponent implements OnInit
     this.floorService
       .getFloors()
       .subscribe((data) => (this.FloorOptions = data));
-    this.regionCodeService
-      .getRegionCodes()
+    this.RegionService
+      .getRegionOptions()
       .subscribe((data) => (this.regionCodeOptions = data));
     this.businessTypeCodeService
       .getBusinessTypeCodes()

@@ -11,7 +11,7 @@ import { HasPermissionsValue } from '../../../shared/directive/has-permission.di
 import { ValidationService } from '../../../shared/service/validation.service';
 
 import { FloorService } from '../../../service/basic/floor.service';
-import { RegionCodeService } from './../../../service/basic/region-code.service';
+import { RegionService } from './../../../service/basic/region-code.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { CommissionTypeService } from '../../../service/basic/commission-type.service';
@@ -311,7 +311,7 @@ export class TLS31020Component {
     private authService: AuthService,
     private validationService: ValidationService,
     private floorService: FloorService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private businessTypeCodeService: BusinessTypeCodeService,
     private organizationNumberService: OrganizationNumberService,
     private commissionTypeService: CommissionTypeService,
@@ -331,7 +331,7 @@ export class TLS31020Component {
     this.floorService.getFloors().subscribe(data => {
       this.floorOptions = data;
     });
-    this.regionCodeService.getRegionCodes().subscribe(data => {
+    this.RegionService.getRegionOptions().subscribe(data => {
       this.regionOptions = data;
     });
     this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {

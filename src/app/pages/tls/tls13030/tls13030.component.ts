@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { RegionCodeService } from '../../../service/basic/region-code.service';
+import { RegionService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { OperationStatusService } from '../../../service/basic/operation-status.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
@@ -54,7 +54,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'floor_no', header: '樓層', visible: true },
     { field: 'area_no', header: '區域', visible: true },
-    { field: 'bus_type', header: '大分類', visible: true },
+    { field: 'bus_type', header: '業種', visible: true },
     { field: 'tlt_openflag', header: '營運狀態', visible: true },
     { field: 'tlt_bdate', header: '契約起日', visible: true },
     { field: 'tlt_edate', header: '契約迄日', visible: true },
@@ -71,7 +71,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   ];
 
   constructor(
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private floorService: FloorService,
     private operationStatusService: OperationStatusService,
     private businessTypeCodeService: BusinessTypeCodeService,
@@ -85,12 +85,13 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS13030', 'TLS/TLS13030CRU', this.queryForm, (f) => this.onSubmit(f));
 
-    this.regionCodeService.getRegionCodes().subscribe(data => this.regionOptions = data);
+    this.RegionService.getRegionOptions().subscribe(data => this.regionOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.operationStatusService.getOperationStatuses().subscribe(data => this.operationStatusOptions = data);
     this.businessTypeCodeService.getBusinessTypeCodes().subscribe(data => this.businessTypeCodeOptions = data);
     this.deductionService.getDeductionCategories().subscribe(data => this.deductionCategoryOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
+
     this.queryForm.controls.cap_typeList.valueChanges.subscribe((selectedCapTypes: string[] | null) => {
       if (selectedCapTypes?.length) {
         const payload = { cap_typeList: selectedCapTypes };
@@ -114,6 +115,8 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
           formValue[key] = null;
         }
       }
+
+      console.log('🔍 查詢發送參數:', formValue);
 
       this.TLS13030Service.queryTLS13030(formValue).subscribe({
         next: (res) => {

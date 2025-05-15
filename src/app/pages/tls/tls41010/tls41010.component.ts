@@ -1,7 +1,7 @@
 import { InvoiceCategoryService } from './../../../service/basic/invoice-category.service';
 import { CahserTypeService } from './../../../service/basic/cahser-type.service';
 import { PosServerService } from './../../../service/basic/pos-server.service';
-import { RegionCodeService } from './../../../service/basic/region-code.service';
+import { RegionService } from './../../../service/basic/region-code.service';
 import { PosStatusService } from './../../../service/basic/pos-status.service';
 import { LocationService } from './../../../service/basic/location.service';
 import { FloorService } from './../../../service/basic/floor.service';
@@ -27,8 +27,7 @@ const storageKey = 'TLS41010';
 })
 export class TLS41010Component
   extends BasicQueryPageComponent<any>
-  implements OnInit
-{
+  implements OnInit {
   // 查詢
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
@@ -221,7 +220,7 @@ export class TLS41010Component
     private floorService: FloorService,
     private locationService: LocationService,
     private posStatusService: PosStatusService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private posServerService: PosServerService,
     private cahserTypeService: CahserTypeService,
     private invoiceCategoryService: InvoiceCategoryService,
@@ -343,7 +342,7 @@ export class TLS41010Component
       this.posStatusOptions = data;
     });
     //
-    this.regionCodeService.getRegionCodes().subscribe((data) => {
+    this.RegionService.getRegionOptions().subscribe((data) => {
       this.regionOptions = data;
     });
     //

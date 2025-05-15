@@ -1,6 +1,6 @@
 import { LocationService } from './../../../service/basic/location.service';
 import { FloorService } from './../../../service/basic/floor.service';
-import { RegionCodeService } from './../../../service/basic/region-code.service';
+import { RegionService } from './../../../service/basic/region-code.service';
 import { IndustryTypeService } from './../../../service/basic/industry-type.service';
 import { VendorService } from './../../../service/basic/vendor.service';
 import { Component } from '@angular/core';
@@ -93,7 +93,7 @@ export class TLS12060Component {
     private userCodeService: UserCodeService,
     private vendorService: VendorService,
     private industryTypeService: IndustryTypeService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private floorService: FloorService,
     private locationService: LocationService,
   ) {
@@ -123,7 +123,7 @@ export class TLS12060Component {
       this.industryCodeOptions = data;
     });
     //
-    this.regionCodeService.getRegionCodes().subscribe(data => {
+    this.RegionService.getRegionOptions().subscribe(data => {
       this.regionOptions = data;
     });
     //

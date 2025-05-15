@@ -15,7 +15,7 @@ import { DecorationStyleService } from './../../../service/basic/decoration-styl
 import { CounterCategoryService } from './../../../service/basic/counter-category.service';
 import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
 import { FloorService } from './../../../service/basic/floor.service';
-import { RegionCodeService } from './../../../service/basic/region-code.service';
+import { RegionService } from './../../../service/basic/region-code.service';
 import { LocationService } from './../../../service/basic/location.service';
 import { BusinessTypeCodeService } from './../../../service/basic/business-type-code-service.service';
 import { VendorService } from './../../../service/basic/vendor.service';
@@ -151,7 +151,7 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
     private userCodeService: UserCodeService,
     private businessTypeCodeService: BusinessTypeCodeService,
     private locationService: LocationService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private floorService: FloorService,
     private businessTypeService: BusinessTypeService,
     private organizationNumberService: OrganizationNumberService,
@@ -191,7 +191,7 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
       this.locationNumberOptions = data;
     });
     //
-    this.regionCodeService.getRegionCodes().subscribe(data => {
+    this.RegionService.getRegionOptions().subscribe(data => {
       this.regionOptions = data;
     });
     //

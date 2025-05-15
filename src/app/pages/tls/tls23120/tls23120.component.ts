@@ -7,7 +7,7 @@ import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/fu
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { RegionCodeService } from '../../../service/basic/region-code.service';
+import { RegionService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -79,7 +79,7 @@ export class TLS23120Component {
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
     private authService: AuthService,
-    private regionCodeService: RegionCodeService, // 區域 service
+    private RegionService: RegionService, // 區域 service
     private floorService: FloorService, // 樓層 service
     private businessTypeCodeService: BusinessTypeCodeService, // 大分類 service
     private organizationNumberService: OrganizationNumberService, // 專櫃編號 service
@@ -92,7 +92,7 @@ export class TLS23120Component {
     this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
       this.organizationOptions = data;
     });
-    this.regionCodeService.getRegionCodes().subscribe((data) => {
+    this.RegionService.getRegionOptions().subscribe((data) => {
       this.regionOptions = data;
     });
     this.floorService.getFloors().subscribe((data) => {
