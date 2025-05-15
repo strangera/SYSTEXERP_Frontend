@@ -9,7 +9,7 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <!-- <app-input-number [useGrouping]="false" label="業種代號" controlName="industryCode"
+            <!-- <app-input-number [useGrouping]="false" label="大分類代號" controlName="industryCode"
                   [control]="queryForm.controls.industryCode" [submitted]="submitted">>
                 </app-input-number> -->
             <app-input-text label="大分類代號" controlName="industryCode" [control]="queryForm.controls.bus_type"
@@ -17,7 +17,7 @@
             </app-input-text>
           </div>
           <div class="col-12 md:col-12 lg:col-4">
-            <!-- <app-input-text label="業種名稱" controlName="industryName" [control]="queryForm.controls.industryName"
+            <!-- <app-input-text label="大分類名稱" controlName="industryName" [control]="queryForm.controls.industryName"
                   [submitted]="submitted">
                 </app-input-text> -->
             <app-input-text label="大分類名稱" controlName="bus_type_name" [control]="queryForm.controls.bus_type_name"

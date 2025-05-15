@@ -42,7 +42,7 @@ export class TLS12030CRUComponent extends BasicCrupageComponent implements OnIni
     vendorUID: [[] as number[], [Validators.required]], // 廠商統一編號
     versionNumber: [, [this.validationService.numberValidator, Validators.maxLength(10)]], // 版本編號
     negotiator: [[] as number[],], // 洽談者
-    industryCode: [[] as number[],], // 業種
+    industryCode: [[] as number[],], // 大分類
     negotiationDate: [,], // 洽談日期
     businessType: [[] as number[],], // 營業型態
 

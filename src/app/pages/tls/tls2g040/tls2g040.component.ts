@@ -31,7 +31,7 @@ export class TLS2G040Component {
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
     onedatemm: [], // 年月
-    industryCode: [], // 業種
+    industryCode: [], // 大分類
     productCategory: [], // 商品類別
     smallCategory: [], // 小分類
     counter: [], // DropDown
@@ -49,7 +49,7 @@ export class TLS2G040Component {
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
-    { field: 'contactPerson', header: '業種/業種名稱', visible: true },
+    { field: 'contactPerson', header: '大分類/大分類名稱', visible: true },
     { field: 'contactDate', header: '月預算', visible: true },
     { field: 'UID', header: '1(三)', visible: true },
     { field: 'industryType', header: '2(四)', visible: true },

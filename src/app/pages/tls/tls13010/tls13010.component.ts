@@ -223,7 +223,7 @@ export class TLS13010Component extends BasicQueryPageComponent<CategoryItem> imp
     { field: 'contractEndDate', header: '契約截止日', visible: true },
     { field: 'operationStartDate', header: '營運起始日', visible: true },
     { field: 'operationEndDate', header: '營運截止日', visible: true },
-    { field: 'businessTypeCode', header: '業種代號', visible: true },
+    { field: 'businessTypeCode', header: '大分類代號', visible: true },
     { field: 'performanceMethod', header: '裝潢方式', visible: true },
     { field: 'settlementMethod', header: '結帳方式', visible: true },
     { field: 'accountMethod', header: '對帳方式', visible: true },

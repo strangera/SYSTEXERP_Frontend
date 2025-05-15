@@ -2,14 +2,15 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { ErrorHandlerService } from '../../shared/service/error-handler.service';
-import { catchError, Observable, of, tap } from 'rxjs';
+import { catchError, map, Observable, of, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
-export class DeductionCategoryService {
+export class DeductionService {
   apiUrl: string = environment.ApiUrl;
   title: string = '扣款類別';
+
   options: any[] = [
     { value: 'A', label: 'A - 一次扣款' },
     { value: 'B', label: 'B - 每月扣款' },
@@ -50,5 +51,15 @@ export class DeductionCategoryService {
       tap(data => console.debug('put response', data)),
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
+  }
+
+  // ✅ 新增這段：查詢扣款類別對應的扣款項目(APS1003)
+  getAPS1003DropDownList(payload: { cap_typeList: string[] }): Observable<any[]> {
+    return this.http
+      .post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13030_APS1003_DropDownList`, payload)
+      .pipe(
+        map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? []),
+        catchError(this.errorHandler.handleError)
+      );
   }
 }

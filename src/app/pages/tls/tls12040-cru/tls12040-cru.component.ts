@@ -73,7 +73,7 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
     vendorUID: [, [Validators.required]], // 廠商統一編號
     businessType: [,], // 營業型態
     organizationCode: [, [Validators.required]], // 組織代碼
-    industryCode: [, [Validators.required]], // 業種
+    industryCode: [, [Validators.required]], // 大分類
     productCategory: [, [Validators.required]], // 商品類別
 
     negotiator: [, [Validators.required]], // 洽談者

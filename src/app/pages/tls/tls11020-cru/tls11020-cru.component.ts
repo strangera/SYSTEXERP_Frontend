@@ -5,7 +5,7 @@ import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { TranslateService } from '@ngx-translate/core';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { DeductionCategoryService } from '../../../service/basic/deduction-category.service';
+import { DeductionService } from '../../../service/basic/deduction.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS11020Service } from '../../../service/API/tls/tls11020.service';
 
@@ -39,7 +39,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
   constructor(
     private translate: TranslateService,
     private validationService: ValidationService,
-    private deductionCategoryService: DeductionCategoryService,
+    private deductionService: DeductionService,
     private tls11020Service: TLS11020Service,
   ) {
     super();
@@ -47,7 +47,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS11020', this.inputForm);
-    this.deductionCategoryService.getDeductionCategories().subscribe((data) => {
+    this.deductionService.getDeductionCategories().subscribe((data) => {
       this.deductionCategoryOptions = data;
     });
   }

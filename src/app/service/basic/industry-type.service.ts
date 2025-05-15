@@ -9,7 +9,7 @@ import { catchError, Observable, of, tap } from 'rxjs';
 })
 export class IndustryTypeService {
   apiUrl: string = environment.ApiUrl;
-  title: string = '所屬業種';
+  title: string = '所屬大分類';
   options: any[] = [
     { value: '1', label: '物販' },
     { value: '2', label: '餐飲' },

@@ -37,7 +37,7 @@ export class SYSB900Component extends BasicQueryPageComponent<CategoryItem> impl
   queryForm = this.formBuilder.nonNullable.group({
     bus_class: ['', [Validators.maxLength(2)]], // 中分類代號
     bus_class_name: ['', [Validators.maxLength(40)]], // 中分類名稱
-    bus_type: [[] as number[]], // 所屬業種
+    bus_type: [[] as number[]], // 所屬大分類
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
     //分頁查詢
     pageSize: [10],

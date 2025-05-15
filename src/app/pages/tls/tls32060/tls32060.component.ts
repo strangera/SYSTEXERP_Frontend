@@ -55,7 +55,7 @@ export class TLS32060Component {
     tax: [], //稅別
     type: [],
     organizationCode: [],
-    businessTypeCode: [],  // 業種
+    businessTypeCode: [],  // 大分類
     commissionType: [], // 抽成方式
     onedatedd: [],
     onedateyy: [],

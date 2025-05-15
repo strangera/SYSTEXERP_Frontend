@@ -522,7 +522,7 @@ const routes: Routes = [
   { path: 'TLS2H020', component: TLS2H020Component }, // 專櫃代扣款發票套印作業
   { path: 'TLS2H030', component: TLS2H030Component }, // 專櫃抽成發票套印作業
   { path: 'TLS2J010', component: TLS2J010Component }, // 換開品項維護作業
-  { path: 'TLS2J020', component: TLS2J020Component }, // 業種換開品項維護作業
+  { path: 'TLS2J020', component: TLS2J020Component }, // 大分類換開品項維護作業
   { path: 'TLS2J030', component: TLS2J030Component }, // 後台發票換開補登作業
   { path: 'TLS2J040', component: TLS2J040Component }, // 發票換開作業
   { path: 'TLS2J050', component: TLS2J050Component }, // 三聯式發票查詢列印
@@ -608,7 +608,7 @@ const routes: Routes = [
   { path: 'TLS2H020CRU', component: TLS2H020CRUComponent }, // 專櫃代扣款發票套印作業 CRU
   { path: 'TLS2H030CRU', component: TLS2H030CRUComponent }, // 專櫃抽成發票套印作業 CRU
   { path: 'TLS2J010CRU', component: TLS2J010CRUComponent }, // 換開品項維護作業 CRU
-  { path: 'TLS2J020CRU', component: TLS2J020CRUComponent }, // 業種換開品項維護作業 CRU
+  { path: 'TLS2J020CRU', component: TLS2J020CRUComponent }, // 大分類換開品項維護作業 CRU
   { path: 'TLS2J030CRU', component: TLS2J030CRUComponent }, // 後台發票換開補登作業 CRU
   { path: 'TLS2J040CRU', component: TLS2J040CRUComponent }, // 發票換開作業 CRU
   { path: 'TLS2J050CRU', component: TLS2J050CRUComponent }, // 三聯式發票查詢列印 CRU
@@ -629,13 +629,13 @@ const routes: Routes = [
   { path: 'TLS26040MOD', component: TLS26040ModComponent }, // 預售管理作業 MOD
   { path: 'TLS31010', component: TLS31010Component }, // 即時業績查詢
   { path: 'TLS31020', component: TLS31020Component }, // 各樓層之營業報表
-  { path: 'TLS31030', component: TLS31030Component }, // 各業種之營業報表
+  { path: 'TLS31030', component: TLS31030Component }, // 各大分類之營業報表
   { path: 'TLS31040', component: TLS31040Component }, // 各櫃別之營業報表
   { path: 'TLS31050', component: TLS31050Component }, // 各抽成別之營業報表
   { path: 'TLS31060', component: TLS31060Component }, // 各組織之營業報表
   { path: 'TLS31070', component: TLS31070Component }, // 各營業型態之營業報表
   { path: 'TLS31080', component: TLS31080Component }, // 各時段之樓層營業報表
-  { path: 'TLS31090', component: TLS31090Component }, // 各時段之業種營業報表
+  { path: 'TLS31090', component: TLS31090Component }, // 各時段之大分類營業報表
   { path: 'TLS32010', component: TLS32010Component }, // 銷售排名分析報表
   { path: 'TLS32020', component: TLS32020Component }, // 期間業績分析報表
   { path: 'TLS32030', component: TLS32030Component }, // 成長率分析報表

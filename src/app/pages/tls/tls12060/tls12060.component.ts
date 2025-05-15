@@ -42,7 +42,7 @@ export class TLS12060Component {
     enddate: [, [Validators.required]], // 接洽日期
     contactPerson: [[] as number[]], // 接洽人員
     vendorUID: [[] as number[]], // 廠商統一編號
-    industryCode: [[] as number[]], // 業種代號
+    industryCode: [[] as number[]], // 大分類代號
     region: [[] as number[]], // 區域
     floor: [[] as number[]], // 樓層
     locationNumber: [[] as number[]], // 位置編號
@@ -65,7 +65,7 @@ export class TLS12060Component {
     { field: 'contactPerson', header: '洽談者', visible: true },
     { field: 'contactDate', header: '洽談日', visible: true },
     { field: 'UID', header: '統編/廠商', visible: true },
-    { field: 'industryType', header: '業種', visible: true },
+    { field: 'industryType', header: '大分類', visible: true },
     { field: 'category', header: '類型', visible: true },
     { field: 'version', header: '版本', visible: true },
     { field: 'rentNumber', header: '位置租賃數', visible: true },

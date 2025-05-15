@@ -124,7 +124,7 @@ export class SYS0110CRUComponent extends BasicCrupageComponent implements OnInit
     jobPositionOptions: [''], // 職位
     FloorOptions: [''], // 樓層代碼
     regionCodeOptions: [''], // 區域代碼
-    businessTypeCodeOptions: [''], // 業種代碼
+    businessTypeCodeOptions: [''], // 大分類代碼
     counterCodeOptions: [''], // 專櫃代碼
     items: this.formBuilder.array([this.createItem()]), // 動態項目
   });

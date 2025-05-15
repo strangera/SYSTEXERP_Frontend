@@ -1,152 +1,157 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { FormGroup, Validators } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { RegionCodeService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { OperationStatusService } from '../../../service/basic/operation-status.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
-import { DeductionCategoryService } from '../../../service/basic/deduction-category.service';
-import { DeductionCodeNameService } from '../../../service/basic/deduction-code-name.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+import { DeductionService } from '../../../service/basic/deduction.service';
+import { TLS13030Service } from '../../../service/API/tls/tls13030.service';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 
 @Component({
   selector: 'app-tls13030',
   templateUrl: './tls13030.component.html',
-  styleUrl: './tls13030.component.scss',
+  styleUrls: ['./tls13030.component.scss'],
 })
-export class TLS13030Component {
-  ProgNo: string = '210012';
-  // 權限
-  funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  // 查詢
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS13030Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    counterCode: [, [Validators.maxLength(8)]],
-    counterName: [, [Validators.maxLength(50)]],
-    floorCode: [],
-    regionCode: [],
-    businessTypeCode: [],
-    operationStatus: [],
-    contractStartDate: [],
-    contractEndDate: [],
-    contractDeadlineStartDate: [],
-    contractDeadlineEndDate: [],
-    deductionCategory: [],
-    deductionCodeName: [],
-    deductionStartDate: [],
-    deductionEndDate: [],
-    deductionDeadlineStartDate: [],
-    deductionDeadlineEndDate: [],
+    tlt_no: ['', [Validators.maxLength(10)]],
+    tlt_name: ['', [Validators.maxLength(50)]],
+    floor_noList: [[] as string[]],
+    area_noList: [[] as string[]],
+    bus_typeList: [[] as string[]],
+    tlt_openflagList: [[] as string[]],
+    tlt_bdate_start: [null],
+    tlt_bdate_end: [null],
+    tlt_edate_start: [null],
+    tlt_edate_end: [null],
+    cap_typeList: [[] as string[]],
+    cap_itemList: [[] as string[]],
+    tpy_bdate_start: [null],
+    tpy_bdate_end: [null],
+    tpy_edate_start: [null],
+    tpy_edate_end: [null],
+    building_no: ['', [Validators.maxLength(1)]],
+    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
 
-  // 下拉選單選項
+  data: any[] = [];
+  totalRecords = 0;
+  selectedItems: any[] = [];
+
   regionOptions: any[] = [];
   floorOptions: any[] = [];
   operationStatusOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
   deductionCategoryOptions: any[] = [];
   deductionCodeNameServOptions: any[] = [];
-  businessTypeOptions: any[] = [];
+  BUILDING_NO_Options: any[] = [];
+
+  columns: any[] = [
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'floor_no', header: '樓層', visible: true },
+    { field: 'area_no', header: '區域', visible: true },
+    { field: 'bus_type', header: '大分類', visible: true },
+    { field: 'tlt_openflag', header: '營運狀態', visible: true },
+    { field: 'tlt_bdate', header: '契約起日', visible: true },
+    { field: 'tlt_edate', header: '契約迄日', visible: true },
+    { field: 'cap_type', header: '扣款類別', visible: true },
+    { field: 'cap_item', header: '扣款項目代碼', visible: true },
+    { field: 'CAP_Name', header: '扣款項目名稱', visible: true },
+    { field: 'tpy_bdate', header: '扣款起日', visible: true },
+    { field: 'tpy_edate', header: '扣款迄日', visible: true },
+    { field: 'tpy_totalamt', header: '總金額', visible: true },
+    { field: 'down_payment', header: '頭期款', visible: true },
+    { field: 'period_nos', header: '期數', visible: true },
+    { field: 'tpy_amount', header: '每期金額', visible: true },
+    { field: 'tpy_rate', header: '扣款比率', visible: true },
+  ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private regionCodeService: RegionCodeService,
     private floorService: FloorService,
     private operationStatusService: OperationStatusService,
     private businessTypeCodeService: BusinessTypeCodeService,
-    private deductionCategoryService: DeductionCategoryService,
-    private deductionCodeNameService: DeductionCodeNameService,
-  ) { }
+    private deductionService: DeductionService,
+    private tls11010Service: Tls11010Service,
+    private TLS13030Service: TLS13030Service
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS13030', 'TLS/TLS13030CRU', this.queryForm, (f) => this.onSubmit(f));
 
-    this.regionCodeService.getRegionCodes().subscribe((data) => {
-      this.regionOptions = data;
-    });
-
-    this.floorService.getFloors().subscribe((data) => {
-      this.floorOptions = data;
-    });
-
-    this.operationStatusService.getOperationStatuses().subscribe((data) => {
-      this.operationStatusOptions = data;
-    });
-
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
-      this.businessTypeCodeOptions = data;
-    });
-
-    this.deductionCategoryService.getDeductionCategories().subscribe((data) => {
-      this.deductionCategoryOptions = data;
-    });
-
-    this.deductionCodeNameService.getDeductionCodeNames().subscribe((data) => {
-      this.deductionCodeNameServOptions = data;
+    this.regionCodeService.getRegionCodes().subscribe(data => this.regionOptions = data);
+    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
+    this.operationStatusService.getOperationStatuses().subscribe(data => this.operationStatusOptions = data);
+    this.businessTypeCodeService.getBusinessTypeCodes().subscribe(data => this.businessTypeCodeOptions = data);
+    this.deductionService.getDeductionCategories().subscribe(data => this.deductionCategoryOptions = data);
+    this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
+    this.queryForm.controls.cap_typeList.valueChanges.subscribe((selectedCapTypes: string[] | null) => {
+      if (selectedCapTypes?.length) {
+        const payload = { cap_typeList: selectedCapTypes };
+        this.deductionService.getAPS1003DropDownList(payload).subscribe(res => {
+          this.deductionCodeNameServOptions = res?.map((x: any) => ({ label: `${x.value} - ${x.label}`, value: x.value })) || [];
+          this.queryForm.controls.cap_itemList.setValue([]);
+        });
+      } else {
+        this.deductionCodeNameServOptions = [];
+        this.queryForm.controls.cap_itemList.setValue([]);
+      }
     });
   }
 
-  canQuery(): boolean {
-    return true;
-  }
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const formValue = { ...form.value };
 
-  canAdd(): boolean {
-    return true;
-  }
+      for (const key in formValue) {
+        if (formValue[key] === '') {
+          formValue[key] = null;
+        }
+      }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: 'Create',
-          queryform: this.queryForm,
+      this.TLS13030Service.queryTLS13030(formValue).subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            this.data = res.Data || [];
+            this.totalRecords = res.TotalCount || this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, formValue);
+            this.messageService.successBubble('查詢成功');
+          } else {
+            this.messageService.errorBubble('查詢失敗');
+          }
         },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
+        error: () => {
+          this.messageService.errorBubble('查詢錯誤');
+        },
+        complete: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
+    });
+  }
+
+  onDelete(selectedItems: any[]): void {
+    if (!selectedItems.length) return;
+    const confirm = window.confirm('是否確定刪除選取項目？');
+    if (!confirm) return;
+
+    const idList = selectedItems.map((item) => item.id);
+
+    this.TLS13030Service.deleteTLS13030(idList).subscribe({
+      next: () => {
+        this.messageService.successBubble('刪除成功');
+        this.onSubmit(this.queryForm);
+      },
+      error: () => {
+        this.messageService.errorBubble('刪除失敗');
+      },
+    });
   }
 }

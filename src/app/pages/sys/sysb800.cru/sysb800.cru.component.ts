@@ -23,13 +23,13 @@ interface CategoryItem {
   templateUrl: './sysb800.cru.component.html',
   styleUrl: './sysb800.cru.component.scss'
 })
-// 業種基本資料維護作業 CRU
+// 大分類基本資料維護作業 CRU
 export class SYSB800CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [], // ID
-    bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 業種代號
-    bus_type_name: ['', [Validators.required, Validators.maxLength(40)]], // 業種名稱
+    bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 大分類代號
+    bus_type_name: ['', [Validators.required, Validators.maxLength(40)]], // 大分類名稱
     bus_type_desc: ['',], // 備註
   });
 

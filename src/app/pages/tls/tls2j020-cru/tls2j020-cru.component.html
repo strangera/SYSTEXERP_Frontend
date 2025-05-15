@@ -8,7 +8,7 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="業種" controlName="industry" [options]="industryOptions" optionLabel="label"
+                    <app-dropdown label="大分類" controlName="industry" [options]="industryOptions" optionLabel="label"
                         optionValue="value" [control]="dataForm.controls.industry" [submitted]="submitted">
                     </app-dropdown>
                 </div>

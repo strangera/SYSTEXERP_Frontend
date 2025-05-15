@@ -14,7 +14,7 @@ import { RegionCodeService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { OperationStatusService } from '../../../service/basic/operation-status.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
-import { DeductionCategoryService } from '../../../service/basic/deduction-category.service';
+import { DeductionService } from '../../../service/basic/deduction.service';
 import { DeductionCodeNameService } from '../../../service/basic/deduction-code-name.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 
@@ -90,7 +90,7 @@ export class TLS21050Component {
     private floorService: FloorService,
     private operationStatusService: OperationStatusService,
     private businessTypeCodeService: BusinessTypeCodeService,
-    private deductionCategoryService: DeductionCategoryService,
+    private DeductionService: DeductionService,
     private deductionCodeNameService: DeductionCodeNameService,
   ) { }
 
@@ -108,7 +108,7 @@ export class TLS21050Component {
     this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
       this.businessTypeCodeOptions = data;
     });
-    this.deductionCategoryService.getDeductionCategories().subscribe((data) => {
+    this.DeductionService.getDeductionCategories().subscribe((data) => {
       this.commissionCategoryOptions = data;
     });
     this.deductionCodeNameService.getDeductionCodeNames().subscribe((data) => {

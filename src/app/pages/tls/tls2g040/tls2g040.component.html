@@ -6,7 +6,7 @@
                     <app-menubar [ProgNo]="ProgNo"></app-menubar>
                 </div>
                 <div *appHasPermission="addPermission">
-                    <app-button btnType="create" label="業種" class="col"></app-button>
+                    <app-button btnType="create" label="大分類" class="col"></app-button>
                 </div>
                 <div *appHasPermission="addPermission">
                     <app-button btnType="create" label="商品類別" class="col"></app-button>
@@ -35,7 +35,7 @@
                                 </app-calendar>
                             </div>
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-dropdown label="業種" controlName="industryCode" [options]="industryCodeOptions"
+                                <app-dropdown label="大分類" controlName="industryCode" [options]="industryCodeOptions"
                                     optionLabel="label" optionValue="value" [control]="queryForm.controls.industryCode"
                                     [submitted]="submitted">
                                 </app-dropdown>

@@ -46,7 +46,7 @@ export class TLS12040Component {
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
     recruitmentNumber: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 專櫃招募編號
-    industryCode: [[] as number[]], // 業種代號
+    industryCode: [[] as number[]], // 大分類代號
     counterID: [, [this.validationService.numberValidator]], // 專櫃編號
     counterName: ['', [Validators.maxLength(50)]], // 專櫃名稱
     vendorUID: [[] as number[]], // 廠商統一編號
@@ -89,7 +89,7 @@ export class TLS12040Component {
   // ----------------------------------------------------------------
   data: any[] = [
     // { recruitmentNumber: '00003584', brandCName: 'xx', vendorUID: '0000/停車管理', versionNumber: 1,
-    //   contactor: 'A小姐', industryCode: '業種代號', replyDate: '', replyEndDate: '2024-09-09',
+    //   contactor: 'A小姐', industryCode: '大分類代號', replyDate: '', replyEndDate: '2024-09-09',
     //   contractType: '意向書', contractStatus: '未審核',rentNumber: 1},
     // 其他資料
   ];

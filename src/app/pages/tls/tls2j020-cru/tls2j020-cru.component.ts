@@ -11,7 +11,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { TaxableService } from '../../../service/basic/taxable.service';
 
-// 2.2.18.2 業種換開品項維護作業
+// 2.2.18.2 大分類換開品項維護作業
 @Component({
   selector: 'app-tls2j020-cru',
   templateUrl: './tls2j020-cru.component.html',

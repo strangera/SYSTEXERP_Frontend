@@ -39,7 +39,7 @@ export class TLS12010Component {
     vendorEName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
     brandCName: ['', [Validators.maxLength(30)]], // 品牌名稱(中文)
     brandEName: ['', [Validators.maxLength(30)]], // 品牌名稱(英文)
-    industryCode: [[] as number[]], // 業種代號
+    industryCode: [[] as number[]], // 大分類代號
   });
   // 表格
   // ----------------------------------------------------------------
@@ -57,7 +57,7 @@ export class TLS12010Component {
     { field: 'vendorCName', header: '廠商公司名稱(中文)', visible: true },
     { field: 'brandCName', header: '品牌名稱(中文)', visible: true },
     { field: 'brandEName', header: '品牌名稱(英文)', visible: true },
-    { field: 'industryCode', header: '業種代號', visible: true },
+    { field: 'industryCode', header: '大分類代號', visible: true },
     { field: 'brandFrom', header: '產品出產地', visible: true },
     // 其他欄位
   ];

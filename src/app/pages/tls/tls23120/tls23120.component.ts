@@ -47,8 +47,8 @@ export class TLS23120Component {
     organizationCode: [{ value: '', disabled: true }],  // 專櫃編號
     regionCode: [{ value: '', disabled: true }],  // 區域
     floorCode: [{ value: '', disabled: true }],  // 樓層
-    businessTypeCode: [{ value: '', disabled: true }],  // 業種
-    whetherDisplayBusinessType: [],  // 是否顯示業種
+    businessTypeCode: [{ value: '', disabled: true }],  // 大分類
+    whetherDisplayBusinessType: [],  // 是否顯示大分類
     locationRadio: ['']  // 地點選項單選
   });
 
@@ -81,9 +81,9 @@ export class TLS23120Component {
     private authService: AuthService,
     private regionCodeService: RegionCodeService, // 區域 service
     private floorService: FloorService, // 樓層 service
-    private businessTypeCodeService: BusinessTypeCodeService, // 業種 service
+    private businessTypeCodeService: BusinessTypeCodeService, // 大分類 service
     private organizationNumberService: OrganizationNumberService, // 專櫃編號 service
-    private whetherService: WhetherService, // 是否顯示業種 service
+    private whetherService: WhetherService, // 是否顯示大分類 service
   ) { }
 
   ngOnInit(): void {
