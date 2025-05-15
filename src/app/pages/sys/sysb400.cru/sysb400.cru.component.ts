@@ -15,8 +15,7 @@ import { Sysb300Service } from '../../../service/API/sys/sysb300.service';
 // 組織碼設定作業 CRU
 export class SYSB400CRUComponent
   extends BasicCruPageComponent<Sysb400m>
-  implements OnInit
-{
+  implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [], // ID
@@ -57,7 +56,7 @@ export class SYSB400CRUComponent
       this.upgroup_Options = response.Data.map((item: apiOption) => ({
         No: item.No,
         Name: item.Name,
-        Label: item.No + ' ' + item.Name,
+        Label: item.No + '-' + item.Name,
       }));
       console.log('組織階層', this.upgroup_Options);
     });
@@ -77,7 +76,7 @@ export class SYSB400CRUComponent
       this.org_Option = response.Data.map((item: Sysb400m) => ({
         No: item.org_id,
         Name: item.org_name,
-        Label: item.org_id + ' ' + item.org_name,
+        Label: item.org_id + '-' + item.org_name,
       }));
       console.log('組織代碼 查詢結果', this.org_Option);
     });

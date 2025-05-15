@@ -136,6 +136,29 @@ export class TreeDropdownComponent implements OnInit {
     }
   }
 
+  // 全選所有節點(包含父節點與leaf節點)
+  selectAll() {
+    const selected: TreeNode[] = [];
+    this.collectAllNodes(this.treeData, selected);
+    this.selectedMembers = [...selected];
+    console.log('selectedMembers (全選所有節點):', this.selectedMembers);
+  }
+
+  // 遞迴收集所有節點 (包括有子節點的父節點)
+  private collectAllNodes(nodes: TreeNode[], selected: TreeNode[]) {
+    for (const node of nodes) {
+      selected.push(node);  // 先加入父節點
+      if (node.children) {
+        this.collectAllNodes(node.children, selected);  // 遞迴加入子節點
+      }
+    }
+  }
+
+  // 清空選擇
+  clearSelection() {
+    this.selectedMembers = [];
+  }
+
   // 送出元件
   inviteMembers() {
     // 過濾出 leaf 節點 (會員層)
