@@ -14,21 +14,21 @@ export class DemostepsComponent implements OnInit {
     { name: '白銀', value: 'silver' },
     { name: '鈦金', value: 'platinum' }
   ];
-  
+
   usedaylist0 = [
-    { name: '每日', value: 'usedayone'},
-    { name: '限平日', value: 'usedayu'},
-    { name: '限假日', value: 'usedayw'},
+    { name: '每日', value: 'usedayone' },
+    { name: '限平日', value: 'usedayu' },
+    { name: '限假日', value: 'usedayw' },
   ];
-  
+
   usedaylist1 = [
-    { name: '一', value: 'useday1'},
-    { name: '二', value: 'useday2'},
-    { name: '三', value: 'useday3'},
-    { name: '四', value: 'useday4'},
-    { name: '五', value: 'useday5'},
-    { name: '六', value: 'useday6'},
-    { name: '日', value: 'useday7'},
+    { name: '一', value: 'useday1' },
+    { name: '二', value: 'useday2' },
+    { name: '三', value: 'useday3' },
+    { name: '四', value: 'useday4' },
+    { name: '五', value: 'useday5' },
+    { name: '六', value: 'useday6' },
+    { name: '日', value: 'useday7' },
   ];
 
   // Step 2 必要項目
@@ -37,7 +37,7 @@ export class DemostepsComponent implements OnInit {
     { name: '兌换', value: 2 },
     { name: '來店（會員認證）', value: 3 },
   ];
-  
+
   coupontypeOptions: any = [
     { name: '促銷', value: 1 },
     { name: '折扣', value: 2 },
@@ -50,7 +50,7 @@ export class DemostepsComponent implements OnInit {
 
   //step3必要項目
   giveawaytypeOptions: any = [
-    { name: '優惠卷', value: 1 },
+    { name: '優惠券', value: 1 },
     { name: '彩票', value: 2 },
     { name: '紅利', value: 3 },
     { name: '商品', value: 4 },
@@ -77,7 +77,7 @@ export class DemostepsComponent implements OnInit {
       }),
       step2Info: this.formBuilder.group({
         eventtype: [1, Validators.required], // 交易類別
-        coupontype: [1, Validators.required], // 優惠卷類型
+        coupontype: [1, Validators.required], // 優惠券類型
         limitstarttime: [now, Validators.required], // 日期限制
         limitendtime: [now, Validators.required],
         thresholdvalue: [0, Validators.required], // 滿門檻
@@ -126,22 +126,22 @@ export class DemostepsComponent implements OnInit {
     data.forEach(item => {
       itemsArray.push(this.formBuilder.group({
         giveawaytype: [1, Validators.required], // 贈品類別
-      tickettype: [1, Validators.required], // 票卷種類
-      ticketclassification: [1, Validators.required], // 票卷分類
-      giveawaytitle: ['', Validators.required], // 贈品標題
-      giveawaydescribe: ['', Validators.required], //  1-1 贈品說明
-      usedstarttime: [now, Validators.required], // 票卷使用起訖日期 (start-end datetime yyyy/mm/dd HH:mm)
-      usedendtime: [now, Validators.required], // 票卷使用起訖日期
-      giveawaythresholdvalue: [0, Validators.required], // 滿額條件
-      giveawaycount: [0, Validators.required], // 次數限制 (0 不限制)
-      usedaylimits0: this.formBuilder.array(this.usedaylist0.map(level => this.formBuilder.control(false))), // 使用星期限制
-      usedaylimits1: this.formBuilder.array(this.usedaylist1.map(level => this.formBuilder.control(false))), // 使用星期限制
-      giveawayvalue: [0, Validators.required], // 價值
-      giveawayunit: [0, Validators.required], // 單位
-      // ----------------------------------------------------------------
-      // 1-2 使用區域限制
-      // 1-2 適用門市
-      Instructionsofuse: ['', Validators.required], // 使用說明
+        tickettype: [1, Validators.required], // 票券種類
+        ticketclassification: [1, Validators.required], // 票券分類
+        giveawaytitle: ['', Validators.required], // 贈品標題
+        giveawaydescribe: ['', Validators.required], //  1-1 贈品說明
+        usedstarttime: [now, Validators.required], // 票券使用起訖日期 (start-end datetime yyyy/mm/dd HH:mm)
+        usedendtime: [now, Validators.required], // 票券使用起訖日期
+        giveawaythresholdvalue: [0, Validators.required], // 滿額條件
+        giveawaycount: [0, Validators.required], // 次數限制 (0 不限制)
+        usedaylimits0: this.formBuilder.array(this.usedaylist0.map(level => this.formBuilder.control(false))), // 使用星期限制
+        usedaylimits1: this.formBuilder.array(this.usedaylist1.map(level => this.formBuilder.control(false))), // 使用星期限制
+        giveawayvalue: [0, Validators.required], // 價值
+        giveawayunit: [0, Validators.required], // 單位
+        // ----------------------------------------------------------------
+        // 1-2 使用區域限制
+        // 1-2 適用門市
+        Instructionsofuse: ['', Validators.required], // 使用說明
       }));
     });
   }

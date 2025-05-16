@@ -20,7 +20,7 @@
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="館別" controlName="BUILDING_NO" [options]="BUILDING_NO_Options" optionLabel="label"
-            optionValue="value" [control]="queryForm.controls.building_no" [submitted]="submitted">
+            optionValue="value" [control]="queryForm.controls.tlt_building" [submitted]="submitted">
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -36,13 +36,13 @@
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-multi-select label="大分類" [options]="businessTypeCodeOptions" [control]="queryForm.controls.bus_typeList"
+          <app-multi-select label="大分類" [options]="bus_typeList" [control]="queryForm.controls.bustypeList"
             optionLabel="label" optionValue="value" [submitted]="submitted">
           </app-multi-select>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-multi-select label="專櫃營運狀況" [options]="operationStatusOptions"
+          <app-multi-select label="營業狀態" [options]="operationStatusOptions"
             [control]="queryForm.controls.tlt_openflagList" optionLabel="label" optionValue="value"
             [submitted]="submitted">
           </app-multi-select>

@@ -4,7 +4,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { RegionService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { OperationStatusService } from '../../../service/basic/operation-status.service';
-import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
+import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
 import { DeductionService } from '../../../service/basic/deduction.service';
 import { TLS13030Service } from '../../../service/API/tls/tls13030.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
@@ -21,7 +21,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     tlt_name: ['', [Validators.maxLength(50)]],
     floor_noList: [[] as string[]],
     area_noList: [[] as string[]],
-    bus_typeList: [[] as string[]],
+    bustypeList: [[] as string[]],
     tlt_openflagList: [[] as string[]],
     tlt_bdate_start: [null],
     tlt_bdate_end: [null],
@@ -33,48 +33,47 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     tpy_bdate_end: [null],
     tpy_edate_start: [null],
     tpy_edate_end: [null],
-    building_no: ['', [Validators.maxLength(1)]],
+    tlt_building: ['', [Validators.maxLength(1)]],
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
 
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
-
   regionOptions: any[] = [];
   floorOptions: any[] = [];
   operationStatusOptions: any[] = [];
-  businessTypeCodeOptions: any[] = [];
+  bus_typeList: any[] = [];
   deductionCategoryOptions: any[] = [];
   deductionCodeNameServOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
 
-  columns: any[] = [
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'floor_no', header: '樓層', visible: true },
-    { field: 'area_no', header: '區域', visible: true },
-    { field: 'bus_type', header: '業種', visible: true },
-    { field: 'tlt_openflag', header: '營運狀態', visible: true },
-    { field: 'tlt_bdate', header: '契約起日', visible: true },
-    { field: 'tlt_edate', header: '契約迄日', visible: true },
-    { field: 'cap_type', header: '扣款類別', visible: true },
-    { field: 'cap_item', header: '扣款項目代碼', visible: true },
-    { field: 'CAP_Name', header: '扣款項目名稱', visible: true },
-    { field: 'tpy_bdate', header: '扣款起日', visible: true },
-    { field: 'tpy_edate', header: '扣款迄日', visible: true },
-    { field: 'tpy_totalamt', header: '總金額', visible: true },
-    { field: 'down_payment', header: '頭期款', visible: true },
-    { field: 'period_nos', header: '期數', visible: true },
-    { field: 'tpy_amount', header: '每期金額', visible: true },
-    { field: 'tpy_rate', header: '扣款比率', visible: true },
-  ];
+columns: any[] = [
+  { field: 'tlt_no', header: '專櫃編號', visible: true },
+  { field: 'tlt_name', header: '專櫃名稱', visible: true },
+  { field: 'tlt_building', header: '館別', visible: true },
+  { field: 'floor_desc', header: '樓層', visible: true },
+  { field: 'area_desc', header: '區域', visible: true },
+  { field: 'bus_type', header: '業種', visible: true },
+  { field: 'tlt_bdate', header: '契約起日', visible: true },
+  { field: 'tlt_edate', header: '契約迄日', visible: true },
+  { field: 'cap_type', header: '扣款類別', visible: true },
+  { field: 'CAP_Name', header: '扣款項目名稱', visible: true },
+  { field: 'tpy_bdate', header: '扣款起日', visible: true },
+  { field: 'tpy_edate', header: '扣款迄日', visible: true },
+  { field: 'tpy_totalamt', header: '總金額', visible: true },
+  { field: 'down_payment', header: '頭期款', visible: true },
+  { field: 'period_nos', header: '期數', visible: true },
+  { field: 'tpy_amount', header: '每期金額', visible: true },
+  { field: 'tpy_rate', header: '扣款比率', visible: true },
+];
+
 
   constructor(
     private RegionService: RegionService,
     private floorService: FloorService,
     private operationStatusService: OperationStatusService,
-    private businessTypeCodeService: BusinessTypeCodeService,
+    private bigCategoryCodeService: BigCategoryCodeService,
     private deductionService: DeductionService,
     private tls11010Service: Tls11010Service,
     private TLS13030Service: TLS13030Service
@@ -87,11 +86,16 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
 
     this.RegionService.getRegionOptions().subscribe(data => this.regionOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
-    this.operationStatusService.getOperationStatuses().subscribe(data => this.operationStatusOptions = data);
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe(data => this.businessTypeCodeOptions = data);
+    this.operationStatusService.getOperationStatuses().subscribe(res => {
+      this.operationStatusOptions = res?.map((x: any) => ({
+        label: `${x.value} - ${x.label}`,
+        value: x.value
+      })) || [];
+    });
+
+    this.bigCategoryCodeService.getSystemTypes().subscribe(data => this.bus_typeList = data);
     this.deductionService.getDeductionCategories().subscribe(data => this.deductionCategoryOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
-
     this.queryForm.controls.cap_typeList.valueChanges.subscribe((selectedCapTypes: string[] | null) => {
       if (selectedCapTypes?.length) {
         const payload = { cap_typeList: selectedCapTypes };

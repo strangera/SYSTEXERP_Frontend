@@ -11,7 +11,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { AnnouncementUserService } from '../../../service/basic/announcement-user.service';
 import { TicketCategoryService } from './../../../service/basic/ticket-category.service';
 
-// 2.2.13.5 部門使用卷類設定作業CRU
+// 2.2.13.5 部門使用券類設定作業CRU
 @Component({
   selector: 'app-tls2d050-cru',
   templateUrl: './tls2d050-cru.component.html',
@@ -23,7 +23,7 @@ export class TLS2D050CRUComponent extends BasicCrupageComponent implements OnIni
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     department: [], // 部門
-    coupon: [], // 卷別
+    coupon: [], // 券別
     // ----------------------------------------------------------------
     items: this.formBuilder.array([
       this.createItem()

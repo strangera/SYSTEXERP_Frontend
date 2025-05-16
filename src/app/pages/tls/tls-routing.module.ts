@@ -498,7 +498,7 @@ const routes: Routes = [
   { path: 'TLS2D020', component: TLS2D020Component }, // 專櫃代扣款試算作業
   { path: 'TLS2D030', component: TLS2D030Component }, // 專櫃代扣款結算作業
   { path: 'TLS2D040', component: TLS2D040Component }, // 專櫃代扣款明細表
-  { path: 'TLS2D050', component: TLS2D050Component }, // 部門使用卷類設定作業
+  { path: 'TLS2D050', component: TLS2D050Component }, // 部門使用券類設定作業
   { path: 'TLS2D060', component: TLS2D060Component }, // 專櫃活動設定暨審核作業
   { path: 'TLS2D070', component: TLS2D070Component }, // 專櫃活動合約設定作業
   { path: 'TLS2E010', component: TLS2E010Component }, // 專櫃租金結算作業
@@ -584,7 +584,7 @@ const routes: Routes = [
   { path: 'TLS2D020CRU', component: TLS2D020CRUComponent }, // 專櫃代扣款試算作業 CRU
   { path: 'TLS2D030CRU', component: TLS2D030CRUComponent }, // 專櫃代扣款結算作業 CRU
   { path: 'TLS2D040CRU', component: TLS2D040CRUComponent }, // 專櫃代扣款明細表 CRU
-  { path: 'TLS2D050CRU', component: TLS2D050CRUComponent }, // 部門使用卷類設定作業 CRU
+  { path: 'TLS2D050CRU', component: TLS2D050CRUComponent }, // 部門使用券類設定作業 CRU
   { path: 'TLS2D060CRU', component: TLS2D060CRUComponent }, // 專櫃活動設定暨審核作業 CRU
   { path: 'TLS2D070CRU', component: TLS2D070CRUComponent }, // 專櫃活動合約設定作業 CRU
   { path: 'TLS2E010CRU', component: TLS2E010CRUComponent }, // 專櫃租金結算作業 CRU

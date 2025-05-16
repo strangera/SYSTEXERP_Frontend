@@ -13,38 +13,38 @@ export class Step3Component {
   @Input() formGroupName: string | undefined;
 
   giveawaytypeOptions: any = [
-    { name: '優惠卷', value: 1 },
+    { name: '優惠券', value: 1 },
     { name: '彩票', value: 2 },
     { name: '紅利', value: 3 },
     { name: '商品', value: 4 },
   ];
 
   tickettypeOptions: any = [
-    { name: '兌幣卷', value: 1 },
-    { name: '折扣卷', value: 2 },
-    { name: '贈品優惠卷', value: 3 },
-    { name: '商品卷', value: 4 },
+    { name: '兌幣券', value: 1 },
+    { name: '折扣券', value: 2 },
+    { name: '贈品優惠券', value: 3 },
+    { name: '商品券', value: 4 },
   ];
 
   ticketclassificationOptions: any = [
-    { name: '實體卷', value: 1 },
-    { name: '電子卷', value: 2 },
-    { name: '熱感機印卷(POS)', value: 3 },
+    { name: '實體券', value: 1 },
+    { name: '電子券', value: 2 },
+    { name: '熱感機印券(POS)', value: 3 },
   ];
 
   usedaylist0 = [
-    { name: '每日', value: 'usedayone'},
-    { name: '限平日', value: 'usedayu'},
-    { name: '限假日', value: 'usedayw'},
+    { name: '每日', value: 'usedayone' },
+    { name: '限平日', value: 'usedayu' },
+    { name: '限假日', value: 'usedayw' },
   ];
   usedaylist1 = [
-    { name: '一', value: 'useday1'},
-    { name: '二', value: 'useday2'},
-    { name: '三', value: 'useday3'},
-    { name: '四', value: 'useday4'},
-    { name: '五', value: 'useday5'},
-    { name: '六', value: 'useday6'},
-    { name: '日', value: 'useday7'},
+    { name: '一', value: 'useday1' },
+    { name: '二', value: 'useday2' },
+    { name: '三', value: 'useday3' },
+    { name: '四', value: 'useday4' },
+    { name: '五', value: 'useday5' },
+    { name: '六', value: 'useday6' },
+    { name: '日', value: 'useday7' },
   ];
 
   giveawayunitOptions: any = [
@@ -57,12 +57,12 @@ export class Step3Component {
   stepForm: FormGroup = this.formBuilder.group({
     items: this.formBuilder.array([this.formBuilder.group({
       giveawaytype: [1, Validators.required], // 贈品類別
-      tickettype: [1, Validators.required], // 票卷種類
-      ticketclassification: [1, Validators.required], // 票卷分類
+      tickettype: [1, Validators.required], // 票券種類
+      ticketclassification: [1, Validators.required], // 票券分類
       giveawaytitle: ['', Validators.required], // 贈品標題
       giveawaydescribe: ['', Validators.required], //  1-1 贈品說明
-      usedstarttime: [now, Validators.required], // 票卷使用起訖日期 (start-end datetime yyyy/mm/dd HH:mm)
-      usedendtime: [now, Validators.required], // 票卷使用起訖日期
+      usedstarttime: [now, Validators.required], // 票券使用起訖日期 (start-end datetime yyyy/mm/dd HH:mm)
+      usedendtime: [now, Validators.required], // 票券使用起訖日期
       giveawaythresholdvalue: [0, Validators.required], // 滿額條件
       giveawaycount: [0, Validators.required], // 次數限制 (0 不限制)
       usedaylimits0: this.formBuilder.array(this.usedaylist0.map(level => this.formBuilder.control(false))), // 使用星期限制
@@ -78,7 +78,7 @@ export class Step3Component {
 
   constructor(
     private formBuilder: FormBuilder,
-    private controlContainer: ControlContainer,) {}
+    private controlContainer: ControlContainer,) { }
 
   ngOnInit(): void {
 
@@ -94,7 +94,7 @@ export class Step3Component {
     return item.get('usedaylimits0') as FormArray;
   }
 
-    getUsedayLimits1Controls(item: AbstractControl): FormArray {
+  getUsedayLimits1Controls(item: AbstractControl): FormArray {
     return item.get('usedaylimits1') as FormArray;
   }
 
@@ -102,12 +102,12 @@ export class Step3Component {
   addItem() {
     this.items.push(this.formBuilder.group({
       giveawaytype: [1, Validators.required], // 贈品類別
-      tickettype: [1, Validators.required], // 票卷種類
-      ticketclassification: [1, Validators.required], // 票卷分類
+      tickettype: [1, Validators.required], // 票券種類
+      ticketclassification: [1, Validators.required], // 票券分類
       giveawaytitle: ['', Validators.required], // 贈品標題
       giveawaydescribe: ['', Validators.required], //  1-1 贈品說明
-      usedstarttime: [now, Validators.required], // 票卷使用起訖日期 (start-end datetime yyyy/mm/dd HH:mm)
-      usedendtime: [now, Validators.required], // 票卷使用起訖日期
+      usedstarttime: [now, Validators.required], // 票券使用起訖日期 (start-end datetime yyyy/mm/dd HH:mm)
+      usedendtime: [now, Validators.required], // 票券使用起訖日期
       giveawaythresholdvalue: [0, Validators.required], // 滿額條件
       giveawaycount: [0, Validators.required], // 次數限制 (0 不限制)
       usedaylimits0: this.formBuilder.array(this.usedaylist0.map(level => this.formBuilder.control(false))), // 使用星期限制

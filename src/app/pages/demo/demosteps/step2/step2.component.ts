@@ -54,7 +54,7 @@ export class Step2Component {
 
   stepForm: FormGroup = this.formBuilder.group({
     eventtype: [1, Validators.required], // 交易類別
-    coupontype: [1, Validators.required], // 優惠卷類型 (下拉選單 先寫死資料) 促銷，折扣，免費，贈品，來店禮，其他
+    coupontype: [1, Validators.required], // 優惠券類型 (下拉選單 先寫死資料) 促銷，折扣，免費，贈品，來店禮，其他
     limitstarttime: [now, Validators.required], // 日期限制 (start-end datetime yyyy/mm/dd HH:mm)
     limitendtime: [now, Validators.required], //
     thresholdvalue: [0 as number, Validators.required], // 滿門檻 (輸入 ***)
@@ -67,7 +67,7 @@ export class Step2Component {
   constructor(
     private formBuilder: FormBuilder,
     private controlContainer: ControlContainer,
-    private cdr: ChangeDetectorRef,) {}
+    private cdr: ChangeDetectorRef,) { }
 
   ngOnInit(): void {
     console.log(this.formGroupName);
