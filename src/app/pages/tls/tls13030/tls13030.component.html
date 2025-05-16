@@ -1,99 +1,106 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-      </div>
-      <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'">
-          <!-- <form
-            [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)"
-          >
-        </form> -->
-          <div class="grid p-fluid">
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-number label="專櫃編號" controlName="counterCode" [control]="queryForm.controls.counterCode"
-                [submitted]="submitted">
-              </app-input-number>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="專櫃名稱" controlName="counterName" [control]="queryForm.controls.counterName"
-                [submitted]="submitted">
-              </app-input-text>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="樓層" controlName="floorCode" [options]="floorOptions" optionLabel="label"
-                optionValue="value" [control]="queryForm.controls.floorCode" [submitted]="submitted">
-              </app-dropdown>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="區域" controlName="regionCode" [options]="regionOptions" optionLabel="label"
-                optionValue="value" [control]="queryForm.controls.regionCode" [submitted]="submitted">
-              </app-dropdown>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="業種" controlName="businessTypeCode" [options]="businessTypeCodeOptions"
-                optionLabel="label" optionValue="value" [control]="queryForm.controls.businessTypeCode"
-                [submitted]="submitted">
-              </app-dropdown>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="專櫃營運狀態" controlName="operationStatus" [options]="operationStatusOptions"
-                optionLabel="label" optionValue="value" [control]="queryForm.controls.operationStatus"
-                [submitted]="submitted">
-              </app-dropdown>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-calendar-range calendarType="dateRange" label="合約起始日"
-                [startControl]="queryForm.controls.contractStartDate" [endControl]="queryForm.controls.contractEndDate"
-                [submitted]="submitted">
-              </app-calendar-range>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-calendar-range calendarType="dateRange" label="合約截止日"
-                [startControl]="queryForm.controls.contractDeadlineStartDate"
-                [endControl]="queryForm.controls.contractDeadlineEndDate" [submitted]="submitted">
-              </app-calendar-range>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="扣款類別" controlName="deductionCategory" [options]="deductionCategoryOptions"
-                optionLabel="label" optionValue="value" [control]="queryForm.controls.deductionCategory"
-                [submitted]="submitted">
-              </app-dropdown>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="扣款(代號)名稱" controlName="deductionCodeName" [options]="deductionCodeNameServOptions"
-                optionLabel="label" optionValue="value" [control]="queryForm.controls.deductionCodeName"
-                [submitted]="submitted">
-              </app-dropdown>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-calendar-range calendarType="dateRange" label="扣款起日"
-                [startControl]="queryForm.controls.deductionStartDate"
-                [endControl]="queryForm.controls.deductionEndDate" [submitted]="submitted">
-              </app-calendar-range>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-calendar-range calendarType="dateRange" label="扣款迄日"
-                [startControl]="queryForm.controls.deductionDeadlineStartDate"
-                [endControl]="queryForm.controls.deductionDeadlineEndDate" [submitted]="submitted">
-              </app-calendar-range>
-            </div>
-          </div>
-
-          <div *appHasPermission="queryPermission" class="col">
-            <div class="grid justify-content-end">
-              <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-              <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
-            </div>
-          </div>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
+<div class="grid align-items-center">
+  <div class="col" style="flex: 1">
+    <app-menubar [ProgNo]="ProgNo"></app-menubar>
   </div>
 </div>
+<p-accordion>
+  <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+    [headerStyleClass]="'query-accordionTab'">
+    <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="專櫃編號" controlName="tlt_no" [control]="queryForm.controls.tlt_no"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="專櫃名稱" controlName="tlt_name" [control]="queryForm.controls.tlt_name"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="館別" controlName="BUILDING_NO" [options]="BUILDING_NO_Options" optionLabel="label"
+            optionValue="value" [control]="queryForm.controls.tlt_building" [submitted]="submitted">
+          </app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-multi-select label="樓層" [options]="floorOptions" [control]="queryForm.controls.floor_noList"
+            optionLabel="label" optionValue="value" [submitted]="submitted">
+          </app-multi-select>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-multi-select label="區域" [options]="regionOptions" [control]="queryForm.controls.area_noList"
+            optionLabel="label" optionValue="value" [submitted]="submitted">
+          </app-multi-select>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-multi-select label="大分類" [options]="bus_typeList" [control]="queryForm.controls.bustypeList"
+            optionLabel="label" optionValue="value" [submitted]="submitted">
+          </app-multi-select>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-multi-select label="營業狀態" [options]="operationStatusOptions"
+            [control]="queryForm.controls.tlt_openflagList" optionLabel="label" optionValue="value"
+            [submitted]="submitted">
+          </app-multi-select>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar-range calendarType="dateRange" label="合約起始日" [startControl]="queryForm.controls.tlt_bdate_start"
+            [endControl]="queryForm.controls.tlt_bdate_end" [submitted]="submitted">
+          </app-calendar-range>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar-range calendarType="dateRange" label="合約截止日" [startControl]="queryForm.controls.tlt_edate_start"
+            [endControl]="queryForm.controls.tlt_edate_end" [submitted]="submitted">
+          </app-calendar-range>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-multi-select label="扣款類別" [options]="deductionCategoryOptions"
+            [control]="queryForm.controls.cap_typeList" optionLabel="label" optionValue="value" [submitted]="submitted">
+          </app-multi-select>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-multi-select label="扣款代碼/名稱" [options]="deductionCodeNameServOptions"
+            [control]="queryForm.controls.cap_itemList" optionLabel="label" optionValue="value" [submitted]="submitted">
+          </app-multi-select>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar-range calendarType="dateRange" label="扣款起日" [startControl]="queryForm.controls.tpy_bdate_start"
+            [endControl]="queryForm.controls.tpy_bdate_end" [submitted]="submitted">
+          </app-calendar-range>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar-range calendarType="dateRange" label="扣款迄日" [startControl]="queryForm.controls.tpy_edate_start"
+            [endControl]="queryForm.controls.tpy_edate_end" [submitted]="submitted">
+          </app-calendar-range>
+        </div>
+      </div>
+
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="clear"></app-button>
+        <app-button btnType="query" [loading]="loading"></app-button>
+      </div>
+    </form>
+  </p-accordionTab>
+</p-accordion>
+
+
+<div class="card">
+  <div class="col-13">
+    <app-table tableKey="TLS13030" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event" (delete)="onDelete($event)" [showCheckBox]="true" dataKey="id"
+      [multiSortMeta]="[{ field: 'CAP_Item', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
+      [loading]="loading" (edit)="onEdit($event)" (detail)="onDetail($event)"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)">
+    </app-table>
+
+  </div>

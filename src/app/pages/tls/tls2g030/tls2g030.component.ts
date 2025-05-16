@@ -31,7 +31,7 @@ export class TLS2G030Component {
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
     onedatetyy: [, [Validators.required]], // 年
-    industryCode: [], // 業種
+    industryCode: [], // 大分類
     counter: [], // 專櫃
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
   });

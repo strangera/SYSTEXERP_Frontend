@@ -25,7 +25,7 @@ export class FIN12020Component extends BasicQpageComponent implements OnInit {
     serialInvoice: [, [Validators.required, Validators.maxLength(8)]], // 發票號碼
     startserialInvoice: [, [Validators.required, this.validationService.numberValidator, Validators.maxLength(8)]], // 發票號碼(起)
     endserialInvoice: [, [Validators.required, this.validationService.numberValidator, Validators.maxLength(8)]], // 發票號碼(迄)
-    rollNumber: [1, [Validators.required, this.validationService.numberValidator, Validators.max(99999999)]], // 卷數
+    rollNumber: [1, [Validators.required, this.validationService.numberValidator, Validators.max(99999999)]], // 券數
     usageStatus: [], // 發票使用狀況
   });
   // 下拉資料多個呈現

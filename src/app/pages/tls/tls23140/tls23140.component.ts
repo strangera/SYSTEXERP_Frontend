@@ -45,7 +45,7 @@ export class TLS23140Component {
     transactionDateEnd: [, [Validators.required]],   // 交易日期迄
     transactionMachine: [],  // 交易機號
     counterNumber: [],  // 專櫃編號
-    voucherAmount: [],  // 單筆交易中有價卷總金額達N萬
+    voucherAmount: [],  // 單筆交易中有價券總金額達N萬
     transactionSerialNumber: [],  // 交易序號
   });
 
@@ -61,7 +61,7 @@ export class TLS23140Component {
     { field: 'franchiseName', header: '專櫃名稱', visible: true },
     { field: 'recruitmentNumber', header: '招募編號', visible: true },
     { field: 'transactionSerialNumber', header: '交易序號', visible: true },
-    { field: 'voucherAmount', header: '有價卷金額', visible: true }
+    { field: 'voucherAmount', header: '有價券金額', visible: true }
   ];
 
   // 交易機號下拉選單選項

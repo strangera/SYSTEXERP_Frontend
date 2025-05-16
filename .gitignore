@@ -43,3 +43,4 @@ Thumbs.db
 
 *.ps1
 /src/environments
+src/environments/environment.ts

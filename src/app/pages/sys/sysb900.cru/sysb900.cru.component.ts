@@ -24,7 +24,7 @@ interface CategoryItem {
   templateUrl: './sysb900.cru.component.html',
   styleUrl: './sysb900.cru.component.scss'
 })
-// 商品類別維護作業 CRU
+// 中分類維護作業 CRU
 export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     id: [0], // ID

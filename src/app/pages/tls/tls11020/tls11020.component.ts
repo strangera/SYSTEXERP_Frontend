@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { DeductionCategoryService } from '../../../service/basic/deduction-category.service';
+import { DeductionService } from '../../../service/basic/deduction.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS11020Service } from '../../../service/API/tls/tls11020.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
@@ -39,56 +39,56 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
 
   constructor(
     private validationService: ValidationService,
-    private deductionCategoryService: DeductionCategoryService,
+    private deductionService: DeductionService,
     private tls11020Service: TLS11020Service,
   ) {
     super();
   }
 
   ngOnInit(): void {
-   this.initializePage('TLS11020', 'TLS/TLS11020CRU', this.queryForm, (f) => this.onSubmit(f));
-    this.deductionCategoryService.getDeductionCategories().subscribe((data) => {
+    this.initializePage('TLS11020', 'TLS/TLS11020CRU', this.queryForm, (f) => this.onSubmit(f));
+    this.deductionService.getDeductionCategories().subscribe((data) => {
       this.deductionCategoryOptions = data;
-      
+
     });
   }
 
   onSubmit(form: FormGroup): void {
-  this.handleSubmit(form, () => {
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(form, () => {
+      this.loading = true;
+      this.messageService.blockUi();
 
-    const formValue = { ...form.value };
+      const formValue = { ...form.value };
 
-    // 將空字串轉為 null（配合後端 char? 欄位處理）
-    if (formValue.CAP_Item === '') formValue.CAP_Item = null;
-    if (formValue.CAP_Name === '') formValue.CAP_Name = null;
-    if (formValue.CAP_Remark === '') formValue.CAP_Remark = null;
+      // 將空字串轉為 null（配合後端 char? 欄位處理）
+      if (formValue.CAP_Item === '') formValue.CAP_Item = null;
+      if (formValue.CAP_Name === '') formValue.CAP_Name = null;
+      if (formValue.CAP_Remark === '') formValue.CAP_Remark = null;
 
 
-    console.log('🔍 查詢條件 request payload:', formValue);
+      console.log('🔍 查詢條件 request payload:', formValue);
 
-    this.tls11020Service.queryTLS11020(formValue).subscribe({
-      next: (res) => {
-        if (res.Status === '0000') {
-          this.data = res?.Data || [];
-          this.totalRecords = res?.TotalCount || this.data.length;
-          this.queryStateService.setQueryState(this.ProgNo, formValue);
-          this.messageService.successBubble('查詢成功');
-        } else {
-          this.messageService.errorBubble('查詢失敗');
-        }
-      },
-      error: () => {
-        this.messageService.errorBubble('查詢錯誤');
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
+      this.tls11020Service.queryTLS11020(formValue).subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            this.data = res?.Data || [];
+            this.totalRecords = res?.TotalCount || this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, formValue);
+            this.messageService.successBubble('查詢成功');
+          } else {
+            this.messageService.errorBubble('查詢失敗');
+          }
+        },
+        error: () => {
+          this.messageService.errorBubble('查詢錯誤');
+        },
+        complete: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
     });
-  });
-}
+  }
 
 
   onDelete(selectedItems: any[]) {

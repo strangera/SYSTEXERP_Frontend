@@ -129,8 +129,8 @@ const routes: Routes = [
   { path: 'CPM13040CRU', component: CPM13040CRUComponent },
   { path: 'CPM13050', component: CPM13050Component },  // 專櫃停車費折抵設定作業
   { path: 'CPM13050CRU', component: CPM13050CRUComponent },
-  { path: 'CpmLostCode', component: CpmLostCodeComponent },  // 遺拾商品類別維護_暫存頁_等代碼開出就會更改
-  { path: 'CpmLostCodeCRU', component: CpmLostCodeCRUComponent },  // 遺拾商品類別維護_暫存頁_等代碼開出就會更改
+  { path: 'CpmLostCode', component: CpmLostCodeComponent },  // 遺拾中分類維護_暫存頁_等代碼開出就會更改
+  { path: 'CpmLostCodeCRU', component: CpmLostCodeCRUComponent },  // 遺拾中分類維護_暫存頁_等代碼開出就會更改
   { path: 'CpmLostPlace', component: CpmLostPlaceComponent },  // 遺拾商品地點維護 暫存頁_等代碼開出就會更改
   { path: 'CpmLostPlaceCRU', component: CpmLostPlaceCRUComponent },  // 遺拾商品地點維護 暫存頁_等代碼開出就會更改
   { path: 'CpmLostPerson', component: CpmLostPersonComponent },  // 尋人廣播服務 暫存頁_等代碼開出就會更改

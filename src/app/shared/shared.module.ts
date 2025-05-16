@@ -146,6 +146,7 @@ import { MultiSelectTableComponent } from './componentkit/multi-select-table/mul
     DataTableGroupComponent,
     DataTableReportComponent,
     RadiobuttonComponent,
+    
     // Directive
     HasPermissionDirective,
     //
@@ -344,6 +345,7 @@ import { MultiSelectTableComponent } from './componentkit/multi-select-table/mul
     IconFieldModule,
     FloatLabelModule,
     EditorModule,
+  
 
     OrganizationChartModule,
   ],

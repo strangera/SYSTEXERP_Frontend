@@ -27,7 +27,7 @@ const storageKey = 'SYSB800';
   templateUrl: './sysb800.component.html',
   styleUrl: './sysb800.component.scss'
 })
-// 業種基本資料維護作業
+// 大分類基本資料維護作業
 export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     bus_type: [, [Validators.maxLength(2)]], // 大分類代號

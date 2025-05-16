@@ -48,7 +48,7 @@ export class TLS26030Component {
     saleDateEnd: [now, [Validators.required]],   // 銷售日期迄
     cashierCode: [],  // 收銀機號
     counterCode: [],  // 專櫃編號
-    businessTypeCode: [],  // 業種
+    businessTypeCode: [],  // 大分類
     machineStats: [],  // 依機台統計
   });
 
@@ -178,7 +178,7 @@ export class TLS26030Component {
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
     private authService: AuthService,
-    private businessTypeCodeService: BusinessTypeCodeService,  // 業種 service
+    private businessTypeCodeService: BusinessTypeCodeService,  // 大分類 service
     private floorService: FloorService,  // 依機台統計 service
   ) { }
 

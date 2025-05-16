@@ -11,7 +11,7 @@ import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { RegionCodeService } from '../../../service/basic/region-code.service';
+import { RegionService } from '../../../service/basic/region-code.service';
 
 @Component({
   selector: 'app-tls2b030',
@@ -90,7 +90,7 @@ export class TLS2B030Component {
     private authService: AuthService,
     private validationService: ValidationService,
     private cahserTypeService: CahserTypeService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private floorService: FloorService,
   ) {
   }
@@ -113,7 +113,7 @@ export class TLS2B030Component {
       // });
     });
     //
-    this.regionCodeService.getRegionCodes().subscribe(data => {
+    this.RegionService.getRegionOptions().subscribe(data => {
       this.areaCodeOptions = data;
 
       // 全選填入

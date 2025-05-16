@@ -9,7 +9,7 @@ import { catchError, Observable, of, tap } from 'rxjs';
 })
 export class BusinessTypeCodeService {
   apiUrl: string = environment.ApiUrl;
-  title: string = '業種代碼';
+  title: string = '大分類代碼';
   options: any[] = [
     { value: 1, label: '物販' },
     { value: 2, label: '餐飲' },
@@ -22,7 +22,7 @@ export class BusinessTypeCodeService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getBusinessTypeCodes(): Observable<any[]> {
     return of(this.options).pipe(

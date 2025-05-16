@@ -8,7 +8,7 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { FloorService } from '../../../service/basic/floor.service';
-import { RegionCodeService } from '../../../service/basic/region-code.service';
+import { RegionService } from '../../../service/basic/region-code.service';
 import { LocationService } from '../../../service/basic/location.service';
 //
 
@@ -60,7 +60,7 @@ export class CpmLostPlaceComponent extends BasicQpageComponent implements OnInit
     private validationService: ValidationService,
     //
     private floorService: FloorService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private locationService: LocationService,
   ) {
     super(); // 呼叫父類建構子
@@ -78,7 +78,7 @@ export class CpmLostPlaceComponent extends BasicQpageComponent implements OnInit
       this.floorOptions = data;
     });
     //
-    this.regionCodeService.getRegionCodes().subscribe(data => {
+    this.RegionService.getRegionOptions().subscribe(data => {
       this.RegionCodeOptions = data;
     });
     //

@@ -3,6 +3,8 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { InputNumberRangeComponent } from '../../../../../src/app/shared/componentkit/input-number-range/input-number-range.component';
+
 
 
 @Component({
@@ -12,18 +14,19 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 })
 export class TLS11010Component extends BasicQueryPageComponent<any> {
 queryForm = this.formBuilder.group({
-  LOCATION_No: [[] as string[], [Validators.maxLength(10)]],      // 陣列中每個值最多10字元
-  org_id: [[] as string[], [Validators.maxLength(20)]],           // 陣列中每個值最多20字元
-  building_no: ['', [Validators.maxLength(1)]],                   // 單值, 最多1字元
-  FLOOR_NO: [[] as string[], [Validators.maxLength(2)]],          // 陣列中每個值最多2字元
-  AREA_NO: [[] as string[], [Validators.maxLength(2)]],           // 陣列中每個值最多2字元
-  GROSS_SPACE: [null, [Validators.min(0), Validators.max(9999.999)]], // 數值, 有上下限
-  NET_SPACE: [null, [Validators.min(0), Validators.max(9999.999)]],   // 數值, 有上下限
-  LOCATION_Status: ['', [Validators.maxLength(1)]],               // 單值, 最多1字元
-  Purpose_no: [[] as string[], [Validators.maxLength(2)]],        // 陣列中每個值最多2字元
-  ...createPaginationConfig([{ field: 'LOCATION_No', order: 1 }]), // 分頁與排序
+  LOCATION_No: [[] as string[], [Validators.maxLength(10)]],
+  org_id: [[] as string[], [Validators.maxLength(20)]],
+  building_no: ['', [Validators.maxLength(1)]],
+  FLOOR_NO: [[] as string[], [Validators.maxLength(2)]],
+  AREA_NO: [[] as string[], [Validators.maxLength(2)]],
+  GROSS_SPACE_start: [null, [Validators.min(0), Validators.max(9999.999)]],
+  GROSS_SPACE_end: [null, [Validators.min(0), Validators.max(9999.999)]],
+  NET_SPACE_start: [null, [Validators.min(0), Validators.max(9999.999)]],
+  NET_SPACE_end: [null, [Validators.min(0), Validators.max(9999.999)]],
+  LOCATION_Status: ['', [Validators.maxLength(1)]],
+  Purpose_no: [[] as string[], [Validators.maxLength(2)]],
+  ...createPaginationConfig([{ field: 'LOCATION_No', order: 1 }]),
 });
-
 
   data: any[] = [];
   selectedItems: any[] = [];

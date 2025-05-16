@@ -7,7 +7,7 @@ import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { FloorService } from '../../../service/basic/floor.service';
-import { RegionCodeService } from '../../../service/basic/region-code.service';
+import { RegionService } from '../../../service/basic/region-code.service';
 import { LocationService } from '../../../service/basic/location.service';
 
 //5.1.1.1 服務台位置維護作業 CRU
@@ -46,7 +46,7 @@ export class CPM11010CRUComponent extends BasicCrupageComponent implements OnIni
     private translate: TranslateService,
     //
     private floorService: FloorService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private locationService: LocationService,
   ) {
     super();  // 呼叫父類建構子
@@ -63,7 +63,7 @@ export class CPM11010CRUComponent extends BasicCrupageComponent implements OnIni
       this.floorOptions = data;
     });
     //
-    this.regionCodeService.getRegionCodes().subscribe(data => {
+    this.RegionService.getRegionOptions().subscribe(data => {
       this.RegionCodeOptions = data;
     });
     //

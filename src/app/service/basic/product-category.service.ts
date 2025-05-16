@@ -9,7 +9,7 @@ import { catchError, Observable, of, tap } from 'rxjs';
 })
 export class ProductCategoryService {
   apiUrl: string = environment.ApiUrl;
-  title: string = '商品類別';
+  title: string = '中分類';
   options: any[] = [
     { value: '1', label: '複合店' },
     { value: '2', label: '主題樂園' },

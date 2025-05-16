@@ -8,12 +8,12 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="商品類別代碼" controlName="counterName" [control]="dataForm.controls.objectCode"
+                    <app-input-text label="中分類代碼" controlName="counterName" [control]="dataForm.controls.objectCode"
                         [submitted]="submitted">
                     </app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="商品類別名稱" controlName="objectName" [control]="dataForm.controls.objectName"
+                    <app-input-text label="中分類名稱" controlName="objectName" [control]="dataForm.controls.objectName"
                         [submitted]="submitted">
                     </app-input-text>
                 </div>

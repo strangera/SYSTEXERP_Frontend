@@ -8,7 +8,7 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
-//5.1.1.test1 遺拾商品類別維護
+//5.1.1.test1 遺拾中分類維護
 @Component({
   selector: 'app-cpm-lost-code',
   templateUrl: './cpm-lost-code.component.html',
@@ -18,7 +18,7 @@ export class CpmLostCodeComponent extends BasicQpageComponent implements OnInit 
   //
   queryForm = this.formBuilder.group({
     objectCode: ['', [Validators.maxLength(60)]], // 物品類別代碼
-    objectName: ['', [Validators.maxLength(60)]], // 商品類別名稱
+    objectName: ['', [Validators.maxLength(60)]], // 中分類名稱
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------
@@ -35,8 +35,8 @@ export class CpmLostCodeComponent extends BasicQpageComponent implements OnInit 
     // 其他資料
   ];
   columns: any[] = [
-    { field: 'objectCode', header: '商品類別代碼', visible: true },
-    { field: 'objectName', header: '商品類別名稱 ', visible: true },
+    { field: 'objectCode', header: '中分類代碼', visible: true },
+    { field: 'objectName', header: '中分類名稱 ', visible: true },
     // 其他欄位
   ];
   // ----------------------------------------------------------------

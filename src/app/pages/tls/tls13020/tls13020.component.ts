@@ -18,7 +18,7 @@ import { BusinessTypeCodeService } from '../../../service/basic/business-type-co
 import { VendorService } from '../../../service/basic/vendor.service';
 import { LocationService } from '../../../service/basic/location.service';
 import { ContractStatusService } from '../../../service/basic/contract-status.service';
-import { RegionCodeService } from '../../../service/basic/region-code.service';
+import { RegionService } from '../../../service/basic/region-code.service';
 import { OperationStatusService } from '../../../service/basic/operation-status.service';
 import { CommissionCalculationService } from '../../../service/basic/commission-calculation.service';
 import { CounterCategoryService } from '../../../service/basic/counter-category.service';
@@ -114,8 +114,8 @@ export class TLS13020Component {
     { field: 'versionCode', header: '版本編號', visible: true },
     { field: 'replyDate', header: '回函日期', visible: true },
     { field: 'replyDeadline', header: '回函截止日', visible: true },
-    { field: 'businessTypeCode', header: '業種代號', visible: true },
-    { field: 'businessTypeName', header: '業種名稱', visible: true },
+    { field: 'businessTypeCode', header: '大分類代號', visible: true },
+    { field: 'businessTypeName', header: '大分類名稱', visible: true },
     { field: 'checkoutMethod', header: '結帳方式', visible: true },
     { field: 'checkoutCategory', header: '結帳別', visible: true },
     { field: 'cooperationMethod', header: '配合方式', visible: true },
@@ -161,7 +161,7 @@ export class TLS13020Component {
     private vendorService: VendorService,
     private locationService: LocationService,
     private contractStatusService: ContractStatusService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private floorService: FloorService,
     private organizationService: OrganizationNumberService,
     private operationStatusService: OperationStatusService,
@@ -191,7 +191,7 @@ export class TLS13020Component {
     this.contractStatusService.getContractStatuses().subscribe((data) => {
       this.contractStatusOptions = data;
     });
-    this.regionCodeService.getRegionCodes().subscribe((data) => {
+    this.RegionService.getRegionOptions().subscribe((data) => {
       this.regionOptions = data;
     });
     this.floorService.getFloors().subscribe((data) => {

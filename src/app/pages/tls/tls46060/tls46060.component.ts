@@ -48,7 +48,7 @@ export class TLS46060Component {
     { field: 'contactPerson', header: '洽談者', visible: true },
     { field: 'contactDate', header: '洽談日', visible: true },
     { field: 'UID', header: '統編/廠商', visible: true },
-    { field: 'industryType', header: '業種', visible: true },
+    { field: 'industryType', header: '大分類', visible: true },
     { field: 'category', header: '類型', visible: true },
     { field: 'version', header: '版本', visible: true },
     { field: 'rentNumber', header: '位置租賃數', visible: true },

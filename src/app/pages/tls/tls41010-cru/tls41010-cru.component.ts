@@ -6,7 +6,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { InvoiceCategoryService } from './../../../service/basic/invoice-category.service';
 import { CahserTypeService } from './../../../service/basic/cahser-type.service';
 import { PosServerService } from './../../../service/basic/pos-server.service';
-import { RegionCodeService } from './../../../service/basic/region-code.service';
+import { RegionService } from './../../../service/basic/region-code.service';
 import { PosStatusService } from './../../../service/basic/pos-status.service';
 import { LocationService } from './../../../service/basic/location.service';
 import { FloorService } from './../../../service/basic/floor.service';
@@ -21,8 +21,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 })
 export class TLS41010CRUComponent
   extends BasicCruPageComponent<any>
-  implements OnInit
-{
+  implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     // POS1002 收銀機設定檔
 
@@ -177,7 +176,7 @@ export class TLS41010CRUComponent
     private floorService: FloorService,
     private locationService: LocationService,
     private posStatusService: PosStatusService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private posServerService: PosServerService,
     private cahserTypeService: CahserTypeService,
     private invoiceCategoryService: InvoiceCategoryService,
@@ -241,7 +240,7 @@ export class TLS41010CRUComponent
       this.posStatusOptions = data;
     });
     //
-    this.regionCodeService.getRegionCodes().subscribe((data) => {
+    this.RegionService.getRegionOptions().subscribe((data) => {
       this.regionOptions = data;
     });
     //

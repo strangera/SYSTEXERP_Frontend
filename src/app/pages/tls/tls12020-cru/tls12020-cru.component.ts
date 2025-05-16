@@ -34,7 +34,7 @@ export class TLS12020CRUComponent extends BasicCrupageComponent implements OnIni
     vendorCName: ['', [Validators.required, Validators.maxLength(60)]], // 廠商名稱(中文)
     vendorEName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
     brand: ['', [Validators.maxLength(30)]], // 品牌
-    industryCode: [], // 業種
+    industryCode: [], // 大分類
     contactPerson: ['', [Validators.required, Validators.maxLength(12)]], // 聯絡人
 
     oContactPhone: [, [Validators.required, Validators.maxLength(18)]], // 聯絡人電話(O)
