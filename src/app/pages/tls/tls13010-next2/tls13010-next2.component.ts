@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
 //資料欄位還需要調整 這是一個範例
 interface CategoryItem {
@@ -29,6 +30,15 @@ interface InventoryItem {
   operationEndDate: string;
 }
 
+interface DiscountType {
+
+  discountType: string;
+  startDate: string;
+  endDate: string;
+  commissionRate: string;
+}
+
+
 @Component({
   selector: 'app-tls13010-next2',
   templateUrl: './tls13010-next2.component.html',
@@ -37,6 +47,21 @@ interface InventoryItem {
 export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> implements OnInit {
   dataForm: FormGroup;
   selectedRowIndex: number | null = null;
+
+  stocksColumns: Column[] = [
+    { field: 'recruitmentNumber', header: '專櫃招募編號', visible: true },
+    { field: 'counterNumber', header: '專櫃編號', visible: true },
+    { field: 'brandName', header: '品牌(專櫃)名稱', visible: true },
+    { field: 'vendorId', header: '廠商統編', visible: true },
+    { field: 'vendorName', header: '廠商名稱', visible: true },
+    { field: 'versionNumber', header: '版本編號', visible: true },
+    { field: 'commissionType', header: '抽成別', visible: true },
+    { field: 'contractStartDate', header: '合約起始日', visible: true },
+    { field: 'contractEndDate', header: '合約終止日', visible: true },
+    { field: 'operationStartDate', header: '營運起始日', visible: true },
+    { field: 'operationEndDate', header: '營運終止日', visible: true },
+  ];
+
 
   inventoryItems: InventoryItem[] = [];
   taxTypeOptions: any[] = [
@@ -58,6 +83,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
     { value: 12, label: '特價' }
   ];
 
+  discountItem: DiscountType[] = [];
+
+
+
   constructor(
     private notificationService: NotificationService
   ) {
@@ -75,6 +104,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   ngOnInit(): void {
     // this.ProgNo = '210010';
+    this.initializePage('TLS13010', this.dataForm);
     this.inventoryItems = [{
       recruitmentNumber: '001',
       counterNumber: 'A123',
@@ -88,6 +118,15 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
       operationStartDate: '2021-02-01',
       operationEndDate: '2023-11-30'
     }];
+
+    //
+    // this.discountItem = [
+    //   { serialNumber: 1, isNew: true, deductionCode: 'A01', deductionName: '開標費財費', startDate: '2015/1', unit: '', unitPrice: 10000, quantity: 1, amount: 10000, organization: 102220, invoiceStatus: 'true' },
+    //   { serialNumber: 2, isNew: false, deductionCode: 'A02', deductionName: '識別證', startDate: '2014/12', unit: '', unitPrice: 0, quantity: 0, amount: 0, organization: 102220, invoiceStatus: 'true' },
+    //   { serialNumber: 3, isNew: false, deductionCode: 'A03', deductionName: '影印費', startDate: '2014/12', unit: '', unitPrice: 0, quantity: 0, amount: 0, organization: 102220, invoiceStatus: 'true' },
+    //   { serialNumber: 4, isNew: false, deductionCode: 'A04', deductionName: '紙袋、包裝費', startDate: '2014/12', unit: '', unitPrice: 0, quantity: 0, amount: 0, organization: 102220, invoiceStatus: 'true' },
+    //   { serialNumber: 5, isNew: false, deductionCode: 'A05', deductionName: '簽票費用', startDate: '2014/12', unit: '', unitPrice: 0, quantity: 0, amount: 0, organization: 102220, invoiceStatus: 'true' }
+    // ];
     this.addInitialItem();
   }
 

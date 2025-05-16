@@ -1,8 +1,6 @@
-import { option } from './../../sys/module/sysb000.module';
 import { Column } from './../../../shared/componentkit/table/table.model';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
 //資料欄位還需要調整 這是一個範例

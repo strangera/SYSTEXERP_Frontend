@@ -20,11 +20,8 @@ interface CategoryItem {
   UPD_USR_No: string;
   UPD_USR_Name: string;
   CAT_LDisplay?: string; // 組合 CAT_LNo 和 CAT_LName
+  CanDel: boolean;
 }
-
-// 本地儲存鍵：用於儲存查詢狀態
-const storageKey = 'TLS51020';
-
 // 2.5.1.2  中分類維護作業
 @Component({
   selector: 'app-tls51020',
@@ -92,7 +89,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
             }));
             this.filteredData = [...this.data];
             this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(storageKey, frm.value);
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
             if (this.data.length === 0) {
               console.log('查詢結果為空');
             }
@@ -111,30 +108,37 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
     });
   }
   onDelete(data: CategoryItem | CategoryItem[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
-
     const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+    if (items.length === 0) return;
+
+    // 過濾出 CanDel = true 且 ID 有效的項目
+    const deletableItems = items.filter(
+      (item) => item && item.id != null && item.id !== undefined && item.CanDel === true
+    );
+    const nonDeletableItems = items.filter(
+      (item) => item && item.id != null && item.id !== undefined && item.CanDel === false
+    );
+
+    // 如果沒有可刪除的項目
+    if (deletableItems.length === 0) {
+      this.messageService.errorBubble('無法刪除：選中的項目有不可刪除的中分類');
       return;
     }
 
-    // 收集所有有效的 ID
-    const idList = items
-      .filter((item) => item && item.id != null && item.id !== undefined)
-      .map((item) => item.id);
-
-    if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-      return;
+    // 如果有不可刪除的項目，提示用戶
+    if (nonDeletableItems.length > 0) {
+      this.messageService.warnBubble(
+        `${nonDeletableItems.length} 個項目因 CanDel 為 false 無法刪除，將處理其餘 ${deletableItems.length} 個項目`
+      );
     }
+    // 收集可刪除項目的 ID
+    const idList = deletableItems.map((item) => item.id);
 
-    // 構建新的 requestBody 格式
+    // 構建 API 請求
     const requestBody = {
-      idList: idList, // 符合 API 的 idList 格式
+      idList: idList,
     };
+
     // 調用 API
     this.apiService.deleteTLS51020(requestBody).subscribe({
       next: (response) => {
