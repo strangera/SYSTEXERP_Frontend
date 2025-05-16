@@ -4,7 +4,7 @@ import { FormGroup, Validators } from '@angular/forms';
 // Permissions
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Tls46010m } from '../module/tls000/tls000.module';
+import { Tls46010m } from '../../../shared/models/tls/tls000.module';
 import { SortMeta } from 'primeng/api';
 import { option } from '../../sys/module/sysb000.module';
 import { TableLazyLoadEvent } from 'primeng/table';
@@ -21,8 +21,7 @@ const storageKey = 'TLS46010';
 // 2.4.6.1 網路位置設定
 export class TLS46010Component
   extends BasicQueryPageComponent<Tls46010m>
-  implements OnInit
-{
+  implements OnInit {
   queryForm = this.formBuilder.group({
     // POS10015 門市系統主機設定檔
 

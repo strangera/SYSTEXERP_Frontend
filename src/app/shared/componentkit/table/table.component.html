@@ -158,11 +158,6 @@
         <ng-container *ngIf="col.type === 'html'">
           <div class="whitespace-pre-wrap"><span [innerHTML]="rowData[col.field]"></span></div>
         </ng-container>
-        <ng-container *ngIf="col.type === 'chips'">
-          <div class="flex flex-wrap gap-2">
-            <p-chip *ngFor="let item of rowData[col.field]" [label]="item[col.chipLabel || 'label']"></p-chip>
-          </div>
-        </ng-container>
         <p-cellEditor *ngIf="col.type === 'checkbox'">
           <ng-template pTemplate="input">
             <p-checkbox [(ngModel)]="rowData[col.field]" [binary]="true" [label]="col.label"

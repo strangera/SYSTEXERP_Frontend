@@ -1,28 +1,19 @@
+import { SkeletonModule } from 'primeng/skeleton';
+import { OrganizationChartModule } from 'primeng/organizationchart';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-// FontAwesome
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-// primeng
-import { SkeletonModule } from 'primeng/skeleton';
-import { BlockUIModule } from 'primeng/blockui';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
 import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { ChipModule } from 'primeng/chip';
-import { TreeSelectModule } from 'primeng/treeselect';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { MenuModule } from 'primeng/menu';
-import { ColorPickerModule } from 'primeng/colorpicker';
 import { TabViewModule } from 'primeng/tabview';
-import { BadgeModule } from 'primeng/badge';
-import { AvatarModule } from 'primeng/avatar';
 import { DropdownModule } from 'primeng/dropdown';
-import { SplitterModule } from 'primeng/splitter';
 import { DividerModule } from 'primeng/divider';
 import { DataViewModule } from 'primeng/dataview';
 import { MultiSelectModule } from 'primeng/multiselect';
@@ -48,8 +39,6 @@ import { ListboxModule } from 'primeng/listbox';
 import { PickListModule } from 'primeng/picklist';
 import { FieldsetModule } from 'primeng/fieldset';
 import { MenubarModule } from 'primeng/menubar';
-import { TabMenuModule } from 'primeng/tabmenu';
-import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ContextMenuModule } from 'primeng/contextmenu';
@@ -59,8 +48,6 @@ import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { SidebarModule } from 'primeng/sidebar';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { TreeModule } from 'primeng/tree';
-import { StyleClassModule } from 'primeng/styleclass';
-import { ChartModule } from 'primeng/chart';
 import { PanelMenuModule } from 'primeng/panelmenu';
 import { TagModule } from 'primeng/tag';
 import { ToolbarModule } from 'primeng/toolbar';
@@ -70,19 +57,13 @@ import { ImageModule } from 'primeng/image';
 import { StepsModule } from 'primeng/steps';
 import { FileUploadModule } from 'primeng/fileupload';
 import { SpeedDialModule } from 'primeng/speeddial';
-
 import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
-import { FloatLabelModule } from 'primeng/floatlabel';
 import { EditorModule } from 'primeng/editor';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-
-// Component
 import { MenubarComponent } from './component/menubar/menubar.component';
 import { ControlMessagesComponent } from './component/control-messages/control-messages.component';
-// Pipe
 import { HasPermissionDirective } from './directive/has-permission.directive';
-//
 import { InputTextComponent } from './componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from './componentkit/multi-select/multi-select.component';
 import { InputNumberComponent } from './componentkit/input-number/input-number.component';
@@ -92,8 +73,6 @@ import { EditorTextComponent } from './componentkit/editor-text/editor-text.comp
 import { FileUploadComponent } from './componentkit/file-upload/file-upload.component';
 import { ButtonDynamicallyaddComponent } from './componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 import { ButtonDynamicallydeleteComponent } from './componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { OrganizationChartModule } from 'primeng/organizationchart';
-import { NgChartsModule } from 'ng2-charts';
 import { ButtonComponent } from './componentkit/button/button.component';
 import { DropdownComponent } from './componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from './componentkit/calendar/calendar.component';
@@ -111,7 +90,6 @@ import { MultiSelectTableComponent } from './componentkit/multi-select-table/mul
   declarations: [
     MenubarComponent,
     ControlMessagesComponent,
-    // componentKit
     ButtonComponent,
     DropdownComponent,
     InputTextComponent,
@@ -127,48 +105,49 @@ import { MultiSelectTableComponent } from './componentkit/multi-select-table/mul
     MultiSelectTableComponent,
     TreeDropdownComponent,
     InputTextareaComponent,
-
     ButtonDynamicallyaddComponent,
     ButtonDynamicallydeleteComponent,
     InputNumberRangeComponent,
     FileUploadComponent,
     EditorTextComponent,
     RadiobuttonComponent,
-
-    // Directive
     HasPermissionDirective,
-    //
   ],
   imports: [
-    NgChartsModule,
     ReactiveFormsModule,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    // FontAwesome
     FontAwesomeModule,
-    // primeng
-    SkeletonModule,
-    BlockUIModule,
-    ProgressSpinnerModule,
-    PanelModule,
     DialogModule,
     TableModule,
-    ButtonModule,
     CardModule,
-    ChipModule,
-    TreeSelectModule,
-    SelectButtonModule,
-    MenuModule,
-    ColorPickerModule,
-    TabViewModule,
-    BadgeModule,
-    AvatarModule,
     DropdownModule,
-    SplitterModule,
+    MultiSelectModule,
+    InputNumberModule,
+    InputTextareaModule,
+    InputTextModule,
+    PasswordModule,
+    CalendarModule,
+    CheckboxModule,
+    MenubarModule,
+    MessagesModule,
+    ToastModule,
+    InputSwitchModule,
+    TranslateModule,
+    ProgressSpinnerModule,
+    PanelModule,
+    OrganizationChartModule,
+    ButtonModule,
+    SkeletonModule,
+    EditorModule,
+    InputIconModule,
+    IconFieldModule,
+    InputGroupAddonModule,
+    SelectButtonModule,
+
     DividerModule,
     DataViewModule,
-    MultiSelectModule,
     InputGroupModule,
     RippleModule,
     SplitButtonModule,
@@ -177,33 +156,19 @@ import { MultiSelectTableComponent } from './componentkit/multi-select-table/mul
     AutoCompleteModule,
     ChipsModule,
     InputMaskModule,
-    InputNumberModule,
     CascadeSelectModule,
-    InputTextareaModule,
-    InputTextModule,
-    PasswordModule,
-    MessagesModule,
     AccordionModule,
     TreeTableModule,
-    CalendarModule,
-    CheckboxModule,
     ListboxModule,
     PickListModule,
     FieldsetModule,
-    MenubarModule,
-    TabMenuModule,
-    MessageModule,
-    ToastModule,
     ConfirmDialogModule,
     ContextMenuModule,
     ProgressBarModule,
     RadioButtonModule,
     OverlayPanelModule,
     SidebarModule,
-    InputSwitchModule,
     TreeModule,
-    StyleClassModule,
-    ChartModule,
     PanelMenuModule,
     TagModule,
     ToolbarModule,
@@ -213,43 +178,26 @@ import { MultiSelectTableComponent } from './componentkit/multi-select-table/mul
     StepsModule,
     FileUploadModule,
     SpeedDialModule,
-    InputGroupAddonModule,
-    //
-    InputIconModule,
-    IconFieldModule,
-    FloatLabelModule,
-    EditorModule,
-    TranslateModule,
-
-    OrganizationChartModule,
   ],
   exports: [
-    NgChartsModule,
+    // Angular
     FormsModule,
     ReactiveFormsModule,
     TranslateModule,
-    // FontAwesome
     FontAwesomeModule,
-    // primeng
-    SkeletonModule,
-    BlockUIModule,
+    // PrimeNG
+    OrganizationChartModule,
     ProgressSpinnerModule,
     PanelModule,
     DialogModule,
-    TableModule,
     ButtonModule,
-    CardModule,
-    ChipModule,
-    TreeSelectModule,
-    SelectButtonModule,
-    MenuModule,
-    ColorPickerModule,
-    TabViewModule,
-    BadgeModule,
-    AvatarModule,
     DropdownModule,
-    SplitterModule,
+    TableModule, // 這個都用共通就把他刪掉，不要佔空間
+    CardModule,
+    TabViewModule,
     DividerModule,
+    InputTextModule,
+
     DataViewModule,
     MultiSelectModule,
     InputGroupModule,
@@ -257,13 +205,10 @@ import { MultiSelectTableComponent } from './componentkit/multi-select-table/mul
     SplitButtonModule,
     ToggleButtonModule,
     BreadcrumbModule,
-    AutoCompleteModule,
     ChipsModule,
     InputMaskModule,
     InputNumberModule,
     CascadeSelectModule,
-    InputTextareaModule,
-    InputTextModule,
     PasswordModule,
     MessagesModule,
     AccordionModule,
@@ -273,9 +218,7 @@ import { MultiSelectTableComponent } from './componentkit/multi-select-table/mul
     ListboxModule,
     PickListModule,
     FieldsetModule,
-    MenubarModule,
-    TabMenuModule,
-    MessageModule,
+
     ToastModule,
     ConfirmDialogModule,
     ContextMenuModule,
@@ -285,8 +228,7 @@ import { MultiSelectTableComponent } from './componentkit/multi-select-table/mul
     SidebarModule,
     InputSwitchModule,
     TreeModule,
-    StyleClassModule,
-    ChartModule,
+
     PanelMenuModule,
     TagModule,
     ToolbarModule,
@@ -297,12 +239,13 @@ import { MultiSelectTableComponent } from './componentkit/multi-select-table/mul
     FileUploadModule,
     SpeedDialModule,
     InputGroupAddonModule,
-    // other
+    IconFieldModule,
+    InputIconModule,
+    // Custom
     MenubarComponent,
     ControlMessagesComponent,
     ButtonComponent,
     DropdownComponent,
-    //
     HasPermissionDirective,
     ButtonDynamicallyaddComponent,
     ButtonDynamicallydeleteComponent,
@@ -322,14 +265,6 @@ import { MultiSelectTableComponent } from './componentkit/multi-select-table/mul
     TableComponent,
     TableExpansionComponent,
     RadiobuttonComponent,
-    //
-    InputIconModule,
-    IconFieldModule,
-    FloatLabelModule,
-    EditorModule,
-
-
-    OrganizationChartModule,
   ],
 })
 export class SharedModule { }

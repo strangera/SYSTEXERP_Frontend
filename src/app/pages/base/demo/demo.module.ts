@@ -4,14 +4,12 @@ import { CommonModule } from '@angular/common';
 import { DemoRoutingModule } from './demo-routing.module';
 import { InputTableComponent } from './input.table/input.table.component';
 import { InputTableCRUComponent } from './input.table.cru/input.table.cru.component';
-import { GanttChartComponent } from './gantt-chart/gantt-chart.component';
 import { SharedModule } from '../../../shared/shared.module';
 
 @NgModule({
   declarations: [
     InputTableComponent,
     InputTableCRUComponent,
-    GanttChartComponent,
   ],
   imports: [
     CommonModule,

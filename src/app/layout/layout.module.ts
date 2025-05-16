@@ -11,6 +11,8 @@ import { AppTopbarComponent } from './app.topbar/app.topbar.component';
 import { AppMenulistComponent } from './app.menulist/app.menulist.component';
 import { SsoDashboardComponent } from '../pages/base/sso-dashboard/sso-dashboard.component';
 import { AppMenuItemComponent } from './app.menulist/app-menu-item/app-menu-item.component';
+import { MenuModule } from 'primeng/menu';
+import { AutoCompleteModule } from 'primeng/autocomplete';
 
 @NgModule({
   declarations: [
@@ -25,6 +27,8 @@ import { AppMenuItemComponent } from './app.menulist/app-menu-item/app-menu-item
     CommonModule,
     RouterModule,
     SharedModule,
+    MenuModule,
+    AutoCompleteModule
   ],
   exports: [
     LayoutComponent,

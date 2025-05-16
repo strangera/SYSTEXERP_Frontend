@@ -2,14 +2,12 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { InputTableComponent } from './input.table/input.table.component';
 import { InputTableCRUComponent } from './input.table.cru/input.table.cru.component';
-import { GanttChartComponent } from './gantt-chart/gantt-chart.component';
 import { NotfoundComponent } from '../notfound/notfound.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '404', pathMatch: 'full' },
   { path: 'demoInputTable', component: InputTableComponent }, // case1
   { path: 'demoInputTableCRU', component: InputTableCRUComponent }, // case1 CRU
-  { path: 'GanttChart', component: GanttChartComponent },
   { path: '404', component: NotfoundComponent },
   { path: '**', redirectTo: '404' },
 ];
