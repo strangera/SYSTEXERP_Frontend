@@ -1,5 +1,5 @@
 import { FloorService } from './../../../service/basic/floor.service';
-import { RegionCodeService } from './../../../service/basic/region-code.service';
+import { RegionService } from './../../../service/basic/region-code.service';
 import { LocationService } from './../../../service/basic/location.service';
 import { BusinessTypeCodeService } from './../../../service/basic/business-type-code-service.service';
 import { VendorService } from './../../../service/basic/vendor.service';
@@ -10,7 +10,7 @@ import { NavigationExtras, Router } from '@angular/router';
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -41,7 +41,7 @@ export class TLS12030Component {
     vendorUID: [[] as number[]], // 廠商統一編號
     versionNumber: [, [this.validationService.numberValidator, Validators.maxLength(10)]], // 版本編號
     negotiator: [[] as number[]], // 洽談者
-    industryCode: [[] as number[]], // 業種代號
+    industryCode: [[] as number[]], // 大分類代號
     locationNumber: [[] as number[]], // 位置編號
     region: [[] as number[]], // 區域
     floor: [[] as number[]], // 樓層
@@ -63,7 +63,7 @@ export class TLS12030Component {
   // ----------------------------------------------------------------
   data: any[] = [
     // { recruitmentNumber: '00003584', brandCName: 'xx', vendorUID: '0000/停車管理', versionNumber: 1,
-    //   contactor: 'A小姐', industryCode: '業種代號', replyDate: '', replyEndDate: '2024-09-09',
+    //   contactor: 'A小姐', industryCode: '大分類代號', replyDate: '', replyEndDate: '2024-09-09',
     //   contractType: '意向書', contractStatus: '未審核',rentNumber: 1},
     // 其他資料
   ];
@@ -74,7 +74,7 @@ export class TLS12030Component {
     { field: 'vendorUID', header: '廠商統一編號', visible: true },
     { field: 'versionNumber', header: '版本編號', visible: true },
     { field: 'contactor', header: '洽談者', visible: true },
-    { field: 'industryCode', header: '業種代號', visible: true },
+    { field: 'industryCode', header: '大分類代號', visible: true },
     { field: 'replyDate', header: '回函日期', visible: true },
     { field: 'replyEndDate', header: '回函截止日', visible: true },
     { field: 'contractType', header: '合約種類', visible: true },
@@ -104,7 +104,7 @@ export class TLS12030Component {
     private userCodeService: UserCodeService,
     private businessTypeCodeService: BusinessTypeCodeService,
     private locationService: LocationService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private floorService: FloorService,
     private contractStatusService: ContractStatusService,
     private businessTypeService: BusinessTypeService,
@@ -127,7 +127,7 @@ export class TLS12030Component {
       this.locationNumberOptions = data;
     });
     //
-    this.regionCodeService.getRegionCodes().subscribe(data => {
+    this.RegionService.getRegionOptions().subscribe(data => {
       this.regionOptions = data;
     });
     //

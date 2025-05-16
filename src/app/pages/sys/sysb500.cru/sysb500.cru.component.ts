@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 // Shared
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Sysb500m } from '../module/sysb000.module';
@@ -15,8 +15,7 @@ import { Sysb500Service } from '../../../service/API/sys/sysb500.service';
 // 區域基本資料維護作業 CRU
 export class SYSB500CRUComponent
   extends BasicCruPageComponent<Sysb500m>
-  implements OnInit
-{
+  implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [],

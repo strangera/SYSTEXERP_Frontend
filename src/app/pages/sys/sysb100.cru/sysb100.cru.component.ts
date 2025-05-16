@@ -1,7 +1,7 @@
 import { Sysb100Service } from './../../../service/API/sys/sysb100.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Sysb100m } from '../module/sysb000.module';
 import { SortMeta } from 'primeng/api';
@@ -14,8 +14,7 @@ import { SortMeta } from 'primeng/api';
 //4.1.1.1 公司基本資料維護作業 CRU
 export class SYSB100CRUComponent
   extends BasicCruPageComponent<Sysb100m>
-  implements OnInit
-{
+  implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     id: [], // ID
     SYS_StoreNo: ['', [Validators.required, Validators.maxLength(10)]], // 公司編號/店號

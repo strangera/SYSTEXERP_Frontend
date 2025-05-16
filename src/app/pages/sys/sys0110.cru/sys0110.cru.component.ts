@@ -1,29 +1,15 @@
+import { Sysb400Service } from './../../../service/API/sys/sysb400.service';
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import {
-  FormArray,
-  FormBuilder,
-  FormControl,
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { UserLevelService } from '../../../service/basic/user-level.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { UserTypeService } from '../../../service/basic/user-type.service';
-import { UserStatusService } from '../../../service/basic/user-status.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { RegionCodeService } from '../../../service/basic/region-code.service';
-import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
-import { SystemTypeDetailService } from '../../../service/basic/system-type-detail.service';
-import { TreeNode } from 'primeng/api';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { apiOption, option, SYS1000, Sysb400m, tblUser } from '../module/sysb000.module';
+import { Sys0110Service } from '../../../service/API/sys/sys0110.service';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+
 // 4-2-1-1使用者基本資料維護
-const nowDate = new Date();
 
 @Component({
   selector: 'app-sys0110-cru',
@@ -31,272 +17,142 @@ const nowDate = new Date();
   styleUrls: ['./sys0110.cru.component.scss'],
   encapsulation: ViewEncapsulation.None,
 })
-export class SYS0110CRUComponent extends BasicCrupageComponent implements OnInit {
-  nodes: TreeNode[] = [
-    {
-      label: '總公司',
-      selectable: false,
-      expanded: true,
-      children: [
-        {
-          key: '1',
-          label: '稽核室',
-          selectable: true,
-          expanded: true
-        },
-        {
-          key: '3',
-          label: '營運部',
-          selectable: false,
-          expanded: true,
-          children: [
-            {
-              key: '3-1',
-              label: '時尚Team',
-              selectable: false,
-              expanded: true,
-              children: [
-                { key: '3-1-1', label: '1F', leaf: true, selectable: true, expanded: true, data: '' },
-                { key: '3-1-2', label: '化妝品', leaf: true, selectable: true, expanded: true, data: '' }
-              ]
-            },
-            {
-              key: '3-2',
-              label: '休閒Team',
-              selectable: false,
-              expanded: true,
-              children: [
-                { key: '3-2-1', label: '3F', leaf: true, selectable: true, expanded: true, data: '' },
-                { key: '3-2-2', label: '居家生活組(停用)', leaf: true, selectable: true, expanded: true, data: '' },
-                { key: '3-2-3', label: '親子娛樂組(停用)', leaf: true, selectable: true, expanded: true, data: '' }
-              ]
-            },
-            {
-              key: '3-3',
-              label: '餐飲Team',
-              selectable: false,
-              expanded: true,
-              children: [
-                { key: '3-3-1', label: '餐廳/輕食組', leaf: true, selectable: true, expanded: true, data: '' },
-                { key: '3-3-2', label: '美食街/食品料組', leaf: true, selectable: true, expanded: true, data: '' },
-                { key: '3-3-3', label: '品牌經營組', leaf: true, selectable: true, expanded: true, data: '' }
-              ]
-            },
-            { key: '3-4', label: '流行Team', leaf: true, selectable: true, expanded: true, data: '' },
-            { key: '3-5', label: '特販Team', leaf: true, selectable: true, expanded: true, data: '' },
-            { key: '3-6', label: '生活Team', leaf: true, selectable: true, expanded: true, data: '' },
-            { key: '3-7', label: '營運支援Team', leaf: true, selectable: true, expanded: true, data: '' }
-          ]
-        },
-        {
-          key: '4',
-          label: '行銷部',
-          selectable: false,
-          expanded: true,
-          children: [
-            { key: '4-1', label: '會員Team', leaf: true, selectable: true, expanded: true, data: '' },
-            { key: '4-2', label: '顧客關係Team(停用)', leaf: true, selectable: true, expanded: true, data: '' },
-            { key: '4-3', label: '活動Team', leaf: true, selectable: true, expanded: true, data: '' },
-            { key: '4-4', label: '廣宣Team', leaf: true, selectable: true, expanded: true, data: '' },
-            { key: '4-5', label: '企劃Team', leaf: true, selectable: true, expanded: true, data: '' }
-          ]
-        }
-      ]
-    }
-  ];
-
-
-  selectedNodes: TreeNode[] = [];
-
+export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser>
+  implements OnInit {
   // 表單
   dataForm = this.formBuilder.nonNullable.group({
-    userCode: [, Validators.required], // 使用者編號
-    userAlias: ['', Validators.required], // 使用者名稱
-    password: [''], // 密碼
-    organizationNumber: ['', Validators.required], // 組織編號
-    startDate: [, Validators.required], // 帳號有效起始日期
-    endDate: [''], // 帳號終止日
-    userStatus: ['', Validators.required], // 使用者狀態
-    userType: [, Validators.required], // 使用者型態
-    userLevel: ['', Validators.required], // 使用者等級
-    remark: [''], // 備註
-    email: [''], // 電子郵件
-    jobPositionOptions: [''], // 職位
-    FloorOptions: [''], // 樓層代碼
-    regionCodeOptions: [''], // 區域代碼
-    businessTypeCodeOptions: [''], // 業種代碼
-    counterCodeOptions: [''], // 專櫃代碼
-    items: this.formBuilder.array([this.createItem()]), // 動態項目
+    ID: [], //ID
+    user_No: ['', [Validators.required, Validators.maxLength(10)]], // 使用者編號
+    user_Name: ['', [Validators.required, Validators.maxLength(20)]], // 使用者名稱
+    user_Password: ['', Validators.maxLength(32)], // 使用者密碼-加密
+    title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000
+    org_ID: ['', Validators.maxLength(20)], // 組織編號 (SYSB400_SYS3100)
+
+    str_dateStart: [null], // 帳號有效開始日期
+    str_dateEnd: [null], // 帳號有效結束日期
+    status: ['', [Validators.required, Validators.maxLength(1)]], // 使用者狀態 1=有效 2=停用
+    user_type: ['', [Validators.required, Validators.maxLength(1)]], // 使用者型態 1=公司內部人員(default) 2=專櫃人員 3=其他
+
+    user_email: ['', Validators.maxLength(100)], // 使用者email帳號
+    TLT_No: ['', Validators.maxLength(12)], // 所屬專櫃編號
+    remarks: ['', Validators.maxLength(100)], // 備註
+    user_priority: ['', Validators.maxLength(1)], // 使用者等級
+    USER_PwdExpireDate: [null], // 密碼到期日 YYYY/MM/DD HH:NN:SS，若使用者登入系統的時間大於此日期，則需強制使用者變更密碼
+
+    last_Login: [null], // 最近一次登入
   });
 
   // 下拉選單選項
-  userLevelOptions: any[] = [];
-  userStatusOptions: any[] = [];
-  userTypeOptions: any[] = [];
-  organizationNumberOptions: any[] = [];
-  FloorOptions: any[] = [];
-  regionCodeOptions: any[] = [];
-  businessTypeCodeOptions: any[] = [];
-  counterCodeOptions: any[] = [];
-  systemTypeDetailOptions: any[] = [];
-
-  jobPositionOptions: any[] = [
-    { label: '總經理', value: '1' },
-    { label: '副總經理', value: '2' },
-    { label: '協理', value: '3' },
-    { label: '經理', value: '4' },
-    { label: '副理', value: '5' },
-    { label: '襄理', value: '6' },
-  ];
+  titleOptions: apiOption[] = [];
+  SYS3100_Options: apiOption[] = [];
+  userStatusOptions: option[] = [];
+  userTypeOptions: option[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private userLevelService: UserLevelService,
-    private organizationNumber: OrganizationNumberService,
-    private userTypeService: UserTypeService,
-    private userStatusService: UserStatusService,
-    private floorService: FloorService,
-    private regionCodeService: RegionCodeService,
-    private businessTypeCodeService: BusinessTypeCodeService,
-    private counterCodeService: CounterCodeService,
-    private systemTypeDetailService: SystemTypeDetailService
+    private sys0110Service: Sys0110Service,
+    private sysb400Service: Sysb400Service,
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '420001';
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    // 加載下拉選項
-    this.userLevelService
-      .getUserlevel()
-      .subscribe((data) => (this.userLevelOptions = data));
-    this.organizationNumber
-      .getOrganizationNumbers()
-      .subscribe((data) => (this.organizationNumberOptions = data));
-    this.userTypeService
-      .getUserTypes()
-      .subscribe((data) => (this.userTypeOptions = data));
-    this.userStatusService
-      .getUserStatus()
-      .subscribe((data) => (this.userStatusOptions = data));
-    this.floorService
-      .getFloors()
-      .subscribe((data) => (this.FloorOptions = data));
-    this.regionCodeService
-      .getRegionCodes()
-      .subscribe((data) => (this.regionCodeOptions = data));
-    this.businessTypeCodeService
-      .getBusinessTypeCodes()
-      .subscribe((data) => (this.businessTypeCodeOptions = data));
-    this.counterCodeService
-      .getCounterCodes()
-      .subscribe((data) => (this.counterCodeOptions = data));
-    this.systemTypeDetailService
-      .getSystemTypes()
-      .subscribe((data) => (this.systemTypeDetailOptions = data));
-
-    const state = this.router.getCurrentNavigation()?.extras.state as {
-      crudstatus: CRUDStatus;
-      rowdata: any;
-    };
-    this.handleState(state);
+    this.initializePage('SYS0110', this.dataForm);
+    console.log('取得資料', this.dataForm.value);
+    this.loadOptions();
   }
 
-  handleState(state: { crudstatus: CRUDStatus; rowdata: any }): void {
-    switch (state.crudstatus) {
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        break;
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        this.Edit(state.rowdata);
-        break;
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-  }
+  // ----------------------------------------------------------------
 
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      systemTypeDetailOptions: [],
-      organizationNumberOptions: [],
+  onSubmit(frm: FormGroup) {
+    // 修改：使用父類的 handleSubmit 方法
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            // this.sys0110Service.insertSYSB600(frm.value).subscribe(() => {
+            //   this.messageService.successBubble('新增成功');
+            //   this.onCancel(); // 新增成功後返回查詢頁面
+            // });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            // this.sys0110Service.updateSYSB600(frm.value).subscribe(() => {
+            //   this.messageService.successBubble('更新成功');
+            //   this.onCancel(); // 更新成功後返回查詢頁面
+            // });
+          }
+          break;
+      }
     });
   }
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
+  submitForm(frm: FormGroup) {
+    this.onSubmit(frm);
   }
 
-  onRemoveItem(index: number): void {
-    this.items.removeAt(index);
+  onClearForm() {
+    this.dataForm.reset(); // 重置表單
   }
 
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
+  // 加載下拉選項
+  loadOptions() {
+    // *職稱代碼-SYS1000
+    this.sys0110Service.queryAllSystemCode({}).subscribe((response) => {
+      console.log('回應', response);
+      this.titleOptions = response.Data.map((item: SYS1000) => ({
+        No: item.SYS_Code,
+        Name: item.SYS_Name,
+        Label: item.SYS_Type + '-' + item.SYS_Code + '-' + item.SYS_Name,
+      }));
+    });
 
-  Edit(rowdata: any): void {
-    this.dataForm.patchValue(rowdata);
-  }
+    //建立組織下拉清單(SYS3100) 查詢全部
+    const query_org = {
+      level_id: '',
+      org_id: '',
+      org_name: '',
 
-  Read(rowdata: any): void {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
+      //分頁查詢
+      pageSize: 1000,
+      pageIndex: 0,
+      SortBy: [{ field: 'org_id', order: 1 }],
+    };
 
-  onSubmit(form: FormGroup): void {
-    this.messageService.blockUi();
-    this.submitted = true;
+    this.sysb400Service.querySYSB400(query_org).subscribe((response) => {
+      this.SYS3100_Options = response.Data.map((item: Sysb400m) => ({
+        No: item.org_id,
+        Name: item.org_name,
+        Label: item.org_id + '-' + item.org_name,
+      }));
+    });
 
-    if (form.invalid) {
-      this.messageService.errorBubble(
-        this.translate.instant('form_error_message')
-      );
-      this.messageService.unblockUi();
-      return;
-    }
+    this.userTypeOptions = [
+      // 使用者型態 1=公司內部人員(default) 2=專櫃人員 3=其他
+      { value: '1', label: '公司內部人員' },
+      { value: '2', label: '專櫃人員' },
+      { value: '3', label: '其他' },
+    ];
 
-    if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-      this.messageService.successBubble(
-        this.translate.instant('success_message')
-      );
-    } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-      this.messageService.successBubble(
-        this.translate.instant('updated-successfully')
-      );
-    }
-
-    this.messageService.unblockUi();
-  }
-
-  submitForm(form: FormGroup): void {
-    this.onSubmit(form);
-  }
-
-  onCancel(): void {
-    this.router.navigate(['SYS0000/SYS0110']);
-  }
-
-  onSelectionChange(event: any) {
-    const selectedNode = event.node;
-    if (selectedNode.children && selectedNode.children.length > 0) {
-      // 若選到非葉子節點，則取消選取
-      this.selectedNodes = this.selectedNodes.filter(node => node.key !== selectedNode.key);
+    //確認新增/編輯狀態
+    switch (this.crudstatus) {
+      case CRUDStatus.Create:
+        if (this.canAdd()) {
+          this.userStatusOptions = [
+            // 1=有效 2=停用
+            { value: '1', label: '有效' },
+          ];
+        }
+        break;
+      case CRUDStatus.Edit:
+        if (this.canEdit()) {
+          this.userStatusOptions = [
+            // 1=有效 2=停用
+            { value: '1', label: '有效' },
+            { value: '2', label: '停用' },
+          ];
+        }
+        break;
     }
   }
 }

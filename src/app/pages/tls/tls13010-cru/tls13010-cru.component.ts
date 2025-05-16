@@ -4,7 +4,7 @@ import { FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BaseTypeService } from '../../../service/basic/base-type-service.service';
 import { ExcessHandlingMethodService } from '../../../service/basic/excess-handling-method.service';
 import { CommissionTypeService } from '../../../service/basic/commission-type.service';

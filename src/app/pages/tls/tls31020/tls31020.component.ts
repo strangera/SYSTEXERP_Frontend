@@ -5,13 +5,13 @@ import { NavigationExtras, Router } from '@angular/router';
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
 import { FloorService } from '../../../service/basic/floor.service';
-import { RegionCodeService } from './../../../service/basic/region-code.service';
+import { RegionService } from './../../../service/basic/region-code.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { CommissionTypeService } from '../../../service/basic/commission-type.service';
@@ -55,7 +55,7 @@ export class TLS31020Component {
     tax: [], //稅別
     type: [],
     organizationCode: [],  // 專櫃編號
-    businessTypeCode: [],  // 業種
+    businessTypeCode: [],  // 大分類
     commissionType: [], // 抽成方式
     onedatedd: [],
     onedateyy: [],
@@ -311,7 +311,7 @@ export class TLS31020Component {
     private authService: AuthService,
     private validationService: ValidationService,
     private floorService: FloorService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private businessTypeCodeService: BusinessTypeCodeService,
     private organizationNumberService: OrganizationNumberService,
     private commissionTypeService: CommissionTypeService,
@@ -331,7 +331,7 @@ export class TLS31020Component {
     this.floorService.getFloors().subscribe(data => {
       this.floorOptions = data;
     });
-    this.regionCodeService.getRegionCodes().subscribe(data => {
+    this.RegionService.getRegionOptions().subscribe(data => {
       this.regionOptions = data;
     });
     this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {

@@ -1,7 +1,7 @@
 import { ValidationService } from './../../../shared/service/validation.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
@@ -13,8 +13,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 })
 export class TLS41020CRUComponent
   extends BasicCruPageComponent<any>
-  implements OnInit
-{
+  implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [],

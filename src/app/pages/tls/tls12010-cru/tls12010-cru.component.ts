@@ -6,7 +6,7 @@ import { BusinessTypeCodeService } from '../../../service/basic/business-type-co
 import { Component, OnInit, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -39,7 +39,7 @@ export class TLS12010CRUComponent extends BasicCrupageComponent implements OnIni
     vendorEName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
     brandCName: ['', [Validators.maxLength(30)]], // 品牌名稱(中文)
     brandEName: ['', [Validators.maxLength(30)]], // 品牌名稱(英文)
-    industryCode: [[] as number[], [Validators.required]], // 業種代號
+    industryCode: [[] as number[], [Validators.required]], // 大分類代號
 
     cPerson: ['', [Validators.required, Validators.maxLength(12)]], // 聯絡人
     cPhone: ['', [Validators.required, Validators.maxLength(60)]], // 聯絡人電話(O)

@@ -109,7 +109,7 @@ export class AuthService {
   getUserPermissions(progNo: string): FunsrightInfo | undefined {
     try {
       const funs = this._menuUpdated.getValue();
-      return funs.find(fun => fun.prog_no === progNo);
+      return funs.find(fun => fun.prog_No === progNo);
     } catch (error) {
       console.error('Error parsing FunRightsInfo from sessionStorage', error);
       return undefined;

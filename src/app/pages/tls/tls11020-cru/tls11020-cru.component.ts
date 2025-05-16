@@ -1,14 +1,13 @@
 import { Component } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { TranslateService } from '@ngx-translate/core';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { DeductionCategoryService } from '../../../service/basic/deduction-category.service';
+import { DeductionService } from '../../../service/basic/deduction.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
+import { TLS11020Service } from '../../../service/API/tls/tls11020.service';
 
 @Component({
   selector: 'app-tls11020-cru',
@@ -40,104 +39,68 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
   constructor(
     private translate: TranslateService,
     private validationService: ValidationService,
-    private deductionCategoryService: DeductionCategoryService,
-    private http: HttpClient,
+    private deductionService: DeductionService,
+    private tls11020Service: TLS11020Service,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS11020', this.inputForm);
-    this.deductionCategoryService.getDeductionCategories().subscribe((data) => {
+    this.deductionService.getDeductionCategories().subscribe((data) => {
       this.deductionCategoryOptions = data;
     });
   }
+
   onSubmit(): void {
-    this.messageService.blockUi();
-    this.submitted = true;
+    this.handleSubmit(this.inputForm, () => {
+      const raw = this.inputForm.getRawValue();
+      const capType = raw.CAP_Type;
 
-    if (this.inputForm.invalid) {
-      this.messageService.errorBubble(
-        this.translate.instant('form_error_message'),
-      );
-      this.messageService.unblockUi();
-      return;
-    }
+      // ✅ CAP_Type 長度檢查
+      if (!capType || (capType as string).length !== 1) {
+        this.messageService.errorBubble('扣款類別(CAP_Type) 必須是一個單一字元');
+        return;
+      }
 
-    const raw = this.inputForm.getRawValue();
-    const capType = (raw.CAP_Type ?? '') as string;
+      // ✅ 新增處理
+      if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
+        console.log('📤 新增送出的 payload：', raw);
 
-    if (capType.length !== 1) {
-      this.messageService.errorBubble('扣款類別(CAP_Type) 必須是一個單一字元');
-      this.messageService.unblockUi();
-      return;
-    }
-
-    const payload: any = {
-      CAP_Type: capType,
-      CAP_Name: raw.CAP_Name,
-      AccNo: raw.AccNo,
-      GUI_FLAG: raw.GUI_FLAG,
-      CAP_TaxType: raw.CAP_TaxType,
-      IsCommonlyUsed: raw.IsCommonlyUsed,
-      Print_Area: raw.Print_Area,
-      CAP_Remark: raw.CAP_Remark,
-    };
-
-    if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-      this.http
-        .post(`${environment.ApiUrl}/TLS0000/TLS1000/insertTLS11020`, payload)
-        .subscribe({
+        this.tls11020Service.insertTLS11020(raw).subscribe({
           next: () => {
-            this.messageService.successBubble(
-              this.translate.instant('success_message'),
-            );
+            this.messageService.successBubble(this.translate.instant('success_message'));
             this.router.navigate(['/TLS', 'TLS11020']);
           },
           error: () => {
-            this.messageService.errorBubble(
-              this.translate.instant('create_failed'),
-            );
-          },
-          complete: () => {
-            this.messageService.unblockUi();
-            this.submitted = false;
+            this.messageService.errorBubble(this.translate.instant('create_failed'));
           },
         });
-    } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-      payload.id = this.rowdata?.id;
-      payload.CAP_Item = this.rowdata?.CAP_Item;
+      }
 
-      this.http
-        .post(`${environment.ApiUrl}/TLS0000/TLS1000/updateTLS11020`, payload)
-        .subscribe({
+      // ✅ 編輯處理
+      else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
+        (raw as any).id = this.rowdata?.id;
+        raw.CAP_Item = this.rowdata?.CAP_Item;
+
+        console.log('📤 更新送出的 payload：', raw);
+
+        this.tls11020Service.updateTLS11020(raw).subscribe({
           next: () => {
-            this.messageService.successBubble(
-              this.translate.instant('updated-successfully'),
-            );
+            this.messageService.successBubble(this.translate.instant('updated-successfully'));
             this.router.navigate(['/TLS', 'TLS11020']);
           },
           error: () => {
-            this.messageService.errorBubble(
-              this.translate.instant('update_failed'),
-            );
-          },
-          complete: () => {
-            this.messageService.unblockUi();
-            this.submitted = false;
+            this.messageService.errorBubble(this.translate.instant('update_failed'));
           },
         });
-    } else {
-      this.messageService.unblockUi();
-    }
-  }
-
-  onClearForm(): void {
-    this.inputForm.reset({
-      CAP_Item: '由系統帶入',
-      GUI_FLAG: 'Y',
-      CAP_TaxType: '1',
-      IsCommonlyUsed: 'N',
+      }
     });
   }
+
 }
+
+
+
+
+

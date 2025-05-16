@@ -15,4 +15,9 @@ export class Sys0110Service {
   queryUser(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryUser`, body);
   }
+
+  // 查詢 SYS1000 資料表
+  queryAllSystemCode(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryAllSystemCode`, body);
+  }
 }

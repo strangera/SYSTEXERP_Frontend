@@ -2,7 +2,8 @@
   <label *ngIf="label" [for]="endControl" class="flex align-content-center gap-1 mb-1">{{ label }}(起迄)
     <span *ngIf="isRequired" class="required">*</span>
     <p-button icon="pi pi-cog" [rounded]="true" [raised]="true" size="small" styleClass="p-0"
-      [style]="{'width': '1.3rem','height':'1.3rem'}" (onClick)="op.toggle($event)" />
+      [style]="{'width': '1.3rem','height':'1.3rem'}" (onClick)="op.toggle($event)"
+      [disabled]="startControl.disabled || endControl.disabled" />
   </label>
   <p-overlayPanel #op styleClass="p-0">
     <div class="flex flex-column gap-3">

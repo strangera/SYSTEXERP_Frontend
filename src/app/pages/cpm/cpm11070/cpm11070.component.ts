@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -51,7 +51,7 @@ export class CPM11070Component extends BasicQpageComponent implements OnInit {
     { field: 'vendorName', header: '廠商名稱', visible: true },
 
     // { field: 'phone', header: '專櫃電話號碼', visible: false },  // 需求文件要求移除
-    { field: 'industryType', header: '大分類', visible: true }, //名稱: 業種 -> 大分類
+    { field: 'industryType', header: '大分類', visible: true }, //名稱: 大分類 -> 大分類
     { field: 'floor', header: '樓層', visible: true },
 
     { field: 'area', header: '區域', visible: true },

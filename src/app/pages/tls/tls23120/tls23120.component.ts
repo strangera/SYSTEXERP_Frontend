@@ -5,9 +5,9 @@ import { NavigationExtras, Router } from '@angular/router';
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { RegionCodeService } from '../../../service/basic/region-code.service';
+import { RegionService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -47,8 +47,8 @@ export class TLS23120Component {
     organizationCode: [{ value: '', disabled: true }],  // 專櫃編號
     regionCode: [{ value: '', disabled: true }],  // 區域
     floorCode: [{ value: '', disabled: true }],  // 樓層
-    businessTypeCode: [{ value: '', disabled: true }],  // 業種
-    whetherDisplayBusinessType: [],  // 是否顯示業種
+    businessTypeCode: [{ value: '', disabled: true }],  // 大分類
+    whetherDisplayBusinessType: [],  // 是否顯示大分類
     locationRadio: ['']  // 地點選項單選
   });
 
@@ -79,11 +79,11 @@ export class TLS23120Component {
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
     private authService: AuthService,
-    private regionCodeService: RegionCodeService, // 區域 service
+    private RegionService: RegionService, // 區域 service
     private floorService: FloorService, // 樓層 service
-    private businessTypeCodeService: BusinessTypeCodeService, // 業種 service
+    private businessTypeCodeService: BusinessTypeCodeService, // 大分類 service
     private organizationNumberService: OrganizationNumberService, // 專櫃編號 service
-    private whetherService: WhetherService, // 是否顯示業種 service
+    private whetherService: WhetherService, // 是否顯示大分類 service
   ) { }
 
   ngOnInit(): void {
@@ -92,7 +92,7 @@ export class TLS23120Component {
     this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
       this.organizationOptions = data;
     });
-    this.regionCodeService.getRegionCodes().subscribe((data) => {
+    this.RegionService.getRegionOptions().subscribe((data) => {
       this.regionOptions = data;
     });
     this.floorService.getFloors().subscribe((data) => {

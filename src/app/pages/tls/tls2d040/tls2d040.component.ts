@@ -12,7 +12,7 @@ import { NavigationExtras, Router } from '@angular/router';
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -50,7 +50,7 @@ export class TLS2D040Component {
     orgCode: [], // 組織代碼
     floor: [], // DropDown
     category: [1, []], // 類型
-    businessCode: [], // 業種代碼/名稱
+    businessCode: [], // 大分類代碼/名稱
     operations: [[] as number[]], // 專櫃/自營櫃
     onlyNegative: [,], // 只顯示負值(只適用依專櫃統計)
     onlyMonthNegative: [,], // 只顯示當月應收為負值

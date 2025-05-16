@@ -5042,7 +5042,7 @@
     {
       "group_no": "0001",
       "prog_no": "220028",
-      "prog_name": "商品類別資料修正作業",
+      "prog_name": "中分類資料修正作業",
       "http_method": "Post",
       "path": "/TLS2000/TLS24050",
       "parent_id": "220000",
@@ -5900,7 +5900,7 @@
     {
       "group_no": "0001",
       "prog_no": "220067",
-      "prog_name": "部門使用卷類設定作業",
+      "prog_name": "部門使用券類設定作業",
       "http_method": "Post",
       "path": "/TLS2000/TLS2D050",
       "parent_id": "220000",
@@ -6428,7 +6428,7 @@
     {
       "group_no": "0001",
       "prog_no": "220091",
-      "prog_name": "業種換開品項維護作業",
+      "prog_name": "大分類換開品項維護作業",
       "http_method": "Post",
       "path": "/TLS2000/TLS2J020",
       "parent_id": "220000",
@@ -6758,7 +6758,7 @@
     {
       "group_no": "0001",
       "prog_no": "230003",
-      "prog_name": "各業種之營業報表",
+      "prog_name": "各大分類之營業報表",
       "http_method": "Post",
       "path": "/TLS3000/TLS31030",
       "parent_id": "230000",
@@ -6890,7 +6890,7 @@
     {
       "group_no": "0001",
       "prog_no": "230009",
-      "prog_name": "各時段之業種營業報表",
+      "prog_name": "各時段之大分類營業報表",
       "http_method": "Post",
       "path": "/TLS3000/TLS31090",
       "parent_id": "230000",
@@ -10696,7 +10696,7 @@
     {
       "group_no": "0001",
       "prog_no": "410007",
-      "prog_name": "業種基本資料維護作業",
+      "prog_name": "大分類基本資料維護作業",
       "http_method": "Post",
       "path": "/SYSB000/SYSB800",
       "parent_id": "410000",
@@ -10718,7 +10718,7 @@
     {
       "group_no": "0001",
       "prog_no": "410008",
-      "prog_name": "商品類別維護作業",
+      "prog_name": "中分類維護作業",
       "http_method": "Post",
       "path": "/SYSB000/SYSB900",
       "parent_id": "410000",

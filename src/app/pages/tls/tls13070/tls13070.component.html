@@ -15,7 +15,7 @@
             </app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="業種代號" controlName="businessTypeCode" [options]="businessTypeCodeOptions"
+            <app-dropdown label="大分類代號" controlName="businessTypeCode" [options]="businessTypeCodeOptions"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.businessTypeCode"
               [submitted]="submitted">
             </app-dropdown>
@@ -192,7 +192,7 @@
 </div>
 <!-- <div class="card">
     <div class="col-12">
-        <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-        </app-data-table>
+        <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+        </app-table>
     </div>
 </div> -->

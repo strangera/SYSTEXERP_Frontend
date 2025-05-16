@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -10,7 +10,7 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
 import { InvoiceCategoryService } from './../../../service/basic/invoice-category.service';
 import { CahserTypeService } from './../../../service/basic/cahser-type.service';
 import { PosServerService } from './../../../service/basic/pos-server.service';
-import { RegionCodeService } from './../../../service/basic/region-code.service';
+import { RegionService } from './../../../service/basic/region-code.service';
 import { PosStatusService } from './../../../service/basic/pos-status.service';
 import { LocationService } from './../../../service/basic/location.service';
 import { FloorService } from './../../../service/basic/floor.service';
@@ -176,7 +176,7 @@ export class TLS41060CRUComponent extends BasicCrupageComponent implements OnIni
     private floorService: FloorService,
     private locationService: LocationService,
     private posStatusService: PosStatusService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private posServerService: PosServerService,
     private cahserTypeService: CahserTypeService,
     private invoiceCategoryService: InvoiceCategoryService,
@@ -208,7 +208,7 @@ export class TLS41060CRUComponent extends BasicCrupageComponent implements OnIni
       this.posStatusOptions = data;
     });
     //
-    this.regionCodeService.getRegionCodes().subscribe(data => {
+    this.RegionService.getRegionOptions().subscribe(data => {
       this.regionOptions = data;
     });
     //

@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -12,7 +12,7 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
 import { PaymentMethodService } from '../../../service/basic/payment-method.service';
 //
 
-//3.1.1.7 備用供應商資料維護作業 
+//3.1.1.7 備用供應商資料維護作業
 @Component({
   selector: 'app-ass11070',
   templateUrl: './ass11070.component.html',

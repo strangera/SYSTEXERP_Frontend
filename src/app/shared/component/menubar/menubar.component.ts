@@ -43,8 +43,8 @@ export class MenubarComponent implements OnInit, OnDestroy {
     });
     this.menuUpdatedSubscription = this.authService.menuUpdated.subscribe((newData: FunsrightInfo[]) => {
       this.funRightsInfo = [
-        { id: "", prog_no: "dashboard", prog_id: "", prog_name: "佈告欄", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
-        { id: "", prog_no: "900001", prog_id: "", prog_name: "範例", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
+        { id: "", prog_No: "dashboard", prog_id: "", prog_name: "佈告欄", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
+        { id: "", prog_No: "900001", prog_id: "", prog_name: "範例", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
         ...newData
       ];
       this.getMenuName(this.funRightsInfo, this.ProgNo);
@@ -62,7 +62,7 @@ export class MenubarComponent implements OnInit, OnDestroy {
   }
 
   getMenuName(funs: FunsrightInfo[], progNo: string) {
-    const prog = funs.filter(x => x.prog_no == progNo);
+    const prog = funs.filter(x => x.prog_No == progNo);
     if (prog.length > 0) {
       if (prog[0].prog_up !== '') {
         this.menu.push(prog[0].prog_name);

@@ -1,6 +1,6 @@
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
@@ -23,13 +23,13 @@ interface CategoryItem {
   templateUrl: './sysb800.cru.component.html',
   styleUrl: './sysb800.cru.component.scss'
 })
-// 業種基本資料維護作業 CRU
+// 大分類基本資料維護作業 CRU
 export class SYSB800CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [], // ID
-    bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 業種代號
-    bus_type_name: ['', [Validators.required, Validators.maxLength(40)]], // 業種名稱
+    bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 大分類代號
+    bus_type_name: ['', [Validators.required, Validators.maxLength(40)]], // 大分類名稱
     bus_type_desc: ['',], // 備註
   });
 

@@ -77,7 +77,7 @@
                 </app-radiobutton>
               </div>
               <div class="col-12 md:col-4 lg:col-4">
-                <app-dropdown label="業種代號" controlName="businessCode" [options]="businessCodeOptions"
+                <app-dropdown label="大分類代號" controlName="businessCode" [options]="businessCodeOptions"
                   optionLabel="label" optionValue="value" [control]="queryForm.controls.businessCode"
                   [submitted]="submitted">
                 </app-dropdown>
@@ -113,8 +113,8 @@
     </div>
     <div class="card">
       <div class="col-13">
-        <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-        </app-data-table>
+        <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+        </app-table>
       </div>
     </div>
   </div>

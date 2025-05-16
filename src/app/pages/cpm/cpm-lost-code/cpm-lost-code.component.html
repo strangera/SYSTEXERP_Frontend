@@ -13,13 +13,13 @@
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="商品類別代碼" controlName="counterName"
+                        <app-input-text label="中分類代碼" controlName="counterName"
                             [control]="queryForm.controls.objectCode" [submitted]="submitted">
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="商品類別名稱" controlName="objectName"
-                            [control]="queryForm.controls.objectName" [submitted]="submitted">
+                        <app-input-text label="中分類名稱" controlName="objectName" [control]="queryForm.controls.objectName"
+                            [submitted]="submitted">
                         </app-input-text>
                     </div>
                 </div>
@@ -35,6 +35,7 @@
     </p-accordion>
 </div>
 <div class="card">
-    <app-data-table-check [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-    </app-data-table-check>
+    <app-table [showCheckBox]="true" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+        (detail)="onDetail($event)">
+    </app-table>
 </div>

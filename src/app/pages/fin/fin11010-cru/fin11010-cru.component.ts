@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { TranslateService } from '@ngx-translate/core';
@@ -67,7 +67,7 @@ export class FIN11010CRUComponent extends BasicCrupageComponent implements OnIni
     this.whetherService.getWhetherOptions().subscribe(data => {
       this.whetherOptions = data;
     });
-    // 
+    //
     this.allpayCodeService.getAllpayCodes().subscribe(data => {
       this.payMethodOptions = data;
     });

@@ -84,7 +84,6 @@ import { ControlMessagesComponent } from './component/control-messages/control-m
 import { HasPermissionDirective } from './directive/has-permission.directive';
 //
 import { InputTextComponent } from './componentkit/input-text/input-text.component';
-import { DataTableComponent } from './componentkit/data-table/data-table.component';
 import { MultiSelectComponent } from './componentkit/multi-select/multi-select.component';
 import { InputNumberComponent } from './componentkit/input-number/input-number.component';
 import { InputNumberRangeComponent } from './componentkit/input-number-range/input-number-range.component';
@@ -93,13 +92,8 @@ import { EditorTextComponent } from './componentkit/editor-text/editor-text.comp
 import { FileUploadComponent } from './componentkit/file-upload/file-upload.component';
 import { ButtonDynamicallyaddComponent } from './componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 import { ButtonDynamicallydeleteComponent } from './componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { DataTableCheckComponent } from './componentkit/data-table-check/data-table-check.component';
-import { DataTableSpanComponent } from './componentkit/data-table-span/data-table-span.component';
 import { OrganizationChartModule } from 'primeng/organizationchart';
 import { NgChartsModule } from 'ng2-charts';
-import { DataTableSettingComponent } from './componentkit/data-table-setting/data-table-setting.component';
-import { DataTableGroupComponent } from './componentkit/data-table-group/data-table-group.component';
-import { DataTableReportComponent } from './componentkit/data-table-report/data-table-report.component';
 import { ButtonComponent } from './componentkit/button/button.component';
 import { DropdownComponent } from './componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from './componentkit/calendar/calendar.component';
@@ -110,6 +104,8 @@ import { DropdownTableComponent } from './componentkit/dropdown-table/dropdown-t
 import { TreeDropdownComponent } from './componentkit/tree-dropdown/tree-dropdown.component';
 import { InputTextareaComponent } from './componentkit/input-textarea/input-textarea.component';
 import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick/calendar-range-quick.component';
+import { TableExportComponent } from './componentkit/table/table-export/table-export.component';
+import { MultiSelectTableComponent } from './componentkit/multi-select-table/multi-select-table.component';
 
 @NgModule({
   declarations: [
@@ -126,7 +122,9 @@ import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick
     CalendarRangeQuickComponent,
     TableComponent,
     TableExpansionComponent,
+    TableExportComponent,
     DropdownTableComponent,
+    MultiSelectTableComponent,
     TreeDropdownComponent,
     InputTextareaComponent,
 
@@ -135,13 +133,8 @@ import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick
     InputNumberRangeComponent,
     FileUploadComponent,
     EditorTextComponent,
-    DataTableComponent,
-    DataTableSettingComponent,
-    DataTableCheckComponent,
-    DataTableSpanComponent,
-    DataTableGroupComponent,
-    DataTableReportComponent,
     RadiobuttonComponent,
+
     // Directive
     HasPermissionDirective,
     //
@@ -315,18 +308,13 @@ import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick
     ButtonDynamicallydeleteComponent,
     InputTextComponent,
     DropdownTableComponent,
+    MultiSelectTableComponent,
     TreeDropdownComponent,
     InputTextareaComponent,
     InputNumberComponent,
     InputNumberRangeComponent,
     FileUploadComponent,
     EditorTextComponent,
-    DataTableComponent,
-    DataTableSettingComponent,
-    DataTableCheckComponent,
-    DataTableGroupComponent,
-    DataTableSpanComponent,
-    DataTableReportComponent,
     MultiSelectComponent,
     CalendarComponent,
     CalendarRangeComponent,
@@ -339,6 +327,7 @@ import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick
     IconFieldModule,
     FloatLabelModule,
     EditorModule,
+
 
     OrganizationChartModule,
   ],

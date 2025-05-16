@@ -27,7 +27,7 @@
             </app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="單筆交易中有價卷總金額達N萬" controlName="voucherAmount"
+            <app-input-number [useGrouping]="false" label="單筆交易中有價券總金額達N萬" controlName="voucherAmount"
               [control]="queryForm.controls.voucherAmount" [submitted]="submitted">
             </app-input-number>
           </div>
@@ -50,7 +50,7 @@
 
 <div class="card">
   <div class="col-12">
-    <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-    </app-data-table>
+    <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+    </app-table>
   </div>
 </div>

@@ -1,160 +1,184 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { TreeNode } from 'primeng/api';
 
 @Component({
   selector: 'app-tree-dropdown',
   templateUrl: './tree-dropdown.component.html',
   styleUrls: ['./tree-dropdown.component.scss'],
 })
-export class TreeDropdownComponent {
-  // 樹狀結構資料
+export class TreeDropdownComponent implements OnInit {
   members = [
-    {
-      department: 'Department A',
-      roles: [
-        {
-          role: 'Owner',
-          members: [
-            { name: 'Amy Elsner', email: 'amy@email.com', role: 'Owner' },
-            {
-              name: 'Bernardo Dominic',
-              email: 'bernardo@email.com',
-              role: 'Owner',
-            },
-          ],
-        },
-        {
-          role: 'Viewer',
-          members: [
-            { name: 'Ioni Bowcher', email: 'ioni@email.com', role: 'Viewer' },
-          ],
-        },
-      ],
-    },
-    {
-      department: 'Department B',
-      roles: [
-        {
-          role: 'Examiner',
-          members: [
-            {
-              name: 'Super Man',
-              email: 'superman@email.com',
-              role: 'Examiner',
-            },
-          ],
-        },
-        {
-          role: 'Reviewer',
-          members: [
-            { name: 'Spider Man', email: 'spider@email.com', role: 'Reviewer' },
-          ],
-        },
-      ],
-    },
+    // department > role > member (其他細項)
+    { id: '1', department: 'Department A', role: 'Owner', name: 'Amy Elsner', email: 'amy@email.com', phone: '0911111111' },
+    { id: '2', department: 'Department A', role: 'Owner', name: 'Anna Fali', email: 'anna@email.com', phone: '0922222222' },
+    { id: '3', department: 'Department A', role: 'Viewer', name: 'Asiya Javayant', email: 'asiya@email.com', phone: '0933333333' },
+    { id: '4', department: 'Department B', role: 'Examiner', name: 'Bernardo Dominic', email: 'bernardo@email.com', phone: '0944444444' },
+    { id: '5', department: 'Department B', role: 'Reviewer', name: 'Elwin Sharvill', email: 'elwin@email.com', phone: '0955555555' },
   ];
 
+  //外部提供顯示名稱
+  Columns = [
+    { 'value': 'department', 'label': '部門' },
+    { 'value': 'role', 'label': '角色' },
+    { 'value': 'member', 'label': '成員' }
+  ];
+
+  isAllExpanded = false;
+
   selectedMembers: any[] = [];
+  treeData: any[] = [];
 
-  // 將樹狀結構展平成一維陣列以便於選擇
-  flattenMembers(members: any[]): any[] {
-    let flattened: any[] = [];
-    members.forEach((dept) => {
-      dept.roles.forEach((role: { members: any }) => {
-        flattened = [...flattened, ...role.members];
-      });
+  ngOnInit() {
+    this.treeData = this.groupByDepartment();
+  }
+
+  // 將扁平化資料轉成樹狀
+  groupByDepartment(): any[] {
+    const grouped: any = {};
+    this.members.forEach(member => {
+      if (!grouped[member.department]) {
+        grouped[member.department] = {};
+      }
+      if (!grouped[member.department][member.role]) {
+        grouped[member.department][member.role] = [];
+      }
+      grouped[member.department][member.role].push(member);
     });
-    return flattened;
+
+    let deptIndex = 0;
+    const result = Object.keys(grouped).map(deptName => {
+      const rolesObj = grouped[deptName];
+      let roleIndex = 0;
+
+      const roles = Object.keys(rolesObj).map(roleName => {
+        const members = rolesObj[roleName];
+        let memberIndex = 0;
+
+        const memberNodes = members.map((member: { name: any; email: any; phone: any; id: any; }) => ({
+          key: `d${deptIndex}-r${roleIndex}-m${memberIndex++}`,
+          label: member.name,
+          data: {
+            email: member.email,
+            phone: member.phone,
+            id: member.id
+          },
+          icon: 'pi pi-user',
+          leaf: true
+        }));
+
+        roleIndex++;
+
+        return {
+          key: `d${deptIndex}-r${roleIndex}`,
+          label: roleName,
+          children: memberNodes,
+          icon: 'pi pi-users'
+        };
+      });
+
+      deptIndex++;
+
+      return {
+        key: `d${deptIndex}`,
+        label: deptName,
+        children: roles,
+        icon: 'pi pi-folder'
+      };
+    });
+
+    return result;
   }
 
-  // 邀請選中的成員
+  //顯示欄位名稱
+  get columnsLabel(): string {
+    return this.Columns.map(col => col.label).join(' / ');
+  }
+
+  //展開全部
+  expandAll() {
+    this.treeData.forEach((node) => {
+      this.expandRecursive(node, true);
+    });
+  }
+
+  //收闔全部
+  collapseAll() {
+    this.treeData.forEach((node) => {
+      this.expandRecursive(node, false);
+    });
+  }
+
+  // 展開樹狀至目標層級（層級從0開始）
+  expandToLevel(level: number) {
+    // console.log('level', level);
+    this.treeData.forEach(node => {
+      this.expandToLevelRecursive(node, 0, level - 1);
+    });
+  }
+
+  // 只能展開到 maxLevel 層，超過就不展開
+  private expandToLevelRecursive(node: TreeNode, currentLevel: number, maxLevel: number) {
+    node.expanded = currentLevel < maxLevel; // 當前層小於目標層數才展開
+    if (node.children) {
+      node.children.forEach(child => {
+        this.expandToLevelRecursive(child, currentLevel + 1, maxLevel);
+      });
+    }
+  }
+
+  //展開控制
+  private expandRecursive(node: TreeNode, isExpand: boolean) {
+    node.expanded = isExpand;
+    if (node.children) {
+      node.children.forEach((childNode) => {
+        this.expandRecursive(childNode, isExpand);
+      });
+    }
+  }
+
+  // 全選所有節點(包含父節點與leaf節點)
+  selectAll() {
+    const selected: TreeNode[] = [];
+    this.collectAllNodes(this.treeData, selected);
+    this.selectedMembers = [...selected];
+    console.log('selectedMembers (全選所有節點):', this.selectedMembers);
+  }
+
+  // 遞迴收集所有節點 (包括有子節點的父節點)
+  private collectAllNodes(nodes: TreeNode[], selected: TreeNode[]) {
+    for (const node of nodes) {
+      selected.push(node);  // 先加入父節點
+      if (node.children) {
+        this.collectAllNodes(node.children, selected);  // 遞迴加入子節點
+      }
+    }
+  }
+
+  // 清空選擇
+  clearSelection() {
+    this.selectedMembers = [];
+  }
+
+  // 送出元件
   inviteMembers() {
-    console.log('Invited members:', this.selectedMembers);
-    // 這裡可以實作邀請邏輯
+    // 過濾出 leaf 節點 (會員層)
+    const invited = this.selectedMembers
+      .filter(node => node.leaf)
+      .map(node => ({
+        id: node.data.id,
+        name: node.label,
+        email: node.data.email,
+        phone: node.data.phone
+      }));
+
+    console.log('Invited members:', invited);
   }
 
-  // 切換選擇狀態
-  toggleSelection(item: any) {
-    // const index = this.selectedMembers.findIndex((m) => m.name === member.name);
-
-    // if (index === -1) {
-    //   // 如果成員沒有被選中，就加入選擇列表
-    //   this.selectedMembers.push(member);
-    // } else {
-    //   // 如果成員已經被選中，就移除它
-    //   this.selectedMembers.splice(index, 1);
-    // }
-
-    // // 強制刷新 p-multiSelect 顯示
-    // setTimeout(() => {
-    //   // 使用 ngModel 更新後，強制刷新顯示
-    //   this.selectedMembers = [...this.selectedMembers];
-    // }, 0);
-
-    let membersToToggle: any[] = [];
-
-    if (item.roles) {
-      // 部門
-      item.roles.forEach((role: { members: any[] }) => {
-        membersToToggle.push(...role.members);
-      });
-    } else if (item.members) {
-      // 角色
-      membersToToggle = item.members;
-    } else {
-      // 單一成員
-      membersToToggle = [item];
-    }
-
-    const allSelected = membersToToggle.every((member) =>
-      this.selectedMembers.some((selected) => selected.name === member.name),
-    );
-
-    if (allSelected) {
-      // 移除所有成員
-      this.selectedMembers = this.selectedMembers.filter(
-        (selected) =>
-          !membersToToggle.some((member) => member.name === selected.name),
-      );
-    } else {
-      // 加入尚未被選擇的成員
-      const newMembers = membersToToggle.filter(
-        (member) =>
-          !this.selectedMembers.some(
-            (selected) => selected.name === member.name,
-          ),
-      );
-      this.selectedMembers = [...this.selectedMembers, ...newMembers];
-    }
-
-    // 強制刷新 UI
-    setTimeout(() => {
-      this.selectedMembers = [...this.selectedMembers];
-    }, 0);
-  }
-
-  // 鍵盤事件處理
-  onKeyDown(event: KeyboardEvent, member: any) {
+  //鍵盤事件
+  onKeyDownExpand(event: KeyboardEvent, level: number) {
     if (event.key === 'Enter' || event.key === ' ') {
-      this.toggleSelection(member);
+      event.preventDefault();
+      this.expandToLevel(level);
     }
-  }
-
-  // 父項目顏色切換
-  isAnyMemberSelected(item: any): boolean {
-    let members: any[] = [];
-
-    if (item.roles) {
-      // 部門
-      item.roles.forEach((role: { members: any }) => {
-        members.push(...role.members);
-      });
-    } else if (item.members) {
-      // 角色
-      members = item.members;
-    }
-
-    return members.some((member) =>
-      this.selectedMembers.find((m) => m.name === member.name),
-    );
   }
 }

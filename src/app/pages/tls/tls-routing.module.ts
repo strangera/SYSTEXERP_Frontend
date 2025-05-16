@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { NotfoundComponent } from '../notfound/notfound.component';
 import { TLS11010CRUComponent } from './tls11010-cru/tls11010-cru.component';
 import { TLS11010Component } from './tls11010/tls11010.component';
 import { TLS11020CRUComponent } from './tls11020-cru/tls11020-cru.component';
@@ -392,6 +391,7 @@ import { TLS57140Component } from './tls57140/tls57140.component';
 import { TLS57150Component } from './tls57150/tls57150.component';
 import { TLS57160Component } from './tls57160/tls57160.component';
 import { TLS57170Component } from './tls57170/tls57170.component';
+import { NotfoundComponent } from '../base/notfound/notfound.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '404', pathMatch: 'full' },
@@ -459,7 +459,7 @@ const routes: Routes = [
   { path: 'TLS24020', component: TLS24020Component }, // 專櫃編號修正作業
   { path: 'TLS24030', component: TLS24030Component }, // 折扣別資料修正作業
   { path: 'TLS24040', component: TLS24040Component }, // 付款別資料修正作業
-  { path: 'TLS24050', component: TLS24050Component }, // 商品類別資料修正作業
+  { path: 'TLS24050', component: TLS24050Component }, // 中分類資料修正作業
   { path: 'TLS24060', component: TLS24060Component }, // 交易資料作廢作業
   { path: 'TLS24070', component: TLS24070Component }, // 發票修正作業
   { path: 'TLS24080', component: TLS24080Component }, // 交易資料修正報表
@@ -498,7 +498,7 @@ const routes: Routes = [
   { path: 'TLS2D020', component: TLS2D020Component }, // 專櫃代扣款試算作業
   { path: 'TLS2D030', component: TLS2D030Component }, // 專櫃代扣款結算作業
   { path: 'TLS2D040', component: TLS2D040Component }, // 專櫃代扣款明細表
-  { path: 'TLS2D050', component: TLS2D050Component }, // 部門使用卷類設定作業
+  { path: 'TLS2D050', component: TLS2D050Component }, // 部門使用券類設定作業
   { path: 'TLS2D060', component: TLS2D060Component }, // 專櫃活動設定暨審核作業
   { path: 'TLS2D070', component: TLS2D070Component }, // 專櫃活動合約設定作業
   { path: 'TLS2E010', component: TLS2E010Component }, // 專櫃租金結算作業
@@ -522,7 +522,7 @@ const routes: Routes = [
   { path: 'TLS2H020', component: TLS2H020Component }, // 專櫃代扣款發票套印作業
   { path: 'TLS2H030', component: TLS2H030Component }, // 專櫃抽成發票套印作業
   { path: 'TLS2J010', component: TLS2J010Component }, // 換開品項維護作業
-  { path: 'TLS2J020', component: TLS2J020Component }, // 業種換開品項維護作業
+  { path: 'TLS2J020', component: TLS2J020Component }, // 大分類換開品項維護作業
   { path: 'TLS2J030', component: TLS2J030Component }, // 後台發票換開補登作業
   { path: 'TLS2J040', component: TLS2J040Component }, // 發票換開作業
   { path: 'TLS2J050', component: TLS2J050Component }, // 三聯式發票查詢列印
@@ -545,7 +545,7 @@ const routes: Routes = [
   { path: 'TLS24020CRU', component: TLS24020CRUComponent }, // 專櫃編號修正作業 CRU
   { path: 'TLS24030CRU', component: TLS24030CRUComponent }, // 折扣別資料修正作業 CRU
   { path: 'TLS24040CRU', component: TLS24040CRUComponent }, // 付款別資料修正作業 CRU
-  { path: 'TLS24050CRU', component: TLS24050CRUComponent }, // 商品類別資料修正作業 CRU
+  { path: 'TLS24050CRU', component: TLS24050CRUComponent }, // 中分類資料修正作業 CRU
   { path: 'TLS24060CRU', component: TLS24060CRUComponent }, // 交易資料作廢作業 CRU
   { path: 'TLS24070CRU', component: TLS24070CRUComponent }, // 發票修正作業 CRU
   { path: 'TLS24080CRU', component: TLS24080CRUComponent }, // 交易資料修正報表 CRU
@@ -584,7 +584,7 @@ const routes: Routes = [
   { path: 'TLS2D020CRU', component: TLS2D020CRUComponent }, // 專櫃代扣款試算作業 CRU
   { path: 'TLS2D030CRU', component: TLS2D030CRUComponent }, // 專櫃代扣款結算作業 CRU
   { path: 'TLS2D040CRU', component: TLS2D040CRUComponent }, // 專櫃代扣款明細表 CRU
-  { path: 'TLS2D050CRU', component: TLS2D050CRUComponent }, // 部門使用卷類設定作業 CRU
+  { path: 'TLS2D050CRU', component: TLS2D050CRUComponent }, // 部門使用券類設定作業 CRU
   { path: 'TLS2D060CRU', component: TLS2D060CRUComponent }, // 專櫃活動設定暨審核作業 CRU
   { path: 'TLS2D070CRU', component: TLS2D070CRUComponent }, // 專櫃活動合約設定作業 CRU
   { path: 'TLS2E010CRU', component: TLS2E010CRUComponent }, // 專櫃租金結算作業 CRU
@@ -608,7 +608,7 @@ const routes: Routes = [
   { path: 'TLS2H020CRU', component: TLS2H020CRUComponent }, // 專櫃代扣款發票套印作業 CRU
   { path: 'TLS2H030CRU', component: TLS2H030CRUComponent }, // 專櫃抽成發票套印作業 CRU
   { path: 'TLS2J010CRU', component: TLS2J010CRUComponent }, // 換開品項維護作業 CRU
-  { path: 'TLS2J020CRU', component: TLS2J020CRUComponent }, // 業種換開品項維護作業 CRU
+  { path: 'TLS2J020CRU', component: TLS2J020CRUComponent }, // 大分類換開品項維護作業 CRU
   { path: 'TLS2J030CRU', component: TLS2J030CRUComponent }, // 後台發票換開補登作業 CRU
   { path: 'TLS2J040CRU', component: TLS2J040CRUComponent }, // 發票換開作業 CRU
   { path: 'TLS2J050CRU', component: TLS2J050CRUComponent }, // 三聯式發票查詢列印 CRU
@@ -629,13 +629,13 @@ const routes: Routes = [
   { path: 'TLS26040MOD', component: TLS26040ModComponent }, // 預售管理作業 MOD
   { path: 'TLS31010', component: TLS31010Component }, // 即時業績查詢
   { path: 'TLS31020', component: TLS31020Component }, // 各樓層之營業報表
-  { path: 'TLS31030', component: TLS31030Component }, // 各業種之營業報表
+  { path: 'TLS31030', component: TLS31030Component }, // 各大分類之營業報表
   { path: 'TLS31040', component: TLS31040Component }, // 各櫃別之營業報表
   { path: 'TLS31050', component: TLS31050Component }, // 各抽成別之營業報表
   { path: 'TLS31060', component: TLS31060Component }, // 各組織之營業報表
   { path: 'TLS31070', component: TLS31070Component }, // 各營業型態之營業報表
   { path: 'TLS31080', component: TLS31080Component }, // 各時段之樓層營業報表
-  { path: 'TLS31090', component: TLS31090Component }, // 各時段之業種營業報表
+  { path: 'TLS31090', component: TLS31090Component }, // 各時段之大分類營業報表
   { path: 'TLS32010', component: TLS32010Component }, // 銷售排名分析報表
   { path: 'TLS32020', component: TLS32020Component }, // 期間業績分析報表
   { path: 'TLS32030', component: TLS32030Component }, // 成長率分析報表

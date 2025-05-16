@@ -1,7 +1,7 @@
 import { Component, OnInit, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -11,7 +11,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { TaxableService } from '../../../service/basic/taxable.service';
 
-// 2.2.18.2 業種換開品項維護作業
+// 2.2.18.2 大分類換開品項維護作業
 @Component({
   selector: 'app-tls2j020-cru',
   templateUrl: './tls2j020-cru.component.html',

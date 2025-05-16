@@ -10,7 +10,7 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { VendorService } from '../../../service/basic/vendor.service';
 
 @Component({

@@ -57,7 +57,7 @@
                 </app-dropdown>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown label="業種/商品類別" controlName="industry" [options]="industryOptions" optionLabel="label"
+                <app-dropdown label="大分類/中分類" controlName="industry" [options]="industryOptions" optionLabel="label"
                   optionValue="value" [control]="queryForm.controls.industry" [submitted]="submitted">
                 </app-dropdown>
               </div>
@@ -113,8 +113,8 @@
     </div>
     <!-- <div class="card">
             <div class="col-13">
-                <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-                </app-data-table>
+                <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+                </app-table>
             </div>
         </div> -->
   </div>

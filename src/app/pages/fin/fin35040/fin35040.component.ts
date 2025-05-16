@@ -8,11 +8,11 @@ import { FlippingstateService } from './../../../service/basic/flippingstate.ser
 // Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { VendorService } from '../../../service/basic/vendor.service';
 import { MargintypeService } from '../../../service/basic/margintype.service';
-//存入保證金保管聯備註維護 
+//存入保證金保管聯備註維護
 @Component({
   selector: 'app-fin35040',
   templateUrl: './fin35040.component.html',

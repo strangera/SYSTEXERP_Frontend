@@ -45,14 +45,14 @@
             </div>
           </div>
           <div class="col-12 md:col-6 lg:col-8"></div>
-          <!-- Radio + 業種 -->
+          <!-- Radio + 大分類 -->
           <div class="col-12 md:col-6 lg:col-4">
             <div class="grid align-items-center">
               <div class="col-2">
                 <input type="radio" formControlName="locationRadio" [value]="'businessTypeCode'" />
               </div>
               <div class="col-10">
-                <app-dropdown label="業種" controlName="businessTypeCode" [options]="businessTypeCodeOptions"
+                <app-dropdown label="大分類" controlName="businessTypeCode" [options]="businessTypeCodeOptions"
                   optionLabel="label" optionValue="value" [control]="queryForm.controls.businessTypeCode"
                   [submitted]="submitted"></app-dropdown>
               </div>
@@ -72,8 +72,8 @@
 
   <div class="col-12">
     <div class="card">
-      <app-data-table [data]="filteredData" [columns]="columns" (edit)="onEdit($event)"
-        (detail)="onDetail($event)"></app-data-table>
+      <app-table [data]="filteredData" [columns]="columns" (edit)="onEdit($event)"
+        (detail)="onDetail($event)"></app-table>
     </div>
   </div>
 </div>

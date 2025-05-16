@@ -10,14 +10,14 @@ import { catchError, Observable, of, tap } from 'rxjs';
 export class SystemTypeDetailService {
 
   apiUrl: string = environment.ApiUrl;
-  title: string = '商品類別';
+  title: string = '中分類';
   options: any[] = [
     { value: 1, label: 'APP服務' },
     { value: 2, label: '出庫系統設定' },
     { value: 3, label: 'EIP模組' },
     { value: 4, label: '權限管理系統' },
     { value: 5, label: '決策支援管理-營運管理及銷售分析報表' },
-    { value: 6, label: '專櫃營運管理' },{ value: 1, label: 'APP服務' },
+    { value: 6, label: '專櫃營運管理' }, { value: 1, label: 'APP服務' },
     { value: 7, label: '贈品管理系統' },
     { value: 8, label: '會員管理系統' },
     { value: 9, label: 'POS網管系統' },
@@ -43,7 +43,7 @@ export class SystemTypeDetailService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getSystemTypes(): Observable<any[]> {
     return of(this.options).pipe(

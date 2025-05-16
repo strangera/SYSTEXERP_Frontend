@@ -7,7 +7,7 @@ import { NavigationExtras, Router } from '@angular/router';
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -31,7 +31,7 @@ export class TLS2G030Component {
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
     onedatetyy: [, [Validators.required]], // 年
-    industryCode: [], // 業種
+    industryCode: [], // 大分類
     counter: [], // 專櫃
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
   });

@@ -2,7 +2,7 @@ import { ValidationService } from './../../../shared/service/validation.service'
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -106,7 +106,7 @@ export class TLS42010CRUComponent extends BasicCrupageComponent implements OnIni
   createItem(): FormGroup {
     return this.formBuilder.group({
       // POS10271_收銀菜單明細檔
-      // ID                  NUMERIC(19,0) IDENTITY(1,1) NOT NULL 
+      // ID                  NUMERIC(19,0) IDENTITY(1,1) NOT NULL
 
       // index: STO_No, SBM_Type, TLT_No
 

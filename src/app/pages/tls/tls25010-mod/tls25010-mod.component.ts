@@ -11,7 +11,7 @@ import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 const now = new Date();
 //商場違規類別維護作業

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Validators } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { TranslateService } from '@ngx-translate/core';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -68,7 +68,7 @@ inputForm = this.formBuilder.nonNullable.group({
   onSubmit(): void {
     this.handleSubmit(this.inputForm, () => {
       const raw = this.inputForm.getRawValue();
-   
+
     (raw as any).GROSS_SPACE = Number(raw.GROSS_SPACE);
     (raw as any).NET_SPACE = Number(raw.NET_SPACE);
     (raw as any).LOCATION_Status = String(raw.LOCATION_Status);

@@ -1,7 +1,14 @@
+import { saveAs } from 'file-saver';
+import { CurrentPageService } from './../../../layout/app.menulist/current-page.service';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChangeDetectorRef, inject, Injectable } from '@angular/core';
+import { QueryStateService } from '../../service/query-state.service';
+import { TableService } from '../../componentkit/table/table.service';
+import { HttpResponse } from '@angular/common/http';
 import { Column } from '../../componentkit/table/table.model';
-import { DatePipe } from '@angular/common';
+import { AuthService } from '../../../service/system/auth.service';
+import { TableExport } from '../../componentkit/table/table-export/table-export.component';
+import { REPORT_TITLES } from '../../componentkit/table/report-titles';
 
 export interface ReportHead {
   exporttime?: Date | string; //報表產出時間
@@ -19,106 +26,126 @@ export class BasicPrintDataComponent {
   IsPrint = true;
   isPDFDownloading = false;
   isExcelDownloading = false;
+  exportDialog = false;
+  exportStatus: 'PDF' | 'Excel' = 'PDF';
+
   cdr = inject(ChangeDetectorRef);
+  queryState = inject(QueryStateService);
+  currentPage = inject(CurrentPageService);
+  tableService = inject(TableService);
+  authService = inject(AuthService);
 
-  BasicPrinting(selectColumns: Column[], data: any[], reportHead: ReportHead, printColumns?: Column[]): void {
-    this.isPDFDownloading = true;
-    const columnsToUse = printColumns?.length ? printColumns : selectColumns;
-    const cleanColumns = (columns: Column[]) =>
-      columns.map(({ field, header, visible }) => ({ field, header, visible }));
-    const columnsWithoutFormat = cleanColumns(columnsToUse);
-    const tableColumns = columnsWithoutFormat.filter(col => col.visible != false).map(col => col.header);
-    const tableRows = data.map(row => columnsWithoutFormat.filter(col => col.visible != false).map(col => row[col.field]));
-    const UserInfo = JSON.parse(sessionStorage.getItem('UserInfo') || '{}');
-    // 設定日期格式化
-    const datePipe = new DatePipe('en-US');
-    const now = datePipe.transform(new Date(), 'yyyy/MM/dd HH:mm') || '';
-    const systemDate = datePipe.transform(new Date(), 'yyyy/MM/dd') || '';
-    // 設置報表標題與默認值
-    reportHead = {
-      exporttime: now,
-      exportNo: UserInfo.code,
-      exportuser: UserInfo.CName,
-      systemtime: systemDate,
-      reporttitle: 'Report Title',
-      reportname: 'Report Name',
-      ...reportHead  // 将传入的 reportHead 覆盖默认值
-    };
-    if (typeof Worker !== 'undefined') {
-      const worker = new Worker(new URL('../../workers/pdf-worker.worker', import.meta.url), { type: 'module' });
-      worker.postMessage({ columns: tableColumns, data: tableRows, reportHead });
-      worker.onmessage = ({ data }) => {
-        try {
-          const blob = new Blob([data], { type: 'application/pdf' });
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = `${reportHead.reportname}.pdf`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        } catch (error) {
-          console.error('Error during PDF generation:', error);
-        } finally {
-          this.isPDFDownloading = false; // 确保设置为 false
-          this.cdr.detectChanges();  // 手动触发变更检测
-          worker.terminate();
-        }
+  exportPDFDownload(event: TableExport, columns: Column[],): void {
+    const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
+    const queryState = this.queryState.getQueryState(ProgNo);
+    const userInfo = this.authService.currentUserValue;
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = (today.getMonth() + 1).toString().padStart(2, '0'); // getMonth() 返回 0-11，所以要 +1
+    const day = today.getDate().toString().padStart(2, '0');
+    const formattedToday = `${year}${month}${day}`;
+    const pdfColumns = columns.map(col => {
+      return {
+        field: col.field,
+        header: col.header,
+        visible: col.visible ? col.visible : true,
       };
-
-      worker.onerror = (error) => {
-        console.error('Worker error:', error);
-        this.isPDFDownloading = false;  // 确保设置为 false
-        this.cdr.detectChanges();  // 手动触发变更检测
-        worker.terminate();
-      };
-    } else {
-      console.error('Web Worker is not supported in this browser.');
-      this.isPDFDownloading = false;  // 在不支持 Web Worker 时也设置为 false
-    }
-  }
-  exportFunction(selectedColumns: Column[], data: any[], exportFilename: string, printColumns?: Column[]): void {
-    this.isExcelDownloading = true;  // 开始导出时设置为 true
-    const columns = printColumns && printColumns.length > 0 ? printColumns : selectedColumns;
-    const dataToExport = data.map((row: any) => {
-      const rowData: any = {};
-      columns.forEach(col => { rowData[col.field] = row[col.field] ?? ''; });
-      return rowData;
     });
-    if (typeof Worker !== 'undefined') {
-      const worker = new Worker(new URL('../../workers/excel-worker.worker', import.meta.url), { type: 'module' });
-      worker.postMessage({ dataToExport, exportFilename });
-      // 接收 Worker 的消息
-      worker.onmessage = ({ data }) => {
-        if (data.success) {
-          // 导出成功，创建下载链接
-          const blob = new Blob([data.file], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-          const link = document.createElement('a');
-          link.href = URL.createObjectURL(blob);
-          link.download = `${data.exportFilename}.xlsx`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+
+    const body = {
+      query_condition: {
+        ServiceName: `query${ProgNo}`,
+        Conditions: queryState
+      },
+      report_title: REPORT_TITLES[`query${ProgNo}`] || 'Report',
+      columns: pdfColumns,
+      config: event,
+      file_name: `${userInfo?.user_No}_${ProgNo}_${formattedToday}`
+    };
+
+    this.tableService.exportPDF(body).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        if (response.body) {
+          const contentDisposition = response.headers.get('content-disposition');
+          let filename = `${body.file_name}.pdf`;
+          if (contentDisposition) {
+            const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.pdf)?$|filename="(.+?)(?:\.pdf)?"$/;
+            const matches = contentDisposition.match(filenameRegex);
+            if (matches) {
+              filename = matches[1] || matches[2] || filename;
+              filename = decodeURIComponent(filename);
+            }
+            filename = filename.replace(/["']/g, '');
+          }
+          const blob = new Blob([response.body], { type: 'application/pdf' });
+          saveAs(blob, filename);
         } else {
-          console.error('导出失败:', data.error);
+          console.error("Response body is empty!");
         }
-
-        // 导出完成，更新状态
-        this.isExcelDownloading = false;
-        this.cdr.detectChanges();  // 确保视图刷新，隐藏 loading 状态
-        worker.terminate();  // 终止 Worker
+        this.exportDialog = false;
+      },
+      error: (err: any) => {
+        console.error('Error downloading PDF:', err);
+        this.exportDialog = false;
+      }
+    });
+  }
+  exportExcelDownload(event: TableExport, columns: Column[],): void {
+    const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
+    const queryState = this.queryState.getQueryState(ProgNo);
+    const userInfo = this.authService.currentUserValue;
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = (today.getMonth() + 1).toString().padStart(2, '0'); // getMonth() 返回 0-11，所以要 +1
+    const day = today.getDate().toString().padStart(2, '0');
+    const formattedToday = `${year}${month}${day}`;
+    const excelColumns = columns.map(col => {
+      return {
+        field: col.field,
+        header: col.header,
+        visible: col.visible ? col.visible : true,
       };
+    });
 
-      worker.onerror = (error) => {
-        console.error('Worker 错误:', error);
-        this.isExcelDownloading = false;
+    const body = {
+      query_condition: {
+        ServiceName: `query${ProgNo}`,
+        Conditions: queryState
+      },
+      report_title: REPORT_TITLES[`query${ProgNo}`] || 'Report',
+      columns: excelColumns,
+      config: event,
+      file_name: `${userInfo?.user_No}_${ProgNo}_${formattedToday}`,
+      allColumns: event.allColumns, // 是否匯出所有欄位
+    };
+    this.tableService.exportExcel(body).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        if (response.body) {
+          const contentDisposition = response.headers.get('content-disposition');
+          let filename = `${body.file_name}.xlsx`; // 副檔名改為 .xlsx
+          if (contentDisposition) {
+            const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/;  //  正則匹配.xlsx
+            const matches = contentDisposition.match(filenameRegex);
+            if (matches) {
+              filename = matches[1] || matches[2] || filename;
+              filename = decodeURIComponent(filename);
+            }
+            filename = filename.replace(/["']/g, '');
+          }
+          const blob = new Blob([response.body], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }); // 正確的 MIME 類型
+          saveAs(blob, filename);
+        } else {
+          console.error("Response body is empty!");
+        }
+        this.exportDialog = false;
         this.cdr.detectChanges();
-        worker.terminate();
-      };
-    } else {
-      console.error('Web Worker 不被当前浏览器支持');
-      this.isExcelDownloading = false;
-      this.cdr.detectChanges();
-    }
+      },
+      error: (err: any) => {
+        console.error('Error downloading Excel:', err);
+        this.exportDialog = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
   toggleVisibility(): void {
     this.IsPrint = !this.IsPrint;

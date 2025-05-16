@@ -1,6 +1,6 @@
 import { LocationService } from './../../../service/basic/location.service';
 import { FloorService } from './../../../service/basic/floor.service';
-import { RegionCodeService } from './../../../service/basic/region-code.service';
+import { RegionService } from './../../../service/basic/region-code.service';
 import { IndustryTypeService } from './../../../service/basic/industry-type.service';
 import { VendorService } from './../../../service/basic/vendor.service';
 import { Component } from '@angular/core';
@@ -10,7 +10,7 @@ import { NavigationExtras, Router } from '@angular/router';
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -42,7 +42,7 @@ export class TLS12060Component {
     enddate: [, [Validators.required]], // 接洽日期
     contactPerson: [[] as number[]], // 接洽人員
     vendorUID: [[] as number[]], // 廠商統一編號
-    industryCode: [[] as number[]], // 業種代號
+    industryCode: [[] as number[]], // 大分類代號
     region: [[] as number[]], // 區域
     floor: [[] as number[]], // 樓層
     locationNumber: [[] as number[]], // 位置編號
@@ -65,7 +65,7 @@ export class TLS12060Component {
     { field: 'contactPerson', header: '洽談者', visible: true },
     { field: 'contactDate', header: '洽談日', visible: true },
     { field: 'UID', header: '統編/廠商', visible: true },
-    { field: 'industryType', header: '業種', visible: true },
+    { field: 'industryType', header: '大分類', visible: true },
     { field: 'category', header: '類型', visible: true },
     { field: 'version', header: '版本', visible: true },
     { field: 'rentNumber', header: '位置租賃數', visible: true },
@@ -93,7 +93,7 @@ export class TLS12060Component {
     private userCodeService: UserCodeService,
     private vendorService: VendorService,
     private industryTypeService: IndustryTypeService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private floorService: FloorService,
     private locationService: LocationService,
   ) {
@@ -123,7 +123,7 @@ export class TLS12060Component {
       this.industryCodeOptions = data;
     });
     //
-    this.regionCodeService.getRegionCodes().subscribe(data => {
+    this.RegionService.getRegionOptions().subscribe(data => {
       this.regionOptions = data;
     });
     //

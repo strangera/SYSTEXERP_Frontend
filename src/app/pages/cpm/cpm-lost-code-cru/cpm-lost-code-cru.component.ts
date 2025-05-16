@@ -1,13 +1,13 @@
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 
-//5.1.1.test1 遺拾商品類別維護 CRU
+//5.1.1.test1 遺拾中分類維護 CRU
 @Component({
   selector: 'app-cpm-lost-code-cru',
   templateUrl: './cpm-lost-code-cru.component.html',
@@ -17,7 +17,7 @@ export class CpmLostCodeCRUComponent extends BasicCrupageComponent implements On
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     objectCode: ['', [Validators.maxLength(60)]], // 物品類別代碼
-    objectName: ['', [Validators.maxLength(60)]], // 商品類別名稱
+    objectName: ['', [Validators.maxLength(60)]], // 中分類名稱
     // ----------------------------------------------------------------
     items: this.formBuilder.array([
       this.createItem()

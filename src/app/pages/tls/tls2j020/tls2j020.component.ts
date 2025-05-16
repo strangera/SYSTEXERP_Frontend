@@ -5,12 +5,12 @@ import { NavigationExtras, Router } from '@angular/router';
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 
-// 2.2.18.2 業種換開品項維護作業
+// 2.2.18.2 大分類換開品項維護作業
 @Component({
   selector: 'app-tls2j020',
   templateUrl: './tls2j020.component.html',
@@ -28,7 +28,7 @@ export class TLS2J020Component {
   loading: boolean = false;
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
-    industry: ['', [Validators.maxLength(5)]], // 業種
+    industry: ['', [Validators.maxLength(5)]], // 大分類
     name: ['', [Validators.maxLength(5)]], // 品項名稱
     tax: ['', [Validators.maxLength(1)]], // 稅別
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
@@ -43,7 +43,7 @@ export class TLS2J020Component {
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
-    { field: 'contactPerson', header: '業種', visible: true },
+    { field: 'contactPerson', header: '大分類', visible: true },
     { field: 'contactDate', header: '品項名稱', visible: true },
     { field: 'UID', header: '稅別', visible: true },
     // 其他欄位

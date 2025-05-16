@@ -13,7 +13,7 @@ import { NavigationExtras, Router } from '@angular/router';
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -46,7 +46,7 @@ export class TLS2E050Component {
     organizationCode: [], // 組織代碼
     commissionMethod: [], // 抽成方式
     floor: [], // 樓層
-    industry: [], // 業種 / 商品類別
+    industry: [], // 大分類 / 中分類
     vendorInvoice: [[] as number[]], // 是否使用業主發票
     showAccount: [,], // 只顯示應付帳款小於0
     showStock: [,], // 只顯示進貨總額小於0
@@ -72,7 +72,7 @@ export class TLS2E050Component {
     { field: 'industryType', header: '專櫃名稱', visible: true },
     { field: 'category', header: '抽成方式', visible: true },
     { field: 'version', header: '結帳年月', visible: true },
-    { field: 'rentNumber', header: '業種', visible: true },
+    { field: 'rentNumber', header: '大分類', visible: true },
     { field: 'progress', header: '結算方式', visible: true },
     { field: 'col1', header: '結算方式', visible: true },
     { field: 'col2', header: '帳次', visible: true },

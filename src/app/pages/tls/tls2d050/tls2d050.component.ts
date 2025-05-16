@@ -6,13 +6,13 @@ import { NavigationExtras, Router } from '@angular/router';
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { AnnouncementUserService } from '../../../service/basic/announcement-user.service';
 
-// 2.2.13.5 部門使用卷類設定作業
+// 2.2.13.5 部門使用券類設定作業
 @Component({
   selector: 'app-tls2d050',
   templateUrl: './tls2d050.component.html',
@@ -31,7 +31,7 @@ export class TLS2D050Component {
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
     department: [[] as number[]], // 部門
-    coupon: [[] as number[]], // 卷別
+    coupon: [[] as number[]], // 券別
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
   });
   // 表格
@@ -45,7 +45,7 @@ export class TLS2D050Component {
   filteredData: any[] = [...this.data];
   columns: any[] = [
     { field: 'contactPerson', header: '部門名稱', visible: true },
-    { field: 'contactDate', header: '卷類名稱', visible: true },
+    { field: 'contactDate', header: '券類名稱', visible: true },
     // 其他欄位
   ];
   // ----------------------------------------------------------------

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -22,7 +22,7 @@ export class ASS16010CRUComponent
     // ----------------------------------------------------------------
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     // 下拉選單--------------------------------------------------------
-    // this.userCodeService.getUserCode().subscribe((data) => (this.founder = data)); 
+    // this.userCodeService.getUserCode().subscribe((data) => (this.founder = data));
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus;

@@ -15,7 +15,7 @@
                     <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                         <div class="grid p-fluid">
                             <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-text label="業種" controlName="industry"
+                                <app-input-text label="大分類" controlName="industry"
                                     [control]="queryForm.controls.industry" [submitted]="submitted">
                                 </app-input-text>
                             </div>
@@ -43,8 +43,8 @@
         </div>
         <div class="card">
             <div class="col-13">
-                <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-                </app-data-table>
+                <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+                </app-table>
             </div>
         </div>
     </div>

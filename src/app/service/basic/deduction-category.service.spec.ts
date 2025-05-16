@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { DeductionCategoryService } from './deduction-category.service';
+import { DeductionCategoryService } from './deduction.service';
 
 describe('DeductionCategoryService', () => {
   let service: DeductionCategoryService;

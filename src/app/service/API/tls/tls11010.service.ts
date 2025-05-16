@@ -14,7 +14,7 @@ export class Tls11010Service {
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
   ) { }
-
+//floor
   getFloorOptions(): Observable<any[]> {
     return this.http
       .post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3900_DropDownList`, {})

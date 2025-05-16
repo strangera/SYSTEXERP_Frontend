@@ -8,12 +8,12 @@ import {
 } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { VendorService } from '../../../service/basic/vendor.service';
 import { ContractStatusService } from '../../../service/basic/contract-status.service';
-import { RegionCodeService } from '../../../service/basic/region-code.service';
+import { RegionService } from '../../../service/basic/region-code.service';
 import { OperationStatusService } from '../../../service/basic/operation-status.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
@@ -90,7 +90,7 @@ export class TLS14010Component {
     private authService: AuthService,
     private vendorService: VendorService,
     private contractStatusService: ContractStatusService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private floorService: FloorService,
     private operationStatusService: OperationStatusService,
     private businessTypeCodeService: BusinessTypeCodeService,
@@ -102,7 +102,7 @@ export class TLS14010Component {
     this.vendorService.getVendors().subscribe((data) => {
       this.vendorOptions = data;
     });
-    this.regionCodeService.getRegionCodes().subscribe((data) => {
+    this.RegionService.getRegionOptions().subscribe((data) => {
       this.regionOptions = data;
     });
     this.floorService.getFloors().subscribe((data) => {

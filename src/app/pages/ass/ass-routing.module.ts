@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
-import { NotfoundComponent } from '../notfound/notfound.component';
+import { NotfoundComponent } from '../base/notfound/notfound.component';
 import { ASS11010CRUComponent } from './ass11010-cru/ass11010-cru.component';
 import { ASS11010Component } from './ass11010/ass11010.component';
 import { ASS11020CRUComponent } from './ass11020-cru/ass11020-cru.component';

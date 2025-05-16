@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -82,7 +82,7 @@ export class ASS13080CRUComponent extends BasicCrupageComponent implements OnIni
     scrapDate: [], // 變賣日期
     scrapManufacturers: [[Validators.required]], // 變賣廠商
     entryVoucherNumber: [], // 入帳傳票編號
-    soldAmount: [, [Validators.required]], // 變賣金額(含稅) 
+    soldAmount: [, [Validators.required]], // 變賣金額(含稅)
     voucherRemark: [,], // 變賣說明
     // 其他
     assetsRemark: [,], // 資產註記

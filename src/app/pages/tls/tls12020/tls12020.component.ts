@@ -7,7 +7,7 @@ import { NavigationExtras, Router } from '@angular/router';
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -46,7 +46,7 @@ export class TLS12020Component {
   // ----------------------------------------------------------------
   data: any[] = [
     // { location: '00000000', vendorUID: '123', vendorCName: '廠商1', vendorEName: 'vendor1',
-    //   brandCName: '品牌1', industryCode: '業種代號', contactPerson: '林先生', contactPersonPhone: '123',
+    //   brandCName: '品牌1', industryCode: '大分類代號', contactPerson: '林先生', contactPersonPhone: '123',
     //   interviewDate: '2024-01-01', interviewDateTime: '11:20',interviewer: '訪談人員', willingnessLevel: 'a'},
     // 其他資料
   ];
@@ -57,7 +57,7 @@ export class TLS12020Component {
     { field: 'vendorCName', header: '廠商名稱(中文)', visible: true },
     { field: 'vendorEName', header: '廠商名稱(英文)', visible: true },
     { field: 'brandCName', header: '品牌', visible: true },
-    { field: 'industryCode', header: '業種代碼', visible: true },
+    { field: 'industryCode', header: '大分類代碼', visible: true },
     { field: 'contactPerson', header: '聯絡人', visible: true },
     { field: 'contactPersonPhone', header: '聯絡人電話', visible: true },
     { field: 'interviewDate', header: '訪談日期', visible: true },

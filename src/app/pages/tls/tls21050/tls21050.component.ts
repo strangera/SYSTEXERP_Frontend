@@ -8,13 +8,13 @@ import {
 } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { RegionCodeService } from '../../../service/basic/region-code.service';
+import { RegionService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { OperationStatusService } from '../../../service/basic/operation-status.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
-import { DeductionCategoryService } from '../../../service/basic/deduction-category.service';
+import { DeductionService } from '../../../service/basic/deduction.service';
 import { DeductionCodeNameService } from '../../../service/basic/deduction-code-name.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 
@@ -86,11 +86,11 @@ export class TLS21050Component {
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
     private authService: AuthService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private floorService: FloorService,
     private operationStatusService: OperationStatusService,
     private businessTypeCodeService: BusinessTypeCodeService,
-    private deductionCategoryService: DeductionCategoryService,
+    private DeductionService: DeductionService,
     private deductionCodeNameService: DeductionCodeNameService,
   ) { }
 
@@ -99,7 +99,7 @@ export class TLS21050Component {
     this.floorService.getFloors().subscribe((data) => {
       this.floorOptions = data;
     });
-    this.regionCodeService.getRegionCodes().subscribe((data) => {
+    this.RegionService.getRegionOptions().subscribe((data) => {
       this.regionOptions = data;
     });
     this.operationStatusService.getOperationStatuses().subscribe((data) => {
@@ -108,7 +108,7 @@ export class TLS21050Component {
     this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
       this.businessTypeCodeOptions = data;
     });
-    this.deductionCategoryService.getDeductionCategories().subscribe((data) => {
+    this.DeductionService.getDeductionCategories().subscribe((data) => {
       this.commissionCategoryOptions = data;
     });
     this.deductionCodeNameService.getDeductionCodeNames().subscribe((data) => {

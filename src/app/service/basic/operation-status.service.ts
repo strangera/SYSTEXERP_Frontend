@@ -12,17 +12,16 @@ export class OperationStatusService {
   apiUrl: string = environment.ApiUrl;
   title: string = '營運狀態';
   options: any[] = [
-    { value: 1, label: '洽談中' },
-    { value: 2, label: '簽約中' },
-    { value: 3, label: '營運中' },
-    { value: 4, label: '已撤櫃' },
-    { value: 5, label: '已作廢' },
+    { value: 0, label: '閉店/撤櫃' },
+    { value: 1, label: '營業中' },
+    { value: 2, label: '合約結束' },
+    { value: 9, label: '核准時合約尚未開始' },
   ];
 
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getOperationStatuses(): Observable<any[]> {
     return of(this.options).pipe(

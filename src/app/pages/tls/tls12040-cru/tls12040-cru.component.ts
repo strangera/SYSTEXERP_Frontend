@@ -15,7 +15,7 @@ import { DecorationStyleService } from './../../../service/basic/decoration-styl
 import { CounterCategoryService } from './../../../service/basic/counter-category.service';
 import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
 import { FloorService } from './../../../service/basic/floor.service';
-import { RegionCodeService } from './../../../service/basic/region-code.service';
+import { RegionService } from './../../../service/basic/region-code.service';
 import { LocationService } from './../../../service/basic/location.service';
 import { BusinessTypeCodeService } from './../../../service/basic/business-type-code-service.service';
 import { VendorService } from './../../../service/basic/vendor.service';
@@ -23,7 +23,7 @@ import { VendorService } from './../../../service/basic/vendor.service';
 import { Component, OnInit, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -73,8 +73,8 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
     vendorUID: [, [Validators.required]], // 廠商統一編號
     businessType: [,], // 營業型態
     organizationCode: [, [Validators.required]], // 組織代碼
-    industryCode: [, [Validators.required]], // 業種
-    productCategory: [, [Validators.required]], // 商品類別
+    industryCode: [, [Validators.required]], // 大分類
+    productCategory: [, [Validators.required]], // 中分類
 
     negotiator: [, [Validators.required]], // 洽談者
     counterType: [,], // 櫃別
@@ -151,7 +151,7 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
     private userCodeService: UserCodeService,
     private businessTypeCodeService: BusinessTypeCodeService,
     private locationService: LocationService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private floorService: FloorService,
     private businessTypeService: BusinessTypeService,
     private organizationNumberService: OrganizationNumberService,
@@ -191,7 +191,7 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
       this.locationNumberOptions = data;
     });
     //
-    this.regionCodeService.getRegionCodes().subscribe(data => {
+    this.RegionService.getRegionOptions().subscribe(data => {
       this.regionOptions = data;
     });
     //

@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -13,7 +13,7 @@ import { TaxTypeService } from './../../../service/basic/tax-type.service';
 import { VendorService } from './../../../service/basic/vendor.service';
 import { UsageTypeService } from '../../../service/basic/usage-type.service';
 
-//1.1.4.6 非二聯式收銀機發票調整作業 
+//1.1.4.6 非二聯式收銀機發票調整作業
 @Component({
   selector: 'app-fin14060',
   templateUrl: './fin14060.component.html',

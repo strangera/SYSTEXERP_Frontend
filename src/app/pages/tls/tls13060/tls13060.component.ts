@@ -9,7 +9,7 @@ import {
 } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { LocationCodeService } from '../../../service/basic/locationcode.service';
 import { OperationStatusService } from '../../../service/basic/operation-status.service';
@@ -88,7 +88,7 @@ export class TLS13060Component {
     { field: 'leadVoucher', header: '導券', visible: true },
     { field: 'externalPickupNotePaper', header: '外來提貨單(紙券)', visible: true },
     { field: 'externalVoucherPaper', header: '外來提貨券(紙券)', visible: true },
-    { field: 'eventVoucher', header: '活動券(自卷)', visible: true },
+    { field: 'eventVoucher', header: '活動券(自券)', visible: true },
     { field: 'discountCoupon', header: '折價券', visible: true },
     { field: 'cashDiscount', header: '現抵', visible: true },
   ];

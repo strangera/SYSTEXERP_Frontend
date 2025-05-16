@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -25,7 +25,7 @@ export class FIN12020Component extends BasicQpageComponent implements OnInit {
     serialInvoice: [, [Validators.required, Validators.maxLength(8)]], // 發票號碼
     startserialInvoice: [, [Validators.required, this.validationService.numberValidator, Validators.maxLength(8)]], // 發票號碼(起)
     endserialInvoice: [, [Validators.required, this.validationService.numberValidator, Validators.maxLength(8)]], // 發票號碼(迄)
-    rollNumber: [1, [Validators.required, this.validationService.numberValidator, Validators.max(99999999)]], // 卷數
+    rollNumber: [1, [Validators.required, this.validationService.numberValidator, Validators.max(99999999)]], // 券數
     usageStatus: [], // 發票使用狀況
   });
   // 下拉資料多個呈現

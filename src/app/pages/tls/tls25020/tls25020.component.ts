@@ -12,7 +12,7 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 const now = new Date();
 

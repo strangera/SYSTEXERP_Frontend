@@ -62,7 +62,7 @@
           }
         ],
         "id": "10093",
-        "prog_no": "BAS1000",
+        "prog_No": "BAS1000",
         "prog_id": "",
         "prog_name": "基本資料管理系統",
         "prog_up": "SYS0000",
@@ -132,7 +132,7 @@
           }
         ],
         "id": "10094",
-        "prog_no": "BAS1100",
+        "prog_No": "BAS1100",
         "prog_id": "",
         "prog_name": "基本資料維護作業",
         "prog_up": "BAS1000",
@@ -202,7 +202,7 @@
           }
         ],
         "id": "10095",
-        "prog_no": "BAS2000",
+        "prog_No": "BAS2000",
         "prog_id": "",
         "prog_name": "權限管理系統",
         "prog_up": "SYS0000",
@@ -272,7 +272,7 @@
           }
         ],
         "id": "10096",
-        "prog_no": "BAS2100",
+        "prog_No": "BAS2100",
         "prog_id": "",
         "prog_name": "使用者管理作業",
         "prog_up": "BAS2000",
@@ -342,7 +342,7 @@
           }
         ],
         "id": "10097",
-        "prog_no": "BAS2200",
+        "prog_No": "BAS2200",
         "prog_id": "",
         "prog_name": "角色配置管理作業",
         "prog_up": "BAS2000",
@@ -412,7 +412,7 @@
           }
         ],
         "id": "10098",
-        "prog_no": "BAS2300",
+        "prog_No": "BAS2300",
         "prog_id": "",
         "prog_name": "系統權限設定作業",
         "prog_up": "BAS2000",
@@ -482,7 +482,7 @@
           }
         ],
         "id": "10099",
-        "prog_no": "BAS2400",
+        "prog_No": "BAS2400",
         "prog_id": "",
         "prog_name": "異動記錄查詢",
         "prog_up": "BAS2000",
@@ -552,7 +552,7 @@
           }
         ],
         "id": "10100",
-        "prog_no": "BAS2500",
+        "prog_No": "BAS2500",
         "prog_id": "",
         "prog_name": "權限管理報表",
         "prog_up": "BAS2000",
@@ -622,7 +622,7 @@
           }
         ],
         "id": "10101",
-        "prog_no": "BAS2600",
+        "prog_No": "BAS2600",
         "prog_id": "",
         "prog_name": "系統監控報表",
         "prog_up": "BAS2000",
@@ -692,7 +692,7 @@
           }
         ],
         "id": "10307",
-        "prog_no": "SYS0000",
+        "prog_No": "SYS0000",
         "prog_id": "",
         "prog_name": "權限及基本資料",
         "prog_up": "",
@@ -762,7 +762,7 @@
           }
         ],
         "id": "10308",
-        "prog_no": "SYS0110",
+        "prog_No": "SYS0110",
         "prog_id": "42110",
         "prog_name": "使用者基本資料維護",
         "prog_up": "BAS2100",
@@ -832,7 +832,7 @@
           }
         ],
         "id": "10309",
-        "prog_no": "SYS0210",
+        "prog_No": "SYS0210",
         "prog_id": "42210",
         "prog_name": "角色基本資料維護",
         "prog_up": "BAS2200",
@@ -902,7 +902,7 @@
           }
         ],
         "id": "10310",
-        "prog_no": "SYS0220",
+        "prog_No": "SYS0220",
         "prog_id": "42240",
         "prog_name": "使用者之角色設定維護",
         "prog_up": "BAS2200",
@@ -972,7 +972,7 @@
           }
         ],
         "id": "10311",
-        "prog_no": "SYS0230",
+        "prog_No": "SYS0230",
         "prog_id": "42220",
         "prog_name": "角色之使用者設定維護",
         "prog_up": "BAS2200",
@@ -1042,7 +1042,7 @@
           }
         ],
         "id": "10312",
-        "prog_no": "SYS0240",
+        "prog_No": "SYS0240",
         "prog_id": "42230",
         "prog_name": "角色複製",
         "prog_up": "BAS2200",
@@ -1112,7 +1112,7 @@
           }
         ],
         "id": "10313",
-        "prog_no": "SYS0310",
+        "prog_No": "SYS0310",
         "prog_id": "42310",
         "prog_name": "角色系統權限設定",
         "prog_up": "BAS2300",
@@ -1182,7 +1182,7 @@
           }
         ],
         "id": "10314",
-        "prog_no": "SYS0320",
+        "prog_No": "SYS0320",
         "prog_id": "42320",
         "prog_name": "使用者系統權限設定",
         "prog_up": "BAS2300",
@@ -1252,7 +1252,7 @@
           }
         ],
         "id": "10315",
-        "prog_no": "SYS0620",
+        "prog_No": "SYS0620",
         "prog_id": "42410",
         "prog_name": "角色基本資料異動查詢",
         "prog_up": "BAS2400",
@@ -1322,7 +1322,7 @@
           }
         ],
         "id": "10316",
-        "prog_no": "SYS0710",
+        "prog_No": "SYS0710",
         "prog_id": "42520",
         "prog_name": "使用者系統權限列表",
         "prog_up": "BAS2500",
@@ -1392,7 +1392,7 @@
           }
         ],
         "id": "10317",
-        "prog_no": "SYS0730",
+        "prog_No": "SYS0730",
         "prog_id": "42510",
         "prog_name": "角色系統權限列表",
         "prog_up": "BAS2500",
@@ -1462,7 +1462,7 @@
           }
         ],
         "id": "10318",
-        "prog_no": "SYS0740",
+        "prog_No": "SYS0740",
         "prog_id": "42530",
         "prog_name": "作業權限之角色列表",
         "prog_up": "BAS2500",
@@ -1532,7 +1532,7 @@
           }
         ],
         "id": "10319",
-        "prog_no": "SYS0750",
+        "prog_No": "SYS0750",
         "prog_id": "42540",
         "prog_name": "角色之使用者列表",
         "prog_up": "BAS2500",
@@ -1602,7 +1602,7 @@
           }
         ],
         "id": "10320",
-        "prog_no": "SYS0760",
+        "prog_No": "SYS0760",
         "prog_id": "42420",
         "prog_name": "使用者異常登入報表",
         "prog_up": "BAS2400",
@@ -1672,7 +1672,7 @@
           }
         ],
         "id": "10321",
-        "prog_no": "SYS0770",
+        "prog_No": "SYS0770",
         "prog_id": "42550",
         "prog_name": "作業權限統計表",
         "prog_up": "BAS2500",
@@ -1742,7 +1742,7 @@
           }
         ],
         "id": "10322",
-        "prog_no": "SYS0780",
+        "prog_No": "SYS0780",
         "prog_id": "42560",
         "prog_name": "作業權限申請表",
         "prog_up": "BAS2500",
@@ -1812,7 +1812,7 @@
           }
         ],
         "id": "10323",
-        "prog_no": "SYS0790",
+        "prog_No": "SYS0790",
         "prog_id": "42610",
         "prog_name": "使用者作業按鈕歷程報表",
         "prog_up": "BAS2600",
@@ -1882,7 +1882,7 @@
           }
         ],
         "id": "10324",
-        "prog_no": "SYS0791",
+        "prog_No": "SYS0791",
         "prog_id": "42570",
         "prog_name": "作業使用率查詢",
         "prog_up": "BAS2500",
@@ -1952,7 +1952,7 @@
           }
         ],
         "id": "10325",
-        "prog_no": "SYS0792",
+        "prog_No": "SYS0792",
         "prog_id": "42580",
         "prog_name": "在線人員查詢作業",
         "prog_up": "BAS2500",
@@ -2022,7 +2022,7 @@
           }
         ],
         "id": "10326",
-        "prog_no": "SYSB100",
+        "prog_No": "SYSB100",
         "prog_id": "41110",
         "prog_name": "公司基本資料維護作業",
         "prog_up": "BAS1100",
@@ -2092,7 +2092,7 @@
           }
         ],
         "id": "10327",
-        "prog_no": "SYSB200",
+        "prog_No": "SYSB200",
         "prog_id": "41120",
         "prog_name": "廠商基本資料維護作業",
         "prog_up": "BAS1100",
@@ -2162,7 +2162,7 @@
           }
         ],
         "id": "10328",
-        "prog_no": "SYSB300",
+        "prog_No": "SYSB300",
         "prog_id": "41130",
         "prog_name": "組織階層設定作業",
         "prog_up": "BAS1100",
@@ -2232,7 +2232,7 @@
           }
         ],
         "id": "10329",
-        "prog_no": "SYSB400",
+        "prog_No": "SYSB400",
         "prog_id": "41140",
         "prog_name": "組織碼設定作業",
         "prog_up": "BAS1100",
@@ -2302,7 +2302,7 @@
           }
         ],
         "id": "10330",
-        "prog_no": "SYSB500",
+        "prog_No": "SYSB500",
         "prog_id": "41150",
         "prog_name": "區域基本資料維護作業",
         "prog_up": "BAS1100",
@@ -2372,7 +2372,7 @@
           }
         ],
         "id": "10331",
-        "prog_no": "SYSB600",
+        "prog_No": "SYSB600",
         "prog_id": "41160",
         "prog_name": "樓層基本資料維護作業",
         "prog_up": "BAS1100",
@@ -2442,7 +2442,7 @@
           }
         ],
         "id": "10332",
-        "prog_no": "SYSB800",
+        "prog_No": "SYSB800",
         "prog_id": "41170",
         "prog_name": "大分類基本資料維護作業",
         "prog_up": "BAS1100",
@@ -2512,7 +2512,7 @@
           }
         ],
         "id": "10333",
-        "prog_no": "SYSB900",
+        "prog_No": "SYSB900",
         "prog_id": "41180",
         "prog_name": "中分類維護作業",
         "prog_up": "BAS1100",
@@ -2582,7 +2582,7 @@
           }
         ],
         "id": "10334",
-        "prog_no": "SYSB920",
+        "prog_No": "SYSB920",
         "prog_id": "41190",
         "prog_name": "小分類維護作業",
         "prog_up": "BAS1100",
@@ -2652,7 +2652,7 @@
           }
         ],
         "id": "10335",
-        "prog_no": "SYSBC00",
+        "prog_No": "SYSBC00",
         "prog_id": "41200",
         "prog_name": "銀行基本資料維護作業",
         "prog_up": "BAS1100",
@@ -2722,7 +2722,7 @@
           }
         ],
         "id": "10336",
-        "prog_no": "SYSBP00",
+        "prog_No": "SYSBP00",
         "prog_id": "41210",
         "prog_name": "參數資料設定維護",
         "prog_up": "BAS1100",
@@ -2792,7 +2792,7 @@
           }
         ],
         "id": "10337",
-        "prog_no": "SYSBQ00",
+        "prog_No": "SYSBQ00",
         "prog_id": "41220",
         "prog_name": "簽核權限設定維護",
         "prog_up": "BAS1100",
@@ -2862,7 +2862,7 @@
           }
         ],
         "id": "10338",
-        "prog_no": "SYSBR00",
+        "prog_No": "SYSBR00",
         "prog_id": "41230",
         "prog_name": "縣市區域資料維護作業",
         "prog_up": "BAS1100",
@@ -2932,7 +2932,7 @@
           }
         ],
         "id": "10339",
-        "prog_no": "SYSBR10",
+        "prog_No": "SYSBR10",
         "prog_id": "41240",
         "prog_name": "佈告欄管理作業",
         "prog_up": "BAS1100",
@@ -3002,7 +3002,7 @@
           }
         ],
         "id": "10340",
-        "prog_no": "TLS00000",
+        "prog_No": "TLS00000",
         "prog_id": "",
         "prog_name": "商場管理模組",
         "prog_up": "",
@@ -3072,7 +3072,7 @@
           }
         ],
         "id": "10341",
-        "prog_no": "TLS10000",
+        "prog_No": "TLS10000",
         "prog_id": "",
         "prog_name": "招商暨合約系統",
         "prog_up": "TLS00000",
@@ -3142,7 +3142,7 @@
           }
         ],
         "id": "10342",
-        "prog_no": "TLS11000",
+        "prog_No": "TLS11000",
         "prog_id": "",
         "prog_name": "基本資料維護",
         "prog_up": "TLS10000",
@@ -3212,7 +3212,7 @@
           }
         ],
         "id": "10343",
-        "prog_no": "TLS11010",
+        "prog_No": "TLS11010",
         "prog_id": "21110",
         "prog_name": "專櫃位置資料維護",
         "prog_up": "TLS11000",
@@ -3282,7 +3282,7 @@
           }
         ],
         "id": "10344",
-        "prog_no": "TLS11020",
+        "prog_No": "TLS11020",
         "prog_id": "21120",
         "prog_name": "扣款項目維護作業",
         "prog_up": "TLS11000",
@@ -3352,7 +3352,7 @@
           }
         ],
         "id": "10345",
-        "prog_no": "TLS12000",
+        "prog_No": "TLS12000",
         "prog_id": "",
         "prog_name": "商場招商管理",
         "prog_up": "TLS10000",
@@ -3422,7 +3422,7 @@
           }
         ],
         "id": "10346",
-        "prog_no": "TLS12010",
+        "prog_No": "TLS12010",
         "prog_id": "21210",
         "prog_name": "潛在客戶資料維護",
         "prog_up": "TLS12000",
@@ -3492,7 +3492,7 @@
           }
         ],
         "id": "10347",
-        "prog_no": "TLS12020",
+        "prog_No": "TLS12020",
         "prog_id": "21220",
         "prog_name": "專櫃訪談記錄維護",
         "prog_up": "TLS12000",
@@ -3562,7 +3562,7 @@
           }
         ],
         "id": "10348",
-        "prog_no": "TLS12040",
+        "prog_No": "TLS12040",
         "prog_id": "21230",
         "prog_name": "專櫃要約書維護",
         "prog_up": "TLS12000",
@@ -3632,7 +3632,7 @@
           }
         ],
         "id": "10349",
-        "prog_no": "TLS12050",
+        "prog_No": "TLS12050",
         "prog_id": "21240",
         "prog_name": "專櫃位置圖",
         "prog_up": "TLS12000",
@@ -3702,7 +3702,7 @@
           }
         ],
         "id": "10350",
-        "prog_no": "TLS12060",
+        "prog_No": "TLS12060",
         "prog_id": "21250",
         "prog_name": "招商進度監控",
         "prog_up": "TLS12000",
@@ -3772,7 +3772,7 @@
           }
         ],
         "id": "10351",
-        "prog_no": "TLS12070",
+        "prog_No": "TLS12070",
         "prog_id": "21260",
         "prog_name": "專櫃訪談紀錄追蹤表",
         "prog_up": "TLS12000",
@@ -3842,7 +3842,7 @@
           }
         ],
         "id": "10352",
-        "prog_no": "TLS13000",
+        "prog_No": "TLS13000",
         "prog_id": "",
         "prog_name": "合約管理",
         "prog_up": "TLS10000",
@@ -3912,7 +3912,7 @@
           }
         ],
         "id": "10353",
-        "prog_no": "TLS13010",
+        "prog_No": "TLS13010",
         "prog_id": "21310",
         "prog_name": "專櫃契約書維護",
         "prog_up": "TLS13000",
@@ -3982,7 +3982,7 @@
           }
         ],
         "id": "10354",
-        "prog_no": "TLS13020",
+        "prog_No": "TLS13020",
         "prog_id": "21330",
         "prog_name": "專櫃契約書續約維護作業",
         "prog_up": "TLS13000",
@@ -4052,7 +4052,7 @@
           }
         ],
         "id": "10355",
-        "prog_no": "TLS13030",
+        "prog_No": "TLS13030",
         "prog_id": "21340",
         "prog_name": "專櫃契約代扣款報表",
         "prog_up": "TLS13000",
@@ -4122,7 +4122,7 @@
           }
         ],
         "id": "10356",
-        "prog_no": "TLS13040",
+        "prog_No": "TLS13040",
         "prog_id": "21350",
         "prog_name": "專櫃契約抽成報表",
         "prog_up": "TLS13000",
@@ -4192,7 +4192,7 @@
           }
         ],
         "id": "10357",
-        "prog_no": "TLS13050",
+        "prog_No": "TLS13050",
         "prog_id": "21360",
         "prog_name": "年度目標營業額管制報表",
         "prog_up": "TLS13000",
@@ -4262,7 +4262,7 @@
           }
         ],
         "id": "10358",
-        "prog_no": "TLS13060",
+        "prog_No": "TLS13060",
         "prog_id": "21380",
         "prog_name": "櫃位營運事項明細查詢作業",
         "prog_up": "TLS13000",
@@ -4332,7 +4332,7 @@
           }
         ],
         "id": "10359",
-        "prog_no": "TLS13070",
+        "prog_No": "TLS13070",
         "prog_id": "21390",
         "prog_name": "調整櫃位合約一覽表",
         "prog_up": "TLS13000",
@@ -4402,7 +4402,7 @@
           }
         ],
         "id": "10360",
-        "prog_no": "TLS13080",
+        "prog_No": "TLS13080",
         "prog_id": "21320",
         "prog_name": "整批新增合約扣款作業",
         "prog_up": "TLS13000",
@@ -4472,7 +4472,7 @@
           }
         ],
         "id": "10361",
-        "prog_no": "TLS13090",
+        "prog_No": "TLS13090",
         "prog_id": "21370",
         "prog_name": "包底試算作業",
         "prog_up": "TLS13000",
@@ -4542,7 +4542,7 @@
           }
         ],
         "id": "10362",
-        "prog_no": "TLS14000",
+        "prog_No": "TLS14000",
         "prog_id": "",
         "prog_name": "管理報表",
         "prog_up": "TLS10000",
@@ -4612,7 +4612,7 @@
           }
         ],
         "id": "10363",
-        "prog_no": "TLS14010",
+        "prog_No": "TLS14010",
         "prog_id": "21410",
         "prog_name": "合約狀態清單",
         "prog_up": "TLS14000",
@@ -4682,7 +4682,7 @@
           }
         ],
         "id": "10364",
-        "prog_no": "TLS14020",
+        "prog_No": "TLS14020",
         "prog_id": "21420",
         "prog_name": "專櫃契約書列印",
         "prog_up": "TLS14000",
@@ -4752,7 +4752,7 @@
           }
         ],
         "id": "10365",
-        "prog_no": "TLS14030",
+        "prog_No": "TLS14030",
         "prog_id": "21430",
         "prog_name": "保證票彙總表",
         "prog_up": "TLS14000",
@@ -4822,7 +4822,7 @@
           }
         ],
         "id": "10366",
-        "prog_no": "TLS20000",
+        "prog_No": "TLS20000",
         "prog_id": "",
         "prog_name": "專櫃營運管理",
         "prog_up": "TLS00000",
@@ -4892,7 +4892,7 @@
           }
         ],
         "id": "10367",
-        "prog_no": "TLS21000",
+        "prog_No": "TLS21000",
         "prog_id": "",
         "prog_name": "基本資料設定",
         "prog_up": "TLS20000",
@@ -4962,7 +4962,7 @@
           }
         ],
         "id": "10368",
-        "prog_no": "TLS21020",
+        "prog_No": "TLS21020",
         "prog_id": "22110",
         "prog_name": "傳票項目之會計科目設定作業",
         "prog_up": "TLS21000",
@@ -5032,7 +5032,7 @@
           }
         ],
         "id": "10369",
-        "prog_no": "TLS21030",
+        "prog_No": "TLS21030",
         "prog_id": "22120",
         "prog_name": "對帳單備註維護作業",
         "prog_up": "TLS21000",
@@ -5102,7 +5102,7 @@
           }
         ],
         "id": "10370",
-        "prog_no": "TLS21040",
+        "prog_No": "TLS21040",
         "prog_id": "22130",
         "prog_name": "信用卡之卡種維護作業",
         "prog_up": "TLS21000",
@@ -5172,7 +5172,7 @@
           }
         ],
         "id": "10371",
-        "prog_no": "TLS21050",
+        "prog_No": "TLS21050",
         "prog_id": "22140",
         "prog_name": "專櫃營運前參數設定作業",
         "prog_up": "TLS21000",
@@ -5242,7 +5242,7 @@
           }
         ],
         "id": "10372",
-        "prog_no": "TLS22000",
+        "prog_No": "TLS22000",
         "prog_id": "",
         "prog_name": "系統監控管理作業",
         "prog_up": "TLS20000",
@@ -5312,7 +5312,7 @@
           }
         ],
         "id": "10373",
-        "prog_no": "TLS22010",
+        "prog_No": "TLS22010",
         "prog_id": "22210",
         "prog_name": "收銀機對帳查詢作業",
         "prog_up": "TLS22000",
@@ -5382,7 +5382,7 @@
           }
         ],
         "id": "10374",
-        "prog_no": "TLS22020",
+        "prog_No": "TLS22020",
         "prog_id": "22220",
         "prog_name": "系統監控報表",
         "prog_up": "TLS22000",
@@ -5452,7 +5452,7 @@
           }
         ],
         "id": "10375",
-        "prog_no": "TLS22030",
+        "prog_No": "TLS22030",
         "prog_id": "22230",
         "prog_name": "序號報表",
         "prog_up": "TLS22000",
@@ -5522,7 +5522,7 @@
           }
         ],
         "id": "10376",
-        "prog_no": "TLS22040",
+        "prog_No": "TLS22040",
         "prog_id": "22240",
         "prog_name": "電子發票上送筆數檢核表",
         "prog_up": "TLS22000",
@@ -5592,7 +5592,7 @@
           }
         ],
         "id": "10377",
-        "prog_no": "TLS22050",
+        "prog_No": "TLS22050",
         "prog_id": "22250",
         "prog_name": "第三方支付帳差報表",
         "prog_up": "TLS22000",
@@ -5662,7 +5662,7 @@
           }
         ],
         "id": "10378",
-        "prog_no": "TLS23000",
+        "prog_No": "TLS23000",
         "prog_id": "",
         "prog_name": "各類銷售查詢報表",
         "prog_up": "TLS20000",
@@ -5732,7 +5732,7 @@
           }
         ],
         "id": "10379",
-        "prog_no": "TLS23010",
+        "prog_No": "TLS23010",
         "prog_id": "22310",
         "prog_name": "型態別報表",
         "prog_up": "TLS23000",
@@ -5802,7 +5802,7 @@
           }
         ],
         "id": "10380",
-        "prog_no": "TLS23020",
+        "prog_No": "TLS23020",
         "prog_id": "22320",
         "prog_name": "折扣別報表",
         "prog_up": "TLS23000",
@@ -5872,7 +5872,7 @@
           }
         ],
         "id": "10381",
-        "prog_no": "TLS23030",
+        "prog_No": "TLS23030",
         "prog_id": "22330",
         "prog_name": "付款別報表",
         "prog_up": "TLS23000",
@@ -5942,7 +5942,7 @@
           }
         ],
         "id": "10382",
-        "prog_no": "TLS23040",
+        "prog_No": "TLS23040",
         "prog_id": "22340",
         "prog_name": "發票報表",
         "prog_up": "TLS23000",
@@ -6012,7 +6012,7 @@
           }
         ],
         "id": "10383",
-        "prog_no": "TLS23050",
+        "prog_No": "TLS23050",
         "prog_id": "22350",
         "prog_name": "收銀機日報表",
         "prog_up": "TLS23000",
@@ -6082,7 +6082,7 @@
           }
         ],
         "id": "10384",
-        "prog_no": "TLS23060",
+        "prog_No": "TLS23060",
         "prog_id": "22360",
         "prog_name": "收銀機區間報表",
         "prog_up": "TLS23000",
@@ -6152,7 +6152,7 @@
           }
         ],
         "id": "10385",
-        "prog_no": "TLS23070",
+        "prog_No": "TLS23070",
         "prog_id": "22370",
         "prog_name": "專櫃收銀機月報表",
         "prog_up": "TLS23000",
@@ -6222,7 +6222,7 @@
           }
         ],
         "id": "10386",
-        "prog_no": "TLS23080",
+        "prog_No": "TLS23080",
         "prog_id": "22380",
         "prog_name": "支付工具實收報表",
         "prog_up": "TLS23000",
@@ -6292,7 +6292,7 @@
           }
         ],
         "id": "10387",
-        "prog_no": "TLS23090",
+        "prog_No": "TLS23090",
         "prog_id": "22390",
         "prog_name": "信用卡明細表",
         "prog_up": "TLS23000",
@@ -6362,7 +6362,7 @@
           }
         ],
         "id": "10388",
-        "prog_no": "TLS23100",
+        "prog_No": "TLS23100",
         "prog_id": "22400",
         "prog_name": "付款別明細表",
         "prog_up": "TLS23000",
@@ -6432,7 +6432,7 @@
           }
         ],
         "id": "10389",
-        "prog_no": "TLS23110",
+        "prog_No": "TLS23110",
         "prog_id": "22410",
         "prog_name": "折扣別月報表",
         "prog_up": "TLS23000",
@@ -6502,7 +6502,7 @@
           }
         ],
         "id": "10390",
-        "prog_no": "TLS23120",
+        "prog_No": "TLS23120",
         "prog_id": "22420",
         "prog_name": "專櫃日對帳單",
         "prog_up": "TLS23000",
@@ -6572,7 +6572,7 @@
           }
         ],
         "id": "10391",
-        "prog_no": "TLS23130",
+        "prog_No": "TLS23130",
         "prog_id": "22430",
         "prog_name": "信用卡銷貨月報表",
         "prog_up": "TLS23000",
@@ -6642,7 +6642,7 @@
           }
         ],
         "id": "10392",
-        "prog_no": "TLS23140",
+        "prog_No": "TLS23140",
         "prog_id": "22440",
         "prog_name": "有價券查詢報表",
         "prog_up": "TLS23000",
@@ -6712,7 +6712,7 @@
           }
         ],
         "id": "10393",
-        "prog_no": "TLS24000",
+        "prog_No": "TLS24000",
         "prog_id": "",
         "prog_name": "交易資料修正作業",
         "prog_up": "TLS20000",
@@ -6782,7 +6782,7 @@
           }
         ],
         "id": "10394",
-        "prog_no": "TLS24010",
+        "prog_No": "TLS24010",
         "prog_id": "22410",
         "prog_name": "交易補登作業",
         "prog_up": "TLS24000",
@@ -6852,7 +6852,7 @@
           }
         ],
         "id": "10395",
-        "prog_no": "TLS24080",
+        "prog_No": "TLS24080",
         "prog_id": "22420",
         "prog_name": "交易資料修正報表",
         "prog_up": "TLS24000",
@@ -6922,7 +6922,7 @@
           }
         ],
         "id": "10396",
-        "prog_no": "TLS25000",
+        "prog_No": "TLS25000",
         "prog_id": "",
         "prog_name": "營運管理作業",
         "prog_up": "TLS20000",
@@ -6992,7 +6992,7 @@
           }
         ],
         "id": "10397",
-        "prog_no": "TLS25030",
+        "prog_No": "TLS25030",
         "prog_id": "22510",
         "prog_name": "商場違規扣款維護作業",
         "prog_up": "TLS25000",
@@ -7062,7 +7062,7 @@
           }
         ],
         "id": "10398",
-        "prog_no": "TLS26000",
+        "prog_No": "TLS26000",
         "prog_id": "",
         "prog_name": "預售管理作業",
         "prog_up": "TLS20000",
@@ -7132,7 +7132,7 @@
           }
         ],
         "id": "10399",
-        "prog_no": "TLS26010",
+        "prog_No": "TLS26010",
         "prog_id": "22610",
         "prog_name": "預購活動檔期設定",
         "prog_up": "TLS26000",
@@ -7202,7 +7202,7 @@
           }
         ],
         "id": "10400",
-        "prog_no": "TLS26020",
+        "prog_No": "TLS26020",
         "prog_id": "22620",
         "prog_name": "預售總表",
         "prog_up": "TLS26000",
@@ -7272,7 +7272,7 @@
           }
         ],
         "id": "10401",
-        "prog_no": "TLS26030",
+        "prog_No": "TLS26030",
         "prog_id": "22630",
         "prog_name": "預售明細表",
         "prog_up": "TLS26000",
@@ -7342,7 +7342,7 @@
           }
         ],
         "id": "10402",
-        "prog_no": "TLS26040",
+        "prog_No": "TLS26040",
         "prog_id": "22640",
         "prog_name": "預售管理作業",
         "prog_up": "TLS26000",
@@ -7412,7 +7412,7 @@
           }
         ],
         "id": "10403",
-        "prog_no": "TLS26050",
+        "prog_No": "TLS26050",
         "prog_id": "22650",
         "prog_name": "組織預售業績總表",
         "prog_up": "TLS26000",
@@ -7482,7 +7482,7 @@
           }
         ],
         "id": "10404",
-        "prog_no": "TLS26060",
+        "prog_No": "TLS26060",
         "prog_id": "22660",
         "prog_name": "中分類預售業績總表",
         "prog_up": "TLS26000",
@@ -7552,7 +7552,7 @@
           }
         ],
         "id": "10405",
-        "prog_no": "TLS26070",
+        "prog_No": "TLS26070",
         "prog_id": "22670",
         "prog_name": "各櫃預售業績總表",
         "prog_up": "TLS26000",
@@ -7622,7 +7622,7 @@
           }
         ],
         "id": "10406",
-        "prog_no": "TLS27000",
+        "prog_No": "TLS27000",
         "prog_id": "",
         "prog_name": "現金/信用卡實收帳款管理作業",
         "prog_up": "TLS20000",
@@ -7692,7 +7692,7 @@
           }
         ],
         "id": "10407",
-        "prog_no": "TLS27010",
+        "prog_No": "TLS27010",
         "prog_id": "22710",
         "prog_name": "保全現金資料轉入作業",
         "prog_up": "TLS27000",
@@ -7762,7 +7762,7 @@
           }
         ],
         "id": "10408",
-        "prog_no": "TLS27020",
+        "prog_No": "TLS27020",
         "prog_id": "22720",
         "prog_name": "保全實收現金調整作業",
         "prog_up": "TLS27000",
@@ -7832,7 +7832,7 @@
           }
         ],
         "id": "10409",
-        "prog_no": "TLS27030",
+        "prog_No": "TLS27030",
         "prog_id": "22730",
         "prog_name": "信用卡資料轉入作業",
         "prog_up": "TLS27000",
@@ -7902,7 +7902,7 @@
           }
         ],
         "id": "10410",
-        "prog_no": "TLS27040",
+        "prog_No": "TLS27040",
         "prog_id": "22740",
         "prog_name": "實收信用卡調整作業",
         "prog_up": "TLS27000",
@@ -7972,7 +7972,7 @@
           }
         ],
         "id": "10411",
-        "prog_no": "TLS27050",
+        "prog_No": "TLS27050",
         "prog_id": "22750",
         "prog_name": "查詢無系統帳資料報表",
         "prog_up": "TLS27000",
@@ -8042,7 +8042,7 @@
           }
         ],
         "id": "10412",
-        "prog_no": "TLS28000",
+        "prog_No": "TLS28000",
         "prog_id": "",
         "prog_name": "繳袋管理作業",
         "prog_up": "TLS20000",
@@ -8112,7 +8112,7 @@
           }
         ],
         "id": "10413",
-        "prog_no": "TLS28020",
+        "prog_No": "TLS28020",
         "prog_id": "22810",
         "prog_name": "領袋繳袋作業",
         "prog_up": "TLS28000",
@@ -8182,7 +8182,7 @@
           }
         ],
         "id": "10414",
-        "prog_no": "TLS28030",
+        "prog_No": "TLS28030",
         "prog_id": "22820",
         "prog_name": "繳袋狀況表",
         "prog_up": "TLS28000",
@@ -8252,7 +8252,7 @@
           }
         ],
         "id": "10415",
-        "prog_no": "TLS28050",
+        "prog_No": "TLS28050",
         "prog_id": "22830",
         "prog_name": "收銀員領袋表",
         "prog_up": "TLS28000",
@@ -8322,7 +8322,7 @@
           }
         ],
         "id": "10416",
-        "prog_no": "TLS29000",
+        "prog_No": "TLS29000",
         "prog_id": "",
         "prog_name": "專櫃特殊抽成折扣作業",
         "prog_up": "TLS20000",
@@ -8392,7 +8392,7 @@
           }
         ],
         "id": "10417",
-        "prog_no": "TLS29010",
+        "prog_No": "TLS29010",
         "prog_id": "22910",
         "prog_name": "折扣開放維護作業",
         "prog_up": "TLS29000",
@@ -8462,7 +8462,7 @@
           }
         ],
         "id": "10418",
-        "prog_no": "TLS2A000",
+        "prog_No": "TLS2A000",
         "prog_id": "",
         "prog_name": "日對帳審核作業",
         "prog_up": "TLS20000",
@@ -8532,7 +8532,7 @@
           }
         ],
         "id": "10419",
-        "prog_no": "TLS2A010",
+        "prog_No": "TLS2A010",
         "prog_id": "22101",
         "prog_name": "各支付工具審核作業",
         "prog_up": "TLS2A000",
@@ -8602,7 +8602,7 @@
           }
         ],
         "id": "10420",
-        "prog_no": "TLS2A020",
+        "prog_No": "TLS2A020",
         "prog_id": "22102",
         "prog_name": "未審核收銀機台報表",
         "prog_up": "TLS2A000",
@@ -8672,7 +8672,7 @@
           }
         ],
         "id": "10421",
-        "prog_no": "TLS2A030",
+        "prog_No": "TLS2A030",
         "prog_id": "22103",
         "prog_name": "溢欠彙總表",
         "prog_up": "TLS2A000",
@@ -8742,7 +8742,7 @@
           }
         ],
         "id": "10422",
-        "prog_no": "TLS2A040",
+        "prog_No": "TLS2A040",
         "prog_id": "22104",
         "prog_name": "缺單據/作廢發票報表",
         "prog_up": "TLS2A000",
@@ -8812,7 +8812,7 @@
           }
         ],
         "id": "10423",
-        "prog_no": "TLS2A050",
+        "prog_No": "TLS2A050",
         "prog_id": "22105",
         "prog_name": "第三方支付帳差報表",
         "prog_up": "TLS2A000",
@@ -8882,7 +8882,7 @@
           }
         ],
         "id": "10424",
-        "prog_no": "TLS2B000",
+        "prog_No": "TLS2B000",
         "prog_id": "",
         "prog_name": "收銀溢欠管理作業",
         "prog_up": "TLS20000",
@@ -8952,7 +8952,7 @@
           }
         ],
         "id": "10425",
-        "prog_no": "TLS2B010",
+        "prog_No": "TLS2B010",
         "prog_id": "22111",
         "prog_name": "收銀員溢欠表(日)",
         "prog_up": "TLS2B000",
@@ -9022,7 +9022,7 @@
           }
         ],
         "id": "10426",
-        "prog_no": "TLS2B020",
+        "prog_No": "TLS2B020",
         "prog_id": "22112",
         "prog_name": "收銀員溢欠表(月)",
         "prog_up": "TLS2B000",
@@ -9092,7 +9092,7 @@
           }
         ],
         "id": "10427",
-        "prog_no": "TLS2B030",
+        "prog_No": "TLS2B030",
         "prog_id": "22113",
         "prog_name": "專櫃收銀機台溢欠表",
         "prog_up": "TLS2B000",
@@ -9162,7 +9162,7 @@
           }
         ],
         "id": "10428",
-        "prog_no": "TLS2C000",
+        "prog_No": "TLS2C000",
         "prog_id": "",
         "prog_name": "日結關帳作業",
         "prog_up": "TLS20000",
@@ -9232,7 +9232,7 @@
           }
         ],
         "id": "10429",
-        "prog_no": "TLS2C010",
+        "prog_No": "TLS2C010",
         "prog_id": "22121",
         "prog_name": "專櫃日暫存傳票報表",
         "prog_up": "TLS2C000",
@@ -9302,7 +9302,7 @@
           }
         ],
         "id": "10430",
-        "prog_no": "TLS2C020",
+        "prog_No": "TLS2C020",
         "prog_id": "22122",
         "prog_name": "日結前檢查作業",
         "prog_up": "TLS2C000",
@@ -9372,7 +9372,7 @@
           }
         ],
         "id": "10431",
-        "prog_no": "TLS2C030",
+        "prog_No": "TLS2C030",
         "prog_id": "22123",
         "prog_name": "日結關帳作業",
         "prog_up": "TLS2C000",
@@ -9442,7 +9442,7 @@
           }
         ],
         "id": "10432",
-        "prog_no": "TLS2C040",
+        "prog_No": "TLS2C040",
         "prog_id": "22124",
         "prog_name": "專櫃暫存傳票查詢作業",
         "prog_up": "TLS2C000",
@@ -9512,7 +9512,7 @@
           }
         ],
         "id": "10433",
-        "prog_no": "TLS2C050",
+        "prog_No": "TLS2C050",
         "prog_id": "22125",
         "prog_name": "發票匯總作業",
         "prog_up": "TLS2C000",
@@ -9582,7 +9582,7 @@
           }
         ],
         "id": "10434",
-        "prog_no": "TLS2D000",
+        "prog_No": "TLS2D000",
         "prog_id": "",
         "prog_name": "專櫃扣款處理作業",
         "prog_up": "TLS20000",
@@ -9652,7 +9652,7 @@
           }
         ],
         "id": "10435",
-        "prog_no": "TLS2D010",
+        "prog_No": "TLS2D010",
         "prog_id": "22131",
         "prog_name": "代扣款補登作業",
         "prog_up": "TLS2D000",
@@ -9722,7 +9722,7 @@
           }
         ],
         "id": "10436",
-        "prog_no": "TLS2D020",
+        "prog_No": "TLS2D020",
         "prog_id": "22132",
         "prog_name": "專櫃代扣款試算作業",
         "prog_up": "TLS2D000",
@@ -9792,7 +9792,7 @@
           }
         ],
         "id": "10437",
-        "prog_no": "TLS2D030",
+        "prog_No": "TLS2D030",
         "prog_id": "22133",
         "prog_name": "專櫃代扣款結算作業",
         "prog_up": "TLS2D000",
@@ -9862,7 +9862,7 @@
           }
         ],
         "id": "10438",
-        "prog_no": "TLS2D040",
+        "prog_No": "TLS2D040",
         "prog_id": "22134",
         "prog_name": "專櫃代扣款明細表",
         "prog_up": "TLS2D000",
@@ -9932,7 +9932,7 @@
           }
         ],
         "id": "10439",
-        "prog_no": "TLS2D050",
+        "prog_No": "TLS2D050",
         "prog_id": "22135",
         "prog_name": "部門使用券類設定作業",
         "prog_up": "TLS2D000",
@@ -10002,7 +10002,7 @@
           }
         ],
         "id": "10440",
-        "prog_no": "TLS2D060",
+        "prog_No": "TLS2D060",
         "prog_id": "22136",
         "prog_name": "專櫃活動設定作業",
         "prog_up": "TLS2D000",
@@ -10072,7 +10072,7 @@
           }
         ],
         "id": "10441",
-        "prog_no": "TLS2E000",
+        "prog_No": "TLS2E000",
         "prog_id": "",
         "prog_name": "專櫃帳款處理作業",
         "prog_up": "TLS20000",
@@ -10142,7 +10142,7 @@
           }
         ],
         "id": "10442",
-        "prog_no": "TLS2E010",
+        "prog_No": "TLS2E010",
         "prog_id": "22141",
         "prog_name": "專櫃租金結算作業",
         "prog_up": "TLS2E000",
@@ -10212,7 +10212,7 @@
           }
         ],
         "id": "10443",
-        "prog_no": "TLS2E020",
+        "prog_No": "TLS2E020",
         "prog_id": "22142",
         "prog_name": "專櫃抽成金額結算作業",
         "prog_up": "TLS2E000",
@@ -10282,7 +10282,7 @@
           }
         ],
         "id": "10444",
-        "prog_no": "TLS2E030",
+        "prog_No": "TLS2E030",
         "prog_id": "22143",
         "prog_name": "專櫃帳款試算作業",
         "prog_up": "TLS2E000",
@@ -10352,7 +10352,7 @@
           }
         ],
         "id": "10445",
-        "prog_no": "TLS2E050",
+        "prog_No": "TLS2E050",
         "prog_id": "22144",
         "prog_name": "專櫃帳款試算彙總表",
         "prog_up": "TLS2E000",
@@ -10422,7 +10422,7 @@
           }
         ],
         "id": "10446",
-        "prog_no": "TLS2E060",
+        "prog_No": "TLS2E060",
         "prog_id": "22145",
         "prog_name": "專櫃結帳前調整作業",
         "prog_up": "TLS2E000",
@@ -10492,7 +10492,7 @@
           }
         ],
         "id": "10447",
-        "prog_no": "TLS2E070",
+        "prog_No": "TLS2E070",
         "prog_id": "22146",
         "prog_name": "專櫃帳款結算作業",
         "prog_up": "TLS2E000",
@@ -10562,7 +10562,7 @@
           }
         ],
         "id": "10448",
-        "prog_no": "TLS2E080",
+        "prog_No": "TLS2E080",
         "prog_id": "22147",
         "prog_name": "專櫃對帳單",
         "prog_up": "TLS2E000",
@@ -10632,7 +10632,7 @@
           }
         ],
         "id": "10449",
-        "prog_no": "TLS2E090",
+        "prog_No": "TLS2E090",
         "prog_id": "22148",
         "prog_name": "專櫃帳款結算彙總表",
         "prog_up": "TLS2E000",
@@ -10702,7 +10702,7 @@
           }
         ],
         "id": "10450",
-        "prog_no": "TLS2E100",
+        "prog_No": "TLS2E100",
         "prog_id": "22149",
         "prog_name": "年度對帳單",
         "prog_up": "TLS2E000",
@@ -10772,7 +10772,7 @@
           }
         ],
         "id": "10451",
-        "prog_no": "TLS2F000",
+        "prog_No": "TLS2F000",
         "prog_id": "",
         "prog_name": "專櫃廠商進貨帳款處理作業",
         "prog_up": "TLS20000",
@@ -10842,7 +10842,7 @@
           }
         ],
         "id": "10452",
-        "prog_no": "TLS2F010",
+        "prog_No": "TLS2F010",
         "prog_id": "22151",
         "prog_name": "廠商發票請款登入暨維護作業",
         "prog_up": "TLS2F000",
@@ -10912,7 +10912,7 @@
           }
         ],
         "id": "10453",
-        "prog_no": "TLS2F020",
+        "prog_No": "TLS2F020",
         "prog_id": "22152",
         "prog_name": "專櫃暫存應付帳款產生作業",
         "prog_up": "TLS2F000",
@@ -10982,7 +10982,7 @@
           }
         ],
         "id": "10454",
-        "prog_no": "TLS2F030",
+        "prog_No": "TLS2F030",
         "prog_id": "22153",
         "prog_name": "專櫃進項發票未開立查詢作業",
         "prog_up": "TLS2F000",
@@ -11052,7 +11052,7 @@
           }
         ],
         "id": "10455",
-        "prog_no": "TLS2G000",
+        "prog_No": "TLS2G000",
         "prog_id": "",
         "prog_name": "預估業績管理作業",
         "prog_up": "TLS20000",
@@ -11122,7 +11122,7 @@
           }
         ],
         "id": "10456",
-        "prog_no": "TLS2G010",
+        "prog_No": "TLS2G010",
         "prog_id": "22161",
         "prog_name": "專櫃預估業績轉入作業",
         "prog_up": "TLS2G000",
@@ -11192,7 +11192,7 @@
           }
         ],
         "id": "10457",
-        "prog_no": "TLS2G020",
+        "prog_No": "TLS2G020",
         "prog_id": "22162",
         "prog_name": "專櫃預估業績維護作業",
         "prog_up": "TLS2G000",
@@ -11262,7 +11262,7 @@
           }
         ],
         "id": "10458",
-        "prog_no": "TLS2G030",
+        "prog_No": "TLS2G030",
         "prog_id": "22163",
         "prog_name": "專櫃預估業績報表",
         "prog_up": "TLS2G000",
@@ -11332,7 +11332,7 @@
           }
         ],
         "id": "10459",
-        "prog_no": "TLS2G040",
+        "prog_No": "TLS2G040",
         "prog_id": "22164",
         "prog_name": "預算日報表",
         "prog_up": "TLS2G000",
@@ -11402,7 +11402,7 @@
           }
         ],
         "id": "10460",
-        "prog_no": "TLS2H000",
+        "prog_No": "TLS2H000",
         "prog_id": "",
         "prog_name": "銷項發票套印管理作業",
         "prog_up": "TLS20000",
@@ -11472,7 +11472,7 @@
           }
         ],
         "id": "10461",
-        "prog_no": "TLS2H010",
+        "prog_No": "TLS2H010",
         "prog_id": "22171",
         "prog_name": "租金發票套印作業",
         "prog_up": "TLS2H000",
@@ -11542,7 +11542,7 @@
           }
         ],
         "id": "10462",
-        "prog_no": "TLS2H020",
+        "prog_No": "TLS2H020",
         "prog_id": "22172",
         "prog_name": "專櫃代扣款發票套印作業",
         "prog_up": "TLS2H000",
@@ -11612,7 +11612,7 @@
           }
         ],
         "id": "10463",
-        "prog_no": "TLS2H030",
+        "prog_No": "TLS2H030",
         "prog_id": "22173",
         "prog_name": "專櫃抽成發票套印作業",
         "prog_up": "TLS2H000",
@@ -11682,7 +11682,7 @@
           }
         ],
         "id": "10464",
-        "prog_no": "TLS2I000",
+        "prog_No": "TLS2I000",
         "prog_id": "",
         "prog_name": "發票換開管理作業",
         "prog_up": "TLS20000",
@@ -11752,7 +11752,7 @@
           }
         ],
         "id": "10465",
-        "prog_no": "TLS2J010",
+        "prog_No": "TLS2J010",
         "prog_id": "22181",
         "prog_name": "換開品項維護作業",
         "prog_up": "TLS2I000",
@@ -11822,9 +11822,9 @@
           }
         ],
         "id": "10466",
-        "prog_no": "TLS2J020",
+        "prog_No": "TLS2J020",
         "prog_id": "22182",
-        "prog_name": "業種換開品項維護作業",
+        "prog_name": "大分類換開品項維護作業",
         "prog_up": "TLS2I000",
         "module_no": "TLS",
         "sub_module_no": "TLS20000",
@@ -11892,7 +11892,7 @@
           }
         ],
         "id": "10467",
-        "prog_no": "TLS2J030",
+        "prog_No": "TLS2J030",
         "prog_id": "22183",
         "prog_name": "發票換開作業",
         "prog_up": "TLS2I000",
@@ -11962,7 +11962,7 @@
           }
         ],
         "id": "10468",
-        "prog_no": "TLS2J040",
+        "prog_No": "TLS2J040",
         "prog_id": "22184",
         "prog_name": "三聯式發票查詢列印",
         "prog_up": "TLS2I000",
@@ -12032,7 +12032,7 @@
           }
         ],
         "id": "10469",
-        "prog_no": "TLS30000",
+        "prog_No": "TLS30000",
         "prog_id": "",
         "prog_name": "決策支援管理",
         "prog_up": "TLS00000",
@@ -12102,7 +12102,7 @@
           }
         ],
         "id": "10470",
-        "prog_no": "TLS31000",
+        "prog_No": "TLS31000",
         "prog_id": "",
         "prog_name": "銷售業績查詢",
         "prog_up": "TLS30000",
@@ -12172,7 +12172,7 @@
           }
         ],
         "id": "10471",
-        "prog_no": "TLS31010",
+        "prog_No": "TLS31010",
         "prog_id": "23110",
         "prog_name": "即時業績查詢",
         "prog_up": "TLS31000",
@@ -12242,7 +12242,7 @@
           }
         ],
         "id": "10472",
-        "prog_no": "TLS31020",
+        "prog_No": "TLS31020",
         "prog_id": "23120",
         "prog_name": "各樓層之營業報表",
         "prog_up": "TLS31000",
@@ -12312,7 +12312,7 @@
           }
         ],
         "id": "10473",
-        "prog_no": "TLS31030",
+        "prog_No": "TLS31030",
         "prog_id": "23130",
         "prog_name": "各大分類之營業報表",
         "prog_up": "TLS31000",
@@ -12382,7 +12382,7 @@
           }
         ],
         "id": "10474",
-        "prog_no": "TLS31040",
+        "prog_No": "TLS31040",
         "prog_id": "23140",
         "prog_name": "各櫃別之營業報表",
         "prog_up": "TLS31000",
@@ -12452,7 +12452,7 @@
           }
         ],
         "id": "10475",
-        "prog_no": "TLS31050",
+        "prog_No": "TLS31050",
         "prog_id": "23150",
         "prog_name": "各抽成別之營業報表",
         "prog_up": "TLS31000",
@@ -12522,7 +12522,7 @@
           }
         ],
         "id": "10476",
-        "prog_no": "TLS31060",
+        "prog_No": "TLS31060",
         "prog_id": "23160",
         "prog_name": "各組織之營業報表",
         "prog_up": "TLS31000",
@@ -12592,7 +12592,7 @@
           }
         ],
         "id": "10477",
-        "prog_no": "TLS31070",
+        "prog_No": "TLS31070",
         "prog_id": "23170",
         "prog_name": "各營業型態之營業報表",
         "prog_up": "TLS31000",
@@ -12662,7 +12662,7 @@
           }
         ],
         "id": "10478",
-        "prog_no": "TLS31080",
+        "prog_No": "TLS31080",
         "prog_id": "23180",
         "prog_name": "各時段之樓層營業報表",
         "prog_up": "TLS31000",
@@ -12732,9 +12732,9 @@
           }
         ],
         "id": "10479",
-        "prog_no": "TLS31090",
+        "prog_No": "TLS31090",
         "prog_id": "23190",
-        "prog_name": "時段之業種營業報表",
+        "prog_name": "時段之大分類營業報表",
         "prog_up": "TLS31000",
         "module_no": "TLS",
         "sub_module_no": "TLS30000",
@@ -12802,7 +12802,7 @@
           }
         ],
         "id": "10480",
-        "prog_no": "TLS32000",
+        "prog_No": "TLS32000",
         "prog_id": "",
         "prog_name": "銷售業績分析",
         "prog_up": "TLS30000",
@@ -12872,7 +12872,7 @@
           }
         ],
         "id": "10481",
-        "prog_no": "TLS32010",
+        "prog_No": "TLS32010",
         "prog_id": "23210",
         "prog_name": "銷售排名分析報表",
         "prog_up": "TLS32000",
@@ -12942,7 +12942,7 @@
           }
         ],
         "id": "10482",
-        "prog_no": "TLS32020",
+        "prog_No": "TLS32020",
         "prog_id": "23220",
         "prog_name": "期間業績分析報表",
         "prog_up": "TLS32000",
@@ -13012,7 +13012,7 @@
           }
         ],
         "id": "10483",
-        "prog_no": "TLS32030",
+        "prog_No": "TLS32030",
         "prog_id": "23230",
         "prog_name": "成長率分析報表",
         "prog_up": "TLS32000",
@@ -13082,7 +13082,7 @@
           }
         ],
         "id": "10484",
-        "prog_no": "TLS32040",
+        "prog_No": "TLS32040",
         "prog_id": "23240",
         "prog_name": "組織業績總表",
         "prog_up": "TLS32000",
@@ -13152,7 +13152,7 @@
           }
         ],
         "id": "10485",
-        "prog_no": "TLS32050",
+        "prog_No": "TLS32050",
         "prog_id": "23250",
         "prog_name": "中分類業績報表",
         "prog_up": "TLS32000",
@@ -13222,7 +13222,7 @@
           }
         ],
         "id": "10486",
-        "prog_no": "TLS32060",
+        "prog_No": "TLS32060",
         "prog_id": "23260",
         "prog_name": "各櫃業績報表",
         "prog_up": "TLS32000",
@@ -13292,7 +13292,7 @@
           }
         ],
         "id": "10487",
-        "prog_no": "TLS40000",
+        "prog_No": "TLS40000",
         "prog_id": "",
         "prog_name": "POS網管系統",
         "prog_up": "TLS00000",
@@ -13362,7 +13362,7 @@
           }
         ],
         "id": "10488",
-        "prog_no": "TLS41000",
+        "prog_No": "TLS41000",
         "prog_id": "",
         "prog_name": "收銀機基本資料管理",
         "prog_up": "TLS40000",
@@ -13432,7 +13432,7 @@
           }
         ],
         "id": "10489",
-        "prog_no": "TLS41010",
+        "prog_No": "TLS41010",
         "prog_id": "24110",
         "prog_name": "收銀機基本資料維護",
         "prog_up": "TLS41000",
@@ -13502,7 +13502,7 @@
           }
         ],
         "id": "10490",
-        "prog_no": "TLS41020",
+        "prog_No": "TLS41020",
         "prog_id": "24120",
         "prog_name": "收銀機EDC資料維護",
         "prog_up": "TLS41000",
@@ -13572,7 +13572,7 @@
           }
         ],
         "id": "10491",
-        "prog_no": "TLS41030",
+        "prog_No": "TLS41030",
         "prog_id": "24130",
         "prog_name": "收銀專櫃人員資料維護作業",
         "prog_up": "TLS41000",
@@ -13642,7 +13642,7 @@
           }
         ],
         "id": "10492",
-        "prog_no": "TLS41040",
+        "prog_No": "TLS41040",
         "prog_id": "24140",
         "prog_name": "發票訊息及通告維護作業",
         "prog_up": "TLS41000",
@@ -13712,7 +13712,7 @@
           }
         ],
         "id": "10493",
-        "prog_no": "TLS41050",
+        "prog_No": "TLS41050",
         "prog_id": "24150",
         "prog_name": "收銀機發票安全量參數維護作業",
         "prog_up": "TLS41000",
@@ -13782,7 +13782,7 @@
           }
         ],
         "id": "10494",
-        "prog_no": "TLS42000",
+        "prog_No": "TLS42000",
         "prog_id": "",
         "prog_name": "鍵盤設定管理",
         "prog_up": "TLS40000",
@@ -13852,7 +13852,7 @@
           }
         ],
         "id": "10495",
-        "prog_no": "TLS42010",
+        "prog_No": "TLS42010",
         "prog_id": "24210",
         "prog_name": "收銀觸控按鍵設定作業",
         "prog_up": "TLS42000",
@@ -13922,7 +13922,7 @@
           }
         ],
         "id": "10496",
-        "prog_no": "TLS42020",
+        "prog_No": "TLS42020",
         "prog_id": "24220",
         "prog_name": "收銀菜單設定",
         "prog_up": "TLS42000",
@@ -13992,7 +13992,7 @@
           }
         ],
         "id": "10497",
-        "prog_no": "TLS43000",
+        "prog_No": "TLS43000",
         "prog_id": "",
         "prog_name": "訊息維護作業",
         "prog_up": "TLS40000",
@@ -14062,7 +14062,7 @@
           }
         ],
         "id": "10498",
-        "prog_no": "TLS43010",
+        "prog_No": "TLS43010",
         "prog_id": "24310",
         "prog_name": "廣告媒體播放設定作業",
         "prog_up": "TLS43000",
@@ -14132,7 +14132,7 @@
           }
         ],
         "id": "10499",
-        "prog_no": "TLS43020",
+        "prog_No": "TLS43020",
         "prog_id": "24320",
         "prog_name": "訊息審核作業",
         "prog_up": "TLS43000",
@@ -14202,7 +14202,7 @@
           }
         ],
         "id": "10500",
-        "prog_no": "TLS43030",
+        "prog_No": "TLS43030",
         "prog_id": "24330",
         "prog_name": "收銀機群組維護作業",
         "prog_up": "TLS43000",
@@ -14272,7 +14272,7 @@
           }
         ],
         "id": "10501",
-        "prog_no": "TLS44000",
+        "prog_No": "TLS44000",
         "prog_id": "",
         "prog_name": "網路監看管理",
         "prog_up": "TLS40000",
@@ -14342,7 +14342,7 @@
           }
         ],
         "id": "10502",
-        "prog_no": "TLS44010",
+        "prog_No": "TLS44010",
         "prog_id": "24410",
         "prog_name": "POS即時連線監看",
         "prog_up": "TLS44000",
@@ -14412,7 +14412,7 @@
           }
         ],
         "id": "10503",
-        "prog_no": "TLS44020",
+        "prog_No": "TLS44020",
         "prog_id": "24420",
         "prog_name": "EDC即時連線監看",
         "prog_up": "TLS44000",
@@ -14482,7 +14482,7 @@
           }
         ],
         "id": "10504",
-        "prog_no": "TLS45000",
+        "prog_No": "TLS45000",
         "prog_id": "",
         "prog_name": "報表管理",
         "prog_up": "TLS40000",
@@ -14552,7 +14552,7 @@
           }
         ],
         "id": "10505",
-        "prog_no": "TLS45010",
+        "prog_No": "TLS45010",
         "prog_id": "24510",
         "prog_name": "收銀機群組報表",
         "prog_up": "TLS45000",
@@ -14622,7 +14622,7 @@
           }
         ],
         "id": "10506",
-        "prog_no": "TLS45020",
+        "prog_No": "TLS45020",
         "prog_id": "24520",
         "prog_name": "收銀機異動查詢",
         "prog_up": "TLS45000",
@@ -14692,7 +14692,7 @@
           }
         ],
         "id": "10507",
-        "prog_no": "TLS45030",
+        "prog_No": "TLS45030",
         "prog_id": "24530",
         "prog_name": "收銀機開關機時間表",
         "prog_up": "TLS45000",
@@ -14762,7 +14762,7 @@
           }
         ],
         "id": "10508",
-        "prog_no": "TLS46000",
+        "prog_No": "TLS46000",
         "prog_id": "",
         "prog_name": "TM管理資料",
         "prog_up": "TLS40000",
@@ -14832,7 +14832,7 @@
           }
         ],
         "id": "10509",
-        "prog_no": "TLS46010",
+        "prog_No": "TLS46010",
         "prog_id": "24610",
         "prog_name": "網路位置設定",
         "prog_up": "TLS46000",
@@ -14902,7 +14902,7 @@
           }
         ],
         "id": "10510",
-        "prog_no": "TLS46020",
+        "prog_No": "TLS46020",
         "prog_id": "24620",
         "prog_name": "POS環境變數維護作業",
         "prog_up": "TLS46000",
@@ -14972,7 +14972,7 @@
           }
         ],
         "id": "10511",
-        "prog_no": "TLS46030",
+        "prog_No": "TLS46030",
         "prog_id": "24630",
         "prog_name": "收銀機異動排程維護",
         "prog_up": "TLS46000",
@@ -15042,7 +15042,7 @@
           }
         ],
         "id": "10512",
-        "prog_no": "TLS46040",
+        "prog_No": "TLS46040",
         "prog_id": "24640",
         "prog_name": "TM監控報表",
         "prog_up": "TLS46000",
@@ -15112,7 +15112,7 @@
           }
         ],
         "id": "10513",
-        "prog_no": "TLS47000",
+        "prog_No": "TLS47000",
         "prog_id": "",
         "prog_name": "收銀機下傳管理作業",
         "prog_up": "TLS40000",
@@ -15182,7 +15182,7 @@
           }
         ],
         "id": "10514",
-        "prog_no": "TLS47010",
+        "prog_No": "TLS47010",
         "prog_id": "24710",
         "prog_name": "整檔下傳作業",
         "prog_up": "TLS47000",
@@ -15252,7 +15252,7 @@
           }
         ],
         "id": "10515",
-        "prog_no": "TLS50000",
+        "prog_No": "TLS50000",
         "prog_id": "",
         "prog_name": "自營管理系統",
         "prog_up": "TLS00000",
@@ -15322,7 +15322,7 @@
           }
         ],
         "id": "10516",
-        "prog_no": "TLS51000",
+        "prog_No": "TLS51000",
         "prog_id": "",
         "prog_name": "基本資料管理作業",
         "prog_up": "TLS50000",
@@ -15392,7 +15392,7 @@
           }
         ],
         "id": "10517",
-        "prog_no": "TLS51010",
+        "prog_No": "TLS51010",
         "prog_id": "25110",
         "prog_name": "大分類維護作業",
         "prog_up": "TLS51000",
@@ -15404,7 +15404,7 @@
       },
       {
         "id": "10518",
-        "prog_no": "TLS51020",
+        "prog_No": "TLS51020",
         "prog_id": "25120",
         "prog_name": "中分類維護作業",
         "prog_up": "TLS51000",
@@ -15532,7 +15532,7 @@
           }
         ],
         "id": "10519",
-        "prog_no": "TLS51030",
+        "prog_No": "TLS51030",
         "prog_id": "25130",
         "prog_name": "小分類維護作業",
         "prog_up": "TLS51000",
@@ -15602,7 +15602,7 @@
           }
         ],
         "id": "10520",
-        "prog_no": "TLS51040",
+        "prog_No": "TLS51040",
         "prog_id": "25140",
         "prog_name": "傳票項目設定作業",
         "prog_up": "TLS51000",
@@ -15672,7 +15672,7 @@
           }
         ],
         "id": "10521",
-        "prog_no": "TLS51050",
+        "prog_No": "TLS51050",
         "prog_id": "25150",
         "prog_name": "商品單位設定",
         "prog_up": "TLS51000",
@@ -15742,7 +15742,7 @@
           }
         ],
         "id": "10522",
-        "prog_no": "TLS51060",
+        "prog_No": "TLS51060",
         "prog_id": "25160",
         "prog_name": "品牌設定作業",
         "prog_up": "TLS51000",
@@ -15812,7 +15812,7 @@
           }
         ],
         "id": "10523",
-        "prog_no": "TLS51070",
+        "prog_No": "TLS51070",
         "prog_id": "25170",
         "prog_name": "商品基本資料",
         "prog_up": "TLS51000",
@@ -15882,7 +15882,7 @@
           }
         ],
         "id": "10524",
-        "prog_no": "TLS51080",
+        "prog_No": "TLS51080",
         "prog_id": "25180",
         "prog_name": "分倉資料處理",
         "prog_up": "TLS51000",
@@ -15952,7 +15952,7 @@
           }
         ],
         "id": "10525",
-        "prog_no": "TLS51110",
+        "prog_No": "TLS51110",
         "prog_id": "25190",
         "prog_name": "品牌每月可進貨限額維護作業",
         "prog_up": "TLS51000",
@@ -16022,7 +16022,7 @@
           }
         ],
         "id": "10526",
-        "prog_no": "TLS51130",
+        "prog_No": "TLS51130",
         "prog_id": "25200",
         "prog_name": "品牌進貨折數設定作業",
         "prog_up": "TLS51000",
@@ -16092,7 +16092,7 @@
           }
         ],
         "id": "10527",
-        "prog_no": "TLS52000",
+        "prog_No": "TLS52000",
         "prog_id": "",
         "prog_name": "進貨管理作業",
         "prog_up": "TLS50000",
@@ -16162,7 +16162,7 @@
           }
         ],
         "id": "10528",
-        "prog_no": "TLS52010",
+        "prog_No": "TLS52010",
         "prog_id": "25210",
         "prog_name": "採購單維護作業",
         "prog_up": "TLS52000",
@@ -16232,7 +16232,7 @@
           }
         ],
         "id": "10529",
-        "prog_no": "TLS52020",
+        "prog_No": "TLS52020",
         "prog_id": "25220",
         "prog_name": "退貨單維護作業",
         "prog_up": "TLS52000",
@@ -16302,7 +16302,7 @@
           }
         ],
         "id": "10530",
-        "prog_no": "TLS52030",
+        "prog_No": "TLS52030",
         "prog_id": "25230",
         "prog_name": "進貨驗收作業",
         "prog_up": "TLS52000",
@@ -16372,7 +16372,7 @@
           }
         ],
         "id": "10531",
-        "prog_no": "TLS52040",
+        "prog_No": "TLS52040",
         "prog_id": "25240",
         "prog_name": "退貨驗收作業",
         "prog_up": "TLS52000",
@@ -16442,7 +16442,7 @@
           }
         ],
         "id": "10532",
-        "prog_no": "TLS52050",
+        "prog_No": "TLS52050",
         "prog_id": "25250",
         "prog_name": "進價/售價變價作業",
         "prog_up": "TLS52000",
@@ -16512,7 +16512,7 @@
           }
         ],
         "id": "10533",
-        "prog_no": "TLS52060",
+        "prog_No": "TLS52060",
         "prog_id": "25260",
         "prog_name": "進價/售價變價匯入作業",
         "prog_up": "TLS52000",
@@ -16582,7 +16582,7 @@
           }
         ],
         "id": "10534",
-        "prog_no": "TLS53000",
+        "prog_No": "TLS53000",
         "prog_id": "",
         "prog_name": "庫存盤點管理作業",
         "prog_up": "TLS50000",
@@ -16652,7 +16652,7 @@
           }
         ],
         "id": "10535",
-        "prog_no": "TLS53010",
+        "prog_No": "TLS53010",
         "prog_id": "25310",
         "prog_name": "盤點單開立",
         "prog_up": "TLS53000",
@@ -16722,7 +16722,7 @@
           }
         ],
         "id": "10536",
-        "prog_no": "TLS53020",
+        "prog_No": "TLS53020",
         "prog_id": "25320",
         "prog_name": "盤點資料匯入作業",
         "prog_up": "TLS53000",
@@ -16792,7 +16792,7 @@
           }
         ],
         "id": "10537",
-        "prog_no": "TLS53030",
+        "prog_No": "TLS53030",
         "prog_id": "25330",
         "prog_name": "盤點資料維護作業",
         "prog_up": "TLS53000",
@@ -16862,7 +16862,7 @@
           }
         ],
         "id": "10538",
-        "prog_no": "TLS54000",
+        "prog_No": "TLS54000",
         "prog_id": "",
         "prog_name": "日結關帳作業/帳款月結管理作業",
         "prog_up": "TLS50000",
@@ -16932,7 +16932,7 @@
           }
         ],
         "id": "10539",
-        "prog_no": "TLS55000",
+        "prog_No": "TLS55000",
         "prog_id": "",
         "prog_name": "商品存貨管理作業",
         "prog_up": "TLS50000",
@@ -17002,7 +17002,7 @@
           }
         ],
         "id": "10540",
-        "prog_no": "TLS55010",
+        "prog_No": "TLS55010",
         "prog_id": "25520",
         "prog_name": "進貨日結作業",
         "prog_up": "TLS54000",
@@ -17072,7 +17072,7 @@
           }
         ],
         "id": "10541",
-        "prog_no": "TLS55020",
+        "prog_No": "TLS55020",
         "prog_id": "25530",
         "prog_name": "帳款月結管理作業",
         "prog_up": "TLS54000",
@@ -17142,7 +17142,7 @@
           }
         ],
         "id": "10542",
-        "prog_no": "TLS55030",
+        "prog_No": "TLS55030",
         "prog_id": "25540",
         "prog_name": "廠商發票折讓作業",
         "prog_up": "TLS54000",
@@ -17212,7 +17212,7 @@
           }
         ],
         "id": "10543",
-        "prog_no": "TLS55040",
+        "prog_No": "TLS55040",
         "prog_id": "25550",
         "prog_name": "廠商請款作業",
         "prog_up": "TLS54000",
@@ -17282,7 +17282,7 @@
           }
         ],
         "id": "10544",
-        "prog_no": "TLS55050",
+        "prog_No": "TLS55050",
         "prog_id": "25560",
         "prog_name": "月結帳作業",
         "prog_up": "TLS54000",
@@ -17352,7 +17352,7 @@
           }
         ],
         "id": "10545",
-        "prog_no": "TLS55060",
+        "prog_No": "TLS55060",
         "prog_id": "25570",
         "prog_name": "暫存傳票審核管理作業",
         "prog_up": "TLS54000",
@@ -17422,7 +17422,7 @@
           }
         ],
         "id": "10546",
-        "prog_no": "TLS55070",
+        "prog_No": "TLS55070",
         "prog_id": "25510",
         "prog_name": "銷貨日報查詢列印",
         "prog_up": "TLS54000",
@@ -17492,7 +17492,7 @@
           }
         ],
         "id": "10547",
-        "prog_no": "TLS56000",
+        "prog_No": "TLS56000",
         "prog_id": "",
         "prog_name": "存貨管理報表",
         "prog_up": "TLS50000",
@@ -17562,7 +17562,7 @@
           }
         ],
         "id": "10548",
-        "prog_no": "TLS56010",
+        "prog_No": "TLS56010",
         "prog_id": "25610",
         "prog_name": "商品庫存查詢作業",
         "prog_up": "TLS55000",
@@ -17632,7 +17632,7 @@
           }
         ],
         "id": "10549",
-        "prog_no": "TLS56020",
+        "prog_No": "TLS56020",
         "prog_id": "25620",
         "prog_name": "商品領用(內部)作業",
         "prog_up": "TLS55000",
@@ -17702,7 +17702,7 @@
           }
         ],
         "id": "10550",
-        "prog_no": "TLS56030",
+        "prog_No": "TLS56030",
         "prog_id": "25630",
         "prog_name": "商品退回(內部)作業",
         "prog_up": "TLS55000",
@@ -17772,7 +17772,7 @@
           }
         ],
         "id": "10551",
-        "prog_no": "TLS56040",
+        "prog_No": "TLS56040",
         "prog_id": "25640",
         "prog_name": "倉別調撥申請維護",
         "prog_up": "TLS55000",
@@ -17842,7 +17842,7 @@
           }
         ],
         "id": "10552",
-        "prog_no": "TLS56050",
+        "prog_No": "TLS56050",
         "prog_id": "25650",
         "prog_name": "倉別調撥發貨作業",
         "prog_up": "TLS55000",
@@ -17912,7 +17912,7 @@
           }
         ],
         "id": "10553",
-        "prog_no": "TLS56060",
+        "prog_No": "TLS56060",
         "prog_id": "25660",
         "prog_name": "倉別調撥驗收作業",
         "prog_up": "TLS55000",
@@ -17982,7 +17982,7 @@
           }
         ],
         "id": "10554",
-        "prog_no": "TLS56070",
+        "prog_No": "TLS56070",
         "prog_id": "25670",
         "prog_name": "商品報廢維護",
         "prog_up": "TLS55000",
@@ -18052,7 +18052,7 @@
           }
         ],
         "id": "10555",
-        "prog_no": "TLS56080",
+        "prog_No": "TLS56080",
         "prog_id": "25680",
         "prog_name": "同業調撥作業",
         "prog_up": "TLS55000",
@@ -18122,7 +18122,7 @@
           }
         ],
         "id": "10556",
-        "prog_no": "TLS57010",
+        "prog_No": "TLS57010",
         "prog_id": "25710",
         "prog_name": "採購統計表",
         "prog_up": "TLS56000",
@@ -18192,7 +18192,7 @@
           }
         ],
         "id": "10557",
-        "prog_no": "TLS57020",
+        "prog_No": "TLS57020",
         "prog_id": "25720",
         "prog_name": "廠商應付帳款明細表",
         "prog_up": "TLS56000",
@@ -18262,7 +18262,7 @@
           }
         ],
         "id": "10558",
-        "prog_no": "TLS57030",
+        "prog_No": "TLS57030",
         "prog_id": "25730",
         "prog_name": "商品庫存表",
         "prog_up": "TLS56000",
@@ -18332,7 +18332,7 @@
           }
         ],
         "id": "10559",
-        "prog_no": "TLS57040",
+        "prog_No": "TLS57040",
         "prog_id": "25740",
         "prog_name": "商品目錄表",
         "prog_up": "TLS56000",
@@ -18402,7 +18402,7 @@
           }
         ],
         "id": "10560",
-        "prog_no": "TLS57050",
+        "prog_No": "TLS57050",
         "prog_id": "25750",
         "prog_name": "收銀機發票商品統計表",
         "prog_up": "TLS56000",
@@ -18472,7 +18472,7 @@
           }
         ],
         "id": "10561",
-        "prog_no": "TLS57060",
+        "prog_No": "TLS57060",
         "prog_id": "25760",
         "prog_name": "EC銷售商品統計表",
         "prog_up": "TLS56000",
@@ -18542,7 +18542,7 @@
           }
         ],
         "id": "10562",
-        "prog_no": "TLS57070",
+        "prog_No": "TLS57070",
         "prog_id": "25770",
         "prog_name": "存貨月結表",
         "prog_up": "TLS56000",
@@ -18612,7 +18612,7 @@
           }
         ],
         "id": "10563",
-        "prog_no": "TLS57080",
+        "prog_No": "TLS57080",
         "prog_id": "25780",
         "prog_name": "庫存數量異動明細表",
         "prog_up": "TLS56000",
@@ -18682,7 +18682,7 @@
           }
         ],
         "id": "10564",
-        "prog_no": "TLS57090",
+        "prog_No": "TLS57090",
         "prog_id": "25790",
         "prog_name": "進貨/進退單據統計表",
         "prog_up": "TLS56000",
@@ -18752,7 +18752,7 @@
           }
         ],
         "id": "10565",
-        "prog_no": "TLS57100",
+        "prog_No": "TLS57100",
         "prog_id": "25800",
         "prog_name": "驗收/驗退單據統計表",
         "prog_up": "TLS56000",
@@ -18822,7 +18822,7 @@
           }
         ],
         "id": "10566",
-        "prog_no": "TLS57110",
+        "prog_No": "TLS57110",
         "prog_id": "25810",
         "prog_name": "存貨月結庫存表",
         "prog_up": "TLS56000",
@@ -18892,7 +18892,7 @@
           }
         ],
         "id": "10567",
-        "prog_no": "TLS57120",
+        "prog_No": "TLS57120",
         "prog_id": "25820",
         "prog_name": "滯銷商品統計表",
         "prog_up": "TLS56000",
@@ -18962,7 +18962,7 @@
           }
         ],
         "id": "10568",
-        "prog_no": "TLS57130",
+        "prog_No": "TLS57130",
         "prog_id": "25830",
         "prog_name": "銷售排行報表",
         "prog_up": "TLS56000",
@@ -19032,7 +19032,7 @@
           }
         ],
         "id": "10569",
-        "prog_no": "TLS57140",
+        "prog_No": "TLS57140",
         "prog_id": "25840",
         "prog_name": "商品迴轉率",
         "prog_up": "TLS56000",
@@ -19102,7 +19102,7 @@
           }
         ],
         "id": "10570",
-        "prog_no": "TLS57150",
+        "prog_No": "TLS57150",
         "prog_id": "25850",
         "prog_name": "盤點統計表",
         "prog_up": "TLS56000",
@@ -19172,7 +19172,7 @@
           }
         ],
         "id": "10571",
-        "prog_no": "TLS57160",
+        "prog_No": "TLS57160",
         "prog_id": "25860",
         "prog_name": "庫齡分析表",
         "prog_up": "TLS56000",
@@ -19242,7 +19242,7 @@
           }
         ],
         "id": "10572",
-        "prog_no": "TLS57170",
+        "prog_No": "TLS57170",
         "prog_id": "25870",
         "prog_name": "存貨評價分析表",
         "prog_up": "TLS56000",
@@ -19312,7 +19312,7 @@
           }
         ],
         "id": "10573",
-        "prog_no": "TLS57180",
+        "prog_No": "TLS57180",
         "prog_id": "25880",
         "prog_name": "自營廠商綜合對帳單-AUTOMAIL",
         "prog_up": "TLS56000",

@@ -1,6 +1,6 @@
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { TranslateService } from '@ngx-translate/core';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -24,7 +24,7 @@ interface CategoryItem {
   templateUrl: './sysb900.cru.component.html',
   styleUrl: './sysb900.cru.component.scss'
 })
-// 商品類別維護作業 CRU
+// 中分類維護作業 CRU
 export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     id: [0], // ID

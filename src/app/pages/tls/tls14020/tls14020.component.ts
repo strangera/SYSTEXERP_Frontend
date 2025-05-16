@@ -10,7 +10,7 @@ import {
 } from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -18,7 +18,7 @@ import { BusinessTypeCodeService } from '../../../service/basic/business-type-co
 import { VendorService } from '../../../service/basic/vendor.service';
 import { LocationService } from '../../../service/basic/location.service';
 import { ContractStatusService } from '../../../service/basic/contract-status.service';
-import { RegionCodeService } from '../../../service/basic/region-code.service';
+import { RegionService } from '../../../service/basic/region-code.service';
 import { OperationStatusService } from '../../../service/basic/operation-status.service';
 import { CommissionCalculationService } from '../../../service/basic/commission-calculation.service';
 import { CounterCategoryService } from '../../../service/basic/counter-category.service';
@@ -149,7 +149,7 @@ export class TLS14020Component {
     private vendorService: VendorService,
     private locationService: LocationService,
     private contractStatusService: ContractStatusService,
-    private regionCodeService: RegionCodeService,
+    private RegionService: RegionService,
     private floorService: FloorService,
     private organizationService: OrganizationNumberService,
     private operationStatusService: OperationStatusService,
@@ -179,7 +179,7 @@ export class TLS14020Component {
     this.contractStatusService.getContractStatuses().subscribe((data) => {
       this.contractStatusOptions = data;
     });
-    this.regionCodeService.getRegionCodes().subscribe((data) => {
+    this.RegionService.getRegionOptions().subscribe((data) => {
       this.regionOptions = data;
     });
     this.floorService.getFloors().subscribe((data) => {

@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { TranslateService } from '@ngx-translate/core';
@@ -29,7 +29,7 @@ export class FIN11020CRUComponent extends BasicCrupageComponent implements OnIni
     invoiceCategory: [, [Validators.required]], // 類別
     viceTicket: [], // 有無副聯
     declareYm: [, [Validators.required]], // 申報年月
-    rollNumber: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 卷數
+    rollNumber: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 券數
   });
   //
   invoiceCategoryOptions: any[] = [];

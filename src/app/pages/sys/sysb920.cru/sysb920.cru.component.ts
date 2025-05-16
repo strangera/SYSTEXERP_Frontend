@@ -1,6 +1,6 @@
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { TranslateService } from '@ngx-translate/core';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { Sysb900DropdownService } from '../../../service/api/sys/sysb900-dropdown.service';
@@ -13,8 +13,8 @@ interface CategoryItem {
   id: number;
   bus_type: string; //大分類代碼
   bus_type_name: string; //大分類名稱
-  bus_class: string; //中分類(商品類別)代碼
-  bus_class_name: string; //中分類(商品類別)名稱
+  bus_class: string; //中分類(中分類)代碼
+  bus_class_name: string; //中分類(中分類)名稱
   bus_sclass: string; //小分類代碼
   bus_sclass_name: string; //小分類名稱
   bus_sclass_desc: string; //備註

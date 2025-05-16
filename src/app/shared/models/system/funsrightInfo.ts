@@ -3,11 +3,6 @@ export enum PermissionsInfo {
   delete = 'DELETE',
   edit = 'EDIT',
   export = 'EXPORT',
-  extright1 = 'EXTRIGHT1',
-  extright2 = 'EXTRIGHT2',
-  extright3 = 'EXTRIGHT3',
-  extright4 = 'EXTRIGHT4',
-  extright5 = 'EXTRIGHT5',
   print = 'PRINT',
   query = 'QUERY',
   report = 'REPORT',
@@ -24,7 +19,7 @@ export interface BehaviorType {
 
 export interface FunsrightInfo {
   id: string,
-  prog_no: string,
+  prog_No: string,
   prog_id: string,
   prog_name: string,
   prog_up: string,

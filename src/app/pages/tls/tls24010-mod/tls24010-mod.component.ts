@@ -10,7 +10,7 @@ import {
 } from '../../../shared/models/system/funsrightInfo';
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { SupplementCategoryService } from '../../../service/basic/supplement-category.service';
 import { FloorService } from '../../../service/basic/floor.service';

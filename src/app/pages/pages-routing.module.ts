@@ -9,9 +9,9 @@ const routes: Routes = [
     component: PagesComponent,
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }, // 重定向到 dashboard
-      { path: 'dashboard', loadChildren: () => import('./dashboard/dashboard.module').then(m => m.DashboardModule), canActivate: [AuthGuard] },
-      { path: 'demo', loadChildren: () => import('./demo/demo.module').then(m => m.DemoModule), canActivate: [AuthGuard] },
-      { path: 'changepsw', loadChildren: () => import('./changepsw/changepsw.module').then(m => m.ChangepswModule), canActivate: [AuthGuard] },
+      { path: 'dashboard', loadChildren: () => import('./base/dashboard/dashboard.module').then(m => m.DashboardModule), canActivate: [AuthGuard] },
+      { path: 'demo', loadChildren: () => import('./base/demo/demo.module').then(m => m.DemoModule), canActivate: [AuthGuard] },
+      { path: 'changepsw', loadChildren: () => import('./base/changepsw/changepsw.module').then(m => m.ChangepswModule), canActivate: [AuthGuard] },
       // 1. 財務會計系統 (FIN)
       { path: 'FIN', loadChildren: () => import('./fin/fin.module').then(m => m.FinModule), canActivate: [AuthGuard] },
       // 2. 銷售管理系統 (TLS)
@@ -24,7 +24,7 @@ const routes: Routes = [
       { path: 'CPM', loadChildren: () => import('./cpm/cpm.module').then(m => m.CpmModule), canActivate: [AuthGuard] },
       {
         path: '**',
-        loadChildren: () => import('./notfound/notfound.module').then(m => m.NotfoundModule),
+        loadChildren: () => import('./base/notfound/notfound.module').then(m => m.NotfoundModule),
       },
     ]
   },

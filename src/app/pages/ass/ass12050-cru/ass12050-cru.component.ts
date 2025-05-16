@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -53,7 +53,7 @@ export class ASS12050CRUComponent extends BasicCrupageComponent implements OnIni
     adjustPrice: [, [Validators.maxLength(8)]], // 調整單價(未稅)
     totalPrice: [, [Validators.maxLength(8)]], // 總金額
 
-    branch: ['', [Validators.maxLength(4)]], // 分店	
+    branch: ['', [Validators.maxLength(4)]], // 分店
     storage: ['', [Validators.maxLength(4)]], // 倉別
     department: [''], //委託部門
     // ----------------------------------------------------------------
