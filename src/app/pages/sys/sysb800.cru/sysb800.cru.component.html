@@ -17,18 +17,16 @@
           </app-input-text>
         </div>
       </div>
-      <hr>
       <div class="grid p-fluid">
         <app-input-textarea class="col-12 md:col-6 lg:col-5" label="說明" controlName="textarea"
           [control]="dataForm.controls.bus_type_desc" [submitted]="submitted" />
       </div>
-      <hr>
     </form>
     <h6>
       說明:業種代號為2碼, 且第1碼字元為1~9
     </h6>
     <div class="col pt-4">
-      <div class="grid justify-content-end">
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" (click)="onCancel()"></app-button>
         <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="!isFormReadable"></app-button>
       </div>

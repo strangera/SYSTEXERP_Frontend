@@ -5,7 +5,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ValidationService } from '../../../shared/service/validation.service';
 import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
 import { TableLazyLoadEvent } from 'primeng/table';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -19,8 +19,8 @@ interface CategoryItem {
   UPD_Date: string;
   UPD_USR_No: string;
   UPD_USR_Name: string;
+  CanDel: boolean;
 }
-const storageKey = 'SYSB800';
 
 @Component({
   selector: 'app-sysb800',
@@ -34,10 +34,8 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
     bus_type_name: ['', [Validators.maxLength(40)]], // 大分類名稱
     bus_type_desc: ['', [Validators.maxLength(160)]], // 備註
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
-    //分頁查詢
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'bus_type', order: 1 }] as SortMeta[]],
+    ...createPaginationConfig([{ field: 'bus_type', order: 1 }]), // 分頁和排序參數
+
   });
 
   data: CategoryItem[] = [];
@@ -49,7 +47,7 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
     // 其他欄位
   ];
 
-  totalRecords: number = 0;
+  totalRecords = 0;
   selectedItems: CategoryItem[] = [];
 
   constructor(
@@ -60,11 +58,7 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
   }
 
   ngOnInit(): void {
-    // this.ProgNo = '410007';
-    this.initializePage('SYSB800', '/SYS/SYSB800CRU');
-
-    // 恢復查詢狀態並自動查詢
-    this.handleQueryRestore(this.queryForm, storageKey, (form) => this.onSubmit(form));
+    this.initializePage('SYSB800', '/SYS/SYSB800CRU', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup): void {
@@ -76,7 +70,7 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
             this.filteredData = [...this.data];
             this.totalRecords = response.TotalCount || response.Data.length;
             // 儲存查詢條件（成功查詢後）
-            this.queryStateService.setQueryState(storageKey, frm.value);
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
             if (this.data.length === 0) {
               console.log('查詢結果為空');
             }
@@ -95,70 +89,58 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
     });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  // 清空表單：重置表單和表格狀態
-  onClearForm(): void {
-    this.queryForm.reset();
-    this.data = [];
-    this.filteredData = [];
-    this.totalRecords = 0;
-  }
-
   onDelete(data: CategoryItem | CategoryItem[]): void {
     const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+    if (items.length === 0) return;
+
+    // 過濾出 CanDel = true 且 ID 有效的項目
+    const deletableItems = items.filter(
+      (item) => item && item.id != null && item.id !== undefined && item.CanDel === true
+    );
+    const nonDeletableItems = items.filter(
+      (item) => item && item.id != null && item.id !== undefined && item.CanDel === false
+    );
+
+    // 如果沒有可刪除的項目
+    if (deletableItems.length === 0) {
+      this.messageService.errorBubble('無法刪除：選中的項目有不可刪除的大分類');
       return;
     }
 
-    const idList = items
-      .filter(item => item && item.id != null && item.id !== undefined)
-      .map(item => item.id);
-
-    if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-      return;
+    // 如果有不可刪除的項目，提示用戶
+    if (nonDeletableItems.length > 0) {
+      this.messageService.warnBubble(
+        `${nonDeletableItems.length} 個項目因 CanDel 為 false 無法刪除，將處理其餘 ${deletableItems.length} 個項目`
+      );
     }
 
+    // 收集可刪除項目的 ID
+    const idList = deletableItems.map((item) => item.id);
+
+    // 構建 API 請求
     const requestBody = {
-      idList: idList
+      idList: idList,
     };
 
-    console.log('Request body:', JSON.stringify(requestBody));
+    // 調用刪除 API
     this.apiService.deleteSYSB800(requestBody).subscribe({
-      next: (response: any) => {
-        console.log('API response:', response);
+      next: (response) => {
         if (response.Status === '0000') {
-          this.messageService.successBubble(`成功刪除 ${idList.length} 個項目`);
-          this.onSubmit(this.queryForm);
+          this.messageService.successBubble('選中項目刪除成功');
         } else {
           console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message || '未知錯誤'}`);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
         }
       },
-      error: (err: any) => {
+      error: (err: string) => {
         console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗，請檢查網路連線或聯繫管理員');
+        this.messageService.errorBubble('刪除失敗');
       },
       complete: () => {
-        this.selectedItems = [];
-      }
+        this.onSubmit(this.queryForm); // 刷新數據
+      },
     });
-  }
 
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) { return; }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'bus_type', order: 1 }];
-    this.onSubmit(this.queryForm);
+    this.selectedItems = [];
   }
-
 }

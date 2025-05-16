@@ -26,9 +26,6 @@ interface CategoryItem {
   CAT_LDisplay?: string;
   CAT_MDisplay?: string;
 }
-
-const storageKey = 'TLS51030';
-
 @Component({
   selector: 'app-tls51030',
   templateUrl: './tls51030.component.html',
@@ -103,25 +100,6 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
         this.queryForm.controls.CAT_MNo.setValue('');
       }
     });
-
-    // 恢復查詢狀態並自動查詢
-    this.handleQueryRestore(this.queryForm, storageKey, (form) => {
-      const catLNo = form.value.CAT_LNo;
-      if (catLNo) {
-        this.middleCategoryCodeService.getSystemTypesByCatLNo(catLNo).subscribe({
-          next: (response) => {
-            this.middleCategoryOptions = response;
-            this.onSubmit(form);
-          },
-          error: (error) => {
-            console.error('恢復中分類代碼失敗:', error);
-            this.messageService.errorBubble('無法恢復中分類代碼，查詢已取消');
-          }
-        });
-      } else {
-        this.onSubmit(form);
-      }
-    });
   }
 
   onSubmit(frm: FormGroup): void {
@@ -138,7 +116,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
                 CAT_MDisplay: catMDisplay
               };
             });
-            this.totalRecords = response.TotalCount;
+            this.totalRecords = response.TotalCount || response.Data.length; // 排序需要;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
             if (this.data.length === 0) {
               console.log('查詢結果為空');
