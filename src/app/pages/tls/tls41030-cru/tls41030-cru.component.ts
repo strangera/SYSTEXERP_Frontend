@@ -2,7 +2,7 @@ import { ValidationService } from './../../../shared/service/validation.service'
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
@@ -25,7 +25,7 @@ export class TLS41030CRUComponent extends BasicCrupageComponent implements OnIni
     USR_Level: ['XXXXXX', [Validators.required, Validators.maxLength(6)]], // 收銀鍵盤等級(編號)
     USR_Auth: [, [Validators.required, Validators.maxLength(6)]], // 收銀員授權等級
 
-    USR_JobStatus: ['J', [Validators.required, Validators.maxLength(2)]], // 收銀員狀態 J=在職(預設) Q=離職 
+    USR_JobStatus: ['J', [Validators.required, Validators.maxLength(2)]], // 收銀員狀態 J=在職(預設) Q=離職
     USR_Class: ['R', [Validators.required, Validators.maxLength(2)]], // 收銀員等級 R=一般(預設) M=店長 S=系統管理者
     USR_RegType: [2, [Validators.required, Validators.maxLength(2)]], // 收銀員區分 2=獨立收銀(預設) 1=集中收銀
 

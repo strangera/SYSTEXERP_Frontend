@@ -56,8 +56,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() insertDisabled = false;                                     // 新增按鈕是否禁用
   @Output() delete = new EventEmitter<any>();                          // 刪除事件
   // expansion 收合展開
-  @Input() expansionDataKey = '';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
+  @Input() expansionDataKey = '';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionSortField = '';          // 收合展開 排序欄位(單一排序)
   @Input() expansionSortOrder = 0;           // 收合展開 排序方向 (1:升序、-1:降序)
   expression = false;                        // 收合展開 狀態 (true:展開、false:收合)

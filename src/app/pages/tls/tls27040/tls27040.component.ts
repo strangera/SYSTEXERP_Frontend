@@ -16,7 +16,7 @@ import { InstallmentPeriodService } from '../../../service/basic/installment-per
 import { AcquiringBankService } from '../../../service/basic/acquiring-bank.service';
 import { QueryFilterService } from '../../../service/basic/query-filter.service';
 import { CreditCardTransactionTypeService } from '../../../service/basic/credit-card-transaction-type.service'; // Import for transaction type
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus'; // Add this import as requested
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus'; // Add this import as requested
 
 const now = new Date();
 

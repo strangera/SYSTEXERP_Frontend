@@ -17,7 +17,7 @@ import { ViolationStatusService } from '../../../service/basic/violation-status.
 import { DeductionItemService } from '../../../service/basic/deduction-item.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 const now = new Date();
 

@@ -1,7 +1,7 @@
 import { Component, OnInit, } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -135,7 +135,7 @@ export class TLS41050CRUComponent extends BasicCrupageComponent implements OnIni
       // STO_No              VARCHAR(06)         NOT NULL,      /*分店編號*/
       // NOT_DateTime        DATETIME            NOT NULL,      /*通告產生日期時間*/
       // NOT_Type            VARCHAR(06)         NOT NULL,      /*通告顯示種類*//*  101=即時顯示通告   102=暫停時顯示通告 103=功能鍵顯示通告 104=客戶顯示器顯示通告 105=銷貨明細表列印訊息 */
-      // ECR_No              VARCHAR(06)             NULL,      /*收銀機號 POS1002.ECR_No*/ 
+      // ECR_No              VARCHAR(06)             NULL,      /*收銀機號 POS1002.ECR_No*/
 
       // INDEX IDX_POS5001_MST ON POS5001 (STO_No, NOT_DateTime, NOT_Type, ECR_No);
 

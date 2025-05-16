@@ -30,8 +30,8 @@
                 </div>
             </div>
             <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-                <app-button btnType="clear" ></app-button>
-                <app-button btnType="query"  [loading]="loading"></app-button>
+                <app-button btnType="clear"></app-button>
+                <app-button btnType="query" [loading]="loading"></app-button>
             </div>
 
         </form>
@@ -40,21 +40,11 @@
 
 <div class="card">
     <div class="col-13">
-<app-table
-  tableKey="TLS11020"
-  [data]="data"
-  [columns]="columns"
-  [selectedItems]="selectedItems"
-  (selectionChange)="selectedItems = $event"
-  (delete)="onDelete($event)"
-  [showCheckBox]="true"
-  dataKey="id"
-  [multiSortMeta]="[{ field: 'CAP_Item', order: 1 }]"
-  [totalRecords]="totalRecords"
-  [lazy]="true"
-  [loading]="loading"
-  (edit)="onEdit($event)" (detail)="onDetail($event)"
-  (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)">
-</app-table>
+        <app-table tableKey="TLS11020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+            (selectionChange)="selectedItems = $event" (delete)="onDelete($event)" [showCheckBox]="true" dataKey="id"
+            [multiSortMeta]="[{ field: 'CAP_Item', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
+            [loading]="loading" (edit)="onEdit($event)" (detail)="onDetail($event)"
+            (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)">
+        </app-table>
 
     </div>

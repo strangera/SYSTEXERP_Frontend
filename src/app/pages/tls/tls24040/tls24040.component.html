@@ -35,8 +35,8 @@
 
 <div class="card">
   <div class="col-12">
-    <app-data-table-check [data]="data" [columns]="columns" (edit)="onEdit($event)"
-      (detail)="onDetail($event)"></app-data-table-check>
+    <app-table [showCheckBox]="true" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+      (detail)="onDetail($event)"></app-table>
   </div>
 </div>
 請注意:已開發票之交易不可修正成未開立發票之交易,未開立亦是!!

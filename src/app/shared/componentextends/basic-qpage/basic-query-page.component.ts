@@ -8,7 +8,7 @@ import { take } from 'rxjs';
 import { UserInfo } from '../../models/system/userInfo';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
-import { CRUDStatus } from '../../enum/CRUDstatus';
+import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { LazyLoadEvent } from '../../componentkit/table/table.model';
 
 export class BasicQueryPageComponent<T> {

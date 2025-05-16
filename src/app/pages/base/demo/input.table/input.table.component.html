@@ -20,7 +20,7 @@
         <p-divider align="left" type="solid">
           <b class="text-primary">Table單選下拉</b>
         </p-divider>
-        <!-- <div class="grid p-fluid">
+        <div class="grid p-fluid">
           <app-dropdown-table class="col-12" [control]="queryForm.controls.dropdownTable" [submitted]="submitted"
             optionLabel="LOCATION_No" optionValue="LOCATION_No" [suggestions]="suggestions"
             [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
@@ -38,7 +38,7 @@
               [options]="RegionCodeOptions" optionLabel="label" optionValue="value"
               [control]="dialogForm.controls.AREA_NO" />
           </app-dropdown-table>
-        </div> -->
+        </div>
         <!-- <p-divider align="left" type="solid">
           <b class="text-primary">Table多選下拉</b>
         </p-divider> -->
@@ -183,13 +183,14 @@
   <p-divider align="left" type="solid">
     <b class="text-gray-500 text-2xl">Table 將移除</b>
   </p-divider>
-  <app-data-table-check [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-  </app-data-table-check>
+  <app-table [showCheckBox]="true" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)">
+  </app-table>
 </div>
 <div class="card">
   <p-divider align="left" type="solid">
     <b class="text-gray-500 text-2xl">Table 將移除</b>
   </p-divider>
-  <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-  </app-data-table>
+  <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+  </app-table>
 </div>

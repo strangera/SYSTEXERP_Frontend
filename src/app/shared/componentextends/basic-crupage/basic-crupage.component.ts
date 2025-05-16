@@ -1,5 +1,5 @@
 import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
-import { CRUDStatus } from '../../enum/CRUDstatus';
+import { CRUDStatus } from '../../models/system/CRUDstatus';
 
 export class BasicCrupageComponent {
   // Page No

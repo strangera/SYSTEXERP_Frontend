@@ -9,7 +9,7 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
 import { DisplayModeService } from '../../../service/basic/display-mode.service';
 const now = new Date();

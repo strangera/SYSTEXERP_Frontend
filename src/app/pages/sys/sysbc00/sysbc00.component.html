@@ -50,9 +50,9 @@
 </div>
 
 <div class="card">
-  <app-data-table-group [data]="data" [columns]="columns" [subColumns]="subColumns" (edit)="onEdit($event)"
+  <app-table [data]="data" [columns]="columns" [expansionColumns]="subColumns" (edit)="onEdit($event)"
     (detail)="onDetail($event)">
-  </app-data-table-group>
+  </app-table>
 </div>
 
 <div class="card">

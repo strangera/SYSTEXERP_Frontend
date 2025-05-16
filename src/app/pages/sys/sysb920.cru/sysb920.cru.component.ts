@@ -1,6 +1,6 @@
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { TranslateService } from '@ngx-translate/core';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { Sysb900DropdownService } from '../../../service/api/sys/sysb900-dropdown.service';

@@ -32,25 +32,22 @@
                     <app-input-text label="位置代碼" [control]="queryForm.controls.LOCATION_No" [submitted]="submitted">
                     </app-input-text>
                 </div>
- 
-                    <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number-range label="簽約坪數"
-                        [startControl]="queryForm.controls.GROSS_SPACE_start"
-                        [endControl]="queryForm.controls.GROSS_SPACE_end"
-                        [submitted]="submitted">
-                    </app-input-number-range>
-                    </div>
 
-                    <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number-range label="營業坪數"
-                        [startControl]="queryForm.controls.NET_SPACE_start"
-                        [endControl]="queryForm.controls.NET_SPACE_end"
-                        [submitted]="submitted">
-                    </app-input-number-range>
-                    </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-multi-select label="用途" controlName="Location_Purpose" [options]="usageOptions" optionLabel="label"
-                        optionValue="value" [control]="queryForm.controls.Purpose_no" [submitted]="submitted">
+                    <app-input-number-range label="簽約坪數" [startControl]="queryForm.controls.GROSS_SPACE_start"
+                        [endControl]="queryForm.controls.GROSS_SPACE_end" [submitted]="submitted">
+                    </app-input-number-range>
+                </div>
+
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number-range label="營業坪數" [startControl]="queryForm.controls.NET_SPACE_start"
+                        [endControl]="queryForm.controls.NET_SPACE_end" [submitted]="submitted">
+                    </app-input-number-range>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-multi-select label="用途" controlName="Location_Purpose" [options]="usageOptions"
+                        optionLabel="label" optionValue="value" [control]="queryForm.controls.Purpose_no"
+                        [submitted]="submitted">
                     </app-multi-select>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
@@ -61,7 +58,7 @@
                 </div>
             </div>
             <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-                <app-button btnType="clear" ></app-button>
+                <app-button btnType="clear"></app-button>
                 <app-button btnType="query" (onClick)="onSubmit(queryForm)" [loading]="loading"></app-button>
             </div>
         </form>
@@ -71,11 +68,11 @@
 <div class="card">
     <div class="col-13">
 
-            <app-table tableKey="TLS11010" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-      [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'LOCATION_No', order: 1 }]"
-      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm);onSubmit(queryForm)" [lazy]="true"
-      [loading]="loading">
-    </app-table>
+        <app-table tableKey="TLS11010" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+            (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+            (delete)="onDelete($event)" [showCheckBox]="true" dataKey="id"
+            [multiSortMeta]="[{ field: 'LOCATION_No', order: 1 }]" [totalRecords]="totalRecords"
+            (lazyLoadData)="onLazyLoadData($event, queryForm);onSubmit(queryForm)" [lazy]="true" [loading]="loading">
+        </app-table>
     </div>
 </div>

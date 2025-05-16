@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output, ViewEncapsulation } from '@angular/core';
-import { CRUDStatus } from '../../enum/CRUDstatus';
+import { CRUDStatus } from '../../models/system/CRUDstatus';
 
 @Component({
   selector: 'app-button-dynamicallydelete',
@@ -21,9 +21,9 @@ export class ButtonDynamicallydeleteComponent {
     return this.IsDelete ? 'pi pi-trash' : ''; // Create 狀態時顯示 pi-plus
   }
   getLabel() {
-    return this.IsDelete ?  'delete' : 'remove'; // Create 狀態時顯示 pi-plus
+    return this.IsDelete ? 'delete' : 'remove'; // Create 狀態時顯示 pi-plus
   }
   getButtonClass() {
-    return this.IsDelete ?  'button-dynamicallydelete' : 'button-dynamicallyremove'; // Create 狀態時顯示 pi-plus
+    return this.IsDelete ? 'button-dynamicallydelete' : 'button-dynamicallyremove'; // Create 狀態時顯示 pi-plus
   }
 }
