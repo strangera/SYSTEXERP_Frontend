@@ -18,11 +18,11 @@
             [submitted]="submitted" />
         </div>
         <p-divider align="left" type="solid">
-          <b class="text-primary">Table下拉</b>
+          <b class="text-primary">Table單選下拉</b>
         </p-divider>
-        <div class="grid p-fluid">
-          <app-dropdown-table class="col-12" label="位置編號" [control]="queryForm.controls.multiLevel"
-            [submitted]="submitted" optionLabel="LOCATION_No" optionValue="LOCATION_No" [suggestions]="suggestions"
+        <!-- <div class="grid p-fluid">
+          <app-dropdown-table class="col-12" [control]="queryForm.controls.dropdownTable" [submitted]="submitted"
+            optionLabel="LOCATION_No" optionValue="LOCATION_No" [suggestions]="suggestions"
             [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
             (formValueChanged)="onformValueChanged($event)" [formGroup]="dialogForm" [dialogData]="dialogData"
             [dialogColumns]="dialogColumns" [loading]="dialogloading">
@@ -38,7 +38,17 @@
               [options]="RegionCodeOptions" optionLabel="label" optionValue="value"
               [control]="dialogForm.controls.AREA_NO" />
           </app-dropdown-table>
-        </div>
+        </div> -->
+        <!-- <p-divider align="left" type="solid">
+          <b class="text-primary">Table多選下拉</b>
+        </p-divider> -->
+        <!-- <div class="grid p-fluid">
+          <app-multi-select-table class="col-12" label="位置編號" controlName="multiSelectTable"
+            [control]="queryForm.controls.multiSelectTable" [submitted]="submitted" optionLabel="LOCATION_No"
+            optionValue="LOCATION_No" [suggestions]="suggestions" datakey="LOCATION_No"
+            (inputValueChanged)="onAutoCompleteInputChange($event)">
+          </app-multi-select-table>
+        </div> -->
         <p-divider align="left" type="solid">
           <b class="text-red-500 text-2xl">開發中</b>
         </p-divider>

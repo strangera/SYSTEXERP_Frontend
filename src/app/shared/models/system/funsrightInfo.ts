@@ -19,7 +19,7 @@ export interface BehaviorType {
 
 export interface FunsrightInfo {
   id: string,
-  prog_no: string,
+  prog_No: string,
   prog_id: string,
   prog_name: string,
   prog_up: string,

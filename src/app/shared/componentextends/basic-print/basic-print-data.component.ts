@@ -138,7 +138,7 @@ export class BasicPrintDataComponent {
           console.error("Response body is empty!");
         }
         this.exportDialog = false;
-        this.cdr.detectChanges(); // 手动触发变更检测
+        this.cdr.detectChanges();
       },
       error: (err: any) => {
         console.error('Error downloading Excel:', err);

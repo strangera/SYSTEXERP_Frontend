@@ -16,7 +16,8 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
   queryForm = this.formBuilder.group({
     dateRangeQuick1: [null, [Validators.required]],
     dateRangeQuick2: [null, [Validators.required]],
-    multiLevel: ['', [Validators.required]], // Multi Level
+    dropdownTable: ['', [Validators.required]], // Multi Level
+    multiSelectTable: [[], [Validators.required]], // Multi Level
     text: ['', [Validators.required, Validators.maxLength(13)]], // Input Text
     textarea: ['', [Validators.required, Validators.maxLength(13)]], // Input Textarea
     number: [null, [Validators.required, Validators.maxLength(13)]], // Input number

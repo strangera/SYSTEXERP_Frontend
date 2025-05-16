@@ -111,6 +111,7 @@ import { TreeDropdownComponent } from './componentkit/tree-dropdown/tree-dropdow
 import { InputTextareaComponent } from './componentkit/input-textarea/input-textarea.component';
 import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick/calendar-range-quick.component';
 import { TableExportComponent } from './componentkit/table/table-export/table-export.component';
+import { MultiSelectTableComponent } from './componentkit/multi-select-table/multi-select-table.component';
 
 @NgModule({
   declarations: [
@@ -129,6 +130,7 @@ import { TableExportComponent } from './componentkit/table/table-export/table-ex
     TableExpansionComponent,
     TableExportComponent,
     DropdownTableComponent,
+    MultiSelectTableComponent,
     TreeDropdownComponent,
     InputTextareaComponent,
 
@@ -317,6 +319,7 @@ import { TableExportComponent } from './componentkit/table/table-export/table-ex
     ButtonDynamicallydeleteComponent,
     InputTextComponent,
     DropdownTableComponent,
+    MultiSelectTableComponent,
     TreeDropdownComponent,
     InputTextareaComponent,
     InputNumberComponent,

@@ -50,11 +50,9 @@ export class SsoDashboardComponent implements OnInit {
   constructor(
     public layoutService: LayoutService,
     private authService: AuthService,
-    private sys1000Service: Sys1000Service,
     public router: Router,
     private ssoDashboardService: SsoDashboardService,
     private formBuilder: FormBuilder,
-    private validationService: ValidationService,
     private encryptionService: EncryptionService,
     private messageService: NotificationService,
     private userCodeService: UserCodeService,

@@ -74,7 +74,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     this.menuUpdatedSubscription = this.authService.menuUpdated.subscribe((newData: FunsrightInfo[]) => {
       if (newData?.length > 0) {
         this.funRightsInfo = newData.map((item: FunsrightInfo) => ({
-          ...item, label: `${item.prog_no} ${item.prog_name}` // 建立 label 屬性
+          ...item, label: `${item.prog_No} ${item.prog_name}` // 建立 label 屬性
         }));
         this.topLevelMenuItems = this.funRightsInfo
           .filter(item => item.prog_up === '')
@@ -101,7 +101,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
       this.topMenuClick.emit(null); // 發射 null 表示沒有激活的頂部菜單項
     } else {
       this.activeTopMenuItem = item; // 點擊未激活的項，將其激活
-      this.topMenuClick.emit(item.prog_no);
+      this.topMenuClick.emit(item.prog_No);
     }
   }
   // 搜尋程式編碼
@@ -134,7 +134,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
       matchedItem = query.value;
     }
     if (matchedItem) {
-      this.router.navigate([`/${matchedItem.prog_no.slice(0, 3)}/${matchedItem.prog_no}`]); // 導向到該頁面，並傳遞 prog_no 參數到該頁面路由matchedItem.]);
+      this.router.navigate([`/${matchedItem.prog_No.slice(0, 3)}/${matchedItem.prog_No}`]); // 導向到該頁面，並傳遞 prog_no 參數到該頁面路由matchedItem.]);
       this.queryForm.reset();
     } else {
       this.messageService.warnBubble('輸入的代碼不存在，或您目前無權限存取對應頁面。', '查無此快速碼');
@@ -153,14 +153,14 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
         const favoritesWithDetails: FunsrightInfo[] = [];
         if (response.Data.length === 0) { this.Favorites = []; return; }
         response.Data.forEach((fav: Favorite) => {
-          const matchingFunRight = this.funRightsInfo.find(item => item.prog_no === fav.PROG_No);
+          const matchingFunRight = this.funRightsInfo.find(item => item.prog_No === fav.PROG_No);
           if (matchingFunRight) favoritesWithDetails.push(matchingFunRight);
         });
         sessionStorage.setItem('Favorites', JSON.stringify(response.Data));
         this.Favorites = favoritesWithDetails.map(item => ({
           ...item,
           label: item.label,
-          path: `/${item.prog_no.slice(0, 3)}/${item.prog_no}`,
+          path: `/${item.prog_No.slice(0, 3)}/${item.prog_No}`,
         }));
       }, error: error => { console.error('Error fetching favorites:', error); }
     });
@@ -171,7 +171,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
       this.messageService.warnBubble(`您目前無檢視「${item.label}」的權限，請聯絡系統管理員開啟權限。`, '無法開啟畫面');
       return;
     }
-    this.router.navigate([`/${item.prog_no.slice(0, 3)}/${item.prog_no}`]);
+    this.router.navigate([`/${item.prog_No.slice(0, 3)}/${item.prog_No}`]);
     this.favorite.hide(); // 點擊後關閉最愛選單
   }
   // 進入編輯我的最愛模式
@@ -182,11 +182,11 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
   deleteSelectedFavorites() {
     if (this.selectedFavorites && this.selectedFavorites.length > 0 && this.Favorites) {
       const remainingFavorites = this.Favorites.filter(favorite =>
-        !this.selectedFavorites.some(selected => selected['prog_no'] === favorite['prog_no'])
+        !this.selectedFavorites.some(selected => selected['prog_No'] === favorite['prog_No'])
       );
       const body = remainingFavorites.map((favorite, index) => ({
         USER_No: this.data?.user_No,
-        PROG_No: favorite['prog_no'],
+        PROG_No: favorite['prog_No'],
         FVT_SeqNo: index + 1,
       }));
       this.authService.UpdateUserFavorite(body).subscribe({
@@ -208,7 +208,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
   onRowReorder() {
     const body = this.Favorites.map((favorite, index) => ({
       USER_No: this.data?.user_No,
-      PROG_No: favorite['prog_no'],
+      PROG_No: favorite['prog_No'],
       FVT_SeqNo: index + 1, // 根據目前的順序生成 FVT_SeqNo
     }))
     this.authService.UpdateUserFavorite(body).subscribe({

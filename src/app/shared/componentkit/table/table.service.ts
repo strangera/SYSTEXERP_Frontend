@@ -12,7 +12,7 @@ export class TableService {
 
   exportPDF(data: any): Observable<HttpResponse<Blob>> {
     return this.http.post(
-      `${this.apiUrl}/TSRDERP_Main/Controllers/exportPDF`,
+      `${this.apiUrl}/exportPDF`,
       data,
       {
         responseType: 'blob',

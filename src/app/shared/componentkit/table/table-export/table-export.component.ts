@@ -76,6 +76,19 @@ export class TableExportComponent implements OnInit, OnDestroy {
           }
         });
     }
+    const printFieldTitleControl = this.form.get('print_field_title') as FormControl;
+    if (printFieldTitleControl) {
+      printFieldTitleControl.valueChanges
+        .pipe(takeUntil(this.destroy$)) // 使用 takeUntil 在組件銷毀時取消訂閱
+        .subscribe((value: string) => {
+          if (value === 'N') {
+            this.form.get('allColumns')?.setValue('N');
+            this.form.get('allColumns')?.disable();
+          } else {
+            this.form.get('allColumns')?.enable();
+          }
+        });
+    }
 
     if (this.exportStatus === 'Excel') { return; }
     const printReportFooterControl = this.form.get('print_reportFooter') as FormControl;
@@ -91,28 +104,12 @@ export class TableExportComponent implements OnInit, OnDestroy {
           }
         });
     }
-
-    const printFieldTitleControl = this.form.get('print_field_title') as FormControl;
-    if (printFieldTitleControl) {
-      printFieldTitleControl.valueChanges
-        .pipe(takeUntil(this.destroy$)) // 使用 takeUntil 在組件銷毀時取消訂閱
-        .subscribe((value: string) => {
-          if (value === 'N') {
-            this.form.get('allColumns')?.setValue('N');
-            this.form.get('allColumns')?.disable();
-          } else {
-            this.form.get('allColumns')?.enable();
-          }
-        });
-    }
   }
 
   saveDialog() {
     if (this.disable) {
       return;
     }
-    console.log('saveDialog', this.form.value);
-
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -129,6 +126,7 @@ export class TableExportComponent implements OnInit, OnDestroy {
     };
     this.save.emit(tableExportData);
     this.visible = false;
+    this.visibleChange.emit(this.visible);
     this.form.reset();
   }
 }

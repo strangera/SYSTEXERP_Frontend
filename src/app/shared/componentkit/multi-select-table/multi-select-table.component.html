@@ -1,0 +1,17 @@
+<label [for]="controlName">{{ label }}
+  <span *ngIf="isRequired" class="required">*</span>
+</label>
+<p-autoComplete [formControl]="control" [id]="controlName" [optionLabel]="optionLabel"
+  (completeMethod)="onInputChange($event)" (onFocus)="op.toggle($event)" [suggestions]="suggestions"
+  [optionValue]="optionValue" [placeholder]="control.disabled ? '' : placeholder" [multiple]="true"></p-autoComplete>
+<app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
+  [control]="control"></app-control-messages>
+
+<p-overlayPanel #op [style]="{'max-width': '700px'}" [appendTo]="'body'">
+  <!-- <form [formGroup]="formGroup" class="grid p-fluid">
+    <ng-content />
+    <app-table class="col-12" [dataKey]="optionValue" [data]="dialogData" [selectedItems]="selectedItems"
+      (select)="onSelectionChange($event)" [columns]="dialogColumns" [showHeader]="false" [showPage]="false"
+      [showCheckBox]="true" selectionMode="single" [showManage]="false" scrollHeight="200px" [loading]="loading" />
+  </form> -->
+</p-overlayPanel>
