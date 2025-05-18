@@ -80,7 +80,11 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     {
       'id': 1, 'name': 'William', 'isdelete': true, 'age': 35, 'email': 'william36@example.com', 'city': 'Yilan', 'details': [
         { id: 1, description: '個人資料A', manufacturer: '台灣', quantity: 10, price: 1500, discount: 5 },
-        { id: 2, description: '個人資料B', manufacturer: '台灣', quantity: 5, price: 3000, discount: 10 }
+        { id: 2, description: '個人資料B', manufacturer: '台灣', quantity: 5, price: 3000, discount: 10 },
+        { id: 3, description: '個人資料C', manufacturer: '台灣', quantity: 10, price: 1500, discount: 5 },
+        { id: 4, description: '個人資料D', manufacturer: '台灣', quantity: 5, price: 3000, discount: 10 },
+        { id: 5, description: '個人資料E', manufacturer: '台灣', quantity: 10, price: 1500, discount: 5 },
+        { id: 6, description: '個人資料F', manufacturer: '台灣', quantity: 5, price: 3000, discount: 10 }
       ]
     },
     {
@@ -113,7 +117,7 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
 
   // 詳細資料欄位定義
   detailColumns: ColumnDef[] = [
-    { field: 'description', header: '詳細描述', editable: true },
+    { field: 'description', header: '詳細描述', editable: true, type: 'dropdown' },
     { field: 'manufacturer', header: '來源', editable: true },
     { field: 'quantity', header: '數量', editable: true, type: 'number' },
     { field: 'price', header: '金額', editable: true, type: 'number' },
