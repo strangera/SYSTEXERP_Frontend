@@ -85,6 +85,7 @@ import { InputTextareaComponent } from './componentkit/input-textarea/input-text
 import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick/calendar-range-quick.component';
 import { TableExportComponent } from './componentkit/table/table-export/table-export.component';
 import { MultiSelectTableComponent } from './componentkit/multi-select-table/multi-select-table.component';
+import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/expandable-edit-table.module';
 
 @NgModule({
   declarations: [
@@ -178,6 +179,7 @@ import { MultiSelectTableComponent } from './componentkit/multi-select-table/mul
     StepsModule,
     FileUploadModule,
     SpeedDialModule,
+    ExpandableEditTableModule,
   ],
   exports: [
     // Angular
@@ -265,6 +267,7 @@ import { MultiSelectTableComponent } from './componentkit/multi-select-table/mul
     TableComponent,
     TableExpansionComponent,
     RadiobuttonComponent,
+    ExpandableEditTableModule,
   ],
 })
 export class SharedModule { }

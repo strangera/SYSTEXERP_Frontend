@@ -7,6 +7,38 @@ import { SystemTypeService } from '../../../../service/basic/system-type.service
 import { Column } from '../../../../shared/componentkit/table/table.model';
 import { FieldsConfig } from '../../../../shared/componentkit/dropdown-table/dropdown-table.component';
 
+// 定義展開式表格所需的資料結構
+interface ProductDetail {
+  id: number;
+  description: string;
+  manufacturer: string;
+  quantity: number;
+  price: number;
+  discount: number;
+}
+
+// 定義欄位結構
+interface ColumnDef {
+  field: string;
+  header: string;
+  type?: string;
+  editable?: boolean;
+  hidden?: boolean;
+  style?: string;
+}
+
+// 定義事件資料類型
+interface RowSaveEvent {
+  oldData: any;
+  newData: any;
+}
+
+interface DetailSaveEvent {
+  oldDetail: any;
+  newDetail: any;
+  parentData: any;
+}
+
 @Component({
   selector: 'app-input.table',
   templateUrl: './input.table.component.html',
@@ -45,10 +77,24 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
   });
   // 表格
   data: any[] = [
-    { 'name': 'William', 'isdelete': true, 'age': 35, 'email': 'william36@example.com', 'city': 'Yilan' },
-    { 'name': 'Sarah', 'isdelete': false, 'age': 30, 'email': 'sarah49@example.com', 'city': 'Tainan' },
-    { 'name': 'Emily', 'isdelete': true, 'age': 24, 'email': 'emily82@example.com', 'city': 'New Taipei' },
-    { 'name': 'Sarah', 'isdelete': false, 'age': 23, 'email': 'sarah51@example.com', 'city': 'Tainan' },
+    {
+      'id': 1, 'name': 'William', 'isdelete': true, 'age': 35, 'email': 'william36@example.com', 'city': 'Yilan', 'details': [
+        { id: 1, description: '個人資料A', manufacturer: '台灣', quantity: 10, price: 1500, discount: 5 },
+        { id: 2, description: '個人資料B', manufacturer: '台灣', quantity: 5, price: 3000, discount: 10 }
+      ]
+    },
+    {
+      'id': 2, 'name': 'Sarah', 'isdelete': false, 'age': 30, 'email': 'sarah49@example.com', 'city': 'Tainan', 'details': [
+        { id: 3, description: '個人資料C', manufacturer: '台灣', quantity: 3, price: 2000, discount: 0 }
+      ]
+    },
+    { 'id': 3, 'name': 'Emily', 'isdelete': true, 'age': 24, 'email': 'emily82@example.com', 'city': 'New Taipei', 'details': [] },
+    {
+      'id': 4, 'name': 'Sarah', 'isdelete': false, 'age': 23, 'email': 'sarah51@example.com', 'city': 'Tainan', 'details': [
+        { id: 4, description: '個人資料D', manufacturer: '台灣', quantity: 8, price: 1800, discount: 15 },
+        { id: 5, description: '個人資料E', manufacturer: '台灣', quantity: 12, price: 500, discount: 0 }
+      ]
+    },
   ];
   columns: Column[] = [
     { field: 'name', header: 'Name', visible: true },
@@ -56,6 +102,27 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     { field: 'email', header: 'Email', visible: true },
     { field: 'city', header: 'City', visible: true },
   ];
+
+  // 展開式表格的欄位定義
+  mainColumns: ColumnDef[] = [
+    { field: 'name', header: '姓名', editable: true },
+    { field: 'age', header: '年齡', editable: true, type: 'number' },
+    { field: 'email', header: 'Email', editable: true },
+    { field: 'city', header: '城市', editable: true }
+  ];
+
+  // 詳細資料欄位定義
+  detailColumns: ColumnDef[] = [
+    { field: 'description', header: '詳細描述', editable: true },
+    { field: 'manufacturer', header: '來源', editable: true },
+    { field: 'quantity', header: '數量', editable: true, type: 'number' },
+    { field: 'price', header: '金額', editable: true, type: 'number' },
+    { field: 'discount', header: '折扣(%)', editable: true, type: 'number' },
+    { field: 'date', header: '日期', editable: true, type: 'date' }
+  ];
+
+  // 展開式表格的載入狀態
+  expandLoading = false;
 
   isRowSelectable(rowData: any): boolean {
     return rowData.isdelete;
@@ -76,6 +143,7 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
   }
 
   ngOnInit(): void {
+    console.log('展開式表格資料:', this.data);
     this.initializePage('900001', '/demo/demoInputTableCRU');
     this.systemTypeService.getSystemTypes().subscribe(data => {
       this.systemTypeOptions = data;
@@ -127,5 +195,35 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
       this.dialogData = [...results]; // 更新data資料
       this.dialogloading = false;
     });
+  }
+
+  // 展開式表格的事件處理方法 - 修正為正確的參數類型
+  // 注意：這些方法需要明確接收正確的事件類型
+  onRowSave(event: any) {
+    // 確認事件對象有預期的屬性
+    if (event && 'oldData' in event && 'newData' in event) {
+      console.log('儲存主表格行:', event);
+      // 這裡可以加入實際的API儲存邏輯
+    } else {
+      console.warn('收到未預期的事件格式:', event);
+    }
+  }
+
+  onRowCancel(event: any) {
+    console.log('取消主表格編輯:', event);
+  }
+
+  onDetailSave(event: any) {
+    // 確認事件對象有預期的屬性
+    if (event && 'oldDetail' in event && 'newDetail' in event && 'parentData' in event) {
+      console.log('儲存詳細資料:', event);
+      // 這裡可以加入實際的API儲存邏輯
+    } else {
+      console.warn('收到未預期的事件格式:', event);
+    }
+  }
+
+  onDetailCancel(event: any) {
+    console.log('取消詳細資料編輯:', event);
   }
 }

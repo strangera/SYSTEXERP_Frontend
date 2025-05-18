@@ -171,6 +171,8 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+
+<!-- 原本的Table範例 -->
 <div class="card">
   <p-divider align="left" type="solid">
     <b class="text-red-500 text-2xl">Table 完成</b>
@@ -179,6 +181,32 @@
     [isRowSelectable]="isRowSelectable" [showCheckBox]="true">
   </app-table>
 </div>
+
+<!-- 加入展開式可編輯表格範例 -->
+<div class="card">
+  <p-divider align="left" type="solid">
+    <b class="text-blue-500 text-2xl">展開式可編輯表格 (新)</b>
+  </p-divider>
+
+  <app-expandable-edit-table title="人員資料表" [mainColumns]="mainColumns" [detailColumns]="detailColumns" [data]="data"
+    [loading]="expandLoading" detailKey="details" dataKey="id" [showCheckBox]="true" [showPaginator]="true"
+    (save)="onRowSave($event)" (cancel)="onRowCancel($event)" (detailSave)="onDetailSave($event)"
+    (detailCancel)="onDetailCancel($event)">
+<!--
+    <ng-container caption-left>
+      <button pButton label="新增" icon="pi pi-plus" class="p-button-outlined p-button-success"></button>
+      <button pButton label="刷新" icon="pi pi-refresh" class="p-button-outlined"></button>
+    </ng-container>
+
+    <ng-container caption-right>
+      <button pButton label="匯出" icon="pi pi-file-export" class="p-button-outlined p-button-info"></button>
+    </ng-container> -->
+  </app-expandable-edit-table>
+</div>
+
+
+
+<!-- 其他原先的表格保持不變 -->
 <div class="card">
   <p-divider align="left" type="solid">
     <b class="text-gray-500 text-2xl">Table 將移除</b>
