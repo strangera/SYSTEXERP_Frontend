@@ -171,34 +171,155 @@
     width: 100%;
   }
 
-
   .date-selector-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-  .date-display {
-    flex-grow: 1;
-    padding-right: 5px;
+    .date-display {
+      flex-grow: 1;
+      padding-right: 5px;
+    }
+
+    .date-input {
+      flex-grow: 1;
+      padding-right: 5px;
+      width: calc(100% - 2rem);
+    }
+
+    .date-picker-button {
+      width: 2rem !important;
+      height: 2rem !important;
+      padding: 0 !important;
+    }
   }
 
-  .date-picker-button {
-    width: 2rem !important;
-    height: 2rem !important;
-    padding: 0 !important;
+  /* 對話框樣式 */
+  .date-picker-container {
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
   }
-}
 
-/* 對話框樣式 */
-.date-picker-container {
-  display: flex;
-  justify-content: center;
-  padding: 1rem;
-}
+  .dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
 
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
+  /* 日期選擇器對話框樣式調整 */
+  :host ::ng-deep {
+    .date-picker-dialog {
+      .p-dialog-content {
+        padding-bottom: 0;
+        overflow: visible !important;
+      }
+
+      .p-datepicker {
+        min-width: 280px;
+        padding: 0.5rem;
+
+        table {
+          margin: 0.25rem 0;
+        }
+
+        .p-datepicker-header {
+          padding: 0.25rem;
+        }
+
+        th {
+          padding: 0.25rem;
+        }
+
+        td {
+          padding: 0.15rem;
+
+          > span {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+
+            &.p-highlight {
+              background: #3b82f6;
+              color: #ffffff;
+            }
+          }
+        }
+
+        .p-datepicker-buttonbar {
+          padding: 0.25rem;
+
+          button {
+            padding: 0.25rem 0.5rem;
+          }
+        }
+      }
+
+      .p-dialog-footer {
+        padding: 0.75rem;
+        border-top: 1px solid #e9ecef;
+      }
+    }
+
+    /* 完全移除底部滾動條 */
+    .date-picker-dialog {
+      .p-dialog-content::-webkit-scrollbar {
+        display: none;
+      }
+
+      .p-dialog-content {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+      }
+    }
+
+    /* 日期選擇容器調整 */
+    .date-picker-container {
+      display: flex;
+      justify-content: center;
+      padding: 0.5rem;
+
+      .p-datepicker {
+        border: none;
+        box-shadow: none;
+      }
+    }
+
+    /* 對話框頁腳調整 */
+    .dialog-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    /* 完全隱藏滾動條 - 應用於所有日期選擇對話框 */
+    .p-dialog.date-picker-dialog .p-dialog-content::-webkit-scrollbar,
+    .p-dialog-content::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    .p-dialog.date-picker-dialog .p-dialog-content,
+    .p-dialog-content {
+      -ms-overflow-style: none !important; /* IE and Edge */
+      scrollbar-width: none !important; /* Firefox */
+    }
+
+    /* 強制禁用滾動條 - 嘗試更強的選擇器 */
+    .p-dialog.date-picker-dialog {
+      .p-component,
+      .p-dialog-content,
+      .p-dialog-content > * {
+        overflow: visible !important;
+        overflow-y: hidden !important;
+      }
+    }
+
+    /* 確保日期選擇器對話框有足夠的高度 */
+    .p-dialog.date-picker-dialog {
+      height: auto !important;
+      max-height: 90vh !important;
+    }
+  }
 }

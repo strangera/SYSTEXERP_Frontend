@@ -26,7 +26,6 @@ export interface Column {
   optionValue?: string; // 下拉選單 optionValue
 
   buttonLabel?: string; // 選擇按鈕 label
-  chipLabel?: string | undefined; // chips 顯示的 label
   checkboxValue?: string; // checkbox 顯示的 ngModel（適用於陣列資料）
   checkboxLabel?: (value: any) => string; // checkbox 顯示的 label（適用於陣列資料）
   checkboxTrueLabel?: string; // checkbox 非編輯模式 true 顯示文字（適用於單一布林值）

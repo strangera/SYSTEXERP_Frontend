@@ -1,86 +1,195 @@
+// .container {
+//   max-width: 500px;
+//   margin: 50px auto;
+//   padding: 20px;
+//   border: 1px solid #ccc;
+//   border-radius: 8px;
+//   background-color: #f9f9f9;
+//   display: flex;
+//   flex-direction: column;
+//   gap: 15px;
+// }
+
+// input,
+// select {
+//   width: 100%;
+//   padding: 8px;
+//   margin-top: 5px;
+//   margin-bottom: 10px;
+//   border: 1px solid #ddd;
+//   border-radius: 4px;
+// }
+
+// button {
+//   padding: 8px 12px;
+//   margin-right: 5px;
+//   border: none;
+//   border-radius: 4px;
+//   background-color: #82dcdc;
+//   color: white;
+//   cursor: pointer;
+// }
+
+// button:hover {
+//   background-color: #5bc2c2;
+// }
+
+// .delete-btn {
+//   background-color: #e74c3c;
+//   color: white;
+// }
+
+// .delete-btn:hover {
+//   background-color: #c0392b;
+// }
+
+// .address-btn {
+//   background-color: white;
+//   border: 1px solid #ccc;
+//   padding: 8px;
+//   border-radius: 4px;
+//   cursor: pointer;
+// }
+
+// .address-btn:hover {
+//   background-color: #f0f0f0;
+// }
+
+// .modal {
+//   display: none;
+//   position: fixed;
+//   z-index: 1;
+//   left: 0;
+//   top: 0;
+//   width: 100%;
+//   height: 100%;
+//   background-color: rgba(0, 0, 0, 0.5);
+//   justify-content: center;
+//   align-items: center;
+// }
+
+// .modal.show {
+//   display: flex;
+// }
+
+// .modal-content {
+//   background-color: white;
+//   padding: 20px;
+//   border-radius: 8px;
+//   width: 400px;
+//   display: flex;
+//   flex-direction: column;
+//   gap: 10px;
+// }
+// ::ng-deep .custom-clear-button .p-button-label {
+//   background-color: transparent !important; /* 背景設為透明 */
+//   color: #20b2aa !important; /* 字體顏色設為藍綠色 */
+//   border: none !important; /* 取消邊框 */
+// }
+
+// .custom-clear-button {
+//   margin-left: auto; /* 讓按鈕自動靠右 */
+//   float: right;
+// }
+
+// ::ng-deep .custom-table-red thead th {
+//   background-color: #2c3e50 !important; /* 深藍灰 */
+//   color: #ecf0f1 !important; /* 淺灰白 */
+// }
+
 .container {
-  max-width: 500px;
-  margin: 50px auto;
+  max-width: 100%;
+  margin: 0 auto;
   padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
 }
 
-input,
-select {
+/* 表格样式 */
+// :host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+//   background-color: #2c3e50;
+//   color: #ecf0f1;
+//   font-weight: bold;
+//   text-align: center;
+// }
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  padding: 0.5rem 0.75rem;
+  vertical-align: middle;
+}
+
+/* 顶部选项卡样式 */
+.setting-tabs .nav-tabs {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.setting-tabs .nav-item {
+  margin-bottom: -1px;
+}
+
+.setting-tabs .nav-link {
+  display: block;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid transparent;
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  color: #495057;
+}
+
+.setting-tabs .nav-link:hover {
+  border-color: #e9ecef #e9ecef #dee2e6;
+  background-color: #f8f9fa;
+}
+
+.setting-tabs .nav-link.active {
+  color: #0275d8;
+  background-color: #fff;
+  border-color: #dee2e6 #dee2e6 #fff;
+  font-weight: bold;
+}
+
+/* 设置内容样式 */
+.setting-content {
+  padding: 1rem 0;
+}
+
+.setting-content h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+  font-size: 1.25rem;
+}
+
+/* 表格样式 */
+.table {
   width: 100%;
-  padding: 8px;
-  margin-top: 5px;
-  margin-bottom: 10px;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.table th,
+.table td {
+  padding: 0.75rem;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  text-align: center;
 }
 
-button {
-  padding: 8px 12px;
-  margin-right: 5px;
-  border: none;
-  border-radius: 4px;
-  background-color: #82dcdc;
-  color: white;
-  cursor: pointer;
+.table th {
+  background-color: #f2f2f2;
+  color: #333;
+  font-weight: bold;
 }
 
-button:hover {
-  background-color: #5bc2c2;
-}
-
-.delete-btn {
-  background-color: #e74c3c;
-  color: white;
-}
-
-.delete-btn:hover {
-  background-color: #c0392b;
-}
-
-.address-btn {
-  background-color: white;
-  border: 1px solid #ccc;
-  padding: 8px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.address-btn:hover {
-  background-color: #f0f0f0;
-}
-
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  justify-content: center;
-  align-items: center;
-}
-
-.modal.show {
+.button-group {
+  margin-top: 1rem;
   display: flex;
+  gap: 0.5rem;
 }
 
-.modal-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
 ::ng-deep .custom-clear-button .p-button-label {
   background-color: transparent !important; /* 背景設為透明 */
   color: #20b2aa !important; /* 字體顏色設為藍綠色 */

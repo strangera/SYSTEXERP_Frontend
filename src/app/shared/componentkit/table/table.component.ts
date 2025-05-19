@@ -47,6 +47,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Output() rowEditSave = new EventEmitter<RowEditSaveEvent>();                 // Row 編輯保存事件
   @Output() rowEditCancel = new EventEmitter<any>();                            // Row 編輯取消事件
   @Input() rowEditDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
+  @Input() showCaption = true;
   // Header(左) 相關
   @Input() showHeader = true;                                          // 是否顯示 Header
   @Input() reportHead!: ReportHead;                                    // 列印PDF 配置

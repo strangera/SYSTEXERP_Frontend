@@ -202,6 +202,7 @@ import { NotificationMessageComponent } from './component/notification-message/n
     RadiobuttonComponent,
     NotificationMessageComponent,
     ExpandableEditTableModule,
+    SelectButtonModule,
   ],
 })
 export class SharedModule { }
