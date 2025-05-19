@@ -57,7 +57,9 @@
         </p-divider>
         <div class="grid p-fluid">
           <!-- add treeDropDown component   -->
-          <app-tree-dropdown></app-tree-dropdown>
+          <app-tree-dropdown [members]="memberList" [Columns]="columnDefs"
+            (confirmSelected)="onMembersSelected($event)">
+          </app-tree-dropdown>
           <!-- --- -->
         </div>
         <p-divider align="left" type="solid">
@@ -192,7 +194,7 @@
     [loading]="expandLoading" detailKey="details" dataKey="id" [showCheckBox]="true" [showPaginator]="true"
     (save)="onRowSave($event)" (cancel)="onRowCancel($event)" (detailSave)="onDetailSave($event)"
     (detailCancel)="onDetailCancel($event)">
-<!--
+    <!--
     <ng-container caption-left>
       <button pButton label="新增" icon="pi pi-plus" class="p-button-outlined p-button-success"></button>
       <button pButton label="刷新" icon="pi pi-refresh" class="p-button-outlined"></button>

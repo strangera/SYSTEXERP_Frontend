@@ -69,18 +69,18 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser>
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            // this.sys0110Service.insertSYSB600(frm.value).subscribe(() => {
-            //   this.messageService.successBubble('新增成功');
-            //   this.onCancel(); // 新增成功後返回查詢頁面
-            // });
+            this.sys0110Service.createUser(frm.value).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              this.onCancel(); // 新增成功後返回查詢頁面
+            });
           }
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            // this.sys0110Service.updateSYSB600(frm.value).subscribe(() => {
-            //   this.messageService.successBubble('更新成功');
-            //   this.onCancel(); // 更新成功後返回查詢頁面
-            // });
+            this.sys0110Service.updateUser(frm.value).subscribe(() => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel(); // 更新成功後返回查詢頁面
+            });
           }
           break;
       }

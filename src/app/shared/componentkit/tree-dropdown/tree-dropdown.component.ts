@@ -1,5 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { TreeNode } from 'primeng/api';
+
+export interface Column {
+  value: string;
+  label: string;
+}
+
 
 @Component({
   selector: 'app-tree-dropdown',
@@ -7,26 +13,30 @@ import { TreeNode } from 'primeng/api';
   styleUrls: ['./tree-dropdown.component.scss'],
 })
 export class TreeDropdownComponent implements OnInit {
-  members = [
-    // department > role > member (其他細項)
-    { id: '1', department: 'Department A', role: 'Owner', name: 'Amy Elsner', email: 'amy@email.com', phone: '0911111111' },
-    { id: '2', department: 'Department A', role: 'Owner', name: 'Anna Fali', email: 'anna@email.com', phone: '0922222222' },
-    { id: '3', department: 'Department A', role: 'Viewer', name: 'Asiya Javayant', email: 'asiya@email.com', phone: '0933333333' },
-    { id: '4', department: 'Department B', role: 'Examiner', name: 'Bernardo Dominic', email: 'bernardo@email.com', phone: '0944444444' },
-    { id: '5', department: 'Department B', role: 'Reviewer', name: 'Elwin Sharvill', email: 'elwin@email.com', phone: '0955555555' },
-  ];
+  // 扁平化導入的資料
+  // members = [
+  //   // department > role > member (其他細項)
+  //   { id: '1', department: 'Department A', role: 'Owner', name: 'Amy Elsner', email: 'amy@email.com', phone: '0911111111' },
+  //   { id: '2', department: 'Department A', role: 'Owner', name: 'Anna Fali', email: 'anna@email.com', phone: '0922222222' },
+  //   { id: '3', department: 'Department A', role: 'Viewer', name: 'Asiya Javayant', email: 'asiya@email.com', phone: '0933333333' },
+  //   { id: '4', department: 'Department B', role: 'Examiner', name: 'Bernardo Dominic', email: 'bernardo@email.com', phone: '0944444444' },
+  //   { id: '5', department: 'Department B', role: 'Reviewer', name: 'Elwin Sharvill', email: 'elwin@email.com', phone: '0955555555' },
+  // ];
+  @Input() members: any[] = []; // 允許外部傳入成員資料
 
   //外部提供顯示名稱
-  Columns = [
-    { 'value': 'department', 'label': '部門' },
-    { 'value': 'role', 'label': '角色' },
-    { 'value': 'member', 'label': '成員' }
-  ];
+  // Columns = [
+  //   { 'value': 'department', 'label': '部門' },
+  //   { 'value': 'role', 'label': '角色' },
+  //   { 'value': 'member', 'label': '成員' }
+  // ];
+  @Input() Columns: Column[] = [];
 
-  isAllExpanded = false;
+  @Output() confirmSelected = new EventEmitter<any[]>(); // 確定送出所選成員
 
-  selectedMembers: any[] = [];
-  treeData: any[] = [];
+  isAllExpanded = false;  //全部展開
+  selectedMembers: any[] = [];  //記錄勾選項目
+  treeData: any[] = []; // member資料先轉換成數狀
 
   ngOnInit() {
     this.treeData = this.groupByDepartment();
@@ -89,7 +99,6 @@ export class TreeDropdownComponent implements OnInit {
     return result;
   }
 
-  //顯示欄位名稱
   get columnsLabel(): string {
     return this.Columns.map(col => col.label).join(' / ');
   }
@@ -172,6 +181,7 @@ export class TreeDropdownComponent implements OnInit {
       }));
 
     console.log('Invited members:', invited);
+    this.confirmSelected.emit(invited); // 向外層傳出結果
   }
 
   //鍵盤事件
