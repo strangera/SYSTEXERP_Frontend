@@ -35,7 +35,6 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
     // 訂閱 currentPageProgNo 的變化
     this.currentPageProgNoSubscription = this.currentPageService.currentPageProgNo$.subscribe(progNo => {
       if (progNo) {
-        console.log('progNo:', progNo);
         this.setActiveItemByProgNo(progNo)
       } else {
         this.clearSelection();
