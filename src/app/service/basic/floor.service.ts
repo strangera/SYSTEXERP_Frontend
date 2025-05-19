@@ -18,7 +18,7 @@ export class FloorService {
 
   getFloors(): Observable<any[]> {
     return this.http
-      .post<any>(`${this.apiUrl}/queryTLS11010_SYS3900_DropDownList`, {})
+      .post<any>(`${this.apiUrl}/queryYS3900_DropDownList`, {})
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? []),
         catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
