@@ -236,9 +236,9 @@
 </p-table>
 </div>
 
-<!-- 在最底部添加 -->
-<p-dialog header="選擇日期" [(visible)]="datePickerVisible" [modal]="true" [style]="{width: '350px'}" [draggable]="false"
-  [resizable]="false">
+<!-- 日期視窗 -->
+<p-dialog header="選擇日期" [(visible)]="datePickerVisible" [modal]="true" [style]="{width: '400px'}"
+  [contentStyle]="{'overflow': 'visible'}" [draggable]="false" [resizable]="false" styleClass="date-picker-dialog">
   <div class="date-picker-container">
     <p-calendar [(ngModel)]="temporaryDate" [inline]="true" [showIcon]="false" [showButtonBar]="true"></p-calendar>
   </div>
