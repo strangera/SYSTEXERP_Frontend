@@ -14,7 +14,7 @@ interface TabItem {
 }
 
 interface AddTabItem {
-  prog_no: string;
+  prog_No: string;
   label: string;
 }
 
@@ -170,12 +170,12 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
     setTimeout(callback, delay);
   }
   onAddTab(item: AddTabItem) {
-    const existingTabIndex = this.tabs.findIndex(tab => tab.component === item.prog_no);
+    const existingTabIndex = this.tabs.findIndex(tab => tab.component === item.prog_No);
     if (existingTabIndex !== -1) {
       this.delayAction(() => (this.activeIndex = existingTabIndex));
       return;
     }
-    const component = item.prog_no;
+    const component = item.prog_No;
     if (component) {
       this.tabs.push({ title: item.label, component });
       this.delayAction(() => (this.activeIndex = this.tabs.length - 1));

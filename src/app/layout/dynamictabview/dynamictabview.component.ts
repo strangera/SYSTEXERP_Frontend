@@ -1,5 +1,5 @@
 import { Component, } from '@angular/core';
-import { DashboardComponent } from '../pages/base/dashboard/dashboard.component';
+import { DashboardComponent } from '../../pages/base/dashboard/dashboard.component';
 
 @Component({
   selector: 'app-dynamictabview',

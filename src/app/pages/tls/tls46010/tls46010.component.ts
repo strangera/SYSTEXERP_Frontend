@@ -4,7 +4,7 @@ import { FormGroup, Validators } from '@angular/forms';
 // Permissions
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Tls46010m } from '../../../shared/models/tls/tls000.module';
+import { Tls46010m } from '../../../shared/models/tls/tls000.model';
 import { SortMeta } from 'primeng/api';
 import { option } from '../../sys/module/sysb000.module';
 import { TableLazyLoadEvent } from 'primeng/table';

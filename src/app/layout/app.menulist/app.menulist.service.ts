@@ -14,7 +14,21 @@ export class AppMenulistService {
     {
       prog_No: '000',
       label: '首頁',
-      items: [{ prog_No: 'dashboard', label: '佈告欄', parent_id: '000', routerLink: '/dashboard', icon: 'pi pi-bookmark', prog_ispage: 'Y', prog_sort: 1 }],
+      items: [
+        {
+          prog_No: 'dashboard',
+          label: '佈告欄',
+          parent_id: '000',
+          routerLink: '/dashboard',
+          expanded: false,
+          icon: 'pi pi-bookmark',
+          hasChildrenOnly: false,
+          prog_ispage: 'Y',
+          prog_sort: '1',
+          selected: false,
+          isSubModule: false
+        }
+      ],
       prog_sort: 0 // 給寫死的首頁一個排序值
     },
     {
@@ -75,6 +89,8 @@ export class AppMenulistService {
     };
     sortMenuItems(dynamicMenu); // 排序第一層選單及其子項目
     const combinedMenu = [...this.fixedMenuItems, ...dynamicMenu];
+    console.log(combinedMenu);
+
     this.menuUpdatedSource.next(combinedMenu);
     return combinedMenu;
   }

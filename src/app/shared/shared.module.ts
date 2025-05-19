@@ -19,14 +19,9 @@ import { DataViewModule } from 'primeng/dataview';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { RippleModule } from 'primeng/ripple';
-import { SplitButtonModule } from 'primeng/splitbutton';
-import { ToggleButtonModule } from 'primeng/togglebutton';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { AutoCompleteModule } from 'primeng/autocomplete';
-import { ChipsModule } from 'primeng/chips';
-import { InputMaskModule } from 'primeng/inputmask';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { CascadeSelectModule } from 'primeng/cascadeselect';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
@@ -35,28 +30,15 @@ import { AccordionModule } from 'primeng/accordion';
 import { TreeTableModule } from 'primeng/treetable';
 import { CalendarModule } from 'primeng/calendar';
 import { CheckboxModule } from 'primeng/checkbox';
-import { ListboxModule } from 'primeng/listbox';
 import { PickListModule } from 'primeng/picklist';
-import { FieldsetModule } from 'primeng/fieldset';
 import { MenubarModule } from 'primeng/menubar';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ContextMenuModule } from 'primeng/contextmenu';
-import { ProgressBarModule } from 'primeng/progressbar';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
-import { SidebarModule } from 'primeng/sidebar';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { TreeModule } from 'primeng/tree';
-import { PanelMenuModule } from 'primeng/panelmenu';
-import { TagModule } from 'primeng/tag';
-import { ToolbarModule } from 'primeng/toolbar';
-import { StepperModule } from 'primeng/stepper';
-import { PaginatorModule } from 'primeng/paginator';
-import { ImageModule } from 'primeng/image';
-import { StepsModule } from 'primeng/steps';
 import { FileUploadModule } from 'primeng/fileupload';
-import { SpeedDialModule } from 'primeng/speeddial';
 import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
 import { EditorModule } from 'primeng/editor';
@@ -86,6 +68,7 @@ import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick
 import { TableExportComponent } from './componentkit/table/table-export/table-export.component';
 import { MultiSelectTableComponent } from './componentkit/multi-select-table/multi-select-table.component';
 import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/expandable-edit-table.module';
+import { NotificationMessageComponent } from './component/notification-message/notification-message.component';
 
 @NgModule({
   declarations: [
@@ -101,6 +84,7 @@ import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/
     CalendarRangeQuickComponent,
     TableComponent,
     TableExpansionComponent,
+    NotificationMessageComponent,
     TableExportComponent,
     DropdownTableComponent,
     MultiSelectTableComponent,
@@ -151,34 +135,13 @@ import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/
     DataViewModule,
     InputGroupModule,
     RippleModule,
-    SplitButtonModule,
-    ToggleButtonModule,
     BreadcrumbModule,
     AutoCompleteModule,
-    ChipsModule,
-    InputMaskModule,
-    CascadeSelectModule,
-    AccordionModule,
-    TreeTableModule,
-    ListboxModule,
-    PickListModule,
-    FieldsetModule,
     ConfirmDialogModule,
-    ContextMenuModule,
-    ProgressBarModule,
     RadioButtonModule,
     OverlayPanelModule,
-    SidebarModule,
     TreeModule,
-    PanelMenuModule,
-    TagModule,
-    ToolbarModule,
-    StepperModule,
-    PaginatorModule,
-    ImageModule,
-    StepsModule,
     FileUploadModule,
-    SpeedDialModule,
     ExpandableEditTableModule,
   ],
   exports: [
@@ -199,47 +162,17 @@ import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/
     TabViewModule,
     DividerModule,
     InputTextModule,
-
     DataViewModule,
-    MultiSelectModule,
     InputGroupModule,
     RippleModule,
-    SplitButtonModule,
-    ToggleButtonModule,
-    BreadcrumbModule,
-    ChipsModule,
-    InputMaskModule,
-    InputNumberModule,
-    CascadeSelectModule,
     PasswordModule,
     MessagesModule,
     AccordionModule,
     TreeTableModule,
-    CalendarModule,
     CheckboxModule,
-    ListboxModule,
     PickListModule,
-    FieldsetModule,
-
-    ToastModule,
-    ConfirmDialogModule,
-    ContextMenuModule,
-    ProgressBarModule,
     RadioButtonModule,
-    OverlayPanelModule,
-    SidebarModule,
-    InputSwitchModule,
     TreeModule,
-
-    PanelMenuModule,
-    TagModule,
-    ToolbarModule,
-    StepperModule,
-    PaginatorModule,
-    ImageModule,
-    StepsModule,
-    FileUploadModule,
-    SpeedDialModule,
     InputGroupAddonModule,
     IconFieldModule,
     InputIconModule,
@@ -267,6 +200,7 @@ import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/
     TableComponent,
     TableExpansionComponent,
     RadiobuttonComponent,
+    NotificationMessageComponent,
     ExpandableEditTableModule,
   ],
 })

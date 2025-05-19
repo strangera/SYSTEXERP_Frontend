@@ -13,19 +13,19 @@ import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
   styleUrls: ['./tls11010-cru.component.scss'],
 })
 export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
-inputForm = this.formBuilder.nonNullable.group({
-  LOCATION_Name: ['', [Validators.required, Validators.maxLength(30)]],
-  org_id: ['', [Validators.required, Validators.maxLength(20)]],
-  building_no: ['', [Validators.required, Validators.maxLength(1)]],
-  FLOOR_NO: ['', [Validators.required, Validators.maxLength(2)]],
-  AREA_NO: ['', [Validators.required, Validators.maxLength(2)]],
-  GROSS_SPACE: [null, [Validators.required, Validators.min(0), Validators.max(9999.999)]],
-  NET_SPACE: [null, [Validators.required, Validators.min(0), Validators.max(9999.999)]],
-  LOCATION_Status: [0, [Validators.required, Validators.maxLength(1)]],
-  Purpose_no: ['', [Validators.required, Validators.maxLength(2)]],
-  Draw_X: ['', [Validators.maxLength(255)]],
-  Draw_Y: ['', [Validators.maxLength(255)]],
-});
+  inputForm = this.formBuilder.nonNullable.group({
+    LOCATION_Name: ['', [Validators.required, Validators.maxLength(30)]],
+    org_id: ['', [Validators.required, Validators.maxLength(20)]],
+    building_no: ['', [Validators.required, Validators.maxLength(1)]],
+    FLOOR_NO: ['', [Validators.required, Validators.maxLength(2)]],
+    AREA_NO: ['', [Validators.required, Validators.maxLength(2)]],
+    GROSS_SPACE: [null, [Validators.required, Validators.min(0), Validators.max(9999.999)]],
+    NET_SPACE: [null, [Validators.required, Validators.min(0), Validators.max(9999.999)]],
+    LOCATION_Status: [0, [Validators.required, Validators.maxLength(1)]],
+    Purpose_no: ['', [Validators.required, Validators.maxLength(2)]],
+    Draw_X: ['', [Validators.maxLength(255)]],
+    Draw_Y: ['', [Validators.maxLength(255)]],
+  });
 
   floorOptions: any[] = [];
   RegionCodeOptions: any[] = [];
@@ -69,17 +69,18 @@ inputForm = this.formBuilder.nonNullable.group({
     this.handleSubmit(this.inputForm, () => {
       const raw = this.inputForm.getRawValue();
 
-    (raw as any).GROSS_SPACE = Number(raw.GROSS_SPACE);
-    (raw as any).NET_SPACE = Number(raw.NET_SPACE);
-    (raw as any).LOCATION_Status = String(raw.LOCATION_Status);
+      (raw as any).GROSS_SPACE = Number(raw.GROSS_SPACE);
+      (raw as any).NET_SPACE = Number(raw.NET_SPACE);
+      (raw as any).LOCATION_Status = String(raw.LOCATION_Status);
 
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-         console.log('📤 新增送出的 payload：', raw);
+        console.log('📤 新增送出的 payload：', raw);
 
         this.tls11010Service.insertData(raw).subscribe({
           next: () => {
             this.messageService.successBubble(this.translate.instant('success_message'));
-            this.router.navigate(['/TLS', 'TLS11010']);
+            // this.router.navigate(['/TLS', 'TLS11010']); 一律不跳轉
+            this.inputForm.reset(); // !!! 一律清空表單就好
           },
           error: () => {
             this.messageService.errorBubble(this.translate.instant('create_failed'));
@@ -87,13 +88,14 @@ inputForm = this.formBuilder.nonNullable.group({
         });
       } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
         // ✅ 加入 id 與 LOCATION_No 傳給後端
-       (raw as any).id = this.rowdata?.id;
+        (raw as any).id = this.rowdata?.id;
         (raw as any).LOCATION_No = this.rowdata?.LOCATION_No;
 
         this.tls11010Service.updateData(raw).subscribe({
           next: () => {
             this.messageService.successBubble(this.translate.instant('updated-successfully'));
-            this.router.navigate(['/TLS', 'TLS11010']);
+            // this.router.navigate(['/TLS', 'TLS11010']); 一律不跳轉
+            this.inputForm.reset();// !!! 一律清空表單就好
           },
           error: () => {
             this.messageService.errorBubble(this.translate.instant('update_failed'));

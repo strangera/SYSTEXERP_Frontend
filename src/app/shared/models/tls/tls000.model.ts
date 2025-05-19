@@ -1,13 +1,5 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-
-@NgModule({
-  declarations: [],
-  imports: [CommonModule],
-})
-
 //POS10015 門市系統主機設定檔
-export class Tls46010m {
+export interface Tls46010m {
   'id': string;
   'SYS_StoreNo': string;
   'SYS_SrvNo': string;

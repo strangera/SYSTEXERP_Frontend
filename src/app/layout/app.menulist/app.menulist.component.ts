@@ -35,6 +35,7 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
     // 訂閱 currentPageProgNo 的變化
     this.currentPageProgNoSubscription = this.currentPageService.currentPageProgNo$.subscribe(progNo => {
       if (progNo) {
+        console.log('progNo:', progNo);
         this.setActiveItemByProgNo(progNo)
       } else {
         this.clearSelection();
@@ -85,7 +86,7 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
 
   private findItemRecursive(items: MenuItem[], progNo: string): MenuItem | null {
     for (const item of items) {
-      if (item['prog_no'] === progNo) {
+      if (item['prog_No'] === progNo) {
         return item;
       }
       if (item.items) {
@@ -102,6 +103,6 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
   }
 
   get filteredMenu(): MenuItem[] {
-    return this.activeTopMenuProgNo ? this.model.filter(item => item['prog_no'] === this.activeTopMenuProgNo) : this.model;
+    return this.activeTopMenuProgNo ? this.model.filter(item => item['prog_No'] === this.activeTopMenuProgNo) : this.model;
   }
 }
