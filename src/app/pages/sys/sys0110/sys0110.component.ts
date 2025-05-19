@@ -165,27 +165,27 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
       return;
     }
     // 構建新的 requestBody 格式
-    // const requestBody = {
-    //   idList: idList, // 符合 API 的 idList 格式
-    // };
+    const requestBody = {
+      idList: idList, // 符合 API 的 idList 格式
+    };
     // 調用 API
-    // this.apiService.deleteTLS51010(requestBody).subscribe({
-    //   next: (response) => {
-    //     if (response.Status === '0000') {
-    //       this.messageService.successBubble('選中項目刪除成功');
-    //     } else {
-    //       console.error('API error:', response.Status, response.Message);
-    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-    //     }
-    //   },
-    //   error: (err: string) => {
-    //     console.error('API error:', err);
-    //     this.messageService.errorBubble('刪除失敗');
-    //   },
-    //   complete: () => {
-    //     this.onSubmit(this.queryForm);
-    //   },
-    // });
+    this.sys0110Service.deleteUser(requestBody).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('選中項目刪除成功');
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        }
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗');
+      },
+      complete: () => {
+        this.onSubmit(this.queryForm);
+      },
+    });
     this.selectedItems = [];
   }
 }
