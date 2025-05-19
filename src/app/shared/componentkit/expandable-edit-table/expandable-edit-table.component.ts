@@ -78,8 +78,35 @@ export class ExpandableEditTableComponent {
 
   constructor(private cdr: ChangeDetectorRef) { }
 
+
+  // 在組件初始化或數據載入時初始化輸入字段
+  initializeInputFields() {
+    if (this.data && this.data.length > 0) {
+      // 為主表格數據初始化
+      this.data.forEach(rowData => {
+        this.mainColumns.forEach(col => {
+          if (col.type === 'date' && rowData[col.field]) {
+            rowData[col.field + '_input'] = this.getFormattedDateValue(rowData[col.field]);
+          }
+        });
+
+        // 為詳細數據初始化
+        if (rowData[this.detailKey] && rowData[this.detailKey].length > 0) {
+          rowData[this.detailKey].forEach((detailData: any) => {
+            this.detailColumns.forEach(col => {
+              if (col.type === 'date' && detailData[col.field]) {
+                detailData[col.field + '_input'] = this.getFormattedDateValue(detailData[col.field]);
+              }
+            });
+          });
+        }
+      });
+    }
+  }
+
   ngOnInit() {
     this.totalRecords = this.data.length;
+    this.initializeInputFields();
   }
 
   ngOnChanges() {
@@ -203,10 +230,15 @@ export class ExpandableEditTableComponent {
     this.datePickerVisible = true;
   }
 
-  // 確認日期選擇
+  // 修改日期選擇器確認方法
   confirmDateSelection() {
     if (this.currentDateField && this.temporaryDate) {
+      // 保存日期對象
       this.currentDateField.data[this.currentDateField.field] = this.temporaryDate;
+
+      // 更新輸入字段以顯示格式化的日期
+      const formattedValue = this.getFormattedDateValue(this.temporaryDate);
+      this.currentDateField.data[this.currentDateField.field + '_input'] = formattedValue;
 
       // 如果是編輯詳細資料的日期，還需要觸發變更檢測
       if (this.currentDateField.isDetail) {
@@ -217,6 +249,108 @@ export class ExpandableEditTableComponent {
     this.currentDateField = null;
     this.temporaryDate = null;
   }
+
+  // 新方法：處理日期輸入完成（失去焦點或按回車時）
+  onDateInputComplete(data: any, field: string, isDetail: boolean = false, rowIndex?: number, detailIndex?: number) {
+    const inputValue = data[field + '_input'];
+
+    // 如果輸入為空，清空日期值
+    if (!inputValue) {
+      data[field] = null;
+      return;
+    }
+
+    // 解析日期
+    const parsedDate = this.parseDate(inputValue);
+
+    if (parsedDate) {
+      // 如果成功解析為日期
+      data[field] = parsedDate;
+      // 更新輸入框顯示為標準格式
+      data[field + '_input'] = this.getFormattedDateValue(parsedDate);
+    } else {
+      // 如果無法解析，保留原始輸入但不更新實際日期值
+      console.warn('無效日期格式:', inputValue);
+      // 可選：清空日期值
+      // data[field] = null;
+    }
+
+    // 觸發變更檢測
+    if (isDetail) {
+      this.cdr.detectChanges();
+    }
+  }
+
+  // 日期解析方法
+  parseDate(inputValue: string): Date | null {
+    if (!inputValue) return null;
+
+    try {
+      // 各種日期格式解析
+
+      // 1. 標準格式 YYYY/MM/DD 或 YYYY-MM-DD
+      const standardFormatMatch = inputValue.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
+      if (standardFormatMatch) {
+        const year = parseInt(standardFormatMatch[1], 10);
+        const month = parseInt(standardFormatMatch[2], 10) - 1;
+        const day = parseInt(standardFormatMatch[3], 10);
+
+        if (this.isValidDate(year, month, day)) {
+          return new Date(year, month, day);
+        }
+      }
+
+      // 2. 反向格式 DD/MM/YYYY
+      const reversedFormatMatch = inputValue.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+      if (reversedFormatMatch) {
+        const day = parseInt(reversedFormatMatch[1], 10);
+        const month = parseInt(reversedFormatMatch[2], 10) - 1;
+        const year = parseInt(reversedFormatMatch[3], 10);
+
+        if (this.isValidDate(year, month, day)) {
+          return new Date(year, month, day);
+        }
+      }
+
+      // 3. 純數字格式 YYYYMMDD
+      if (/^\d{8}$/.test(inputValue)) {
+        const year = parseInt(inputValue.substring(0, 4), 10);
+        const month = parseInt(inputValue.substring(4, 6), 10) - 1;
+        const day = parseInt(inputValue.substring(6, 8), 10);
+
+        if (this.isValidDate(year, month, day)) {
+          return new Date(year, month, day);
+        }
+      }
+
+      // 4. 嘗試一般解析
+      const dateObj = new Date(inputValue);
+      if (!isNaN(dateObj.getTime())) {
+        return dateObj;
+      }
+
+      // 無法解析為有效日期
+      return null;
+    } catch (e) {
+      console.error('日期解析錯誤:', e);
+      return null;
+    }
+  }
+
+  // 日期有效性檢查
+  isValidDate(year: number, month: number, day: number): boolean {
+    // 基本範圍檢查
+    if (year < 1900 || year > 2100) return false;
+    if (month < 0 || month > 11) return false;
+    if (day < 1 || day > 31) return false;
+
+    // 檢查月份的具體天數
+    const date = new Date(year, month, day);
+    return date.getFullYear() === year &&
+      date.getMonth() === month &&
+      date.getDate() === day;
+  }
+
 
   // 取消日期選擇
   cancelDateSelection() {
@@ -248,5 +382,169 @@ export class ExpandableEditTableComponent {
     event.stopPropagation();
 
     this.openDatePicker(detailData, field, true, rowIndex, detailIndex);
+  }
+
+
+  // 處理手動輸入日期（更穩健的版本）
+  onDateInputChange(data: any, field: string, isDetail: boolean = false, rowIndex?: number, detailIndex?: number) {
+    // 獲取輸入文本
+    const inputValue = data[field];
+
+    // 如果是空值，直接清空
+    if (!inputValue) {
+      data[field] = null;
+      return;
+    }
+
+    // 如果已經是Date對象，轉換為格式化的字符串
+    if (inputValue instanceof Date) {
+      const formattedValue = this.getFormattedDateValue(inputValue);
+      data[field] = inputValue;
+      return;
+    }
+
+    try {
+      // 只處理字符串類型的輸入
+      if (typeof inputValue !== 'string') {
+        return;
+      }
+
+      // 首先檢查是否是格式化的日期字符串 YYYY/MM/DD
+      if (/^\d{4}\/\d{2}\/\d{2}$/.test(inputValue)) {
+        const [year, month, day] = inputValue.split('/').map(p => parseInt(p, 10));
+
+        // 驗證日期合法性
+        if (this.isValidDate(year, month - 1, day)) {
+          const dateObj = new Date(year, month - 1, day);
+          data[field] = dateObj;
+          return;
+        }
+      }
+
+      // 檢查其他各種日期格式
+      // 1. YYYY-MM-DD
+      if (/^\d{4}-\d{2}-\d{2}$/.test(inputValue)) {
+        const [year, month, day] = inputValue.split('-').map(p => parseInt(p, 10));
+        if (this.isValidDate(year, month - 1, day)) {
+          const dateObj = new Date(year, month - 1, day);
+          data[field] = dateObj;
+          return;
+        }
+      }
+
+      // 2. DD/MM/YYYY
+      if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(inputValue)) {
+        const parts = inputValue.split('/').map(p => parseInt(p, 10));
+        const day = parts[0];
+        const month = parts[1];
+        const year = parts[2];
+
+        if (this.isValidDate(year, month - 1, day)) {
+          const dateObj = new Date(year, month - 1, day);
+          data[field] = dateObj;
+
+          // 更新為標準格式顯示
+          setTimeout(() => {
+            const formattedValue = this.getFormattedDateValue(dateObj);
+            data[field] = dateObj; // 確保仍然是Date對象
+            this.cdr.detectChanges();
+          }, 0);
+
+          return;
+        }
+      }
+
+      // 3. 嘗試通用解析（如果用戶輸入了其他可能的格式）
+      const possibleDate = new Date(inputValue);
+      if (!isNaN(possibleDate.getTime())) {
+        data[field] = possibleDate;
+
+        // 更新為標準格式顯示
+        setTimeout(() => {
+          const formattedValue = this.getFormattedDateValue(possibleDate);
+          if (formattedValue !== inputValue) {
+            data[field] = possibleDate; // 確保仍然是Date對象
+            this.cdr.detectChanges();
+          }
+        }, 0);
+
+        return;
+      }
+
+      // 4. 處理特殊情況：用戶輸入的只是數字（例如20230101）
+      if (/^\d{8}$/.test(inputValue)) {
+        const year = parseInt(inputValue.substring(0, 4), 10);
+        const month = parseInt(inputValue.substring(4, 6), 10) - 1;
+        const day = parseInt(inputValue.substring(6, 8), 10);
+
+        if (this.isValidDate(year, month, day)) {
+          const dateObj = new Date(year, month, day);
+          data[field] = dateObj;
+
+          // 更新為標準格式顯示
+          setTimeout(() => {
+            const formattedValue = this.getFormattedDateValue(dateObj);
+            this.cdr.detectChanges();
+          }, 0);
+
+          return;
+        }
+      }
+
+      // 5. 處理短格式：用戶輸入的簡短日期（例如2023/1/1）
+      const shortFormatMatch = inputValue.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/);
+      if (shortFormatMatch) {
+        const year = parseInt(shortFormatMatch[1], 10);
+        const month = parseInt(shortFormatMatch[2], 10) - 1;
+        const day = parseInt(shortFormatMatch[3], 10);
+
+        if (this.isValidDate(year, month, day)) {
+          const dateObj = new Date(year, month, day);
+          data[field] = dateObj;
+
+          // 更新為標準格式顯示
+          setTimeout(() => {
+            const formattedValue = this.getFormattedDateValue(dateObj);
+            this.cdr.detectChanges();
+          }, 0);
+
+          return;
+        }
+      }
+
+      // 如果都不匹配，保留原始輸入但在控制台輸出警告
+      console.warn('無法解析日期格式:', inputValue);
+      // 這裡關鍵是不要修改data[field]，保留用戶的原始輸入
+      // 讓用戶可以繼續修改，而不是自動轉換為無效日期
+
+    } catch (e) {
+      console.error('日期解析錯誤:', e);
+      // 發生錯誤時，不修改原始輸入
+    }
+  }
+
+  // 修改getFormattedDateValue方法，使其更穩健
+  getFormattedDateValue(date: any): string {
+    if (!date) return '';
+
+    // 如果已經是格式化的字符串，直接返回
+    if (typeof date === 'string' && /^\d{4}\/\d{2}\/\d{2}$/.test(date)) {
+      return date;
+    }
+
+    try {
+      const dateObj = new Date(date);
+      if (isNaN(dateObj.getTime())) return '';
+
+      // 格式化為 YYYY/MM/DD
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+
+      return `${year}/${month}/${day}`;
+    } catch (e) {
+      console.error('日期格式化錯誤:', e);
+      return '';
+    }
   }
 }

@@ -171,34 +171,39 @@
     width: 100%;
   }
 
-
   .date-selector-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-  .date-display {
-    flex-grow: 1;
-    padding-right: 5px;
+    .date-display {
+      flex-grow: 1;
+      padding-right: 5px;
+    }
+
+    .date-input {
+      flex-grow: 1;
+      padding-right: 5px;
+      width: calc(100% - 2rem);
+    }
+
+    .date-picker-button {
+      width: 2rem !important;
+      height: 2rem !important;
+      padding: 0 !important;
+    }
   }
 
-  .date-picker-button {
-    width: 2rem !important;
-    height: 2rem !important;
-    padding: 0 !important;
+  /* 對話框樣式 */
+  .date-picker-container {
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
   }
-}
 
-/* 對話框樣式 */
-.date-picker-container {
-  display: flex;
-  justify-content: center;
-  padding: 1rem;
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
+  .dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
 }
