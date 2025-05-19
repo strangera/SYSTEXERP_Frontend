@@ -147,7 +147,6 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
   }
 
   ngOnInit(): void {
-    console.log('展開式表格資料:', this.data);
     this.initializePage('900001', '/demo/demoInputTableCRU');
     this.systemTypeService.getSystemTypes().subscribe(data => {
       this.systemTypeOptions = data;

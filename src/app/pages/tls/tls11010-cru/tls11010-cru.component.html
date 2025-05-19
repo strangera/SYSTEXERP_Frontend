@@ -11,7 +11,7 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="inputForm">
       <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
+        <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="店位說明" [control]="inputForm.controls.LOCATION_Name" [submitted]="submitted">
           </app-input-text>
         </div>
@@ -64,7 +64,7 @@
       </div>
       <div class="col pt-4">
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
-          <app-button btnType="cancel" (click)="onCancel()"></app-button>
+          <app-button btnType="cancel"></app-button>
           <app-button btnType="submit" (click)="onSubmit()"></app-button>
         </div>
       </div>

@@ -38,7 +38,7 @@
           [disabled]="insertDisabled || !canPerformAction('20')" />
         <p-button *ngIf="IsPrint && showCheckBox && !rowEditing" (click)="deleteRow(selectedItems)" pTooltip="刪除"
           tooltipPosition="top" pButton icon="pi pi-trash" severity="danger" class="p-button-text" [rounded]="true"
-          [disabled]="selectedItems.length <= 0 || !canPerformAction('40')" />
+          [disabled]="selectedItems?.length <= 0 || !canPerformAction('40')" />
       </div>
       <div *ngIf="IsPrint" class="flex-grow-1 p-2"><ng-content select="header"></ng-content></div>
       <div *ngIf="IsPrint" class="flex gap-2 py-2">

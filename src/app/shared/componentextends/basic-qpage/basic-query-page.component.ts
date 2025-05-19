@@ -33,8 +33,6 @@ export class BasicQueryPageComponent<T> {
     this.ProgNo = progNo; // 程式編號
     this.cruPage = cruPage ?? ''; // CRU路徑
     this.funInfo = this.authService.getUserPermissions(this.ProgNo); // 取得權限
-    console.log(this.funInfo);
-
     // 在初始化頁面後，通知選單更新選中狀態
     this.currentPageService.setCurrentProgNo(this.ProgNo);
     // 取得歷史紀錄(如果有的話)
