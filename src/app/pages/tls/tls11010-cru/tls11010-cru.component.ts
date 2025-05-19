@@ -60,8 +60,21 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
 
     this.tls11010Service.getFloorOptions().subscribe(res => this.floorOptions = res);
     this.tls11010Service.getRegionOptions().subscribe(res => this.RegionCodeOptions = res);
-    this.tls11010Service.getOrgOptions().subscribe(res => this.OrganizationCodeOptions = res);
-    this.tls11010Service.getUsageOptions().subscribe(res => this.usageOptions = res);
+    this.tls11010Service.getOrgOptions().subscribe((res) => {
+      this.OrganizationCodeOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
+
+        this.tls11010Service.getUsageOptions().subscribe((res) => {
+      this.usageOptions = res?.map((x: any) => ({
+                label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
     this.tls11010Service.getBuildingOptions().subscribe(res => this.BUILDING_NO_Options = res);
   }
 

@@ -3,7 +3,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { InputNumberRangeComponent } from '../../../../../src/app/shared/componentkit/input-number-range/input-number-range.component';
+
 
 
 
@@ -16,7 +16,7 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     LOCATION_No: [[] as string[], [Validators.maxLength(10)]],
     org_id: [[] as string[], [Validators.maxLength(20)]],
-    org_name: [[] as string[], [Validators.maxLength(20)]],
+
     building_no: ['', [Validators.maxLength(1)]],
     FLOOR_NO: [[] as string[], [Validators.maxLength(2)]],
     AREA_NO: [[] as string[], [Validators.maxLength(2)]],
@@ -26,6 +26,7 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     NET_SPACE_End: [null, [Validators.min(0), Validators.max(9999.999)]],
     LOCATION_Status: ['', [Validators.maxLength(1)]],
     Purpose_no: [[] as string[], [Validators.maxLength(2)]],
+
     ...createPaginationConfig([{ field: 'LOCATION_No', order: 1 }]),
   });
 
@@ -37,7 +38,13 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     { field: 'LOCATION_No', header: '位置代碼', visible: true },
     { field: 'LOCATION_Name', header: '店位說明', visible: true },
     { field: 'org_id', header: '組織代碼', visible: true },
-    { field: 'org_name', header: '組織名稱', visible: true },
+
+    {
+      field: 'org_id',
+      header: '組織名稱',
+      visible: true,
+      format: (value: any) => this.getLabelFromOptions(value, this.OrganizationCodeOptions),
+    },
     {
       field: 'building_no',
       header: '館別',
@@ -98,8 +105,25 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
 
     this.tls11010Service.getFloorOptions().subscribe((res) => (this.floorOptions = res));
     this.tls11010Service.getRegionOptions().subscribe((res) => (this.RegionCodeOptions = res));
-    this.tls11010Service.getOrgOptions().subscribe((res) => (this.OrganizationCodeOptions = res));
-    this.tls11010Service.getUsageOptions().subscribe((res) => (this.usageOptions = res));
+    this.tls11010Service.getOrgOptions().subscribe((res) => {
+      this.OrganizationCodeOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
+
+
+    this.tls11010Service.getUsageOptions().subscribe((res) => {
+      this.usageOptions = res?.map((x: any) => ({
+                label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+
+
+
+    });
     this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
   }
 
