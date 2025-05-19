@@ -48,25 +48,25 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   deductionCodeNameServOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
 
-columns: any[] = [
-  { field: 'tlt_no', header: '專櫃編號', visible: true },
-  { field: 'tlt_name', header: '專櫃名稱', visible: true },
-  { field: 'tlt_building', header: '館別', visible: true },
-  { field: 'floor_desc', header: '樓層', visible: true },
-  { field: 'area_desc', header: '區域', visible: true },
-  { field: 'bus_type', header: '業種', visible: true },
-  { field: 'tlt_bdate', header: '契約起日', visible: true },
-  { field: 'tlt_edate', header: '契約迄日', visible: true },
-  { field: 'cap_type', header: '扣款類別', visible: true },
-  { field: 'CAP_Name', header: '扣款項目名稱', visible: true },
-  { field: 'tpy_bdate', header: '扣款起日', visible: true },
-  { field: 'tpy_edate', header: '扣款迄日', visible: true },
-  { field: 'tpy_totalamt', header: '總金額', visible: true },
-  { field: 'down_payment', header: '頭期款', visible: true },
-  { field: 'period_nos', header: '期數', visible: true },
-  { field: 'tpy_amount', header: '每期金額', visible: true },
-  { field: 'tpy_rate', header: '扣款比率', visible: true },
-];
+  columns: any[] = [
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'tlt_building', header: '館別', visible: true },
+    { field: 'floor_desc', header: '樓層', visible: true },
+    { field: 'area_desc', header: '區域', visible: true },
+    { field: 'bus_type', header: '業種', visible: true },
+    { field: 'tlt_bdate', header: '契約起日', visible: true },
+    { field: 'tlt_edate', header: '契約迄日', visible: true },
+    { field: 'cap_type', header: '扣款類別', visible: true },
+    { field: 'CAP_Name', header: '扣款項目名稱', visible: true },
+    { field: 'tpy_bdate', header: '扣款起日', visible: true },
+    { field: 'tpy_edate', header: '扣款迄日', visible: true },
+    { field: 'tpy_totalamt', header: '總金額', visible: true },
+    { field: 'down_payment', header: '頭期款', visible: true },
+    { field: 'period_nos', header: '期數', visible: true },
+    { field: 'tpy_amount', header: '每期金額', visible: true },
+    { field: 'tpy_rate', header: '扣款比率', visible: true },
+  ];
 
 
   constructor(

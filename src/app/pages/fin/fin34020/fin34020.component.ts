@@ -3,13 +3,13 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 //
 
-//1.3.4.2 客戶收款明細表 
+//1.3.4.2 客戶收款明細表
 @Component({
   selector: 'app-fin34020',
   templateUrl: './fin34020.component.html',

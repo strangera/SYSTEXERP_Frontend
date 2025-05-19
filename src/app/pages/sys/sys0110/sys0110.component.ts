@@ -82,7 +82,7 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
   }
 
   ngOnInit(): void {
-    this.initializePage('SYS0110', '/SYS/SYS0110', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('SYS0110', '/SYS/SYS0110CRU', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 
@@ -123,13 +123,13 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
       { value: '1', label: '公司內部人員' },
       { value: '2', label: '專櫃人員' },
       { value: '3', label: '其他' },
-    ]
+    ];
 
     this.userStatusOptions = [
       // 1=有效 2=停用
       { value: '1', label: '有效' },
       { value: '2', label: '停用' },
-    ]
+    ];
   }
 
   // 提交查詢：處理表單並呼叫查詢 API
@@ -165,27 +165,27 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
       return;
     }
     // 構建新的 requestBody 格式
-    // const requestBody = {
-    //   idList: idList, // 符合 API 的 idList 格式
-    // };
+    const requestBody = {
+      idList: idList, // 符合 API 的 idList 格式
+    };
     // 調用 API
-    // this.apiService.deleteTLS51010(requestBody).subscribe({
-    //   next: (response) => {
-    //     if (response.Status === '0000') {
-    //       this.messageService.successBubble('選中項目刪除成功');
-    //     } else {
-    //       console.error('API error:', response.Status, response.Message);
-    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-    //     }
-    //   },
-    //   error: (err: string) => {
-    //     console.error('API error:', err);
-    //     this.messageService.errorBubble('刪除失敗');
-    //   },
-    //   complete: () => {
-    //     this.onSubmit(this.queryForm);
-    //   },
-    // });
+    this.sys0110Service.deleteUser(requestBody).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('選中項目刪除成功');
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        }
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗');
+      },
+      complete: () => {
+        this.onSubmit(this.queryForm);
+      },
+    });
     this.selectedItems = [];
   }
 }

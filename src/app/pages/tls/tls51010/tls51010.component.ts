@@ -17,6 +17,7 @@ interface CategoryItem {
   UPD_Date?: string;
   UPD_USR_No?: string;
   UPD_USR_Name?: string;
+  CanDel: boolean;
 }
 @Component({
   selector: 'app-tls51010',
@@ -72,17 +73,37 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
   onDelete(data: CategoryItem | CategoryItem[]): void {
     const items = Array.isArray(data) ? data : [data];
     if (items.length === 0) return;
-    // 收集所有有效的 ID
-    const idList = items.filter((item) => item && item.id != null && item.id !== undefined).map((item) => item.id);
-    if (idList.length === 0) {
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+
+    // 過濾出 CanDel = true 且 ID 有效的項目
+    const deletableItems = items.filter(
+      (item) => item && item.id != null && item.id !== undefined && item.CanDel === true
+    );
+    const nonDeletableItems = items.filter(
+      (item) => item && item.id != null && item.id !== undefined && item.CanDel === false
+    );
+
+    // 如果沒有可刪除的項目
+    if (deletableItems.length === 0) {
+      this.messageService.errorBubble('無法刪除：選中的項目有不可刪除的大分類');
       return;
     }
-    // 構建新的 requestBody 格式
+
+    // 如果有不可刪除的項目，提示用戶
+    if (nonDeletableItems.length > 0) {
+      this.messageService.warnBubble(
+        `${nonDeletableItems.length} 個項目因 CanDel 為 false 無法刪除，將處理其餘 ${deletableItems.length} 個項目`
+      );
+    }
+
+    // 收集可刪除項目的 ID
+    const idList = deletableItems.map((item) => item.id);
+
+    // 構建 API 請求
     const requestBody = {
-      idList: idList, // 符合 API 的 idList 格式
+      idList: idList,
     };
-    // 調用 API
+
+    // 調用刪除 API
     this.apiService.deleteTLS51010(requestBody).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
@@ -97,9 +118,10 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
         this.messageService.errorBubble('刪除失敗');
       },
       complete: () => {
-        this.onSubmit(this.queryForm);
+        this.onSubmit(this.queryForm); // 刷新數據
       },
     });
+
     this.selectedItems = [];
   }
 }

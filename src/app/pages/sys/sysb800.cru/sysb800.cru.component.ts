@@ -1,6 +1,6 @@
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Bas1000Service } from '../../../service/api/sys/bas1000.service';

@@ -5,7 +5,7 @@ import { NotificationService } from '../../component/notification-message/notifi
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
 import { UserInfo } from '../../models/system/userInfo';
-import { CRUDStatus } from '../../enum/CRUDstatus';
+import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 
 export class BasicCruPageComponent<T> {

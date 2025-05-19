@@ -26,14 +26,16 @@
 <app-button btnType="create" label="收銀機號查詢" icon="pi pi-search"></app-button>
 <div class="card">
   <div class="col-12">
-    <app-data-table-check [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-    </app-data-table-check>
+    <app-table [showCheckBox]="true" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+      (detail)="onDetail($event)">
+    </app-table>
   </div>
 </div>
 <app-button btnType="create" label="專櫃編號查詢" icon="pi pi-search"></app-button>
 <div class="card">
   <div class="col-12">
-    <app-data-table-check [data]="data2" [columns]="columns2" (edit)="onEdit($event)" (detail)="onDetail($event)">
-    </app-data-table-check>
+    <app-table [showCheckBox]="true" [data]="data2" [columns]="columns2" (edit)="onEdit($event)"
+      (detail)="onDetail($event)">
+    </app-table>
   </div>
 </div>

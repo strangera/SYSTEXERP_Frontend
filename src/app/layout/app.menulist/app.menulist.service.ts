@@ -12,15 +12,42 @@ export class AppMenulistService {
 
   private fixedMenuItems: MenuItem[] = [
     {
-      prog_no: '000',
+      prog_No: '000',
       label: '首頁',
-      items: [{ prog_no: 'dashboard', label: '佈告欄', parent_id: '000', routerLink: '/dashboard', icon: 'pi pi-bookmark', prog_ispage: 'Y', prog_sort: 1 }],
+      items: [
+        {
+          prog_No: 'dashboard',
+          label: '佈告欄',
+          parent_id: '000',
+          routerLink: '/dashboard',
+          expanded: false,
+          icon: 'pi pi-bookmark',
+          hasChildrenOnly: false,
+          prog_ispage: 'Y',
+          prog_sort: '1',
+          selected: false,
+          isSubModule: false
+        }
+      ],
       prog_sort: 0 // 給寫死的首頁一個排序值
     },
     {
-      prog_no: '999',
+      prog_No: '999',
       label: '測試',
-      items: [{ prog_no: '900001', label: '範例', parent_id: '999', routerLink: '/demo/demoInputTable', icon: 'pi pi-bookmark', prog_ispage: 'Y', prog_sort: 1 }],
+      items: [
+        {
+          prog_No: '900001',
+          label: '範例',
+          parent_id: '999',
+          routerLink: '/demo/demoInputTable',
+          expanded: false,
+          icon: 'pi pi-bookmark',
+          hasChildrenOnly: false,
+          prog_ispage: 'Y',
+          prog_sort: '1',
+          selected: false,
+          isSubModule: false
+        }],
       icon: 'pi pi-cog',
       prog_sort: 999 // 給寫死的測試一個排序值
     }
@@ -31,12 +58,12 @@ export class AppMenulistService {
     const menuLookup = new Map<string, MenuItem>();
     const dynamicMenu: MenuItem[] = [];
     // 先處理所有節點，建立基本的 MenuItem 物件並放入 menuLookup
-    lists.forEach(({ prog_no, prog_name, prog_up, prog_ispage, prog_sort, sub_module_no }) => {
+    lists.forEach(({ prog_No, prog_name, prog_up, prog_ispage, prog_sort, sub_module_no }) => {
       const menuItem: MenuItem = {
-        prog_no: prog_no,
+        prog_No: prog_No,
         label: prog_name,
         parent_id: prog_up,
-        routerLink: prog_ispage === 'Y' ? `/${prog_no.slice(0, 3)}/${prog_no}` : undefined,
+        routerLink: prog_ispage === 'Y' ? `/${prog_No.slice(0, 3)}/${prog_No}` : undefined,
         items: undefined,
         expanded: false,
         icon: prog_ispage === 'Y' ? 'pi pi-bookmark' : sub_module_no === "" ? "pi pi-home" : 'pi pi-box',
@@ -46,11 +73,11 @@ export class AppMenulistService {
         selected: false,
         isSubModule: sub_module_no === "" && prog_up !== "" // 判斷是否為第一個子模組
       };
-      menuLookup.set(prog_no, menuItem);
+      menuLookup.set(prog_No, menuItem);
     });
     // 建立選單的層級結構
-    lists.forEach(({ prog_no, prog_up }) => {
-      const menuItem = menuLookup.get(prog_no);
+    lists.forEach(({ prog_No, prog_up }) => {
+      const menuItem = menuLookup.get(prog_No);
       if (menuItem) {
         if (prog_up !== "") {
           const parentItem = menuLookup.get(prog_up as string);

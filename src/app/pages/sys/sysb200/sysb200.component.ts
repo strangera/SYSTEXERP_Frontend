@@ -8,7 +8,7 @@ import { TableLazyLoadEvent } from 'primeng/table';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { SystemTypeService } from '../../../service/basic/system-type.service';
 import { ApprovalStatusService } from '../../../service/basic/approval-status.service';
-import { SYS1000Response } from '../../../shared/models/SYS/SYS1000';
+import { SYS1000Response } from '../../../shared/models/system/SYS1000';
 
 // 本地儲存鍵：用於儲存查詢狀態
 const storageKey = 'SYSB200';

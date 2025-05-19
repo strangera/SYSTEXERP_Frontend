@@ -166,12 +166,12 @@
 
 <div class="card">
   <div class="col-12" *ngIf="selectedOption == '1'">
-    <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-    </app-data-table>
+    <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+    </app-table>
   </div>
   <div class="col-12"
     *ngIf="selectedOption == '2' || selectedOption == '3' || selectedOption == '4' || selectedOption == '5' || selectedOption == '6' || selectedOption == '7'">
-    <app-data-table [data]="data" [columns]="columns2" (edit)="onEdit($event)" (detail)="onDetail($event)">
-    </app-data-table>
+    <app-table [data]="data" [columns]="columns2" (edit)="onEdit($event)" (detail)="onDetail($event)">
+    </app-table>
   </div>
 </div>

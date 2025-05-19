@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { NotfoundComponent } from '../notfound/notfound.component';
+import { NotfoundComponent } from '../base/notfound/notfound.component';
 import { SYS0110Component } from './sys0110/sys0110.component';
 import { SYS0210Component } from './sys0210/sys0210.component';
 import { SYS0220Component } from './sys0220/sys0220.component';

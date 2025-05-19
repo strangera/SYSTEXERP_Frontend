@@ -7,12 +7,12 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-//存入保證金保管聯備註維護 
+//存入保證金保管聯備註維護
 @Component({
   selector: 'app-fin35040-cru',
   templateUrl: './fin35040-cru.component.html',

@@ -10,7 +10,7 @@ import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 
 const now = new Date();

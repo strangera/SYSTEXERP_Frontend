@@ -1,3 +1,4 @@
+// 不使用
 export interface ReportHead {
   exporttime?: Date | string;    //報表產出時間
   exportuser?: string;            //使用者

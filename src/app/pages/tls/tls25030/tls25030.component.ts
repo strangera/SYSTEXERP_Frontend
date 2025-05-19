@@ -16,7 +16,7 @@ import { FloorService } from '../../../service/basic/floor.service';
 import { ViolationStatusService } from '../../../service/basic/violation-status.service';
 import { DeductionItemService } from '../../../service/basic/deduction-item.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 
 const now = new Date();

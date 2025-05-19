@@ -8,7 +8,6 @@ import { NotificationService } from '../../component/notification-message/notifi
 import { QueryStateService } from '../../service/query-state.service';
 import { ReportHead } from '../../models/ReportHead';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
-import { AuthService } from '../../../service/system/auth.service';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { Subject, takeUntil } from 'rxjs';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
@@ -57,8 +56,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() insertDisabled = false;                                     // 新增按鈕是否禁用
   @Output() delete = new EventEmitter<any>();                          // 刪除事件
   // expansion 收合展開
-  @Input() expansionDataKey = '';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
+  @Input() expansionDataKey = '';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionSortField = '';          // 收合展開 排序欄位(單一排序)
   @Input() expansionSortOrder = 0;           // 收合展開 排序方向 (1:升序、-1:降序)
   expression = false;                        // 收合展開 狀態 (true:展開、false:收合)
@@ -105,7 +104,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   constructor(
     private readonly queryStateService: QueryStateService,
     private readonly messageService: NotificationService,
-    private readonly authService: AuthService,
     private readonly currentPageService: CurrentPageService,
 
   ) { super(); }
@@ -122,7 +120,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
       setTimeout(() => {
-        console.log('當 data 發生變化時');
         const dataLength = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
         if (dataLength > 0) {
           this.calculateTotalPages(); // 計算總頁數
@@ -142,7 +139,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   }
   // 計算總頁數並生成頁面選項
   calculateTotalPages() {
-    console.log('加總頁數', this.data);
     this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
     this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
     this.pages = Array.from({ length: this.totalPages }, (_, index) => ({ label: `第 ${index + 1} 頁`, value: index + 1 }));
@@ -152,26 +148,22 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   }
   // 右上dropdown 跳轉頁數
   goToPage(pageNumber: number) {
-    console.log('右上dropdown 跳轉頁數', pageNumber);
     this.first = (pageNumber - 1) * this.rows; // 計算起始索引
     this.selectedPage = pageNumber; // 更新選擇的頁數
     this.lazyLoadData.emit({ pageIndex: this.selectedPage, pageSize: this.rows, SortBy: this.multiSortMeta });
   }
   // Table內建 分頁器變動
   onPageChange(event: TablePageEvent) {
-    console.log('Table內建 分頁器變動', event);
     this.first = event.first;   // 更新當前起始索引
     this.rows = event.rows;     // 更新每頁行數
     this.selectedPage = Math.ceil((event.first / event.rows) + 1); // 更新下拉選單中的頁碼
     this.calculateTotalPages();
   }
   onSort(event: any) {
-    console.log('onSort', event);
     this.multiSortMeta = event.multisortmeta;
     this.queryStateService.setQueryState(this.tableKey + 'Sort', this.multiSortMeta);
   }
   loadDataLazy(event: TableLazyLoadEvent) {
-    console.log('執行 Lazy 加載', event);
     setTimeout(() => {
       if (this.totalRecords === 0) { return; }
       const pageSize = event.rows && event.rows > 0 ? event.rows : 10;

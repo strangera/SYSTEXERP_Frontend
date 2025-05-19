@@ -1,0 +1,279 @@
+<!-- expandable-edit-table.component.html -->
+<div class="expandable-edit-table-container">
+  <!-- <div style="padding: 10px; background-color: lightyellow; margin-bottom: 10px;">
+    <p>表格調試區域</p>
+    <p>表格數據行數: {{data?.length || 0}}</p>
+    <p>列配置: {{mainColumns?.length || 0}} 列</p>
+  </div> -->
+  <h3 *ngIf="title" class="expandable-table-title">{{ title }}</h3>
+
+  <p-table #dt [value]="data"
+           [columns]="mainColumns"
+           [(selection)]="selectedItems"
+           [dataKey]="dataKey"
+           [rowTrackBy]="trackByFn"
+           [paginator]="showPaginator"
+           [rows]="rows"
+           [(first)]="first"
+           (onPage)="onPageChange($event)"
+           styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
+           [expandedRowKeys]="expandedRows"
+           [ngClass]="{ 'table-disabled': readonly }"
+           [loading]="loading"
+           editMode="row">
+
+    <!-- 表格頂部工具欄 -->
+    <ng-template pTemplate="caption">
+      <div class="table-caption flex justify-content-between align-items-center">
+        <div class="table-caption-left flex gap-2">
+          <ng-content select="[caption-left]"></ng-content>
+        </div>
+
+        <div class="table-caption-right flex gap-2">
+          <button *ngIf="detailKey" pButton pRipple
+                  [icon]="isAllExpanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+                  (click)="toggleExpandAll()"
+                  [label]="isAllExpanded ? '收合全部' : '展開全部'"
+                  class="p-button-text"></button>
+          <ng-content select="[caption-right]"></ng-content>
+        </div>
+      </div>
+    </ng-template>
+
+    <!-- 表頭 -->
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 4rem; text-align: center">序號</th>
+        <th *ngIf="showCheckBox && selectionMode === 'multiple'" style="width: 4rem">
+          <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+        </th>
+        <th *ngIf="detailKey" style="width: 4rem; text-align: center">展開</th>
+        <th *ngFor="let col of mainColumns" [hidden]="col.hidden" style="text-align: center">
+          {{ col.header }}
+        </th>
+        <th *ngIf="!readonly" style="width: 8rem; text-align: center">操作</th>
+      </tr>
+    </ng-template>
+
+    <!-- 表身 -->
+    <ng-template pTemplate="body" let-rowData let-expanded="expanded" let-editing="editing" let-ri="rowIndex">
+      <tr [pEditableRow]="rowData" [pSelectableRow]="rowData">
+        <td style="text-align: center">{{ ri + 1 }}</td>
+
+        <td *ngIf="showCheckBox && selectionMode === 'multiple'">
+          <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
+        </td>
+
+        <td *ngIf="detailKey" style="text-align: center">
+          <button type="button" pButton pRipple [pRowToggler]="rowData"
+                  [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                  class="p-button-text p-button-rounded"
+                  [disabled]="!rowData[detailKey] || rowData[detailKey].length === 0"
+                  [ngClass]="{'expanded-button': expanded}"></button>
+        </td>
+
+        <!-- 各個欄位 -->
+        <td *ngFor="let col of mainColumns" [hidden]="col.hidden" [ngClass]="col.style" style="text-align: center">
+          <!-- 可編輯欄位 -->
+          <p-cellEditor *ngIf="col.editable">
+            <ng-template pTemplate="input">
+              <ng-container [ngSwitch]="col.type">
+                <!-- 基本文字輸入 -->
+                <input *ngSwitchCase="'text'" pInputText type="text" [(ngModel)]="rowData[col.field]">
+
+                <!-- 數字輸入 -->
+                <p-inputNumber *ngSwitchCase="'number'" [(ngModel)]="rowData[col.field]"></p-inputNumber>
+
+                <!-- 下拉選單 -->
+                <p-dropdown *ngSwitchCase="'dropdown'"
+                           [options]="rowData[col.field + 'Options']"
+                           [(ngModel)]="rowData[col.field]"
+                           [style]="{width: '100%'}"></p-dropdown>
+
+                <!-- 日期選擇 -->
+                <div *ngSwitchCase="'date'" class="date-selector-wrapper">
+                  <div class="date-display">{{ formatDate(rowData[col.field]) }}</div>
+                  <button pButton pRipple type="button" icon="pi pi-calendar"
+                          class="p-button-text p-button-sm p-button-rounded date-picker-button"
+                          (click)="openDatePicker(rowData, col.field, false, ri)"></button>
+                </div>
+
+                <!-- 預設文字輸入 -->
+                <input *ngSwitchDefault pInputText type="text" [(ngModel)]="rowData[col.field]">
+              </ng-container>
+            </ng-template>
+
+            <ng-template pTemplate="output">
+              <ng-container [ngSwitch]="col.type">
+                <!-- 日期顯示 -->
+                <span *ngSwitchCase="'date'">{{ rowData[col.field] | date:'yyyy/MM/dd' }}</span>
+
+                <!-- 數字顯示 -->
+                <span *ngSwitchCase="'number'">{{ rowData[col.field] | number }}</span>
+
+                <!-- 預設顯示 -->
+                <span *ngSwitchDefault>{{ rowData[col.field] }}</span>
+              </ng-container>
+            </ng-template>
+          </p-cellEditor>
+
+          <!-- 不可編輯欄位 -->
+          <ng-container *ngIf="!col.editable">
+            <ng-container [ngSwitch]="col.type">
+              <!-- 日期顯示 -->
+              <span *ngSwitchCase="'date'">{{ rowData[col.field] | date:'yyyy/MM/dd' }}</span>
+
+              <!-- 數字顯示 -->
+              <span *ngSwitchCase="'number'">{{ rowData[col.field] | number }}</span>
+
+              <!-- 預設顯示 -->
+              <span *ngSwitchDefault>{{ rowData[col.field] }}</span>
+            </ng-container>
+          </ng-container>
+        </td>
+
+        <!-- 操作按鈕 -->
+        <td *ngIf="!readonly" style="text-align: center">
+          <div class="edit-buttons flex justify-content-center gap-2">
+            <button *ngIf="!editing" pButton pRipple type="button"
+                    icon="pi pi-pencil"
+                    class="p-button-rounded p-button-text"
+                    (click)="onRowEditInit(rowData, ri)"></button>
+
+            <button *ngIf="editing" pButton pRipple type="button"
+                    icon="pi pi-check"
+                    class="p-button-rounded p-button-text p-button-success"
+                    (click)="onRowEditSave(rowData)"></button>
+
+            <button *ngIf="editing" pButton pRipple type="button"
+                    icon="pi pi-times"
+                    class="p-button-rounded p-button-text p-button-danger"
+                    (click)="onRowEditCancel(rowData, ri)"></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <!-- 展開的詳細資料 -->
+    <ng-template pTemplate="rowexpansion" let-rowData let-ri="rowIndex">
+      <tr>
+        <td [attr.colspan]="visibleColumnsCount + (readonly ? 0 : 1)">
+          <div class="expanded-detail p-3">
+            <p-table [value]="rowData[detailKey]" [columns]="detailColumns">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width: 4rem; text-align: center">序號</th>
+                  <th *ngFor="let col of detailColumns" [hidden]="col.hidden" style="text-align: center">
+                    {{ col.header }}
+                  </th>
+                  <th *ngIf="!readonly" style="width: 8rem; text-align: center">操作</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-detailData let-di="rowIndex">
+                <tr>
+                  <td style="text-align: center">{{ di + 1 }}</td>
+
+                  <td *ngFor="let col of detailColumns" [hidden]="col.hidden" [ngClass]="col.style" style="text-align: center">
+                    <!-- 可編輯欄位 -->
+                    <ng-container *ngIf="isDetailEditing(ri, di) && col.editable">
+                      <ng-container [ngSwitch]="col.type">
+                        <!-- 基本文字輸入 -->
+                        <input *ngSwitchCase="'text'" pInputText type="text" [(ngModel)]="detailData[col.field]">
+
+                        <!-- 數字輸入 -->
+                        <p-inputNumber *ngSwitchCase="'number'" [(ngModel)]="detailData[col.field]"></p-inputNumber>
+
+                        <!-- 下拉選單 -->
+                        <p-dropdown *ngSwitchCase="'dropdown'"
+                                   [options]="detailData[col.field + 'Options']"
+                                   [(ngModel)]="detailData[col.field]"
+                                   [style]="{width: '100%'}"></p-dropdown>
+
+                        <!-- 日期選擇 -->
+                        <div *ngSwitchCase="'date'" class="date-selector-wrapper">
+                          <div class="date-display">{{ formatDate(detailData[col.field]) }}</div>
+                          <button pButton pRipple type="button" icon="pi pi-calendar"
+                                  class="p-button-text p-button-sm p-button-rounded date-picker-button"
+                                  (click)="openDatePicker(detailData, col.field, true, ri, di)"></button>
+                        </div>
+
+                        <!-- 預設文字輸入 -->
+                        <input *ngSwitchDefault pInputText type="text" [(ngModel)]="detailData[col.field]">
+                      </ng-container>
+                    </ng-container>
+
+                    <!-- 不可編輯或非編輯狀態 -->
+                    <ng-container *ngIf="!isDetailEditing(ri, di) || !col.editable">
+                      <ng-container [ngSwitch]="col.type">
+                        <!-- 日期顯示 -->
+                        <span *ngSwitchCase="'date'">{{ detailData[col.field] | date:'yyyy/MM/dd' }}</span>
+
+                        <!-- 數字顯示 -->
+                        <span *ngSwitchCase="'number'">{{ detailData[col.field] | number }}</span>
+
+                        <!-- 預設顯示 -->
+                        <span *ngSwitchDefault>{{ detailData[col.field] }}</span>
+                      </ng-container>
+                    </ng-container>
+                  </td>
+
+                  <!-- 詳細資料操作按鈕 -->
+                  <td *ngIf="!readonly" style="text-align: center">
+                    <div class="detail-edit-buttons flex justify-content-center gap-2">
+                      <button *ngIf="!isDetailEditing(ri, di)" pButton pRipple type="button"
+                              icon="pi pi-pencil"
+                              class="p-button-rounded p-button-text"
+                              (click)="onDetailEditInit(detailData, rowData, ri, di)"></button>
+
+                      <button *ngIf="isDetailEditing(ri, di)" pButton pRipple type="button"
+                              icon="pi pi-check"
+                              class="p-button-rounded p-button-text p-button-success"
+                              (click)="onDetailEditSave(detailData, rowData)"></button>
+
+                      <button *ngIf="isDetailEditing(ri, di)" pButton pRipple type="button"
+                              icon="pi pi-times"
+                              class="p-button-rounded p-button-text p-button-danger"
+                              (click)="onDetailEditCancel(detailData, rowData, ri, di)"></button>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <!-- 無詳細資料時顯示 -->
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td [attr.colspan]="detailColumns.length + 2" style="text-align: center">
+                    查無詳細資料
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <!-- 無資料時顯示 -->
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td [attr.colspan]="visibleColumnsCount + (readonly ? 0 : 1)" style="text-align: center">
+          {{ emptyMessage }}
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- 在最底部添加 -->
+<p-dialog header="選擇日期" [(visible)]="datePickerVisible" [modal]="true" [style]="{width: '350px'}" [draggable]="false" [resizable]="false">
+  <div class="date-picker-container">
+    <p-calendar [(ngModel)]="temporaryDate" [inline]="true" [showIcon]="false" [showButtonBar]="true"></p-calendar>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton pRipple label="確認" icon="pi pi-check" class="p-button-text" (click)="confirmDateSelection()"></button>
+      <button pButton pRipple label="取消" icon="pi pi-times" class="p-button-text p-button-secondary" (click)="cancelDateSelection()"></button>
+    </div>
+  </ng-template>
+</p-dialog>

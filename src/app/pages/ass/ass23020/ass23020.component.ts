@@ -8,7 +8,7 @@ import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { BigCategoryService } from '../../../service/basic/big-category.service';
 import { MidCategoryService } from '../../../service/basic/mid-category.service';

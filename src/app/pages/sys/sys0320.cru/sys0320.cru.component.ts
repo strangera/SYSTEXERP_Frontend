@@ -7,13 +7,12 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { Store } from '../../../shared/models/SYS/StoreM';
 import { TreeNode } from 'primeng/api';
 
 // 4.2.3.2 使用者系統權限設定 CRU
@@ -25,7 +24,7 @@ import { TreeNode } from 'primeng/api';
 // 使用者系統權限設定 CRU
 export class SYS0320CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------
-  sourceProducts: Store[] = [{
+  sourceProducts: any[] = [{
     id: 1,
     cName: 'agnès b.',
     area: 'A1館',
@@ -41,7 +40,7 @@ export class SYS0320CRUComponent extends BasicCrupageComponent implements OnInit
     area: 'A1館',
     floor: '1F',
   },];
-  targetProducts: Store[] = [];
+  targetProducts: any[] = [];
 
   // ----------------------------------------------------------------
   selectedFiles: TreeNode[] = [];

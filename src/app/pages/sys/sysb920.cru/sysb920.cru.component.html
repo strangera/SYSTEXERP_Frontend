@@ -17,27 +17,25 @@
           </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="所屬大分類名稱" controlName="bus_type" [options]="optionsBig" optionLabel="label"
+          <app-dropdown label="所屬大分類代碼/名稱" controlName="bus_type" [options]="optionsBig" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.bus_type" [submitted]="submitted">
           </app-dropdown>
         </div>
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="中分類名稱" controlName="bus_class" [options]="optionsMid" optionLabel="label"
+          <app-dropdown label="中分類代碼/名稱" controlName="bus_class" [options]="optionsMid" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.bus_class" [submitted]="submitted">
           </app-dropdown>
         </div>
       </div>
-      <hr>
       <div class="grid p-fluid">
         <app-input-textarea class="col-12 md:col-6 lg:col-5" label="說明" controlName="textarea"
           [control]="dataForm.controls.bus_sclass_desc" [submitted]="submitted" />
       </div>
-      <hr>
     </form>
     <div class="col pt-4">
-      <div class="grid justify-content-end">
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" (click)="onCancel()"></app-button>
         <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="!isFormReadable"></app-button>
       </div>

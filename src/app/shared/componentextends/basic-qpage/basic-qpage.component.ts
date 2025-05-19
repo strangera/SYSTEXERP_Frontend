@@ -1,7 +1,7 @@
 import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
 import { HasPermissionsValue } from '../../directive/has-permission.directive';
 import { NavigationExtras, Router } from '@angular/router';
-import { CRUDStatus } from '../../enum/CRUDstatus';
+import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { ReportHead } from '../../models/ReportHead';
 import { UserInfo } from '../../models/system/userInfo';
 

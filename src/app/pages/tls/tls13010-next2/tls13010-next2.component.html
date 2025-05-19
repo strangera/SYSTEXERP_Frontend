@@ -1,228 +1,257 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
+    <app-button btnType="create" label="下一步(XX設定)"></app-button>
+    <app-button btnType="cancel" (click)="onCancel()"></app-button>
+  </div>
+
+  <p-accordion>
+    <p-accordionTab header="專櫃契約書資訊" [selected]="true" class="line-height-3 m-0">
+      <div class="col-12 custom-table-red">
+        <app-table tableKey="stocks" [lazy]="true" [loading]="loading" [showEdit]="false" [showDetail]="false"
+          [showRowEdit]="false" [data]="inventoryItems" [columns]="stocksColumns" [showManage]="false">
+        </app-table>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+
+  <p-accordion>
+    <p-accordionTab header="抽成與活動設定" [selected]="true" class="line-height-3 m-0">
+      <form [formGroup]="dataForm">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="抽成類別" controlName="commissionType" [submitted]="submitted">
+            </app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="抽成類別名稱" controlName="commissionTypeName" [submitted]="submitted">
+            </app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="稅別" controlName="taxType" [options]="taxTypeOptions" optionLabel="label"
+              optionValue="value" [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <label for="discountSummary">設定摘要</label>
+            <input type="text" id="discountSummary" formControlName="discountSummary" readonly />
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="單筆交易金額(含)以上" controlName="transactionAmount" [submitted]="submitted">
+            </app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="特價抽成(%)" controlName="specialCommission" [submitted]="submitted">
+            </app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <p-checkbox label="全館消費滿額集點活動" formControlName="fullAmountPointsEvent" binary="true"></p-checkbox>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <p-checkbox label="滿仟送佰" formControlName="thousandDiscountEvent" binary="true"></p-checkbox>
+          </div>
         </div>
-        <app-button btnType="submit" (click)="submitForm()"></app-button>
-        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+
+  <p-accordion>
+    <p-accordionTab header="折扣設定" [selected]="true" class="line-height-3 m-0">
+      <div class="">
+        <app-table tableKey="stocks" [lazy]="true" [loading]="loading" [showEdit]="false" [showDetail]="false"
+          [showRowEdit]="true" [data]="inventoryItems" [columns]="stocksColumns" [showManage]="false"
+          [showCheckBox]="true">
+        </app-table>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+
+  <p-accordion>
+    <p-accordionTab header="年度總業績抽成設定" [selected]="true" class="line-height-3 m-0">
+      <div class="">
+        <app-table tableKey="stocks" [lazy]="true" [loading]="loading" [showEdit]="false" [showDetail]="false"
+          [showRowEdit]="true" [data]="inventoryItems" [columns]="stocksColumns" [showManage]="false">
+        </app-table>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+
+  <p-accordion>
+    <p-accordionTab header="折扣別層級抽成設定" [selected]="true" class="line-height-3 m-0">
+      <div class="">
+        <app-table tableKey="stocks" [lazy]="true" [loading]="loading" [showEdit]="false" [showDetail]="false"
+          [showRowEdit]="true" [data]="inventoryItems" [columns]="stocksColumns" [showManage]="false">
+        </app-table>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+
+  <form [formGroup]="dataForm">
+    <ng-container formArrayName="items">
+      <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+        <div class="card" style="position: relative;">
+          <p-button label="清除" [text]="true" class="p-button-text p-button-danger custom-clear-button"
+            (click)="onRemoveItem(i)">
+          </p-button>
+
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="抽成類別" controlName="commissionType" [control]="getFormControl(i, 'commissionType')"
+                [submitted]="submitted">
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="抽成類別名稱" controlName="commissionTypeName"
+                [control]="getFormControl(i, 'commissionTypeName')" [submitted]="submitted">
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="稅別" controlName="taxType" [control]="getFormControl(i, 'taxType')"
+                [options]="taxTypeOptions" optionLabel="label" optionValue="value" [submitted]="submitted">
+              </app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <label for="discountSummary{{ i }}">設定摘要</label>
+              <input type="text" id="discountSummary{{ i }}" [formControl]="getFormControl(i, 'discountSummary')"
+                readonly />
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="單筆交易金額(含)以上" controlName="transactionAmount"
+                [control]="getFormControl(i, 'transactionAmount')" [submitted]="submitted">
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="特價抽成(%)" controlName="specialCommission"
+                [control]="getFormControl(i, 'specialCommission')" [submitted]="submitted">
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <p-checkbox label="全館消費滿額集點活動">
+              </p-checkbox>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <p-checkbox label="滿仟送佰">
+              </p-checkbox>
+            </div>
+          </div>
+          <br>
+          <div class="card inner-items">
+            <p-tabView>
+              <p-tabPanel header="折扣設定">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>選擇</th>
+                      <th>折扣別</th>
+                      <th>合約起始日</th>
+                      <th>合約終止日</th>
+                      <th>抽成率 (%)</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody formArrayName="discountSettingItems">
+                    <tr *ngFor="let innerItem of getDiscountSettingItems(i).controls; let j = index"
+                      [formGroupName]="j">
+                      <td><input type="checkbox" formControlName="selected" /></td>
+                      <td>
+                        <select id="discountType1_{{ i }}{{ j }}" formControlName="discountType">
+                          <option value="" disabled>選擇折扣別</option>
+                          <option *ngFor="let discount of discounts" [value]="discount.value">
+                            {{ discount.label }}</option>
+                        </select>
+                      </td>
+                      <td><input type="date" formControlName="startDate" /></td>
+                      <td><input type="date" formControlName="endDate" /></td>
+                      <td><input type="text" formControlName="rate" /></td>
+                      <td><button type="button" (click)="removeDiscountSettingItem(i, j)">刪除</button></td>
+                    </tr>
+                    <tr>
+                      <td colspan="6"><button type="button" (click)="addDiscountSettingItem(i)">新增項目</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </p-tabPanel>
+
+              <p-tabPanel header="年度總業績抽成設定">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>選擇</th>
+                      <th>帳務起</th>
+                      <th>帳務迄</th>
+                      <th>業績超過金額含</th>
+                      <th>抽成率</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody formArrayName="annualPerformanceItems">
+                    <tr *ngFor="let innerItem of getAnnualPerformanceItems(i).controls; let j = index"
+                      [formGroupName]="j">
+                      <td><input type="checkbox" formControlName="selected" /></td>
+                      <td><input type="date" /></td>
+                      <td><input type="date" /></td>
+                      <td><input type="text" formControlName="discountAmount" /></td>
+                      <td><input type="text" formControlName="rate" /></td>
+                      <td><button type="button" (click)="removeAnnualPerformanceItem(i, j)">刪除</button></td>
+                    </tr>
+                    <tr>
+                      <td colspan="4"><button type="button" (click)="addAnnualPerformanceItem(i)">新增項目</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </p-tabPanel>
+
+              <p-tabPanel header="折扣別層級抽成設定">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>選擇</th>
+                      <th>折扣別</th>
+                      <th>業績計算金額(起)</th>
+                      <th>業績計算金額(迄)</th>
+                      <th>抽成率</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody formArrayName="discountLevelItems">
+                    <tr *ngFor="let innerItem of getDiscountLevelItems(i).controls; let j = index" [formGroupName]="j">
+                      <td><input type="checkbox" formControlName="selected" /></td>
+                      <td>
+                        <select id="discountType3_{{ i }}{{ j }}" formControlName="discountType">
+                          <option value="" disabled>選擇折扣別</option>
+                          <option *ngFor="let discount of discounts" [value]="discount.value">
+                            {{ discount.label }}</option>
+                        </select>
+                      </td>
+                      <td><input type="text" formControlName="startAmount" /></td>
+                      <td><input type="text" formControlName="endAmount" /></td>
+                      <td><input type="text" formControlName="rate" /></td>
+                      <td><button type="button" (click)="removeDiscountLevelItem(i, j)">刪除</button></td>
+                    </tr>
+                    <tr>
+                      <td colspan="6"><button type="button" (click)="addDiscountLevelItem(i)">新增項目</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </p-tabPanel>
+            </p-tabView>
+
+            <div class="button-group">
+              <button type="button" (click)="onSave(i)">確定</button>
+              <button type="button" (click)="onCancelInner(i)">取消</button>
+              <button type="button" (click)="onClear(i)">清除內容</button>
+            </div>
+          </div>
+        </div>
+        <hr />
+      </ng-container>
+    </ng-container>
+
+
+    <div class="pt-1">
+      <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
     </div>
+  </form>
 
-    <p-accordion>
-        <p-accordionTab header="專櫃契約書資訊" [selected]="true" class="line-height-3 m-0">
-            <p-table [value]="inventoryItems" responsiveLayout="scroll">
-                <ng-template pTemplate="header">
-                    <tr>
-                        <th>專櫃招募編號</th>
-                        <th>專櫃編號</th>
-                        <th>品牌(專櫃)名稱</th>
-                        <th>廠商統編</th>
-                        <th>廠商名稱</th>
-                        <th>版本編號</th>
-                        <th>抽成別</th>
-                        <th>合約起始日</th>
-                        <th>合約終止日</th>
-                        <th>營運起始日</th>
-                        <th>營運終止日</th>
-                    </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-counter>
-                    <tr>
-                        <td>{{ counter.recruitmentNumber }}</td>
-                        <td>{{ counter.counterNumber }}</td>
-                        <td>{{ counter.brandName }}</td>
-                        <td>{{ counter.vendorId }}</td>
-                        <td>{{ counter.vendorName }}</td>
-                        <td>{{ counter.versionNumber }}</td>
-                        <td>{{ counter.commissionType }}</td>
-                        <td>{{ counter.contractStartDate }}</td>
-                        <td>{{ counter.contractEndDate }}</td>
-                        <td>{{ counter.operationStartDate }}</td>
-                        <td>{{ counter.operationEndDate }}</td>
-                    </tr>
-                </ng-template>
-            </p-table>
-        </p-accordionTab>
-    </p-accordion>
-
-    <form [formGroup]="dataForm">
-        <ng-container formArrayName="items">
-            <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                <div class="card" style="position: relative;">
-                    <!-- 清除按鈕 -->
-                    <p-button label="清除" [text]="true" class="p-button-text p-button-danger custom-clear-button"
-                        (click)="onRemoveItem(i)">
-                    </p-button>
-
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="抽成類別" controlName="commissionType"
-                                [control]="getFormControl(i, 'commissionType')" [submitted]="submitted">
-                            </app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="抽成類別名稱" controlName="commissionTypeName"
-                                [control]="getFormControl(i, 'commissionTypeName')" [submitted]="submitted">
-                            </app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="稅別" controlName="taxType" [control]="getFormControl(i, 'taxType')"
-                                [options]="taxTypeOptions" optionLabel="label" optionValue="value"
-                                [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <label for="discountSummary{{ i }}">設定摘要</label>
-                            <input type="text" id="discountSummary{{ i }}"
-                                [formControl]="getFormControl(i, 'discountSummary')" readonly />
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="單筆交易金額(含)以上" controlName="transactionAmount"
-                                [control]="getFormControl(i, 'transactionAmount')" [submitted]="submitted">
-                            </app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="特價抽成(%)" controlName="specialCommission"
-                                [control]="getFormControl(i, 'specialCommission')" [submitted]="submitted">
-                            </app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <p-checkbox label="全館消費滿額集點活動">
-                            </p-checkbox>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <p-checkbox label="滿仟送佰">
-                            </p-checkbox>
-                        </div>
-                    </div>
-                    <br>
-                    <!-- 折扣設定區域 -->
-                    <div class="card inner-items">
-                        <p-tabView>
-                            <!-- 折扣設定 Tab -->
-                            <p-tabPanel header="折扣設定">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>選擇</th>
-                                            <th>折扣別</th>
-                                            <th>合約起始日</th>
-                                            <th>合約終止日</th>
-                                            <th>抽成率 (%)</th>
-                                            <th>操作</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody formArrayName="discountSettingItems">
-                                        <tr *ngFor="let innerItem of getDiscountSettingItems(i).controls; let j = index"
-                                            [formGroupName]="j">
-                                            <td><input type="checkbox" formControlName="selected" /></td>
-                                            <td>
-                                                <select id="discountType1_{{ i }}{{ j }}"
-                                                    formControlName="discountType">
-                                                    <option value="" disabled>選擇折扣別</option>
-                                                    <option *ngFor="let discount of discounts" [value]="discount.value">
-                                                        {{ discount.label }}</option>
-                                                </select>
-                                            </td>
-                                            <td><input type="date" formControlName="startDate" /></td>
-                                            <td><input type="date" formControlName="endDate" /></td>
-                                            <td><input type="text" formControlName="rate" /></td>
-                                            <td><button type="button"
-                                                    (click)="removeDiscountSettingItem(i, j)">刪除</button></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="6"><button type="button"
-                                                    (click)="addDiscountSettingItem(i)">新增項目</button></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </p-tabPanel>
-
-                            <!-- 年度總業績抽成設定 Tab -->
-                            <p-tabPanel header="年度總業績抽成設定">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>選擇</th>
-                                            <th>帳務起</th>
-                                            <th>帳務迄</th>
-                                            <th>業績超過金額含</th>
-                                            <th>抽成率</th>
-                                            <th>操作</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody formArrayName="annualPerformanceItems">
-                                        <tr *ngFor="let innerItem of getAnnualPerformanceItems(i).controls; let j = index"
-                                            [formGroupName]="j">
-                                            <td><input type="checkbox" formControlName="selected" /></td>
-                                            <td><input type="date" /></td>
-                                            <td><input type="date" /></td>
-                                            <td><input type="text" formControlName="discountAmount" /></td>
-                                            <td><input type="text" formControlName="rate" /></td>
-                                            <td><button type="button"
-                                                    (click)="removeAnnualPerformanceItem(i, j)">刪除</button></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="4"><button type="button"
-                                                    (click)="addAnnualPerformanceItem(i)">新增項目</button></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </p-tabPanel>
-
-                            <!-- 折扣別層級抽成設定 Tab -->
-                            <p-tabPanel header="折扣別層級抽成設定">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>選擇</th>
-                                            <th>折扣別</th>
-                                            <th>業績計算金額(起)</th>
-                                            <th>業績計算金額(迄)</th>
-                                            <th>抽成率</th>
-                                            <th>操作</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody formArrayName="discountLevelItems">
-                                        <tr *ngFor="let innerItem of getDiscountLevelItems(i).controls; let j = index"
-                                            [formGroupName]="j">
-                                            <td><input type="checkbox" formControlName="selected" /></td>
-                                            <td>
-                                                <select id="discountType3_{{ i }}{{ j }}"
-                                                    formControlName="discountType">
-                                                    <option value="" disabled>選擇折扣別</option>
-                                                    <option *ngFor="let discount of discounts" [value]="discount.value">
-                                                        {{ discount.label }}</option>
-                                                </select>
-                                            </td>
-                                            <td><input type="text" formControlName="startAmount" /></td>
-                                            <td><input type="text" formControlName="endAmount" /></td>
-                                            <td><input type="text" formControlName="rate" /></td>
-                                            <td><button type="button"
-                                                    (click)="removeDiscountLevelItem(i, j)">刪除</button></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="6"><button type="button"
-                                                    (click)="addDiscountLevelItem(i)">新增項目</button></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </p-tabPanel>
-                        </p-tabView>
-
-                        <div class="button-group">
-                            <button type="button" (click)="onSave(i)">確定</button>
-                            <button type="button" (click)="onCancelInner(i)">取消</button>
-                            <!-- <button type="button" (click)="onClear(i)">清除內容</button> -->
-                        </div>
-                    </div>
-                </div>
-                <hr />
-            </ng-container>
-        </ng-container>
-
-
-        <div class="pt-1">
-            <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
-        </div>
-    </form>
 </div>

@@ -64,8 +64,8 @@
 
 <div class="card">
   <div class="col-12">
-    <app-data-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-    </app-data-table>
+    <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+    </app-table>
   </div>
 </div>
 * 發票總金額(F) = 發票未稅金額(M) + 發票稅額(N) + 發票免稅金額(O)

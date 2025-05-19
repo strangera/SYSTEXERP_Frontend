@@ -2,7 +2,7 @@ import { Component, } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { NavigationExtras, Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { ValidationService } from '../../../shared/service/validation.service';

@@ -1,0 +1,204 @@
+.expandable-edit-table-container {
+  // 整體容器樣式
+  margin: 1rem;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  .expandable-table-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 1rem;
+  }
+}
+
+:host ::ng-deep {
+  // PrimeNG表格樣式自定義
+  .p-datatable {
+    // 表格標題行
+    .p-datatable-header {
+      background: transparent;
+      border: none;
+      padding: 0.5rem;
+    }
+
+    // 表格頭
+    .p-datatable-thead > tr > th {
+      background: #c7d2fe;
+      text-align: center;
+      padding: 0.75rem 0.5rem;
+      border: 1px solid #e9ecef;
+      font-weight: 600;
+    }
+
+    // 表格偶數行
+    .p-datatable-tbody > tr:nth-child(even) {
+      background: #eef2ff;
+    }
+
+    // 行懸停效果
+    .p-datatable-tbody > tr:not(.p-highlight):hover {
+      background-color: #e3f2fd;
+      cursor: pointer;
+    }
+
+    // 選中行樣式
+    .p-datatable-tbody > tr.p-highlight {
+      background-color: #c5e4fc;
+      color: #000000;
+    }
+
+    // 表格單元格
+    .p-datatable-tbody > tr > td {
+      padding: 0.6rem 0.5rem;
+      border: 1px solid #e9ecef;
+      text-align: center;
+    }
+
+    // 展開按鈕樣式
+    .expanded-button {
+      background-color: #f0f7ff;
+      &:hover {
+        background-color: #dae8fc;
+      }
+    }
+
+    // 編輯按鈕樣式
+    .edit-buttons,
+    .detail-edit-buttons {
+      .p-button {
+        width: 2rem;
+        height: 2rem;
+
+        &:hover {
+          background-color: rgba(0, 123, 255, 0.1);
+        }
+
+        &.p-button-success:hover {
+          background-color: rgba(40, 167, 69, 0.1);
+        }
+
+        &.p-button-danger:hover {
+          background-color: rgba(220, 53, 69, 0.1);
+        }
+      }
+    }
+
+    // 展開詳細資料樣式
+    .expanded-detail {
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+      margin: 0.5rem;
+
+      .p-datatable {
+        box-shadow: none;
+
+        .p-datatable-thead > tr > th {
+          background: #dfe7f6;
+          font-size: 0.9rem;
+          padding: 0.5rem 0.5rem;
+        }
+
+        .p-datatable-tbody > tr > td {
+          padding: 0.5rem 0.5rem;
+          font-size: 0.9rem;
+        }
+      }
+    }
+
+    // 分頁器樣式
+    .p-paginator {
+      background: transparent;
+      padding: 0.5rem;
+
+      .p-paginator-pages .p-paginator-page.p-highlight {
+        background: #007ad9;
+        color: #ffffff;
+      }
+    }
+
+    // 無資料時的提示樣式
+    .p-datatable-emptymessage > td {
+      text-align: center;
+      padding: 1rem;
+      font-style: italic;
+      color: #6c757d;
+    }
+  }
+
+  // 表格禁用樣式
+  .table-disabled {
+    opacity: 0.7;
+    pointer-events: none;
+    background-color: #f0f0f0;
+
+    .p-datatable-thead > tr > th {
+      background: #e0e0e0;
+    }
+  }
+
+  // 自定義表格頭部控制欄
+  .table-caption {
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .table-caption-left,
+    .table-caption-right {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+  }
+
+  // 確保單元格內容不會換行
+  .nowrap {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // 自定義輸入控件寬度
+  .p-inputtext,
+  .p-dropdown,
+  .p-calendar,
+  .p-inputnumber {
+    width: 100%;
+  }
+
+
+  .date-selector-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .date-display {
+    flex-grow: 1;
+    padding-right: 5px;
+  }
+
+  .date-picker-button {
+    width: 2rem !important;
+    height: 2rem !important;
+    padding: 0 !important;
+  }
+}
+
+/* 對話框樣式 */
+.date-picker-container {
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+}

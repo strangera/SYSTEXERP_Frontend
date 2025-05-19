@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/enum/CRUDstatus';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
@@ -12,7 +12,7 @@ import { RegionService } from '../../../service/basic/region-code.service';
 import { LocationService } from '../../../service/basic/location.service';
 //
 
-//5.1.1.test2 遺拾商品地點維護 
+//5.1.1.test2 遺拾商品地點維護
 @Component({
   selector: 'app-cpm-lost-place',
   templateUrl: './cpm-lost-place.component.html',

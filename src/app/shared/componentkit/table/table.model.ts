@@ -17,7 +17,7 @@ export interface Column {
 
   validate?: ((value: string, rowData: any, data: any[], field: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
 
-  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'chips' | 'checkbox' | 'date' | 'default'; // 欄位類型
+  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'checkbox' | 'date' | 'default'; // 欄位類型
   prefix?: string;
   fractionDigits?: number;
 
