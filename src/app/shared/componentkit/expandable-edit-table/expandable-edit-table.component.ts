@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild, ChangeDetectorRef, TemplateRef } from '@angular/core';
 import { Table } from 'primeng/table';
 import { FormBuilder, FormGroup } from '@angular/forms';
 
@@ -22,7 +22,7 @@ interface DetailItem {
   discount: number;
 }
 
-interface ColumnDef {
+export interface ColumnDef {
   field: string;
   header: string;
   type?: string;
@@ -50,6 +50,7 @@ export class ExpandableEditTableComponent {
   @Input() loading: boolean = false;
   @Input() emptyMessage: string = '查無資料';
   @Input() readonly: boolean = false;
+  @Input() expandedContentTemplate: TemplateRef<any> | null = null;
 
   @Output() edit = new EventEmitter<any>();
   @Output() save = new EventEmitter<{ oldData: any, newData: any }>();
@@ -166,6 +167,7 @@ export class ExpandableEditTableComponent {
 
   // 詳細資料編輯相關
   onDetailEditInit(detailData: any, rowData: any, rowIndex: number, detailIndex: number) {
+    console.log('Detail edit:', event);
     this.editingDetail = { rowIndex, detailIndex };
     this.clonedDetails[detailData.id] = { ...detailData };
     this.detailEdit.emit(detailData);

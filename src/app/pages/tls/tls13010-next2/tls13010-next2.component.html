@@ -1,4 +1,4 @@
-<div class="card">
+<!-- <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
@@ -16,7 +16,6 @@
     </p-accordionTab>
   </p-accordion>
 
-  <!-- 顶部选项卡 -->
   <div class="setting-tabs mt-3">
     <ul class="nav nav-tabs">
       <li class="nav-item">
@@ -34,9 +33,7 @@
     </ul>
   </div>
 
-  <!-- 根据选项卡切换内容 -->
   <div class="setting-content mt-2">
-    <!-- 折扣設定 -->
     <div *ngIf="selectedSettingTab === 'discount'">
       <p-accordion>
         <p-accordionTab header="抽成設定" [selected]="true" class="line-height-3 m-0">
@@ -44,7 +41,6 @@
             [detailKey]="'detailItems'" [dataKey]="'id'" [showCheckBox]="false" [readonly]="false"
             (edit)="onItemEdit($event)" (save)="onItemSave($event)" (cancel)="onItemCancel($event)">
 
-            <!-- 展开部分的自定义折扣设定内容 -->
             <ng-template #expandedContent let-rowData>
               <div class="p-3">
                 <h3>折扣設定</h3>
@@ -102,7 +98,6 @@
       </p-accordion>
     </div>
 
-    <!-- 年度總業績抽成設定 -->
     <div *ngIf="selectedSettingTab === 'annual'">
       <p-accordion>
         <p-accordionTab header="抽成設定" [selected]="true" class="line-height-3 m-0">
@@ -110,7 +105,6 @@
             [detailKey]="'detailItems'" [dataKey]="'id'" [showCheckBox]="false" [readonly]="false"
             (edit)="onItemEdit($event)" (save)="onItemSave($event)" (cancel)="onItemCancel($event)">
 
-            <!-- 展开部分的自定义年度业绩设定内容 -->
             <ng-template #expandedContent let-rowData>
               <div class="p-3">
                 <h3>年度總業績抽成設定</h3>
@@ -164,7 +158,6 @@
       </p-accordion>
     </div>
 
-    <!-- 折扣別層級抽成設定 -->
     <div *ngIf="selectedSettingTab === 'level'">
       <p-accordion>
         <p-accordionTab header="抽成設定" [selected]="true" class="line-height-3 m-0">
@@ -172,7 +165,6 @@
             [detailKey]="'detailItems'" [dataKey]="'id'" [showCheckBox]="false" [readonly]="false"
             (edit)="onItemEdit($event)" (save)="onItemSave($event)" (cancel)="onItemCancel($event)">
 
-            <!-- 展开部分的自定义折扣层级设定内容 -->
             <ng-template #expandedContent let-rowData>
               <div class="p-3">
                 <h3>折扣別層級抽成設定</h3>
@@ -229,6 +221,67 @@
         </p-accordionTab>
       </p-accordion>
     </div>
+  </div>
+
+  <div class="pt-3">
+    <app-button-dynamicallyadd (click)="onAddCommissionItem()"></app-button-dynamicallyadd>
+  </div>
+</div> -->
+
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
+    <app-button btnType="create" label="下一步(XX設定)"></app-button>
+    <app-button btnType="cancel" (click)="onCancel()"></app-button>
+  </div>
+
+  <p-accordion>
+    <p-accordionTab header="專櫃契約書資訊" [selected]="true" class="line-height-3 m-0">
+      <div class="col-12 custom-table-red">
+        <app-table tableKey="stocks" [lazy]="true" [loading]="loading" [showEdit]="false" [showDetail]="false"
+          [showRowEdit]="false" [data]="inventoryItems" [columns]="stocksColumns" [showManage]="false"
+          [showCaption]="false" [showPaginator]="false">
+        </app-table>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+
+  <!-- 顶部选项卡 -->
+  <div class="setting-tabs mt-3">
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link" [ngClass]="{'active': selectedSettingTab === 'discount'}"
+          (click)="changeSettingTab('discount')">折扣設定</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [ngClass]="{'active': selectedSettingTab === 'annual'}"
+          (click)="changeSettingTab('annual')">年度總業績抽成設定</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" [ngClass]="{'active': selectedSettingTab === 'level'}"
+          (click)="changeSettingTab('level')">折扣別層級抽成設定</a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 根据选项卡切换内容 -->
+  <div class="setting-content mt-2">
+    <!-- 共用的抽成設定區塊 -->
+    <p-accordion>
+      <p-accordionTab header="抽成設定" [selected]="true" class="line-height-3 m-0">
+        <!-- 注意這裡傳遞了 detailColumns 屬性給組件 -->
+        <!-- <app-expandable-edit-table [data]="commissionItems" [mainColumns]="commissionColumns"
+          [detailColumns]="detailColumns" [detailKey]="'detailItems'" [dataKey]="'id'" [showCheckBox]="false"
+          [readonly]="false" (edit)="onItemEdit($event)" (save)="onItemSave($event)" (cancel)="onItemCancel($event)">
+        </app-expandable-edit-table> -->
+        <app-expandable-edit-table [data]="commissionItems" [mainColumns]="commissionColumns"
+          [detailColumns]="detailColumns" [detailKey]="'detailItems'" [dataKey]="'id'" [showCheckBox]="false"
+          [readonly]="false" (edit)="onItemEdit($event)" (save)="onItemSave($event)" (cancel)="onItemCancel($event)"
+          (detailEdit)="onDetailEdit($event)" (detailCancel)="onDetailCancel($event)">
+        </app-expandable-edit-table>
+      </p-accordionTab>
+    </p-accordion>
   </div>
 
   <div class="pt-3">
