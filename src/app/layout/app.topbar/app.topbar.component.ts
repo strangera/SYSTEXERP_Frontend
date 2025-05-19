@@ -70,11 +70,11 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     private messageService: NotificationService,
   ) { }
   ngOnInit() {
-    // 訂閱 AccessService 的 menuUpdated，當選單資料更新時重新建立選單
+    // 當權限更新時
     this.menuUpdatedSubscription = this.authService.menuUpdated.subscribe((newData: FunsrightInfo[]) => {
       if (newData?.length > 0) {
         this.funRightsInfo = newData.map((item: FunsrightInfo) => ({
-          ...item, label: `${item.prog_No} ${item.prog_name}` // 建立 label 屬性
+          ...item, label: `${item.prog_id} ${item.prog_name}` // 建立 label 屬性
         }));
         this.topLevelMenuItems = this.funRightsInfo
           .filter(item => item.prog_up === '')
@@ -86,10 +86,12 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
         this.initFavorites(); // 初始化最愛功能
       }
     });
+    // 當使用者更新時
     this.userSubscription = this.authService.user.subscribe((userInfo: UserInfo | null) => {
       this.data = userInfo;
       this.initFavorites();
     });
+    // 時間更新時
     this.timerSubscription = interval(500).subscribe(() => {
       this.now = new Date();
     });
@@ -104,7 +106,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
       this.topMenuClick.emit(item.prog_No);
     }
   }
-  // 搜尋程式編碼
+  // 搜尋快速碼或名稱
   filteredProgs: { label: string; value: FunsrightInfo }[] = [];
   filterProgNo(event: AutoCompleteCompleteEvent) {
     const filtered: { label: string; value: FunsrightInfo }[] = [];
@@ -117,23 +119,26 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
       }
     }
     this.filteredProgs = filtered;
-    console.log(this.filteredProgs);
-
   }
   // 按下搜尋確認
   onSubmit(frm: FormGroup) {
     const query = frm.controls["query_data"].value;
+    if (!query) { return; }
     let matchedItem: FunsrightInfo | undefined;
     if (typeof query === 'string') {
       // 如果 query 是字串，直接在 funRightsInfo 中尋找 label 包含該字串的項目
+      const lowerCaseQuery = query.toLowerCase();
       matchedItem = this.funRightsInfo.find(item =>
-        item.label?.toLowerCase().includes(query.toLowerCase()) && item.prog_ispage === 'Y'
+        (item.label?.toLowerCase().includes(lowerCaseQuery) || // 檢查 label 是否包含
+          item.prog_id?.toLowerCase() === lowerCaseQuery) &&   // 或者 prog_id 是否完全匹配
+        item.prog_ispage === 'Y'                              // 並且必須是頁面
       );
     } else if (typeof query === 'object' && query !== null && 'value' in query) {
       // 如果 query 是選中的自動完成選項（包含 value 屬性），直接使用 query.value
       matchedItem = query.value;
     }
     if (matchedItem) {
+      console.log(matchedItem);
       this.router.navigate([`/${matchedItem.prog_No.slice(0, 3)}/${matchedItem.prog_No}`]); // 導向到該頁面，並傳遞 prog_no 參數到該頁面路由matchedItem.]);
       this.queryForm.reset();
     } else {
