@@ -34,7 +34,20 @@ export class AppMenulistService {
     {
       prog_No: '999',
       label: '測試',
-      items: [{ prog_No: '900001', label: '範例', parent_id: '999', routerLink: '/demo/demoInputTable', icon: 'pi pi-bookmark', prog_ispage: 'Y', prog_sort: 1 }],
+      items: [
+        {
+          prog_No: '900001',
+          label: '範例',
+          parent_id: '999',
+          routerLink: '/demo/demoInputTable',
+          expanded: false,
+          icon: 'pi pi-bookmark',
+          hasChildrenOnly: false,
+          prog_ispage: 'Y',
+          prog_sort: '1',
+          selected: false,
+          isSubModule: false
+        }],
       icon: 'pi pi-cog',
       prog_sort: 999 // 給寫死的測試一個排序值
     }
@@ -47,7 +60,7 @@ export class AppMenulistService {
     // 先處理所有節點，建立基本的 MenuItem 物件並放入 menuLookup
     lists.forEach(({ prog_No, prog_name, prog_up, prog_ispage, prog_sort, sub_module_no }) => {
       const menuItem: MenuItem = {
-        prog_no: prog_No,
+        prog_No: prog_No,
         label: prog_name,
         parent_id: prog_up,
         routerLink: prog_ispage === 'Y' ? `/${prog_No.slice(0, 3)}/${prog_No}` : undefined,
@@ -89,8 +102,6 @@ export class AppMenulistService {
     };
     sortMenuItems(dynamicMenu); // 排序第一層選單及其子項目
     const combinedMenu = [...this.fixedMenuItems, ...dynamicMenu];
-    console.log(combinedMenu);
-
     this.menuUpdatedSource.next(combinedMenu);
     return combinedMenu;
   }

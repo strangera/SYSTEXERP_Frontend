@@ -10,7 +10,7 @@ import { MenuItem } from 'primeng/api';
     trigger('children', [
       state('collapsed', style({ height: '0' })),
       state('expanded', style({ height: '*' })),
-      transition('collapsed <=> expanded', animate('400ms cubic-bezier(0.86, 0, 0.07, 1)'))
+      transition('collapsed <=> expanded', animate('100ms cubic-bezier(0.86, 0, 0.07, 1)'))
     ]),
   ]
 })

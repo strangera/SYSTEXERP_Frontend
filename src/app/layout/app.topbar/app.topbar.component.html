@@ -32,7 +32,7 @@
         <p-iconField iconPosition="right" class="h-full" styleClass="h-full">
           <p-autoComplete formControlName="query_data" [suggestions]="filteredProgs" emptyMessage="查無此快速碼"
             (completeMethod)="filterProgNo($event)" optionLabel="label" placeholder="搜尋選單的名稱編號" styleClass="h-2rem"
-            (keydown.enter)="onSubmit(queryForm)" />
+            (keydown.enter)="onSubmit(queryForm)" (onSelect)="onSubmit(queryForm)" />
           <p-inputIcon styleClass="pi pi-search" onclick="onSubmit(queryForm);" />
         </p-iconField>
       </form>
