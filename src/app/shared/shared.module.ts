@@ -110,6 +110,7 @@ import { DropdownTableComponent } from './componentkit/dropdown-table/dropdown-t
 import { TreeDropdownComponent } from './componentkit/tree-dropdown/tree-dropdown.component';
 import { InputTextareaComponent } from './componentkit/input-textarea/input-textarea.component';
 import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MultiLocationFilterComponent } from './componentkit/multi-location-filter/multi-location-filter.component';
 
 @NgModule({
   declarations: [
@@ -142,6 +143,8 @@ import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick
     DataTableGroupComponent,
     DataTableReportComponent,
     RadiobuttonComponent,
+    MultiLocationFilterComponent,
+     
     
     // Directive
     HasPermissionDirective,
@@ -335,6 +338,7 @@ import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick
     TableComponent,
     TableExpansionComponent,
     RadiobuttonComponent,
+    MultiLocationFilterComponent,
     //
     InputIconModule,
     IconFieldModule,
