@@ -23,12 +23,20 @@ export interface ApiItem {
   providedIn: 'root',
 })
 export class SsoDashboardService {
-  private apiUrl: string = environment.ApiUrl;
+  private apiUrl: string = environment.ApiUrl + '/SSOLogin';
 
   constructor(private http: HttpClient) { }
 
   // 模擬 API 呼叫，返回一個 Observable<ApiItem[]>
   fetchUrlList(): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/SSOLogin/querySSOLogin`, {});
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/querySSOLogin`, {});
+  }
+
+  Inner(): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/Inner`);
+  }
+
+  Outer(): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/Outer`);
   }
 }
