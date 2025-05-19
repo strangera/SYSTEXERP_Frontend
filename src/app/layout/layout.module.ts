@@ -1,10 +1,6 @@
 import { RouterModule } from '@angular/router';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-// Shared
-import { SharedModule } from '../shared/shared.module';
-// Dynamictabview
-import { DynamictabviewComponent } from '../dynamictabview/dynamictabview.component';
 // Component
 import { LayoutComponent } from './layout.component';
 import { AppTopbarComponent } from './app.topbar/app.topbar.component';
@@ -14,6 +10,20 @@ import { AppMenuItemComponent } from './app.menulist/app-menu-item/app-menu-item
 import { MenuModule } from 'primeng/menu';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
+import { ButtonModule } from 'primeng/button';
+import { PasswordModule } from 'primeng/password';
+import { DividerModule } from 'primeng/divider';
+import { DialogModule } from 'primeng/dialog';
+import { CardModule } from 'primeng/card';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { TranslateModule } from '@ngx-translate/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { TableModule } from 'primeng/table';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { TabViewModule } from 'primeng/tabview';
+// Dynamictabview
+import { DynamictabviewComponent } from './dynamictabview/dynamictabview.component';
 
 @NgModule({
   declarations: [
@@ -27,10 +37,23 @@ import { OverlayPanelModule } from 'primeng/overlaypanel';
   imports: [
     CommonModule,
     RouterModule,
-    SharedModule,
     MenuModule,
     AutoCompleteModule,
-    OverlayPanelModule
+    OverlayPanelModule,
+    ButtonModule,
+    PasswordModule,
+    DividerModule,
+    DialogModule,
+    CardModule,
+    ProgressSpinnerModule,
+    MenuModule,
+    TranslateModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TableModule,
+    IconFieldModule,
+    InputIconModule,
+    TabViewModule
   ],
   exports: [
     LayoutComponent,
