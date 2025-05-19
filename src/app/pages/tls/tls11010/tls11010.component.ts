@@ -20,10 +20,10 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     building_no: ['', [Validators.maxLength(1)]],
     FLOOR_NO: [[] as string[], [Validators.maxLength(2)]],
     AREA_NO: [[] as string[], [Validators.maxLength(2)]],
-    GROSS_SPACE_start: [null, [Validators.min(0), Validators.max(9999.999)]],
-    GROSS_SPACE_end: [null, [Validators.min(0), Validators.max(9999.999)]],
-    NET_SPACE_start: [null, [Validators.min(0), Validators.max(9999.999)]],
-    NET_SPACE_end: [null, [Validators.min(0), Validators.max(9999.999)]],
+    GROSS_SPACE_Start: [null, [Validators.min(0), Validators.max(9999.999)]],
+    GROSS_SPACE_End: [null, [Validators.min(0), Validators.max(9999.999)]],
+    NET_SPACE_Start: [null, [Validators.min(0), Validators.max(9999.999)]],
+    NET_SPACE_End: [null, [Validators.min(0), Validators.max(9999.999)]],
     LOCATION_Status: ['', [Validators.maxLength(1)]],
     Purpose_no: [[] as string[], [Validators.maxLength(2)]],
     ...createPaginationConfig([{ field: 'LOCATION_No', order: 1 }]),
@@ -38,16 +38,42 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     { field: 'LOCATION_Name', header: '店位說明', visible: true },
     { field: 'org_id', header: '組織代碼', visible: true },
     { field: 'org_name', header: '組織名稱', visible: true },
-    { field: 'building_no', header: '館別', visible: true },
-    { field: 'FLOOR_NO', header: '樓層', visible: true },
-    { field: 'AREA_NO', header: '區域', visible: true },
+    {
+      field: 'building_no',
+      header: '館別',
+      visible: true,
+      format: (value: any) => this.getLabelFromOptions(value, this.BUILDING_NO_Options),
+    },
+    {
+      field: 'FLOOR_NO',
+      header: '樓層',
+      visible: true,
+      format: (value: any) => this.getLabelFromOptions(value, this.floorOptions),
+    },
+    {
+      field: 'AREA_NO',
+      header: '區域',
+      visible: true,
+      format: (value: any) => this.getLabelFromOptions(value, this.RegionCodeOptions),
+    },
     { field: 'GROSS_SPACE', header: '簽約坪數', visible: true },
     { field: 'NET_SPACE', header: '營業坪數', visible: true },
-    { field: 'LOCATION_Status', header: '使用狀態', visible: true },
-    { field: 'Purpose_no', header: '用途代碼', visible: true },
+    {
+      field: 'LOCATION_Status',
+      header: '使用狀態',
+      visible: true,
+      format: (value: any) => this.getLabelFromOptions(value, this.LOCATION_Status_Options),
+    },
+    {
+      field: 'Purpose_no',
+      header: '用途代碼',
+      visible: true,
+      format: (value: any) => this.getLabelFromOptions(value, this.usageOptions),
+    },
     { field: 'Draw_X', header: 'X 軸', visible: true },
-    { field: 'Draw_Y', header: 'Y 軸', visible: true }
+    { field: 'Draw_Y', header: 'Y 軸', visible: true },
   ];
+
 
   floorOptions: any[] = [];
   RegionCodeOptions: any[] = [];
@@ -129,18 +155,10 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       error: () => this.messageService.errorBubble('刪除失敗'),
     });
   }
+
   getLabelFromOptions(value: any, options: any[]): string {
-    console.log('🧩 mapping value:', value, 'options:', options); // 👉 加這行
-
-    if (Array.isArray(value)) {
-      return value.map(v => {
-        const option = options.find(opt => opt.value === v);
-        return option ? option.label : v;
-      }).join(', ');
-    }
-
-    const option = options.find(opt => opt.value === value);
-    return option ? option.label : value;
+    const found = options?.find(opt => String(opt.value) === String(value));
+    return found ? found.label : value;
   }
 
 
