@@ -18,7 +18,7 @@ export class FloorService {
 
   getFloors(): Observable<any[]> {
     return this.http
-      .post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3900_DropDownList`, {})
+      .post<any>(`${this.apiUrl}/queryTLS11010_SYS3900_DropDownList`, {})
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? []),
         catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
@@ -48,7 +48,7 @@ export class FloorService {
     // ✅ 新增：查詢 APS1003 的下拉資料
   getAPS1003DropDownList(cap_typeList: string[]): Observable<any[]> {
     return this.http.post<any>(
-      `${this.apiUrl}/TLS0000/TLS1000/queryTLS13030_APS1003_DropDownList`,
+      `${this.apiUrl}/queryTLS13030_APS1003_DropDownList`,
       { cap_typeList }
     ).pipe(
       map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? []),

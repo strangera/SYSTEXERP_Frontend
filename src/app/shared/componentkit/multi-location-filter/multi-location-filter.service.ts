@@ -15,7 +15,7 @@ export class MultiLocationFilterService {
   /** 取得館別選項 */
   getBuildingOptions(): Observable<any[]> {
     return this.http
-      .post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3800_DropDownList`, {})
+      .post<any>(`${this.apiUrl}/queryTLS11010_SYS3800_DropDownList`, {})
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? []),
         catchError(this.errorHandler.handleError)
@@ -25,7 +25,7 @@ export class MultiLocationFilterService {
   /** 取得樓層選項 */
   getFloors(): Observable<any[]> {
     return this.http
-      .post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3900_DropDownList`, {})
+      .post<any>(`${this.apiUrl}/queryTLS11010_SYS3900_DropDownList`, {})
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? []),
         catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
@@ -35,7 +35,7 @@ export class MultiLocationFilterService {
   /** 取得區域選項 */
   getRegionOptions(): Observable<any[]> {
     return this.http
-      .post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3A00_DropDownList`, {})
+      .post<any>(`${this.apiUrl}/queryTLS11010_SYS3A00_DropDownList`, {})
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? []),
         catchError(this.errorHandler.handleError)

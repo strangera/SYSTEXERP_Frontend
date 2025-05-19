@@ -17,7 +17,7 @@ export class Tls11010Service {
 //floor
   getFloorOptions(): Observable<any[]> {
     return this.http
-      .post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3900_DropDownList`, {})
+      .post<any>(`${this.apiUrl}/queryTLS11010_SYS3900_DropDownList`, {})
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? []),
         catchError(this.errorHandler.handleError)
@@ -26,7 +26,7 @@ export class Tls11010Service {
 
   getRegionOptions(): Observable<any[]> {
     return this.http
-      .post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3A00_DropDownList`, {})
+      .post<any>(`${this.apiUrl}/queryTLS11010_SYS3A00_DropDownList`, {})
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? []),
         catchError(this.errorHandler.handleError)
@@ -35,7 +35,7 @@ export class Tls11010Service {
 
   getOrgOptions(): Observable<any[]> {
     return this.http
-      .post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3100_DropDownList`, {})
+      .post<any>(`${this.apiUrl}/queryTLS11010_SYS3100_DropDownList`, {})
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? []),
         catchError(this.errorHandler.handleError)
@@ -44,7 +44,7 @@ export class Tls11010Service {
 
   getUsageOptions(): Observable<any[]> {
     return this.http
-      .post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3F00_DropDownList`, {})
+      .post<any>(`${this.apiUrl}/queryTLS11010_SYS3F00_DropDownList`, {})
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? []),
         catchError(this.errorHandler.handleError)
@@ -53,7 +53,7 @@ export class Tls11010Service {
 
   getBuildingOptions(): Observable<any[]> {
     return this.http
-      .post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3800_DropDownList`, {})
+      .post<any>(`${this.apiUrl}/queryTLS11010_SYS3800_DropDownList`, {})
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? []),
         catchError(this.errorHandler.handleError)

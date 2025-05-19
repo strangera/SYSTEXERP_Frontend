@@ -69,6 +69,7 @@ import { TableExportComponent } from './componentkit/table/table-export/table-ex
 import { MultiSelectTableComponent } from './componentkit/multi-select-table/multi-select-table.component';
 import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/expandable-edit-table.module';
 import { NotificationMessageComponent } from './component/notification-message/notification-message.component';
+import { MultiLocationFilterComponent } from './componentkit/multi-location-filter/multi-location-filter.component';
 
 @NgModule({
   declarations: [
@@ -97,6 +98,7 @@ import { NotificationMessageComponent } from './component/notification-message/n
     EditorTextComponent,
     RadiobuttonComponent,
     HasPermissionDirective,
+    MultiLocationFilterComponent,
   ],
   imports: [
     ReactiveFormsModule,
@@ -202,6 +204,7 @@ import { NotificationMessageComponent } from './component/notification-message/n
     RadiobuttonComponent,
     NotificationMessageComponent,
     ExpandableEditTableModule,
+    MultiLocationFilterComponent,
   ],
 })
 export class SharedModule { }
