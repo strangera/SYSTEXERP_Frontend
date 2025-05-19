@@ -13,6 +13,7 @@ import { SsoDashboardComponent } from '../pages/base/sso-dashboard/sso-dashboard
 import { AppMenuItemComponent } from './app.menulist/app-menu-item/app-menu-item.component';
 import { MenuModule } from 'primeng/menu';
 import { AutoCompleteModule } from 'primeng/autocomplete';
+import { OverlayPanelModule } from 'primeng/overlaypanel';
 
 @NgModule({
   declarations: [
@@ -28,7 +29,8 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
     RouterModule,
     SharedModule,
     MenuModule,
-    AutoCompleteModule
+    AutoCompleteModule,
+    OverlayPanelModule
   ],
   exports: [
     LayoutComponent,

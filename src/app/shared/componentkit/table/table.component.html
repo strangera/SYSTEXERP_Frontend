@@ -18,8 +18,7 @@
   [ngClass]="{ 'table-disabled': tableDisabled }" [expandedRowKeys]="IsPrint ? expandedRows : {}"
   paginatorDropdownAppendTo="body" editMode="row" [loading]="loading">
   <ng-template pTemplate="caption">
-    <div class="grid align-items-center justify-content-between mx-0"
-      *ngIf="showHeader && !isPDFDownloading && !isExcelDownloading">
+    <div class="grid align-items-center justify-content-between mx-0">
       <div class="caption-left button-group flex gap-2 py-2">
         <p-multiSelect [options]="columns" [(ngModel)]="selectedColumns" optionLabel="header" dropdownIcon="pi pi-cog"
           pTooltip="過濾欄位" tooltipPosition="top" (onChange)="onFilterChange($event)" />
@@ -58,9 +57,6 @@
           [ngModel]="selectedPage" optionValue="value" (onChange)="goToPage($event.value)" appendTo="body" />
       </div>
     </div>
-    <span class="text-xl text-primary-500" *ngIf="isPDFDownloading">正在下載PDF...</span>
-    <span class="text-xl text-primary-500" *ngIf="isExcelDownloading">正在下載Excel...</span>
-    <p-progressBar *ngIf="isPDFDownloading || isExcelDownloading" mode="indeterminate" [style]="{'height': '6px'}" />
   </ng-template>
   <ng-template pTemplate="header" let-columns>
     <tr>
@@ -100,55 +96,47 @@
         class="max-w-{{ col.maxWidth }} text-center" style="text-overflow: ellipsis" [ngClass]="col.style"
         [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn
         [frozen]="IsPrint && !tableDisabled && col.frozen">
-        <p-cellEditor *ngIf="col.type === 'input'">
+        <p-cellEditor *ngIf="showRowEdit">
           <ng-template pTemplate="input">
-            <input pInputText class="w-full min-w-max" [(ngModel)]="rowData[col.field]"
+            <input *ngIf="col.type === 'input'" pInputText class="w-full min-w-max" [(ngModel)]="rowData[col.field]"
               placeholder="請輸入{{ col.header }}" [ngModelOptions]="{ standalone: true }"
+              [disabled]="col.disabled ? col.disabled(rowData) : false"
+              (ngModelChange)="onFieldChange(rowData, col.field, $event)" />
+            <p-inputNumber *ngIf="col.type === 'inputNumber'" class="w-full min-w-max" [(ngModel)]="rowData[col.field]"
+              placeholder="請輸入{{ col.header }}" [ngModelOptions]="{ standalone: true }"
+              [disabled]="col.disabled ? col.disabled(rowData) : false" mode="decimal"
+              (ngModelChange)="onFieldChange(rowData, col.field, $event)" [prefix]="col.prefix"
+              [minFractionDigits]="col.fractionDigits" [maxFractionDigits]="col.fractionDigits" />
+            <p-dropdown *ngIf="col.type === 'dropdown'" [(ngModel)]="rowData[col.field]"
+              [ngModelOptions]="{ standalone: true }" styleClass="w-full" placeholder="請輸入{{ col.header }}"
+              [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
+              [showClear]="true" appendTo="body" [disabled]="col.disabled ? col.disabled(rowData) : false"
+              (onChange)="onFieldChange(rowData, col.field, $event.value)">
+            </p-dropdown>
+            <p-calendar *ngIf="col.type === 'date'" [(ngModel)]="rowData[col.field]"
+              [ngModelOptions]="{ standalone: true }" class="w-full" styleClass="min-w-max"
+              placeholder="請選擇{{ col.header }}" [dateFormat]="col.dateFormat || 'yy-mm-dd'" [showIcon]="true"
+              appendTo="body" [disabled]="col.disabled ? col.disabled(rowData) : false" [minDate]="col.minDate"
+              [maxDate]="col.maxDate" (ngModelChange)="onFieldChange(rowData, col.field, $event)">
+            </p-calendar>
+            <p-checkbox *ngIf="col.type === 'checkbox'" [(ngModel)]="rowData[col.field]" [binary]="true"
+              [label]="col.label" [ngModelOptions]="{ standalone: true }"
               [disabled]="col.disabled ? col.disabled(rowData) : false"
               (ngModelChange)="onFieldChange(rowData, col.field, $event)" />
           </ng-template>
           <ng-template pTemplate="output">
-            <span class="w-full min-w-max">{{ rowData[col.field] }}</span>
-          </ng-template>
-        </p-cellEditor>
-        <p-cellEditor *ngIf="col.type === 'inputNumber'">
-          <ng-template pTemplate="input">
-            <p-inputNumber class="w-full min-w-max" [(ngModel)]="rowData[col.field]" placeholder="請輸入{{ col.header }}"
-              [ngModelOptions]="{ standalone: true }" [disabled]="col.disabled ? col.disabled(rowData) : false"
-              mode="decimal" (ngModelChange)="onFieldChange(rowData, col.field, $event)" [prefix]="col.prefix"
-              [minFractionDigits]="col.fractionDigits" [maxFractionDigits]="col.fractionDigits" />
-          </ng-template>
-          <ng-template pTemplate="output">
-            <span class="w-full min-w-max">{{col.prefix}}{{ rowData[col.field] }}</span>
-          </ng-template>
-        </p-cellEditor>
-        <p-cellEditor *ngIf="col.type === 'dropdown'">
-          <ng-template pTemplate="input">
-            <p-dropdown [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" styleClass="w-full"
-              placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"
-              [optionValue]="col.optionValue" [showClear]="true" appendTo="body"
-              [disabled]="col.disabled ? col.disabled(rowData) : false"
-              (onChange)="onFieldChange(rowData, col.field, $event.value)">
+            <span *ngIf="col.type === 'input'" class="w-full min-w-max">{{ rowData[col.field] }}</span>
+            <span *ngIf="col.type === 'inputNumber'" class="w-full min-w-max">{{col.prefix}}{{ rowData[col.field]
+              }}</span>
+            <p-dropdown *ngIf="col.type === 'dropdown'" class="table-dropdown" [(ngModel)]="rowData[col.field]"
+              [ngModelOptions]="{ standalone: true }" [options]="getOptions(rowData, col)"
+              [optionLabel]="col.optionLabel" [optionValue]="col.optionValue" [group]="col.group"
+              [optionGroupChildren]="col.optionGroupChildren">
             </p-dropdown>
-          </ng-template>
-          <ng-template pTemplate="output">
-            <p-dropdown class="table-dropdown" [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
-              [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
-              [group]="col.group" [optionGroupChildren]="col.optionGroupChildren">
-            </p-dropdown>
-          </ng-template>
-        </p-cellEditor>
-        <p-cellEditor *ngIf="col.type === 'date'">
-          <ng-template pTemplate="input">
-            <p-calendar [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" class="w-full"
-              styleClass="min-w-max" placeholder="請選擇{{ col.header }}" [dateFormat]="col.dateFormat || 'yy-mm-dd'"
-              [showIcon]="true" appendTo="body" [disabled]="col.disabled ? col.disabled(rowData) : false"
-              [minDate]="col.minDate" [maxDate]="col.maxDate"
-              (ngModelChange)="onFieldChange(rowData, col.field, $event)">
-            </p-calendar>
-          </ng-template>
-          <ng-template pTemplate="output">
-            <span class="w-full min-w-max">{{ rowData[col.field] | date:'yyyy/MM/dd' }}</span>
+            <span *ngIf="col.type === 'date'" class="w-full min-w-max">{{ rowData[col.field] | date:'yyyy/MM/dd'
+              }}</span>
+            <span *ngIf="col.type === 'checkbox'">{{ rowData[col.field] ? (col.checkboxTrueLabel || '是') :
+              (col.checkboxFalseLabel || '否') }}</span>
           </ng-template>
         </p-cellEditor>
         <ng-container *ngIf="col.type === 'button'">
@@ -158,16 +146,6 @@
         <ng-container *ngIf="col.type === 'html'">
           <div class="whitespace-pre-wrap"><span [innerHTML]="rowData[col.field]"></span></div>
         </ng-container>
-        <p-cellEditor *ngIf="col.type === 'checkbox'">
-          <ng-template pTemplate="input">
-            <p-checkbox [(ngModel)]="rowData[col.field]" [binary]="true" [label]="col.label"
-              [ngModelOptions]="{ standalone: true }" [disabled]="col.disabled ? col.disabled(rowData) : false"
-              (ngModelChange)="onFieldChange(rowData, col.field, $event)" />
-          </ng-template>
-          <ng-template pTemplate="output">
-            <span>{{ rowData[col.field] ? (col.checkboxTrueLabel || '是') : (col.checkboxFalseLabel || '否') }}</span>
-          </ng-template>
-        </p-cellEditor>
         <span *ngIf="rowData[col.field] !== undefined && rowData[col.field] !== null && !col.type">
           {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
         </span>

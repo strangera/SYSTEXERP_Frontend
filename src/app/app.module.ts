@@ -5,8 +5,6 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AppComponent } from './app.component';
 // routing
 import { AppRoutingModule } from './app-routing.module';
-// shared
-import { SharedModule } from './shared/shared.module';
 // HttpInterceptor
 import { HTTP_INTERCEPTORS, HttpClientModule, } from '@angular/common/http';
 // Service
@@ -15,7 +13,6 @@ import { CustomheaderinterceptorService } from './interceptors/customheaderinter
 import { ErrorinterceptorService } from './interceptors/errorinterceptor.service';
 import { ConfirmationService, MessageService, PrimeNGConfig } from 'primeng/api';
 import { NotificationService } from './shared/component/notification-message/notification.service';
-import { NotificationMessageComponent } from './shared/component/notification-message/notification-message.component';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { HttpClient } from '@angular/common/http';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
@@ -31,7 +28,6 @@ export function HttpLoaderFactory(http: HttpClient) {
   declarations: [
     // 组件
     AppComponent,
-    NotificationMessageComponent
   ],
   imports: [
     // 模块
@@ -39,7 +35,6 @@ export function HttpLoaderFactory(http: HttpClient) {
     BrowserAnimationsModule,
     HttpClientModule,
     AppRoutingModule,
-    SharedModule,
     TranslateModule.forRoot({
       loader: {
         provide: TranslateLoader,

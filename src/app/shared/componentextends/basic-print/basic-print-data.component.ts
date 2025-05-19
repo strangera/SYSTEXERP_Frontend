@@ -24,8 +24,6 @@ export interface ReportHead {
 })
 export class BasicPrintDataComponent {
   IsPrint = true;
-  isPDFDownloading = false;
-  isExcelDownloading = false;
   exportDialog = false;
   exportStatus: 'PDF' | 'Excel' = 'PDF';
 
