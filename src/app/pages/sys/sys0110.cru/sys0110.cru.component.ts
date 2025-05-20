@@ -26,7 +26,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser>
     ID: [], //ID
     user_No: ['', [Validators.required, Validators.maxLength(10)]], // 使用者編號
     user_Name: ['', [Validators.required, Validators.maxLength(20)]], // 使用者名稱
-    user_Password: ['', Validators.maxLength(32)], // 使用者密碼-加密
+    user_Password: [''], // 使用者密碼-加密
     title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000
     org_ID: ['', Validators.maxLength(20)], // 組織編號 (SYSB400_SYS3100)
 
@@ -63,17 +63,6 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser>
 
   ngOnInit(): void {
     this.initializePage('SYS0110', this.dataForm);
-
-    //取得用戶資料(for加密)
-    const userInfoString = sessionStorage.getItem('UserInfo');
-    if (userInfoString) {
-      try {
-        this.userInfo = JSON.parse(userInfoString) as UserInfo;
-      } catch (error) {
-        console.error('Failed to parse user info from sessionStorage', error);
-      }
-    }
-
     console.log('取得資料', this.dataForm.value);
     this.loadOptions();
   }
@@ -89,7 +78,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser>
             // 先將user_Password加密
             frm.value.user_Password = this.encrypt.getPassword(
               frm.value.user_No,
-              frm.value.user_Password,
+              frm.value.user_Password
             );
             console.log('userInfo', this.userInfo);
             console.log('frm.value.user_Password', frm.value.user_Password);
