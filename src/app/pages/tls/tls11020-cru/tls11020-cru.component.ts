@@ -8,6 +8,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { DeductionService } from '../../../service/basic/deduction.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS11020Service } from '../../../service/API/tls/tls11020.service';
+import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
 
 @Component({
   selector: 'app-tls11020-cru',
@@ -35,12 +36,13 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     Print_Area: ['', [Validators.maxLength(5)]],
     CAP_Remark: ['', [Validators.maxLength(160)]],
   });
-
+  accountOptions: any[] = [];
   constructor(
     private translate: TranslateService,
     private validationService: ValidationService,
     private deductionService: DeductionService,
     private tls11020Service: TLS11020Service,
+    private accountingaccountService: AccountingaccountService
   ) {
     super();
   }
@@ -50,6 +52,13 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     this.deductionService.getDeductionCategories().subscribe((data) => {
       this.deductionCategoryOptions = data;
     });
+this.accountingaccountService.getOptions().subscribe((data) => {
+  this.accountOptions = (data || []).map(x => ({
+    label: x.Name,
+    formLabel: `${x.No} - ${x.Name}`,
+    value: x.No
+  }));
+});
   }
 
   onSubmit(): void {

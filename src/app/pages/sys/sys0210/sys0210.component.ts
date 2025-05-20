@@ -1,11 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { FormGroup, Validators } from '@angular/forms';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { tblRole } from '../module/sysb000.module';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-sys0210',
@@ -13,99 +11,101 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   styleUrls: ['./sys0210.component.scss'],
 })
 // 4-2-2-1角色基本資料維護
-export class SYS0210Component extends BasicQpageComponent implements OnInit {
+export class SYS0210Component extends BasicQueryPageComponent<tblRole>
+  implements OnInit {
   // 查詢
   queryForm = this.formBuilder.group({
-    roleCode: [], // Input Text
-    roleName: [], // Input Text
-    roleDescription: [], // Input Text
+    role_no: ['', [Validators.maxLength(10)]], // 角色代號
+    role_name: ['', [Validators.maxLength(30)]], // 角色名稱
+    description: ['', [Validators.maxLength(50)]], // 角色註記
+
+    //分頁查詢
+    ...createPaginationConfig([{ field: 'role_no', order: 1 }]), // 分頁和排序參數
   });
-  // 表格
 
-  data: any[] = [
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
+  data: tblRole[] = [];
+  columns: Column[] = [
+    { field: 'role_no', header: '角色代號', visible: true },
+    { field: 'role_name', header: '角色名稱', visible: true },
+    { field: 'description', header: '角色註記', visible: true },
+  ];
+  // 多選項目
+  selectedItems: tblRole[] = [];
 
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'roleCode', header: '角色代碼', visible: true },
-    { field: 'roleName', header: '角色名稱', visible: true },
-    { field: 'roleDescription', header: '角色敘述', visible: true },
-  ];
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService
-  ) {
+  constructor() {
     super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '420002';
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
+    this.initializePage('SYS0210', 'SYS/SYS0210CRU', this.queryForm, (form) => this.onSubmit(form));
+    // this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
+      console.log('query condition', frm.value);
+      // this.sysb300Service.querySYSB300(frm.value).subscribe({
+      //   next: (response) => {
+      //     // console.log('回傳階層:', response.Data);
+      //     if (response.Status === '0000') {
+      //       this.data = response.Data || [];
+      //       this.totalRecords = response.TotalCount || response.Data.length;
+      //       this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      //     } else {
+      //       console.error('API error:', response.Status, response.Message);
+      //     }
+      //     this.loading = false;
+      //     this.messageService.unblockUi();
+      //   },
+      //   error: (err: string) => {
+      //     console.error('API error:', err);
+      //     this.loading = false;
+      //     this.messageService.unblockUi();
+      //   },
+      // });
+    });
+  }
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
+  // 刪除項目
+  onDelete(data: tblRole | tblRole[]): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
+
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) {
+      console.error('No items to delete');
+      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+      return;
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
+    // 收集所有有效的 ID
+    const idList = items
+      .filter((item) => item && item.id != null && item.id !== undefined)
+      .map((item) => item.id);
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['SYS0000/SYS0210CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
+    const deleteBody = {
+      idList: idList, // 符合 API 的 idList 格式
     };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+
+    console.log('Delete body:', JSON.stringify(deleteBody, null, 2));
+    // this.sysb300Service.deleteSYSB300(deleteBody).subscribe({
+    //   next: (response) => {
+    //     if (response.Status === '0000') {
+    //       this.messageService.successBubble('選中項目刪除成功');
+    //     } else {
+    //       console.error('API error:', response.Status, response.Message);
+    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+    //     }
+    //   },
+    //   error: (err: string) => {
+    //     console.error('API error:', err);
+    //     this.messageService.errorBubble('刪除失敗');
+    //   },
+    //   complete: () => {
+    //     this.onSubmit(this.queryForm);
+    //   },
+    // });
+
+    this.selectedItems = [];
   }
 }

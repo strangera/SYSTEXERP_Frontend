@@ -155,6 +155,21 @@ export class tblUser {
   'UPD_USR_Name': string;
 }
 
+//tblRole 使用者角色設定檔
+export class tblRole {
+  'id': string;
+  'role_no': string;
+  'role_name': string;
+  'description': string;
+
+  'CRT_Date': Date;
+  'CRT_USR_No': string;
+  'CRT_USR_Name': string;
+  'UPD_Date': Date;
+  'UPD_USR_No': string;
+  'UPD_USR_Name': string;
+}
+
 // SYS1000代碼檔案
 export interface SYS1000 {
   'ID': number;
