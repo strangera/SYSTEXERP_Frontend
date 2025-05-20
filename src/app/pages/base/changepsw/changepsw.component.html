@@ -1,64 +1,34 @@
-<form [formGroup]="passwordForm" (ngSubmit)="onSubmit()">
-  <span class="p-text-secondary block mb-5">更新您的密碼</span>
-  <div class="field grid">
-    <label for="oldPassword" class="col-12 mb-2 md:col-2 md:mb-0">舊密碼</label>
-    <div class="col-12 md:col-10">
-      <p-password id="oldPassword" formControlName="oldPassword" class="w-full" styleClass="w-full"
-        inputStyleClass="w-full" placeholder="請輸入舊密碼" maxlength="8" [toggleMask]="true" appendTo="body"
-        [feedback]="false" />
-      <small
-        *ngIf="passwordForm.controls['oldPassword'].touched && passwordForm.controls['oldPassword'].errors?.['required']"
-        class="p-error block">舊密碼為必填項。</small>
-    </div>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [customBreadcrumbItems]="customBreadcrumbItems" class="flex-1"></app-menubar>
   </div>
-  <div class="field grid">
-    <label for="newPassword" class="col-12 mb-2 md:col-2 md:mb-0">密碼</label>
-    <div class="col-12 md:col-10">
-      <p-password id="newPassword" class="w-full" styleClass="w-full" inputStyleClass="w-full"
-        formControlName="newPassword" placeholder="請輸入新密碼" maxlength="8" promptLabel="設定密碼" weakLabel="太簡單"
-        mediumLabel="中等複雜度" strongLabel="複雜密碼" [toggleMask]="true" appendTo="body" [strongRegex]="strongRegex">
-        <ng-template pTemplate="footer">
-          <div class="flex flex-column">
-            <p-divider />
-            <p class="mt-2">密碼規則格式限制：</p>
-            <ul class="pl-2 ml-2 mt-0" style="line-height: 1.5">
-              <li>字數限制：4 至 8 個字元</li>
-              <ul class="pl-2 ml-2 mt-0" style="line-height: 1.5">
-                <li>至少一個英文大寫字母（A–Z）</li>
-                <li>至少一個數字（0–9）</li>
-                <li>至少一個特殊符號</li>
-              </ul>
-            </ul>
-          </div>
-        </ng-template>
-      </p-password>
-      <small
-        *ngIf="passwordForm.controls['newPassword'].touched && passwordForm.controls['newPassword'].errors?.['required']"
-        class="p-error block">新密碼為必填項。</small>
-      <small
-        *ngIf="passwordForm.controls['newPassword'].touched && passwordForm.controls['newPassword'].errors?.['invalidPasswordStrength']"
-        class="p-error block">密碼強度不足，請符合密碼規則。</small>
-      <!-- 錯誤訊息 -->
-      <small *ngIf="passwordForm.hasError('mismatch') && passwordForm.get('confirmPassword')?.touched"
-        class="text-red-500 text-sm mt-1">
-        新密碼與確認密碼不一致
-      </small>
-    </div>
-  </div>
-  <div class="field grid">
-    <label for="confirmPassword" class="col-12 mb-2 md:col-2 md:mb-0">確認密碼</label>
-    <div class="col-12 md:col-10">
-      <p-password id="confirmPassword" class="w-full" styleClass="w-full" inputStyleClass="w-full"
-        formControlName="confirmPassword" placeholder="請再次輸入密碼" maxlength="8" [toggleMask]="true" appendTo="body"
-        [feedback]="false" />
-      <small
-        *ngIf="passwordForm.controls['confirmPassword'].touched && passwordForm.controls['confirmPassword'].errors?.['required']"
-        class="p-error block">確認密碼為必填項。</small>
-      <small *ngIf="passwordForm.errors?.['passwordsMismatch']" class="p-error block">密碼與確認密碼不符。</small>
-    </div>
-  </div>
-  <div class="flex justify-content-end gap-2">
-    <!-- <p-button label="取消" severity="secondary" (onClick)="visible = false" /> -->
-    <p-button label="確定" [loading]="formButtonLoading" type="submit" />
-  </div>
-</form>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="userForm" (ngSubmit)="changePass(userForm)" class="sm:px-4 md:px-6 lg:px-8">
+        <div class="grid fields">
+          <app-input-text class="col-12 sm:col-6" label="使用者代號" controlName="User_No"
+            [control]="userForm.controls.User_No" [submitted]="submitted" />
+          <app-input-text class="col-12 sm:col-6" label="使用者姓名" controlName="User_Name"
+            [control]="userForm.controls.User_Name" [submitted]="submitted" />
+          <app-password class="col-12" label="舊密碼" controlName="Old_password" [control]="userForm.controls.Old_password"
+            [submitted]="submitted" [showPasswordRule]="false" [feedback]="false" />
+          <app-password class="col-12" label="新密碼" controlName="New_password" [control]="userForm.controls.New_password"
+            [submitted]="submitted">
+            <div class="text-primary-500 text-sm flex align-items-center gap-1 mt-1">
+              <i class="pi pi-exclamation-circle"></i>
+              <span>密碼需要4-8碼，且包含大小寫英文、數字與特殊符號</span>
+            </div>
+          </app-password>
+          <app-password class="col-12" label="重新輸入新密碼" controlName="New_password2"
+            [control]="userForm.controls.New_password2" [submitted]="submitted" [errorForGroup]="true"
+            [showPasswordRule]="false" [feedback]="false" />
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="submit" [loading]="loading" />
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>

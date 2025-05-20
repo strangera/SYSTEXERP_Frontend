@@ -28,7 +28,9 @@ export class ValidationService {
       invalidHddocnum: '請補上錯誤訊息',
       invalidElectronicnum: '請補上錯誤訊息',
       invalidDateRange: '日期起不可大於日期迄',
-      invalidNumberRange: '起始數字不可大於結束數字'
+      invalidNumberRange: '起始數字不可大於結束數字',
+      passwordsMismatch: '兩次輸入的密碼不一致，請重新輸入。',
+      invalidPasswordStrength: '密碼強度不足，至少包含一個大小寫字母、一個數字和一個特殊符號。',
     };
     return config[validatorName];
   }

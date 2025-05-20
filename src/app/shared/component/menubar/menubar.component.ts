@@ -19,6 +19,7 @@ interface Favorite {
 })
 export class MenubarComponent implements OnInit, OnDestroy {
   @Input() ProgNo = '';
+  @Input() customBreadcrumbItems: MenuItem[] = [];
   home?: { icon: string, routerLink: string };
   breadcrumbItems: MenuItem[] = [];
   menu: string[] = [];
@@ -37,6 +38,9 @@ export class MenubarComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.home = { icon: 'pi pi-home', routerLink: '/dashboard' };
+    if (this.customBreadcrumbItems.length > 0) {
+      return;
+    }
     this.breadcrumbItems = [];
     this.userSubscription = this.authService.user.subscribe((userInfo: UserInfo | null) => {
       this.data = userInfo;

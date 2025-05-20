@@ -241,9 +241,8 @@ export class SsoDashboardComponent implements OnInit {
           this.authService.logout();
           this.formButtonLoading = false;
         },
-        error: (error) => {
-          console.error('密碼修改失敗:', error);
-          this.messageService.errorBubble('密碼修改失敗，請稍後再試。');
+        error: () => {
+          this.formButtonLoading = false;
         },
       });
     }

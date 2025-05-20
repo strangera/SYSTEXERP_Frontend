@@ -70,7 +70,7 @@
 </div>
 
 <p-dialog header="修改使用者密碼" [modal]="true" [(visible)]="visible" [style]="{ width: '40rem' }" [closeOnEscape]="!noClose"
-  [closable]="!noClose">
+  [closable]="!noClose" [breakpoints]="{ '575px': '100vw' }">
   <form [formGroup]="form" (ngSubmit)="onSubmit(form)">
     <span class="p-text-secondary block mb-5">更新您的密碼</span>
     <div class="field grid">

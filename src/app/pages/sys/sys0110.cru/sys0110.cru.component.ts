@@ -88,7 +88,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser>
           if (this.canAdd()) {
             // 先將user_Password加密
             frm.value.user_Password = this.encrypt.getPassword(
-              this.userInfo ? this.userInfo.user_No : '',
+              frm.value.user_No,
               frm.value.user_Password,
             );
             console.log('userInfo', this.userInfo);
