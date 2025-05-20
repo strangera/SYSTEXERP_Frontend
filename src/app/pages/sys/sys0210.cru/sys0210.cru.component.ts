@@ -2,158 +2,73 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import {
-
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { TranslateService } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { tblUser } from '../module/sysb000.module';
 // 4-2-2-1角色基本資料維護
+
+// 角色基本資料維護 CRU
 @Component({
   selector: 'app-sys0210-cru',
   templateUrl: './sys0210.cru.component.html',
   styleUrls: ['./sys0210.cru.component.scss'],
 })
 export class SYS0210CRUComponent
-  extends BasicCrupageComponent
+  extends BasicCruPageComponent<tblUser>
   implements OnInit {
-
-  // 表單及狀態控制
+  // ----------------------------------------------------------------
   dataForm = this.formBuilder.group({
-    roleCode: ['', Validators.required], // 角色代碼
-    roleName: ['', Validators.required], // 角色名稱
-    roleDescription: [''], // 角色敘述
+    id: [], // ID
+    role_no: ['', [Validators.required, Validators.maxLength(10)]], // 角色代號
+    role_name: ['', [Validators.required, Validators.maxLength(30)]], // 角色名稱
+    description: ['', [Validators.maxLength(50)]], // 角色註記
   });
 
-
+  // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private translate: TranslateService,
-  ) { super(); }
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    this.ProgNo = '420002';
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus;
-      rowdata: any;
-    };
-
-    switch (state.crudstatus) {
-      case CRUDStatus.Create:
-        this.formTitle = '新增資料';
-        this.showConfirm = this.canAdd();
-        break;
-      case CRUDStatus.Edit:
-        this.formTitle = '編輯資料';
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      case CRUDStatus.Read:
-        this.formTitle = '顯示資料';
-        this.Read(state.rowdata);
-        break;
-    }
+    this.initializePage('SYS0210', this.dataForm);
   }
 
-  // 權限檢查
-  canQuery(): boolean {
-    return true;
-  }
-
-
-  // 表單控制
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-
-
-  // 提交表單
-  onSubmit(form: FormGroup): void {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (form.invalid) {
-      this.messageService.errorBubble(
-        this.translate.instant('form_error_message')
-      );
-      this.messageService.unblockUi();
-      return;
-    }
-
-    if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-      this.messageService.successBubble(
-        this.translate.instant('success_message')
-      );
-    } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-      this.messageService.successBubble(
-        this.translate.instant('updated-successfully')
-      );
-    }
-
-    this.messageService.unblockUi();
+  onSubmit(frm: FormGroup) {
+    // 修改：使用父類的 handleSubmit 方法
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            // this.sysb400Service.insertSYSB400(frm.value).subscribe(() => {
+            //   this.messageService.successBubble('新增成功');
+            //   this.onCancel(); // 新增成功後返回查詢頁面
+            // });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            console.log('frm.value', frm.value);
+            // this.sysb400Service.updateSYSB400(frm.value).subscribe(() => {
+            //   this.messageService.successBubble('更新成功');
+            //   this.onCancel(); // 更新成功後返回查詢頁面
+            // });
+          }
+          break;
+      }
+    });
   }
 
   submitForm(frm: FormGroup) {
     this.onSubmit(frm);
   }
 
-  onCancel() {
-    this.router.navigate(['SYS0000/SYS0210']);
-  }
-
-  // 導航操作
-  onCreate() {
-    if (this.canAdd()) {
-      const extras: NavigationExtras = {
-        state: { crudstatus: CRUDStatus.Create, dataForm: this.dataForm },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['SYS0000/SYS0210'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      const extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          dataForm: this.dataForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    const extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        dataForm: this.dataForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
-  }
-
   onClearForm() {
-    this.dataForm.reset();
+    this.dataForm.reset(); // 重置表單
   }
 }
