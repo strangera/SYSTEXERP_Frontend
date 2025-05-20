@@ -59,15 +59,25 @@ export class SYSB400CRUComponent
     this.initializePage('SYSB400', this.dataForm);
     this.loadOptions();
 
-    // 初始讀取頁面就確認上層組織階層代碼的選項
+    // 初始讀取頁面就確認p_level_id的選項
     if (this.dataForm.controls.level_id.value == '' || this.dataForm.controls.level_id.value == null) {
       this.dataForm.controls.p_level_id.disable();
       this.dataForm.controls.p_level_id.setValue('');
     }
 
-    // 監聽組織階層代碼的變化 (決定上層組織階層代碼的選項)
+    // 監聽組織階層代碼的變化 (決定p_level_id代碼的選項)
     this.dataForm.controls.level_id.valueChanges.subscribe((levelId) => {
       this.handleLevelIdChange(levelId);
+    });
+
+    // 監聽組織階層代碼的變化 (決定上p_org_id的選項)
+    this.dataForm.controls.p_level_id.valueChanges.subscribe((pLevelId) => {
+      if (pLevelId) {
+        this.dataForm.controls.p_org_id.enable();
+      } else {
+        this.dataForm.controls.p_org_id.disable();
+        this.dataForm.controls.p_org_id.setValue('');
+      }
     });
   }
 

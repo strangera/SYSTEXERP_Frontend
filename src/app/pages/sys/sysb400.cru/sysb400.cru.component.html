@@ -25,14 +25,14 @@
       <!-- 上層組織代碼區域：僅當 org_id 不為零時顯示 -->
       <div class="grid p-fluid" *ngIf="dataForm.get('org_id')?.value !== '100000'">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="上層組織代碼/名稱" controlName="p_org_id" [options]="org_Option" optionLabel="Label"
-            optionValue="No" [control]="dataForm.controls.p_org_id" [submitted]="submitted">
-          </app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="上層組織階層代碼/名稱" controlName="p_level_id" [options]="filtered_p_level_Options"
             optionLabel="Label" optionValue="No" [control]="dataForm.controls.p_level_id" [submitted]="submitted"
             (disabled)="dataForm.controls.p_level_id.disabled">
+          </app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="上層組織代碼/名稱" controlName="p_org_id" [options]="org_Option" optionLabel="Label"
+            optionValue="No" [control]="dataForm.controls.p_org_id" [submitted]="submitted">
           </app-dropdown>
         </div>
       </div>
