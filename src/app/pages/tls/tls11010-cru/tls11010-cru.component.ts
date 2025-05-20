@@ -60,50 +60,63 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
 
     this.tls11010Service.getFloorOptions().subscribe(res => this.floorOptions = res);
     this.tls11010Service.getRegionOptions().subscribe(res => this.RegionCodeOptions = res);
-    this.tls11010Service.getOrgOptions().subscribe(res => this.OrganizationCodeOptions = res);
-    this.tls11010Service.getUsageOptions().subscribe(res => this.usageOptions = res);
+    this.tls11010Service.getOrgOptions().subscribe((res) => {
+      this.OrganizationCodeOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
+
+        this.tls11010Service.getUsageOptions().subscribe((res) => {
+      this.usageOptions = res?.map((x: any) => ({
+                label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
     this.tls11010Service.getBuildingOptions().subscribe(res => this.BUILDING_NO_Options = res);
   }
 
   onSubmit(): void {
-    this.handleSubmit(this.inputForm, () => {
-      const raw = this.inputForm.getRawValue();
+  this.handleSubmit(this.inputForm, () => {
+    const raw = this.inputForm.getRawValue();
 
-      (raw as any).GROSS_SPACE = Number(raw.GROSS_SPACE);
-      (raw as any).NET_SPACE = Number(raw.NET_SPACE);
-      (raw as any).LOCATION_Status = String(raw.LOCATION_Status);
+    (raw as any).GROSS_SPACE = Number(raw.GROSS_SPACE);
+    (raw as any).NET_SPACE = Number(raw.NET_SPACE);
+    (raw as any).LOCATION_Status = String(raw.LOCATION_Status);
 
-      if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        console.log('📤 新增送出的 payload：', raw);
+    if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
+      console.log('📤 新增送出的 payload：', raw);
 
-        this.tls11010Service.insertData(raw).subscribe({
-          next: () => {
-            this.messageService.successBubble(this.translate.instant('success_message'));
-            // this.router.navigate(['/TLS', 'TLS11010']); 一律不跳轉
-            this.inputForm.reset(); // !!! 一律清空表單就好
-          },
-          error: () => {
-            this.messageService.errorBubble(this.translate.instant('create_failed'));
-          },
-        });
-      } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-        // ✅ 加入 id 與 LOCATION_No 傳給後端
-        (raw as any).id = this.rowdata?.id;
-        (raw as any).LOCATION_No = this.rowdata?.LOCATION_No;
+      this.tls11010Service.insertData(raw).subscribe({
+        next: () => {
+          this.messageService.successBubble(this.translate.instant('success_message'));
+          this.inputForm.reset(); // ✅ 清空整個表單
+          this.inputForm.markAsPristine(); // ✅ 標記為未修改狀態（防止髒表單警告）
+        },
+        error: () => {
+          this.messageService.errorBubble(this.translate.instant('create_failed'));
+        },
+      });
+    } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
+      (raw as any).id = this.rowdata?.id;
+      (raw as any).LOCATION_No = this.rowdata?.LOCATION_No;
 
-        this.tls11010Service.updateData(raw).subscribe({
-          next: () => {
-            this.messageService.successBubble(this.translate.instant('updated-successfully'));
-            // this.router.navigate(['/TLS', 'TLS11010']); 一律不跳轉
-            this.inputForm.reset();// !!! 一律清空表單就好
-          },
-          error: () => {
-            this.messageService.errorBubble(this.translate.instant('update_failed'));
-          },
-        });
-      }
-    });
-  }
+      this.tls11010Service.updateData(raw).subscribe({
+        next: () => {
+          this.messageService.successBubble(this.translate.instant('updated-successfully'));
+          // ✅ 編輯成功後也不跳頁，改為清空資料
+          this.inputForm.reset();
+          this.inputForm.markAsPristine();
+        },
+        error: () => {
+          this.messageService.errorBubble(this.translate.instant('update_failed'));
+        },
+      });
+    }
+  });
+}
 
   // ✅ 新增刪除方法
   onDelete(): void {

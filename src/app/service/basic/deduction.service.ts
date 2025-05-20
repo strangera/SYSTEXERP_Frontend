@@ -56,7 +56,7 @@ export class DeductionService {
   // ✅ 新增這段：查詢扣款類別對應的扣款項目(APS1003)
   getAPS1003DropDownList(payload: { cap_typeList: string[] }): Observable<any[]> {
     return this.http
-      .post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13030_APS1003_DropDownList`, payload)
+      .post<any>(`${this.apiUrl}/queryTLS13030_APS1003_DropDownList`, payload)
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? []),
         catchError(this.errorHandler.handleError)

@@ -67,6 +67,7 @@ import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick
 import { TableExportComponent } from './componentkit/table/table-export/table-export.component';
 import { MultiSelectTableComponent } from './componentkit/multi-select-table/multi-select-table.component';
 import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/expandable-edit-table.module';
+import { MultiLocationFilterComponent } from './componentkit/multi-location-filter/multi-location-filter.component';
 
 @NgModule({
   declarations: [
@@ -94,6 +95,7 @@ import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/
     EditorTextComponent,
     RadiobuttonComponent,
     HasPermissionDirective,
+    MultiLocationFilterComponent,
   ],
   imports: [
     ReactiveFormsModule,
@@ -198,6 +200,7 @@ import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/
     RadiobuttonComponent,
     ExpandableEditTableModule,
     SelectButtonModule,
+    MultiLocationFilterComponent,
   ],
 })
 export class SharedModule { }
