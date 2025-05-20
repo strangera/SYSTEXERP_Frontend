@@ -84,7 +84,7 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
   data: any[] = [
     {
       'id': 1, 'name': 'William', 'isdelete': true, 'age': 35, 'email': 'william36@example.com', 'city': 'Yilan', 'details': [
-        { id: 1, description: '個人資料A', manufacturer: '台灣', quantity: 10, price: 1500, discount: 5, date: '2025/05/20' },
+        { id: 1, description: '個人資料A', manufacturer: '台灣', quantity: 10, price: 1500, discount: 5, date: '2025/05/20', testbool: true },
         { id: 2, description: '個人資料B', manufacturer: '台灣', quantity: 5, price: 3000, discount: 10 },
         { id: 3, description: '個人資料C', manufacturer: '台灣', quantity: 10, price: 1500, discount: 5 },
         { id: 4, description: '個人資料D', manufacturer: '台灣', quantity: 5, price: 3000, discount: 10 },
@@ -117,7 +117,8 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     { field: 'name', header: '姓名', editable: true, type: 'text' },
     { field: 'age', header: '年齡', editable: true, type: 'number' },
     { field: 'email', header: 'Email', editable: true, type: 'text' },
-    { field: 'city', header: '城市', editable: true, type: 'text' }
+    { field: 'city', header: '城市', editable: true, type: 'text' },
+    { field: 'testbool', header: '是否', editable: true, type: 'checkbox' }
   ];
 
   // 詳細資料欄位定義
@@ -127,8 +128,10 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     { field: 'quantity', header: '數量', editable: true, type: 'number' },
     { field: 'price', header: '金額', editable: true, type: 'number' },
     { field: 'discount', header: '折扣(%)', editable: true, type: 'number' },
-    { field: 'date', header: '日期', editable: true, type: 'date' }
-  ];
+    { field: 'discount', header: '折扣(%)', editable: true, type: 'number' },
+    { field: 'date', header: '日期', editable: true, type: 'date' },
+    { field: 'testbool', header: '是否', editable: true, type: 'checkbox' }
+  ]
 
   // 展開式表格的載入狀態
   expandLoading = false;

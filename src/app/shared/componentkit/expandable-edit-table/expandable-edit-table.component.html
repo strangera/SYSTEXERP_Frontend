@@ -84,6 +84,11 @@
                     (click)="openDatePicker(rowData, col.field, false, ri)"></button>
                 </div>
 
+                <!-- 新增: Checkbox 核取方塊 -->
+                <div *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
+                  <p-checkbox [(ngModel)]="rowData[col.field]" [binary]="true"></p-checkbox>
+                </div>
+
                 <!-- 預設文字輸入 -->
                 <input *ngSwitchDefault pInputText type="text" [(ngModel)]="rowData[col.field]">
               </ng-container>
@@ -97,6 +102,15 @@
 
                 <!-- 數字顯示 -->
                 <span *ngSwitchCase="'number'">{{ rowData[col.field] | number }}</span>
+
+                <!-- 新增: Checkbox 顯示 -->
+                <span *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
+                  <div class="p-checkbox p-component p-disabled">
+                    <div class="p-checkbox-box" [ngClass]="{'p-highlight': rowData[col.field]}">
+                      <span class="p-checkbox-icon pi pi-check" *ngIf="rowData[col.field]"></span>
+                    </div>
+                  </div>
+                </span>
 
                 <!-- 預設顯示 -->
                 <span *ngSwitchDefault>{{ rowData[col.field] }}</span>
@@ -112,6 +126,11 @@
 
               <!-- 數字顯示 -->
               <span *ngSwitchCase="'number'">{{ rowData[col.field] | number }}</span>
+
+              <!-- 新增: Checkbox 顯示 -->
+              <span *ngSwitchCase="'checkbox'">
+                <i class="pi" [ngClass]="{'pi-check-square': rowData[col.field], 'pi-square': !rowData[col.field]}"></i>
+              </span>
 
               <!-- 預設顯示 -->
               <span *ngSwitchDefault>{{ rowData[col.field] }}</span>
@@ -197,6 +216,11 @@
                   (click)="openDatePicker(detailData, col.field, true, ri, di)"></button>
               </div>
 
+              <!-- 新增: Checkbox 顯示 -->
+              <div *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
+                <p-checkbox [(ngModel)]="detailData[col.field]" [binary]="true"></p-checkbox>
+              </div>
+
               <!-- 預設文字輸入 -->
               <input *ngSwitchDefault pInputText type="text" [(ngModel)]="detailData[col.field]">
             </ng-container>
@@ -210,6 +234,15 @@
 
               <!-- 數字顯示 -->
               <span *ngSwitchCase="'number'">{{ detailData[col.field] | number }}</span>
+
+              <!-- 新增: Checkbox 顯示 -->
+              <span *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
+                <div class="p-checkbox p-component p-disabled">
+                  <div class="p-checkbox-box" [ngClass]="{'p-highlight': detailData[col.field]}">
+                    <span class="p-checkbox-icon pi pi-check" *ngIf="detailData[col.field]"></span>
+                  </div>
+                </div>
+              </span>
 
               <!-- 預設顯示 -->
               <span *ngSwitchDefault>{{ detailData[col.field] }}</span>

@@ -321,5 +321,17 @@
       height: auto !important;
       max-height: 90vh !important;
     }
+
+    // 新增: Checkbox 相關樣式
+    .checkbox-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      .p-checkbox {
+        // 確保 checkbox 在單元格中居中
+        margin: 0 auto;
+      }
+    }
   }
 }
