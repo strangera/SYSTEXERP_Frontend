@@ -23,7 +23,7 @@ export class SYSB300Component
     // SYS3000 組織階層設定檔
     level_id: ['', [Validators.maxLength(2)]], // 組織階層代碼
     level_name: ['', [Validators.maxLength(30)]], // 組織階層名稱
-    p_level_id: ['', [Validators.maxLength(2)]], // 上層組織階層代碼
+    p_level_id: ['', [Validators.maxLength(2)]], // 上層組織代碼/名稱
     //分頁查詢
     ...createPaginationConfig([{ field: 'level_id', order: 1 }]), // 分頁和排序參數
   });
@@ -132,6 +132,7 @@ export class SYSB300Component
       this.sysb300Service
         .querySYSB300_DropDownList({})
         .subscribe((response) => {
+          console.log('querySYSB300_DropDownList:', response);
           this.upgroup_Options = response.Data.map((item: apiOption) => ({
             No: item.No,
             Name: item.Name,
