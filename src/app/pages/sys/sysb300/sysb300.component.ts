@@ -23,7 +23,7 @@ export class SYSB300Component
     // SYS3000 組織階層設定檔
     level_id: ['', [Validators.maxLength(2)]], // 組織階層代碼
     level_name: ['', [Validators.maxLength(30)]], // 組織階層名稱
-    p_level_id: ['', [Validators.maxLength(2)]], // 上層組織階層代碼
+    p_level_id: ['', [Validators.maxLength(2)]], // 上層組織代碼/名稱
     //分頁查詢
     ...createPaginationConfig([{ field: 'level_id', order: 1 }]), // 分頁和排序參數
   });
@@ -61,7 +61,7 @@ export class SYSB300Component
       console.log('query condition', frm.value);
       this.sysb300Service.querySYSB300(frm.value).subscribe({
         next: (response) => {
-          console.log('API response:', response);
+          // console.log('回傳階層:', response.Data);
           if (response.Status === '0000') {
             this.data = response.Data || [];
             this.totalRecords = response.TotalCount || response.Data.length;
@@ -103,6 +103,15 @@ export class SYSB300Component
       return;
     }
 
+    //確認是否全部都可以刪除
+    const canDelete = items.every((item) => item.CanDel);
+
+    if (!canDelete) {
+      console.error('Some items cannot be deleted');
+      this.messageService.errorBubble('無法刪除：組織階層互相關連');
+      return;
+    }
+
     const deleteBody = {
       idList: idList, // 符合 API 的 idList 格式
     };
@@ -132,6 +141,7 @@ export class SYSB300Component
       this.sysb300Service
         .querySYSB300_DropDownList({})
         .subscribe((response) => {
+          console.log('querySYSB300_DropDownList:', response);
           this.upgroup_Options = response.Data.map((item: apiOption) => ({
             No: item.No,
             Name: item.Name,

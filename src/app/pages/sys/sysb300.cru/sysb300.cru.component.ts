@@ -21,7 +21,7 @@ export class SYSB300CRUComponent
     id: [],
     level_id: ['', [Validators.required, Validators.maxLength(2)]], // 組織階層代碼
     level_name: ['', [Validators.required, Validators.maxLength(30)]], // 組織階層名稱
-    p_level_id: ['', [Validators.maxLength(2)]], // 上層組織階層代碼(空白代表第一層)
+    p_level_id: ['', [Validators.maxLength(2)]], // 上層組織代碼/名稱(空白代表第一層)
   });
   //
   upgroup_Options: apiOption[] = [];

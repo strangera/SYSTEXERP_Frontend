@@ -80,6 +80,8 @@ export class Sysb300m {
   'UPD_Date': Date;
   'UPD_USR_No': string;
   'UPD_USR_Name': string;
+
+  'CanDel': boolean; // 是否可刪除
 }
 
 // SYS3100 組織碼設定作業
