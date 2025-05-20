@@ -1,4 +1,4 @@
-<p-breadcrumb class="max-w-full" [model]="customBreadcrumbItems ? customBreadcrumbItems : breadcrumbItems"
+<p-breadcrumb class="max-w-full" [model]="customBreadcrumbItems.length ? customBreadcrumbItems : breadcrumbItems"
   [home]="home">
   <ng-template pTemplate="item" let-item>
     <div class="cursor-pointer" [routerLink]="item.url">
