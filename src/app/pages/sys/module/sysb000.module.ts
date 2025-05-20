@@ -80,6 +80,8 @@ export class Sysb300m {
   'UPD_Date': Date;
   'UPD_USR_No': string;
   'UPD_USR_Name': string;
+
+  'CanDel': boolean; // 是否可刪除
 }
 
 // SYS3100 組織碼設定作業
@@ -144,6 +146,21 @@ export class tblUser {
   'remarks': string;
   'user_priority': string;
   'USER_PwdExpireDate': Date;
+
+  'CRT_Date': Date;
+  'CRT_USR_No': string;
+  'CRT_USR_Name': string;
+  'UPD_Date': Date;
+  'UPD_USR_No': string;
+  'UPD_USR_Name': string;
+}
+
+//tblRole 使用者角色設定檔
+export class tblRole {
+  'id': string;
+  'role_no': string;
+  'role_name': string;
+  'description': string;
 
   'CRT_Date': Date;
   'CRT_USR_No': string;

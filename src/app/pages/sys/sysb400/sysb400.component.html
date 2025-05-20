@@ -22,6 +22,13 @@
             </app-dropdown>
           </div>
         </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="是否停用" controlName="stop_flag" [options]="whetherOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.stop_flag" [submitted]="submitted">
+            </app-dropdown>
+          </div>
+        </div>
         <!-- <div *appHasPermission="queryPermission" class="col"> -->
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
