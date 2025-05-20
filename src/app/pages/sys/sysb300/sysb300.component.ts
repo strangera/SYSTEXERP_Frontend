@@ -61,7 +61,7 @@ export class SYSB300Component
       console.log('query condition', frm.value);
       this.sysb300Service.querySYSB300(frm.value).subscribe({
         next: (response) => {
-          console.log('API response:', response);
+          // console.log('回傳階層:', response.Data);
           if (response.Status === '0000') {
             this.data = response.Data || [];
             this.totalRecords = response.TotalCount || response.Data.length;
@@ -100,6 +100,15 @@ export class SYSB300Component
     if (idList.length === 0) {
       console.error('No valid IDs to delete');
       this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
+    }
+
+    //確認是否全部都可以刪除
+    const canDelete = items.every((item) => item.CanDel);
+
+    if (!canDelete) {
+      console.error('Some items cannot be deleted');
+      this.messageService.errorBubble('無法刪除：組織階層互相關連');
       return;
     }
 
