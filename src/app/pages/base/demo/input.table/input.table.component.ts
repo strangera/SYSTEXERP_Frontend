@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, input, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { debounceTime, Subject, switchMap } from 'rxjs';
 import { LocationData, LocationForm, LocationService } from './location.service';
@@ -6,6 +6,8 @@ import { BasicQueryPageComponent } from '../../../../shared/componentextends/bas
 import { SystemTypeService } from '../../../../service/basic/system-type.service';
 import { Column } from '../../../../shared/componentkit/table/table.model';
 import { FieldsConfig } from '../../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { ExpandableEditTableComponent } from '../../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+
 
 // 定義展開式表格所需的資料結構
 interface ProductDetail {
@@ -45,6 +47,9 @@ interface DetailSaveEvent {
   styleUrl: './input.table.component.scss'
 })
 export class InputTableComponent extends BasicQueryPageComponent<any> implements OnInit {
+  // 在父組件中聲明
+  @ViewChild(ExpandableEditTableComponent) expandableTable!: ExpandableEditTableComponent;
+
   queryForm = this.formBuilder.group({
     dateRangeQuick1: [null, [Validators.required]],
     dateRangeQuick2: [null, [Validators.required]],
@@ -79,7 +84,7 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
   data: any[] = [
     {
       'id': 1, 'name': 'William', 'isdelete': true, 'age': 35, 'email': 'william36@example.com', 'city': 'Yilan', 'details': [
-        { id: 1, description: '個人資料A', manufacturer: '台灣', quantity: 10, price: 1500, discount: 5 },
+        { id: 1, description: '個人資料A', manufacturer: '台灣', quantity: 10, price: 1500, discount: 5, date: '2025/05/20' },
         { id: 2, description: '個人資料B', manufacturer: '台灣', quantity: 5, price: 3000, discount: 10 },
         { id: 3, description: '個人資料C', manufacturer: '台灣', quantity: 10, price: 1500, discount: 5 },
         { id: 4, description: '個人資料D', manufacturer: '台灣', quantity: 5, price: 3000, discount: 10 },
@@ -109,15 +114,15 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
 
   // 展開式表格的欄位定義
   mainColumns: ColumnDef[] = [
-    { field: 'name', header: '姓名', editable: true },
+    { field: 'name', header: '姓名', editable: true, type: 'text' },
     { field: 'age', header: '年齡', editable: true, type: 'number' },
-    { field: 'email', header: 'Email', editable: true },
-    { field: 'city', header: '城市', editable: true }
+    { field: 'email', header: 'Email', editable: true, type: 'text' },
+    { field: 'city', header: '城市', editable: true, type: 'text' }
   ];
 
   // 詳細資料欄位定義
   detailColumns: ColumnDef[] = [
-    { field: 'description', header: '詳細描述', editable: true, type: 'dropdown' },
+    { field: 'description', header: '詳細描述', editable: true, type: 'text' },
     { field: 'manufacturer', header: '來源', editable: true },
     { field: 'quantity', header: '數量', editable: true, type: 'number' },
     { field: 'price', header: '金額', editable: true, type: 'number' },
@@ -127,6 +132,30 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
 
   // 展開式表格的載入狀態
   expandLoading = false;
+
+  // 預設新項目模板
+  defaultNewPerson = {
+    name: '',
+    gender: '',
+    age: 25,
+    department: '',
+    hireDate: new Date(),
+    genderOptions: [
+      { label: '男', value: '男' },
+      { label: '女', value: '女' },
+      { label: '其他', value: '其他' }
+    ],
+    details: []
+  };
+
+  // 預設新明細模板
+  defaultNewDetail = {
+    project: '',
+    role: '',
+    startDate: new Date(),
+    endDate: null,
+    performance: 0
+  };
 
   isRowSelectable(rowData: any): boolean {
     return rowData.isdelete;
@@ -245,5 +274,60 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
 
   onDetailCancel(event: any) {
     console.log('取消詳細資料編輯:', event);
+  }
+
+  // 新增人員事件 (新增)
+  onAddPerson() {
+    const newPerson = {
+      ...this.defaultNewPerson,
+      id: this.generatePersonId(),
+      details: [] // 確保明細陣列存在
+    };
+
+    this.data.push(newPerson);
+
+    // 自動進入編輯模式
+    setTimeout(() => {
+      const index = this.data.indexOf(newPerson);
+      if (index >= 0) {
+        this.expandableTable.onRowEditInit(newPerson, index);
+      }
+    }, 0);
+  }
+
+  onAddDetail(person: any) {
+    console.log('新增明細，人員:', person);
+
+    // 建立新明細物件
+    const newDetail = {
+      ...this.defaultNewDetail,
+      id: this.generateDetailId(person),
+      startDate: new Date()
+    };
+
+    // 確保details陣列存在
+    if (!person.details) {
+      person.details = [];
+    }
+
+    // 將新明細加入陣列
+    person.details.unshift(newDetail);
+
+    // 這裡可以加入新增成功訊息提示
+  }
+
+  // 生成新人員ID (新增)
+  generatePersonId(): number {
+    const maxId = Math.max(...this.data.map(p => p.id), 0);
+    return maxId + 1;
+  }
+
+  // 生成新明細ID (新增)
+  generateDetailId(person: any): number {
+    if (!person.details || person.details.length === 0) {
+      return 1;
+    }
+    const maxId = Math.max(...person.details.map((d: any) => d.id), 0);
+    return maxId + 1;
   }
 }
