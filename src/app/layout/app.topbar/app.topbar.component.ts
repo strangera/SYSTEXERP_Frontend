@@ -179,9 +179,9 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     this.router.navigate([`/${item.prog_No.slice(0, 3)}/${item.prog_No}`]);
     this.favorite.hide(); // 點擊後關閉最愛選單
   }
-  // 進入編輯我的最愛模式
   editFavorites() {
     this.editingFavorites = !this.editingFavorites; // 切換編輯狀態
+    this.selectedFavorites = []; // 清空已選中的項目
   }
   // 刪除我的最愛
   deleteSelectedFavorites() {
@@ -205,7 +205,6 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
         }
       });
     } else {
-      this.editingFavorites = false; // 取消編輯狀態
       this.selectedFavorites = []; // 清空已選中的項目
     }
   }

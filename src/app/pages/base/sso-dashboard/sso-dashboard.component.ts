@@ -44,7 +44,7 @@ export class SsoDashboardComponent implements OnInit {
   }, { validators: this.validationService.passwordsMatchValidator('newPassword', 'confirmPassword') });
   strongRegex = '^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>-_+=`~[]\\;\']).{4,8}$';
   formButtonLoading = false; // 控制按鈕的載入狀態
-  noClose = true; // 禁用對話框的關閉
+  noClose = false; // 禁用對話框的關閉
 
   constructor(
     public layoutService: LayoutService,
@@ -235,7 +235,6 @@ export class SsoDashboardComponent implements OnInit {
         New_password: this.encryptionService.getPassword(this.data?.user_No || '', frm.value.newPassword),
         PwdExpireDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 密碼到期日設為90天後
       };
-      return;
       this.userCodeService.changePassword(query).subscribe({
         next: () => {
           this.messageService.successBubble('密碼修改成功');

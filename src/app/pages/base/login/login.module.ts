@@ -8,16 +8,16 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 
 @NgModule({
-    declarations: [
-      LoginComponent
-    ],
-    imports: [
-      CommonModule,
-      LoginRoutingModule,
-      PasswordModule,
-      FormsModule,
-      ReactiveFormsModule,
-      ButtonModule
-    ],
+  declarations: [
+    LoginComponent
+  ],
+  imports: [
+    CommonModule,
+    LoginRoutingModule,
+    PasswordModule,
+    FormsModule,
+    ReactiveFormsModule,
+    ButtonModule,
+  ],
 })
 export class LoginModule { }

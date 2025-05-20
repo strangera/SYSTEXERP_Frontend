@@ -58,8 +58,8 @@
                   </th>
                   <th *ngIf="editingFavorites"
                     class="border-round-xl p-0 flex justify-content-between align-items-center">
-                    <p-button class="w-full" styleClass="w-full border-round-lg" severity="danger" label="刪除我的最愛"
-                      icon="pi pi-trash" iconPos="right" (click)="deleteSelectedFavorites()" />
+                    <p-button class="w-full" styleClass="w-full border-round-lg" severity="secondary" label="關閉編輯模式"
+                      (click)="editFavorites()" />
                   </th>
                 </tr>
               </ng-template>
@@ -89,6 +89,9 @@
                 </tr>
               </ng-template>
             </p-table>
+            <p-button *ngIf="editingFavorites" class="w-full" styleClass="w-full border-round-lg" severity="danger"
+              label="刪除我的最愛" icon="pi pi-trash" iconPos="right" (click)="deleteSelectedFavorites()"
+              [disabled]="!selectedFavorites.length" />
           </div>
         </div>
       </p-overlayPanel>

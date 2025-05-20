@@ -15,6 +15,10 @@ import { ConfirmationService, MessageService, PrimeNGConfig } from 'primeng/api'
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { HttpClient } from '@angular/common/http';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import { NotificationMessageComponent } from './shared/component/notification-message/notification-message.component';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
+import { DialogModule } from 'primeng/dialog';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -26,8 +30,12 @@ export function HttpLoaderFactory(http: HttpClient) {
 @NgModule({
   declarations: [
     AppComponent,
+    NotificationMessageComponent,
   ],
   imports: [
+    ConfirmDialogModule,
+    ToastModule,
+    DialogModule,
     // 模块
     AppRoutingModule,
     BrowserModule,

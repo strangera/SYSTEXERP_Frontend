@@ -32,7 +32,6 @@ import { CalendarModule } from 'primeng/calendar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PickListModule } from 'primeng/picklist';
 import { MenubarModule } from 'primeng/menubar';
-import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
@@ -68,7 +67,6 @@ import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick
 import { TableExportComponent } from './componentkit/table/table-export/table-export.component';
 import { MultiSelectTableComponent } from './componentkit/multi-select-table/multi-select-table.component';
 import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/expandable-edit-table.module';
-import { NotificationMessageComponent } from './component/notification-message/notification-message.component';
 
 @NgModule({
   declarations: [
@@ -84,7 +82,6 @@ import { NotificationMessageComponent } from './component/notification-message/n
     CalendarRangeQuickComponent,
     TableComponent,
     TableExpansionComponent,
-    NotificationMessageComponent,
     TableExportComponent,
     DropdownTableComponent,
     MultiSelectTableComponent,
@@ -117,7 +114,6 @@ import { NotificationMessageComponent } from './component/notification-message/n
     CheckboxModule,
     MenubarModule,
     MessagesModule,
-    ToastModule,
     InputSwitchModule,
     TranslateModule,
     ProgressSpinnerModule,
@@ -200,7 +196,6 @@ import { NotificationMessageComponent } from './component/notification-message/n
     TableComponent,
     TableExpansionComponent,
     RadiobuttonComponent,
-    NotificationMessageComponent,
     ExpandableEditTableModule,
     SelectButtonModule,
   ],

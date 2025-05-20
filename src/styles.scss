@@ -134,10 +134,6 @@ input[disabled],
   color: var(--text-color);
 }
 
-.p-dialog-mask-scrollblocker {
-  z-index: 9999 !important;
-}
-
 .p-toast {
   z-index: 10000 !important;
 }
