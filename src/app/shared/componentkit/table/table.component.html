@@ -1,7 +1,6 @@
 <p-divider align="left" type="solid" *ngIf="title" styleClass="pb-2">
   <span class="text-center text-xl font-bold text-primary">
     {{ title }}
-    <span class="text-red-500" *ngIf="required">*</span>
   </span>
 </p-divider>
 <p-table #dt [value]="data" [columns]="selectedColumns" [(selection)]="selectedItems" sortMode="multiple"
@@ -15,8 +14,7 @@
   currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})" (onSort)="onSort($event)"
   (selectionChange)="onSelectionChange($event)" (onRowSelect)="select.emit($event)"
   (onRowUnselect)="unSelect.emit($event)" [rowSelectable]="rowSelectableWrapper"
-  [ngClass]="{ 'table-disabled': tableDisabled }" [expandedRowKeys]="IsPrint ? expandedRows : {}"
-  paginatorDropdownAppendTo="body" editMode="row" [loading]="loading">
+  [expandedRowKeys]="IsPrint ? expandedRows : {}" paginatorDropdownAppendTo="body" editMode="row" [loading]="loading">
   <ng-template pTemplate="caption">
     <div class="grid align-items-center justify-content-between mx-0" *ngIf="showCaption">
       <div class="caption-left button-group flex gap-2 py-2">
@@ -66,12 +64,11 @@
       </th>
       <th class="w-1rem" *ngIf="expansionDataKey && IsPrint">收合/展開</th>
       <th *ngFor="let col of columns" [pSortableColumn]="col.sortField ? col.sortField: col.field" class="text-center"
-        [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn
-        [frozen]="IsPrint && !tableDisabled && col.frozen">
+        [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="IsPrint && col.frozen">
         {{ col.header }}<p-sortIcon [field]="col.sortField ? col.sortField: col.field"></p-sortIcon>
       </th>
-      <th [hidden]="!IsPrint || !showManage || tableDisabled" class="w-1rem text-center" alignFrozen="right"
-        pFrozenColumn [frozen]="IsPrint && !tableDisabled">管理</th>
+      <th [hidden]="!IsPrint || !showManage " class="w-1rem text-center" alignFrozen="right" pFrozenColumn
+        [frozen]="IsPrint">管理</th>
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-expanded="expanded"
@@ -94,8 +91,7 @@
       </td>
       <td *ngFor="let col of columns" (click)="editing ? $event.stopPropagation() : null"
         class="max-w-{{ col.maxWidth }} text-center" style="text-overflow: ellipsis" [ngClass]="col.style"
-        [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn
-        [frozen]="IsPrint && !tableDisabled && col.frozen">
+        [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="IsPrint  && col.frozen">
         <p-cellEditor *ngIf="showRowEdit">
           <ng-template pTemplate="input">
             <input *ngIf="col.type === 'input'" pInputText class="w-full min-w-max" [(ngModel)]="rowData[col.field]"
@@ -150,10 +146,10 @@
           {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
         </span>
       </td>
-      <td [hidden]="!IsPrint || !showManage || tableDisabled" [ngClass]="{'flex justify-content-center gap-2':
-            IsPrint && showManage && !tableDisabled }" class="no-wrap icon-button" alignFrozen="right" pFrozenColumn
-        [frozen]="IsPrint && !tableDisabled" [style.text-align]="'center'">
-        <div *ngIf="showRowEdit && !tableDisabled" class="flex align-items-center justify-content-center gap-2">
+      <td [hidden]="!IsPrint || !showManage" [ngClass]="{'flex justify-content-center gap-2':
+            IsPrint && showManage }" class="no-wrap icon-button" alignFrozen="right" pFrozenColumn
+        [frozen]="IsPrint" [style.text-align]="'center'">
+        <div *ngIf="showRowEdit" class="flex align-items-center justify-content-center gap-2">
           <p-button *ngIf="!editing" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pen-to-square"
             (click)="onRowEditInit(rowData)" [text]="true" [disabled]="rowEditing || rowEditDisabled(rowData)" />
           <p-button *ngIf="editing" icon="pi pi-check text-green-500"

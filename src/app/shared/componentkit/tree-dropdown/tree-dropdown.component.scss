@@ -1,6 +1,16 @@
-::ng-deep .custom-panel .p-multiselect-items-wrapper {
-  max-height: 15rem;
-  overflow-y: auto;
+.custom-panel {
+  .p-multiselect-items-wrapper {
+    max-height: 15rem;
+    overflow-y: auto;
+  }
+  .p-overlaypanel {
+    padding: 0 !important;
+    margin: 0 !important;
+    .p-overlaypanel-content {
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+  }
 }
 
 .selected {
