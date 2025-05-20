@@ -30,6 +30,7 @@ export class SYSB400CRUComponent
   showConfirm = false;
 
   upgroup_Options: apiOption[] = [];
+  filtered_p_level_Options: apiOption[] = [];   //依據組織階層代碼 動態變化的 上層組織階層代碼
   org_Option: apiOption[] = [];
   whetherOptions: option[] = [
     { value: 'Y', label: '是' },
@@ -48,6 +49,40 @@ export class SYSB400CRUComponent
   ngOnInit(): void {
     this.initializePage('SYSB400', this.dataForm);
     this.loadOptions();
+
+    // 初始讀取頁面就確認上層組織階層代碼的選項
+    if (this.dataForm.controls.level_id.value == '' || this.dataForm.controls.level_id.value == null) {
+      this.dataForm.controls.p_level_id.disable();
+    }
+
+    // 監聽組織階層代碼的變化 (決定上層組織階層代碼的選項)
+    this.dataForm.controls.level_id.valueChanges.subscribe((levelId) => {
+      this.handleLevelIdChange(levelId);
+    });
+  }
+
+  // 上層階層內容選項控制
+  handleLevelIdChange(levelId: string) {
+    console.log('上層階層代碼', levelId);
+    if (!levelId) {
+      this.filtered_p_level_Options = [];
+      this.dataForm.controls.p_level_id.disable();
+      this.dataForm.controls.p_level_id.setValue('');
+      return;
+    }
+
+    // 假設上層階層的編碼比下層小，例如：10 是最上層，20 是中層，30 是底層
+    this.filtered_p_level_Options = this.upgroup_Options.filter(
+      // (item) => item.No < levelId
+      (item) => item.No === (parseInt(levelId, 10) - 10).toString()
+    );
+
+    if (this.filtered_p_level_Options.length > 0) {
+      this.dataForm.controls.p_level_id.enable();
+    } else {
+      this.dataForm.controls.p_level_id.disable();
+      this.dataForm.controls.p_level_id.setValue('');
+    }
   }
 
   loadOptions() {
