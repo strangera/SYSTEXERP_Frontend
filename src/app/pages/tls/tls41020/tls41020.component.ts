@@ -6,7 +6,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { SortMeta } from 'primeng/api';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Sysb500m } from '../../sys/module/sysb000.module';
+import { Sysb500m } from '../../../shared/models/sys/sysb000.module';
 
 // 本地儲存鍵：用於儲存查詢狀態
 const storageKey = 'TLS41020';
@@ -19,8 +19,7 @@ const storageKey = 'TLS41020';
 })
 export class TLS41020Component
   extends BasicQueryPageComponent<any>
-  implements OnInit
-{
+  implements OnInit {
   // 查詢
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({

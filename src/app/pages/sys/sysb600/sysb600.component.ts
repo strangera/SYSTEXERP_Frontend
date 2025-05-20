@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Sysb600m } from '../module/sysb000.module';
+import { Sysb600m } from '../../../shared/models/sys/sysb000.module';
 import { Sysb600Service } from '../../../service/API/sys/sysb600.service';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 

@@ -8,7 +8,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { tblUser } from '../module/sysb000.module';
+import { tblUser } from '../../../shared/models/sys/sysb000.module';
 // 4-2-2-1角色基本資料維護
 
 // 角色基本資料維護 CRU

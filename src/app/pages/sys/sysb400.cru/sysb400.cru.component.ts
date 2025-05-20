@@ -3,7 +3,7 @@ import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { apiOption, option, Sysb400m } from '../module/sysb000.module';
+import { apiOption, option, Sysb400m } from '../../../shared/models/sys/sysb000.module';
 import { Sysb400Service } from '../../../service/API/sys/sysb400.service';
 import { Sysb300Service } from '../../../service/API/sys/sysb300.service';
 

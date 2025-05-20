@@ -1,13 +1,9 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-// component
 import { AppComponent } from './app.component';
-// routing
 import { AppRoutingModule } from './app-routing.module';
-// HttpInterceptor
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi, } from '@angular/common/http';
-// Service
 import { AuthinterceptorService } from './interceptors/authinterceptor.service';
 import { CustomheaderinterceptorService } from './interceptors/customheaderinterceptor.service';
 import { ErrorinterceptorService } from './interceptors/errorinterceptor.service';
@@ -24,9 +20,6 @@ export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
 }
 
-
-// https://stackoverflow.com/questions/45975675/lazy-loading-browsermodule-has-already-been-loaded
-// Import BrowserModule, BrowserAnimationsModule, HttpModule or HttpClientModule only once, preferably in your root module.
 @NgModule({
   declarations: [
     AppComponent,
@@ -36,7 +29,6 @@ export function HttpLoaderFactory(http: HttpClient) {
     ConfirmDialogModule,
     ToastModule,
     DialogModule,
-    // 模块
     AppRoutingModule,
     BrowserModule,
     BrowserAnimationsModule,
@@ -69,8 +61,6 @@ export function HttpLoaderFactory(http: HttpClient) {
       multi: true
     },
   ],
-  bootstrap: [
-    AppComponent
-  ],
+  bootstrap: [AppComponent],
 })
 export class AppModule { }

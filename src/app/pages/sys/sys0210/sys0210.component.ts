@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 // Shared
-import { tblRole } from '../module/sysb000.module';
+import { tblRole } from '../../../shared/models/sys/sysb000.module';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 

@@ -135,10 +135,17 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
   filteredProgs: { label: string; value: FunsrightInfo }[] = [];
   filterProgNo(event: AutoCompleteCompleteEvent) {
     const filtered: { label: string; value: FunsrightInfo }[] = [];
-    const query = event.query;
+    const query = event.query ? event.query.toLowerCase() : '';
+    if (!this.funRightsInfo || !Array.isArray(this.funRightsInfo)) {
+      this.filteredProgs = [];
+      return;
+    }
     for (const f of this.funRightsInfo) {
       if (f.prog_ispage === 'Y') {
-        if (f.label?.toLowerCase().includes(query.toLowerCase())) {
+        const matchProgNo = f.prog_No && f.prog_No.toLowerCase().includes(query);
+        const matchProgID = f.prog_id && f.prog_id.toLowerCase().includes(query);
+        const matchProgName = f.prog_name && f.prog_name.toLowerCase().includes(query);
+        if (f.label && (matchProgNo || matchProgID || matchProgName)) {
           filtered.push({ label: f.label, value: f });
         }
       }

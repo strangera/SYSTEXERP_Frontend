@@ -1,4 +1,4 @@
-import { apiOption, Sysb300m } from './../module/sysb000.module';
+import { apiOption, Sysb300m } from '../../../shared/models/sys/sysb000.module';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 // Shared

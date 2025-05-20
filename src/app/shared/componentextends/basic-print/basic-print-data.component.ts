@@ -10,15 +10,6 @@ import { AuthService } from '../../../service/system/auth.service';
 import { TableExport } from '../../componentkit/table/table-export/table-export.component';
 import { REPORT_TITLES } from '../../componentkit/table/report-titles';
 
-export interface ReportHead {
-  exporttime?: Date | string; //報表產出時間
-  exportuser?: string; //使用者
-  exportNo?: string; //使用者代號
-  systemtime?: Date | string; //系統日期
-  reporttitle?: string; //報表名稱
-  reportname?: string; //報表檔名
-}
-
 @Injectable({
   providedIn: 'root'
 })
@@ -35,6 +26,7 @@ export class BasicPrintDataComponent {
 
   exportPDFDownload(event: TableExport, columns: Column[],): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
+    const funInfo = this.authService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(ProgNo);
     const userInfo = this.authService.currentUserValue;
     const today = new Date();
@@ -61,7 +53,7 @@ export class BasicPrintDataComponent {
         ...event,
         footer_DataType: ProgNo
       },
-      file_name: `${userInfo?.user_No}_${ProgNo}_${formattedToday}`
+      file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`
     };
 
     this.tableService.exportPDF(body).subscribe({
@@ -93,6 +85,7 @@ export class BasicPrintDataComponent {
   }
   exportExcelDownload(event: TableExport, columns: Column[],): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
+    const funInfo = this.authService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(ProgNo);
     const userInfo = this.authService.currentUserValue;
     const today = new Date();
@@ -116,7 +109,7 @@ export class BasicPrintDataComponent {
       report_title: REPORT_TITLES[`query${ProgNo}`] || 'Report',
       columns: excelColumns,
       config: event,
-      file_name: `${userInfo?.user_No}_${ProgNo}_${formattedToday}`,
+      file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`,
     };
     this.tableService.exportExcel(body).subscribe({
       next: (response: HttpResponse<Blob>) => {

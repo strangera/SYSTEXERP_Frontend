@@ -132,6 +132,19 @@ export class AuthService {
       })
     );
   }
+  // 獲得系統代碼檔
+  queryAllSystemCode(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/User/queryAllSystemCode`, {}).pipe(
+      map((response: any) => {
+        sessionStorage.setItem('SYS1000', JSON.stringify(response.Data));
+        return response;
+      }),
+      catchError((error) => {
+        console.error('Error fetching SystemCode', error);
+        return throwError(() => error);
+      })
+    );
+  }
   // 當頁面移動，獲取目前頁面使用者權限
   getUserPermissions(progNo: string): FunsrightInfo | undefined {
     try {

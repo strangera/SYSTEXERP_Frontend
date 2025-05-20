@@ -1,6 +1,4 @@
 import { Component } from '@angular/core';
-import { faDesktop,faDisplay,faBan,faMoneyBillWave,faCircleCheck,faArrowRightFromBracket,faUserGroup } from '@fortawesome/free-solid-svg-icons';
-
 
 @Component({
   selector: 'app-tls44010-cru',
@@ -8,20 +6,12 @@ import { faDesktop,faDisplay,faBan,faMoneyBillWave,faCircleCheck,faArrowRightFro
   styleUrl: './tls44010-cru.component.scss'
 })
 export class TLS44010CRUComponent {
-  faDesktop = faDesktop;
-  faDisplay = faDisplay;
-  faBan = faBan;
-  faMoneyBillWave = faMoneyBillWave;
-  faCircleCheck = faCircleCheck;
-  faArrowRightFromBracket = faArrowRightFromBracket;
-  faUserGroup = faUserGroup;
-
   dropdown3 = [
     { label: '第1頁', value: '1' },
 
-];
+  ];
 
-poslist = [
+  poslist = [
     { name: 'A1專櫃', pos: '100001', line: '0', area: 'A區', code: '99991', ip: '127.0.0.1', status: '待機中', opentime: '2024/01/01 12:00:00' },
     { name: 'A2專櫃', pos: '100002', line: '1', area: 'A區', code: '99992', ip: '127.0.0.1', status: '待機中', opentime: '2024/01/01 12:00:00' },
     { name: 'A3專櫃', pos: '100003', line: '2', area: 'A區', code: '99993', ip: '127.0.0.1', status: '待機中', opentime: '2024/01/01 12:00:00' },
@@ -52,5 +42,5 @@ poslist = [
     { name: 'A8專櫃', pos: '100008', line: '0', area: 'A區', code: '99998', ip: '127.0.0.1', status: '待機中', opentime: '2024/01/01 12:00:00' },
     { name: 'A9專櫃', pos: '100009', line: '0', area: 'A區', code: '99999', ip: '127.0.0.1', status: '待機中', opentime: '2024/01/01 12:00:00' },
     { name: 'A10專櫃', pos: '100010', line: '2', area: 'A區', code: '99999', ip: '127.0.0.1', status: '待機中', opentime: '2024/01/01 12:00:00' },
-];
+  ];
 }

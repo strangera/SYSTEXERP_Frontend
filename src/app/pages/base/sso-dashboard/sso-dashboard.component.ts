@@ -2,7 +2,7 @@ import { Component, ElementRef, OnInit, Renderer2 } from '@angular/core';
 import { LayoutService } from '../../../layout/layout.service';
 import { ApiResponse, AuthService } from '../../../service/system/auth.service';
 import { UserInfo } from '../../../shared/models/system/userInfo';
-import { Subscription } from 'rxjs';
+import { concatMap, finalize, Subscription } from 'rxjs';
 import { MenuItem } from 'primeng/api';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -118,34 +118,36 @@ export class SsoDashboardComponent implements OnInit {
     this.loading = true;
     if (this.urlItems.length > 0 && item === this.urlItems[0]) {
       // 導向內部系統 (this.urlItems[0])
-      this.ssoDashboardService.Inner().subscribe({
+      this.ssoDashboardService.Inner().pipe(
+        // finalize 操作符會在 Observable 完成或出錯時執行，確保 loading 狀態被重置
+        finalize(() => this.loading = false)
+      ).subscribe({
         next: (innerResponse: ApiResponse<any>) => {
-          // 檢查 Inner API 回應，根據你的 API 契約來判斷是否成功
           if (innerResponse.Status === '0000') {
             console.log("Inner API 成功:", innerResponse);
-            // Inner API 成功後，再呼叫 getFunRightsInfo 並導航
-            this.authService.getFunRightsInfo().subscribe({
-              next: (sys1000Response) => {
-                sessionStorage.setItem('SYSTEMSetting', JSON.stringify(sys1000Response));
-                this.loading = false;
-                this.router.navigate([item.System_Url]);
+
+            // 使用 concatMap 串聯兩個權限相關的 API 呼叫
+            // concatMap 會等待前一個 Observable 完成後再訂閱下一個
+            this.authService.getFunRightsInfo().pipe(
+              concatMap(() => this.authService.queryAllSystemCode()) // getFunRightsInfo 成功後，接著呼叫 queryAllSystemCode
+            ).subscribe({
+              next: () => {
+                console.log('所有權限資料載入成功。');
+                this.router.navigate([item.System_Url]); // 兩個 API 都成功後才導航
               },
               error: (error) => {
-                console.error('getFunRightsInfo API 請求失敗:', error);
-                this.loading = false;
+                console.error('載入權限資料失敗:', error);
                 this.messageService.errorBubble('載入權限資料失敗，無法導航。');
               },
             });
+
           } else {
-            // Inner API 返回非 0000 狀態碼，表示失敗
             console.error('Inner API 失敗:', innerResponse.Message);
-            this.loading = false;
             this.messageService.errorBubble(innerResponse.Message || '內部系統登入失敗，請稍後再試。');
           }
         },
         error: (error) => {
           console.error('Inner API 請求失敗:', error);
-          this.loading = false;
           this.messageService.errorBubble('連線內部系統失敗。');
         },
       });

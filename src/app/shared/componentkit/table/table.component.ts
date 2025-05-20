@@ -6,7 +6,6 @@ import { AddButton, Column, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent, t
 import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { QueryStateService } from '../../service/query-state.service';
-import { ReportHead } from '../../models/ReportHead';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -50,7 +49,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() showCaption = true;
   // Header(左) 相關
   @Input() showHeader = true;                                          // 是否顯示 Header
-  @Input() reportHead!: ReportHead;                                    // 列印PDF 配置
   @Input() exportFilename = 'download';                                // table 匯出CSV檔案名稱
   @Input() showInsert = false;                                         // 是否顯示 Insert新增按鈕
   @Output() insert = new EventEmitter<any>();                          // 新增事件

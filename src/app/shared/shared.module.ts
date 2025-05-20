@@ -4,7 +4,6 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
 import { DialogModule } from 'primeng/dialog';
@@ -102,7 +101,6 @@ import { MultiLocationFilterComponent } from './componentkit/multi-location-filt
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    FontAwesomeModule,
     DialogModule,
     TableModule,
     CardModule,
@@ -147,7 +145,6 @@ import { MultiLocationFilterComponent } from './componentkit/multi-location-filt
     FormsModule,
     ReactiveFormsModule,
     TranslateModule,
-    FontAwesomeModule,
     // PrimeNG
     OrganizationChartModule,
     ProgressSpinnerModule,
