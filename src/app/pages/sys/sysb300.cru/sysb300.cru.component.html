@@ -23,17 +23,16 @@
                     </app-dropdown>
                 </div>
             </div>
+            <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+                *ngIf="!isFormReadable">
+                <app-button btnType="cancel"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
+            </div>
         </form>
         <ul>
             <li>備註：</li>
             <li>1.若上層組織階層為空，表示此階層為公司組織階層之最上層。</li>
             <li>2.代碼大小順序表示階層上下關係(例：全公司為10、本部為20...)</li>
         </ul>
-        <div class="col pt-4" *ngIf="!isFormReadable">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
-            </div>
-        </div>
     </p-panel>
 </div>
