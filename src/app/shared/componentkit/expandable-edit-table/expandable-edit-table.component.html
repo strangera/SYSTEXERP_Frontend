@@ -167,9 +167,19 @@
       <tr>
         <td [attr.colspan]="visibleColumnsCount + (readonly ? 0 : 1)">
           <div class="expanded-detail p-3">
-            <!-- 內層表格標題區域，加入內層新增按鈕 -->
+            <!-- 內層表格標題區域，加入內層選項卡和新增按鈕 -->
             <div class="detail-table-header flex justify-content-between align-items-center mb-2">
-              <div class="detail-table-header-left">
+              <div class="detail-table-header-left flex align-items-center gap-2">
+                <!-- 選項卡按鈕，使用簡單的按鈕樣式而不是標準選項卡 -->
+                <div *ngIf="showDetailTabs && detailTabOptions.length > 0" class="detail-tab-buttons">
+                  <div class="tab-button-group">
+                    <button *ngFor="let tab of detailTabOptions" pButton type="button" [label]="tab.label" [ngClass]="{'p-button-primary': getDetailSelectedTab(rowData) === tab.id,
+                                  'p-button-outlined p-button-secondary': getDetailSelectedTab(rowData) !== tab.id}"
+                      class="p-button-sm tab-button" (click)="onDetailTabChange(rowData, tab.id)"></button>
+                  </div>
+                </div>
+
+                <!-- 新增按鈕放在選項卡之後 -->
                 <button *ngIf="!readonly && showDetailAddButton" pButton pRipple type="button" icon="pi pi-plus"
                   severity="success" class="p-button-rounded" (click)="onAddDetailItem(rowData, ri)"></button>
               </div>
@@ -177,22 +187,26 @@
                 <ng-content select="[detail-header-right]"></ng-content>
               </div>
             </div>
-            <p-table [value]="rowData[detailKey]" [columns]="detailColumns">
+
+            <!-- 詳細資料表格 - 確保這個表格在標題區域之外 -->
+            <p-table [value]="rowData[detailKey]" [columns]="getDetailColumnsForTab(rowData)">
               <ng-template pTemplate="header">
       <tr>
         <th style="width: 4rem; text-align: center">序號</th>
-        <th *ngFor="let col of detailColumns" [hidden]="col.hidden" style="text-align: center">
+        <th *ngFor="let col of getDetailColumnsForTab(rowData)" [hidden]="col.hidden" style="text-align: center">
           {{ col.header }}
         </th>
         <th *ngIf="!readonly" style="width: 8rem; text-align: center">操作</th>
       </tr>
     </ng-template>
 
+
     <ng-template pTemplate="body" let-detailData let-di="rowIndex">
       <tr>
         <td style="text-align: center">{{ di + 1 }}</td>
 
-        <td *ngFor="let col of detailColumns" [hidden]="col.hidden" [ngClass]="col.style" style="text-align: center">
+        <td *ngFor="let col of getDetailColumnsForTab(rowData)" [hidden]="col.hidden" [ngClass]="col.style"
+          style="text-align: center">
           <!-- 可編輯欄位 -->
           <ng-container *ngIf="isDetailEditing(ri, di) && col.editable">
             <ng-container [ngSwitch]="col.type">

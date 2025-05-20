@@ -57,6 +57,14 @@ export class ExpandableEditTableComponent {
   @Input() showDetailAddButton: boolean = true;              // 控制內層新增按鈕顯示
   @Input() defaultNewItem: any = {};                         // 預設新項目模板
   @Input() defaultNewDetailItem: any = {};                   // 預設新明細項目模板
+  // 添加詳細資料選項卡相關屬性
+  @Input() showDetailTabs: boolean = false; // 是否在詳細資料中顯示選項卡
+  @Input() detailTabOptions: { id: string, label: string }[] = []; // 詳細資料選項卡選項
+  @Input() defaultDetailTab: string = ''; // 預設選中的詳細資料選項卡
+  @Input() detailColumnsMap: { [tabId: string]: ColumnDef[] } = {};  // 如果需要支持不同列定義，還需要添加:
+  // 用於儲存每行的選中選項卡
+  detailSelectedTabs: { [key: string]: string } = {};
+
 
   @Output() edit = new EventEmitter<any>();
   @Output() save = new EventEmitter<{ oldData: any, newData: any }>();
@@ -66,6 +74,8 @@ export class ExpandableEditTableComponent {
   @Output() detailCancel = new EventEmitter<any>();
   @Output() rowSelect = new EventEmitter<any>();
   @Output() rowUnselect = new EventEmitter<any>();
+  @Output() detailTabChange = new EventEmitter<{ rowData: any, tabId: string }>();  // 添加事件發射器
+
 
   // 新增這些事件
   @Output() addMainItem = new EventEmitter<void>();          // 外層新增按鈕事件
@@ -124,7 +134,18 @@ export class ExpandableEditTableComponent {
   ngOnChanges() {
     if (this.data) {
       this.totalRecords = this.data.length;
-      this.initializeDetailArrays(); // 新增這一行
+      this.initializeDetailArrays();
+
+      // 添加這段以確保行的展開狀態
+      if (this.showDetailTabs) {
+        this.data.forEach(item => {
+          // 初始化選項卡狀態
+          const rowKey = item[this.dataKey];
+          if (!this.detailSelectedTabs[rowKey]) {
+            this.detailSelectedTabs[rowKey] = this.defaultDetailTab;
+          }
+        });
+      }
     }
   }
 
@@ -686,5 +707,29 @@ export class ExpandableEditTableComponent {
     // setTimeout(() => {
     //   this.onDetailEditInit(newDetailItem, parentData, rowIndex, 0);
     // }, 0);
+  }
+  // 詳細資料選項卡切換方法
+  onDetailTabChange(rowData: any, tabId: string) {
+    const rowKey = rowData[this.dataKey];
+    this.detailSelectedTabs[rowKey] = tabId;
+    this.detailTabChange.emit({ rowData, tabId });
+  }
+
+  // 獲取行的選中選項卡
+  getDetailSelectedTab(rowData: any): string {
+    const rowKey = rowData[this.dataKey];
+    if (!this.detailSelectedTabs[rowKey]) {
+      this.detailSelectedTabs[rowKey] = this.defaultDetailTab;
+    }
+    return this.detailSelectedTabs[rowKey];
+  }
+
+  // 獲取當前選中選項卡對應的詳細資料列
+  getDetailColumnsForTab(rowData: any): ColumnDef[] {
+    const selectedTab = this.getDetailSelectedTab(rowData);
+    if (this.detailColumnsMap && this.detailColumnsMap[selectedTab]) {
+      return this.detailColumnsMap[selectedTab];
+    }
+    return this.detailColumns; // 預設使用原有的 detailColumns
   }
 }
