@@ -46,7 +46,8 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
   columns: Column[] = [
     { field: 'CAT_MNo', header: '中分類代碼', visible: true },
     { field: 'CAT_MName', header: '中分類名稱', visible: true },
-    { field: 'CAT_LDisplay', header: '大分類代碼 / 名稱', visible: true, sortField: 'CAT_LNo' }, // 使用類型斷言
+    { field: 'CAT_LNo', header: '大分類代碼', visible: true },
+    { field: 'CAT_LName', header: '大分類名稱', visible: true },
     { field: 'CAT_MRemark', header: '備註', visible: true }, // 說明
   ];
 

@@ -69,15 +69,15 @@
   </div>
 </div>
 
-<p-dialog header="修改使用者密碼" [modal]="true" [(visible)]="visible" [style]="{ width: '40rem' }">
+<p-dialog header="修改使用者密碼" [modal]="true" [(visible)]="visible" [style]="{ width: '40rem' }" [closeOnEscape]="!noClose"
+  [closable]="!noClose">
   <form [formGroup]="form" (ngSubmit)="onSubmit(form)">
     <span class="p-text-secondary block mb-5">更新您的密碼</span>
     <div class="field grid">
       <label for="oldPassword" class="col-12 mb-2 md:col-2 md:mb-0">舊密碼</label>
       <div class="col-12 md:col-10">
         <p-password id="oldPassword" formControlName="oldPassword" class="w-full" styleClass="w-full"
-          inputStyleClass="w-full" placeholder="請輸入舊密碼" maxlength="8" [toggleMask]="true" appendTo="body"
-          [feedback]="false" />
+          inputStyleClass="w-full" placeholder="請輸入舊密碼" maxlength="8" [toggleMask]="true" [feedback]="false" />
         <small *ngIf="form.controls['oldPassword'].touched && form.controls['oldPassword'].errors?.['required']"
           class="p-error block">舊密碼為必填項。</small>
       </div>
@@ -87,7 +87,7 @@
       <div class="col-12 md:col-10">
         <p-password id="newPassword" class="w-full" styleClass="w-full" inputStyleClass="w-full"
           formControlName="newPassword" placeholder="請輸入新密碼" maxlength="8" promptLabel="設定密碼" weakLabel="太簡單"
-          mediumLabel="中等複雜度" strongLabel="複雜密碼" [toggleMask]="true" appendTo="body" [strongRegex]="strongRegex">
+          mediumLabel="中等複雜度" strongLabel="複雜密碼" [toggleMask]="true" [strongRegex]="strongRegex">
           <ng-template pTemplate="footer">
             <div class="flex flex-column">
               <p-divider />
@@ -126,7 +126,7 @@
         <small *ngIf="form.errors?.['passwordsMismatch']" class="p-error block">密碼與確認密碼不符。</small>
       </div>
     </div>
-    <div class="flex justify-content-end gap-2">
+    <div class="flex justify-content-end gap-2" *ngIf="!noClose">
       <p-button label="取消" severity="secondary" (onClick)="visible = false" />
       <p-button label="確定" [loading]="formButtonLoading" type="submit" />
     </div>

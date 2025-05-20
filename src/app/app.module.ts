@@ -6,13 +6,12 @@ import { AppComponent } from './app.component';
 // routing
 import { AppRoutingModule } from './app-routing.module';
 // HttpInterceptor
-import { HTTP_INTERCEPTORS, HttpClientModule, } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi, } from '@angular/common/http';
 // Service
 import { AuthinterceptorService } from './interceptors/authinterceptor.service';
 import { CustomheaderinterceptorService } from './interceptors/customheaderinterceptor.service';
 import { ErrorinterceptorService } from './interceptors/errorinterceptor.service';
 import { ConfirmationService, MessageService, PrimeNGConfig } from 'primeng/api';
-import { NotificationService } from './shared/component/notification-message/notification.service';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { HttpClient } from '@angular/common/http';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
@@ -26,15 +25,13 @@ export function HttpLoaderFactory(http: HttpClient) {
 // Import BrowserModule, BrowserAnimationsModule, HttpModule or HttpClientModule only once, preferably in your root module.
 @NgModule({
   declarations: [
-    // 组件
     AppComponent,
   ],
   imports: [
     // 模块
+    AppRoutingModule,
     BrowserModule,
     BrowserAnimationsModule,
-    HttpClientModule,
-    AppRoutingModule,
     TranslateModule.forRoot({
       loader: {
         provide: TranslateLoader,
@@ -44,22 +41,23 @@ export function HttpLoaderFactory(http: HttpClient) {
     })
   ],
   providers: [
-    // 依賴注入
-    NotificationService,
+    provideHttpClient(withInterceptorsFromDi()), // 啟用 HttpClient 並讓其支援 DI 提供的攔截器
     MessageService,
     ConfirmationService,
     PrimeNGConfig,
     {
       provide: HTTP_INTERCEPTORS,
-      useClass: AuthinterceptorService,
+      useClass: CustomheaderinterceptorService, // 先添加自定義頭部
       multi: true
-    }, {
+    },
+    {
       provide: HTTP_INTERCEPTORS,
-      useClass: CustomheaderinterceptorService,
+      useClass: AuthinterceptorService,         // 再處理認證
       multi: true
-    }, {
+    },
+    {
       provide: HTTP_INTERCEPTORS,
-      useClass: ErrorinterceptorService,
+      useClass: ErrorinterceptorService,        // 最後處理錯誤
       multi: true
     },
   ],

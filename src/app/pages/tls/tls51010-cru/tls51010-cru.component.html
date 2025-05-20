@@ -14,7 +14,7 @@
           [control]="dataForm.controls.CAT_LRemark" [submitted]="submitted" />
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" (click)="onCancel()" />
+        <app-button btnType="cancel" />
         <app-button btnType="submit" />
       </div>
     </form>

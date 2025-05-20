@@ -8,6 +8,8 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { apiOption, option, SYS1000, Sysb400m, tblUser } from '../module/sysb000.module';
 import { Sys0110Service } from '../../../service/API/sys/sys0110.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { EncryptionService } from '../../../shared/service/encryption.service';
+import { UserInfo } from '../../base/changepsw/changepsw.component';
 
 // 4-2-1-1使用者基本資料維護
 
@@ -42,6 +44,9 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser>
     last_Login: [null], // 最近一次登入
   });
 
+  // 用戶資訊
+  userInfo: UserInfo | null = null;
+
   // 下拉選單選項
   titleOptions: apiOption[] = [];
   SYS3100_Options: apiOption[] = [];
@@ -51,12 +56,24 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser>
   constructor(
     private sys0110Service: Sys0110Service,
     private sysb400Service: Sysb400Service,
+    private encrypt: EncryptionService,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('SYS0110', this.dataForm);
+
+    //取得用戶資料(for加密)
+    const userInfoString = sessionStorage.getItem('UserInfo');
+    if (userInfoString) {
+      try {
+        this.userInfo = JSON.parse(userInfoString) as UserInfo;
+      } catch (error) {
+        console.error('Failed to parse user info from sessionStorage', error);
+      }
+    }
+
     console.log('取得資料', this.dataForm.value);
     this.loadOptions();
   }
@@ -69,6 +86,14 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser>
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
+            // 先將user_Password加密
+            frm.value.user_Password = this.encrypt.getPassword(
+              this.userInfo ? this.userInfo.user_No : '',
+              frm.value.user_Password,
+            );
+            console.log('userInfo', this.userInfo);
+            console.log('frm.value.user_Password', frm.value.user_Password);
+            console.log('新增', frm.value);
             this.sys0110Service.createUser(frm.value).subscribe(() => {
               this.messageService.successBubble('新增成功');
               this.onCancel(); // 新增成功後返回查詢頁面

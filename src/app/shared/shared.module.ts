@@ -204,6 +204,7 @@ import { MultiLocationFilterComponent } from './componentkit/multi-location-filt
     RadiobuttonComponent,
     NotificationMessageComponent,
     ExpandableEditTableModule,
+    SelectButtonModule,
     MultiLocationFilterComponent,
   ],
 })

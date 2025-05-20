@@ -105,16 +105,6 @@ export class AuthService {
       error: (error) => { console.error('Logout error:', error); }
     });
   }
-  // 獲取使用者權限
-  getUserPermissions(progNo: string): FunsrightInfo | undefined {
-    try {
-      const funs = this._menuUpdated.getValue();
-      return funs.find(fun => fun.prog_No === progNo);
-    } catch (error) {
-      console.error('Error parsing FunRightsInfo from sessionStorage', error);
-      return undefined;
-    }
-  }
   // 獲取我的最愛
   getFavorites(user_No?: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/User/GetUserFavorite`, { user_No: user_No }).pipe(
@@ -127,7 +117,7 @@ export class AuthService {
   UpdateUserFavorite(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/User/UpdateUserFavorite`, { Favorites: body });
   }
-
+  // 獲取使用者權限
   getFunRightsInfo(): Observable<any> {
     return this.http.get<any>(`assets/service/User/FunRightsInfo.json`).pipe(
       // return this.http.post<any>(`${this.apiUrl}/User/GetUserDashboard`, {}).pipe(
@@ -142,7 +132,17 @@ export class AuthService {
       })
     );
   }
-
+  // 當頁面移動，獲取目前頁面使用者權限
+  getUserPermissions(progNo: string): FunsrightInfo | undefined {
+    try {
+      const funs = this._menuUpdated.getValue();
+      return funs.find(fun => fun.prog_No === progNo);
+    } catch (error) {
+      console.error('Error parsing FunRightsInfo from sessionStorage', error);
+      return undefined;
+    }
+  }
+  // 獲取使用者資訊
   getUserInfo(): any {
     const userInfo = sessionStorage.getItem('UserInfo');
     if (userInfo) {
