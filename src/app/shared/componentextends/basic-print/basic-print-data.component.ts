@@ -57,7 +57,10 @@ export class BasicPrintDataComponent {
       },
       report_title: REPORT_TITLES[`query${ProgNo}`] || 'Report',
       columns: pdfColumns,
-      config: event,
+      config: {
+        ...event,
+        footer_DataType: ProgNo
+      },
       file_name: `${userInfo?.user_No}_${ProgNo}_${formattedToday}`
     };
 
@@ -114,7 +117,6 @@ export class BasicPrintDataComponent {
       columns: excelColumns,
       config: event,
       file_name: `${userInfo?.user_No}_${ProgNo}_${formattedToday}`,
-      allColumns: event.allColumns, // 是否匯出所有欄位
     };
     this.tableService.exportExcel(body).subscribe({
       next: (response: HttpResponse<Blob>) => {

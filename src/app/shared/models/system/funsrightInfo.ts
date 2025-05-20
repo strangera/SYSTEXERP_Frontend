@@ -29,6 +29,7 @@ export interface FunsrightInfo {
   prog_stopflag: string,
   prog_sort: string,
 
+  icon?: string
   label?: string  // 程式代號 + 程式名稱
 
   PrivilegeBehavior?: BehaviorType[] // 先不理會

@@ -57,20 +57,16 @@ export class ErrorHandlerService {
         userFriendlyMessage = error.error; // 有些後端直接返回字串錯誤
       } else {
         // 如果無法解析具體錯誤訊息，使用預設訊息
-        userFriendlyMessage = `發生未知錯誤，HTTP 狀態碼: ${error.status}。`;
+        userFriendlyMessage = `發生未知錯誤${error.status}。`;
       }
     }
-
     // 將詳細的錯誤資訊輸出到瀏覽器控制台 (用於開發和除錯)
     console.error('HTTP Error Details:', error);
     console.error('User-friendly Message:', userFriendlyMessage);
-
     // 向用戶顯示錯誤訊息泡泡通知
     this.notificationService.errorBubble(userFriendlyMessage);
-
     // 解除任何可能被加載中的 UI 阻擋 (例如進度條或遮罩)
     this.notificationService.unblockUi();
-
     // 將錯誤訊息記錄到 Session Storage (用於後續除錯或報錯)
     try {
       const errorsString = sessionStorage.getItem(this.LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS);

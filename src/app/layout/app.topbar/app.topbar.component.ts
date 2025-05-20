@@ -82,8 +82,33 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
             const sortA = parseInt(a.prog_sort, 10);
             const sortB = parseInt(b.prog_sort, 10);
             return sortA - sortB;
+          }).map(item => {
+            let iconName = '';
+            switch (item.prog_No) {
+              case 'FIN00000':
+                iconName = 'pi pi-users';
+                break;
+              case 'ASS00000':
+                iconName = 'pi pi-briefcase';
+                break;
+              case 'TLS00000':
+                iconName = 'pi pi-shopping-bag';
+                break;
+              case 'SYS0000':
+                iconName = 'pi pi-user';
+                break;
+              case 'CPM0000':
+                iconName = 'pi pi-chart-pie';
+                break;
+              default:
+                iconName = 'pi pi-circle';
+                break;
+            }
+            return { ...item, icon: iconName };
           });
         this.initFavorites(); // 初始化最愛功能
+        console.log(this.topLevelMenuItems);
+
       }
     });
     // 當使用者更新時

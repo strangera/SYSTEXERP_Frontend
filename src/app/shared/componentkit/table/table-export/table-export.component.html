@@ -9,7 +9,7 @@
             falseValue="N" />
         </div>
         <div class="col-12 flex justify-content-between align-items-center">
-          <label for="print_reportTitle_per_page">是否顯示每頁報表標題</label>
+          <label for="print_reportTitle_per_page">每頁顯示報表標題</label>
           <p-inputSwitch class="flex" id="print_reportTitle_per_page" formControlName="print_reportTitle_per_page"
             trueValue="Y" falseValue="N" />
         </div>
@@ -30,21 +30,29 @@
           <p-inputSwitch class="flex" id="print_field_title" formControlName="print_field_title" trueValue="Y"
             falseValue="N" />
         </div>
-        <div *ngIf="exportStatus === 'Excel'" class="col-12 flex justify-content-between align-items-center">
-          <label for="allColumns">是否要顯示所有欄位</label>
-          <p-inputSwitch class="flex" id="allColumns" formControlName="allColumns" trueValue="Y" falseValue="N" />
+        <div *ngIf="exportStatus === 'PDF'" class="col-12 flex justify-content-between align-items-center">
+          <label for="print_field_title_per_page">每頁顯示欄位名稱</label>
+          <p-inputSwitch class="flex" id="print_field_title_per_page" formControlName="print_field_title_per_page"
+            trueValue="Y" falseValue="N" />
         </div>
       </div>
-      <div class="card col-12 p-0">
-        <div *ngIf="exportStatus === 'PDF'" class="col-12 flex justify-content-between align-items-center">
+      <div *ngIf="exportStatus === 'PDF'" class="card col-12 p-0">
+        <div class="col-12 flex justify-content-between align-items-center">
           <label for="print_reportFooter">是否顯示報表頁尾</label>
           <p-inputSwitch class="flex" id="print_reportFooter" formControlName="print_reportFooter" trueValue="Y"
             falseValue="N" />
         </div>
-        <div *ngIf="exportStatus === 'PDF'" class="col-12 flex justify-content-between align-items-center">
+        <div class="col-12 flex justify-content-between align-items-center">
           <label for="print_reportFooter_per_page">是否每頁顯示報表頁尾</label>
           <p-inputSwitch class="flex" id="print_reportFooter_per_page" formControlName="print_reportFooter_per_page"
             trueValue="Y" falseValue="N" />
+        </div>
+      </div>
+      <div *ngIf="exportStatus === 'PDF'" class="card col-12 p-0">
+        <div class="col-12 flex justify-content-between align-items-center">
+          <label for="print_line_number">是否顯示序號</label>
+          <p-inputSwitch class="flex" id="print_line_number" formControlName="print_line_number" trueValue="Y"
+            falseValue="N" />
         </div>
       </div>
       <div class="flex justify-content-end gap-2 w-full">
