@@ -14,8 +14,8 @@ import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 })
 export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
   inputForm = this.formBuilder.nonNullable.group({
-    LOCATION_Name: ['', [Validators.required, Validators.maxLength(30)]],
-    org_id: ['', [Validators.required, Validators.maxLength(20)]],
+    LOCATION_Name: ['', [ Validators.maxLength(30)]],
+    org_id: ['', [ Validators.maxLength(20)]],
     building_no: ['', [Validators.required, Validators.maxLength(1)]],
     FLOOR_NO: ['', [Validators.required, Validators.maxLength(2)]],
     AREA_NO: ['', [Validators.required, Validators.maxLength(2)]],
@@ -25,6 +25,13 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
     Purpose_no: ['', [Validators.required, Validators.maxLength(2)]],
     Draw_X: ['', [Validators.maxLength(255)]],
     Draw_Y: ['', [Validators.maxLength(255)]],
+    LOCATION_No: [
+      { value: '由系統帶入', disabled: true },
+      [
+        Validators.required,
+        Validators.maxLength(3),
+      ],
+    ],
   });
 
   floorOptions: any[] = [];

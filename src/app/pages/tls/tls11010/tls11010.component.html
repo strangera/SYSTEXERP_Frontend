@@ -9,10 +9,10 @@
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-multi-select label="館別" controlName="BUILDING_NO" [options]="BUILDING_NO_Options"
+                        <app-dropdown label="館別" controlName="BUILDING_NO" [options]="BUILDING_NO_Options"
                             optionLabel="label" optionValue="value" [control]="queryForm.controls.building_no"
                             [submitted]="submitted">
-                        </app-multi-select>
+                        </app-dropdown>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-multi-select label="樓層" controlName="FLOOR_NO" [options]="floorOptions" optionLabel="label"
@@ -37,7 +37,7 @@
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
                         <app-multi-select label="用途" controlName="Location_Purpose" [options]="usageOptions"
-                            optionLabel="label" optionValue="value" [control]="queryForm.controls.Purpose_no"
+                            optionLabel="formLabel" optionValue="value" [control]="queryForm.controls.Purpose_no"
                             [submitted]="submitted">
                         </app-multi-select>
                     </div>
