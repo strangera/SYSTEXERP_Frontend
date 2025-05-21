@@ -194,7 +194,7 @@
     }
   }
   .p-datatable .p-datatable-thead > tr > th {
-    background: #c7d2fe;
+    background: var(--table-header-bg);
   }
 
   .p-datatable .p-datatable-tbody > tr:nth-child(even) {
