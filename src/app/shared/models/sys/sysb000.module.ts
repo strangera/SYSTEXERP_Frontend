@@ -151,9 +151,9 @@ export interface tblUser {
 //tblRole 使用者角色設定檔
 export interface tblRole {
   'id': string;
-  'role_no': string;
-  'role_name': string;
-  'description': string;
+  'Role_No': string;
+  'Role_Name': string;
+  'Description': string;
 
   'CRT_Date': Date;
   'CRT_USR_No': string;

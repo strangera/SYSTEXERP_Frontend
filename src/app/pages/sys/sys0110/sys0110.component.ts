@@ -166,8 +166,9 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     }
     // 構建新的 requestBody 格式
     const requestBody = {
-      idList: idList, // 符合 API 的 idList 格式
+      user_NoList: idList, // 符合 API 的 idList 格式
     };
+    console.log('Delete body:', JSON.stringify(requestBody, null, 2));
     // 調用 API
     this.sys0110Service.deleteUser(requestBody).subscribe({
       next: (response) => {
