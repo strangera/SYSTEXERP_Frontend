@@ -6,6 +6,7 @@ export interface Column {
   label: string;
 }
 
+
 @Component({
   selector: 'app-tree-dropdown',
   templateUrl: './tree-dropdown.component.html',
@@ -102,19 +103,19 @@ export class TreeDropdownComponent implements OnInit {
     return this.Columns.map(col => col.label).join(' / ');
   }
 
-  // //展開全部
-  // expandAll() {
-  //   this.treeData.forEach((node) => {
-  //     this.expandRecursive(node, true);
-  //   });
-  // }
+  //展開全部
+  expandAll() {
+    this.treeData.forEach((node) => {
+      this.expandRecursive(node, true);
+    });
+  }
 
-  // //收闔全部
-  // collapseAll() {
-  //   this.treeData.forEach((node) => {
-  //     this.expandRecursive(node, false);
-  //   });
-  // }
+  //收闔全部
+  collapseAll() {
+    this.treeData.forEach((node) => {
+      this.expandRecursive(node, false);
+    });
+  }
 
   // 展開樹狀至目標層級（層級從0開始）
   expandToLevel(level: number) {
