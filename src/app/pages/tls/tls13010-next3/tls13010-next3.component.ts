@@ -35,6 +35,39 @@ interface InventoryItem {
 }
 
 interface GraduatedItems {
+  ischeck: boolean;
+  A: string;
+  B: string;
+  C: string;
+  D: string;
+  E: string;
+  F: string;
+  G: string;
+}
+
+interface BaseTierItems {
+  ischeck: boolean;
+  A: string;
+  B: string;
+  C: string;
+  D: string;
+  E: string;
+  F: string;
+  G: string;
+}
+
+interface BaseCommissionItems {
+  ischeck: boolean;
+  A: string;
+  B: string;
+  C: string;
+  D: string;
+  E: string;
+  F: string;
+  G: string;
+}
+interface fixedRentItems {
+  ischeck: boolean;
   A: string;
   B: string;
   C: string;
@@ -60,6 +93,10 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
   // 數據
   inventoryItems: InventoryItem[] = [];
   graduatedItems: GraduatedItems[] = [];
+  baseTierItems: BaseTierItems[] = [];
+  baseCommissionItems: BaseCommissionItems[] = [];
+  fixedRentItems: fixedRentItems[] = [];
+
   // commissionItems: CommissionItem[] = [];
   columns: Column[] = [// 表格欄位定義
     { field: 'CAT_LNo', header: '大分類代碼', visible: true },
@@ -83,7 +120,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
 
   //階梯式抽成欄位
   graduatedColumns: Column[] = [
-    { field: 'ischeck', header: '是否新增', visible: true },
+    { field: 'ischeck', header: '是否新增', visible: true, type: 'checkbox' },
     { field: 'A', header: '帳務期別', visible: true },
     { field: 'B', header: '帳務起', visible: true, type: 'date' },
     { field: 'C', header: '帳務迄', visible: true },
@@ -91,8 +128,9 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
     { field: 'E', header: '階梯金額(迄值)', visible: true },
     { field: 'F', header: '抽成率', visible: true },
   ];
-
+  //包底+階梯
   baseTierColumns: Column[] = [
+    { field: 'ischeck', header: '是否新增', visible: true, type: 'checkbox' },
     { field: 'A', header: '帳務期別', visible: true },
     { field: 'B', header: '帳務起', visible: true },
     { field: 'C', header: '帳務迄', visible: true },
@@ -100,6 +138,25 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
     { field: 'E', header: '階梯金額(起值)', visible: true },
     { field: 'F', header: '階梯金額(迄值)', visible: true },
     { field: 'G', header: '抽成率', visible: true },
+  ];
+  //包底
+  baseCommissionColumns: Column[] = [
+    { field: 'ischeck', header: '是否新增', visible: true, type: 'checkbox' },
+    { field: 'A', header: '帳務期別', visible: true },
+    { field: 'B', header: '帳務起', visible: true },
+    { field: 'C', header: '帳務迄', visible: true },
+    { field: 'D', header: '包底金額', visible: true },
+    { field: 'E', header: '抽成率', visible: true },
+  ];
+
+  //底租抽成取高者、固定租金 欄位
+  fixedRentColumns: Column[] = [
+    { field: 'ischeck', header: '是否新增', visible: true, type: 'checkbox' },
+    { field: 'A', header: '帳務期別', visible: true },
+    { field: 'B', header: '帳務起', visible: true },
+    { field: 'C', header: '帳務迄', visible: true },
+    { field: 'D', header: '包底金額', visible: true },
+    { field: 'E', header: '抽成率', visible: true },
   ];
   selectedItems: CategoryItem[] = [];// 多選項目
 
@@ -131,12 +188,49 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
     ];
     this.graduatedItems = [
       {
+        ischeck: true,
         A: '001',
-        B: 'A123',
-        C: '品牌A',
-        D: '55667788',
-        E: '公司A',
-        F: 'v1.0',
+        B: '2025/05/21',
+        C: '2025/05/21',
+        D: '1000',
+        E: '10000',
+        F: '0.1',
+        G: '固定',
+      }
+    ];
+    this.baseTierItems = [
+      {
+        ischeck: true,
+        A: '001',
+        B: '2025/05/21',
+        C: '2025/05/21',
+        D: '1000',
+        E: '10000',
+        F: '0.1',
+        G: '固定',
+      }
+    ];
+    this.baseCommissionItems = [
+      {
+        ischeck: true,
+        A: '001',
+        B: '2025/05/21',
+        C: '2025/05/21',
+        D: '1000',
+        E: '10000',
+        F: '0.1',
+        G: '固定',
+      }
+    ];
+    this.fixedRentItems = [
+      {
+        ischeck: true,
+        A: '001',
+        B: '2025/05/21',
+        C: '2025/05/21',
+        D: '1000',
+        E: '10000',
+        F: '0.1',
         G: '固定',
       }
     ];
