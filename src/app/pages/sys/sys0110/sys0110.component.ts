@@ -43,6 +43,11 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
   columns: Column[] = [
     { field: 'user_No', header: '使用者編號', visible: true },
     { field: 'user_Name', header: '使用者名稱', visible: true },
+    {
+      field: 'status', header: '使用者狀態', visible: true, format: (value: string) =>
+        this.userStatusOptions.find((option) => option.value === value)?.label ||
+        value
+    },
     { field: 'title', header: '職稱代碼', visible: true },
     {
       field: 'org_ID', header: '組織編號', visible: true, format: (value: string) =>
@@ -51,11 +56,6 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     },
     { field: 'str_dateStart', header: '帳號有效開始日期', visible: true },
     { field: 'str_dateEnd', header: '帳號有效結束日期', visible: true },
-    {
-      field: 'status', header: '使用者狀態', visible: true, format: (value: string) =>
-        this.userStatusOptions.find((option) => option.value === value)?.label ||
-        value
-    },
     {
       field: 'user_type', header: '使用者型態', visible: true, format: (value: string) =>
         this.userTypeOptions.find((option) => option.value === value)?.label ||
