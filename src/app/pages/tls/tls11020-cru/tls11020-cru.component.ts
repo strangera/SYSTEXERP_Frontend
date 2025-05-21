@@ -29,7 +29,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     ],
     CAP_Name: ['', [Validators.required, Validators.maxLength(40)]],
     CAP_Type: [null, [Validators.required]],
-    AccNo: ['', [Validators.maxLength(14)]],
+    AccNo: ['', [Validators.required, Validators.maxLength(14)]],
     GUI_FLAG: ['Y', [Validators.required]],
     CAP_TaxType: ['1', [Validators.required]],
     IsCommonlyUsed: ['Y', [Validators.required]],
@@ -47,19 +47,27 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     super();
   }
 
-  ngOnInit(): void {
-    this.initializePage('TLS11020', this.inputForm);
-    this.deductionService.getDeductionCategories().subscribe((data) => {
-      this.deductionCategoryOptions = data;
-    });
-this.accountingaccountService.getOptions().subscribe((data) => {
-  this.accountOptions = (data || []).map(x => ({
-    label: x.Name,
-    formLabel: `${x.No} - ${x.Name}`,
-    value: x.No
-  }));
-});
+ngOnInit(): void {
+  this.initializePage('TLS11020', this.inputForm);
+
+  // 編輯狀態時禁用 CAP_Type
+  if (this.crudstatus === CRUDStatus.Edit) {
+    this.inputForm.get('CAP_Type')?.disable();
   }
+
+  this.deductionService.getDeductionCategories().subscribe((data) => {
+    this.deductionCategoryOptions = data;
+  });
+
+  this.accountingaccountService.getOptions().subscribe((data) => {
+    this.accountOptions = (data || []).map(x => ({
+      label: x.Name,
+      formLabel: `${x.No} - ${x.Name}`,
+      value: x.No
+    }));
+  });
+}
+
 
   onSubmit(): void {
   this.handleSubmit(this.inputForm, () => {
@@ -124,7 +132,23 @@ this.accountingaccountService.getOptions().subscribe((data) => {
     }
   });
 }
-
+onClear(): void {
+  const keepValues = {
+    CAP_Item: this.inputForm.get('CAP_Item')?.value,
+     CAP_Type: this.inputForm.get('CAP_Type')?.value,
+    
+  };
+  // 重設表單
+  this.inputForm.reset();
+  // 設回保留欄位的值
+  this.inputForm.patchValue(keepValues);
+  this.inputForm.markAsPristine();
+}
+clearBtnConfig = {
+  label: '清除',
+  class: 'button-clear',
+  text: true
+};
 
 }
 

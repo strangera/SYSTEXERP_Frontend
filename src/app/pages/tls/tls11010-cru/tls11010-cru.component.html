@@ -11,7 +11,7 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="inputForm">
       <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
+        <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="店位代碼" [control]="inputForm.controls.LOCATION_No" [submitted]="submitted">
           </app-input-text>
         </div>
@@ -30,12 +30,12 @@
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="樓層代碼" [options]="floorOptions" optionLabel="label" optionValue="value"
+          <app-dropdown label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
             [control]="inputForm.controls.FLOOR_NO" [submitted]="submitted">
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="區域代碼" [options]="RegionCodeOptions" optionLabel="label" optionValue="value"
+          <app-dropdown label="區域" [options]="RegionCodeOptions" optionLabel="label" optionValue="value"
             [control]="inputForm.controls.AREA_NO" [submitted]="submitted">
           </app-dropdown>
         </div>
@@ -53,7 +53,7 @@
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="用途代碼" [options]="usageOptions" optionLabel="formLabel" optionValue="value"
+          <app-dropdown label="用途代碼/名稱" [options]="usageOptions" optionLabel="formLabel" optionValue="value"
             [control]="inputForm.controls.Purpose_no" [submitted]="submitted">
           </app-dropdown>
         </div>
@@ -68,7 +68,18 @@
       </div>
       <div class="col pt-4">
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
-          <app-button btnType="clear"></app-button>
+<p-button
+  id="clearButton"
+  (click)="onClear()"
+  [label]="clearBtnConfig.label"
+  [class]="clearBtnConfig.class"
+  [text]="clearBtnConfig.text">
+</p-button>
+
+
+
+
+
           <app-button btnType="submit" (click)="onSubmit()"></app-button>
         </div>
       </div>

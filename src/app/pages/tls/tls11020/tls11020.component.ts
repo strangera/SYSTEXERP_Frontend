@@ -23,19 +23,49 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
 
   totalRecords = 0;
   data: any[] = [];
-  columns: any[] = [
-    { field: 'CAP_Item', header: '扣款代碼', visible: true },
-    { field: 'CAP_Type', header: '扣款類型', visible: true },
-    { field: 'CAP_Name', header: '扣款名稱', visible: true },
-    { field: 'AccNo', header: '會計科目', visible: true },
-    { field: 'GUI_FLAG', header: '是否開立發票', visible: true },
-    { field: 'CAP_TaxType', header: '課稅別', visible: true },
-    { field: 'IsCommonlyUsed', header: '是否常用', visible: true },
-    { field: 'Print_Area', header: '扣款項目合約列印區分', visible: true },
-    { field: 'CAP_Remark', header: '備註', visible: true },
-  ];
+columns: any[] = [
+  { field: 'CAP_Item', header: '扣款代碼', visible: true },
+  { field: 'CAP_Type', header: '扣款類型', visible: true },
+  { field: 'CAP_Name', header: '扣款名稱', visible: true },
+  { field: 'AccNo', header: '會計科目', visible: true },
+  {
+    field: 'GUI_FLAG',
+    header: '是否開立發票',
+    visible: true,
+    format: (value: any) => this.getLabelFromOptions(value, this.guiFlagOptions),
+  },
+  {
+    field: 'CAP_TaxType',
+    header: '課稅別',
+    visible: true,
+    format: (value: any) => this.getLabelFromOptions(value, this.taxTypeOptions),
+  },
+  {
+    field: 'IsCommonlyUsed',
+    header: '是否常用',
+    visible: true,
+    format: (value: any) => this.getLabelFromOptions(value, this.isCommonlyUsedOptions),
+  },
+  { field: 'Print_Area', header: '扣款項目合約列印區分', visible: true },
+  { field: 'CAP_Remark', header: '備註', visible: true },
+];
+
   selectedItems: any[] = [];
   deductionCategoryOptions: any[] = [];
+guiFlagOptions = [
+  { label: '開立', value: 'Y' },
+  { label: '不開立', value: 'N' },
+];
+
+taxTypeOptions = [
+  { label: '免稅', value: '0' },
+  { label: '應稅', value: '1' },
+];
+
+isCommonlyUsedOptions = [
+  { label: '常用', value: 'Y' },
+  { label: '不常用', value: 'N' },
+];
 
   constructor(
     private validationService: ValidationService,
@@ -108,4 +138,8 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
       },
     });
   }
+  getLabelFromOptions(value: any, options: any[]): string {
+  return options.find(opt => opt.value === value)?.label ?? value;
+}
+
 }
