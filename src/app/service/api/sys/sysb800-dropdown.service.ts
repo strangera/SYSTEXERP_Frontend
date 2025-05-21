@@ -9,7 +9,7 @@ import { catchError, Observable, tap, map } from 'rxjs';
 })
 export class Sysb800DropdownService {
   apiUrl: string = environment.ApiUrl;
-  queryApiUrl = `${environment.ApiUrl}/SYS0000/BAS1000/querySYSB800_DropDownList`;
+  queryApiUrl = `${environment.ApiUrl}/queryTLTBUSTYPE_DropDownList`;
   title = '大分類代碼';
 
   constructor(

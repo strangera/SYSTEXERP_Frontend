@@ -37,6 +37,6 @@
   <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (delete)="onDelete($event)"
     (detail)="onDetail($event)" [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'CAT_MNo', order: 1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm);onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading">
+    [loading]="loading" [isRowSelectable]="isRowSelectable">
   </app-table>
 </div>

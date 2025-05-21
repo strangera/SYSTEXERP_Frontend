@@ -89,41 +89,21 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
     });
   }
 
+  // 刪除項目
   onDelete(data: CategoryItem | CategoryItem[]): void {
     const items = Array.isArray(data) ? data : [data];
     if (items.length === 0) return;
 
-    // 過濾出 CanDel = true 且 ID 有效的項目
-    const deletableItems = items.filter(
-      (item) => item && item.id != null && item.id !== undefined && item.CanDel === true
-    );
-    const nonDeletableItems = items.filter(
-      (item) => item && item.id != null && item.id !== undefined && item.CanDel === false
-    );
+    const idList = items
+      .filter(item => item && item.id != null)
+      .map(item => item.id);
 
-    // 如果沒有可刪除的項目
-    if (deletableItems.length === 0) {
-      this.messageService.errorBubble('無法刪除：選中的項目有不可刪除的大分類');
+    if (idList.length === 0) {
+      this.messageService.warnBubble('未找到有效的刪除項目');
       return;
     }
 
-    // 如果有不可刪除的項目，提示用戶
-    if (nonDeletableItems.length > 0) {
-      this.messageService.warnBubble(
-        `${nonDeletableItems.length} 個項目因 CanDel 為 false 無法刪除，將處理其餘 ${deletableItems.length} 個項目`
-      );
-    }
-
-    // 收集可刪除項目的 ID
-    const idList = deletableItems.map((item) => item.id);
-
-    // 構建 API 請求
-    const requestBody = {
-      idList: idList,
-    };
-
-    // 調用刪除 API
-    this.apiService.deleteSYSB800(requestBody).subscribe({
+    this.apiService.deleteSYSB800({ idList }).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('選中項目刪除成功');
@@ -137,10 +117,14 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
         this.messageService.errorBubble('刪除失敗');
       },
       complete: () => {
-        this.onSubmit(this.queryForm); // 刷新數據
+        this.onSubmit(this.queryForm); // 刷新資料
       },
     });
 
     this.selectedItems = [];
+  }
+
+  isRowSelectable(rowData: CategoryItem): boolean {
+    return rowData.CanDel
   }
 }

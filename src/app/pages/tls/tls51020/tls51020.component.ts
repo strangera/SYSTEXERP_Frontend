@@ -1,10 +1,10 @@
-import { BigCategoryCodeService } from './../../../service/basic/big-category-code.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Tls51010DropDownListService } from '../../../service/api/tls/tls51010-dropdown.service';
 
 interface CategoryItem {
   id: number;
@@ -58,7 +58,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
 
   constructor(
     private validationService: ValidationService,
-    private bigCategoryCodeService: BigCategoryCodeService,
+    private dropdownListService: Tls51010DropDownListService,
     private apiService: TLS5000Service,
   ) {
     super();
@@ -67,7 +67,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
   ngOnInit(): void {
     this.initializePage('TLS51020', '/TLS/TLS51020CRU', this.queryForm, (form) => this.onSubmit(form));
     // 獲取大分類代碼
-    this.bigCategoryCodeService.getSystemTypes().subscribe({
+    this.dropdownListService.getSystemTypes().subscribe({
       next: (response) => {
         this.bigCategoryOptions = response;
       },
@@ -108,40 +108,21 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
       });
     });
   }
+
   onDelete(data: CategoryItem | CategoryItem[]): void {
     const items = Array.isArray(data) ? data : [data];
     if (items.length === 0) return;
 
-    // 過濾出 CanDel = true 且 ID 有效的項目
-    const deletableItems = items.filter(
-      (item) => item && item.id != null && item.id !== undefined && item.CanDel === true
-    );
-    const nonDeletableItems = items.filter(
-      (item) => item && item.id != null && item.id !== undefined && item.CanDel === false
-    );
+    const idList = items
+      .filter(item => item && item.id != null)
+      .map(item => item.id);
 
-    // 如果沒有可刪除的項目
-    if (deletableItems.length === 0) {
-      this.messageService.errorBubble('無法刪除：選中的項目有不可刪除的中分類');
+    if (idList.length === 0) {
+      this.messageService.warnBubble('未找到有效的刪除項目');
       return;
     }
 
-    // 如果有不可刪除的項目，提示用戶
-    if (nonDeletableItems.length > 0) {
-      this.messageService.warnBubble(
-        `${nonDeletableItems.length} 個項目因 CanDel 為 false 無法刪除，將處理其餘 ${deletableItems.length} 個項目`
-      );
-    }
-    // 收集可刪除項目的 ID
-    const idList = deletableItems.map((item) => item.id);
-
-    // 構建 API 請求
-    const requestBody = {
-      idList: idList,
-    };
-
-    // 調用 API
-    this.apiService.deleteTLS51020(requestBody).subscribe({
+    this.apiService.deleteTLS51020({ idList }).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('選中項目刪除成功');
@@ -155,10 +136,14 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
         this.messageService.errorBubble('刪除失敗');
       },
       complete: () => {
-        this.onSubmit(this.queryForm);
+        this.onSubmit(this.queryForm); // 刷新資料
       },
     });
 
     this.selectedItems = [];
+  }
+
+  isRowSelectable(rowData: CategoryItem): boolean {
+    return rowData.CanDel
   }
 }

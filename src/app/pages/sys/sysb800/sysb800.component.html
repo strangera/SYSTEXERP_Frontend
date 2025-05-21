@@ -42,6 +42,7 @@
   <app-table tableKey="SYSB800" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
     [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'bus_type', order: 1 }]" [totalRecords]="totalRecords"
-    [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm);onSubmit(queryForm)" [loading]="loading">
+    [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm);onSubmit(queryForm)"
+    [isRowSelectable]="isRowSelectable" [loading]="loading">
   </app-table>
 </div>

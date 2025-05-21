@@ -7,6 +7,8 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { MidCategoryCodeService } from '../../../service/basic/mid-category-code.service';
 import { debounceTime } from 'rxjs';
+import { Tls51010DropDownListService } from '../../../service/api/tls/tls51010-dropdown.service';
+import { Tls51020DropDownService } from '../../../service/api/tls/tls51020-dropdown.service';
 
 interface CategoryItem {
   id: number;
@@ -46,8 +48,8 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
   constructor(
     private validationService: ValidationService,
     private apiService: TLS5000Service,
-    private bigCategoryCodeService: BigCategoryCodeService,
-    private middleCategoryCodeService: MidCategoryCodeService,
+    private bigCategoryCodeService: Tls51010DropDownListService,
+    private middleCategoryCodeService: Tls51020DropDownService,
   ) {
     super();
   }
@@ -124,7 +126,7 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
               next: (response: any) => {
                 if (response.Status === '0000') {
                   this.messageService.successBubble('新增成功');
-                  this.onCancel();
+                  this.dataForm.reset();
                 } else {
                   console.error('API error:', response.Status, response.Message);
                   this.messageService.errorBubble(`新增失敗: ${response.Message || '未知錯誤'}`);
@@ -143,7 +145,6 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
               next: (response: any) => {
                 if (response.Status === '0000') {
                   this.messageService.successBubble('更新成功');
-                  this.onCancel();
                 } else {
                   console.error('API error:', response.Status, response.Message);
                   this.messageService.errorBubble(`更新失敗: ${response.Message || '未知錯誤'}`);
@@ -158,14 +159,5 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
           break;
       }
     });
-  }
-
-  submitForm(frm: FormGroup): void {
-    this.onSubmit(frm);
-  }
-
-  onClearForm(): void {
-    this.dataForm.reset();
-    this.middleCategoryOptions = [];
   }
 }
