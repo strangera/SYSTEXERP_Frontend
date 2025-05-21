@@ -62,50 +62,69 @@ this.accountingaccountService.getOptions().subscribe((data) => {
   }
 
   onSubmit(): void {
-    this.handleSubmit(this.inputForm, () => {
-      const raw = this.inputForm.getRawValue();
-      const capType = raw.CAP_Type;
+  this.handleSubmit(this.inputForm, () => {
+    const raw = this.inputForm.getRawValue();
+    const capType = raw.CAP_Type;
 
-      // ✅ CAP_Type 長度檢查
-      if (!capType || (capType as string).length !== 1) {
-        this.messageService.errorBubble('扣款類別(CAP_Type) 必須是一個單一字元');
-        return;
-      }
+    // ✅ CAP_Type 長度檢查
+    if (!capType || (capType as string).length !== 1) {
+      this.messageService.errorBubble('扣款類別(CAP_Type) 必須是一個單一字元');
+      return;
+    }
 
-      // ✅ 新增處理
-      if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        console.log('📤 新增送出的 payload：', raw);
+    // ✅ 新增處理
+    if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
+      console.log('📤 新增送出的 payload：', raw);
 
-        this.tls11020Service.insertTLS11020(raw).subscribe({
-          next: () => {
-            this.messageService.successBubble(this.translate.instant('success_message'));
-            this.router.navigate(['/TLS', 'TLS11020']);
-          },
-          error: () => {
-            this.messageService.errorBubble(this.translate.instant('create_failed'));
-          },
-        });
-      }
+      this.tls11020Service.insertTLS11020(raw).subscribe({
+        next: () => {
+          this.messageService.successBubble(this.translate.instant('success_message'));
 
-      // ✅ 編輯處理
-      else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-        (raw as any).id = this.rowdata?.id;
-        raw.CAP_Item = this.rowdata?.CAP_Item;
+          // ✅ 清空表單（保留 CAP_Item 為預設值）
+          this.inputForm.reset();
+          this.inputForm.get('CAP_Item')?.disable(); // 再次禁用
+          this.inputForm.patchValue({
+            CAP_Item: '由系統帶入',
+            GUI_FLAG: 'Y',
+            CAP_TaxType: '1',
+            IsCommonlyUsed: 'Y'
+          });
+        },
+        error: () => {
+          this.messageService.errorBubble(this.translate.instant('create_failed'));
+        },
+      });
+    }
 
-        console.log('📤 更新送出的 payload：', raw);
+    // ✅ 編輯處理
+    else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
+      (raw as any).id = this.rowdata?.id;
+      raw.CAP_Item = this.rowdata?.CAP_Item;
 
-        this.tls11020Service.updateTLS11020(raw).subscribe({
-          next: () => {
-            this.messageService.successBubble(this.translate.instant('updated-successfully'));
-            this.router.navigate(['/TLS', 'TLS11020']);
-          },
-          error: () => {
-            this.messageService.errorBubble(this.translate.instant('update_failed'));
-          },
-        });
-      }
-    });
-  }
+      console.log('📤 更新送出的 payload：', raw);
+
+      this.tls11020Service.updateTLS11020(raw).subscribe({
+        next: () => {
+          this.messageService.successBubble(this.translate.instant('updated-successfully'));
+
+          // ✅ 清空表單並保留預設值（同新增時處理）
+          this.inputForm.reset();
+          this.inputForm.get('CAP_Item')?.disable();
+          this.inputForm.patchValue({
+            CAP_Item: '由系統帶入',
+            GUI_FLAG: 'Y',
+            CAP_TaxType: '1',
+            IsCommonlyUsed: 'Y'
+          });
+        },
+        error: () => {
+          this.messageService.errorBubble(this.translate.instant('update_failed'));
+        },
+      });
+    }
+  });
+}
+
 
 }
 
