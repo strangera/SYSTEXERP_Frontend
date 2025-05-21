@@ -6,7 +6,6 @@ export interface Column {
   label: string;
 }
 
-
 @Component({
   selector: 'app-tree-dropdown',
   templateUrl: './tree-dropdown.component.html',
@@ -30,7 +29,8 @@ export class TreeDropdownComponent implements OnInit {
   //   { 'value': 'role', 'label': '角色' },
   //   { 'value': 'member', 'label': '成員' }
   // ];
-  @Input() Columns: Column[] = [];
+  @Input() Columns: Column[] = []; //Columns前兩欄是父節點，最後一個是末端葉節點
+  @Input() LeaveColumnName = 'name'; // 子節點顯示名稱
 
   @Output() confirmSelected = new EventEmitter<any[]>(); // 確定送出所選成員
 
@@ -44,60 +44,70 @@ export class TreeDropdownComponent implements OnInit {
 
   // 將扁平化資料轉成樹狀
   groupByDepartment(): any[] {
+    if (this.Columns.length < 3) {
+      console.error('Columns 至少需要三個欄位（兩層父節點 + 一層葉節點）');
+      return [];
+    }
+
+    const [firstKey, secondKey] = this.Columns.slice(0, 2).map(c => c.value);
+    const leafKeys = this.Columns.slice(2).map(c => c.value);
+
     const grouped: any = {};
+
     this.members.forEach(member => {
-      if (!grouped[member.department]) {
-        grouped[member.department] = {};
+      const firstVal = member[firstKey];
+      const secondVal = member[secondKey];
+
+      if (!grouped[firstVal]) {
+        grouped[firstVal] = {};
       }
-      if (!grouped[member.department][member.role]) {
-        grouped[member.department][member.role] = [];
+      if (!grouped[firstVal][secondVal]) {
+        grouped[firstVal][secondVal] = [];
       }
-      grouped[member.department][member.role].push(member);
+      grouped[firstVal][secondVal].push(member);
     });
 
     let deptIndex = 0;
-    const result = Object.keys(grouped).map(deptName => {
-      const rolesObj = grouped[deptName];
+    const result = Object.entries(grouped).map(([firstVal, rolesObj]) => {
       let roleIndex = 0;
 
-      const roles = Object.keys(rolesObj).map(roleName => {
-        const members = rolesObj[roleName];
+      const roleNodes = Object.entries(rolesObj as any).map(([secondVal, members]) => {
         let memberIndex = 0;
 
-        const memberNodes = members.map((member: { name: any; email: any; phone: any; id: any; }) => ({
-          key: `d${deptIndex}-r${roleIndex}-m${memberIndex++}`,
-          label: member.name,
-          data: {
-            email: member.email,
-            phone: member.phone,
-            id: member.id
-          },
-          icon: 'pi pi-user',
-          leaf: true
-        }));
+        const memberNodes = (members as any[]).map((member) => {
+          const labelFromLeaveColumn = member[this.LeaveColumnName];
+          const leafLabel = labelFromLeaveColumn !== undefined && labelFromLeaveColumn !== null
+            ? labelFromLeaveColumn
+            : leafKeys.map(k => member[k]).join(' / ');
 
-        roleIndex++;
+          return {
+            key: `d${deptIndex}-r${roleIndex}-m${memberIndex++}`,
+            label: leafLabel,
+            data: member,
+            icon: 'pi pi-user',
+            leaf: true
+          };
+        });
 
         return {
-          key: `d${deptIndex}-r${roleIndex}`,
-          label: roleName,
+          key: `d${deptIndex}-r${roleIndex++}`,
+          label: secondVal,
           children: memberNodes,
           icon: 'pi pi-users'
         };
       });
 
-      deptIndex++;
-
       return {
-        key: `d${deptIndex}`,
-        label: deptName,
-        children: roles,
+        key: `d${deptIndex++}`,
+        label: firstVal,
+        children: roleNodes,
         icon: 'pi pi-folder'
       };
     });
 
     return result;
   }
+
 
   get columnsLabel(): string {
     return this.Columns.map(col => col.label).join(' / ');
@@ -170,18 +180,12 @@ export class TreeDropdownComponent implements OnInit {
 
   // 送出元件
   inviteMembers() {
-    // 過濾出 leaf 節點 (會員層)
     const invited = this.selectedMembers
       .filter(node => node.leaf)
-      .map(node => ({
-        id: node.data.id,
-        name: node.label,
-        email: node.data.email,
-        phone: node.data.phone
-      }));
+      .map(node => node.data); // 直接取原始 member 資料
 
     console.log('Invited members:', invited);
-    this.confirmSelected.emit(invited); // 向外層傳出結果
+    this.confirmSelected.emit(invited);
   }
 
   //鍵盤事件
