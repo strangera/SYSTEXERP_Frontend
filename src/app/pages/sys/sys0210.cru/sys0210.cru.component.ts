@@ -1,12 +1,9 @@
+import { Sys0210Service } from './../../../service/API/sys/sys0210.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { FormGroup, Validators } from '@angular/forms';
 // Permissions
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { TranslateService } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { tblUser } from '../../../shared/models/sys/sysb000.module';
 // 4-2-2-1角色基本資料維護
@@ -23,14 +20,14 @@ export class SYS0210CRUComponent
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.group({
     id: [], // ID
-    role_no: ['', [Validators.required, Validators.maxLength(10)]], // 角色代號
-    role_name: ['', [Validators.required, Validators.maxLength(30)]], // 角色名稱
-    description: ['', [Validators.maxLength(50)]], // 角色註記
+    Role_No: ['', [Validators.required, Validators.maxLength(10)]], // 角色代號
+    Role_Name: ['', [Validators.required, Validators.maxLength(30)]], // 角色名稱
+    Description: ['', [Validators.maxLength(50)]], // 角色註記
   });
 
   // ----------------------------------------------------------------
   constructor(
-    private translate: TranslateService,
+    private sys0210Service: Sys0210Service,
   ) {
     super();
   }
@@ -45,19 +42,19 @@ export class SYS0210CRUComponent
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            // this.sysb400Service.insertSYSB400(frm.value).subscribe(() => {
-            //   this.messageService.successBubble('新增成功');
-            //   this.onCancel(); // 新增成功後返回查詢頁面
-            // });
+            this.sys0210Service.createRole(frm.value).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              this.onCancel(); // 新增成功後返回查詢頁面
+            });
           }
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             console.log('frm.value', frm.value);
-            // this.sysb400Service.updateSYSB400(frm.value).subscribe(() => {
-            //   this.messageService.successBubble('更新成功');
-            //   this.onCancel(); // 更新成功後返回查詢頁面
-            // });
+            this.sys0210Service.updateRole(frm.value).subscribe(() => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel(); // 更新成功後返回查詢頁面
+            });
           }
           break;
       }
