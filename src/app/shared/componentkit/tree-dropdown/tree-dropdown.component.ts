@@ -30,7 +30,8 @@ export class TreeDropdownComponent implements OnInit {
   //   { 'value': 'member', 'label': '成員' }
   // ];
   @Input() Columns: Column[] = []; //Columns前兩欄是父節點，最後一個是末端葉節點
-  @Input() LeaveColumnName = 'name'; // 子節點顯示名稱
+  @Input() LeaveColumnLabel = ''; // 子節點顯示名稱
+  @Input() onlySendLeaf? = true; // 是否只送葉節點資料，預設為 true
 
   @Output() confirmSelected = new EventEmitter<any[]>(); // 確定送出所選成員
 
@@ -75,7 +76,7 @@ export class TreeDropdownComponent implements OnInit {
         let memberIndex = 0;
 
         const memberNodes = (members as any[]).map((member) => {
-          const labelFromLeaveColumn = member[this.LeaveColumnName];
+          const labelFromLeaveColumn = member[this.LeaveColumnLabel];
           const leafLabel = labelFromLeaveColumn !== undefined && labelFromLeaveColumn !== null
             ? labelFromLeaveColumn
             : leafKeys.map(k => member[k]).join(' / ');
@@ -179,13 +180,18 @@ export class TreeDropdownComponent implements OnInit {
   }
 
   // 送出元件
-  inviteMembers() {
-    const invited = this.selectedMembers
-      .filter(node => node.leaf)
-      .map(node => node.data); // 直接取原始 member 資料
+  sendTreeSelect() {
+    if (this.onlySendLeaf) {
+      const invited = this.selectedMembers
+        .filter(node => node.leaf)
+        .map(node => node.data); // 直接取原始 member 資料
 
-    console.log('Invited members:', invited);
-    this.confirmSelected.emit(invited);
+      // console.log('sendTreeSelect:', invited);
+      this.confirmSelected.emit(invited);
+    } else {
+      //回傳所有節點內容(等待 調整)
+      this.confirmSelected.emit(this.selectedMembers);
+    }
   }
 
   //鍵盤事件
