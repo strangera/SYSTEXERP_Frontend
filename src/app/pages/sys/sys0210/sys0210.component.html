@@ -9,18 +9,18 @@
             <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
                 <div class="grid p-fluid">
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="角色代碼" controlName="role_no" [control]="queryForm.controls.role_no"
+                        <app-input-text label="角色代碼" controlName="Role_No" [control]="queryForm.controls.Role_No"
                             [submitted]="submitted">
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="角色名稱" controlName="role_name" [control]="queryForm.controls.role_name"
+                        <app-input-text label="角色名稱" controlName="Role_Name" [control]="queryForm.controls.Role_Name"
                             [submitted]="submitted">
                         </app-input-text>
                     </div>
                     <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="角色註記" controlName="description"
-                            [control]="queryForm.controls.description" [submitted]="submitted">
+                        <app-input-text label="角色註記" controlName="Description"
+                            [control]="queryForm.controls.Description" [submitted]="submitted">
                         </app-input-text>
                     </div>
                 </div>
@@ -39,7 +39,7 @@
         <app-table tableKey="SYSB600" [data]="data" [columns]="columns" (edit)="onEdit($event)"
             (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
             (delete)="onDelete($event)" [showCheckBox]="true" dataKey="id"
-            [multiSortMeta]="[{ field: 'floor_no', order: 1 }]" [totalRecords]="totalRecords"
+            [multiSortMeta]="[{ field: 'Role_No', order: 1 }]" [totalRecords]="totalRecords"
             (lazyLoadData)="onLazyLoadData($event, queryForm);onSubmit(queryForm)" [lazy]="true" [loading]="loading">
         </app-table>
     </div>

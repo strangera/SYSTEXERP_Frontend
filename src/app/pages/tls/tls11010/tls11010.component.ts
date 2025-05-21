@@ -17,15 +17,15 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     LOCATION_No: [[] as string[], [Validators.maxLength(10)]],
     org_id: [[] as string[], [Validators.maxLength(20)]],
 
-    building_no: ['', [Validators.maxLength(1)]],
-    FLOOR_NO: [[] as string[], [Validators.maxLength(2)]],
-    AREA_NO: [[] as string[], [Validators.maxLength(2)]],
+    building_no: [''],
+    FLOOR_NO: [[] as string[]],
+    AREA_NO: [[] as string[]],
     GROSS_SPACE_Start: [null, [Validators.min(0), Validators.max(9999.999)]],
     GROSS_SPACE_End: [null, [Validators.min(0), Validators.max(9999.999)]],
     NET_SPACE_Start: [null, [Validators.min(0), Validators.max(9999.999)]],
     NET_SPACE_End: [null, [Validators.min(0), Validators.max(9999.999)]],
-    LOCATION_Status: ['', [Validators.maxLength(1)]],
-    Purpose_no: [[] as string[], [Validators.maxLength(2)]],
+    LOCATION_Status: [''],
+    Purpose_no: [[] as string[]],
 
     ...createPaginationConfig([{ field: 'LOCATION_No', order: 1 }]),
   });
