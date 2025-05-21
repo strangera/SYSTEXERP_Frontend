@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Sysb200m } from '../module/sysb000.module';
+import { Sysb200m } from '../../../shared/models/sys/sysb000.module';
 import { SortMeta } from 'primeng/api';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { ValidationService } from '../../../shared/service/validation.service';

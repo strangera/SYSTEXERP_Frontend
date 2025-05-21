@@ -2,7 +2,6 @@ import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInf
 import { HasPermissionsValue } from '../../directive/has-permission.directive';
 import { NavigationExtras, Router } from '@angular/router';
 import { CRUDStatus } from '../../models/system/CRUDstatus';
-import { ReportHead } from '../../models/ReportHead';
 import { UserInfo } from '../../models/system/userInfo';
 
 export class BasicQpageComponent {
@@ -21,7 +20,6 @@ export class BasicQpageComponent {
   // ----------------------------------------------------------------
   loading = false;
   submitted = false;
-  reportHead: ReportHead = { outputvisible: true };   //報表表頭(預設匯出顯示資料)
   // 權限
   // ----------------------------------------------------------------
   canQuery(): boolean {

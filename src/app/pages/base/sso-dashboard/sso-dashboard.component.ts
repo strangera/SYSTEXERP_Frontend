@@ -1,17 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, Renderer2 } from '@angular/core';
 import { LayoutService } from '../../../layout/layout.service';
-import { AuthService } from '../../../service/system/auth.service';
+import { ApiResponse, AuthService } from '../../../service/system/auth.service';
 import { UserInfo } from '../../../shared/models/system/userInfo';
-import { Subscription } from 'rxjs';
+import { concatMap, finalize, Subscription } from 'rxjs';
 import { MenuItem } from 'primeng/api';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiItem, SsoDashboardService } from './sso-dashboard.service';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { EncryptionService } from '../../../shared/service/encryption.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
-import { Sys1000Service } from '../../../service/system/sys1000.service';
+import { ValidationService } from '../../../shared/service/validation.service';
 
 @Component({
   selector: 'app-sso-dashboard',
@@ -40,12 +39,12 @@ export class SsoDashboardComponent implements OnInit {
   form = this.formBuilder.group({
     code: [{ value: '', disabled: true }],
     oldPassword: ['', [Validators.required]],
-    newPassword: ['', [Validators.required]],
-    // newPassword: ['', [Validators.required, this.validationService.passwordStrengthValidator()]],
+    newPassword: ['', [Validators.required, this.validationService.passwordStrengthValidator()]],
     confirmPassword: ['', [Validators.required]],
-  }); // }, { validators: this.validationService.passwordsMatchValidator('newPassword', 'confirmPassword') });
+  }, { validators: this.validationService.passwordsMatchValidator('newPassword', 'confirmPassword') });
   strongRegex = '^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>-_+=`~[]\\;\']).{4,8}$';
   formButtonLoading = false; // 控制按鈕的載入狀態
+  noClose = false; // 禁用對話框的關閉
 
   constructor(
     public layoutService: LayoutService,
@@ -56,6 +55,9 @@ export class SsoDashboardComponent implements OnInit {
     private encryptionService: EncryptionService,
     private messageService: NotificationService,
     private userCodeService: UserCodeService,
+    private renderer: Renderer2,
+    private el: ElementRef,
+    private validationService: ValidationService
   ) {
     this.subscriptions.push(
       this.authService.user.subscribe((x) => (this.user = x)),
@@ -70,9 +72,6 @@ export class SsoDashboardComponent implements OnInit {
     }
     this.fetchUrlList();
 
-    this.form.get('newPassword')?.valueChanges.subscribe(() => { this.form.get('confirmPassword')?.updateValueAndValidity() });
-    this.form.get('confirmPassword')?.valueChanges.subscribe(() => { this.form.get('confirmPassword')?.updateValueAndValidity() });
-
     const time = JSON.parse(sessionStorage.getItem('UserInfo') || '{}').USER_PwdExpireDate;
     if (time <= new Date().toISOString()) {
       this.messageService.warnBubble(
@@ -80,6 +79,7 @@ export class SsoDashboardComponent implements OnInit {
         '建議您定期更換密碼',
       );
       this.visible = true;
+      this.noClose = true
     }
   }
   fetchUrlList(): void {
@@ -115,23 +115,116 @@ export class SsoDashboardComponent implements OnInit {
   }
 
   navigateToUrl(item: ApiItem): void {
+    this.loading = true;
     if (this.urlItems.length > 0 && item === this.urlItems[0]) {
-      this.loading = true; // 開始載入，顯示 loading 效果 (如果需要)
-      this.authService.getFunRightsInfo().subscribe({
-        next: (sys1000Response) => {
-          sessionStorage.setItem('SYSTEMSetting', JSON.stringify(sys1000Response));
-          this.loading = false; // 停止載入
-          this.router.navigate([item.System_Url]);
+      // 導向內部系統 (this.urlItems[0])
+      this.ssoDashboardService.Inner().pipe(
+        // finalize 操作符會在 Observable 完成或出錯時執行，確保 loading 狀態被重置
+        finalize(() => this.loading = false)
+      ).subscribe({
+        next: (innerResponse: ApiResponse<any>) => {
+          if (innerResponse.Status === '0000') {
+            console.log("Inner API 成功:", innerResponse);
+
+            // 使用 concatMap 串聯兩個權限相關的 API 呼叫
+            // concatMap 會等待前一個 Observable 完成後再訂閱下一個
+            this.authService.getFunRightsInfo().pipe(
+              concatMap(() => this.authService.queryAllSystemCode()) // getFunRightsInfo 成功後，接著呼叫 queryAllSystemCode
+            ).subscribe({
+              next: () => {
+                console.log('所有權限資料載入成功。');
+                this.router.navigate([item.System_Url]); // 兩個 API 都成功後才導航
+              },
+              error: (error) => {
+                console.error('載入權限資料失敗:', error);
+                this.messageService.errorBubble('載入權限資料失敗，無法導航。');
+              },
+            });
+
+          } else {
+            console.error('Inner API 失敗:', innerResponse.Message);
+            this.messageService.errorBubble(innerResponse.Message || '內部系統登入失敗，請稍後再試。');
+          }
         },
         error: (error) => {
-          console.error('API 請求失敗:', error);
-          this.loading = false; // 停止載入
-          this.errorMessage = '載入資料失敗，無法導航。'; // 顯示錯誤訊息 (如果需要)
+          console.error('Inner API 請求失敗:', error);
+          this.messageService.errorBubble('連線內部系統失敗。');
         },
       });
     } else {
-      window.open(item.System_Url, '_blank');
+      // 導向外部系統
+      this.ssoDashboardService.Outer().subscribe({
+        next: (response) => {
+          if (response.Status === '0000' && response.Data && response.Data.AccessToken) {
+            const accessToken = response.Data.AccessToken;
+            console.log("取得的 AccessToken:", accessToken);
+            // 使用 Form Post 方式將 AccessToken 傳遞給外部系統
+            this.postToUrl(item.System_Url, { token: accessToken }); // 這裡的 'token' 需與外部系統約定
+            this.loading = false; // 成功發送跳轉後停止載入
+          } else {
+            console.error('Outer API 未成功取得 AccessToken:', response);
+            this.loading = false;
+            this.messageService.errorBubble('無法登入外部系統，請稍後再試。');
+          }
+        },
+        error: (error) => {
+          console.error('Outer API 請求失敗:', error);
+          this.loading = false;
+          this.messageService.errorBubble('導航至外部系統失敗。');
+        },
+      });
     }
+  }
+  /**
+ * @param url 目標 URL：要將 POST 請求發送到哪個外部系統的 URL。
+ * @param params 要傳遞的參數對象：包含鍵值對，例如 { token: 'your_jwt_token' }。
+ *
+ * 這個函數動態建立一個 HTML `<form>` 表單，並透過 POST 請求將數據發送到指定的 URL。
+ * 這通常用於 SSO (Single Sign-On) 中，安全地將 AccessToken 傳遞給其他系統，
+ * 避免將敏感資訊暴露在 URL 查詢參數中。
+ */
+  private postToUrl(url: string, params: Record<string, string>) {
+    // 1. 建立一個新的 HTML <form> 元素
+    const form = this.renderer.createElement('form');
+
+    // 2. 設定表單的屬性
+    //    - method: 設定為 'POST'，確保數據在 HTTP 請求體中傳輸。
+    this.renderer.setAttribute(form, 'method', 'POST');
+    //    - action: 設定表單提交的目標 URL，即外部系統的入口點。
+    this.renderer.setAttribute(form, 'action', url);
+    //    - target: 設定為 '_blank'，讓表單提交後在新分頁打開目標 URL。
+    this.renderer.setAttribute(form, 'target', '_blank');
+
+    // 3. 遍歷 params 物件，為每個鍵值對建立隱藏的 <input> 元素
+    for (const key in params) {
+      // 檢查屬性是否是物件自身的屬性 (非原型鏈上的繼承屬性)，確保安全性和準確性。
+      // Object.hasOwn() 是 ES2022 引入的，更簡潔且安全。
+      if (Object.hasOwn(params, key)) {
+        // 建立一個新的 HTML <input> 元素作為隱藏字段
+        const hiddenField = this.renderer.createElement('input');
+        // 設定輸入框的類型為 'hidden'，這樣它就不會顯示在頁面上。
+        this.renderer.setAttribute(hiddenField, 'type', 'hidden');
+        // 設定輸入框的 'name' 屬性，這個名字將作為 POST 請求中的參數鍵。
+        this.renderer.setAttribute(hiddenField, 'name', key);
+        // 設定輸入框的 'value' 屬性，這個值將作為 POST 請求中的參數值 (例如 AccessToken)。
+        this.renderer.setAttribute(hiddenField, 'value', params[key]);
+        // 將這個隱藏輸入框添加到表單中。
+        this.renderer.appendChild(form, hiddenField);
+      }
+    }
+
+    // 4. 將動態建立的表單臨時添加到當前組件的 DOM 結構中
+    //    - `this.el.nativeElement` 指的是當前組件的根 DOM 元素。
+    //    - 這是為了讓表單能夠被正確提交。
+    this.renderer.appendChild(this.el.nativeElement, form);
+
+    // 5. 提交表單
+    //    - 這將觸發瀏覽器向表單的 'action' URL 發送一個 POST 請求。
+    form.submit();
+
+    // 6. 提交後立即從 DOM 中移除表單
+    //    - 保持 DOM 的整潔，避免留下不需要的元素。
+    this.renderer.removeChild(this.el.nativeElement, form);
   }
 
   onSubmit(frm: FormGroup): void {
@@ -150,9 +243,8 @@ export class SsoDashboardComponent implements OnInit {
           this.authService.logout();
           this.formButtonLoading = false;
         },
-        error: (error) => {
-          console.error('密碼修改失敗:', error);
-          this.messageService.errorBubble('密碼修改失敗，請稍後再試。');
+        error: () => {
+          this.formButtonLoading = false;
         },
       });
     }

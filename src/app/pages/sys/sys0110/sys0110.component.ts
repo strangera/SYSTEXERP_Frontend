@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { apiOption, option, SYS1000, Sysb400m, tblUser } from '../module/sysb000.module';
+import { apiOption, option, SYS1000, Sysb400m, tblUser } from '../../../shared/models/sys/sysb000.module';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Sysb400Service } from '../../../service/API/sys/sysb400.service';
 
@@ -43,6 +43,11 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
   columns: Column[] = [
     { field: 'user_No', header: '使用者編號', visible: true },
     { field: 'user_Name', header: '使用者名稱', visible: true },
+    {
+      field: 'status', header: '使用者狀態', visible: true, format: (value: string) =>
+        this.userStatusOptions.find((option) => option.value === value)?.label ||
+        value
+    },
     { field: 'title', header: '職稱代碼', visible: true },
     {
       field: 'org_ID', header: '組織編號', visible: true, format: (value: string) =>
@@ -51,11 +56,6 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     },
     { field: 'str_dateStart', header: '帳號有效開始日期', visible: true },
     { field: 'str_dateEnd', header: '帳號有效結束日期', visible: true },
-    {
-      field: 'status', header: '使用者狀態', visible: true, format: (value: string) =>
-        this.userStatusOptions.find((option) => option.value === value)?.label ||
-        value
-    },
     {
       field: 'user_type', header: '使用者型態', visible: true, format: (value: string) =>
         this.userTypeOptions.find((option) => option.value === value)?.label ||
@@ -159,15 +159,17 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     const items = Array.isArray(data) ? data : [data];
     if (items.length === 0) return;
     // 收集所有有效的 ID
-    const idList = items.filter((item) => item && item.id != null && item.id !== undefined).map((item) => item.id);
+    const idList = items.filter((item) => item && item.ID != null && item.ID !== undefined).map((item) => item.ID);
     if (idList.length === 0) {
       this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      console.log('項目', items);
       return;
     }
     // 構建新的 requestBody 格式
     const requestBody = {
-      idList: idList, // 符合 API 的 idList 格式
+      ids: idList, // 符合 API 的 idList 格式
     };
+    console.log('Delete body:', JSON.stringify(requestBody, null, 2));
     // 調用 API
     this.sys0110Service.deleteUser(requestBody).subscribe({
       next: (response) => {

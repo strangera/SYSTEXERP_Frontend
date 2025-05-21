@@ -1,10 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MessageService } from 'primeng/api';
+import { MenuItem } from 'primeng/api';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { EncryptionService } from '../../../shared/service/encryption.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { AuthService } from '../../../service/system/auth.service';
+import { ValidationService } from '../../../shared/service/validation.service';
+import { Router } from '@angular/router';
+import { EncryptionService } from '../../../shared/service/encryption.service';
 
 export interface UserInfo {
   AccessToken: string;
@@ -19,112 +21,62 @@ export interface UserInfo {
   selector: 'app-changepsw',
   templateUrl: './changepsw.component.html',
   styleUrls: ['./changepsw.component.scss'],
-  providers: [MessageService],
 })
 export class ChangepswComponent implements OnInit {
-  passwordForm: FormGroup;
-  userInfo: UserInfo | null = null;
-  formButtonLoading = false; // 控制按鈕的載入狀態
-  strongRegex =
-    '^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>-_+=`~[]\\;\']).{4,8}$';
+  submitted = false;
+  loading = false;
+  customBreadcrumbItems: MenuItem[] = [{ label: '修改使用者密碼' }];
+  userForm = this.formBuilder.group({
+    User_No: [{ value: '', disabled: true }],
+    User_Name: [{ value: '', disabled: true }],
+    Old_password: ['', Validators.required],
+    New_password: ['', [Validators.required, Validators.minLength(4), this.validationService.passwordStrengthValidator()]],
+    New_password2: ['', Validators.required]
+  }, { validators: this.validationService.passwordsMatchValidator('New_password', 'New_password2') });
 
   constructor(
-    private fb: FormBuilder,
-    private messageService: MessageService,
     private notemessage: NotificationService,
     private encrypt: EncryptionService,
+    private router: Router,
     private userCodeService: UserCodeService,
     private authService: AuthService,
-  ) {
-    this.passwordForm = this.fb.group(
-      {
-        oldPassword: ['', Validators.required],
-        newPassword: ['', [Validators.required]],
-        confirmPassword: ['', Validators.required],
-      },
-      {
-        validators: this.passwordsMatchValidator,
-      },
-    );
-  }
+    private validationService: ValidationService,
+    private formBuilder: FormBuilder
+  ) { }
 
   ngOnInit(): void {
-    const userInfoString = sessionStorage.getItem('UserInfo');
+    const userInfoString = this.authService.getUserInfo();
     if (userInfoString) {
-      try {
-        this.userInfo = JSON.parse(userInfoString) as UserInfo;
-      } catch (error) {
-        console.error('Failed to parse user info from sessionStorage', error);
+      this.userForm.get('User_No')?.setValue(userInfoString.user_No);
+      this.userForm.get('User_Name')?.setValue(userInfoString.user_Name);
+    }
+  }
+  changePass(frm: FormGroup) {
+    this.submitted = true;
+    this.notemessage.blockUi();
+    if (frm.valid) {
+      this.notemessage.unblockUi();
+      this.loading = true;
+      const body = {
+        User_No: frm.get('User_No')?.value,
+        Old_password: this.encrypt.getPassword(frm.get('User_No')?.value, frm.value.Old_password),
+        New_password: this.encrypt.getPassword(frm.get('User_No')?.value, frm.value.New_password),
+        PwdExpireDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
       }
-    }
-
-    this.passwordForm.get('newPassword')?.valueChanges.subscribe(() => {
-      this.passwordForm.get('confirmPassword')?.updateValueAndValidity();
-    });
-
-    this.passwordForm.get('confirmPassword')?.valueChanges.subscribe(() => {
-      this.passwordForm.get('confirmPassword')?.updateValueAndValidity();
-    });
-  }
-
-  passwordsMatchValidator(form: FormGroup) {
-    const newPassword = form.get('newPassword')?.value;
-    const confirmPassword = form.get('confirmPassword')?.value;
-    return newPassword === confirmPassword ? null : { mismatch: true };
-  }
-
-  onSubmit(): void {
-    if (!this.userInfo) {
-      console.error('用戶代碼無效');
-      return;
-    }
-
-    if (this.passwordForm.invalid) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: '格式錯誤',
-        detail: '請確認密碼格式及輸入是否一致',
-      });
-      return;
-    }
-
-    if (this.passwordForm.valid) {
-      this.formButtonLoading = true;
-
-      const { oldPassword, newPassword } = this.passwordForm.value;
-
-      const query = {
-        User_No: this.userInfo.user_No,
-        Old_password: this.encrypt.getPassword(
-          this.userInfo.user_No,
-          oldPassword,
-        ),
-        New_password: this.encrypt.getPassword(
-          this.userInfo.user_No,
-          newPassword,
-        ),
-        PwdExpireDate: new Date(
-          Date.now() + 90 * 24 * 60 * 60 * 1000,
-        ).toISOString(), // 密碼到期日設為90天後
-      };
-
-      this.userCodeService.changePassword(query).subscribe({
-        next: () => {
-          this.notemessage.successBubble('密碼修改成功');
-          this.messageService.add({
-            severity: 'success',
-            summary: '成功',
-            detail: '密碼已變更',
-          });
-          this.passwordForm.reset();
-          this.authService.logout();
+      this.userCodeService.changePassword(body).subscribe({
+        next: (response) => {
+          if (response && response.Status == "0000") {
+            this.notemessage.successBubble(response?.Message, '更新成功');
+            this.authService.logout();
+          } else {
+            this.notemessage.errorBubble(response?.Message, "更新失敗");
+          }
+          this.loading = false;
         },
-        error: (error) => {
-          console.error('密碼修改失敗:', error);
-          this.notemessage.errorBubble('密碼修改失敗，請稍後再試。');
-        },
-      });
-      this.formButtonLoading = false;
+        error: () => {
+          this.loading = false;
+        }
+      })
     }
   }
 }

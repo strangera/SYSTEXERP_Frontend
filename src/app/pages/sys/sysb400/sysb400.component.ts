@@ -2,12 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { option, Sysb400m } from '../module/sysb000.module';
+import { option, Sysb400m } from '../../../shared/models/sys/sysb000.module';
 import { Sysb300Service } from '../../../service/API/sys/sysb300.service';
 import { Sysb400Service } from '../../../service/API/sys/sysb400.service';
 import { apiOption } from '../../../shared/models/tls/tls000.model';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
+// 組織碼設定作業
 @Component({
   selector: 'app-sysb400',
   templateUrl: './sysb400.component.html',
@@ -19,9 +20,10 @@ export class SYSB400Component
 
   queryForm = this.formBuilder.group({
     // SYS3100 + SYS3000
-    org_id: ['', Validators.maxLength(20)], // 組織代碼
+    org_id: ['', Validators.maxLength(6)], // 組織代碼
     org_name: ['', Validators.maxLength(40)], // 組織名稱
     level_id: ['', Validators.maxLength(2)], // 組織階層代碼
+    stop_flag: ['', Validators.maxLength(1)], // 是否停用
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'org_id', order: 1 }]), // 分頁和排序參數
@@ -29,6 +31,7 @@ export class SYSB400Component
 
   upgroup_Options: apiOption[] = [];
   whetherOptions: option[] = [];
+  org_Option: apiOption[] = [];
 
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: Sysb400m[] = [];
@@ -37,19 +40,24 @@ export class SYSB400Component
     { field: 'org_name', header: '組織名稱', visible: true },
     {
       field: 'level_id',
-      header: '組織階層代碼',
+      header: '組織階層代碼/名稱',
       visible: true,
       format: (value: string) =>
-        this.upgroup_Options.find((option) => option.No === value)?.Name ||
+        this.upgroup_Options.find((option) => option.No === value)?.Label ||
         value,
     },
-    { field: 'p_org_id', header: '上層組織代碼', visible: true },
+    {
+      field: 'p_org_id', header: '上層組織代碼', visible: true,
+      format: (value: string) =>
+        this.org_Option.find((option) => option.No === value)?.Label ||
+        value,
+    },
     {
       field: 'p_level_id',
-      header: '上層組織階層代碼',
+      header: '上層組織階層代碼/名稱',
       visible: true,
       format: (value: string) =>
-        this.upgroup_Options.find((option) => option.No === value)?.Name ||
+        this.upgroup_Options.find((option) => option.No === value)?.Label ||
         value,
     },
     {
@@ -159,5 +167,26 @@ export class SYSB400Component
       { value: 'Y', label: '是' },
       { value: 'N', label: '否' },
     ];
+
+    // 所有組織代碼
+    const query_org = {
+      level_id: '',
+      org_id: '',
+      org_name: '',
+
+      //分頁查詢
+      pageSize: 1000,
+      pageIndex: 0,
+      SortBy: [{ field: 'org_id', order: 1 }],
+    };
+
+    this.sysb400Service.querySYSB400(query_org).subscribe((response) => {
+      this.org_Option = response.Data.map((item: Sysb400m) => ({
+        No: item.org_id,
+        Name: item.org_name,
+        Label: item.org_id + '-' + item.org_name,
+      }));
+      console.log('組織代碼 查詢結果', this.org_Option);
+    });
   }
 }

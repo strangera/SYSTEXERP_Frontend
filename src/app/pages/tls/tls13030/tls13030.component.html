@@ -40,7 +40,9 @@
             optionLabel="label" optionValue="value" [submitted]="submitted">
           </app-multi-select>
         </div>
-
+        <div class="col-12">
+          <app-multi-location-filter [form]="queryForm" [submitted]="submitted"></app-multi-location-filter>
+        </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-multi-select label="營業狀態" [options]="operationStatusOptions"
             [control]="queryForm.controls.tlt_openflagList" optionLabel="label" optionValue="value"

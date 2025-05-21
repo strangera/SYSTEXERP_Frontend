@@ -4,7 +4,6 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { PanelModule } from 'primeng/panel';
 import { DialogModule } from 'primeng/dialog';
@@ -32,7 +31,6 @@ import { CalendarModule } from 'primeng/calendar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PickListModule } from 'primeng/picklist';
 import { MenubarModule } from 'primeng/menubar';
-import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
@@ -68,7 +66,7 @@ import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick
 import { TableExportComponent } from './componentkit/table/table-export/table-export.component';
 import { MultiSelectTableComponent } from './componentkit/multi-select-table/multi-select-table.component';
 import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/expandable-edit-table.module';
-import { NotificationMessageComponent } from './component/notification-message/notification-message.component';
+import { MultiLocationFilterComponent } from './componentkit/multi-location-filter/multi-location-filter.component';
 
 @NgModule({
   declarations: [
@@ -84,7 +82,6 @@ import { NotificationMessageComponent } from './component/notification-message/n
     CalendarRangeQuickComponent,
     TableComponent,
     TableExpansionComponent,
-    NotificationMessageComponent,
     TableExportComponent,
     DropdownTableComponent,
     MultiSelectTableComponent,
@@ -97,13 +94,13 @@ import { NotificationMessageComponent } from './component/notification-message/n
     EditorTextComponent,
     RadiobuttonComponent,
     HasPermissionDirective,
+    MultiLocationFilterComponent,
   ],
   imports: [
     ReactiveFormsModule,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    FontAwesomeModule,
     DialogModule,
     TableModule,
     CardModule,
@@ -117,7 +114,6 @@ import { NotificationMessageComponent } from './component/notification-message/n
     CheckboxModule,
     MenubarModule,
     MessagesModule,
-    ToastModule,
     InputSwitchModule,
     TranslateModule,
     ProgressSpinnerModule,
@@ -149,7 +145,6 @@ import { NotificationMessageComponent } from './component/notification-message/n
     FormsModule,
     ReactiveFormsModule,
     TranslateModule,
-    FontAwesomeModule,
     // PrimeNG
     OrganizationChartModule,
     ProgressSpinnerModule,
@@ -200,9 +195,9 @@ import { NotificationMessageComponent } from './component/notification-message/n
     TableComponent,
     TableExpansionComponent,
     RadiobuttonComponent,
-    NotificationMessageComponent,
     ExpandableEditTableModule,
     SelectButtonModule,
+    MultiLocationFilterComponent,
   ],
 })
 export class SharedModule { }

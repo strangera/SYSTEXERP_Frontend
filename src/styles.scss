@@ -128,14 +128,15 @@ input[disabled],
   border: 1px solid var(--surface-d);
 }
 
+.p-datatable .p-datatable-wrapper,
+.p-paginator,
+.p-datatable.p-datatable-sm .p-datatable-footer {
+  border: 1px solid var(--surface-border) !important;
+}
 .p-panel .p-panel-header {
   border: 1px solid var(--surface-d);
   background: var(--surface-d);
   color: var(--text-color);
-}
-
-.p-dialog-mask-scrollblocker {
-  z-index: 9999 !important;
 }
 
 .p-toast {
@@ -144,8 +145,8 @@ input[disabled],
 
 .p-accordion-header-link {
   font-size: 14px;
-  background-color: #a2e7c6;
-  color: black;
+  background-color: var(--surface-d) !important;
+  color: var(--text-color) !important;
   font-weight: bold;
 }
 

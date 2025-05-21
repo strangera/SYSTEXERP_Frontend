@@ -6,7 +6,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Tls46010m } from '../../../shared/models/tls/tls000.model';
 import { SortMeta } from 'primeng/api';
-import { option } from '../../sys/module/sysb000.module';
+import { option } from '../../../shared/models/sys/sysb000.module';
 import { TableLazyLoadEvent } from 'primeng/table';
 
 // 本地儲存鍵：用於儲存查詢狀態

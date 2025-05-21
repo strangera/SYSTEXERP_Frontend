@@ -167,21 +167,6 @@
       background-color: rgb(217 217 217 / 40%) !important;
     }
   }
-  .table-disabled {
-    background-color: #f0f0f0;
-    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1);
-    opacity: 0.85;
-    border-radius: 4px;
-    table {
-      pointer-events: none;
-      tr > th {
-        background: #e0e0e0; // Disable的顏色
-      }
-      tr > td {
-        background: #ffffff; // Disable的顏色
-      }
-    }
-  }
   .whitespace-pre-wrap {
     white-space: pre-wrap; // 保留換行
     overflow: hidden; // 隱藏溢出內容
@@ -209,7 +194,7 @@
     }
   }
   .p-datatable .p-datatable-thead > tr > th {
-    background: #c7d2fe;
+    background: var(--table-header-bg);
   }
 
   .p-datatable .p-datatable-tbody > tr:nth-child(even) {

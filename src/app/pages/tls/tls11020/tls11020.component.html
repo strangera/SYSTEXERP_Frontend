@@ -1,11 +1,8 @@
-<div class="grid align-items-center">
-    <div class="col" style="flex: 1;">
-        <app-menubar [ProgNo]="ProgNo"></app-menubar>
+<div class="card">
+    <div class="flex gap-2 mb-2">
+        <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+        <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
     </div>
-    <div>
-        <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-    </div>
-</div>
 <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
         [headerStyleClass]="'query-accordionTab'">
@@ -34,12 +31,12 @@
                 <app-button btnType="query" [loading]="loading"></app-button>
             </div>
 
-        </form>
-    </p-accordionTab>
-</p-accordion>
+            </form>
+        </p-accordionTab>
+    </p-accordion>
+</div>
 
 <div class="card">
-    <div class="col-13">
         <app-table tableKey="TLS11020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
             (selectionChange)="selectedItems = $event" (delete)="onDelete($event)" [showCheckBox]="true" dataKey="id"
             [multiSortMeta]="[{ field: 'CAP_Item', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"

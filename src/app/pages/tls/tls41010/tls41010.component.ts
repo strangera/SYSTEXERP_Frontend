@@ -14,7 +14,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { SortMeta } from 'primeng/api';
 import { TableLazyLoadEvent } from 'primeng/table';
-import { Sysb400m } from '../../sys/module/sysb000.module';
+import { Sysb400m } from '../../../shared/models/sys/sysb000.module';
 
 // 本地儲存鍵：用於儲存查詢狀態
 const storageKey = 'TLS41010';

@@ -82,8 +82,33 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
             const sortA = parseInt(a.prog_sort, 10);
             const sortB = parseInt(b.prog_sort, 10);
             return sortA - sortB;
+          }).map(item => {
+            let iconName = '';
+            switch (item.prog_No) {
+              case 'FIN00000':
+                iconName = 'pi pi-users';
+                break;
+              case 'ASS00000':
+                iconName = 'pi pi-briefcase';
+                break;
+              case 'TLS00000':
+                iconName = 'pi pi-shopping-bag';
+                break;
+              case 'SYS0000':
+                iconName = 'pi pi-user';
+                break;
+              case 'CPM0000':
+                iconName = 'pi pi-chart-pie';
+                break;
+              default:
+                iconName = 'pi pi-circle';
+                break;
+            }
+            return { ...item, icon: iconName };
           });
         this.initFavorites(); // 初始化最愛功能
+        console.log(this.topLevelMenuItems);
+
       }
     });
     // 當使用者更新時
@@ -110,10 +135,17 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
   filteredProgs: { label: string; value: FunsrightInfo }[] = [];
   filterProgNo(event: AutoCompleteCompleteEvent) {
     const filtered: { label: string; value: FunsrightInfo }[] = [];
-    const query = event.query;
+    const query = event.query ? event.query.toLowerCase() : '';
+    if (!this.funRightsInfo || !Array.isArray(this.funRightsInfo)) {
+      this.filteredProgs = [];
+      return;
+    }
     for (const f of this.funRightsInfo) {
       if (f.prog_ispage === 'Y') {
-        if (f.label?.toLowerCase().includes(query.toLowerCase())) {
+        const matchProgNo = f.prog_No && f.prog_No.toLowerCase().includes(query);
+        const matchProgID = f.prog_id && f.prog_id.toLowerCase().includes(query);
+        const matchProgName = f.prog_name && f.prog_name.toLowerCase().includes(query);
+        if (f.label && (matchProgNo || matchProgID || matchProgName)) {
           filtered.push({ label: f.label, value: f });
         }
       }
@@ -179,9 +211,9 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     this.router.navigate([`/${item.prog_No.slice(0, 3)}/${item.prog_No}`]);
     this.favorite.hide(); // 點擊後關閉最愛選單
   }
-  // 進入編輯我的最愛模式
   editFavorites() {
     this.editingFavorites = !this.editingFavorites; // 切換編輯狀態
+    this.selectedFavorites = []; // 清空已選中的項目
   }
   // 刪除我的最愛
   deleteSelectedFavorites() {
@@ -205,7 +237,6 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
         }
       });
     } else {
-      this.editingFavorites = false; // 取消編輯狀態
       this.selectedFavorites = []; // 清空已選中的項目
     }
   }

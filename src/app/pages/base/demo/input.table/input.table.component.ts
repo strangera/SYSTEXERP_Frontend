@@ -197,6 +197,7 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     { value: 'role', label: '角色' },
     { value: 'member', label: '成員' }
   ];
+  LeaveColumnName = 'name'; // 子節點顯示名稱
 
   onMembersSelected(selected: any[]) {
     console.log('從子元件選到的:', selected);

@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, EventEmitter, Input, SimpleChanges, OnChanges, Output, ViewChild, ContentChild, TemplateRef, OnDestroy, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, SimpleChanges, OnChanges, Output, ViewChild, OnDestroy, OnInit } from '@angular/core';
 import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
 import { AddButton, Column, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
 import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { QueryStateService } from '../../service/query-state.service';
-import { ReportHead } from '../../models/ReportHead';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -25,11 +24,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() tableKey: string | undefined = undefined;                            // table 唯一標識 (必填)
   @Input() title: string | undefined = undefined;                               // table 標題
   @Input() columns!: Column[];                                                  // table 欄位配置 (必填)
-  @Input() printColumns: Column[] = [];                                         // table 列印模式需要的欄位
   selectedColumns!: Column[];                                                   // table 預設顯示欄位
   @Input() data: any[] = [];                                                    // table 資料 (必填)
-  @Input() tableDisabled = false;                                               // 是否禁用 Table
-  @Input() required = false;                                                    // 是否為必填欄位
   @Input() loading = false;                                                     // 是否顯示 loading
   // select 選擇Row相關
   @Input() showCheckBox = false;                                                // 是否顯示 checkbox
@@ -41,17 +37,17 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Output() selectionChange = new EventEmitter<any>();                          // 資料勾選(事件)
   // Sort 相關
   @Input() multiSortMeta: SortMeta[] = [{ field: this.dataKey, order: 1 }];     // table 排序依據 (多重排序 {field欄位、order排序方向} )
-  // Edit 相關
+  // rowEdit 相關
+  @Input() rowEditing = false;                                                  // 是否正在編輯Row
   clonedProducts: Record<string, any> = {};                                     // 儲存編輯前資料
   @Output() rowEditInit = new EventEmitter<any>();                              // Row 編輯初始化事件
   @Output() rowEditSave = new EventEmitter<RowEditSaveEvent>();                 // Row 編輯保存事件
   @Output() rowEditCancel = new EventEmitter<any>();                            // Row 編輯取消事件
   @Input() rowEditDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
-  @Input() showCaption = true;
+  // Header 相關
+  @Input() showCaption = true;                                                  // 是否顯示 Caption
   // Header(左) 相關
   @Input() showHeader = true;                                          // 是否顯示 Header
-  @Input() reportHead!: ReportHead;                                    // 列印PDF 配置
-  @Input() exportFilename = 'download';                                // table 匯出CSV檔案名稱
   @Input() showInsert = false;                                         // 是否顯示 Insert新增按鈕
   @Output() insert = new EventEmitter<any>();                          // 新增事件
   @Input() insertDisabled = false;                                     // 新增按鈕是否禁用
@@ -77,7 +73,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Output() edit = new EventEmitter<any>();  // 編輯事件
   @Input() addButton: AddButton[] = [];      // 自定義 管理按鈕
   @Input() showRowEdit = false;              // 是否顯示 Row編輯按鈕
-  @Input() rowEditing = false;               // 是否正在編輯Row
   // body
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件
   @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
@@ -98,7 +93,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   // 其他
   @Input() emptyMessage = '查無資料';                // table 無資料時顯示文字
   // 權限
-  @ContentChild('captionTemplate') captionTemplate: TemplateRef<any> | undefined;
   private ngUnsubscribe = new Subject<void>();
   public funInfo: FunsrightInfo | undefined;
 

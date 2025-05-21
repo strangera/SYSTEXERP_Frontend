@@ -3,14 +3,16 @@ import { FormBuilder, FormControl, Validators } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 
 export interface TableExport {
-  print_reportTitle: string;
-  print_reportTitle_per_page: string;
-  print_eject: string;
-  print_field_title: string;
+  print_reportTitle?: string;
+  print_reportTitle_per_page?: string;
+  print_eject?: string;
+  print_field_title?: string;
+  print_field_title_per_page?: string,
   print_reportFooter?: string;
   print_reportFooter_per_page?: string;
-  page_lines: number;
-  allColumns?: string;
+  page_lines?: number;
+  print_line_number?: string,
+  footer_DataType?: string
 }
 
 @Component({
@@ -33,10 +35,12 @@ export class TableExportComponent implements OnInit, OnDestroy {
     print_reportTitle_per_page: ['N'], // 報表標題每頁
     print_eject: ['Y'], // 是否分頁
     print_field_title: ['Y'], // 是否顯示欄位標題
+    print_field_title_per_page: ['N'],// 是否顯示欄位標題
     print_reportFooter: ['Y'], // 報表頁尾
     print_reportFooter_per_page: ['N'], // 報表頁尾每頁
     page_lines: [10, [Validators.min(10)]], // 每頁行數
-    allColumns: ['N'],  // 是否匯出所有欄位
+    print_line_number: ['Y'],
+    footer_DataType: ['']
   });
   constructor(private formBuilder: FormBuilder) { };
   ngOnInit() {
@@ -82,10 +86,10 @@ export class TableExportComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$)) // 使用 takeUntil 在組件銷毀時取消訂閱
         .subscribe((value: string) => {
           if (value === 'N') {
-            this.form.get('allColumns')?.setValue('N');
-            this.form.get('allColumns')?.disable();
+            this.form.get('print_field_title_per_page')?.setValue('N');
+            this.form.get('print_field_title_per_page')?.disable();
           } else {
-            this.form.get('allColumns')?.enable();
+            this.form.get('print_field_title_per_page')?.enable();
           }
         });
     }
@@ -119,10 +123,12 @@ export class TableExportComponent implements OnInit, OnDestroy {
       print_reportTitle_per_page: this.form.value.print_reportTitle_per_page || 'N',
       print_eject: this.form.value.print_eject || 'Y',
       print_field_title: this.form.value.print_field_title || 'Y',
+      print_field_title_per_page: this.exportStatus === 'PDF' ? (this.form.value.print_field_title_per_page || 'N') : undefined,
       page_lines: this.form.value.page_lines || 0,
       print_reportFooter: this.exportStatus === 'PDF' ? (this.form.value.print_reportFooter || 'Y') : undefined,
       print_reportFooter_per_page: this.exportStatus === 'PDF' ? (this.form.value.print_reportFooter_per_page || 'N') : undefined,
-      allColumns: this.exportStatus === 'Excel' ? (this.form.value.allColumns || 'N') : undefined,
+      print_line_number: this.exportStatus === 'PDF' ? (this.form.value.print_line_number || 'Y') : undefined,
+      footer_DataType: this.form.value.footer_DataType || ''
     };
     this.save.emit(tableExportData);
     this.visible = false;

@@ -26,14 +26,11 @@ export interface Column {
   optionValue?: string; // 下拉選單 optionValue
 
   buttonLabel?: string; // 選擇按鈕 label
-  checkboxValue?: string; // checkbox 顯示的 ngModel（適用於陣列資料）
-  checkboxLabel?: (value: any) => string; // checkbox 顯示的 label（適用於陣列資料）
   checkboxTrueLabel?: string; // checkbox 非編輯模式 true 顯示文字（適用於單一布林值）
   checkboxFalseLabel?: string; // checkbox 非編輯模式 false 顯示文字（適用於單一布林值）
   dateFormat?: string; // 日期格式（例如 'yy-mm-dd'，僅適用於 type='date'）
   frozen?: boolean;  // 是否凍結 (是否為凍結欄位)
   alignFrozen?: string; // 凍結欄位對齊方式
-
 }
 
 export interface LazyLoadEvent {
@@ -70,16 +67,6 @@ export interface AddButton {
   disabled?: (rowData: any) => boolean;
 }
 
-export const CreationColumns: Column[] = [
-  { field: 'CRT_Date', header: '建立日期', visible: false, format: (value: string) => formatDateTime(value) },
-  { field: 'CRT_USR_No', header: '建立人員', visible: false },
-  { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-  { field: 'UPD_Date', header: '變更日期', visible: false, format: (value: string) => formatDateTime(value) },
-  { field: 'UPD_USR_No', header: '變更人員', visible: false },
-  { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
-];
-
-
 export interface RowEditSaveEvent {
   oldData: any;
   newData: any;
@@ -102,7 +89,7 @@ export function validateRowData(rowData: any, columns: Column[], data: any, mess
         const [message, title] = errorMessage;
         messageService.errorBubble(message, title);
       }
-      return !isValid; // 发现验证失败则返回 true，导致 `some` 终止循环
+      return !isValid;
     }))
   );
 }

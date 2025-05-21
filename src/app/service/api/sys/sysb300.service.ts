@@ -21,7 +21,7 @@ export class Sysb300Service {
   // 查詢 上層組織(SYS3000) 下拉選單
   querySYSB300_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(
-      `${this.apiUrl}/querySYSB300_DropDownList`,
+      `${environment.ApiUrl}/querySYS3000_DropDownList`,
       body,
     );
   }

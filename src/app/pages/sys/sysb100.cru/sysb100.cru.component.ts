@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Sysb100m } from '../module/sysb000.module';
+import { Sysb100m } from '../../../shared/models/sys/sysb000.module';
 import { SortMeta } from 'primeng/api';
 
 @Component({

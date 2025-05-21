@@ -57,6 +57,7 @@
   --sidebar-item-bg-active: #f4f6f8; /* 一個較淺的灰色作為 active 背景 */
   --sidebar-item-text-active: #2196F3; /* 使用你的主要顏色作為 active 文字 */
   --sidebar-border-color: #dee2e6; /* 使用你的 surface-border 作為邊框顏色 */
+  --table-header-bg: #c7d2fe;
   color-scheme: light;
 }
 
@@ -238,6 +239,8 @@
   --sidebar-item-bg-active: #4b5563; /* 一個更深的灰色作為 active 背景 */
   --sidebar-item-text-active: #64b5f6; /* 一個較亮的藍色作為 active 文字 */
   --sidebar-border-color: #4b5563; /* 一個較深的灰色作為邊框顏色 */
+  --table-header-bg: #2c3e50;
+  --table-header-color:#ecf0f1;
   color-scheme: dark;
 }
 
@@ -2973,17 +2976,17 @@
     border-radius: 0;
   }
   .p-datatable .p-datatable-header {
-    background: #f8f9fa;
-    color: #495057;
-    border: 1px solid #e9ecef;
+    background: var(--table-header-bg);
+    color: var(--table-header-color);
+    border: 1px solid var(--surface-border);
     border-width: 1px 0 1px 0;
     padding: 1rem 1rem;
     font-weight: 600;
   }
   .p-datatable .p-datatable-footer {
-    background: #f8f9fa;
-    color: #495057;
-    border: 1px solid #e9ecef;
+    background: var(--table-header-bg);
+    color: var(--table-header-color);
+    border: 1px solid var(--surface-border);
     border-width: 0 0 1px 0;
     padding: 1rem 1rem;
     font-weight: 600;
@@ -2991,21 +2994,21 @@
   .p-datatable .p-datatable-thead > tr > th {
     text-align: left;
     padding: 1rem 1rem;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--surface-border);
     border-width: 0 0 1px 0;
     font-weight: 600;
-    color: #495057;
-    background: #f8f9fa;
+    color: var(--table-header-color);
+    background: var(--table-header-bg);
     transition: box-shadow 0.2s;
   }
   .p-datatable .p-datatable-tfoot > tr > td {
     text-align: left;
     padding: 1rem 1rem;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--surface-border);
     border-width: 0 0 1px 0;
     font-weight: 600;
-    color: #495057;
-    background: #f8f9fa;
+    color: var(--table-header-color);
+    background: var(--table-header-bg);
   }
   .p-datatable .p-sortable-column .p-sortable-column-icon {
     color: #6c757d;

@@ -1,11 +1,4 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-
-@NgModule({
-  declarations: [],
-  imports: [CommonModule],
-})
-export class Sysb100m {
+export interface Sysb100m {
   'id': string;
   'SYS_StoreNo': string;
   'STR_Uniform': string;
@@ -38,7 +31,7 @@ export class Sysb100m {
   'UPD_USR_Name': string;
 }
 
-export class Sysb200m {
+export interface Sysb200m {
   'id': string;
   'manufacturerID': string;
   'approvalStatus': string;
@@ -69,7 +62,7 @@ export class Sysb200m {
   'UPD_USR_Name': string;
 }
 
-export class Sysb300m {
+export interface Sysb300m {
   'id': string;
   'level_id': string;
   'level_name': string;
@@ -80,10 +73,12 @@ export class Sysb300m {
   'UPD_Date': Date;
   'UPD_USR_No': string;
   'UPD_USR_Name': string;
+
+  'CanDel': boolean; // 是否可刪除
 }
 
 // SYS3100 組織碼設定作業
-export class Sysb400m {
+export interface Sysb400m {
   'id': string;
   'org_id': string;
   'org_name': string;
@@ -100,7 +95,7 @@ export class Sysb400m {
 }
 
 // SYS3A00 區域代碼檔
-export class Sysb500m {
+export interface Sysb500m {
   'id': string;
   'area_no': string;
   'area_desc': string;
@@ -113,7 +108,7 @@ export class Sysb500m {
 }
 
 // SYS3900 樓層基本資料維護
-export class Sysb600m {
+export interface Sysb600m {
   'id': string;
   'floor_no': string;
   'floor_desc': string;
@@ -126,8 +121,8 @@ export class Sysb600m {
 }
 
 // tblUser 使用者設定檔
-export class tblUser {
-  'id': string;
+export interface tblUser {
+  'ID': string;
   'user_No': string;
   'user_Name': string;
   'user_Password': string;
@@ -144,6 +139,21 @@ export class tblUser {
   'remarks': string;
   'user_priority': string;
   'USER_PwdExpireDate': Date;
+
+  'CRT_Date': Date;
+  'CRT_USR_No': string;
+  'CRT_USR_Name': string;
+  'UPD_Date': Date;
+  'UPD_USR_No': string;
+  'UPD_USR_Name': string;
+}
+
+//tblRole 使用者角色設定檔
+export interface tblRole {
+  'id': string;
+  'Role_No': string;
+  'Role_Name': string;
+  'Description': string;
 
   'CRT_Date': Date;
   'CRT_USR_No': string;
