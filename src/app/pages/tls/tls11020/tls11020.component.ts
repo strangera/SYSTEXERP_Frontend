@@ -6,6 +6,7 @@ import { DeductionService } from '../../../service/basic/deduction.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS11020Service } from '../../../service/API/tls/tls11020.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
 
 @Component({
   selector: 'app-tls11020',
@@ -23,54 +24,67 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
 
   totalRecords = 0;
   data: any[] = [];
-columns: any[] = [
-  { field: 'CAP_Item', header: '扣款代碼', visible: true },
-  { field: 'CAP_Type', header: '扣款類型', visible: true },
-  { field: 'CAP_Name', header: '扣款名稱', visible: true },
-  { field: 'AccNo', header: '會計科目', visible: true },
-  {
-    field: 'GUI_FLAG',
-    header: '是否開立發票',
-    visible: true,
-    format: (value: any) => this.getLabelFromOptions(value, this.guiFlagOptions),
-  },
-  {
-    field: 'CAP_TaxType',
-    header: '課稅別',
-    visible: true,
-    format: (value: any) => this.getLabelFromOptions(value, this.taxTypeOptions),
-  },
-  {
-    field: 'IsCommonlyUsed',
-    header: '是否常用',
-    visible: true,
-    format: (value: any) => this.getLabelFromOptions(value, this.isCommonlyUsedOptions),
-  },
-  { field: 'Print_Area', header: '扣款項目合約列印區分', visible: true },
-  { field: 'CAP_Remark', header: '備註', visible: true },
-];
+  columns: any[] = [
+    { field: 'CAP_Item', header: '扣款項目編號', visible: true },
+    {
+      field: 'CAP_Type',
+      header: '扣款類別',
+      visible: true,
+      format: (value: any) => this.getLabelFromOptions(value, this.deductionCategoryOptions),
+    },
+    { field: 'CAP_Name', header: '扣款項目名稱', visible: true },
+    { field: 'AccNo', header: '會計科目代碼', visible: true },
+    {
+      field: 'AccNo',
+      header: '會計科目名稱',
+      visible: true,
+      format: (value: any) => this.getLabelFromOptions(value, this.accountOptions),
+    },
+    {
+      field: 'GUI_FLAG',
+      header: '是否開立發票',
+      visible: true,
+      format: (value: any) => this.getLabelFromOptions(value, this.guiFlagOptions),
+    },
+    {
+      field: 'CAP_TaxType',
+      header: '課稅別',
+      visible: true,
+      format: (value: any) => this.getLabelFromOptions(value, this.taxTypeOptions),
+    },
+    {
+      field: 'IsCommonlyUsed',
+      header: '是否常用',
+      visible: true,
+      format: (value: any) => this.getLabelFromOptions(value, this.isCommonlyUsedOptions),
+    },
+    { field: 'Print_Area', header: '扣款項目合約列印區分', visible: true },
+    { field: 'CAP_Remark', header: '備註', visible: true },
+  ];
 
   selectedItems: any[] = [];
   deductionCategoryOptions: any[] = [];
-guiFlagOptions = [
-  { label: '開立', value: 'Y' },
-  { label: '不開立', value: 'N' },
-];
+  guiFlagOptions = [
+    { label: '開立', value: 'Y' },
+    { label: '不開立', value: 'N' },
+  ];
 
-taxTypeOptions = [
-  { label: '免稅', value: '0' },
-  { label: '應稅', value: '1' },
-];
+  taxTypeOptions = [
+    { label: '免稅', value: '0' },
+    { label: '應稅', value: '1' },
+  ];
 
-isCommonlyUsedOptions = [
-  { label: '常用', value: 'Y' },
-  { label: '不常用', value: 'N' },
-];
-
+  isCommonlyUsedOptions = [
+    { label: '常用', value: 'Y' },
+    { label: '不常用', value: 'N' },
+  ];
+  accountOptions: any[] = [];
   constructor(
     private validationService: ValidationService,
     private deductionService: DeductionService,
     private tls11020Service: TLS11020Service,
+    private accountingaccountService: AccountingaccountService
+
   ) {
     super();
   }
@@ -80,6 +94,13 @@ isCommonlyUsedOptions = [
     this.deductionService.getDeductionCategories().subscribe((data) => {
       this.deductionCategoryOptions = data;
 
+    });
+    this.accountingaccountService.getOptions().subscribe((data) => {
+      this.accountOptions = (data || []).map(x => ({
+        label: x.Name,
+        formLabel: `${x.No} - ${x.Name}`,
+        value: x.No
+      }));
     });
   }
 
@@ -118,6 +139,7 @@ isCommonlyUsedOptions = [
         },
       });
     });
+    console.log('📦 回傳資料 sample：', this.data?.[0]);
   }
 
 
@@ -139,7 +161,7 @@ isCommonlyUsedOptions = [
     });
   }
   getLabelFromOptions(value: any, options: any[]): string {
-  return options.find(opt => opt.value === value)?.label ?? value;
-}
+    return options.find(opt => opt.value === value)?.label ?? value;
+  }
 
 }
