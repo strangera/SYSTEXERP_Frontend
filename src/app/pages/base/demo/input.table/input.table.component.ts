@@ -186,18 +186,18 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     this.locationSubscribe();
   }
   // tree dropDown==================================
-  memberList = [
+  flatTreeData = [
     { id: '1', department: 'Department A', role: 'Owner', name: 'Amy Elsner', email: 'amy@email.com', phone: '0911111111' },
     { id: '2', department: 'Department A', role: 'Owner', name: 'Anna Fali', email: 'anna@email.com', phone: '0922222222' },
     { id: '3', department: 'Department A', role: 'Viewer', name: 'Asiya Javayant', email: 'asiya@email.com', phone: '0933333333' },
     { id: '4', department: 'Department B', role: 'Examiner', name: 'Bernardo Dominic', email: 'bernardo@email.com', phone: '0944444444' },
     { id: '5', department: 'Department B', role: 'Reviewer', name: 'Elwin Sharvill', email: 'elwin@email.com', phone: '0955555555' }]; // 從 API 或資料庫取得
-  columnDefs = [
+  treeNodes = [
     { value: 'department', label: '部門' },
     { value: 'role', label: '角色' },
     { value: 'member', label: '成員' }
   ];
-  LeaveColumnName = 'name'; // 子節點顯示名稱
+  LeaveColumnLabel = 'name'; // 子節點顯示名稱
 
   onMembersSelected(selected: any[]) {
     console.log('從子元件選到的:', selected);
