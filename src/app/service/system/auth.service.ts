@@ -6,7 +6,7 @@ import { EncryptionService } from '../../shared/service/encryption.service';
 import { catchError, map } from 'rxjs/operators';
 import { userLogin } from '../../shared/models/system/userLogin';
 import { environment } from '../../../environments/environment';
-import { BehaviorType, FunsrightInfo } from '../../shared/models/system/funsrightInfo';
+import { FunsrightInfo } from '../../shared/models/system/funsrightInfo';
 import { UserInfo } from '../../shared/models/system/userInfo';
 import { NotificationService } from '../../shared/component/notification-message/notification.service';
 import { QueryStateService } from '../../shared/service/query-state.service';
