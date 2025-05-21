@@ -765,4 +765,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
     this.updateDetailColumns(); // 更新詳細列定義
     this.updateDetailItemsForDisplay(); // 更新顯示的詳細資料
   }
+
+  onSubmitNext(): void {
+    this.router.navigate(['TLS/TLS13010NEXT3']);
+  }
 }

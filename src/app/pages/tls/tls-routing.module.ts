@@ -392,6 +392,7 @@ import { TLS57150Component } from './tls57150/tls57150.component';
 import { TLS57160Component } from './tls57160/tls57160.component';
 import { TLS57170Component } from './tls57170/tls57170.component';
 import { NotfoundComponent } from '../base/notfound/notfound.component';
+import { Tls13010Next3Component } from './tls13010-next3/tls13010-next3.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '404', pathMatch: 'full' },
@@ -431,6 +432,7 @@ const routes: Routes = [
   { path: 'TLS14020CRU', component: TLS14020CRUComponent }, // 專櫃契約書列印 CRU
   { path: 'TLS13010NEXT1', component: TLS13010Next1Component }, // 專櫃契約書維護 NEXT1
   { path: 'TLS13010NEXT2', component: TLS13010Next2Component }, // 專櫃契約書維護 NEXT2
+  { path: 'TLS13010NEXT3', component: Tls13010Next3Component }, // 專櫃契約書維護 NEXT3
 
   { path: 'TLS21010', component: TLS21010Component }, // 傳票項目之會計科目設定作業
   { path: 'TLS21020', component: TLS21020Component }, // 傳票項目之會計科目設定作業_NEW
