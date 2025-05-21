@@ -159,14 +159,15 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     const items = Array.isArray(data) ? data : [data];
     if (items.length === 0) return;
     // 收集所有有效的 ID
-    const idList = items.filter((item) => item && item.id != null && item.id !== undefined).map((item) => item.id);
+    const idList = items.filter((item) => item && item.ID != null && item.ID !== undefined).map((item) => item.ID);
     if (idList.length === 0) {
       this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      console.log('項目', items);
       return;
     }
     // 構建新的 requestBody 格式
     const requestBody = {
-      user_NoList: idList, // 符合 API 的 idList 格式
+      ids: idList, // 符合 API 的 idList 格式
     };
     console.log('Delete body:', JSON.stringify(requestBody, null, 2));
     // 調用 API

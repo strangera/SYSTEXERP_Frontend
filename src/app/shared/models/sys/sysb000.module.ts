@@ -122,7 +122,7 @@ export interface Sysb600m {
 
 // tblUser 使用者設定檔
 export interface tblUser {
-  'id': string;
+  'ID': string;
   'user_No': string;
   'user_Name': string;
   'user_Password': string;
