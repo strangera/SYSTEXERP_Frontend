@@ -1,25 +1,22 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Sys0230Service } from './../../../service/API/sys/sys0230.service';
+import { Component, OnInit } from '@angular/core';
 import {
-  FormArray, FormBuilder,
-  FormControl,
+
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { KeyValue } from '@angular/common';
-import { TreeNode } from 'primeng/api';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { tblUser } from '../../../shared/models/sys/sysb000.module';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
-interface Column {
-  field: string;
-  header: string;
+export interface UserOption {
+  ID: string; // ID
+  User_No: string; // 角色代號
+  User_Name: string; // 角色名稱
+  Match: string; // 是否配對
 }
+
 // 4-2-2-2 角色之使用者設定維護
 @Component({
   selector: 'app-sys0230.cru',
@@ -37,15 +34,47 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>
     Role_Name: ['', [Validators.required, Validators.maxLength(30)]], // 角色名稱
     Description: ['', [Validators.maxLength(50)]], // 角色註記
   });
+
+  roleUserData: UserOption[] = [];
   // ----------------------------------------------------------------
+  roleUserColumns: Column[] = [
+    { field: 'ID', header: 'ID', visible: false },
+    { field: 'Match', header: '是否配對', visible: true },
+    { field: 'User_No', header: '使用者代號', visible: true },
+    { field: 'User_Name', header: '使用者名稱', visible: true },
+  ]
+
   constructor(
-    private translate: TranslateService
+    private sys0230Service: Sys0230Service,
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
     this.initializePage('SYS0230', this.dataForm);
+    this.loadOptions(this.dataForm.get('Role_No')?.value ?? ''); // 載入選項
+  }
+  // ----------------------------------------------------------------
+  // 載入 角色之使用者
+  loadOptions(roleNo: string) {
+    console.log('需求:', roleNo);
+    this.sys0230Service.queryRoleUsers({ Role_No: roleNo }).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.roleUserData = response.Data || [];
+          console.log('回傳Role:', response.Data);
+        } else {
+          console.error('API error:', response.Status, response.Message);
+        }
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+    });
   }
 
   // ----------------------------------------------------------------
@@ -80,80 +109,5 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>
 
   onClearForm() {
     this.dataForm.reset(); // 重置表單
-
   }
-  // demo
-  // ----------------------------------------------------------------
-  files: TreeNode[] = [
-    {
-      key: '0',
-      data: {
-        name: '全公司',
-        code: '100000',
-        count: '0(3)'
-      },
-      children: [
-        {
-          key: '0-0',
-          data: {
-            name: '阮湘晴',
-            code: '	0900000001',
-          },
-        },
-        {
-          key: '0-1',
-          data: {
-            name: 'sandy',
-            code: 'sandy',
-
-          }
-        },
-        {
-          key: '0-2',
-          data: {
-            name: '李律民',
-            code: 'turn000001',
-
-          }
-        }
-      ]
-    },
-    {
-      key: '1',
-      data: {
-        name: '行政服務部',
-        code: '107000',
-        count: '0(2)'
-      },
-      children: [
-        {
-          key: '1-0',
-          data: {
-            name: '林東賢',
-            code: '2014000138',
-          }
-        },
-        {
-          key: '1-1',
-          data: {
-            name: '	陳秋莉',
-            code: '	2015000184',
-          }
-        }
-      ]
-    },
-  ];
-
-  selectionKeys = {}; /* {
-    '0-0': {
-        partialChecked: false,
-        checked: true
-    }
-  };*/
-
-  cols: Column[] = [
-    { field: 'name', header: '部門名稱' },
-    { field: 'code', header: '代碼' },
-    { field: 'count', header: '使用者數目(部門總人數)' }
-  ];
 }
