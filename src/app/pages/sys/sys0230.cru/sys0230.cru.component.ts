@@ -13,6 +13,8 @@ import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { KeyValue } from '@angular/common';
 import { TreeNode } from 'primeng/api';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { tblUser } from '../../../shared/models/sys/sysb000.module';
 
 interface Column {
   field: string;
@@ -25,154 +27,60 @@ interface Column {
   styleUrl: './sys0230.cru.component.scss',
 })
 // 角色之使用者設定維護 CRU
-export class SYS0230CRUComponent extends BasicCrupageComponent implements OnInit {
+export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>
+  implements OnInit {
 
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    Role: [],
-    search: [],
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([this.createItem()]),
+    id: [], // ID
+    Role_No: ['', [Validators.required, Validators.maxLength(10)]], // 角色代號
+    Role_Name: ['', [Validators.required, Validators.maxLength(30)]], // 角色名稱
+    Description: ['', [Validators.maxLength(50)]], // 角色註記
   });
-  Role: any[] = [
-    { value: 1, label: '全部' },
-    { value: 2, label: '公司人員' },
-    { value: 3, label: '專櫃人員' },
-    { value: 4, label: '其他' },
-
-  ];
   // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private translate: TranslateService
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '420003';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus;
-      rowdata: any;
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
+    this.initializePage('SYS0230', this.dataForm);
   }
 
   // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      departmentCode: [], //
-      departmentName: [], //
-      userCount: [], //
-
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-
-  onReset() {
-    // 重新設定的邏輯
-    console.log('重新設定');
-  }
-
-  onBack() {
-    this.router.navigate(['/SYS0000/SYS0230']);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(
-        this.translate.instant('form_error_message')
-      );
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('success_message')
-          );
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('updated-successfully')
-          );
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+    // 修改：使用父類的 handleSubmit 方法
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            // this.sys0210Service.createRole(frm.value).subscribe(() => {
+            //   this.messageService.successBubble('新增成功');
+            //   this.onCancel(); // 新增成功後返回查詢頁面
+            // });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            console.log('frm.value', frm.value);
+            // this.sys0210Service.updateRole(frm.value).subscribe(() => {
+            //   this.messageService.successBubble('更新成功');
+            //   this.onCancel(); // 更新成功後返回查詢頁面
+            // });
+          }
+          break;
+      }
+    });
   }
 
   submitForm(frm: FormGroup) {
-    // 查詢邏輯
     this.onSubmit(frm);
-  } //CRU
+  }
 
-  onCancel() {
-    this.router.navigate(['SYS0000/SYS0230']);
+  onClearForm() {
+    this.dataForm.reset(); // 重置表單
+
   }
   // demo
   // ----------------------------------------------------------------
