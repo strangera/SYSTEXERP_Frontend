@@ -38,11 +38,11 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>
   roleUserData: UserOption[] = [];
   // ----------------------------------------------------------------
   roleUserColumns: Column[] = [
-    { field: 'ID', header: 'ID', visible: false },
     { field: 'Match', header: '是否配對', visible: true },
     { field: 'User_No', header: '使用者代號', visible: true },
     { field: 'User_Name', header: '使用者名稱', visible: true },
   ]
+  selectedRoleUserData: UserOption[] = []; // 選取的使用者資料
 
   constructor(
     private sys0230Service: Sys0230Service,
@@ -93,6 +93,7 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             console.log('frm.value', frm.value);
+            console.log('選擇變更', this.selectedRoleUserData);
             // this.sys0210Service.updateRole(frm.value).subscribe(() => {
             //   this.messageService.successBubble('更新成功');
             //   this.onCancel(); // 更新成功後返回查詢頁面
