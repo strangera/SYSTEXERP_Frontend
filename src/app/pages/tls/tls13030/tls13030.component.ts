@@ -22,7 +22,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     tlt_name: ['', [Validators.maxLength(50)]],
     floor_noList: [[] as string[]],
     area_noList: [[] as string[]],
-    bustypeList: [[] as string[]],
+    bus_type: ['', Validators.required], // 改為 bus_type 欄位，並加上必填
     tlt_openflagList: [[] as string[]],
     tlt_bdate_start: [null],
     tlt_bdate_end: [null],
@@ -41,6 +41,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
+
   regionOptions: any[] = [];
   floorOptions: any[] = [];
   operationStatusOptions: any[] = [];
@@ -69,7 +70,6 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     { field: 'tpy_rate', header: '扣款比率', visible: true },
   ];
 
-
   constructor(
     private RegionService: RegionService,
     private floorService: FloorService,
@@ -84,7 +84,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS13030', 'TLS/TLS13030CRU', this.queryForm, (f) => this.onSubmit(f));
+    this.initializePage('TLS13030', '', this.queryForm, (f) => this.onSubmit(f));
 
     this.RegionService.getRegionOptions().subscribe(data => this.regionOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
@@ -98,11 +98,15 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     this.bigCategoryCodeService.getSystemTypes().subscribe(data => this.bus_typeList = data);
     this.deductionService.getDeductionCategories().subscribe(data => this.deductionCategoryOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
+
     this.queryForm.controls.cap_typeList.valueChanges.subscribe((selectedCapTypes: string[] | null) => {
       if (selectedCapTypes?.length) {
         const payload = { cap_typeList: selectedCapTypes };
         this.deductionService.getAPS1003DropDownList(payload).subscribe(res => {
-          this.deductionCodeNameServOptions = res?.map((x: any) => ({ label: `${x.value} - ${x.label}`, value: x.value })) || [];
+          this.deductionCodeNameServOptions = res?.map((x: any) => ({
+            label: `${x.value} - ${x.label}`,
+            value: x.value
+          })) || [];
           this.queryForm.controls.cap_itemList.setValue([]);
         });
       } else {
@@ -121,6 +125,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
           formValue[key] = null;
         }
       }
+
 
       console.log('🔍 查詢發送參數:', formValue);
 

@@ -25,7 +25,7 @@ export class BigCategoryCodeService {
     };
 
     return this.http.post<any>(this.queryApiUrl, params).pipe(
-      tap(data => console.debug('queryTLS51010_DropDownList response', data)),
+      tap(data => console.debug('/queryTLTBUSTYPE_DropDownList response', data)),
       map(response => {
         // 檢查回傳數據結構
         if (!response || typeof response !== 'object') {
@@ -55,13 +55,19 @@ export class BigCategoryCodeService {
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
-
-  createSystemType(systemType: any): Observable<any> {
-    return this.http.post<any>(this.apiUrl, systemType).pipe(
-      tap(data => console.debug('post response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
-    );
+createSystemType(systemType: any): Observable<any> {
+  if (!systemType || !systemType.bus_type) {
+    const error = new Error('缺少必要欄位 bus_type');
+    console.error('❌ 錯誤：', error.message, systemType);
+    return throwError(() => error);
   }
+
+  return this.http.post<any>(this.apiUrl, systemType).pipe(
+    tap(data => console.debug('✅ post response', data)),
+    catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
+  );
+}
+
 
   updateSystemType(id: number, systemType: any): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/${id}`, systemType).pipe(
