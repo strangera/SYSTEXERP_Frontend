@@ -76,7 +76,7 @@ export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> imp
             // 待實現：調用 API 進行新增
             this.apiService.insertSYSB900(frm.value).subscribe((response: any) => {
               this.messageService.successBubble('新增成功');
-              this.onCancel(); // 新增成功後返回查詢頁面
+              this.dataForm.reset();
             });
           }
           break;
@@ -85,7 +85,6 @@ export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> imp
             // 待實現：調用 API 進行更新
             this.apiService.updateSYSB900(frm.value).subscribe((response: any) => {
               this.messageService.successBubble('更新成功');
-              this.onCancel(); // 更新成功後返回查詢頁面
             });
           }
           break;

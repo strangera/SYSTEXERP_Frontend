@@ -151,67 +151,37 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
       });
     });
   }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
   onDelete(data: CategoryItem | CategoryItem[]): void {
     const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
+    if (items.length === 0) return;
 
     const idList = items
-      .filter(item => item && item.id != null && item.id !== undefined)
+      .filter(item => item && item.id != null)
       .map(item => item.id);
 
     if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      this.messageService.warnBubble('未找到有效的刪除項目');
       return;
     }
 
-    const requestBody = {
-      idList: idList
-    };
-
-    console.log('Request body:', JSON.stringify(requestBody));
-    this.apiService.deleteSYSB920(requestBody).subscribe({
-      next: (response: any) => {
-        console.log('API response:', response);
+    this.apiService.deleteSYSB920({ idList }).subscribe({
+      next: (response) => {
         if (response.Status === '0000') {
-          this.messageService.successBubble(`成功刪除 ${idList.length} 個項目`);
-          this.onSubmit(this.queryForm);
+          this.messageService.successBubble('選中項目刪除成功');
         } else {
           console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message || '未知錯誤'}`);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
         }
       },
-      error: (err: any) => {
+      error: (err: string) => {
         console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗，請檢查網路連線或聯繫管理員');
+        this.messageService.errorBubble('刪除失敗');
       },
       complete: () => {
-        this.selectedItems = [];
-      }
+        this.onSubmit(this.queryForm); // 刷新資料
+      },
     });
-  }
 
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) { return; }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [{ field: 'bus_class', order: 1 }];
-    this.onSubmit(this.queryForm);
+    this.selectedItems = [];
   }
-
 }

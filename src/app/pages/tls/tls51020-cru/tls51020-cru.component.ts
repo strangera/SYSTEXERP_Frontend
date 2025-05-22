@@ -2,9 +2,9 @@ import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { BigCategoryCodeService } from './../../../service/basic/big-category-code.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
+import { Tls51010DropDownListService } from '../../../service/api/tls/tls51010-dropdown.service';
 
 // 新增：定義數據接口
 interface CategoryItem {
@@ -39,14 +39,15 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
   constructor(
     private validationService: ValidationService,
     private apiService: TLS5000Service,
-    private bigCategoryCodeService: BigCategoryCodeService,
+    private dropdownListService: Tls51010DropDownListService,
+
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS51020', this.dataForm);
-    this.bigCategoryCodeService.getSystemTypes().subscribe(data => {
+    this.dropdownListService.getSystemTypes().subscribe(data => {
       this.bigCategoryOptions = data;
       console.log('bigCategoryOptions:', this.bigCategoryOptions); // 調試用
     });
@@ -61,7 +62,7 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
             // 待實現：調用 API 進行新增
             this.apiService.insertTLS51020(frm.value).subscribe((response: any) => {
               this.messageService.successBubble('新增成功');
-              this.onCancel(); // 新增成功後返回查詢頁面
+              this.dataForm.reset();
             });
           }
           break;
@@ -70,20 +71,10 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
             // 待實現：調用 API 進行更新
             this.apiService.updateTLS51020(frm.value).subscribe((response: any) => {
               this.messageService.successBubble('更新成功');
-              this.onCancel(); // 更新成功後返回查詢頁面
             });
           }
           break;
       }
     });
-  }
-
-
-  submitForm(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.dataForm.reset();  // 重置表單
   }
 }

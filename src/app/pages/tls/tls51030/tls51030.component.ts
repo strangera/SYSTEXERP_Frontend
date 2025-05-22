@@ -1,12 +1,12 @@
-import { BigCategoryCodeService } from './../../../service/basic/big-category-code.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { debounceTime } from 'rxjs';
-import { MidCategoryCodeService } from '../../../service/basic/mid-category-code.service';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Tls51020DropDownService } from '../../../service/api/tls/tls51020-dropdown.service';
+import { Tls51010DropDownListService } from '../../../service/api/tls/tls51010-dropdown.service';
 
 interface CategoryItem {
   id: number;
@@ -59,8 +59,8 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
 
   constructor(
     private validationService: ValidationService,
-    private bigCategoryCodeService: BigCategoryCodeService,
-    private middleCategoryCodeService: MidCategoryCodeService,
+    private bigCategoryCodeService: Tls51010DropDownListService,
+    private middleCategoryCodeService: Tls51020DropDownService,
     private apiService: TLS5000Service,
   ) {
     super();
@@ -145,45 +145,38 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
     const option = options.find(opt => opt.value === code);
     return option ? option.label : code;
   }
+
   onDelete(data: CategoryItem | CategoryItem[]): void {
     const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
+    if (items.length === 0) return;
 
     const idList = items
-      .filter(item => item && item.id != null && item.id !== undefined)
+      .filter(item => item && item.id != null)
       .map(item => item.id);
 
     if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      this.messageService.warnBubble('未找到有效的刪除項目');
       return;
     }
 
-    const requestBody = {
-      idList: idList
-    };
-
-    this.apiService.deleteTLS51030(requestBody).subscribe({
+    this.apiService.deleteTLS51030({ idList }).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
-          this.messageService.successBubble(`成功刪除 ${idList.length} 個項目`);
-          this.onSubmit(this.queryForm);
+          this.messageService.successBubble('選中項目刪除成功');
         } else {
-          console.error('API error:', response.Status, response.Message, response.Error);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message || '未知錯誤'}`);
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
         }
       },
-      error: (err) => {
-        console.error('API error:', err.status, err.message, err.error);
-        this.messageService.errorBubble('刪除失敗，請檢查網路連線或聯繫管理員');
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗');
       },
       complete: () => {
-        this.selectedItems = [];
-      }
+        this.onSubmit(this.queryForm); // 刷新資料
+      },
     });
+
+    this.selectedItems = [];
   }
 }

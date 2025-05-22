@@ -2,7 +2,11 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
-    <app-button btnType="create" label="下一步(抽成設定)" (click)="onSubmitNext()"></app-button>
+    <app-button
+      btnType="create"
+      label="下一步(抽成設定)"
+      (click)="onSubmitNext()"
+    ></app-button>
     <app-button btnType="cancel" (click)="onCancel()"></app-button>
   </div>
 
@@ -10,55 +14,116 @@
   <div class="scroll-container">
     <!-- 專櫃契約書資訊表格 -->
     <p-accordion>
-      <p-accordionTab header="專櫃契約書資訊" [selected]="true" class="line-height-3 m-0">
+      <p-accordionTab
+        header="專櫃契約書資訊"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
         <div class="col-12 custom-table-red">
-          <app-table tableKey="stocks" [lazy]="true" [loading]="loading" [showEdit]="false" [showDetail]="false"
-            [showRowEdit]="false" [data]="stocks" [columns]="stocksColumns" [showManage]="false">
-          </app-table>
+          <app-table
+            tableKey="stocks"
+            [lazy]="true"
+            [loading]="loading"
+            [showEdit]="false"
+            [showDetail]="false"
+            [showRowEdit]="false"
+            [data]="stocks"
+            [columns]="stocksColumns"
+            [showManage]="false"
+          ></app-table>
         </div>
       </p-accordionTab>
     </p-accordion>
     <!-- 一次扣款表格 -->
     <p-accordion>
-      <p-accordionTab header="一次扣款" [selected]="true" class="line-height-3 m-0">
+      <p-accordionTab
+        header="一次扣款"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
         <div class="col-12">
-          <app-table tableKey="deductions" [lazy]="true" [loading]="loading" [showEdit]="false" [showDetail]="false"
-            [showRowEdit]="true" [data]="deductions" [columns]="deductionColumns" [showInsert]="true">
-          </app-table>
+          <app-table
+            tableKey="deductions"
+            [lazy]="true"
+            [loading]="loading"
+            [showEdit]="false"
+            [showDetail]="false"
+            [showRowEdit]="true"
+            [data]="deductions"
+            [columns]="deductionColumns"
+            [showInsert]="true"
+          ></app-table>
         </div>
       </p-accordionTab>
     </p-accordion>
 
     <!-- 每月扣款表格 -->
     <p-accordion>
-      <p-accordionTab header="每月扣款" [selected]="true" class="line-height-3 m-0">
+      <p-accordionTab
+        header="每月扣款"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
         <div class="col-12">
-          <app-table tableKey="deductions1" [lazy]="true" [loading]="loading" [showEdit]="false" [showDetail]="false"
-            [showRowEdit]="true" [data]="deductions1" [columns]="deduction1Columns" [showInsert]="true">
-          </app-table>
+          <app-table
+            tableKey="deductions1"
+            [lazy]="true"
+            [loading]="loading"
+            [showEdit]="false"
+            [showDetail]="false"
+            [showRowEdit]="true"
+            [data]="deductions1"
+            [columns]="deduction1Columns"
+            [showInsert]="true"
+          ></app-table>
         </div>
       </p-accordionTab>
     </p-accordion>
     <!-- 需要全選按鈕 -->
 
     <p-accordion>
-      <p-accordionTab header="平均分攤" [selected]="true" class="line-height-3 m-0">
+      <p-accordionTab
+        header="平均分攤"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
         <div class="col-12">
-          <app-table tableKey="deductions2" [lazy]="true" [loading]="loading" [showEdit]="false" [showDetail]="false"
-            [showRowEdit]="true" [data]="deductions2" [columns]="deduction2Columns" [showInsert]="true">
-          </app-table>
+          <app-table
+            tableKey="deductions2"
+            [lazy]="true"
+            [loading]="loading"
+            [showEdit]="false"
+            [showDetail]="false"
+            [showRowEdit]="true"
+            [data]="deductions2"
+            [columns]="deduction2Columns"
+            [showInsert]="true"
+          ></app-table>
         </div>
       </p-accordionTab>
     </p-accordion>
 
-
     <p-accordion>
-      <p-accordionTab header="比率分攤" [selected]="true" class="line-height-3 m-0">
-        <span> 比率分攤(比率或元欄位如輸入比率請輸入1以下數字,如2%請輸入0.02!!)</span>
+      <p-accordionTab
+        header="比率分攤"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
+        <span>
+          比率分攤(比率或元欄位如輸入比率請輸入1以下數字,如2%請輸入0.02!!)
+        </span>
         <div class="col-12">
-          <app-table tableKey="deductions3" [lazy]="true" [loading]="loading" [showEdit]="false" [showDetail]="false"
-            [showRowEdit]="true" [data]="deductions3" [columns]="deduction3Columns" [showInsert]="true">
-          </app-table>
+          <app-table
+            tableKey="deductions3"
+            [lazy]="true"
+            [loading]="loading"
+            [showEdit]="false"
+            [showDetail]="false"
+            [showRowEdit]="true"
+            [data]="deductions3"
+            [columns]="deduction3Columns"
+            [showInsert]="true"
+          ></app-table>
         </div>
       </p-accordionTab>
     </p-accordion>
@@ -124,3 +189,5 @@
         </div>
       </p-accordionTab>
     </p-accordion> -->
+  </div>
+</div>

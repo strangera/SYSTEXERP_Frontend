@@ -17,7 +17,7 @@
   "prettier.tabWidth": 2, // 設定縮排寬度
   "prettier.useTabs": false,
   "[html]": {
-    "editor.defaultFormatter": "vscode.html-language-features"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[typescript]": {
     "editor.defaultFormatter": "vscode.typescript-language-features"
