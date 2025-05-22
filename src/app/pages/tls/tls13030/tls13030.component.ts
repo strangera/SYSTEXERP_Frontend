@@ -9,6 +9,7 @@ import { DeductionService } from '../../../service/basic/deduction.service';
 import { TLS13030Service } from '../../../service/API/tls/tls13030.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 @Component({
   selector: 'app-tls13030',
@@ -76,7 +77,8 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     private bigCategoryCodeService: BigCategoryCodeService,
     private deductionService: DeductionService,
     private tls11010Service: Tls11010Service,
-    private TLS13030Service: TLS13030Service
+    private TLS13030Service: TLS13030Service,
+    private notificationService: NotificationService
   ) {
     super();
   }

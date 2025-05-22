@@ -16,8 +16,8 @@ export class MultiLocationFilterComponent implements OnInit {
   floorOptions: any[] = [];
   regionOptions: any[] = [];
   buildingControl!: FormControl;
-floorControl!: FormControl;
-regionControl!: FormControl;
+  floorControl!: FormControl;
+  regionControl!: FormControl;
 
   constructor(private multiLocationService: MultiLocationFilterService,
   ) {}

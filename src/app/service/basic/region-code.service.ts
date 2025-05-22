@@ -17,7 +17,7 @@ export class RegionService {
 
   getRegionOptions(): Observable<any[]> {
     return this.http
-      .post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS11010_SYS3A00_DropDownList`, {})
+      .post<any>(`${this.apiUrl}/querySYS3A00_DropDownList`, {})
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? []),
         catchError(this.errorHandler.handleError)

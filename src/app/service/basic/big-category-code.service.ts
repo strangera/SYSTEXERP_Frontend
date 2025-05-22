@@ -9,7 +9,7 @@ import { catchError, Observable, tap, map, throwError } from 'rxjs';
 })
 export class BigCategoryCodeService {
   apiUrl: string = environment.ApiUrl;
-  queryApiUrl = `${environment.ApiUrl}/TLS0000/TLS5000/queryTLS51010_DropDownList`;
+  queryApiUrl = `${environment.ApiUrl}/queryTLTBUSCLASS_DropDownList`;
   title = '大分類代碼';
 
   constructor(
