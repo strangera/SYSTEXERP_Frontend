@@ -386,6 +386,7 @@
             <span [innerHTML]="rowData[col.field]"></span>
           </div>
         </ng-container>
+<<<<<<< HEAD
         <span
           *ngIf="
             rowData[col.field] !== undefined &&
@@ -394,6 +395,14 @@
           "
         >
           {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
+=======
+        <span *ngIf="!col.type">
+          {{
+            col.format
+              ? col.format(rowData[col.field], rowData)
+              : rowData[col.field]
+          }}
+>>>>>>> main
         </span>
       </td>
       <td

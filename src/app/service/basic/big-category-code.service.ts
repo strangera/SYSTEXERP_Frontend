@@ -9,7 +9,7 @@ import { catchError, Observable, tap, map, throwError } from 'rxjs';
 })
 export class BigCategoryCodeService {
   apiUrl: string = environment.ApiUrl;
-  queryApiUrl = `${environment.ApiUrl}/TLS0000/TLS5000/queryTLS51010_DropDownList`;
+  queryApiUrl = `${environment.ApiUrl}/queryTLTBUSTYPE_DropDownList`;
   title = '大分類代碼';
 
   constructor(
@@ -18,28 +18,23 @@ export class BigCategoryCodeService {
   ) { }
 
   getSystemTypes(): Observable<{ value: string, label: string }[]> {
-    const params = {
-      id: 0,
-      CAT_LNo: '',
-      CAT_LName: ''
-    };
+    const payload = {};
 
-    return this.http.post<any>(this.queryApiUrl, params).pipe(
-      tap(data => console.debug('queryTLS51010_DropDownList response', data)),
+    return this.http.post<any>(this.queryApiUrl, payload, {
+      headers: { 'Content-Type': 'application/json' }
+    }).pipe(
+      tap(data => console.debug('/queryTLTBUSTYPE_DropDownList', data)),
       map(response => {
-        // 檢查回傳數據結構
         if (!response || typeof response !== 'object') {
           throw new Error('無效的 API 回傳格式');
         }
-        // 確保 Data 存在且為陣列
         const data = response.Data || [];
         if (!Array.isArray(data)) {
           throw new Error('API 回傳的 Data 不是陣列');
         }
-        // 轉換為 { value, label } 格式，label 顯示 CAT_LNo + CAT_LName
         return data.map((item: any) => ({
-          value: item.No || '', // value 為 CAT_LNo
-          label: `${item.No || ''} - ${item.Name || ''}` // label 為 "CAT_LNo - CAT_LName"
+          value: item.No || '',
+          label: `${item.No || ''} - ${item.Name || ''}`
         }));
       }),
       // catchError((error: HttpErrorResponse | Error) => {
@@ -49,19 +44,28 @@ export class BigCategoryCodeService {
     );
   }
 
+
+
+
   getSystemTypeById(id: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
       tap(data => console.debug('get by id response', data)),
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
-
   createSystemType(systemType: any): Observable<any> {
+    if (!systemType || !systemType.bus_type) {
+      const error = new Error('缺少必要欄位 bus_type');
+      console.error('❌ 錯誤：', error.message, systemType);
+      return throwError(() => error);
+    }
+
     return this.http.post<any>(this.apiUrl, systemType).pipe(
-      tap(data => console.debug('post response', data)),
+      tap(data => console.debug('✅ post response', data)),
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
+
 
   updateSystemType(id: number, systemType: any): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/${id}`, systemType).pipe(

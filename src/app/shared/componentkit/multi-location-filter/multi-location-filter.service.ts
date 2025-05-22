@@ -22,7 +22,7 @@ export class MultiLocationFilterService {
       );
   }
 
-  /** 取得樓層選項 */
+  /** ✅ 獨立取得樓層選項（不依館別） */
   getFloors(): Observable<any[]> {
     return this.http
       .post<any>(`${this.apiUrl}/querySYS3900_DropDownList`, {})
@@ -32,7 +32,7 @@ export class MultiLocationFilterService {
       );
   }
 
-  /** 取得區域選項 */
+  /** ✅ 獨立取得區域選項（不依館別與樓層） */
   getRegionOptions(): Observable<any[]> {
     return this.http
       .post<any>(`${this.apiUrl}/querySYS3A00_DropDownList`, {})

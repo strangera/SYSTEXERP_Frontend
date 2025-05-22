@@ -64,6 +64,7 @@ export class SYSB300Component
           // console.log('回傳階層:', response.Data);
           if (response.Status === '0000') {
             this.data = response.Data || [];
+            console.log('Result', this.data);
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {
@@ -149,5 +150,9 @@ export class SYSB300Component
           }));
         });
     }
+  }
+
+  isRowSelectable(rowData: Sysb300m): boolean {
+    return rowData.CanDel
   }
 }
