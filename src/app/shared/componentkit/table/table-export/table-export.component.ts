@@ -123,7 +123,7 @@ export class TableExportComponent implements OnInit, OnDestroy {
       print_reportTitle_per_page: this.form.value.print_reportTitle_per_page || 'N',
       print_eject: this.form.value.print_eject || 'Y',
       print_field_title: this.form.value.print_field_title || 'Y',
-      print_field_title_per_page: this.exportStatus === 'PDF' ? (this.form.value.print_field_title_per_page || 'N') : undefined,
+      print_field_title_per_page: this.form.value.print_field_title_per_page || 'N',
       page_lines: this.form.value.page_lines || 0,
       print_reportFooter: this.exportStatus === 'PDF' ? (this.form.value.print_reportFooter || 'Y') : undefined,
       print_reportFooter_per_page: this.exportStatus === 'PDF' ? (this.form.value.print_reportFooter_per_page || 'N') : undefined,
