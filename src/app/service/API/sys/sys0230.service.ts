@@ -11,6 +11,7 @@ export class Sys0230Service {
 
   constructor(private http: HttpClient) { }
 
+  // ---給SYS0230---
   // 查詢 角色之使用者
   queryRoleUsers(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryRoleUsers`, body);
@@ -21,6 +22,7 @@ export class Sys0230Service {
     return this.http.post<any>(`${this.apiUrl}/updateRoleUsers`, body);
   }
 
+  // ---給SYS0220---
   // 查詢 使用者之角色
   queryUserRoles(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryUserRoles`, body);
