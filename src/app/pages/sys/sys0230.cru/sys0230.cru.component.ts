@@ -78,6 +78,22 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>
   }
 
   // ----------------------------------------------------------------
+  // 點擊時變更 match狀態
+  onUserSelectionChange(selectedItems: UserOption[]) {
+    // 先記錄目前選取的 ID
+    const selectedIds = selectedItems.map(item => item.ID);
+
+    // loop 所有 roleUserData 來更新 Match 狀態
+    this.roleUserData.forEach(user => {
+      // 如果該使用者目前是被選取中的，就設為 true
+      // 如果之前是 true 但現在沒被選，就變回 false
+      user.Match = selectedIds.includes(user.ID) ? 'true' : 'false';
+    });
+
+    this.selectedRoleUserData = selectedItems;
+  }
+
+  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
     // 修改：使用父類的 handleSubmit 方法
     this.handleSubmit(frm, () => {

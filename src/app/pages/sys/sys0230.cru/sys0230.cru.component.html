@@ -42,7 +42,7 @@
             dataKey="ID"
             [multiSortMeta]="[{ field: 'Match', order: 1 }]"
             [selectedItems]="selectedRoleUserData"
-            (selectionChange)="selectedRoleUserData = $event"
+            (selectionChange)="onUserSelectionChange($event)"
             [loading]="loading"
           ></app-table>
         </div>
