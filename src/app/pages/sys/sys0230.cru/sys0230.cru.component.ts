@@ -108,12 +108,18 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            console.log('frm.value', frm.value);
-            console.log('選擇變更', this.selectedRoleUserData);
-            // this.sys0210Service.updateRole(frm.value).subscribe(() => {
-            //   this.messageService.successBubble('更新成功');
-            //   this.onCancel(); // 更新成功後返回查詢頁面
-            // });
+            // console.log('User資料', frm.value);
+            // console.log('變更後的清單', { RoleList: this.selectedRoleUserData.map(item => item.ID) });
+            const requestBody = {
+              Role_No: frm.value.Role_No,
+              RoleList: this.selectedRoleUserData.map(item => item.ID)
+            }
+
+            console.log('更新的請求內容', requestBody);
+            this.sys0230Service.updateRoleUsers(frm.value).subscribe(() => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel(); // 更新成功後返回查詢頁面
+            });
           }
           break;
       }
