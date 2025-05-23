@@ -7,14 +7,14 @@ import {
 } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { tblUser } from '../../../shared/models/sys/sysb000.module';
+import { option, tblUser } from '../../../shared/models/sys/sysb000.module';
 import { Column } from '../../../shared/componentkit/table/table.model';
 
 export interface UserOption {
   ID: string; // ID
   User_No: string; // 角色代號
   User_Name: string; // 角色名稱
-  Match: string; // 是否配對
+  Match: boolean; // 是否配對
 }
 
 // 4-2-2-2 角色之使用者設定維護
@@ -36,15 +36,22 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>
   });
 
   roleUserData: UserOption[] = [];
+  whetherOptions: any[] = [
+    { value: true, label: '是' },
+    { value: false, label: '否' },
+  ];
   // ----------------------------------------------------------------
   roleUserColumns: Column[] = [
-    { field: 'Match', header: '是否配對', visible: true },
+    {
+      field: 'Match', header: '是否配對', visible: true,
+      format: (value: boolean) =>
+        this.whetherOptions.find((option) => option.value === value)?.label ||
+        value,
+    },
     { field: 'User_No', header: '使用者代號', visible: true },
     { field: 'User_Name', header: '使用者名稱', visible: true },
   ]
   selectedRoleUserData: UserOption[] = []; // 選取的使用者資料
-  DeleteUserList: string[] = []; // 儲存 Match 從 true 變 false 的使用者 ID
-  originalMatchedIds: string[] = [];  //原始配對的 ID 清單
 
   constructor(
     private sys0230Service: Sys0230Service,
@@ -64,10 +71,13 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>
       next: (response) => {
         if (response.Status === '0000') {
           this.roleUserData = response.Data || [];
-          this.originalMatchedIds = this.roleUserData
-            .filter(u => u.Match === 'true')
-            .map(u => u.ID);
-          console.log('回傳Role:', response.Data);
+
+          // 初始化被選中的資料（Match 為 true）
+          this.selectedRoleUserData = this.roleUserData.filter(user => user.Match === true);
+
+          const user0900 = response.Data.find((u: UserOption) => u.User_No === '0900000001');
+          console.log('⏱ 原始 Match 值:', JSON.parse(JSON.stringify(user0900)));
+
         } else {
           console.error('API error:', response.Status, response.Message);
         }
@@ -85,32 +95,14 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>
   // ----------------------------------------------------------------
   // 點擊時變更 match狀態
   onUserSelectionChange(selectedItems: UserOption[]) {
-    // // 先記錄目前選取的 ID
-    // const selectedIds = selectedItems.map(item => item.ID);
-
-    // // loop 所有 roleUserData 來更新 Match 狀態
-    // this.roleUserData.forEach(user => {
-    //   // 如果該使用者目前是被選取中的，就設為 true
-    //   // 如果之前是 true 但現在沒被選，就變回 false
-    //   user.Match = selectedIds.includes(user.ID) ? 'true' : 'false';
-    // });
-
-    // this.selectedRoleUserData = selectedItems;
-
+    // 先記錄目前選取的 ID
     const selectedIds = selectedItems.map(item => item.ID);
-    this.DeleteUserList = [];
 
+    // loop 所有 roleUserData 來更新 Match 狀態
     this.roleUserData.forEach(user => {
-      const isNowSelected = selectedIds.includes(user.ID);
-      const wasOriginallyMatched = this.originalMatchedIds.includes(user.ID);
-
-      // 更新 Match 狀態
-      user.Match = isNowSelected ? 'true' : 'false';
-
-      // 如果原本是 true，現在沒被選，才加入 DeleteUserList
-      if (wasOriginallyMatched && !isNowSelected) {
-        this.DeleteUserList.push(user.User_No);
-      }
+      // 如果該使用者目前是被選取中的，就設為 true
+      // 如果之前是 true 但現在沒被選，就變回 false
+      user.Match = selectedIds.includes(user.ID) ? true : false;
     });
 
     this.selectedRoleUserData = selectedItems;
@@ -132,15 +124,19 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             // console.log('User資料', frm.value);
-            // console.log('變更後的清單', { RoleList: this.selectedRoleUserData.map(item => item.ID) });
+            // console.log('變更後的清單', { RoleList: this.selectedRoleUserData.map(item => item.User_No) });
             const requestBody = {
               Role_No: frm.value.Role_No,
-              UserNoList: this.selectedRoleUserData.map(item => item.User_No),
-              DeleteUserNoList: this.DeleteUserList
-            }
+              UserNoList: this.selectedRoleUserData
+                .filter(item => item.Match === true)
+                .map(item => item.User_No),
+              DeleteUserNoList: this.selectedRoleUserData
+                .filter(item => item.Match === false)
+                .map(item => item.User_No),
+            };
 
             console.log('更新的請求內容', requestBody);
-            this.sys0230Service.updateRoleUsers(frm.value).subscribe(() => {
+            this.sys0230Service.updateRoleUsers(requestBody).subscribe(() => {
               this.messageService.successBubble('更新成功');
               this.onCancel(); // 更新成功後返回查詢頁面
             });
