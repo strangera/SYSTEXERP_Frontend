@@ -27,4 +27,9 @@ export class Sys0230Service {
   queryUserRoles(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryUserRoles`, body);
   }
+
+  // 更新 使用者之角色
+  updateUserRoles(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateUserRoles`, body);
+  }
 }
