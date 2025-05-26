@@ -12,6 +12,7 @@
             controlName="user_No"
             [control]="dataForm.controls.user_No"
             [submitted]="submitted"
+            [disabled]="true"
           ></app-input-text>
         </div>
 
@@ -21,19 +22,20 @@
             controlName="user_Name"
             [control]="dataForm.controls.user_Name"
             [submitted]="submitted"
+            [disabled]="true"
           ></app-input-text>
         </div>
 
-        <div class="col-12 md:col-6 lg:col-4">
+        <!-- <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="使用者密碼-加密"
             controlName="user_Password"
             [control]="dataForm.controls.user_Password"
             [submitted]="submitted"
           ></app-input-text>
-        </div>
+        </div> -->
       </div>
-      <div class="grid p-fluid">
+      <!-- <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             class="col-12 md:col-6 lg:col-5"
@@ -62,9 +64,6 @@
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <!-- <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="帳號有效起始日期"
-                        [startControl]="dataForm.controls.str_dateStart" [endControl]="dataForm.controls.str_dateEnd"
-                        [submitted]="submitted" /> -->
           <app-calendar
             calendarType="dateOne"
             class="col-12 md:col-6 lg:col-5"
@@ -165,7 +164,25 @@
             [submitted]="submitted"
           />
         </div>
+      </div> -->
+
+      <div class="card">
+        <div class="col-13">
+          <app-table
+            tableKey="SYS0230CRU"
+            [data]="roleUserData"
+            [columns]="roleUserColumns"
+            [showCheckBox]="true"
+            [showManage]="false"
+            dataKey="ID"
+            [multiSortMeta]="[{ field: 'Match', order: -1 }]"
+            [selectedItems]="selectedRoleUserData"
+            (selectionChange)="onUserSelectionChange($event)"
+            [loading]="loading"
+          ></app-table>
+        </div>
       </div>
+
       <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         *ngIf="!isFormReadable"
