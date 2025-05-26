@@ -30,7 +30,7 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
 import { BusinessTypeService } from '../../../service/basic/businesstype.service';
 import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { SortMeta } from 'primeng/api';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
@@ -117,52 +117,69 @@ const nowDate = new Date();
 })
 export class TLS13010Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    recruitmentCode: [, [Validators.maxLength(8)]],
-    businessTypeCode: [],
-    counterCode: [, [Validators.maxLength(6)]],
-    counterName: [, [Validators.maxLength(50)]],
-    vendorCode: [],
-    locationCode: [],
-    startserial: [, [Validators.maxLength(8)]],
-    endserial: [, [Validators.maxLength(8)]],
-    contractStatus: [],
-    regionCode: [],
-    floorCode: [],
-    negotiator: [],
-    organizationCode: [],
-    operationStatus: [],
-    commissionCalculation: [],
-    responseStartDate: [],
-    responseEndDate: [],
-    responseDeadlineStartDate: [],
-    responseDeadlineEndDate: [],
-    negotiationStartDate: [],
-    negotiationEndDate: [],
-    businessType: [],
-    contractStartDate: [],
-    contractEndDate: [],
-    contractDeadlineStartDate: [],
-    contractDeadlineEndDate: [],
-    operationStartDate: [],
-    operationEndDate: [],
-    operationDeadlineStartDate: [],
-    operationDeadlineEndDate: [],
-    counterCategory: [],
-    decorationMethod: [],
-    commissionType: [],
-    settlementMethod: [],
-    paymentMethod: [],
-    cooperationMethod: [],
-    issueOwnerInvoice: [],
-    useOwnerCashRegister: [],
-    ownerCashCollection: [],
-    whetherOptions: [],
-    businessTypeCodeOptions: [],
-    isMeterReadOption: [],
-    isGuaranteedByNoteOption: [],
-    isTestOption: [],
+    // 基本資訊
+    apply_no: [, [Validators.maxLength(50)]], // 專櫃招募編號
+    tlt_name: [, [Validators.maxLength(100)]], // 專櫃名稱
+    tlt_no: [, [Validators.maxLength(50)]], // 專櫃編號
+    bus_typeList: [[]], // 大分類
+    ven_no: [, [Validators.maxLength(50)]], // 廠商編號
+    ven_uniformList: [[]], // 廠商統一編號
+    paper_typeList: [[]], // 營業型態
+
+    // 地點資訊
+    location_noList: [[]], // 位置
+    area_noList: [[]], // 區域
+    tlt_buildingList: [[]], // 館別
+    tlt_floorList: [[]], // 樓層
+
+    // 合約資訊
+    apply_typeList: [[]], // 合約狀態
+    contact_USR_No: [[]], // 洽談者
+    feedback_date_from: [], // 回函日期(起)
+    feedback_date_to: [], // 回函日期(迄)
+    due_date_from: [], // 回函截止日(起)
+    due_date_to: [], // 回函截止日(迄)
+    contact_Date_from: [], // 洽談日期(起)
+    contact_Date_to: [], // 洽談日期(迄)
+    tlt_bdate_start_from: [], // 合約起始日期(起)
+    tlt_bdate_start_to: [], // 合約起始日期(迄)
+    tlt_bdate_end_from: [], // 合約起始日期(起)
+    tlt_bdate_end_to: [], // 合約起始日期(迄)
+    tlt_edate_start_from: [], // 合約終止日期(起)
+    tlt_edate_start_to: [], // 合約終止日期(迄)
+    tlt_edate_end_from: [], // 合約終止日期(起)
+    tlt_edate_end_to: [], // 合約終止日期(迄)
+
+    // 營運資訊
+    tlt_openflagList: [[]], // 專櫃營運狀況
+    org_idList: [[]], // 組織
+    tlt_contract_bdate_from: [], // 營運起始日期(起)
+    tlt_contract_bdate_to: [], // 營運起始日期(迄)
+    tlt_contract_edate_from: [], // 營運終止日期(起)
+    tlt_contract_edate_to: [], // 營運終止日期(迄)
+
+    // 財務與其他資訊
+    comm_comp_type: [[]], // 抽成額計算方式
+    tlt_term_typeList: [[]], // 抽成別(抽成類別)
+    money_typeList: [[]], // 結帳方式
+    paytypeList: [[]], // 付款方式
+    store_wayList: [[]], // 配合方式
+    invoice_typeList: [[]], // 請款單據別
+    tlt_kindList: [[]], // 專櫃櫃別
+    deco_typeList: [[]], // 裝潢方式
+    check_day: [, [Validators.maxLength(10)]], // 月結天數
+    overall_statusList: [[]], // 超出部分處理方式
+    rece_yn: [], // 是否開立業主發票
+    pos_yn: [], // 是否使用業主收銀機
+    cash_yn: [], // 是否為業主收現
+    meter_typeList: [[]], // 是否抄表
+
+    // 保證金相關
+    depositTypes: [[]], // 有無保證金
+    paymentMethods: [[]], // 保證金付款方式
+
     // 使用 createPaginationConfig 建立分頁配置
-    ...createPaginationConfig([{ field: 'talent_id', order: 1 }])
+    ...createPaginationConfig([{ field: 'apply_no', order: 1 }])
   });
 
   // 表格資料
@@ -202,11 +219,11 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     { field: 'contract_subno', header: '版本編號', visible: true },
     { field: 'feedback_date', header: '回函日期', visible: true },
     { field: 'due_date', header: '回函截止日', visible: true },
-    { field: 'tlt_contract_bdate', header: '契約起始日', visible: true, format: (rowData: any) => formatDate(rowData) },
+    { field: 'tlt_contract_bdate', header: '契約起始日', visible: true },
     { field: 'tlt_contract_edate', header: '契約截止日', visible: true },
     { field: 'tlt_bdate', header: '營運起始日', visible: true },
     { field: 'tlt_edate', header: '營運截止日', visible: true },
-    { field: 'bus_type', header: '大分類代號', visible: true, },
+    { field: 'bus_type', header: '大分類代號', visible: true },
     { field: 'deco_type', header: '裝潢方式', visible: true },
     { field: 'money_type', header: '結帳方式', visible: true },
     { field: 'check_type', header: '對帳方式', visible: true },
@@ -230,23 +247,29 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   locationOptions: any[] = [];
   contractStatusOptions: any[] = [];
   regionOptions: any[] = [];
+  buildingOptions: any[] = []; // 新增館別選項
   floorOptions: any[] = [];
   negotiatorOptions: any[] = [];
   organizationOptions: any[] = [];
   operationStatusOptions: any[] = [];
   commissionCalculationOptions: any[] = [];
-  businessType: any[] = [];
   counterCategoryOptions: any[] = [];
   decorationMethodOptions: any[] = [];
   commissionTypeOptions: any[] = [];
   settlementMethodOptions: any[] = [];
   paymentMethodOptions: any[] = [];
   cooperationMethodOptions: any[] = [];
-  issueOwnerInvoiceOptions: any[] = [];
-  useOwnerCashRegisterOptions: any[] = [];
-  ownerCashCollectionOptions: any[] = [];
+  invoiceTypeOptions: any[] = []; // 新增請款單據別選項
+  overallStatusOptions: any[] = []; // 新增超出部份處理方式選項
   whetherOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
+
+  // 保證金相關選項 - 根據 enum 定義
+  depositPaymentOptions: any[] = [
+    { value: 1, label: '現金' },
+    { value: 2, label: '支票' },
+    { value: 3, label: '履約保證金' },
+  ];
 
   constructor(
     private businessTypeCodeService: BusinessTypeCodeService,
@@ -408,14 +431,6 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   onSubmitQuery(frm: FormGroup): void {
     // 查詢邏輯
     this.onSubmit(frm);
-  }
-
-  onClearForm(): void {
-    this.queryForm.reset();  // 重置表單
-    this.data = [];
-    this.filteredData = [];
-    this.totalRecords = 0;
-    this.selectedItems = [];
   }
 
   // 刪除功能 - 參考 SYSB800 的實作
