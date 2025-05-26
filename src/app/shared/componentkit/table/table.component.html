@@ -500,8 +500,8 @@
   (visibleChange)="exportDialog = $event"
   (save)="
     exportStatus === 'PDF'
-      ? exportPDFDownload($event, columns)
-      : exportExcelDownload($event, columns)
+      ? exportPDFDownload($event, selectedColumns)
+      : exportExcelDownload($event, selectedColumns)
   "
   [exportStatus]="exportStatus"
 ></app-table-export>
