@@ -179,7 +179,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
         vendorId: '55667788',
         vendorName: '公司A',
         versionNumber: 'v1.0',
-        commissionType: '固定',
+        commissionType: '階梯式',
         contractStartDate: '2021-01-01',
         contractEndDate: '2023-12-31',
         operationStartDate: '2021-02-01',
@@ -238,6 +238,15 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
 
   onSubmitNext(): void {
     this.router.navigate(['TLS/TLS13010NEXT4']);
+  }
+
+  shouldShowCommissionType(commissionType: string): boolean {
+    return this.inventoryItems.some(item => item.commissionType === commissionType);
+  }
+
+  // 如果你想要更靈活的處理，也可以建立一個 getter 來取得所有存在的 commissionType
+  get existingCommissionTypes(): string[] {
+    return [...new Set(this.inventoryItems.map(item => item.commissionType))];
   }
 }
 

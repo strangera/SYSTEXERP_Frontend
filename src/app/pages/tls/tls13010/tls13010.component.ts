@@ -105,6 +105,7 @@ export class TLS13010Component extends BasicQueryPageComponent<CategoryItem> imp
     businessTypeCodeOptions: [],
     isMeterReadOption: [],
     isGuaranteedByNoteOption: [],
+    isTestOption: [],
     //分頁
     pageSize: [10],
     pageIndex: [0],
@@ -124,6 +125,12 @@ export class TLS13010Component extends BasicQueryPageComponent<CategoryItem> imp
     { value: '1', label: '準時開業' },
     { value: '2', label: '施工保證' },
     { value: '3', label: '契約屆滿保證票' },
+  ];
+
+  isTestOptions: any[] = [
+    { value: '1', label: '現金' },
+    { value: '2', label: '支票' },
+    { value: '3', label: '履約保證金' },
   ];
 
   data: any[] = [

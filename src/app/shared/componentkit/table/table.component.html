@@ -386,12 +386,14 @@
             <span [innerHTML]="rowData[col.field]"></span>
           </div>
         </ng-container>
-        <span *ngIf="!col.type">
-          {{
-            col.format
-              ? col.format(rowData[col.field], rowData)
-              : rowData[col.field]
-          }}
+        <span
+          *ngIf="
+            rowData[col.field] !== undefined &&
+            rowData[col.field] !== null &&
+            !col.type
+          "
+        >
+          {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
         </span>
       </td>
       <td
@@ -437,7 +439,6 @@
           icon="pi pi-pencil"
           (click)="editRow(rowData)"
           *ngIf="showEdit"
-          [disabled]="!isRowSelectable(rowData)"
         />
         <p-button
           pTooltip="查看"
