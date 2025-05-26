@@ -135,7 +135,6 @@
 </p-accordion>
 
 <div class="card">
-  <div class="col-13">
     <app-table
       tableKey="TLS13030"
       [data]="data"
@@ -148,10 +147,8 @@
       [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]"
       [totalRecords]="totalRecords"
       [lazy]="true"
+      [showManage] = "false"
       [loading]="loading"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     ></app-table>
-  </div>
 </div>

@@ -33,7 +33,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     tpy_bdate_end: [null],
     tpy_edate_start: [null],
     tpy_edate_end: [null],
-    bus_type: ['', [Validators.maxLength(50)]],
+    bus_type: [''],
     tlt_building: ['', [Validators.maxLength(1)]],
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
@@ -41,7 +41,6 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
-
   regionOptions: any[] = [];
   floorOptions: any[] = [];
   operationStatusOptions: any[] = [];
