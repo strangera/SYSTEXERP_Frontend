@@ -7,7 +7,7 @@ import {
 } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { option, tblUser } from '../../../shared/models/sys/sysb000.module';
+import { tblUser } from '../../../shared/models/sys/sysb000.module';
 import { Column } from '../../../shared/componentkit/table/table.model';
 
 export interface UserOption {

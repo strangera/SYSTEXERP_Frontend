@@ -13,7 +13,7 @@ export class Sys0210Service {
 
   // 查詢 tblRole 資料表
   queryRole(body: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/QueryRole`, body);
+    return this.http.post<any>(`${this.apiUrl}/queryRole`, body);
   }
 
   // 新增 tblRole 資料表
