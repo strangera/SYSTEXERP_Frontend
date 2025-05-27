@@ -124,7 +124,7 @@
       (selectionChange)="selectedItems = $event"
       (delete)="onDelete($event)"
       [showCheckBox]="true"
-      dataKey="ID"
+      dataKey="id"
       [multiSortMeta]="[{ field: 'user_No', order: 1 }]"
       [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
