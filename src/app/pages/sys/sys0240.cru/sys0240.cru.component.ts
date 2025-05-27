@@ -131,10 +131,10 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
             };
 
             console.log('更新的請求內容', requestBody);
-            this.sys0230Service.updateRoleUsers(requestBody).subscribe(() => {
-              this.messageService.successBubble('更新成功');
-              this.onCancel(); // 更新成功後返回查詢頁面
-            });
+            // this.sys0230Service.updateRoleUsers(requestBody).subscribe(() => {
+            //   this.messageService.successBubble('更新成功');
+            //   this.onCancel(); // 更新成功後返回查詢頁面
+            // });
           }
           break;
       }

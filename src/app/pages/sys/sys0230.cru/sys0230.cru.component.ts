@@ -75,8 +75,8 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>
           // 初始化被選中的資料（Match 為 true）
           this.selectedRoleUserData = this.roleUserData.filter(user => user.Match === true);
 
-          const user0900 = response.Data.find((u: UserOption) => u.User_No === '0900000001');
-          console.log('⏱ 原始 Match 值:', JSON.parse(JSON.stringify(user0900)));
+          // const user0900 = response.Data.find((u: UserOption) => u.User_No === '0900000001');
+          console.log('⏱ 原始 Match 值:', JSON.parse(JSON.stringify(this.selectedRoleUserData)));
 
         } else {
           console.error('API error:', response.Status, response.Message);
