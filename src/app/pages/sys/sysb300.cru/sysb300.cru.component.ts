@@ -113,6 +113,7 @@ export class SYSB300CRUComponent
     this.dataForm.reset(); // 重置表單
   }
 
+  // 讀取dopropdown選項
   loadOptions() {
     {
       this.sysb300Service
