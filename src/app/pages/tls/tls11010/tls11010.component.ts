@@ -14,9 +14,8 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 })
 export class TLS11010Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    LOCATION_No: [[] as string[], [Validators.maxLength(10)]],
-    org_id: [[] as string[], [Validators.maxLength(20)]],
-
+    LOCATION_No: [''],
+    org_id: [[]],
     building_no: [''],
     FLOOR_NO: [[] as string[]],
     AREA_NO: [[] as string[]],
@@ -24,9 +23,8 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     GROSS_SPACE_End: [null, [Validators.min(0), Validators.max(9999.999)]],
     NET_SPACE_Start: [null, [Validators.min(0), Validators.max(9999.999)]],
     NET_SPACE_End: [null, [Validators.min(0), Validators.max(9999.999)]],
-    LOCATION_Status: [''],
+    LOCATION_Status: [[]],
     Purpose_no: [[] as string[]],
-
     ...createPaginationConfig([{ field: 'LOCATION_No', order: 1 }]),
   });
 
@@ -38,7 +36,6 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     { field: 'LOCATION_No', header: '位置代碼', visible: true },
     { field: 'LOCATION_Name', header: '店位說明', visible: true },
     { field: 'org_id', header: '組織代碼', visible: true },
-
     {
       field: 'org_id',
       header: '組織名稱',
@@ -89,8 +86,7 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
   LOCATION_Status_Options: any[] = [
     { value: 0, label: '空位' },
     { value: 1, label: '使用中' },
-    { value: 2, label: '保留(不使用)' },
-    { value: 3, label: '停用' },
+    { value: 2, label: '停用' },
   ];
   BUILDING_NO_Options: any[] = [];
 
@@ -102,7 +98,6 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS11010', 'TLS/TLS11010CRU', this.queryForm, (form) => this.onSubmit(form));
-
     this.tls11010Service.getFloorOptions().subscribe((res) => (this.floorOptions = res));
     this.tls11010Service.getRegionOptions().subscribe((res) => (this.RegionCodeOptions = res));
     this.tls11010Service.getOrgOptions().subscribe((res) => {
@@ -112,16 +107,12 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
         value: x.value,
       })) || [];
     });
-
-
     this.tls11010Service.getUsageOptions().subscribe((res) => {
       this.usageOptions = res?.map((x: any) => ({
-                label: x.label,                                 // 給 table 用
+        label: x.label,                                 // 給 table 用
         formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
         value: x.value,
       })) || [];
-
-
 
     });
     this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
@@ -138,8 +129,15 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       if (formValue.building_no === '') {
         formValue.building_no = null;
       }
-      if (formValue.LOCATION_Status === '') {
-        formValue.LOCATION_Status = null;
+
+
+      // 處理空值
+      if (formValue.building_no === '') formValue.building_no = null;
+      if (formValue.LOCATION_No === '') formValue.LOCATION_No = null;
+
+      // ✅ 將 LOCATION_Status 轉成字串陣列
+      if (Array.isArray(formValue.LOCATION_Status)) {
+        formValue.LOCATION_Status = formValue.LOCATION_Status.map((x: string | number) => String(x));
       }
 
       console.log('🔍 查詢條件 request payload:', formValue);
@@ -156,10 +154,15 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
           this.loading = false;
           this.messageService.unblockUi();
         },
-        error: () => { },
+        error: () => {
+          this.messageService.errorBubble('查詢錯誤');
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
         complete: () => {
           this.loading = false;
           this.messageService.unblockUi();
+
         },
       });
     });

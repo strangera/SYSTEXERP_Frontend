@@ -1,8 +1,8 @@
-<div class="grid align-items-center">
-  <div class="col" style="flex: 1">
-    <app-menubar [ProgNo]="ProgNo"></app-menubar>
-  </div>
-</div>
+<div class="card">
+    <div class="flex gap-2 mb-2">
+        <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+        
+    </div>
 <p-accordion>
   <p-accordionTab
     header="{{ 'query-conditions' | translate }}"
@@ -32,7 +32,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
-                <div class="col-12 md:col-6 lg:col-4">
+        <div class="col-12 md:col-6 lg:col-4">
           <app-multi-select
             label="大分類"
             [options]="bus_typeOptions"
@@ -103,7 +103,7 @@
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-multi-select
-            label="組織"
+            label="組織代碼/名稱"
             [options]="OrganizationCodeOptions"
             optionLabel="formLabel"
             optionValue="value"
@@ -111,34 +111,36 @@
             [submitted]="submitted"
           ></app-multi-select>
         </div>
-      </div>
+</div>
 
-  <div
+      <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
       >
         <app-button btnType="clear"></app-button>
         <app-button btnType="query" [loading]="loading"></app-button>
       </div>
-    </form>
-  </p-accordionTab>
-</p-accordion>
-    <div class="card">
-      <app-table
-        tableKey="TLS13040"
-        [data]="data"
-        [columns]="columns"
-        [selectedItems]="selectedItems"
-        (selectionChange)="selectedItems = $event"
-        (delete)="onDelete($event)"
-        [showCheckBox]="true"
-        dataKey="tlt_no"
-        [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]"
-        [totalRecords]="totalRecords"
-        [lazy]="true"
-        [loading]="loading"
-        (edit)="onEdit($event)"
-        (detail)="onDetail($event)"
-        [showManage]="false"
-        (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      ></app-table>
-    </div>
+            </form>
+        </p-accordionTab>
+    </p-accordion>
+</div>
+<div class="card">
+  <app-table
+    tableKey="TLS13040"
+    [data]="data"
+    [columns]="columns"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    (delete)="onDelete($event)"
+    [showCheckBox]="true"
+    dataKey="tlt_no"
+    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [loading]="loading"
+    [showCheckBox]="false"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    [showManage]="false"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+  ></app-table>
+</div>
