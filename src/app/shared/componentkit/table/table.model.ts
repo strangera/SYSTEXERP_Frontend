@@ -93,21 +93,39 @@ export function validateRowData(rowData: any, columns: Column[], data: any, mess
     }))
   );
 }
-
-// yyyy-MM-dd
+//formatDate：會輸出 2024/05/27 格式
 export const formatDate = (dateStr: string) => {
   if (!dateStr) return '';
   const date = new Date(dateStr);
-  return isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+  if (isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}/${month}/${day}`;
 };
-// yyy-mm-dd hh:mm:ss
+
+//formatDateTime：會輸出 2024/05/27 14:30:25 格式
 export const formatDateTime = (dateStr: string) => {
   if (!dateStr) return '';
   const date = new Date(dateStr);
-  return isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(date);
+  if (isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
 };
+
 // 000,000,000
 export const formatNumber = (number: number | string): string => {
   if (!number) return '0';
   return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
+
+export const formatYN = (value: string): string => {
+  return value === 'Y' ? '是' : '否';
 };

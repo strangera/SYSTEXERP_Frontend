@@ -1,18 +1,7 @@
 import { WhetherService } from './../../../service/basic/whether.service';
 import { FloorService } from './../../../service/basic/floor.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+import { FormGroup, Validators } from '@angular/forms';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { VendorService } from '../../../service/basic/vendor.service';
@@ -30,10 +19,11 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
 import { BusinessTypeService } from '../../../service/basic/businesstype.service';
 import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { SortMeta } from 'primeng/api';
-import { TableLazyLoadEvent } from 'primeng/table';
+import { Column, createPaginationConfig, formatDate, formatDateTime, formatYN } from '../../../shared/componentkit/table/table.model';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
+import { formatCheckType, formatCommissionCompType, formatDecoType, formatMoneyType, formatOpenflagStatus, formatTltTermType } from './tls13010.constants';
+import { TLS13010_DROPDOWN_OPTIONS } from './tls13010.dropdown';
+
 
 // 資料模型：專櫃契約書維護項目
 interface ContractItem {
@@ -104,10 +94,14 @@ interface ContractItem {
   contact_addr: string;
   tlt_remark: string;
   ticket_remarks: string;
+  source_type: string;
+  rental_count: string;
+  contract_type: string;
 }
 
 const now = new Date();
 const nowDate = new Date();
+
 
 //專櫃契約書維護
 @Component({
@@ -124,7 +118,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     bus_typeList: [[]], // 大分類
     ven_no: [, [Validators.maxLength(50)]], // 廠商編號
     ven_uniformList: [[]], // 廠商統一編號
-    paper_typeList: [[]], // 營業型態
+    paper_typeList: [[]], // 證件類型
 
     // 地點資訊
     location_noList: [[]], // 位置
@@ -133,48 +127,52 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     tlt_floorList: [[]], // 樓層
 
     // 合約資訊
-    apply_typeList: [[]], // 合約狀態
-    contact_USR_No: [[]], // 洽談者
+    apply_typeList: [[]], // 申請類型
+    contact_USR_No: [[]], // 聯絡人清單
     feedback_date_from: [], // 回函日期(起)
     feedback_date_to: [], // 回函日期(迄)
     due_date_from: [], // 回函截止日(起)
     due_date_to: [], // 回函截止日(迄)
-    contact_Date_from: [], // 洽談日期(起)
-    contact_Date_to: [], // 洽談日期(迄)
-    tlt_bdate_start_from: [], // 合約起始日期(起)
-    tlt_bdate_start_to: [], // 合約起始日期(迄)
-    tlt_bdate_end_from: [], // 合約起始日期(起)
-    tlt_bdate_end_to: [], // 合約起始日期(迄)
-    tlt_edate_start_from: [], // 合約終止日期(起)
-    tlt_edate_start_to: [], // 合約終止日期(迄)
-    tlt_edate_end_from: [], // 合約終止日期(起)
-    tlt_edate_end_to: [], // 合約終止日期(迄)
+    contact_Date_from: [], // 聯絡日期(起)
+    contact_Date_to: [], // 聯絡日期(迄)
+
+    // 專櫃日期範圍
+    tlt_bdate_start_from: [], // 專櫃開始日期(起)
+    tlt_bdate_end_to: [], // 專櫃開始日期(迄)
+    tlt_edate_start_from: [], // 專櫃結束日期(起)
+    tlt_edate_end_to: [], // 專櫃結束日期(迄)
+
+    // 合約日期範圍
+    tlt_contract_bdate_from: [], // 合約開始日期(起)
+    tlt_contract_bdate_to: [], // 合約開始日期(迄)
+    tlt_contract_edate_from: [], // 合約結束日期(起)
+    tlt_contract_edate_to: [], // 合約結束日期(迄)
 
     // 營運資訊
-    tlt_openflagList: [[]], // 專櫃營運狀況
-    org_idList: [[]], // 組織
-    tlt_contract_bdate_from: [], // 營運起始日期(起)
-    tlt_contract_bdate_to: [], // 營運起始日期(迄)
-    tlt_contract_edate_from: [], // 營運終止日期(起)
-    tlt_contract_edate_to: [], // 營運終止日期(迄)
+    tlt_openflagList: [[]], // 開幕狀態清單
+    org_idList: [[]], // 組織代碼清單
 
     // 財務與其他資訊
-    comm_comp_type: [[]], // 抽成額計算方式
-    tlt_term_typeList: [[]], // 抽成別(抽成類別)
-    money_typeList: [[]], // 結帳方式
-    paytypeList: [[]], // 付款方式
-    store_wayList: [[]], // 配合方式
-    invoice_typeList: [[]], // 請款單據別
-    tlt_kindList: [[]], // 專櫃櫃別
-    deco_typeList: [[]], // 裝潢方式
-    check_day: [, [Validators.maxLength(10)]], // 月結天數
-    overall_statusList: [[]], // 超出部分處理方式
-    rece_yn: [], // 是否開立業主發票
-    pos_yn: [], // 是否使用業主收銀機
-    cash_yn: [], // 是否為業主收現
-    meter_typeList: [[]], // 是否抄表
+    comm_comp_type: [[]], // 佣金計算方式清單
+    tlt_term_typeList: [[]], // 合約期間類型清單
+    money_typeList: [[]], // 幣別清單
+    paytypeList: [[]], // 付款方式清單
+    store_wayList: [[]], // 收款方式清單
+    invoice_typeList: [[]], // 發票類型清單
+    tlt_kindList: [[]], // 專櫃種類清單
+    deco_typeList: [[]], // 裝潢類型清單
+    overall_statusList: [[]], // 整體狀態清單
+    check_day: [, [Validators.maxLength(10)]], // 對帳日
 
-    // 保證金相關
+    // Y/N 條件
+    rece_yn: [], // 是否收取管理費
+    pos_yn: [], // 是否有POS機
+    cash_yn: [], // 是否收現金
+
+    // 抄表類型
+    meter_typeList: [[]], // 抄表類型清單
+
+    // 保證金相關 (如果需要的話)
     depositTypes: [[]], // 有無保證金
     paymentMethods: [[]], // 保證金付款方式
 
@@ -186,90 +184,73 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   data: ContractItem[] = [];
   filteredData: ContractItem[] = [...this.data];
 
-  // 假資料 - 保留作為開發時的備用資料
-  counterCodeOptions: any[] = [
-    { value: 'C001', label: 'C001' },
-  ];
-
-  isMeterReadOptions: any[] = [
-    { value: '1', label: '水表' },
-    { value: '2', label: '電表' },
-    { value: '3', label: '瓦斯表' },
-  ];
-
-  isGuaranteedByNoteOptions: any[] = [
-    { value: '1', label: '準時開業' },
-    { value: '2', label: '施工保證' },
-    { value: '3', label: '契約屆滿保證票' },
-  ];
-
-  isTestOptions: any[] = [
-    { value: '1', label: '現金' },
-    { value: '2', label: '支票' },
-    { value: '3', label: '履約保證金' },
-  ];
-
   // 表格欄位配置 - 根據 API 回傳的欄位調整
   columns: Column[] = [
     { field: 'apply_no', header: '專櫃招募編號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'ven_no', header: '廠商編號', visible: true },
+    { field: 'ven_no', header: '廠商編號', visible: true }, //欄位還沒開
     { field: 'VEN_Name', header: '廠商名稱', visible: true },
     { field: 'contract_subno', header: '版本編號', visible: true },
-    { field: 'feedback_date', header: '回函日期', visible: true },
-    { field: 'due_date', header: '回函截止日', visible: true },
-    { field: 'tlt_contract_bdate', header: '契約起始日', visible: true },
-    { field: 'tlt_contract_edate', header: '契約截止日', visible: true },
-    { field: 'tlt_bdate', header: '營運起始日', visible: true },
-    { field: 'tlt_edate', header: '營運截止日', visible: true },
+    { field: 'feedback_date', header: '回函日期', visible: true, format: formatDate },
+    { field: 'due_date', header: '回函截止日', visible: true, format: formatDate },
+    { field: 'tlt_contract_bdate', header: '契約起始日', visible: true, format: formatDate },
+    { field: 'tlt_contract_edate', header: '契約截止日', visible: true, format: formatDate },
+    { field: 'tlt_bdate', header: '營運起始日', visible: true, format: formatDate },
+    { field: 'tlt_edate', header: '營運截止日', visible: true, format: formatDate },
     { field: 'bus_type', header: '大分類代號', visible: true },
-    { field: 'deco_type', header: '裝潢方式', visible: true },
-    { field: 'money_type', header: '結帳方式', visible: true },
-    { field: 'check_type', header: '對帳方式', visible: true },
-    { field: 'comm_comp_type', header: '抽成別', visible: true },
-    { field: 'tlt_term_type', header: '配合方式', visible: true },
-    { field: 'rece_yn', header: '開立業主發票', visible: true },
-    { field: 'pos_yn', header: '使用業主收現', visible: true },
-    { field: 'cash_yn', header: '業主收現銀行', visible: true },
-    { field: 'tlt_kind', header: '合約種類', visible: true },
-    { field: 'overall_status', header: '營運狀態', visible: true },
-    { field: 'org_id', header: '來源處', visible: true },
-    { field: 'total_amt', header: '承租數', visible: true },
+    { field: 'deco_type', header: '裝潢方式', visible: true, format: formatDecoType },
+    { field: 'money_type', header: '結帳方式', visible: true, format: formatMoneyType },
+    { field: 'check_type', header: '對帳方式', visible: true, format: formatCheckType },
+    { field: 'comm_comp_type', header: '抽成別', visible: true, format: formatCommissionCompType },
+    { field: 'store_way', header: '配合方式', visible: true, format: formatTltTermType },
+    { field: 'rece_yn', header: '開立業主發票', visible: true, format: formatYN },
+    { field: 'pos_yn', header: '使用業主收現', visible: true, format: formatYN },
+    { field: 'cash_yn', header: '業主收現銀行', visible: true, format: formatYN },
+    { field: 'contract_type', header: '合約種類', visible: true },
+    { field: 'overall_status', header: '營運狀態', visible: true, format: formatOpenflagStatus },
+    { field: 'source_type', header: '來源處', visible: true },
+    { field: 'rental_count', header: '承租數', visible: true },
   ];
 
   totalRecords: number = 0;
   selectedItems: ContractItem[] = [];
 
-  // 下拉選單選項
-  businessTypeOptions: any[] = [];
+  // 固定選項 (從 constants 來的)
+  decorationOptions = TLS13010_DROPDOWN_OPTIONS.decorationType;
+  moneyTypeOptions = TLS13010_DROPDOWN_OPTIONS.moneyType;
+  checkTypeOptions = TLS13010_DROPDOWN_OPTIONS.checkType;
+  yesNoOptions = TLS13010_DROPDOWN_OPTIONS.yesNo;
+  meterTypeOptions = TLS13010_DROPDOWN_OPTIONS.meterType;
+  paytypeOptions = TLS13010_DROPDOWN_OPTIONS.paytype;
+  storeWayOptions = TLS13010_DROPDOWN_OPTIONS.storeWay;
+  invoiceTypeOptions = TLS13010_DROPDOWN_OPTIONS.invoiceType;
+  tltKindOptions = TLS13010_DROPDOWN_OPTIONS.tltKind;
+  openflagStatusOptions = TLS13010_DROPDOWN_OPTIONS.openflagStatus;
+  overallStatusOptions = TLS13010_DROPDOWN_OPTIONS.overallStatus;
+  depositTypeOptions = TLS13010_DROPDOWN_OPTIONS.depositType;
+  depositPaymentOptions = TLS13010_DROPDOWN_OPTIONS.depositPayment;
+  commissionCompTypeOptions = TLS13010_DROPDOWN_OPTIONS.commissionCompType;
+  businessTypeOptions = TLS13010_DROPDOWN_OPTIONS.businessType;
+  commCompTypeDropdown = TLS13010_DROPDOWN_OPTIONS.commCompType;
+  // API 來的選項 (保留原來的)
+  // businessTypeOptions: any[] = [];
   vendorOptions: any[] = [];
   locationOptions: any[] = [];
   contractStatusOptions: any[] = [];
   regionOptions: any[] = [];
-  buildingOptions: any[] = []; // 新增館別選項
+  buildingOptions: any[] = [];
   floorOptions: any[] = [];
   negotiatorOptions: any[] = [];
   organizationOptions: any[] = [];
   operationStatusOptions: any[] = [];
   commissionCalculationOptions: any[] = [];
   counterCategoryOptions: any[] = [];
-  decorationMethodOptions: any[] = [];
   commissionTypeOptions: any[] = [];
   settlementMethodOptions: any[] = [];
   paymentMethodOptions: any[] = [];
   cooperationMethodOptions: any[] = [];
-  invoiceTypeOptions: any[] = []; // 新增請款單據別選項
-  overallStatusOptions: any[] = []; // 新增超出部份處理方式選項
-  whetherOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
-
-  // 保證金相關選項 - 根據 enum 定義
-  depositPaymentOptions: any[] = [
-    { value: 1, label: '現金' },
-    { value: 2, label: '支票' },
-    { value: 3, label: '履約保證金' },
-  ];
 
   constructor(
     private businessTypeCodeService: BusinessTypeCodeService,
@@ -306,6 +287,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   }
 
   private loadDropdownOptions(): void {
+    // 只載入需要從 API 取得的選項
     this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
       this.businessTypeCodeOptions = data;
     });
@@ -318,77 +300,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
       this.locationOptions = data;
     });
 
-    this.contractStatusService.getContractStatuses().subscribe((data) => {
-      this.contractStatusOptions = data;
-    });
-
-    this.RegionService.getRegionOptions().subscribe((data) => {
-      this.regionOptions = data;
-    });
-
-    this.floorService.getFloors().subscribe((data) => {
-      this.floorOptions = data;
-    });
-
-    this.negotiatorService.getUserCode().subscribe((data) => {
-      this.negotiatorOptions = data;
-    });
-
-    this.organizationService.getOrganizationNumbers().subscribe((data) => {
-      this.organizationOptions = data;
-    });
-
-    this.operationStatusService.getOperationStatuses().subscribe((data) => {
-      this.operationStatusOptions = data;
-    });
-
-    this.commissionCalculationService.getCommissionCalculations().subscribe((data) => {
-      this.commissionCalculationOptions = data;
-    });
-
-    this.counterCategoryService.getCounterCategories().subscribe((data) => {
-      this.counterCategoryOptions = data;
-    });
-
-    this.decorationMethodService.getDecorationMethods().subscribe((data) => {
-      this.decorationMethodOptions = data;
-    });
-
-    this.commissionTypeService.getCommissionTypes().subscribe((data) => {
-      this.commissionTypeOptions = data;
-    });
-
-    this.settlementMethodService.getSettlementMethods().subscribe((data) => {
-      this.settlementMethodOptions = data;
-    });
-
-    this.paymentMethodService.getPaymentMethods().subscribe((data) => {
-      this.paymentMethodOptions = data;
-    });
-
-    this.cooperationMethodService.getCooperationMethods().subscribe((data) => {
-      this.cooperationMethodOptions = data;
-    });
-
-    this.whetherService.getWhetherOptions().subscribe((data) => {
-      this.whetherOptions = data;
-    });
-
-    this.businessTypeService.getBusinessTypes().subscribe((data) => {
-      this.businessTypeOptions = data;
-    });
-  }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
+    // ... 其他 API 相關的選項
   }
 
   // 主要的查詢方法 - 參考 SYSB800 的實作
@@ -408,9 +320,10 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
             if (this.data.length === 0) {
               console.log('查詢結果為空');
               this.messageService.infoBubble('查詢無資料');
-            } else {
-              this.messageService.successBubble(`查詢成功，共 ${this.data.length} 筆資料`);
             }
+            // else {
+            //   this.messageService.successBubble(`查詢成功，共 ${this.data.length} 筆資料`);
+            // }
           } else {
             console.error('API error:', response.Status, response.Message);
             this.messageService.errorBubble(`查詢失敗: ${response.Message || '未知錯誤'}`);

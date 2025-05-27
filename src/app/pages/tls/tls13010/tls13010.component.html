@@ -2,11 +2,6 @@
   <!-- 操作按鈕區域 -->
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button>
   </div>
   <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
     <!-- 查詢表單 - 保持風琴式展開 -->
@@ -206,8 +201,8 @@
               <app-calendar-range
                 calendarType="dateRange"
                 label="契約起始日(起)"
-                [startControl]="queryForm.controls.tlt_bdate_start_from"
-                [endControl]="queryForm.controls.tlt_bdate_start_to"
+                [startControl]="queryForm.controls.tlt_contract_bdate_from"
+                [endControl]="queryForm.controls.tlt_contract_bdate_to"
                 [submitted]="submitted"
               ></app-calendar-range>
             </div>
@@ -215,8 +210,8 @@
               <app-calendar-range
                 calendarType="dateRange"
                 label="契約起始日(迄)"
-                [startControl]="queryForm.controls.tlt_bdate_end_from"
-                [endControl]="queryForm.controls.tlt_bdate_end_to"
+                [startControl]="queryForm.controls.tlt_contract_bdate_from"
+                [endControl]="queryForm.controls.tlt_contract_bdate_to"
                 [submitted]="submitted"
               ></app-calendar-range>
             </div>
@@ -224,8 +219,8 @@
               <app-calendar-range
                 calendarType="dateRange"
                 label="契約終止日(起)"
-                [startControl]="queryForm.controls.tlt_edate_start_from"
-                [endControl]="queryForm.controls.tlt_edate_start_to"
+                [startControl]="queryForm.controls.tlt_contract_edate_from"
+                [endControl]="queryForm.controls.tlt_contract_edate_to"
                 [submitted]="submitted"
               ></app-calendar-range>
             </div>
@@ -233,8 +228,8 @@
               <app-calendar-range
                 calendarType="dateRange"
                 label="契約終止日(迄)"
-                [startControl]="queryForm.controls.tlt_edate_end_from"
-                [endControl]="queryForm.controls.tlt_edate_end_to"
+                [startControl]="queryForm.controls.tlt_contract_edate_from"
+                [endControl]="queryForm.controls.tlt_contract_edate_to"
                 [submitted]="submitted"
               ></app-calendar-range>
             </div>
@@ -308,7 +303,7 @@
               <app-multi-select
                 label="抽成額計算方式"
                 controlName="comm_comp_type"
-                [options]="commissionCalculationOptions"
+                [options]="commCompTypeDropdown"
                 optionLabel="label"
                 optionValue="value"
                 [control]="queryForm.controls.comm_comp_type"
@@ -319,7 +314,7 @@
               <app-multi-select
                 label="抽成別"
                 controlName="tlt_term_typeList"
-                [options]="commissionTypeOptions"
+                [options]="commissionCompTypeOptions"
                 optionLabel="label"
                 optionValue="value"
                 [control]="queryForm.controls.tlt_term_typeList"
@@ -385,7 +380,7 @@
               <app-multi-select
                 label="裝潢方式"
                 controlName="deco_typeList"
-                [options]="decorationMethodOptions"
+                [options]="decorationOptions"
                 optionLabel="label"
                 optionValue="value"
                 [control]="queryForm.controls.deco_typeList"
@@ -415,7 +410,7 @@
               <app-dropdown
                 label="是否開立業主發票"
                 controlName="rece_yn"
-                [options]="whetherOptions"
+                [options]="yesNoOptions"
                 optionLabel="label"
                 optionValue="value"
                 [control]="queryForm.controls.rece_yn"
@@ -426,7 +421,7 @@
               <app-dropdown
                 label="是否使用業主收銀機"
                 controlName="pos_yn"
-                [options]="whetherOptions"
+                [options]="yesNoOptions"
                 optionLabel="label"
                 optionValue="value"
                 [control]="queryForm.controls.pos_yn"
@@ -437,7 +432,7 @@
               <app-dropdown
                 label="是否為業主收現"
                 controlName="cash_yn"
-                [options]="whetherOptions"
+                [options]="yesNoOptions"
                 optionLabel="label"
                 optionValue="value"
                 [control]="queryForm.controls.cash_yn"
@@ -448,7 +443,7 @@
               <app-multi-select
                 label="是否抄表"
                 controlName="meter_typeList"
-                [options]="isMeterReadOptions"
+                [options]="meterTypeOptions"
                 optionLabel="label"
                 optionValue="value"
                 [control]="queryForm.controls.meter_typeList"
@@ -459,7 +454,7 @@
               <app-multi-select
                 label="有無保證金"
                 controlName="depositTypes"
-                [options]="isGuaranteedByNoteOptions"
+                [options]="depositTypeOptions"
                 optionLabel="label"
                 optionValue="value"
                 [control]="queryForm.controls.depositTypes"
