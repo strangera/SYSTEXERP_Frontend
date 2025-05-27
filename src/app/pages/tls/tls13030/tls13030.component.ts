@@ -33,7 +33,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     tpy_bdate_end: [null],
     tpy_edate_start: [null],
     tpy_edate_end: [null],
-    bus_type: ['', [Validators.maxLength(50)]],
+    bus_typeList: [[] as string[]],
     tlt_building: ['', [Validators.maxLength(1)]],
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
@@ -41,7 +41,6 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
-
   regionOptions: any[] = [];
   floorOptions: any[] = [];
   operationStatusOptions: any[] = [];
@@ -64,41 +63,31 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     { field: 'area_desc', header: '區域', visible: true },
     { field: 'bus_type', header: '大分類', visible: true },
     {
-      field: 'tlt_period',
-      header: '合約起迄日',
+      field: 'tlt_bdate',
+      header: '合約起日',
       visible: true,
-      format: (_: any, rowData: any) => {
-        const formatDate = (raw: string): string => {
-          if (!raw) return '';
-          const date = new Date(raw);
-          if (isNaN(date.getTime())) return ''; // 無效日期
-          const yyyy = date.getFullYear().toString();
-          const mm = (date.getMonth() + 1).toString().padStart(2, '0');
-          const dd = date.getDate().toString().padStart(2, '0');
-          return `${yyyy}${mm}${dd}`;
-        };
-
-        const start = formatDate(rowData.tlt_bdate);
-        const end = formatDate(rowData.tlt_edate);
-
-        if (start && end) return `${start} ~ ${end}`;
-        return start || end || '';
-      }
+      format: (value: string) => this.formatFullDate(value),
     },
+    {
+      field: 'tlt_edate',
+      header: '合約迄日',
+      visible: true,
+      format: (value: string) => this.formatFullDate(value),
+    },
+
     { field: 'cap_type', header: '扣款類別', visible: true },
     { field: 'CAP_Name', header: '扣款項目名稱', visible: true },
     {
-      field: 'tlt_period',
-      header: '扣款起迄日',
+      field: 'tpy_bdate',
+      header: '扣款起日',
       visible: true,
-      format: (_: any, rowData: any) => {
-        const start = rowData.tpy_bdate ?? '';
-        const end = rowData.tpy_edate ?? '';
-        if (start && end) return `${start} ~ ${end}`;
-        if (start) return start;
-        if (end) return end;
-        return '';
-      }
+      format: (value: string) => this.formatYYYYMM(value),
+    },
+    {
+      field: 'tpy_edate',
+      header: '扣款迄日',
+      visible: true,
+      format: (value: string) => this.formatYYYYMM(value),
     },
 
 
@@ -108,7 +97,26 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     { field: 'tpy_amount', header: '每月扣款金額', visible: true },
     { field: 'tpy_rate', header: '費用計算的比率', visible: true },
   ];
+  // ✅ 合約日格式（YYYY/MM/DD）
+  formatFullDate(raw: string): string {
+    if (!raw) return '';
+    const date = new Date(raw);
+    if (!isNaN(date.getTime())) {
+      const y = date.getFullYear();
+      const m = (date.getMonth() + 1).toString().padStart(2, '0');
+      const d = date.getDate().toString().padStart(2, '0');
+      return `${y}/${m}/${d}`;
+    }
+    return raw;
+  }
 
+  // ✅ 扣款日格式（YYYY/MM）
+  formatYYYYMM(raw: string): string {
+    if (!raw || raw.length !== 6) return '';
+    const year = raw.substring(0, 4);
+    const month = raw.substring(4, 6);
+    return `${year}/${month}`;
+  }
   constructor(
     private RegionService: RegionService,
     private floorService: FloorService,
@@ -123,7 +131,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS13030', '', this.queryForm, (f) => this.onSubmit(f));
+    this.initializePage('TLS13030', '', this.queryForm);
     this.operationStatusService.getOperationStatuses().subscribe(data => this.operationStatusOptions = data);
     this.bigCategoryCodeService.getSystemTypes().subscribe(data => this.bus_typeOptions = data);
     this.deductionService.getDeductionCategories().subscribe(data => this.deductionCategoryOptions = data);
@@ -146,39 +154,83 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   }
 
   onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const formValue = { ...form.value };
+    console.log('送出的查詢條件：', form.value);
 
-      for (const key in formValue) {
+    this.submitted = true;
+    const formValue = { ...form.value };
+    for (const key in formValue) {
+      if (typeof formValue[key] === 'string') {
+        formValue[key] = formValue[key].trim(); // 去除空白
         if (formValue[key] === '') {
           formValue[key] = null;
         }
       }
+    }
 
+    // ✅ 將空字串轉成 null
+    for (const key in formValue) {
+      if (formValue[key] === '') formValue[key] = null;
+    }
 
-      console.log('🔍 查詢發送參數:', formValue);
+    // ✅ 映射欄位名稱
+    formValue.tlt_floorList = formValue.floor_noList;
+    formValue.area_noList = formValue.area_noList;
 
-      this.TLS13030Service.queryTLS13030(formValue).subscribe({
+    // ✅ 明確轉型陣列欄位
+    const listFieldsToConvert = [
+      'tlt_idList',
+      'tlt_term_typeList',
+      'cag_barcodeList',
+      'bus_typeList',
+      'tlt_openflagList',
+      'org_idList',
+      'tlt_floorList',
+      'area_noList',
+      'floor_noList',
+      'cap_typeList',
+      'cap_itemList'
+    ];
+    for (const key of listFieldsToConvert) {
+      if (Array.isArray(formValue[key])) {
+        formValue[key] = formValue[key].map((v: any) => String(v));
+      }
+    }
+
+    // ✅ dropdown 欄位處理
+    if (formValue.tlt_building && typeof formValue.tlt_building === 'object') {
+      formValue.tlt_building = formValue.tlt_building?.value;
+    }
+
+    // ✅ 顯示 loading
+    this.loading = true;
+    this.messageService.blockUi();
+
+    this.TLS13030Service.queryTLS13030(formValue)
+      .subscribe({
         next: (res) => {
           if (res.Status === '0000') {
             this.data = res.Data || [];
             this.totalRecords = res.TotalCount || this.data.length;
-            this.queryStateService.setQueryState(this.ProgNo, formValue);
             this.messageService.successBubble('查詢成功');
+            this.queryStateService.setQueryState(this.ProgNo, formValue);
           } else {
             this.messageService.errorBubble('查詢失敗');
           }
         },
         error: () => {
           this.messageService.errorBubble('查詢錯誤');
+          // 🔴 錯誤時也要清除 loading 狀態
+          this.loading = false;
+          this.messageService.unblockUi();
         },
         complete: () => {
           this.loading = false;
           this.messageService.unblockUi();
-        },
+        }
       });
-    });
   }
+
+
 
   onDelete(selectedItems: any[]): void {
     if (!selectedItems.length) return;
