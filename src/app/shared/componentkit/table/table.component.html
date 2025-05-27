@@ -61,7 +61,7 @@
         <p-button
           [icon]="IsPrint ? 'pi pi-file' : 'pi pi-times'"
           [rounded]="true"
-          *ngIf="data.length > 0"
+          *ngIf="showReportMode && data.length > 0"
           (click)="toggleVisibility()"
           [pTooltip]="IsPrint ? '報表模式' : '關閉報表模式'"
           tooltipPosition="top"
@@ -104,7 +104,7 @@
           [disabled]="insertDisabled || !canPerformAction('20')"
         />
         <p-button
-          *ngIf="IsPrint && showCheckBox && !rowEditing"
+          *ngIf="IsPrint && showDelete && !rowEditing"
           (click)="deleteRow(selectedItems)"
           pTooltip="刪除"
           tooltipPosition="top"
