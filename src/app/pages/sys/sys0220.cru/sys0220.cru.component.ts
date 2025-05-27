@@ -11,8 +11,8 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
 
 export interface RoleOption {
   ID: string; // ID
-  role_No: string; // 使用者代號
-  role_Name: string; // 角色名稱
+  role_no: string; // 使用者代號
+  role_name: string; // 角色名稱
   description: string; // 角色註記
   Match: boolean; // 是否配對
 }
@@ -102,7 +102,7 @@ export class SYS0220CRUComponent extends BasicCruPageComponent<tblUser>
 
           // 初始化被選中的資料（Match 為 true）
           this.selectedRoleUserData = this.roleUserData.filter(user => user.Match === true);
-          console.log('result', this.selectedRoleUserData);
+          // console.log('result', this.selectedRoleUserData);
 
         } else {
           console.error('API error:', response.Status, response.Message);
@@ -155,14 +155,14 @@ export class SYS0220CRUComponent extends BasicCruPageComponent<tblUser>
             if (this.dataForm.get('user_No')?.value !== '' || null) {
               const requestBody = {
                 User_No: this.dataForm.get('user_No')?.value,
-                RoleList: this.selectedRoleUserData.map(item => item.ID),
+                RoleNoList: this.selectedRoleUserData.map(item => item.role_no),
               };
 
               console.log('更新的請求內容', requestBody);
-              // this.sys0220Service.updateUserRoles(requestBody).subscribe(() => {
-              //   this.messageService.successBubble('更新成功');
-              //   this.onCancel(); // 更新成功後返回查詢頁面
-              // });
+              this.sys0220Service.updateUserRoles(requestBody).subscribe(() => {
+                this.messageService.successBubble('更新成功');
+                this.onCancel(); // 更新成功後返回查詢頁面
+              });
             }
           }
           break;
