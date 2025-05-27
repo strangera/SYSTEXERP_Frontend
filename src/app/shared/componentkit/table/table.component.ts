@@ -92,6 +92,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>(); // Lazy 加載事件
   // 其他
   @Input() emptyMessage = '查無資料';                // table 無資料時顯示文字
+
+  @Input() showReportMode = true;                // 是否顯示報表模式切換按鈕
+  @Input() showDelete = true;                    // 是否顯示刪除按鈕
   // 權限
   private ngUnsubscribe = new Subject<void>();
   public funInfo: FunsrightInfo | undefined;

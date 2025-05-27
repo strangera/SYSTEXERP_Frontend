@@ -1,23 +1,21 @@
+import { Sys0230Service } from './../../../service/API/sys/sys0230.service';
 import { Component, OnInit } from '@angular/core';
 import {
-  FormArray,
-  FormBuilder,
-  FormControl,
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService } from '@ngx-translate/core';
-import { TreeNode } from 'primeng/api';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { apiOption, option, SYS1000, Sysb400m, tblUser } from '../../../shared/models/sys/sysb000.module';
-import { Sys0110Service } from '../../../service/API/sys/sys0110.service';
-import { Sysb400Service } from '../../../service/API/sys/sysb400.service';
-import { EncryptionService } from '../../../shared/service/encryption.service';
-import { UserInfo } from '../../base/changepsw/changepsw.component';
+import { apiOption, option, tblUser } from '../../../shared/models/sys/sysb000.module';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+
+export interface RoleOption {
+  ID: string; // ID
+  role_No: string; // 使用者代號
+  role_Name: string; // 角色名稱
+  description: string; // 角色註記
+  Match: boolean; // 是否配對
+}
 
 @Component({
   selector: 'app-sys0220-cru',
@@ -49,59 +47,123 @@ export class SYS0220CRUComponent extends BasicCruPageComponent<tblUser>
     USER_PwdExpireDate: [null], // 密碼到期日 YYYY/MM/DD HH:NN:SS，若使用者登入系統的時間大於此日期，則需強制使用者變更密碼
 
     last_Login: [null], // 最近一次登入
+
+    ...createPaginationConfig([{ field: 'user_No', order: 1 }]), // 分頁和排序參數
   });
 
   // 用戶資訊
-  userInfo: UserInfo | null = null;
+  userInfo: tblUser | null = null;
 
   // 下拉選單選項
   titleOptions: apiOption[] = [];
   SYS3100_Options: apiOption[] = [];
   userStatusOptions: option[] = [];
   userTypeOptions: option[] = [];
+  whetherOptions: any[] = [
+    { value: true, label: '是' },
+    { value: false, label: '否' },
+  ];
+
+  roleUserData: RoleOption[] = [];
+  // ----------------------------------------------------------------
+  roleUserColumns: Column[] = [
+    {
+      field: 'Match', header: '是否配對', visible: true,
+      format: (value: boolean) =>
+        this.whetherOptions.find((option) => option.value === value)?.label ||
+        value,
+    },
+    { field: 'role_no', header: '角色代號', visible: true },
+    { field: 'role_name', header: '角色名稱', visible: true },
+    { field: 'description', header: '角色註記', visible: true },
+
+  ]
+  selectedRoleUserData: RoleOption[] = []; // 選取的使用者資料
 
   constructor(
-    private sys0110Service: Sys0110Service,
-    private sysb400Service: Sysb400Service,
-    private encrypt: EncryptionService,
+    private sys0220Service: Sys0230Service, //這邊的api設定與SYS0220共用
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('SYS0220', this.dataForm);
-    console.log('取得資料', this.dataForm.value);
-    this.loadOptions();
+    this.loadOptions(this.dataForm.get('user_No')?.value ?? ''); // 載入選項
   }
 
   // ----------------------------------------------------------------
+  // 載入 角色之使用者
+  loadOptions(userNo: string) {
+    console.log('需求:', userNo);
+    this.sys0220Service.queryUserRoles({ User_No: userNo }).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.roleUserData = response.Data || [];
 
+          // 初始化被選中的資料（Match 為 true）
+          this.selectedRoleUserData = this.roleUserData.filter(user => user.Match === true);
+          console.log('result', this.selectedRoleUserData);
+
+        } else {
+          console.error('API error:', response.Status, response.Message);
+        }
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+    });
+  }
+
+  // ----------------------------------------------------------------
+  // 點擊時變更 match狀態
+  onUserSelectionChange(selectedItems: RoleOption[]) {
+    // 先記錄目前選取的 ID
+    const selectedIds = selectedItems.map(item => item.ID);
+
+    // loop 所有 roleUserData 來更新 Match 狀態
+    this.roleUserData.forEach(user => {
+      // 如果該使用者目前是被選取中的，就設為 true
+      // 如果之前是 true 但現在沒被選，就變回 false
+      user.Match = selectedIds.includes(user.ID) ? true : false;
+    });
+
+    this.selectedRoleUserData = selectedItems;
+  }
+
+  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
     // 修改：使用父類的 handleSubmit 方法
     this.handleSubmit(frm, () => {
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            // 先將user_Password加密
-            frm.value.user_Password = this.encrypt.getPassword(
-              frm.value.user_No,
-              frm.value.user_Password
-            );
-            console.log('userInfo', this.userInfo);
-            console.log('frm.value.user_Password', frm.value.user_Password);
-            console.log('新增', frm.value);
-            this.sys0110Service.createUser(frm.value).subscribe(() => {
-              this.messageService.successBubble('新增成功');
-              this.onCancel(); // 新增成功後返回查詢頁面
-            });
+            // this.sys0210Service.createRole(frm.value).subscribe(() => {
+            //   this.messageService.successBubble('新增成功');
+            //   this.onCancel(); // 新增成功後返回查詢頁面
+            // });
           }
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            this.sys0110Service.updateUser(frm.value).subscribe(() => {
-              this.messageService.successBubble('更新成功');
-              this.onCancel(); // 更新成功後返回查詢頁面
-            });
+            // console.log('User資料', frm.value);
+            // console.log('變更後的清單', { RoleList: this.selectedRoleUserData.map(item => item.User_No) });
+            console.log('frm', frm.value);
+            if (this.dataForm.get('user_No')?.value !== '' || null) {
+              const requestBody = {
+                User_No: this.dataForm.get('user_No')?.value,
+                RoleList: this.selectedRoleUserData.map(item => item.ID),
+              };
+
+              console.log('更新的請求內容', requestBody);
+              // this.sys0220Service.updateUserRoles(requestBody).subscribe(() => {
+              //   this.messageService.successBubble('更新成功');
+              //   this.onCancel(); // 更新成功後返回查詢頁面
+              // });
+            }
           }
           break;
       }
@@ -114,66 +176,5 @@ export class SYS0220CRUComponent extends BasicCruPageComponent<tblUser>
 
   onClearForm() {
     this.dataForm.reset(); // 重置表單
-  }
-
-  // 加載下拉選項
-  loadOptions() {
-    // *職稱代碼-SYS1000
-    this.sys0110Service.queryAllSystemCode({}).subscribe((response) => {
-      console.log('回應', response);
-      this.titleOptions = response.Data.map((item: SYS1000) => ({
-        No: item.SYS_Code,
-        Name: item.SYS_Name,
-        Label: item.SYS_Type + '-' + item.SYS_Code + '-' + item.SYS_Name,
-      }));
-    });
-
-    //建立組織下拉清單(SYS3100) 查詢全部
-    const query_org = {
-      level_id: '',
-      org_id: '',
-      org_name: '',
-
-      //分頁查詢
-      pageSize: 1000,
-      pageIndex: 0,
-      SortBy: [{ field: 'org_id', order: 1 }],
-    };
-
-    this.sysb400Service.querySYSB400(query_org).subscribe((response) => {
-      this.SYS3100_Options = response.Data.map((item: Sysb400m) => ({
-        No: item.org_id,
-        Name: item.org_name,
-        Label: item.org_id + '-' + item.org_name,
-      }));
-    });
-
-    this.userTypeOptions = [
-      // 使用者型態 1=公司內部人員(default) 2=專櫃人員 3=其他
-      { value: '1', label: '公司內部人員' },
-      { value: '2', label: '專櫃人員' },
-      { value: '3', label: '其他' },
-    ];
-
-    //確認新增/編輯狀態
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          this.userStatusOptions = [
-            // 1=有效 2=停用
-            { value: '1', label: '有效' },
-          ];
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          this.userStatusOptions = [
-            // 1=有效 2=停用
-            { value: '1', label: '有效' },
-            { value: '2', label: '停用' },
-          ];
-        }
-        break;
-    }
   }
 }
