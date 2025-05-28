@@ -8,27 +8,51 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
-            label="角色代碼"
+            label="來源角色代碼"
             controlName="Role_No"
             [control]="dataForm.controls.Role_No"
             [submitted]="submitted"
+            [disabled]="true"
           ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
-            label="角色名稱"
+            label="來源角色名稱"
+            controlName="Role_Name"
+            [control]="dataForm.controls.Role_Name"
+            [submitted]="submitted"
+            [disabled]="true"
+          ></app-input-text>
+        </div>
+      </div>
+
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="目標角色代碼"
+            controlName="Role_No"
+            [control]="dataForm.controls.Role_No"
+            [submitted]="submitted"
+            [disabled]="true"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="目標角色名稱"
             controlName="Role_Name"
             [control]="dataForm.controls.Role_Name"
             [submitted]="submitted"
           ></app-input-text>
         </div>
+      </div>
+
+      <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="角色註記"
-            controlName="Description"
-            [control]="dataForm.controls.Description"
-            [submitted]="submitted"
-          ></app-input-text>
+          <p-checkbox
+            label="X是否複製使用者權限"
+            formControlName="showScrapData"
+            [binary]="true"
+          ></p-checkbox>
         </div>
       </div>
 
@@ -40,8 +64,8 @@
             [columns]="roleUserColumns"
             [showCheckBox]="true"
             [showManage]="false"
-            dataKey="ID"
-            [multiSortMeta]="[{ field: 'Match', order: -1 }]"
+            dataKey="id"
+            [multiSortMeta]="[{ field: 'partialSelected', order: -1 }]"
             [selectedItems]="selectedRoleUserData"
             (selectionChange)="onUserSelectionChange($event)"
             [loading]="loading"
