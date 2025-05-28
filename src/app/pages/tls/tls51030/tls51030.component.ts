@@ -25,6 +25,7 @@ interface CategoryItem {
   UPD_USR_Name: string;
   CAT_LDisplay?: string;
   CAT_MDisplay?: string;
+  CanDel: boolean; // 是否可以刪除
 }
 @Component({
   selector: 'app-tls51030',
@@ -178,5 +179,9 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
     });
 
     this.selectedItems = [];
+  }
+
+  isRowSelectable(rowData: CategoryItem): boolean {
+    return rowData.CanDel
   }
 }

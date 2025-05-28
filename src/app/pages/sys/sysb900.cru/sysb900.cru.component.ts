@@ -17,6 +17,7 @@ interface CategoryItem {
   UPD_Date: string;
   UPD_USR_No: string;
   UPD_USR_Name: string;
+  CanDel?: boolean; // 新增 CanDel 屬性
 }
 
 @Component({
@@ -33,6 +34,14 @@ export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> imp
     bus_type: ['', [Validators.required]], // 所屬大分類
     bus_class_desc: ['',], // 備註
   });
+
+  // 修正：判斷是否可以編輯大分類代碼
+  // CanDel = true：可刪除項目（返回 false）
+  // CanDel = false：不可刪除項目（返回 true）
+  get isDisabled(): boolean {
+    return this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false;
+  }
+
   option: any[] = [];
 
   constructor(
@@ -47,6 +56,8 @@ export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> imp
     // 初始化
     // this.ProgNo = '410008';
     this.initializePage('SYSB900', this.dataForm);
+    // 新增：在初始化後立即設置大分類代碼的禁用狀態
+    this.updateDisabledState();
     this.Sysb800DropdownService.getSystemTypes().subscribe({
       next: (response) => {
         this.option = response;
@@ -57,15 +68,43 @@ export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> imp
       }
     });
   }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
+
+  // 修正：更新大分類代碼欄位的禁用狀態
+  private updateDisabledState(): void {
+    const field = this.dataForm.get('bus_class');
+    if (field) {
+      // 編輯模式且 CanDel = false 時才禁用
+      if (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false) {
+        field.disable();
+      } else {
+        field.enable();
+      }
+    }
   }
 
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
+  // 新增：自定義清空方法，保留大分類代碼
+  clearFormExcept(): void {
+    const control = this.dataForm.get('bus_class');
+    const isDisabled = control?.disabled || false;  // 新增：檢查是否被禁用
+    const current = control?.value;
+
+    this.dataForm.reset();
+
+    // 修正：只有在欄位被禁用且有值時才恢復
+    if (isDisabled && current) {
+      this.dataForm.patchValue({
+        bus_class: current,
+        id: 0
+      });
+    } else {
+      this.dataForm.patchValue({
+        id: 0
+      });
+    }
+
+    this.updateDisabledState();
   }
+
 
   onSubmit(frm: FormGroup) {
     // 修改：使用父類的 handleSubmit 方法
@@ -85,6 +124,7 @@ export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> imp
             // 待實現：調用 API 進行更新
             this.apiService.updateSYSB900(frm.value).subscribe((response: any) => {
               this.messageService.successBubble('更新成功');
+              this.onCancel();
             });
           }
           break;

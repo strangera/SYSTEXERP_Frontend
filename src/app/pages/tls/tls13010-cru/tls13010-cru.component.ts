@@ -1,10 +1,7 @@
 import { LocationCodeService } from './../../../service/basic/locationcode.service';
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BaseTypeService } from '../../../service/basic/base-type-service.service';
 import { ExcessHandlingMethodService } from '../../../service/basic/excess-handling-method.service';
 import { CommissionTypeService } from '../../../service/basic/commission-type.service';
@@ -26,6 +23,7 @@ import { ProductCategoryService } from '../../../service/basic/product-category.
 import { SmallCategoryService } from '../../../service/basic/small-category.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ContractFlowService } from '../../../service/api/tls/tls13010contract-flow/contract-flow.service';
 
 interface CategoryItem {
   id: number;
@@ -52,6 +50,9 @@ const storageKey = 'SYSB920';
   styleUrls: ['./tls13010-cru.component.scss'],
 })
 export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
+  // 加入這一行
+  private originalData: any = null;
+
   data: any[] = [
     {
       isNew: false,
@@ -100,6 +101,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   ];
 
   dataForm = this.formBuilder.group({
+    // 加入這兩行在最前面
+    talent_id: [''],
+    apply_no: [''],
+
     recruitmentCode: [{ value: '自動給號', disabled: true }],
     counterNumber: [{ value: '契約書審核後才給號', disabled: true }],
     vendorCode: [1, Validators.required],
@@ -206,6 +211,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   ];
 
   constructor(
+    private contractFlowService: ContractFlowService, // 加入這個
     private validationService: ValidationService,
     private counterCategoryService: CounterCategoryService,
     private decorationStyleService: DecorationStyleService,
@@ -246,6 +252,32 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     if (state && state['rowdata'] && state['rowdata']['recruitmentCode']) {
       this.dataForm.controls['recruitmentCode'].setValue(state['rowdata']['recruitmentCode']);
     }
+    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.fetchDropdownOptions();
+
+    // // 從導航狀態取得資料
+    // const navigation = this.router.getCurrentNavigation();
+    // const state = navigation?.extras.state as { [key: string]: any };
+
+    if (state && state['rowdata']) {
+      this.originalData = state['rowdata'];
+      console.log('從查詢頁面帶來的資料:', this.originalData);
+
+      // 檢查有沒有暫存資料
+      const tempData = this.contractFlowService.getStep1Data(this.originalData);
+      console.log('檢查暫存資料:', tempData);
+
+      if (tempData) {
+        console.log('找到暫存資料，使用暫存的');
+        this.dataForm.patchValue(tempData);
+      } else {
+        console.log('沒有暫存資料，使用查詢結果');
+        this.loadDataFromQueryResult(this.originalData);
+      }
+    } else {
+      console.log('沒有從查詢頁面帶來資料');
+    }
+
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.fetchDropdownOptions();
   }
@@ -389,5 +421,23 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   calculatePerformanceShare(): void {
     console.log('Calculating performance share based on business area');
+  }
+
+  // 載入查詢結果到表單
+  private loadDataFromQueryResult(rowData: any) {
+    console.log('載入查詢結果到表單:', rowData);
+
+    this.dataForm.patchValue({
+      // 隱藏的ID欄位
+      talent_id: rowData.talent_id,
+      apply_no: rowData.apply_no,
+
+      // 顯示的欄位 - 根據你的查詢結果對應
+      recruitmentCode: rowData.apply_no,
+      brandName: rowData.tlt_name,
+      counterNumber: rowData.tlt_no,
+      vendorName: rowData.VEN_Name,
+      // 你可以根據需要對應更多欄位
+    });
   }
 }

@@ -113,6 +113,7 @@ export class SYSB920CRUComponent extends BasicCruPageComponent<CategoryItem> imp
             // 待實現：調用 API 進行更新
             this.apiService.updateSYSB920(frm.value).subscribe((response: any) => {
               this.messageService.successBubble('更新成功');
+              this.onCancel();
             });
           }
           break;
