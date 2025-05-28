@@ -7,6 +7,8 @@ import { environment } from '../../../../environments/environment';
   providedIn: 'root'
 })
 export class Sys0210Service {
+  // Role 角色相關功能的 WebAPI 控制器 角色管理等功能。
+
   apiUrl: string = environment.ApiUrl + '/Role';
 
   constructor(private http: HttpClient) { }
@@ -29,5 +31,17 @@ export class Sys0210Service {
   // 刪除 tblRole 資料表
   deleteRole(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/DeleteRole`, body);
+  }
+
+  // ---以下為 4-2-2-3角色複製 使用---
+
+  // 查詢 角色權限
+  queryRolePrivileges(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryRolePrivileges`, body);
+  }
+
+  // 複製 角色權限
+  copyRoleSettings(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/copyRoleSettings`, body);
   }
 }

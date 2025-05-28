@@ -23,11 +23,11 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser>
   implements OnInit {
   // 表單
   dataForm = this.formBuilder.nonNullable.group({
-    ID: [], //ID
+    id: [], //ID
     user_No: ['', [Validators.required, Validators.maxLength(10)]], // 使用者編號
     user_Name: ['', [Validators.required, Validators.maxLength(20)]], // 使用者名稱
     user_Password: [''], // 使用者密碼-加密
-    title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000
+    title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000 (就是職位)
     org_ID: ['', Validators.maxLength(20)], // 組織編號 (SYSB400_SYS3100)
 
     str_dateStart: [null], // 帳號有效開始日期
@@ -35,13 +35,13 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser>
     status: ['', [Validators.required, Validators.maxLength(1)]], // 使用者狀態 1=有效 2=停用
     user_type: ['', [Validators.required, Validators.maxLength(1)]], // 使用者型態 1=公司內部人員(default) 2=專櫃人員 3=其他
 
-    user_email: ['', Validators.maxLength(100)], // 使用者email帳號
+    user_email: ['', [Validators.email, Validators.maxLength(100)]], // 使用者email帳號
     TLT_No: ['', Validators.maxLength(12)], // 所屬專櫃編號
     remarks: ['', Validators.maxLength(100)], // 備註
     user_priority: ['', Validators.maxLength(1)], // 使用者等級
-    USER_PwdExpireDate: [null], // 密碼到期日 YYYY/MM/DD HH:NN:SS，若使用者登入系統的時間大於此日期，則需強制使用者變更密碼
+    // USER_PwdExpireDate: [null], // 密碼到期日 YYYY/MM/DD HH:NN:SS，若使用者登入系統的時間大於此日期，則需強制使用者變更密碼
 
-    last_Login: [null], // 最近一次登入
+    // last_Login: [null], // 最近一次登入
   });
 
   // 用戶資訊
@@ -91,6 +91,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser>
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
+            // console.log('編輯', frm.value);
             this.sys0110Service.updateUser(frm.value).subscribe(() => {
               this.messageService.successBubble('更新成功');
               this.onCancel(); // 更新成功後返回查詢頁面
