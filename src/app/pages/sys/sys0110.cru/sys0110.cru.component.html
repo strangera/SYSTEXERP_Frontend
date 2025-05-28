@@ -26,7 +26,7 @@
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
-            label="使用者密碼-加密"
+            label="使用者密碼"
             controlName="user_Password"
             [control]="dataForm.controls.user_Password"
             [submitted]="submitted"
@@ -36,20 +36,6 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
-            class="col-12 md:col-6 lg:col-5"
-            label="職稱代碼"
-            controlName="title"
-            [options]="titleOptions"
-            optionLabel="Label"
-            optionValue="No"
-            [control]="dataForm.controls.title"
-            [submitted]="submitted"
-          />
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-5"
             label="組織編號"
             controlName="org_ID"
             [options]="SYS3100_Options"
@@ -59,31 +45,28 @@
             [submitted]="submitted"
           />
         </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="職位"
+            controlName="title"
+            [options]="titleOptions"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.title"
+            [submitted]="submitted"
+          />
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar-range-quick
+            label="帳號有效日期"
+            [startControl]="dataForm.controls.str_dateStart"
+            [endControl]="dataForm.controls.str_dateEnd"
+            [submitted]="submitted"
+          />
+        </div>
       </div>
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <!-- <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="帳號有效起始日期"
-                        [startControl]="dataForm.controls.str_dateStart" [endControl]="dataForm.controls.str_dateEnd"
-                        [submitted]="submitted" /> -->
-          <app-calendar
-            calendarType="dateOne"
-            class="col-12 md:col-6 lg:col-5"
-            label="帳號有效起始日期"
-            [control]="dataForm.controls.str_dateStart"
-            controlName="str_dateStart"
-            [submitted]="submitted"
-          />
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            calendarType="dateOne"
-            class="col-12 md:col-6 lg:col-5"
-            label="帳號有效終止日期"
-            [control]="dataForm.controls.str_dateEnd"
-            controlName="str_dateEnd"
-            [submitted]="submitted"
-          />
-        </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="使用者狀態"
@@ -106,11 +89,28 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="使用者等級"
+            controlName="user_priority"
+            [control]="dataForm.controls.user_priority"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
-            label="使用者email帳號"
+            label="備註"
+            controlName="remarks"
+            [control]="dataForm.controls.remarks"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="電子信箱"
             controlName="user_email"
             [control]="dataForm.controls.user_email"
             [submitted]="submitted"
@@ -124,46 +124,6 @@
             [control]="dataForm.controls.TLT_No"
             [submitted]="submitted"
           ></app-input-text>
-        </div>
-
-        <app-editor-text
-          class="col-12"
-          label="備註"
-          controlName="remarks"
-          [control]="dataForm.controls.remarks"
-          [submitted]="submitted"
-        />
-      </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="使用者等級"
-            controlName="user_priority"
-            [control]="dataForm.controls.user_priority"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            calendarType="dateOne"
-            class="col-12 md:col-6 lg:col-5"
-            label="密碼到期日"
-            [control]="dataForm.controls.USER_PwdExpireDate"
-            controlName="USER_PwdExpireDate"
-            [submitted]="submitted"
-          />
-        </div>
-      </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            calendarType="dateTimeOne"
-            class="col-12 md:col-6 lg:col-5"
-            label="最近一次登入"
-            [control]="dataForm.controls.last_Login"
-            controlName="last_Login"
-            [submitted]="submitted"
-          />
         </div>
       </div>
       <div
