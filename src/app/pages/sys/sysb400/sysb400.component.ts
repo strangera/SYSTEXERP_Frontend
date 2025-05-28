@@ -40,24 +40,40 @@ export class SYSB400Component
     { field: 'org_name', header: '組織名稱', visible: true },
     {
       field: 'level_id',
-      header: '組織階層代碼/名稱',
+      header: '組織階層代碼',
       visible: true,
       format: (value: string) =>
-        this.upgroup_Options.find((option) => option.No === value)?.Label ||
+        this.upgroup_Options.find((option) => option.No === value)?.No ||
         value,
     },
     {
-      field: 'p_org_id', header: '上層組織代碼', visible: true,
+      field: 'level_name',
+      header: '組織階層名稱',
+      visible: true,
+      format: (value: string) =>
+        this.upgroup_Options.find((option) => option.No === value)?.Name ||
+        value,
+    },
+    {
+      field: 'p_org_id', header: '上層組織代碼/名稱', visible: true,
       format: (value: string) =>
         this.org_Option.find((option) => option.No === value)?.Label ||
         value,
     },
     {
       field: 'p_level_id',
-      header: '上層組織階層代碼/名稱',
+      header: '上層組織階層代碼',
       visible: true,
       format: (value: string) =>
-        this.upgroup_Options.find((option) => option.No === value)?.Label ||
+        this.upgroup_Options.find((option) => option.No === value)?.No ||
+        value,
+    },
+    {
+      field: 'p_level_name',
+      header: '上層組織階層名稱',
+      visible: true,
+      format: (value: string) =>
+        this.upgroup_Options.find((option) => option.No === value)?.Name ||
         value,
     },
     {
