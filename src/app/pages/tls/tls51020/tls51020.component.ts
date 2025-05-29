@@ -34,7 +34,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
   queryForm = this.formBuilder.nonNullable.group({
     CAT_MNo: ['', [Validators.maxLength(3), this.validationService.numberValidator]], // 中分類代碼
     CAT_MName: ['', [Validators.maxLength(32)]], // 中分類名稱
-    CAT_LNo: [''], // 大分類代碼 / 名稱
+    CAT_LNo: [[] as string[]],  //大分類代碼
     // CAT_MRemark: [,], // 說明
     ...createPaginationConfig([{ field: 'CAT_MNo', order: 1 }]), // 分頁和排序參數
   });
@@ -77,13 +77,27 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
       }
     });
   }
-
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      this.apiService.queryTLS51020(frm.value).subscribe({
+      // 處理多選大分類代碼的查詢參數
+      const queryParams = { ...frm.value };
+
+      // 處理多選大分類代碼陣列
+      if (queryParams.CAT_LNo && Array.isArray(queryParams.CAT_LNo)) {
+        // 如果是空陣列，根據後端需求處理
+        if (queryParams.CAT_LNo.length === 0) {
+          // 選擇以下其中一種處理方式（根據您的後端 API 需求）：
+          queryParams.CAT_LNo = null; // 設為 null
+          // delete queryParams.CAT_LNo; // 或刪除參數
+        }
+        // 如果有值，保持陣列格式不變
+      }
+
+      console.log('查詢參數:', queryParams); // 除錯用，上線時可移除
+
+      this.apiService.queryTLS51020(queryParams).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
-            // this.data = response.Data || [];
             this.data = response.Data.map((item: CategoryItem) => ({
               ...item,
               CAT_LDisplay: `${item.CAT_LNo || ''} - ${item.CAT_LName || ''}`
@@ -108,6 +122,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
       });
     });
   }
+
 
   onDelete(data: CategoryItem | CategoryItem[]): void {
     const items = Array.isArray(data) ? data : [data];

@@ -1,3 +1,5 @@
+// tls51010-cru.component.ts 修改版本
+
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -5,7 +7,6 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
-// 新增：定義數據接口
 interface CategoryItem {
   id: number;
   CAT_LNo: string;
@@ -13,9 +14,9 @@ interface CategoryItem {
   CAT_LRemark: string | null;
   CRT_USR_No: string | "";
   CRT_USR_Name: string | "";
+  CanDel?: boolean; // 新增 CanDel 屬性
 }
 
-// 2.5.1.1 大分類維護作業 CRU
 @Component({
   selector: 'app-tls51010-cru',
   templateUrl: './tls51010-cru.component.html',
@@ -23,13 +24,21 @@ interface CategoryItem {
 })
 export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    id: [0], // ID
-    CAT_LNo: ['', [Validators.required, Validators.maxLength(2), this.validationService.numberValidator]], // Input serial number
-    CAT_LName: ['', [Validators.required, Validators.maxLength(32)]], // Input Text
-    CAT_LRemark: [''], // editor text
+    id: [0],
+    CAT_LNo: ['', [Validators.required, Validators.maxLength(2), this.validationService.numberValidator]],
+    CAT_LName: ['', [Validators.required, Validators.maxLength(32)]],
+    CAT_LRemark: [''],
     CRT_USR_No: [''],
     CRT_USR_Name: ['']
   });
+
+  // 修正：判斷是否可以編輯大分類代碼
+  // CanDel = true：可刪除項目，大分類代碼可以編輯（返回 false）
+  // CanDel = false：不可刪除項目，大分類代碼不能編輯（返回 true）
+  get isCATLNoDisabled(): boolean {
+    return this.crudstatus === CRUDStatus.Read ||
+      (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false);
+  }
 
   constructor(
     private validationService: ValidationService,
@@ -40,29 +49,66 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   ngOnInit(): void {
     this.initializePage('TLS51010', this.dataForm);
+
+    // 新增：在初始化後立即設置大分類代碼的禁用狀態
+    this.updateCATLNoDisabledState();
   }
 
+  // 修正：更新大分類代碼欄位的禁用狀態
+  private updateCATLNoDisabledState(): void {
+    const field = this.dataForm.get('CAT_LNo');
+    if (field) {
+      // 編輯模式且 CanDel = false 時才禁用大分類代碼
+      if (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false) {
+        field.disable();
+      } else {
+        field.enable();
+      }
+    }
+  }
 
+  // 新增：自定義清空方法，保留大分類代碼
+  clearFormExceptCATLNo(): void {
+    const catLNoControl = this.dataForm.get('CAT_LNo');
+    const isCAT_LNoDisabled = catLNoControl?.disabled || false;  // 新增：檢查是否被禁用
+    const currentCATLNo = catLNoControl?.value;
+
+    this.dataForm.reset();
+
+    // 修正：只有在欄位被禁用且有值時才恢復
+    if (isCAT_LNoDisabled && currentCATLNo) {
+      this.dataForm.patchValue({
+        CAT_LNo: currentCATLNo,
+        id: 0
+      });
+    } else {
+      this.dataForm.patchValue({
+        id: 0
+      });
+    }
+
+    this.updateCATLNoDisabledState();
+  }
 
   onSubmit(frm: FormGroup) {
-    // 修改：使用父類的 handleSubmit 方法
     this.handleSubmit(frm, () => {
+      // 修正：使用 getRawValue() 來獲取包含禁用欄位的完整表單值
+      const formValue = frm.getRawValue();
+
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            // 待實現：調用 API 進行新增
-            this.apiService.insertTLS51010(frm.value).subscribe((response: any) => {
+            this.apiService.insertTLS51010(formValue).subscribe((response: any) => {
               this.messageService.successBubble('新增成功');
-              this.dataForm.reset(); // 新增成功後返回查詢頁面
+              this.dataForm.reset();
             });
           }
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            // 待實現：調用 API 進行更新
-            this.apiService.updateTLS51010(frm.value).subscribe((response: any) => {
+            this.apiService.updateTLS51010(formValue).subscribe((response: any) => {
               this.messageService.successBubble('更新成功');
-              // this.onCancel(); // 更新成功後返回查詢頁面
+              this.onCancel();
             });
           }
           break;

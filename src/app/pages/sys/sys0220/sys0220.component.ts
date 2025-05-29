@@ -158,7 +158,7 @@ export class SYS0220Component extends BasicQueryPageComponent<tblUser> implement
     const items = Array.isArray(data) ? data : [data];
     if (items.length === 0) return;
     // 收集所有有效的 ID
-    const idList = items.filter((item) => item && item.ID != null && item.ID !== undefined).map((item) => item.ID);
+    const idList = items.filter((item) => item && item.id != null && item.id !== undefined).map((item) => item.id);
     if (idList.length === 0) {
       this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
       console.log('項目', items);

@@ -39,15 +39,17 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <!-- <app-multi-select class="col-12 md:col-6 lg:col-5" label="職稱代碼" controlName="title"
-                            [options]="titleOptions" optionLabel="Label" optionValue="No"
-                            [control]="queryForm.controls.title" [submitted]="submitted" /> -->
+            <app-input-text
+              label="使用者等級"
+              controlName="user_priority"
+              [control]="queryForm.controls.user_priority"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
-              class="col-12 md:col-6 lg:col-5"
               label="組織編號"
               controlName="org_ID"
               [options]="SYS3100_Options"
@@ -60,7 +62,6 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick
-              class="col-12 md:col-6 lg:col-5"
               label="帳號有效起始日期"
               [startControl]="queryForm.controls.str_dateStart"
               [endControl]="queryForm.controls.str_dateEnd"
@@ -68,12 +69,15 @@
             />
           </div>
 
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-                        <app-calendar-range calendarType="dateRange" label="上次登入時間"
-                            [startControl]="queryForm.controls.lastLoginStartTime"
-                            [endControl]="queryForm.controls.lastLoginEndTime"
-                            [submitted]="submitted"></app-calendar-range>
-                    </div> -->
+          <!-- 還沒串 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range-quick
+              label="X_上次登入時間"
+              [startControl]="queryForm.controls.str_dateStart"
+              [endControl]="queryForm.controls.str_dateEnd"
+              [submitted]="submitted"
+            />
+          </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
@@ -124,7 +128,7 @@
       (selectionChange)="selectedItems = $event"
       (delete)="onDelete($event)"
       [showCheckBox]="true"
-      dataKey="ID"
+      dataKey="id"
       [multiSortMeta]="[{ field: 'user_No', order: 1 }]"
       [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"

@@ -92,6 +92,8 @@ export interface Sysb400m {
   'UPD_Date': Date;
   'UPD_USR_No': string;
   'UPD_USR_Name': string;
+
+  'CanDel': boolean; // 是否可刪除
 }
 
 // SYS3A00 區域代碼檔
@@ -122,7 +124,7 @@ export interface Sysb600m {
 
 // tblUser 使用者設定檔
 export interface tblUser {
-  'ID': string;
+  'id': string;
   'user_No': string;
   'user_Name': string;
   'user_Password': string;

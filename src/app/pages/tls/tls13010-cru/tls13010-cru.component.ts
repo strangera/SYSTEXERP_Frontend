@@ -1,10 +1,7 @@
 import { LocationCodeService } from './../../../service/basic/locationcode.service';
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BaseTypeService } from '../../../service/basic/base-type-service.service';
 import { ExcessHandlingMethodService } from '../../../service/basic/excess-handling-method.service';
 import { CommissionTypeService } from '../../../service/basic/commission-type.service';
@@ -26,6 +23,8 @@ import { ProductCategoryService } from '../../../service/basic/product-category.
 import { SmallCategoryService } from '../../../service/basic/small-category.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ContractFlowService } from '../../../service/api/tls/tls13010contract-flow/contract-flow.service';
+import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 
 interface CategoryItem {
   id: number;
@@ -52,6 +51,9 @@ const storageKey = 'SYSB920';
   styleUrls: ['./tls13010-cru.component.scss'],
 })
 export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
+  // 加入這一行
+  private originalData: any = null;
+
   data: any[] = [
     {
       isNew: false,
@@ -100,112 +102,185 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   ];
 
   dataForm = this.formBuilder.group({
-    recruitmentCode: [{ value: '自動給號', disabled: true }],
-    counterNumber: [{ value: '契約書審核後才給號', disabled: true }],
-    vendorCode: [1, Validators.required],
-    vendorName: ['', Validators.required],
-    brandName: ['', Validators.required],
-    version: ['1'],
-    businessType: [''],
-    organizationCode: ['', Validators.required],
-    industryType: ['', Validators.required],
-    productCategory: ['', Validators.required],
-    subCategory: ['', Validators.required],
-    contractStartDate: ['', Validators.required],
-    contractEndDate: ['', Validators.required],
-    startBusinessStartDate: ['', Validators.required],
-    startBusinessEndDate: ['', Validators.required],
-    callbackDate: [''],
-    callbackEndDate: [''],
-    discussDate: ['', Validators.required],
-    discussPerson: ['', Validators.required],
-    activity1: [false],
-    activity2: [false],
-    activity3: [false],
-    activity4: [false],
-    counterCategory: [],
-    decorationStyle: [''],
-    commissionType: [''],
-    commissionCalculation: [''],
-    useOwnerStoreCode: [false],
-    packageCategory: [''],
-    excessHandlingMethod: [''],
-    advanceRent: [false],
-    advanceRentPeriods: [''],
-    fixedRent: [''],
+    /** @description 合約ID */
+    talent_id: [''],
+    /** @description 專櫃招募編號 */
+    apply_no: [''],
+
+    // 基本資訊
+    /** @description 專櫃名稱 */
+    tlt_name: ['', Validators.required],
+    /** @description 專櫃編號 */
+    tlt_no: [{ value: '契約書審核後才給號', disabled: true }],
+    /** @description 廠商統一編號 */
+    ven_uniform: ['', Validators.required],
+    /** @description 廠商名稱 */
+    VEN_Name: ['', Validators.required],
+    /** @description 營業型態 */
+    paper_type: [''],
+    /** @description 大分類 */
+    bus_type: ['', Validators.required],
+    /** @description 中分類 */
+    bus_class: [''],
+    /** @description 小分類 */
+    bus_sclass: [''],
+
+    // 合約資訊
+    /** @description 合約起始日 */
+    tlt_bdate: ['', Validators.required],
+    /** @description 合約終止日 */
+    tlt_edate: ['', Validators.required],
+    /** @description 洽談日期 */
+    contact_Date: ['', Validators.required],
+    /** @description 洽談人員姓名 */
+    contact_USR_Name: ['', Validators.required],
+    /** @description 回函日期 */
+    feedback_date: [''],
+    /** @description 回函截止日 */
+    due_date: [''],
+
+    // 營運資訊
+    /** @description 組織代號 */
+    org_id: ['', Validators.required],
+    /** @description 營運起始日 */
+    tlt_contract_bdate: ['', Validators.required],
+    /** @description 營運截止日 */
+    tlt_contract_edate: ['', Validators.required],
+
+    // 財務資訊
+    /** @description 抽成別 */
+    tlt_term_type: [''],
+    /** @description 抽成額計算方式，預設為除稅 */
+    comm_comp_type: ['2'],
+    /** @description 是否為抽成 */
+    comm_yn: [''],
+    /** @description 預收租金 */
+    rent_ahead: [''],
+    /** @description 預收租金期數 */
+    rent_period: [''],
+    /** @description 固定租金 */
+    base_rent: [''],
+    /** @description 押金 */
     deposit: [''],
-    issueOwnerInvoice: [false],
-    useOwnerCashRegister: [false],
-    isOwnerCashCollection: [false],
-    isCommission: [false],
-    checkoutMethod: [''],
-    cooperationMethod: [''],
-    reconciliationMethod: [''],
-    paymentMethod: [''],
-    isCooperationWithCard: [false],
-    cardDiscount: [''],
-    annualOwnerTarget: [''],
-    annualVendorEstimate: [''],
-    depositPaymentMethod: [''],
-    performanceBond: [''],
-    constructionDepositPaymentMethod: [''],
-    constructionBond: [''],
-    paymentDaysAfterCheckout: ['', Validators.required],
-    invoiceDocumentType: [1, Validators.required],
+    /** @description 年目標營業額(業主) */
+    total_amt: [''],
+    /** @description 年預估營業額(廠商) */
+    total_amt_vendor: [''],
+    /** @description 準時開業保證金付款方式 */
+    open_deposit: [''],
+    /** @description 準時開業保證金 */
+    open_fees: [''],
+    /** @description 裝潢方式 */
+    deco_type: [''],
+    /** @description // 保證金付款方式: [''], */
+    paymentMethods: [[]], // 保證金付款方式: [''],
+    /** @description 施工保證金 */
+    construct_fees: [''],
+    /** @description 付款期限(天數) */
+    check_day: ['', Validators.required],
+
+    // 業務資訊
+    /** @description 櫃別 */
+    tlt_kind: [''],
+    /** @description 是否使用業主商店代號 */
+    edc_yn: [''],
+    /** @description 包底類別 */
+    tlt_ctype_mtotal: [''],
+    /** @description 超出部份處理方式 */
+    overall_status: [''],
+    /** @description 是否開立業主發票 */
+    rece_yn: [''],
+    /** @description 是否使用業主收銀機 */
+    pos_yn: [''],
+    /** @description 是否為業主收現 */
+    cash_yn: [''],
+    /** @description 結帳方式 */
+    money_type: [''],
+    /** @description 配合方式 */
+    store_way: [''],
+    /** @description 對帳方式 */
+    check_type: [''],
+    /** @description 付款方式 */
+    paytype: [''],
+    /** @description 是否配合聯名卡 */
+    vip_yn: [''],
+    /** @description 聯名卡折數 */
+    credit_card: [''],
+    /** @description 請款單據別 */
+    invoice_type: ['1', Validators.required],
+
+    // 抄表類型
+    /** @description 抄表類型清單 */
+    meter_typeList: [[]],
+
+    // 保證金相關
+    /** @description 保證金備註 */
+    ticket_remarks: [''],
+
+    // 聯絡資訊
+    /** @description 電子信箱 */
     email: ['', Validators.required],
-    invoiceEmail: ['', Validators.required],
-    billTitle: [''],
-    counterPhone: [''],
-    bankCode: [''],
-    vendorAccountName: [''],
-    bankAccountNumber: [''],
-    companyPhone: ['', Validators.required],
-    companyFax: [''],
-    mailingAddress: [''],
-    remarks: [''],
-    meterReading: [[]],
-    guaranteeNote: [[]],
-    depositRemarks: ['']
+    /** @description 發票電子郵件 */
+    invoice_email: ['', Validators.required],
+    /** @description 票據抬頭 */
+    CHECK_TITLE: [''],
+    /** @description 專櫃電話號碼 */
+    store_tel: [''],
+    /** @description 廠商匯款銀行代號 */
+    bank_id: [''],
+    /** @description 廠商帳戶名稱 */
+    vendor_acct_name: [''],
+    /** @description 廠商銀行帳號 */
+    vendor_acct_no: [''],
+    /** @description 公司電話號碼 */
+    contact_tel: ['', Validators.required],
+    /** @description 公司傳真號碼 */
+    contact_fax: [''],
+    /** @description 郵寄地址 */
+    contact_addr: [''],
+    /** @description 備註 */
+    tlt_remark: [''],
   });
 
-  counterCategoryOptions: any[] = [];
-  decorationStyleOptions: any[] = [];
-  commissionTypeOptions: any[] = [];
-  commissionCalculationOptions: any[] = [];
-  packageCategoryOptions: any[] = [];
-  excessHandlingMethodOptions: any[] = [];
-  checkoutMethodOptions: any[] = [];
-  cooperationMethodOptions: any[] = [];
-  reconciliationMethodOptions: any[] = [];
-  paymentMethodOptions: any[] = [];
-  invoiceDocumentTypeOptions: any[] = [];
-  bankCodeOptions: any[] = [];
-  depositPaymentMethodOptions: any[] = [];
-  constructionDepositPaymentMethodOptions: any[] = [];
-  whetherOptions: any[] = [];
+
+  // 固定選項 (從 constants 來的)
+  decorationOptions = TLS13010_DROPDOWN_OPTIONS.decorationType;
+  moneyTypeOptions = TLS13010_DROPDOWN_OPTIONS.moneyType;
+  checkTypeOptions = TLS13010_DROPDOWN_OPTIONS.checkType;
+  yesNoOptions = TLS13010_DROPDOWN_OPTIONS.yesNo;
+  meterTypeOptions = TLS13010_DROPDOWN_OPTIONS.meterType;
+  paytypeOptions = TLS13010_DROPDOWN_OPTIONS.paytype;
+  storeWayOptions = TLS13010_DROPDOWN_OPTIONS.storeWay;
+  invoiceTypeOptions = TLS13010_DROPDOWN_OPTIONS.invoiceType;
+  tltKindOptions = TLS13010_DROPDOWN_OPTIONS.tltKind;
+  openflagStatusOptions = TLS13010_DROPDOWN_OPTIONS.openflagStatus;
+  overallStatusOptions = TLS13010_DROPDOWN_OPTIONS.overallStatus;
+  depositTypeOptions = TLS13010_DROPDOWN_OPTIONS.depositType;
+  depositPaymentOptions = TLS13010_DROPDOWN_OPTIONS.depositPayment;
+  commissionCompTypeOptions = TLS13010_DROPDOWN_OPTIONS.commissionCompType;
+  businessTypeOptions = TLS13010_DROPDOWN_OPTIONS.businessType;
+  commCompTypeDropdown = TLS13010_DROPDOWN_OPTIONS.commCompType;
+  // API 來的選項 (保留原來的)
+  // businessTypeOptions: any[] = [];
   vendorOptions: any[] = [];
-  businessTypeOptions: any[] = [];
-  OrganizationNumberOptions: any[] = [];
-  businessTypeCodeOptions: any[] = [];
-  productCategoryOptions: any[] = [];
-  smallCategoryOptions: any[] = [];
-  UserCodeOptions: any[] = [];
+  locationOptions: any[] = [];
+  contractStatusOptions: any[] = [];
+  regionOptions: any[] = [];
+  buildingOptions: any[] = [];
   floorOptions: any[] = [];
-  LocationCodeOptions: any[] = [];
-
-  options1: any[] = [
-    { value: 1, label: '水錶' },
-    { value: 2, label: '電錶' },
-    { value: 3, label: '瓦斯錶' },
-  ];
-
-  options2: any[] = [
-    { value: 1, label: '準時開業' },
-    { value: 2, label: '施工保證' },
-    { value: 3, label: '契約屆滿保證票' },
-  ];
+  negotiatorOptions: any[] = [];
+  organizationOptions: any[] = [];
+  operationStatusOptions: any[] = [];
+  commissionCalculationOptions: any[] = [];
+  counterCategoryOptions: any[] = [];
+  commissionTypeOptions: any[] = [];
+  settlementMethodOptions: any[] = [];
+  paymentMethodOptions: any[] = [];
+  cooperationMethodOptions: any[] = [];
+  businessTypeCodeOptions: any[] = [];
 
   constructor(
+    private contractFlowService: ContractFlowService, // 加入這個
     private validationService: ValidationService,
     private counterCategoryService: CounterCategoryService,
     private decorationStyleService: DecorationStyleService,
@@ -243,86 +318,112 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     const navigation = this.router.getCurrentNavigation();
     const state = navigation?.extras.state as { [key: string]: any };
 
-    if (state && state['rowdata'] && state['rowdata']['recruitmentCode']) {
-      this.dataForm.controls['recruitmentCode'].setValue(state['rowdata']['recruitmentCode']);
-    }
+    // if (state && state['rowdata'] && state['rowdata']['recruitmentCode']) {
+    //   this.dataForm.controls['recruitmentCode'].setValue(state['rowdata']['recruitmentCode']);
+    // }
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.fetchDropdownOptions();
-  }
+    // this.fetchDropdownOptions();
 
-  fetchDropdownOptions() {
-    this.counterCategoryService.getCounterCategories().subscribe((options) => {
-      this.counterCategoryOptions = options;
-    });
-    this.userCodeService.getUserCode().subscribe((data) => {
-      this.UserCodeOptions = data;
-    });
-    this.LocationCodeService.getSystemTypes().subscribe((data) => {
-      this.LocationCodeOptions = data;
-    });
-    this.smallCategoryService.getSmallCategories().subscribe(data => this.smallCategoryOptions = data);
-    this.productCategoryService.getSystemTypes().subscribe((options) => {
-      this.productCategoryOptions = options;
-    });
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
-      this.businessTypeCodeOptions = data;
-    });
-    this.businessTypeService.getBusinessTypes().subscribe((data) => {
-      this.businessTypeOptions = data;
-    });
-    this.OrganizationNumberService.getOrganizationNumbers().subscribe(
-      (data) => {
-        this.OrganizationNumberOptions = data;
+    // // 從導航狀態取得資料
+    // const navigation = this.router.getCurrentNavigation();
+    // const state = navigation?.extras.state as { [key: string]: any };
+
+    if (state && state['rowdata']) {
+      this.originalData = state['rowdata'];
+      console.log('從查詢頁面帶來的資料:', this.originalData);
+
+      // 檢查有沒有暫存資料
+      const tempData = this.contractFlowService.getStep1Data(this.originalData);
+      console.log('檢查暫存資料:', tempData);
+
+      if (tempData) {
+        console.log('找到暫存資料，使用暫存的');
+        this.dataForm.patchValue(tempData);
+      } else {
+        console.log('沒有暫存資料，使用查詢結果');
+        this.loadDataFromQueryResult(this.originalData);
       }
-    );
-    this.decorationStyleService.getSystemTypes().subscribe((options) => {
-      this.decorationStyleOptions = options;
-    });
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
-    });
-    this.commissionTypeService.getCommissionTypes().subscribe((options) => {
-      this.commissionTypeOptions = options;
-    });
-    this.commissionCalculationService.getCommissionCalculations().subscribe((options) => {
-      this.commissionCalculationOptions = options;
+    } else {
+      console.log('沒有從查詢頁面帶來資料');
+    }
 
-
-    });
-    this.baseTypeService.getBaseTypes().subscribe((options) => {
-      this.packageCategoryOptions = options;
-    });
-    this.excessHandlingMethodService.getExcessHandlingMethods().subscribe((options) => {
-      this.excessHandlingMethodOptions = options;
-    });
-    this.checkoutMethodService.getSettlementMethods().subscribe((options) => {
-      this.checkoutMethodOptions = options;
-    });
-    this.cooperationMethodService.getCooperationMethods().subscribe((options) => {
-      this.cooperationMethodOptions = options;
-    });
-    this.reconciliationMethodService.getReconciliationMethods().subscribe((options) => {
-      this.reconciliationMethodOptions = options;
-    });
-    this.paymentMethodService.getPaymentMethods().subscribe((options) => {
-      this.paymentMethodOptions = options;
-    });
-    this.bankAccountCodeService.getSystemTypes().subscribe((options) => {
-      this.bankCodeOptions = options;
-    });
-    this.invoiceDocumentTypeService.getSystemTypes().subscribe((options) => {
-      this.invoiceDocumentTypeOptions = options;
-    });
-    this.depositPaymentMethodService.getPaymentMethods().subscribe((options) => {
-      this.depositPaymentMethodOptions = options;
-    });
-    this.constructionDepositPaymentMethodService.getPaymentMethods().subscribe((options) => {
-      this.constructionDepositPaymentMethodOptions = options;
-    });
-    this.whetherService.getWhetherOptions().subscribe((options) => {
-      this.whetherOptions = options;
-    });
+    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // this.fetchDropdownOptions();
   }
+
+  // fetchDropdownOptions() {
+  //   this.counterCategoryService.getCounterCategories().subscribe((options) => {
+  //     this.counterCategoryOptions = options;
+  //   });
+  //   this.userCodeService.getUserCode().subscribe((data) => {
+  //     this.UserCodeOptions = data;
+  //   });
+  //   this.LocationCodeService.getSystemTypes().subscribe((data) => {
+  //     this.LocationCodeOptions = data;
+  //   });
+  //   this.smallCategoryService.getSmallCategories().subscribe(data => this.smallCategoryOptions = data);
+  //   this.productCategoryService.getSystemTypes().subscribe((options) => {
+  //     this.productCategoryOptions = options;
+  //   });
+  //   this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
+  //     this.businessTypeCodeOptions = data;
+  //   });
+  //   this.businessTypeService.getBusinessTypes().subscribe((data) => {
+  //     this.businessTypeOptions = data;
+  //   });
+  //   this.OrganizationNumberService.getOrganizationNumbers().subscribe(
+  //     (data) => {
+  //       this.OrganizationNumberOptions = data;
+  //     }
+  //   );
+  //   this.decorationStyleService.getSystemTypes().subscribe((options) => {
+  //     this.decorationStyleOptions = options;
+  //   });
+  //   this.vendorService.getVendors().subscribe((data) => {
+  //     this.vendorOptions = data;
+  //   });
+  //   this.commissionTypeService.getCommissionTypes().subscribe((options) => {
+  //     this.commissionTypeOptions = options;
+  //   });
+  //   this.commissionCalculationService.getCommissionCalculations().subscribe((options) => {
+  //     this.commissionCalculationOptions = options;
+
+
+  //   });
+  //   this.baseTypeService.getBaseTypes().subscribe((options) => {
+  //     this.packageCategoryOptions = options;
+  //   });
+  //   this.excessHandlingMethodService.getExcessHandlingMethods().subscribe((options) => {
+  //     this.excessHandlingMethodOptions = options;
+  //   });
+  //   this.checkoutMethodService.getSettlementMethods().subscribe((options) => {
+  //     this.checkoutMethodOptions = options;
+  //   });
+  //   this.cooperationMethodService.getCooperationMethods().subscribe((options) => {
+  //     this.cooperationMethodOptions = options;
+  //   });
+  //   this.reconciliationMethodService.getReconciliationMethods().subscribe((options) => {
+  //     this.reconciliationMethodOptions = options;
+  //   });
+  //   this.paymentMethodService.getPaymentMethods().subscribe((options) => {
+  //     this.paymentMethodOptions = options;
+  //   });
+  //   this.bankAccountCodeService.getSystemTypes().subscribe((options) => {
+  //     this.bankCodeOptions = options;
+  //   });
+  //   this.invoiceDocumentTypeService.getSystemTypes().subscribe((options) => {
+  //     this.invoiceDocumentTypeOptions = options;
+  //   });
+  //   this.depositPaymentMethodService.getPaymentMethods().subscribe((options) => {
+  //     this.depositPaymentMethodOptions = options;
+  //   });
+  //   this.constructionDepositPaymentMethodService.getPaymentMethods().subscribe((options) => {
+  //     this.constructionDepositPaymentMethodOptions = options;
+  //   });
+  //   this.whetherService.getWhetherOptions().subscribe((options) => {
+  //     this.whetherOptions = options;
+  //   });
+  // }
 
   canQuery(): boolean {
     return true;
@@ -389,5 +490,23 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   calculatePerformanceShare(): void {
     console.log('Calculating performance share based on business area');
+  }
+
+  // 載入查詢結果到表單
+  private loadDataFromQueryResult(rowData: any) {
+    console.log('載入查詢結果到表單:', rowData);
+
+    this.dataForm.patchValue({
+      // 隱藏的ID欄位
+      talent_id: rowData.talent_id,
+      apply_no: rowData.apply_no,
+
+      // // 顯示的欄位 - 根據你的查詢結果對應
+      // recruitmentCode: rowData.apply_no,
+      // brandName: rowData.tlt_name,
+      // counterNumber: rowData.tlt_no,
+      // vendorName: rowData.VEN_Name,
+      // 你可以根據需要對應更多欄位
+    });
   }
 }

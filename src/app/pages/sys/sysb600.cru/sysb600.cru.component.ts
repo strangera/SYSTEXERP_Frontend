@@ -46,7 +46,8 @@ export class SYSB600CRUComponent
           if (this.canAdd()) {
             this.sysb600Service.insertSYSB600(frm.value).subscribe(() => {
               this.messageService.successBubble('新增成功');
-              this.onCancel(); // 新增成功後返回查詢頁面
+              // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+              this.dataForm.reset(); // 重置表單
             });
           }
           break;

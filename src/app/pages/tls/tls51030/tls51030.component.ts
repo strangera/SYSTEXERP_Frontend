@@ -25,6 +25,7 @@ interface CategoryItem {
   UPD_USR_Name: string;
   CAT_LDisplay?: string;
   CAT_MDisplay?: string;
+  CanDel: boolean; // 是否可以刪除
 }
 @Component({
   selector: 'app-tls51030',
@@ -35,8 +36,8 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
   queryForm = this.formBuilder.nonNullable.group({
     CAT_SNo: ['', [Validators.maxLength(3), this.validationService.numberValidator]],
     CAT_SName: ['', [Validators.maxLength(32)]],
-    CAT_LNo: [''],
-    CAT_MNo: [''],
+    CAT_LNo: [[] as string[]],
+    CAT_MNo: [[] as string[]],
     ...createPaginationConfig([{ field: 'CAT_SNo', order: 1 }]), // 分頁和排序參數
   });
 
@@ -68,10 +69,17 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
 
   ngOnInit(): void {
     this.initializePage('TLS51030', '/TLS/TLS51030CRU', this.queryForm, (form) => this.onSubmit(form));
+
     // 載入大分類代碼
     this.bigCategoryCodeService.getSystemTypes().subscribe({
       next: (response) => {
         this.bigCategoryOptions = response;
+
+        // 🔧 修正：大分類載入完成後，檢查是否需要載入中分類
+        const currentCatLNo = this.queryForm.controls.CAT_LNo.value;
+        if (currentCatLNo && Array.isArray(currentCatLNo) && currentCatLNo.length > 0) {
+          this.loadMiddleCategoriesByMultipleCatLNo(currentCatLNo);
+        }
       },
       error: (error) => {
         console.error('獲取大分類代碼失敗:', error);
@@ -79,34 +87,44 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
       }
     });
 
-    // 監聽 CAT_LNo 變化，動態載入中分類代碼
-    this.queryForm.controls.CAT_LNo.valueChanges.pipe(debounceTime(300)).subscribe(catLNo => {
-      if (catLNo) {
-        this.middleCategoryCodeService.getSystemTypesByCatLNo(catLNo).subscribe({
-          next: (response) => {
-            this.middleCategoryOptions = response;
-            const currentCatMNo = this.queryForm.controls.CAT_MNo.value;
-            if (currentCatMNo && !response.find(opt => opt.value === currentCatMNo)) {
-              this.queryForm.controls.CAT_MNo.setValue('');
-            }
-          },
-          error: (error) => {
-            console.error('獲取中分類代碼失敗:', error);
-            this.messageService.errorBubble('無法載入中分類代碼，請稍後重試');
-            this.middleCategoryOptions = [];
-            this.queryForm.controls.CAT_MNo.setValue('');
-          }
-        });
+    // 監聽 CAT_LNo 變化，動態載入中分類代碼（支援多選陣列）
+    this.queryForm.controls.CAT_LNo.valueChanges.pipe(debounceTime(300)).subscribe(catLNoArray => {
+      if (catLNoArray && Array.isArray(catLNoArray) && catLNoArray.length > 0) {
+        // 使用多選方法載入所有相關的中分類
+        this.loadMiddleCategoriesByMultipleCatLNo(catLNoArray);
       } else {
+        // 清空中分類選項，但不清空已選擇的值（讓用戶手動清除）
         this.middleCategoryOptions = [];
-        this.queryForm.controls.CAT_MNo.setValue('');
+        // ❌ 不要自動清空用戶選擇的值
+        // this.queryForm.controls.CAT_MNo.setValue([]);
       }
     });
-  }
 
+    // 🆕 新增：查詢條件恢復機制（像 SYSB920 一樣）
+    this.handleQueryRestore(this.queryForm, 'TLS51030', (form) => this.onSubmit(form));
+  }
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      this.apiService.queryTLS51030(frm.value).subscribe({
+      // 處理多選參數
+      const queryParams = { ...frm.value };
+
+      // 處理大分類代碼多選陣列
+      if (queryParams.CAT_LNo && Array.isArray(queryParams.CAT_LNo)) {
+        if (queryParams.CAT_LNo.length === 0) {
+          queryParams.CAT_LNo = null; // 或 delete queryParams.CAT_LNo;
+        }
+      }
+
+      // 處理中分類代碼多選陣列
+      if (queryParams.CAT_MNo && Array.isArray(queryParams.CAT_MNo)) {
+        if (queryParams.CAT_MNo.length === 0) {
+          queryParams.CAT_MNo = null; // 或 delete queryParams.CAT_MNo;
+        }
+      }
+
+      console.log('查詢參數:', queryParams); // 除錯用
+
+      this.apiService.queryTLS51030(queryParams).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.data = response.Data.map((item: CategoryItem) => {
@@ -118,7 +136,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
                 CAT_MDisplay: catMDisplay
               };
             });
-            this.totalRecords = response.TotalCount || response.Data.length; // 排序需要;
+            this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
             if (this.data.length === 0) {
               console.log('查詢結果為空');
@@ -178,5 +196,37 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
     });
 
     this.selectedItems = [];
+  }
+
+  isRowSelectable(rowData: CategoryItem): boolean {
+    return rowData.CanDel
+  }
+
+  private loadMiddleCategoriesByMultipleCatLNo(catLNoArray: string[]): void {
+    this.middleCategoryCodeService.getSystemTypesByMultipleCatLNo(catLNoArray).subscribe({
+      next: (response) => {
+        this.middleCategoryOptions = response;
+
+        // 🔧 修正：更智能地處理已選擇的中分類
+        const currentCatMNo = this.queryForm.controls.CAT_MNo.value;
+        if (currentCatMNo && Array.isArray(currentCatMNo) && currentCatMNo.length > 0) {
+          // 只保留仍然有效的選項，但不會自動清空
+          const validCatMNo = currentCatMNo.filter(value =>
+            response.find(opt => opt.value === value)
+          );
+
+          // 只有在有無效項目時才更新
+          if (validCatMNo.length !== currentCatMNo.length) {
+            this.queryForm.controls.CAT_MNo.setValue(validCatMNo);
+
+            // 如果有被移除的項目，給用戶提示
+            const removedCount = currentCatMNo.length - validCatMNo.length;
+            if (removedCount > 0) {
+              this.messageService.warnBubble(`有 ${removedCount} 個中分類選項因大分類變更而被移除`);
+            }
+          }
+        }
+      }
+    });
   }
 }

@@ -14,6 +14,7 @@ interface CategoryItem {
   CAT_LRemark: string | null;
   CRT_USR_No: string | "";
   CRT_USR_Name: string | "";
+  CanDel?: boolean; // 新增 CanDel 屬性
 }
 
 // 2.5.1.2 中分類維護作業 CRU
@@ -33,6 +34,13 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
   });
   showConfirm: boolean = false;
 
+  // 修正：判斷是否可以編輯中分類代碼
+  // CanDel = true：可刪除項目，大分類代碼可以編輯（返回 false）
+  // CanDel = false：不可刪除項目，大分類代碼不能編輯（返回 true）
+  get isCATMNoDisabled(): boolean {
+    return this.crudstatus === CRUDStatus.Read ||
+      (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false);
+  }
   // ----------------------------------------------------------------
   bigCategoryOptions: any[] = [];
 
@@ -53,14 +61,52 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
     });
   }
 
+  // 修正：更新大分類代碼欄位的禁用狀態
+  private updateCATMNoDisabledState(): void {
+    const catLNoControl = this.dataForm.get('CAT_MNo');
+    if (catLNoControl) {
+      // 編輯模式且 CanDel = false 時才禁用大分類代碼
+      if (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false) {
+        catLNoControl.disable();
+      } else {
+        catLNoControl.enable();
+      }
+    }
+  }
+
+  // 新增：自定義清空方法，保留中分類代碼
+  clearFormExceptCATMNo(): void {
+    const catMNoControl = this.dataForm.get('CAT_MNo');
+    const isCAT_MNoDisabled = catMNoControl?.disabled || false;  // 新增：檢查是否被禁用
+    const currentCATMNo = catMNoControl?.value;
+
+    this.dataForm.reset();
+
+    // 修正：只有在欄位被禁用且有值時才恢復
+    if (isCAT_MNoDisabled && currentCATMNo) {
+      this.dataForm.patchValue({
+        CAT_MNo: currentCATMNo,
+        id: 0
+      });
+    } else {
+      this.dataForm.patchValue({
+        id: 0
+      });
+    }
+
+    this.updateCATMNoDisabledState();
+  }
+
+
   onSubmit(frm: FormGroup) {
     // 修改：使用父類的 handleSubmit 方法
     this.handleSubmit(frm, () => {
+      const formValue = frm.getRawValue();
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
             // 待實現：調用 API 進行新增
-            this.apiService.insertTLS51020(frm.value).subscribe((response: any) => {
+            this.apiService.insertTLS51020(formValue).subscribe((response: any) => {
               this.messageService.successBubble('新增成功');
               this.dataForm.reset();
             });
@@ -69,8 +115,9 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             // 待實現：調用 API 進行更新
-            this.apiService.updateTLS51020(frm.value).subscribe((response: any) => {
+            this.apiService.updateTLS51020(formValue).subscribe((response: any) => {
               this.messageService.successBubble('更新成功');
+              this.onCancel();
             });
           }
           break;

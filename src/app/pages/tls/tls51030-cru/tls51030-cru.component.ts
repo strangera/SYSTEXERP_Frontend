@@ -25,6 +25,7 @@ interface CategoryItem {
   UPD_Date?: string;
   UPD_USR_No?: string;
   UPD_USR_Name?: string;
+  CanDel?: boolean; // 新增 CanDel 屬性
 }
 
 @Component({
@@ -41,6 +42,14 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
     CAT_MNo: ['', [Validators.required]],
     CAT_SRemark: ['', [Validators.maxLength(200)]],
   });
+
+  // 修正：判斷是否可以編輯大分類代碼
+  // CanDel = true：可刪除項目，大分類代碼可以編輯（返回 false）
+  // CanDel = false：不可刪除項目，大分類代碼不能編輯（返回 true）
+  get isCATSNoDisabled(): boolean {
+    return this.crudstatus === CRUDStatus.Read ||
+      (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false);
+  }
 
   bigCategoryOptions: { value: string, label: string }[] = [];
   middleCategoryOptions: { value: string, label: string }[] = [];
@@ -68,6 +77,7 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
     });
 
 
+
     this.dataForm.controls.CAT_LNo.valueChanges.pipe(debounceTime(300)).subscribe(catLNo => {
       if (catLNo) {
         this.middleCategoryCodeService.getSystemTypesByCatLNo(catLNo).subscribe({
@@ -90,6 +100,45 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
         this.dataForm.controls.CAT_MNo.setValue('');
       }
     });
+
+    // 新增：在初始化後立即設置大分類代碼的禁用狀態
+    this.updateCATSNoDisabledState();
+  }
+
+  // 新增：自定義清空方法，保留大分類代碼
+  clearFormExceptCATSNo(): void {
+    const catSNoControl = this.dataForm.get('CAT_SNo');
+    const isCAT_MNoDisabled = catSNoControl?.disabled || false;  // 新增：檢查是否被禁用
+    const currentCATSNo = catSNoControl?.value;
+
+    this.dataForm.reset();
+
+    // 修正：只有在欄位被禁用且有值時才恢復
+    if (isCAT_MNoDisabled && currentCATSNo) {
+      this.dataForm.patchValue({
+        CAT_SNo: currentCATSNo,
+        id: 0
+      });
+    } else {
+      this.dataForm.patchValue({
+        id: 0
+      });
+    }
+
+    this.updateCATSNoDisabledState();
+  }
+
+  // 修正：更新大分類代碼欄位的禁用狀態
+  private updateCATSNoDisabledState(): void {
+    const field = this.dataForm.get('CAT_SNo');
+    if (field) {
+      // 編輯模式且 CanDel = false 時才禁用大分類代碼
+      if (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false) {
+        field.disable();
+      } else {
+        field.enable();
+      }
+    }
   }
 
   private loadInitialData(): void {
@@ -131,10 +180,6 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
                   console.error('API error:', response.Status, response.Message);
                   this.messageService.errorBubble(`新增失敗: ${response.Message || '未知錯誤'}`);
                 }
-              },
-              error: (err: any) => {
-                console.error('API error:', err.status, err.message, err.error);
-                this.messageService.errorBubble('新增失敗，請檢查網路連線或聯繫管理員');
               }
             });
           }
@@ -145,15 +190,12 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
               next: (response: any) => {
                 if (response.Status === '0000') {
                   this.messageService.successBubble('更新成功');
+                  this.onCancel();
                 } else {
                   console.error('API error:', response.Status, response.Message);
                   this.messageService.errorBubble(`更新失敗: ${response.Message || '未知錯誤'}`);
                 }
               },
-              error: (err: any) => {
-                console.error('API error:', err.status, err.message, err.error);
-                this.messageService.errorBubble('更新失敗，請檢查網路連線或聯繫管理員');
-              }
             });
           }
           break;

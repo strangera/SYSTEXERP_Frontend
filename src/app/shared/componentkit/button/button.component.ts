@@ -19,7 +19,7 @@ interface ButtonConfig {
   styleUrl: './button.component.scss'
 })
 export class ButtonComponent implements OnInit, OnDestroy {
-  @Input() btnType: 'default' | 'create' | 'edit' | 'delete' | 'query' | 'cancel' | 'clear' | 'submit' | 'next' | 'previous' | 'back' = 'default';
+  @Input() btnType: 'default' | 'create' | 'edit' | 'delete' | 'query' | 'cancel' | 'clear' | 'submit' | 'next' | 'previous' | 'smartclear' | 'back' = 'default';
   @Input() loading = false;
   @Output() clickEvent = new EventEmitter<void>();
   // --- 以下為按鈕配置 ---
@@ -48,6 +48,7 @@ export class ButtonComponent implements OnInit, OnDestroy {
     next: { label: '下一步', icon: 'pi pi-arrow-right', class: '', disabled: false, type: 'button', severity: 'info' },        // 下一步
     previous: { label: '上一步', icon: 'pi pi-arrow-left', class: 'button-previous', outlined: true, disabled: false, type: 'button', severity: 'info' }, // 上一步
     back: { label: '離開', icon: 'pi pi-arrow-left', class: 'button-back', outlined: true, disabled: false, type: 'button', severity: 'secondary' },      // 離開
+    smartclear: { label: '清除', icon: 'pi pi-times', class: 'button-smart-clear', outlined: true, disabled: false, type: 'button', severity: 'secondary' }, // 智慧清除
   };
 
   ngOnInit() {
