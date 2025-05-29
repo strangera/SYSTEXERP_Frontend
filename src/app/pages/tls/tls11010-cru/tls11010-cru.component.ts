@@ -67,22 +67,33 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
   usageOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
 
-readonly locationStatusAll = [
-  { value: 0, label: '空位' },
-  { value: 1, label: '使用中' },
-  { value: 2, label: '停用' },
-];
+  readonly locationStatusAll = [
+    { value: 0, label: '空位' },
+    { value: 1, label: '使用中' },
+    { value: 2, label: '停用' },
+  ];
 
-readonly locationStatusCreateOnly = [
-  { value: 0, label: '空位' },
-  { value: 2, label: '停用' },
-];
+  readonly locationStatusCreate = [
+    { value: 0, label: '空位' },
+    { value: 2, label: '停用' },
+  ];
 
-readonly locationStatusEditOnly = [
-  { value: 1, label: '使用中' },
-];
+  readonly locationStatusFromVacant = [
+    { value: 0, label: '空位' },
+    { value: 2, label: '停用' },
+  ];
 
-LOCATION_Status_Options: any[] = []; // 實際綁定的下拉選單選項
+  readonly locationStatusFromDisabled = [
+    { value: 2, label: '停用' },
+    { value: 0, label: '空位' },
+  ];
+
+  readonly locationStatusFromUsed = [
+    { value: 1, label: '使用中' },
+  ];
+
+
+  LOCATION_Status_Options: any[] = []; // 實際綁定的下拉選單選項
 
   constructor(
     private validationService: ValidationService,
@@ -93,49 +104,88 @@ LOCATION_Status_Options: any[] = []; // 實際綁定的下拉選單選項
     super();
   }
 
-ngOnInit(): void {
-  this.initializePage('TLS11010', this.inputForm);
+  ngOnInit(): void {
+    this.initializePage('TLS11010', this.inputForm);
 
-  if (this.crudstatus === CRUDStatus.Create) {
-    this.LOCATION_Status_Options = this.locationStatusCreateOnly;
+    // 建立或編輯時處理 LOCATION_Status 下拉選單
+    if (this.crudstatus === CRUDStatus.Create) {
+      // 建立時固定給兩個選項：空位、停用
+      this.LOCATION_Status_Options = [
+        { value: 0, label: '空位' },
+        { value: 2, label: '停用' },
+      ];
+      this.inputForm.patchValue({ LOCATION_Status: 0 });
+      this.inputForm.get('LOCATION_Status')?.enable();
+    }
 
-    this.inputForm.patchValue({
-      LOCATION_Status: 0,
+    if (this.crudstatus === CRUDStatus.Edit) {
+      const status = Number(this.rowdata?.LOCATION_Status);
+
+      if (status === 1) {
+        this.LOCATION_Status_Options = [{ value: 1, label: '使用中' }];
+        this.inputForm.patchValue({ ...this.rowdata, LOCATION_Status: 1 }); // ✅ 確保 value 是數字
+        this.inputForm.get('LOCATION_Status')?.disable(); // ✅ patch 後再 disable
+      } else if (status === 0) {
+        this.LOCATION_Status_Options = [
+          { value: 0, label: '空位' },
+          { value: 2, label: '停用' },
+        ];
+        this.inputForm.get('LOCATION_Status')?.enable();
+        this.inputForm.patchValue(this.rowdata);
+      } else if (status === 2) {
+        this.LOCATION_Status_Options = [
+          { value: 2, label: '停用' },
+          { value: 0, label: '空位' },
+        ];
+        this.inputForm.get('LOCATION_Status')?.enable();
+        this.inputForm.patchValue(this.rowdata);
+      }
+    }
+
+
+
+
+
+
+
+    if (this.crudstatus === CRUDStatus.Read) {
+      this.LOCATION_Status_Options = this.locationStatusAll;
+
+      // ✅ 替換 LOCATION_Status 為對應的 option value（避免 disabled 時 dropdown 顯示空白）
+      const matched = this.LOCATION_Status_Options.find(
+        opt => String(opt.value) === String(this.rowdata?.LOCATION_Status)
+      );
+      const labelValue = matched ? matched.value : null;
+
+      // ✅ 將原始資料補上對應值再 patch
+      this.inputForm.patchValue({
+        ...this.rowdata,
+        LOCATION_Status: labelValue,
+      });
+
+      this.inputForm.disable();
+    }
+
+
+    // 其餘選項初始化
+    this.tls11010Service.getFloorOptions().subscribe(res => this.floorOptions = res);
+    this.tls11010Service.getRegionOptions().subscribe(res => this.RegionCodeOptions = res);
+    this.tls11010Service.getOrgOptions().subscribe(res => {
+      this.OrganizationCodeOptions = res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
     });
-
-    this.inputForm.get('LOCATION_Status')?.enable();
-  }
-
-  if (this.crudstatus === CRUDStatus.Edit) {
-    this.LOCATION_Status_Options = this.locationStatusEditOnly;
-
-    this.inputForm.patchValue({
-      LOCATION_Status: 1,
+    this.tls11010Service.getUsageOptions().subscribe((res) => {
+      this.usageOptions = res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
     });
-
-    // 禁用 LOCATION_Status 欄位
-    this.inputForm.get('LOCATION_Status')?.disable();
+    this.tls11010Service.getBuildingOptions().subscribe(res => this.BUILDING_NO_Options = res);
   }
-
-  // 其餘選項初始化
-  this.tls11010Service.getFloorOptions().subscribe(res => this.floorOptions = res);
-  this.tls11010Service.getRegionOptions().subscribe(res => this.RegionCodeOptions = res);
-  this.tls11010Service.getOrgOptions().subscribe(res => {
-    this.OrganizationCodeOptions = res?.map((x: any) => ({
-      label: x.label,
-      formLabel: `${x.value} - ${x.label}`,
-      value: x.value,
-    })) || [];
-  });
-  this.tls11010Service.getUsageOptions().subscribe((res) => {
-    this.usageOptions = res?.map((x: any) => ({
-      label: x.label,
-      formLabel: `${x.value} - ${x.label}`,
-      value: x.value,
-    })) || [];
-  });
-  this.tls11010Service.getBuildingOptions().subscribe(res => this.BUILDING_NO_Options = res);
-}
 
   onSubmit(): void {
     this.handleSubmit(this.inputForm, () => {
@@ -165,9 +215,7 @@ ngOnInit(): void {
         this.tls11010Service.updateData(raw).subscribe({
           next: () => {
             this.messageService.successBubble(this.translate.instant('updated-successfully'));
-            // ✅ 編輯成功後也不跳頁，改為清空資料
-            this.inputForm.reset();
-            this.inputForm.markAsPristine();
+            this.router.navigate(['/TLS', 'TLS11010']); // ✅ 導回查詢頁
           },
           error: () => {
             this.messageService.errorBubble(this.translate.instant('update_failed'));
@@ -198,22 +246,24 @@ ngOnInit(): void {
       },
     });
   }
-onClear(): void {
-  const keepValues = {
-    LOCATION_No: this.inputForm.get('LOCATION_No')?.value,
-    LOCATION_Status: this.inputForm.get('LOCATION_Status')?.value,
+  onClear(): void {
+    const keepValues = {
+      LOCATION_No: this.inputForm.get('LOCATION_No')?.value,
+      LOCATION_Status: this.inputForm.get('LOCATION_Status')?.value,
+    };
+    // 重設表單
+    this.inputForm.reset();
+    // 設回保留欄位的值
+    this.inputForm.patchValue(keepValues);
+    this.inputForm.markAsPristine();
+  }
+  clearBtnConfig = {
+    label: '清除',
+    class: 'button-clear',
+    text: true
   };
-  // 重設表單
-  this.inputForm.reset();
-  // 設回保留欄位的值
-  this.inputForm.patchValue(keepValues);
-  this.inputForm.markAsPristine();
-}
-clearBtnConfig = {
-  label: '清除',
-  class: 'button-clear',
-  text: true
-};
-
+  fakeControlForDisplay(value: string) {
+    return this.formBuilder.control({ value, disabled: true });
+  }
 
 }

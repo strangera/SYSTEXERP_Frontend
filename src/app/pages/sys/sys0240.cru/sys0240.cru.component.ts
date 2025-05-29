@@ -1,11 +1,155 @@
-import { Component } from '@angular/core';
-// 4-2-2-3角色複製
+import { Component, OnInit } from '@angular/core';
+import { Validators, FormGroup } from '@angular/forms';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
+import { tblUser } from '../../../shared/models/sys/sysb000.module';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { Sys0210Service } from '../../../service/API/sys/sys0210.service';
+
+// 來源角色擁有的權限
+export interface AuthOption {
+  id: string; // ID
+  label: string; // 角色代號
+  children: AuthOption[]; // 角色名稱
+  IsEnable: boolean; // 是否允許
+  partialSelected: boolean; // 是否勾選
+}
+
+// 4-2-2-3角色複製 CRU
 @Component({
   selector: 'app-sys0240.cru',
   templateUrl: './sys0240.cru.component.html',
   styleUrl: './sys0240.cru.component.scss'
 })
 
-export class SYS0240CRUComponent {
+export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
+  implements OnInit {
+  // ----------------------------------------------------------------
+  dataForm = this.formBuilder.nonNullable.group({
+    id: [], // ID
+    Role_No: ['', [Validators.required, Validators.maxLength(10)]], // 來源角色代碼
+    Role_Name: ['', [Validators.required, Validators.maxLength(30)]], // 來源角色名稱
+    Description: ['', [Validators.maxLength(50)]], // 角色註記
+  });
 
+  roleUserData: AuthOption[] = [];
+  whetherOptions: any[] = [
+    { value: true, label: '是' },
+    { value: false, label: '否' },
+  ];
+  // ----------------------------------------------------------------
+  roleUserColumns: Column[] = [
+    {
+      field: 'Match', header: '是否配對', visible: true,
+      format: (value: boolean) =>
+        this.whetherOptions.find((option) => option.value === value)?.label ||
+        value,
+    },
+    { field: 'User_No', header: '使用者代號', visible: true },
+    { field: 'User_Name', header: '使用者名稱', visible: true },
+  ]
+  selectedRoleUserData: AuthOption[] = []; // 選取的使用者資料
+
+  constructor(
+    private sys0210Service: Sys0210Service,
+  ) {
+    super(); // 呼叫父類建構子
+  }
+
+  ngOnInit(): void {
+    this.initializePage('SYS0240', this.dataForm);
+    this.loadOptions(this.dataForm.get('Role_No')?.value ?? ''); // 載入選項
+  }
+  // ----------------------------------------------------------------
+  // 載入 角色之使用者
+  loadOptions(roleNo: string) {
+    console.log('需求:', roleNo);
+    this.sys0210Service.queryRolePrivileges({ Role_No: roleNo }).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.roleUserData = response.Data || [];
+
+          console.log('回傳使用者資料:', this.roleUserData);
+
+          // 初始化被選中的資料（Match 為 true）
+          // this.selectedRoleUserData = this.roleUserData.filter(user => user.Match === true);
+
+          // const user0900 = response.Data.find((u: UserOption) => u.User_No === '0900000001');
+          // console.log('⏱ 原始 Match 值:', JSON.parse(JSON.stringify(user0900)));
+
+        } else {
+          console.error('API error:', response.Status, response.Message);
+        }
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+    });
+  }
+
+  // ----------------------------------------------------------------
+  // 點擊時變更 match狀態
+  onUserSelectionChange(selectedItems: AuthOption[]) {
+    // 先記錄目前選取的 ID
+    const selectedIds = selectedItems.map(item => item.id);
+
+    // loop 所有 roleUserData 來更新 Match 狀態
+    this.roleUserData.forEach(user => {
+      // 如果該使用者目前是被選取中的，就設為 true
+      // 如果之前是 true 但現在沒被選，就變回 false
+      user.partialSelected = selectedIds.includes(user.id) ? true : false;
+    });
+
+    this.selectedRoleUserData = selectedItems;
+  }
+
+  // ----------------------------------------------------------------
+  onSubmit(frm: FormGroup) {
+    // 修改：使用父類的 handleSubmit 方法
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            // this.sys0210Service.createRole(frm.value).subscribe(() => {
+            //   this.messageService.successBubble('新增成功');
+            //   this.onCancel(); // 新增成功後返回查詢頁面
+            // });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            // console.log('User資料', frm.value);
+            // console.log('變更後的清單', { RoleList: this.selectedRoleUserData.map(item => item.User_No) });
+            // const requestBody = {
+            //   Role_No: frm.value.Role_No,
+            //   UserNoList: this.selectedRoleUserData
+            //     .filter(item => item.partialSelected === true)
+            //     .map(item => item.id),
+            //   DeleteUserNoList: this.selectedRoleUserData
+            //     .filter(item => item.partialSelected === false)
+            //     .map(item => item.id),
+            // };
+
+            // console.log('更新的請求內容', requestBody);
+            // this.sys0230Service.updateRoleUsers(requestBody).subscribe(() => {
+            //   this.messageService.successBubble('更新成功');
+            //   this.onCancel(); // 更新成功後返回查詢頁面
+            // });
+          }
+          break;
+      }
+    });
+  }
+
+  submitForm(frm: FormGroup) {
+    this.onSubmit(frm);
+  }
+
+  onClearForm() {
+    this.dataForm.reset(); // 重置表單
+  }
 }

@@ -38,7 +38,7 @@ export class TLS13030Service {
    * 取得 APS1003 下拉選單資料
    */
   getAPS1003DropDownList(): Observable<any[]> {
-    return this.http.post<any[]>(`${this.apiUrl}/queryTLS13030_APS1003_DropDownList`, {}).pipe(
+    return this.http.post<any[]>(`${this.apiUrl}/queryAPS1003_DropDownList`, {}).pipe(
       tap((res) => console.log('APS1003 下拉資料:', res)),
       catchError(this.errorHandler.handleError)
     );

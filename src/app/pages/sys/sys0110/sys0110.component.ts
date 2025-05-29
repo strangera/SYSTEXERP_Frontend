@@ -20,7 +20,7 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     user_No: ['', Validators.maxLength(10)], // 使用者編號
     user_Name: ['', Validators.maxLength(20)], // 使用者名稱
     // user_Password: ['', Validators.maxLength(32)], // 使用者密碼-加密
-    // title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000
+    // title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000 (就是職位)
     org_ID: [[], Validators.maxLength(20)], // 組織編號 (SYSB400_SYS3100)
     str_dateStart: [null], // 帳號有效開始日期
     str_dateEnd: [null], // 帳號有效結束日期
@@ -30,7 +30,7 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     // user_email: ['', Validators.maxLength(100)], // 使用者email帳號
     // TLT_No: ['', Validators.maxLength(12)], // 所屬專櫃編號
     // remarks: ['', Validators.maxLength(100)], // 備註
-    user_priority: [[], Validators.maxLength(1)], // 使用者等級
+    user_priority: [[], Validators.maxLength(1)], // 使用者等級 > 規格?不知道內容
     // USER_PwdExpireDate: [''], // 密碼到期日 YYYY/MM/DD HH:NN:SS，若使用者登入系統的時間大於此日期，則需強制使用者變更密碼
 
     ...createPaginationConfig([{ field: 'user_No', order: 1 }]), // 分頁和排序參數
@@ -44,11 +44,9 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     { field: 'user_No', header: '使用者編號', visible: true },
     { field: 'user_Name', header: '使用者名稱', visible: true },
     {
-      field: 'status', header: '使用者狀態', visible: true, format: (value: string) =>
-        this.userStatusOptions.find((option) => option.value === value)?.label ||
-        value
+      field: 'title', header: '職稱代碼', visible: false, format: (value: string) =>
+        this.titleOptions.find((option) => option.No === value)?.Label || value
     },
-    { field: 'title', header: '職稱代碼', visible: true },
     {
       field: 'org_ID', header: '組織編號', visible: true, format: (value: string) =>
         this.SYS3100_Options.find((option) => option.No === value)?.Label ||
@@ -56,15 +54,24 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     },
     { field: 'str_dateStart', header: '帳號有效開始日期', visible: true },
     { field: 'str_dateEnd', header: '帳號有效結束日期', visible: true },
+    { field: 'lastLogin', header: '上次登入時間', visible: true },  // 還沒串資料
+    {
+      field: 'status', header: '使用者狀態', visible: true, format: (value: string) =>
+        this.userStatusOptions.find((option) => option.value === value)?.label ||
+        value
+    },
     {
       field: 'user_type', header: '使用者型態', visible: true, format: (value: string) =>
         this.userTypeOptions.find((option) => option.value === value)?.label ||
         value
     },
-    { field: 'user_email', header: '使用者email帳號', visible: true },
-    { field: 'TLT_No', header: '備註', visible: true },
+    { field: 'user_email', header: '使用者等級', visible: true },
     { field: 'user_priority', header: '使用者等級', visible: true },
-    { field: 'USER_PwdExpireDate', header: '密碼到期日', visible: true },
+    { field: 'user_email', header: '使用者email帳號', visible: false },
+    { field: 'TLT_No', header: '所屬專櫃編號', visible: false },
+    { field: 'remarks', header: '備註', visible: true },
+    { field: 'user_priority', header: '使用者等級', visible: false },
+
   ];
   selectedItems: tblUser[] = [];// 多選項目
 
@@ -159,7 +166,7 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     const items = Array.isArray(data) ? data : [data];
     if (items.length === 0) return;
     // 收集所有有效的 ID
-    const idList = items.filter((item) => item && item.ID != null && item.ID !== undefined).map((item) => item.ID);
+    const idList = items.filter((item) => item && item.id != null && item.id !== undefined).map((item) => item.id);
     if (idList.length === 0) {
       this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
       console.log('項目', items);
