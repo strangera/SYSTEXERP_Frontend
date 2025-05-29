@@ -98,11 +98,12 @@ export class SYSB800CRUComponent extends BasicCruPageComponent<CategoryItem> imp
   onSubmit(frm: FormGroup) {
     // 修改：使用父類的 handleSubmit 方法
     this.handleSubmit(frm, () => {
+      const formValue = frm.getRawValue();
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
             // 待實現：調用 API 進行新增
-            this.apiService.insertSYSB800(frm.value).subscribe((response: any) => {
+            this.apiService.insertSYSB800(formValue).subscribe((response: any) => {
               this.messageService.successBubble('新增成功');
               this.dataForm.reset();
             });
@@ -111,7 +112,7 @@ export class SYSB800CRUComponent extends BasicCruPageComponent<CategoryItem> imp
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             // 待實現：調用 API 進行更新
-            this.apiService.updateSYSB800(frm.value).subscribe((response: any) => {
+            this.apiService.updateSYSB800(formValue).subscribe((response: any) => {
               this.messageService.successBubble('更新成功');
               this.onCancel();
             });

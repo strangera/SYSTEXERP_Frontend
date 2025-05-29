@@ -92,8 +92,9 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      // 新增：在提交前確保編輯模式下包含 CAT_LNo 值
-      const formValue = { ...frm.value };
+      // 修正：使用 getRawValue() 來獲取包含禁用欄位的完整表單值
+      const formValue = frm.getRawValue();
+
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
