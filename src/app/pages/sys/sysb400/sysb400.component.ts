@@ -55,9 +55,15 @@ export class SYSB400Component
         value,
     },
     {
-      field: 'p_org_id', header: '上層組織代碼/名稱', visible: true,
+      field: 'p_org_id', header: '上層組織代碼', visible: true,
       format: (value: string) =>
-        this.org_Option.find((option) => option.No === value)?.Label ||
+        this.org_Option.find((option) => option.No === value)?.No ||
+        value,
+    },
+    {
+      field: 'p_org_id', header: '上層組織名稱', visible: true,
+      format: (value: string) =>
+        this.org_Option.find((option) => option.No === value)?.Name ||
         value,
     },
     {
