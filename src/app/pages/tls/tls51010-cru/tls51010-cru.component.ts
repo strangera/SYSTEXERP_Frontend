@@ -36,7 +36,8 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // CanDel = true：可刪除項目，大分類代碼可以編輯（返回 false）
   // CanDel = false：不可刪除項目，大分類代碼不能編輯（返回 true）
   get isCATLNoDisabled(): boolean {
-    return this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false;
+    return this.crudstatus === CRUDStatus.Read ||
+      (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false);
   }
 
   constructor(
@@ -91,8 +92,9 @@ export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      // 新增：在提交前確保編輯模式下包含 CAT_LNo 值
-      const formValue = { ...frm.value };
+      // 修正：使用 getRawValue() 來獲取包含禁用欄位的完整表單值
+      const formValue = frm.getRawValue();
+
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {

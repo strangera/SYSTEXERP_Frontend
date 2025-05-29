@@ -38,9 +38,9 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // CanDel = true：可刪除項目，大分類代碼可以編輯（返回 false）
   // CanDel = false：不可刪除項目，大分類代碼不能編輯（返回 true）
   get isCATMNoDisabled(): boolean {
-    return this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false;
+    return this.crudstatus === CRUDStatus.Read ||
+      (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false);
   }
-
   // ----------------------------------------------------------------
   bigCategoryOptions: any[] = [];
 
@@ -101,11 +101,12 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
   onSubmit(frm: FormGroup) {
     // 修改：使用父類的 handleSubmit 方法
     this.handleSubmit(frm, () => {
+      const formValue = frm.getRawValue();
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
             // 待實現：調用 API 進行新增
-            this.apiService.insertTLS51020(frm.value).subscribe((response: any) => {
+            this.apiService.insertTLS51020(formValue).subscribe((response: any) => {
               this.messageService.successBubble('新增成功');
               this.dataForm.reset();
             });
@@ -114,7 +115,7 @@ export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> im
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             // 待實現：調用 API 進行更新
-            this.apiService.updateTLS51020(frm.value).subscribe((response: any) => {
+            this.apiService.updateTLS51020(formValue).subscribe((response: any) => {
               this.messageService.successBubble('更新成功');
               this.onCancel();
             });

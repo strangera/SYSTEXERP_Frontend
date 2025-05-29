@@ -226,13 +226,6 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
             }
           }
         }
-      },
-      error: (error) => {
-        console.error('獲取中分類代碼失敗:', error);
-        this.messageService.errorBubble('無法載入中分類代碼，請稍後重試');
-        this.middleCategoryOptions = [];
-        // ❌ 發生錯誤時也不要自動清空用戶選擇
-        // this.queryForm.controls.CAT_MNo.setValue([]);
       }
     });
   }

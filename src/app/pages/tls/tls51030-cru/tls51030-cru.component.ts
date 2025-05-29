@@ -47,7 +47,8 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // CanDel = true：可刪除項目，大分類代碼可以編輯（返回 false）
   // CanDel = false：不可刪除項目，大分類代碼不能編輯（返回 true）
   get isCATSNoDisabled(): boolean {
-    return this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false;
+    return this.crudstatus === CRUDStatus.Read ||
+      (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false);
   }
 
   bigCategoryOptions: { value: string, label: string }[] = [];
@@ -179,10 +180,6 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
                   console.error('API error:', response.Status, response.Message);
                   this.messageService.errorBubble(`新增失敗: ${response.Message || '未知錯誤'}`);
                 }
-              },
-              error: (err: any) => {
-                console.error('API error:', err.status, err.message, err.error);
-                this.messageService.errorBubble('新增失敗，請檢查網路連線或聯繫管理員');
               }
             });
           }
@@ -199,10 +196,6 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
                   this.messageService.errorBubble(`更新失敗: ${response.Message || '未知錯誤'}`);
                 }
               },
-              error: (err: any) => {
-                console.error('API error:', err.status, err.message, err.error);
-                this.messageService.errorBubble('更新失敗，請檢查網路連線或聯繫管理員');
-              }
             });
           }
           break;

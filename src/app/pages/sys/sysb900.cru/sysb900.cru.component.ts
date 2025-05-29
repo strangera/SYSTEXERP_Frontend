@@ -39,8 +39,10 @@ export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> imp
   // CanDel = true：可刪除項目（返回 false）
   // CanDel = false：不可刪除項目（返回 true）
   get isDisabled(): boolean {
-    return this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false;
+    return this.crudstatus === CRUDStatus.Read ||
+      (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false);
   }
+
 
   option: any[] = [];
 
@@ -109,11 +111,12 @@ export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> imp
   onSubmit(frm: FormGroup) {
     // 修改：使用父類的 handleSubmit 方法
     this.handleSubmit(frm, () => {
+      const formValue = frm.getRawValue();
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
             // 待實現：調用 API 進行新增
-            this.apiService.insertSYSB900(frm.value).subscribe((response: any) => {
+            this.apiService.insertSYSB900(formValue).subscribe((response: any) => {
               this.messageService.successBubble('新增成功');
               this.dataForm.reset();
             });
@@ -122,7 +125,7 @@ export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> imp
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             // 待實現：調用 API 進行更新
-            this.apiService.updateSYSB900(frm.value).subscribe((response: any) => {
+            this.apiService.updateSYSB900(formValue).subscribe((response: any) => {
               this.messageService.successBubble('更新成功');
               this.onCancel();
             });

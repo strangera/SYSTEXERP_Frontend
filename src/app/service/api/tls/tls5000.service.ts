@@ -29,7 +29,6 @@ export class TLS5000Service {
   insertTLS51010(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertTLS51010`, data).pipe(
       tap((data) => console.debug('TLS5000 insertTLS51010 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -38,7 +37,6 @@ export class TLS5000Service {
   updateTLS51010(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateTLS51010`, data).pipe(
       tap((data) => console.debug('TLS5000 updateTLS51010 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -46,7 +44,6 @@ export class TLS5000Service {
   deleteTLS51010(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS51010`, data).pipe(
       tap((data) => console.debug('TLS5000 deletePOS2003 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -55,14 +52,12 @@ export class TLS5000Service {
   queryTLS51020(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS51020`, data).pipe(
       tap((data) => console.debug('TLS5000 queryTLS51020 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
   //新增 TLS51020
   insertTLS51020(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertTLS51020`, data).pipe(
       tap((data) => console.debug('TLS5000 insertTLS51020 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -71,7 +66,6 @@ export class TLS5000Service {
   updateTLS51020(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateTLS51020`, data).pipe(
       tap((data) => console.debug('TLS5000 updateTLS51020 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -79,7 +73,6 @@ export class TLS5000Service {
   deleteTLS51020(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS51020`, data).pipe(
       tap((data) => console.debug('TLS5000 deletePOS20031 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
   //小分類
@@ -87,14 +80,12 @@ export class TLS5000Service {
   queryTLS51030(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS51030`, data).pipe(
       tap((data) => console.debug('TLS5000 queryTLS51030 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
   //新增 POS20032
   insertTLS51030(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertTLS51030`, data).pipe(
       tap((data) => console.debug('TLS5000 insertTLS51030 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -103,7 +94,6 @@ export class TLS5000Service {
   updateTLS51030(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateTLS51030`, data).pipe(
       tap((data) => console.debug('TLS5000 updateTLS51030 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -111,7 +101,6 @@ export class TLS5000Service {
   deleteTLS51030(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS51030`, data).pipe(
       tap((data) => console.debug('TLS5000 deleteTLS51030 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 }

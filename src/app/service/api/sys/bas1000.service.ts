@@ -20,7 +20,6 @@ export class Bas1000Service {
   querySYSB800(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/querySYSB800`, data).pipe(
       tap((data) => console.debug('querySYSB800 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -28,7 +27,6 @@ export class Bas1000Service {
   insertSYSB800(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertSYSB800`, data).pipe(
       tap((data) => console.debug('insertSYSB800 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -37,7 +35,6 @@ export class Bas1000Service {
   updateSYSB800(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateSYSB800`, data).pipe(
       tap((data) => console.debug('updateSYSB800 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -45,7 +42,6 @@ export class Bas1000Service {
   deleteSYSB800(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteSYSB800`, data).pipe(
       tap((data) => console.debug('deleteSYSB800 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -53,7 +49,6 @@ export class Bas1000Service {
   querySYSB900(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/querySYSB900`, data).pipe(
       tap((data) => console.debug('querySYSB900 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -61,7 +56,6 @@ export class Bas1000Service {
   insertSYSB900(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertSYSB900`, data).pipe(
       tap((data) => console.debug('insertSYSB900 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -70,7 +64,6 @@ export class Bas1000Service {
   updateSYSB900(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateSYSB900`, data).pipe(
       tap((data) => console.debug('updateSYSB900 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -78,7 +71,6 @@ export class Bas1000Service {
   deleteSYSB900(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteSYSB900`, data).pipe(
       tap((data) => console.debug('deleteSYSB900 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -86,7 +78,6 @@ export class Bas1000Service {
   querySYSB920(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/querySYSB920`, data).pipe(
       tap((data) => console.debug('querySYSB920 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -94,7 +85,6 @@ export class Bas1000Service {
   insertSYSB920(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertSYSB920`, data).pipe(
       tap((data) => console.debug('insertSYSB920 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -103,7 +93,6 @@ export class Bas1000Service {
   updateSYSB920(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateSYSB920`, data).pipe(
       tap((data) => console.debug('updateSYSB920 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
@@ -111,9 +100,6 @@ export class Bas1000Service {
   deleteSYSB920(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteSYSB920`, data).pipe(
       tap((data) => console.debug('deleteSYSB920 response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
-
-
 }
