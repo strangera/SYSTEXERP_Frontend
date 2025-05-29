@@ -120,6 +120,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     ven_uniformList: [[]], // 廠商統一編號
     paper_typeList: [[]], // 證件類型
 
+
     // 地點資訊
     location_noList: [[]], // 位置
     area_noList: [[]], // 區域

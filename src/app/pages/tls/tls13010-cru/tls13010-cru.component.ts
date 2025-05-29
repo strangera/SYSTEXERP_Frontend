@@ -70,12 +70,12 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   filteredData: any[] = [...this.data];
 
   columns: any[] = [
-    {
-      field: 'isNew', header: '是否新增', visible: true,
-      type: 'checkbox',
-      checkboxTrueLabel: '是', // 非編輯模式顯示「新增」表示 true
-      checkboxFalseLabel: '否', // 非編輯模式顯示「非新增」表示 false
-    },
+    // {
+    //   field: 'isNew', header: '是否新增', visible: true,
+    //   type: 'checkbox',
+    //   checkboxTrueLabel: '是', // 非編輯模式顯示「新增」表示 true
+    //   checkboxFalseLabel: '否', // 非編輯模式顯示「非新增」表示 false
+    // },
     {
       field: 'locationCode', header: '位置編號', visible: true, type: 'dropdown',
       options: [
@@ -124,6 +124,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     bus_class: [''],
     /** @description 小分類 */
     bus_sclass: [''],
+    /** @description 版本編號 */
+    contract_subno: ['',], // 版本編號
 
     // 合約資訊
     /** @description 合約起始日 */
