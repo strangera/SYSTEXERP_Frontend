@@ -22,7 +22,7 @@ export class SYSB300CRUComponent
     level_id: ['', [Validators.required, Validators.maxLength(2)]], // 組織階層代碼
     level_name: ['', [Validators.required, Validators.maxLength(30)]], // 組織階層名稱
     p_level_id: ['', [Validators.maxLength(2)]], // 上層組織代碼/名稱(空白代表第一層)
-    CanDel: [], // 是否可刪除
+    CanDel: [false], // 是否可刪除
   });
   //
   upgroup_Options: apiOption[] = [];
@@ -36,6 +36,13 @@ export class SYSB300CRUComponent
   ngOnInit(): void {
     this.initializePage('SYSB300', this.dataForm);
     this.loadOptions();
+
+    //新增模式的CanDel設定
+    if (this.crudstatus == 'Create') {
+      this.dataForm.patchValue({
+        CanDel: true
+      });
+    }
 
     console.log('dataform', this.dataForm.value);
   }
