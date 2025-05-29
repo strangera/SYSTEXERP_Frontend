@@ -13,7 +13,7 @@
             controlName="level_id"
             [control]="dataForm.controls.level_id"
             [submitted]="submitted"
-            [disabled]="crudstatus !== 'Create'"
+            [disabled]="!(dataForm.controls.CanDel.value ?? true)"
           ></app-input-text>
         </div>
         <div class="col-12 md:col-12 lg:col-4">

@@ -22,6 +22,7 @@ export class SYSB300CRUComponent
     level_id: ['', [Validators.required, Validators.maxLength(2)]], // 組織階層代碼
     level_name: ['', [Validators.required, Validators.maxLength(30)]], // 組織階層名稱
     p_level_id: ['', [Validators.maxLength(2)]], // 上層組織代碼/名稱(空白代表第一層)
+    CanDel: [], // 是否可刪除
   });
   //
   upgroup_Options: apiOption[] = [];
@@ -35,6 +36,8 @@ export class SYSB300CRUComponent
   ngOnInit(): void {
     this.initializePage('SYSB300', this.dataForm);
     this.loadOptions();
+
+    console.log('dataform', this.dataForm.value);
   }
 
   onSubmit(frm: FormGroup) {
@@ -84,7 +87,8 @@ export class SYSB300CRUComponent
               console.log('insert', frm.value);
               this.sysb300Service.insertSYSB300(frm.value).subscribe(() => {
                 this.messageService.successBubble('新增成功');
-                this.onCancel();
+                // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+                this.dataForm.reset(); // 重置表單
               });
             }
             break;
@@ -93,7 +97,7 @@ export class SYSB300CRUComponent
               console.log('update', frm.value);
               this.sysb300Service.updateSYSB300(frm.value).subscribe(() => {
                 this.messageService.successBubble('更新成功');
-                this.onCancel();
+                this.onCancel(); // 儲存後，會返回列表
               });
             }
             break;
