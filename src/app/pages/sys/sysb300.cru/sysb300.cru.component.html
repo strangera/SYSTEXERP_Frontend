@@ -13,7 +13,7 @@
             controlName="level_id"
             [control]="dataForm.controls.level_id"
             [submitted]="submitted"
-            [disabled]="crudstatus !== 'Create'"
+            [disabled]="!dataForm.controls.CanDel.value"
           ></app-input-text>
         </div>
         <div class="col-12 md:col-12 lg:col-4">
@@ -47,6 +47,7 @@
     <ul>
       <li>備註：</li>
       <li>若上層組織階層為空，表示此階層為公司組織階層之最上層。</li>
+      <li>設定時組織階層碼以小到大排序</li>
     </ul>
   </p-panel>
 </div>

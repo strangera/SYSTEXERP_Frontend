@@ -34,6 +34,7 @@ export class SYSB400CRUComponent
     p_level_id: ['', [Validators.required, Validators.maxLength(2)]], // 上層組織階層代碼
     p_level_name: ['', [Validators.maxLength(40)]], // 上層組織階層名稱
     stop_flag: ['N', [Validators.required, Validators.maxLength(1)]], // 是否停用
+    CanDel: [], // 是否可刪除
   });
   showConfirm = false;
 
@@ -57,7 +58,12 @@ export class SYSB400CRUComponent
 
   ngOnInit(): void {
     this.initializePage('SYSB400', this.dataForm);
-    this.loadOptions();
+    this.loadOptions().then(() => {
+      const levelId = this.dataForm.controls.level_id.value;
+      if (this.crudstatus !== 'Create' && levelId) {
+        this.handleLevelIdChange(levelId);
+      }
+    });
 
     // 初始讀取頁面就確認p_level_id的選項
     if (this.dataForm.controls.level_id.value == '' || this.dataForm.controls.level_id.value == null) {
@@ -111,44 +117,44 @@ export class SYSB400CRUComponent
       this.dataForm.controls.p_level_id.disable();
       this.dataForm.controls.p_level_id.setValue('');
     }
+
+    console.log('filtered_p_level_Options', this.filtered_p_level_Options);
   }
 
-  loadOptions() {
-    // 組織階層列表
-    this.sysb300Service.querySYSB300_DropDownList({}).subscribe((response) => {
-      this.upgroup_Options = response.Data.map((item: apiOption) => ({
-        No: item.No,
-        Name: item.Name,
-        Label: item.No + '-' + item.Name,
-      }));
-      console.log('組織階層', this.upgroup_Options);
-    });
+  loadOptions(): Promise<void> {
+    return new Promise((resolve) => {
+      let upgroupLoaded = false;
+      let orgLoaded = false;
 
-    const query_org = {
-      level_id: '',
-      org_id: '',
-      org_name: '',
+      this.sysb300Service.querySYSB300_DropDownList({}).subscribe((response) => {
+        this.upgroup_Options = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
+        upgroupLoaded = true;
+        if (upgroupLoaded && orgLoaded) resolve();
+      });
 
-      //分頁查詢
-      pageSize: 1000,
-      pageIndex: 0,
-      SortBy: [{ field: 'org_id', order: 1 }],
-    };
+      const query_org = {
+        level_id: '',
+        org_id: '',
+        org_name: '',
+        pageSize: 1000,
+        pageIndex: 0,
+        SortBy: [{ field: 'org_id', order: 1 }],
+      };
 
-    this.sysb400Service.querySYSB400(query_org).subscribe((response) => {
-      this.org_Option = response.Data.map((item: Sysb400m) => ({
-        No: item.org_id,
-        Name: item.org_name,
-        Level: item.level_id,
-        Label: item.org_id + '-' + item.org_name,
-      }));
-      this.raw_org_Option = response.Data.map((item: Sysb400m) => ({
-        No: item.org_id,
-        Name: item.org_name,
-        Level: item.level_id,
-        Label: item.org_id + '-' + item.org_name,
-      }));
-      console.log('組織代碼 查詢結果', this.org_Option);
+      this.sysb400Service.querySYSB400(query_org).subscribe((response) => {
+        this.org_Option = this.raw_org_Option = response.Data.map((item: Sysb400m) => ({
+          No: item.org_id,
+          Name: item.org_name,
+          Level: item.level_id,
+          Label: item.org_id + '-' + item.org_name,
+        }));
+        orgLoaded = true;
+        if (upgroupLoaded && orgLoaded) resolve();
+      });
     });
   }
 
@@ -160,7 +166,8 @@ export class SYSB400CRUComponent
           if (this.canAdd()) {
             this.sysb400Service.insertSYSB400(frm.value).subscribe(() => {
               this.messageService.successBubble('新增成功');
-              this.onCancel(); // 新增成功後返回查詢頁面
+              // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+              this.dataForm.reset(); // 重置表單
             });
           }
           break;

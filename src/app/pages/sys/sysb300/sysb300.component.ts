@@ -36,7 +36,15 @@ export class SYSB300Component
     { field: 'level_name', header: '階層名稱', visible: true },
     {
       field: 'p_level_id',
-      header: '上層組織',
+      header: '上層組織編號',
+      visible: true,
+      format: (value: string) =>
+        this.upgroup_Options.find((option) => option.No === value)?.No ||
+        value,
+    },
+    {
+      field: 'p_level_name',
+      header: '上層組織名稱',
       visible: true,
       format: (value: string) =>
         this.upgroup_Options.find((option) => option.No === value)?.Name ||
