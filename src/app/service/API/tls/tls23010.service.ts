@@ -20,4 +20,15 @@ return this.http.post<any>(url, body).pipe(
   catchError((error) => this.errorHandler.handleError(error))  // ✅ 正確
 );
   }
+  queryTLS23010Detail(payload: {
+  SYS_StoreNo: string;
+  TXN_Date: string;
+  ECR_No: string;
+  TXN_No: number;
+}): Observable<any> {
+  return this.http
+    .post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS23010_Detail`, payload)
+    .pipe(catchError(this.errorHandler.handleError));
+}
+
 }

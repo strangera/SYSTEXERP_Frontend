@@ -16,7 +16,7 @@
       >
         <div class="grid p-fluid">
           <app-calendar-range-quick
-            class="col-12 md:col-6 lg:col-5"
+            class="col-12 md:col-6 lg:col-4"
             label="交易日期"
             [startControl]="queryForm.controls.TXN_DateStart"
             [endControl]="queryForm.controls.TXN_DateEnd"
@@ -244,3 +244,17 @@
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
   ></app-table>
 </div>
+<app-expandable-edit-table
+  [mainColumns]="mainColumns"
+  [detailColumns]="detailColumns"
+  [data]="data"
+  [loading]="expandLoading"
+  detailKey="details"
+  dataKey="id" 
+  [showPaginator]="true"
+  [showCheckBox]="false"
+  [showAddButton]="false"
+  [showDetailAddButton]="false"
+  (onRowExpand)="loadDetail($event)" 
+>
+</app-expandable-edit-table>
