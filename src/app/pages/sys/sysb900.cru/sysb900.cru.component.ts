@@ -39,8 +39,10 @@ export class SYSB900CRUComponent extends BasicCruPageComponent<CategoryItem> imp
   // CanDel = true：可刪除項目（返回 false）
   // CanDel = false：不可刪除項目（返回 true）
   get isDisabled(): boolean {
-    return this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false;
+    return this.crudstatus === CRUDStatus.Read ||
+      (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false);
   }
+
 
   option: any[] = [];
 

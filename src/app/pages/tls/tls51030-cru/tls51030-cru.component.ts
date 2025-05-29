@@ -47,7 +47,8 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // CanDel = true：可刪除項目，大分類代碼可以編輯（返回 false）
   // CanDel = false：不可刪除項目，大分類代碼不能編輯（返回 true）
   get isCATSNoDisabled(): boolean {
-    return this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false;
+    return this.crudstatus === CRUDStatus.Read ||
+      (this.crudstatus === CRUDStatus.Edit && this.rowdata?.CanDel === false);
   }
 
   bigCategoryOptions: { value: string, label: string }[] = [];
