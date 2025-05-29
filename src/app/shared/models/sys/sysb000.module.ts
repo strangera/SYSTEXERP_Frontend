@@ -92,6 +92,8 @@ export interface Sysb400m {
   'UPD_Date': Date;
   'UPD_USR_No': string;
   'UPD_USR_Name': string;
+
+  'CanDel': boolean; // 是否可刪除
 }
 
 // SYS3A00 區域代碼檔

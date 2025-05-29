@@ -211,4 +211,8 @@ export class SYSB400Component
       console.log('組織代碼 查詢結果', this.org_Option);
     });
   }
+
+  isRowSelectable(rowData: Sysb400m): boolean {
+    return rowData.CanDel
+  }
 }
