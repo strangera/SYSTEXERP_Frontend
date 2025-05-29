@@ -241,6 +241,7 @@
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
     [showManage]="false"
+    [showDelete] = "false" 
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
   ></app-table>
 </div>
