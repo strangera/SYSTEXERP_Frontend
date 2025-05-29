@@ -22,6 +22,7 @@
             label="組織代碼"
             controlName="org_id"
             [control]="dataForm.controls.org_id"
+            [disabled]="!dataForm.controls.CanDel.value"
             [submitted]="submitted"
           ></app-input-text>
         </div>
