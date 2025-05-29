@@ -30,6 +30,7 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
     Role_No: ['', [Validators.required, Validators.maxLength(10)]], // 來源角色代碼
     Role_Name: ['', [Validators.required, Validators.maxLength(30)]], // 來源角色名稱
     Description: ['', [Validators.maxLength(50)]], // 角色註記
+    showScrapData: [],
   });
 
   roleUserData: AuthOption[] = [];
@@ -48,6 +49,13 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
     { field: 'User_No', header: '使用者代號', visible: true },
     { field: 'User_Name', header: '使用者名稱', visible: true },
   ]
+
+  treeNodes = [
+    { value: 'label', label: '角色代號' },
+    { value: 'children', label: '角色名稱' },
+    { value: 'IsEnable', label: '是否允許' },
+    { value: 'partialSelected', label: '是否勾選' }
+  ];
   selectedRoleUserData: AuthOption[] = []; // 選取的使用者資料
 
   constructor(
@@ -71,6 +79,10 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
 
           console.log('回傳使用者資料:', this.roleUserData);
 
+          const filteredTree = this.filterSelectedTree(this.roleUserData);
+          console.log('只保留已勾選的結構:', filteredTree);
+
+
           // 初始化被選中的資料（Match 為 true）
           // this.selectedRoleUserData = this.roleUserData.filter(user => user.Match === true);
 
@@ -89,6 +101,18 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
         this.messageService.unblockUi();
       },
     });
+  }
+
+  // ---樹狀資料---
+  toggleSelection(node: AuthOption, selected: boolean) {
+    node.partialSelected = selected;
+    if (node.children?.length) {
+      node.children.forEach(child => this.toggleSelection(child, selected));
+    }
+  }
+
+  onMembersSelected(selected: any[]) {
+    console.log('從子元件選到的:', selected);
   }
 
   // ----------------------------------------------------------------
@@ -151,5 +175,22 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
 
   onClearForm() {
     this.dataForm.reset(); // 重置表單
+  }
+
+  // 扁平化資料
+  filterSelectedTree(data: AuthOption[]): AuthOption[] {
+    return data
+      .map(node => {
+        const selectedChildren = this.filterSelectedTree(node.children || []);
+        const isSelected = node.partialSelected || selectedChildren.length > 0;
+        if (isSelected) {
+          return {
+            ...node,
+            children: selectedChildren
+          };
+        }
+        return null;
+      })
+      .filter(node => node !== null) as AuthOption[];
   }
 }
