@@ -115,14 +115,16 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
       format: (val: any) => this.getLabelFromOptions(val, this.carrierTypeOptions)
     },
     { field: 'TXN_GUI_CarrId', header: '電子發票載具ID隱碼', visible: true },
-    {
-      field: 'TXN_PrintGUI',
-      header: '電子發票是否列印',
-      visible: true,
-      format: (val: string) => val === '1' ? '是' : val === '0' ? '否' : val
-    }
+{
+  field: 'TXN_PrintGUI',
+  header: '電子發票是否列印',
+  visible: true,
+  format: (val: any) => this.getYesNoLabel(val)
+}
   ];
-
+getYesNoLabel(value: any): string {
+  return value === 'Y' ? '是' : value === 'N' ? '否' : value;
+}
 
   constructor(
     private tls23010Service: TLS23010Service,

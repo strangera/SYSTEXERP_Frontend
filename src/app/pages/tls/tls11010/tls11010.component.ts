@@ -97,7 +97,7 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS11010', 'TLS/TLS11010CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS11010', 'TLS/TLS11010CRU', this.queryForm);
     this.tls11010Service.getFloorOptions().subscribe((res) => (this.floorOptions = res));
     this.tls11010Service.getRegionOptions().subscribe((res) => (this.RegionCodeOptions = res));
     this.tls11010Service.getOrgOptions().subscribe((res) => {

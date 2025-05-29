@@ -61,7 +61,19 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     },
     { field: 'floor_desc', header: '樓層', visible: true },
     { field: 'area_desc', header: '區域', visible: true },
-    { field: 'bus_type', header: '大分類', visible: true },
+    // ✅ 新增兩個欄位來取代舊的「大分類」
+    {
+      field: 'bus_type',
+      header: '大分類代碼',
+      visible: true,
+      format: (value: string) => value?.split('/')?.[0] ?? ''
+    },
+    {
+      field: 'bus_type',
+      header: '大分類名稱',
+      visible: true,
+      format: (value: string) => value?.split('/')?.[1] ?? ''
+    },
     {
       field: 'tlt_bdate',
       header: '合約起日',
