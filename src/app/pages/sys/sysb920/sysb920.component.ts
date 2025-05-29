@@ -10,6 +10,7 @@ import { SortMeta } from 'primeng/api';
 import { IndustryTypeService } from '../../../service/basic/industry-type.service';
 import { ProductCategoryService } from '../../../service/basic/product-category.service';
 import { debounceTime } from 'rxjs';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -47,18 +48,17 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
     bus_class: [[] as string[]], // 中分類代碼
     bus_sclass_desc: ['', [Validators.maxLength(200)]], // 備註
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
-    //分頁用
-    pageSize: [10],
-    pageIndex: [0],
-    SortBy: [[{ field: 'bus_class', order: 1 }] as SortMeta[]],
+    ...createPaginationConfig([{ field: 'bus_sclass', order: 1 }]), // 分頁和排序參數
   });
 
   data: CategoryItem[] = [];
   filteredData: CategoryItem[] = [...this.data];
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'bus_sclass', header: '小分類代碼', visible: true },
     { field: 'bus_sclass_name', header: '小分類名稱', visible: true },
+    { field: 'bus_type', header: '所屬大分類代碼', visible: true },
     { field: 'bus_type_name', header: '所屬大分類', visible: true },
+    { field: 'bus_class', header: '中分類代碼', visible: true },
     { field: 'bus_class_name', header: '中分類名稱', visible: true },
     { field: 'bus_sclass_desc', header: '備註', visible: true },
     // 其他欄位

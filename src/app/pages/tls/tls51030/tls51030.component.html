@@ -39,7 +39,7 @@
                 ></app-input-text>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
+                <app-multi-select
                   label="大分類代碼/名稱"
                   controlName="CAT_LNo"
                   [options]="bigCategoryOptions"
@@ -47,12 +47,12 @@
                   optionValue="value"
                   [control]="queryForm.controls.CAT_LNo"
                   [submitted]="submitted"
-                ></app-dropdown>
+                ></app-multi-select>
               </div>
             </div>
             <div class="grid p-fluid">
               <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
+                <app-multi-select
                   label="中分類代碼/名稱"
                   controlName="CAT_MNo"
                   [options]="middleCategoryOptions"
@@ -60,7 +60,7 @@
                   optionValue="value"
                   [control]="queryForm.controls.CAT_MNo"
                   [submitted]="submitted"
-                ></app-dropdown>
+                ></app-multi-select>
               </div>
             </div>
             <!-- <app-editor-text label="說明" controlName="editortext" [control]="queryForm.controls.editortext"

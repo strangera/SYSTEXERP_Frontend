@@ -28,65 +28,66 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="專櫃名稱"
-              controlName="brandName"
-              [control]="dataForm.controls.brandName"
+              controlName="tlt_name"
+              [control]="dataForm.controls.tlt_name"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="專櫃招募編號"
-              controlName="recruitmentCode"
-              [control]="dataForm.controls.recruitmentCode"
+              controlName="apply_no"
+              [control]="dataForm.controls.apply_no"
               [submitted]="submitted"
+              [disabled]="true"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="專櫃編號"
-              controlName="counterNumber"
-              [control]="dataForm.controls.counterNumber"
+              controlName="tlt_no"
+              [control]="dataForm.controls.tlt_no"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="大分類"
-              controlName="industryType"
+              controlName="bus_type"
               [options]="businessTypeCodeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.industryType"
+              [control]="dataForm.controls.bus_type"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="廠商統一編號"
-              controlName="vendorCode"
+              controlName="ven_uniform"
               [options]="vendorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.vendorCode"
+              [control]="dataForm.controls.ven_uniform"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="廠商名稱"
-              controlName="vendorName"
-              [control]="dataForm.controls.vendorName"
+              controlName="VEN_Name"
+              [control]="dataForm.controls.VEN_Name"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="營業型態"
-              controlName="businessType"
+              controlName="paper_type"
               [options]="businessTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.businessType"
+              [control]="dataForm.controls.paper_type"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -105,13 +106,16 @@
         <app-table
           [data]="filteredData"
           [columns]="columns"
-          [showCheckBox]="true"
+          [showCheckBox]="false"
           dataKey="locationCode"
           [loading]="loading"
           [showDetail]="false"
           [showRowEdit]="true"
           [showInsert]="true"
           [showEdit]="false"
+          [showReportMode]="false"
+          [showFooter]="false"
+          [showPaginator]="false"
         >
           <ng-template pTemplate="caption">
             <div class="flex justify-content-end">
@@ -144,8 +148,8 @@
             <app-calendar
               calendarType="dateOne"
               label="契約起始日"
-              controlName="contractStartDate"
-              [control]="dataForm.controls.contractStartDate"
+              controlName="tlt_bdate"
+              [control]="dataForm.controls.tlt_bdate"
               [submitted]="submitted"
             ></app-calendar>
           </div>
@@ -153,8 +157,8 @@
             <app-calendar
               calendarType="dateOne"
               label="契約截止日"
-              controlName="contractEndDate"
-              [control]="dataForm.controls.contractEndDate"
+              controlName="tlt_edate"
+              [control]="dataForm.controls.tlt_edate"
               [submitted]="submitted"
             ></app-calendar>
           </div>
@@ -162,8 +166,8 @@
             <app-calendar
               calendarType="dateOne"
               label="洽談日期"
-              controlName="discussDate"
-              [control]="dataForm.controls.discussDate"
+              controlName="contact_Date"
+              [control]="dataForm.controls.contact_Date"
               [submitted]="submitted"
             ></app-calendar>
           </div>
@@ -171,8 +175,8 @@
             <app-calendar
               calendarType="dateOne"
               label="回函日期"
-              controlName="callbackDate"
-              [control]="dataForm.controls.callbackDate"
+              controlName="feedback_date"
+              [control]="dataForm.controls.feedback_date"
               [submitted]="submitted"
             ></app-calendar>
           </div>
@@ -180,19 +184,19 @@
             <app-calendar
               calendarType="dateOne"
               label="回函截止日"
-              controlName="callbackEndDate"
-              [control]="dataForm.controls.callbackEndDate"
+              controlName="due_date"
+              [control]="dataForm.controls.due_date"
               [submitted]="submitted"
             ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="洽談者"
-              controlName="discussPerson"
-              [options]="UserCodeOptions"
+              controlName="contact_USR_Name"
+              [options]="yesNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.discussPerson"
+              [control]="dataForm.controls.contact_USR_Name"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -216,22 +220,22 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="組織代號"
-              controlName="organizationCode"
-              [options]="OrganizationNumberOptions"
+              controlName="org_id"
+              [options]="organizationOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.organizationCode"
+              [control]="dataForm.controls.org_id"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="中分類"
-              controlName="productCategory"
-              [options]="productCategoryOptions"
+              controlName="bus_class"
+              [options]="yesNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.productCategory"
+              [control]="dataForm.controls.bus_class"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -239,10 +243,10 @@
             <app-dropdown
               label="小分類"
               controlName="subCategory"
-              [options]="smallCategoryOptions"
+              [options]="yesNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.subCategory"
+              [control]="dataForm.controls.bus_sclass"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -250,8 +254,8 @@
             <app-calendar
               calendarType="dateOne"
               label="營運起始日"
-              controlName="startBusinessStartDate"
-              [control]="dataForm.controls.startBusinessStartDate"
+              controlName="tlt_contract_bdate"
+              [control]="dataForm.controls.tlt_contract_bdate"
               [submitted]="submitted"
             ></app-calendar>
           </div>
@@ -259,8 +263,8 @@
             <app-calendar
               calendarType="dateOne"
               label="營運截止日"
-              controlName="startBusinessEndDate"
-              [control]="dataForm.controls.startBusinessEndDate"
+              controlName="tlt_contract_edate"
+              [control]="dataForm.controls.tlt_contract_edate"
               [submitted]="submitted"
             ></app-calendar>
           </div>
@@ -284,60 +288,60 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="抽成別"
-              controlName="commissionType"
+              controlName="tlt_term_type"
               [options]="commissionTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.commissionType"
+              [control]="dataForm.controls.tlt_term_type"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="抽成額計算方式"
-              controlName="commissionCalculation"
+              controlName="comm_comp_type"
               [options]="commissionCalculationOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.commissionCalculation"
+              [control]="dataForm.controls.comm_comp_type"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="是否為抽成"
-              controlName="isCommission"
-              [options]="whetherOptions"
+              controlName="comm_yn"
+              [options]="yesNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.isCommission"
+              [control]="dataForm.controls.comm_yn"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="預收租金"
-              controlName="advanceRent"
-              [options]="whetherOptions"
+              controlName="rent_ahead"
+              [options]="yesNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.advanceRent"
+              [control]="dataForm.controls.rent_ahead"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="預收租金期數"
-              controlName="advanceRentPeriods"
-              [control]="dataForm.controls.advanceRentPeriods"
+              controlName="rent_period"
+              [control]="dataForm.controls.rent_period"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="固定租金"
-              controlName="fixedRent"
-              [control]="dataForm.controls.fixedRent"
+              controlName="base_rent"
+              [control]="dataForm.controls.base_rent"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -352,27 +356,27 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="年目標營業額(業主)"
-              controlName="annualOwnerTarget"
-              [control]="dataForm.controls.annualOwnerTarget"
+              controlName="total_amt"
+              [control]="dataForm.controls.total_amt"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="年預估營業額(廠商)"
-              controlName="annualVendorEstimate"
-              [control]="dataForm.controls.annualVendorEstimate"
+              controlName="total_amt_vendor"
+              [control]="dataForm.controls.total_amt_vendor"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="保證金付款方式"
-              controlName="depositPaymentMethod"
-              [options]="depositPaymentMethodOptions"
+              controlName="paymentMethods"
+              [options]="paymentMethodOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.depositPaymentMethod"
+              [control]="dataForm.controls.paymentMethods"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -380,7 +384,7 @@
             <app-input-text
               label="履約保證金"
               controlName="performanceBond"
-              [control]="dataForm.controls.performanceBond"
+              [control]="dataForm.controls.paymentMethods"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -388,37 +392,37 @@
             <app-dropdown
               label="裝潢方式"
               controlName="decorationStyle"
-              [options]="decorationStyleOptions"
+              [options]="decorationOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.decorationStyle"
+              [control]="dataForm.controls.deco_type"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="施工保證金付款方式"
-              controlName="constructionDepositPaymentMethod"
-              [options]="constructionDepositPaymentMethodOptions"
+              controlName="paytype"
+              [options]="paytypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.constructionDepositPaymentMethod"
+              [control]="dataForm.controls.paytype"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="施工保證金"
-              controlName="constructionBond"
-              [control]="dataForm.controls.constructionBond"
+              controlName="construct_fees"
+              [control]="dataForm.controls.construct_fees"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="付款期限(天數)"
-              controlName="paymentDaysAfterCheckout"
-              [control]="dataForm.controls.paymentDaysAfterCheckout"
+              controlName="check_day"
+              [control]="dataForm.controls.check_day"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -442,22 +446,22 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="櫃別"
-              controlName="counterCategory"
+              controlName="tlt_kind"
               [options]="counterCategoryOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.counterCategory"
+              [control]="dataForm.controls.tlt_kind"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="是否使用業主商店代號"
-              controlName="useOwnerStoreCode"
-              [options]="whetherOptions"
+              controlName="edc_yn"
+              [options]="yesNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.useOwnerStoreCode"
+              [control]="dataForm.controls.edc_yn"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -465,21 +469,21 @@
             <app-dropdown
               label="包底類別"
               controlName="packageCategory"
-              [options]="packageCategoryOptions"
+              [options]="tltKindOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.packageCategory"
+              [control]="dataForm.controls.tlt_ctype_mtotal"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="超出部份處理方式"
-              controlName="excessHandlingMethod"
-              [options]="excessHandlingMethodOptions"
+              controlName="overall_status"
+              [options]="overallStatusOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.excessHandlingMethod"
+              [control]="dataForm.controls.overall_status"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -487,76 +491,76 @@
             <app-dropdown
               label="是否開立業主發票"
               controlName="issueOwnerInvoice"
-              [options]="whetherOptions"
+              [options]="yesNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.issueOwnerInvoice"
+              [control]="dataForm.controls.rece_yn"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="是否使用業主收銀機"
-              controlName="useOwnerCashRegister"
-              [options]="whetherOptions"
+              controlName="pos_yn"
+              [options]="yesNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.useOwnerCashRegister"
+              [control]="dataForm.controls.pos_yn"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="是否為業主收現"
-              controlName="isOwnerCashCollection"
-              [options]="whetherOptions"
+              controlName="cash_yn"
+              [options]="yesNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.isOwnerCashCollection"
+              [control]="dataForm.controls.cash_yn"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="結帳方式"
-              controlName="checkoutMethod"
-              [options]="checkoutMethodOptions"
+              controlName="money_type"
+              [options]="moneyTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.checkoutMethod"
+              [control]="dataForm.controls.money_type"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="配合方式"
-              controlName="cooperationMethod"
-              [options]="cooperationMethodOptions"
+              controlName="store_way"
+              [options]="storeWayOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.cooperationMethod"
+              [control]="dataForm.controls.store_way"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="對帳方式"
-              controlName="reconciliationMethod"
-              [options]="reconciliationMethodOptions"
+              controlName="check_type"
+              [options]="checkTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.reconciliationMethod"
+              [control]="dataForm.controls.check_type"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="付款方式"
-              controlName="paymentMethod"
-              [options]="paymentMethodOptions"
+              controlName="paytype"
+              [options]="paytypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.paymentMethod"
+              [control]="dataForm.controls.paytype"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -564,29 +568,29 @@
             <app-dropdown
               label="是否配合聯名卡"
               controlName="isCooperationWithCard"
-              [options]="whetherOptions"
+              [options]="yesNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.isCooperationWithCard"
+              [control]="dataForm.controls.vip_yn"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="聯名卡折數"
-              controlName="cardDiscount"
-              [control]="dataForm.controls.cardDiscount"
+              controlName="credit_card"
+              [control]="dataForm.controls.credit_card"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="請款單據別"
-              controlName="invoiceDocumentType"
-              [options]="invoiceDocumentTypeOptions"
+              controlName="invoice_type"
+              [options]="invoiceTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.invoiceDocumentType"
+              [control]="dataForm.controls.invoice_type"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -594,10 +598,10 @@
             <app-multi-select
               label="是否抄錶"
               controlName="meterReading"
-              [options]="options1"
+              [options]="meterTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.meterReading"
+              [control]="dataForm.controls.meter_typeList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -605,18 +609,18 @@
             <app-multi-select
               label="有無保證票"
               controlName="guaranteeNote"
-              [options]="options2"
+              [options]="yesNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.guaranteeNote"
+              [control]="dataForm.controls.meter_typeList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="保證金備註"
-              controlName="depositRemarks"
-              [control]="dataForm.controls.depositRemarks"
+              controlName="ticket_remarks"
+              [control]="dataForm.controls.ticket_remarks"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -693,24 +697,24 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="發票電子郵件"
-              controlName="invoiceEmail"
-              [control]="dataForm.controls.invoiceEmail"
+              controlName="invoice_email"
+              [control]="dataForm.controls.invoice_email"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="票據抬頭"
-              controlName="billTitle"
-              [control]="dataForm.controls.billTitle"
+              controlName="CHECK_TITLE"
+              [control]="dataForm.controls.CHECK_TITLE"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="專櫃電話號碼"
-              controlName="counterPhone"
-              [control]="dataForm.controls.counterPhone"
+              controlName="store_tel"
+              [control]="dataForm.controls.store_tel"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -718,58 +722,58 @@
             <app-dropdown
               label="廠商匯款銀行代號"
               controlName="bankCode"
-              [options]="bankCodeOptions"
+              [options]="yesNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.bankCode"
+              [control]="dataForm.controls.bank_id"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="廠商帳戶名稱"
-              controlName="vendorAccountName"
-              [control]="dataForm.controls.vendorAccountName"
+              controlName="vendor_acct_name"
+              [control]="dataForm.controls.vendor_acct_name"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="廠商銀行帳號"
-              controlName="bankAccountNumber"
-              [control]="dataForm.controls.bankAccountNumber"
+              controlName="vendor_acct_no"
+              [control]="dataForm.controls.vendor_acct_no"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="公司電話號碼(O)"
-              controlName="companyPhone"
-              [control]="dataForm.controls.companyPhone"
+              controlName="contact_tel"
+              [control]="dataForm.controls.contact_tel"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="公司傳真號碼(F)"
-              controlName="companyFax"
-              [control]="dataForm.controls.companyFax"
+              controlName="contact_fax"
+              [control]="dataForm.controls.contact_fax"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-6">
             <app-input-text
               label="郵寄地址"
-              controlName="mailingAddress"
-              [control]="dataForm.controls.mailingAddress"
+              controlName="contact_addr"
+              [control]="dataForm.controls.contact_addr"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12">
             <app-input-textarea
               label="備註"
-              controlName="remarks"
-              [control]="dataForm.controls.remarks"
+              controlName="tlt_remark"
+              [control]="dataForm.controls.tlt_remark"
               [submitted]="submitted"
             ></app-input-textarea>
           </div>

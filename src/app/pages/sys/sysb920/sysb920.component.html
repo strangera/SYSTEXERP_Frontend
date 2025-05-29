@@ -39,7 +39,7 @@
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="所屬大分類代碼/名稱"
               controlName="bus_type"
               [options]="optionsBig"
@@ -47,12 +47,12 @@
               optionValue="value"
               [control]="queryForm.controls.bus_type"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="中分類代碼/名稱"
               controlName="bus_class"
               [options]="optionsMid"
@@ -60,7 +60,7 @@
               optionValue="value"
               [control]="queryForm.controls.bus_class"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
         </div>
         <!-- <div *appHasPermission="queryPermission" class="col"> -->
@@ -86,7 +86,7 @@
     (delete)="onDelete($event)"
     [showCheckBox]="true"
     dataKey="id"
-    [multiSortMeta]="queryForm.controls.SortBy.value"
+    [multiSortMeta]="[{ field: 'bus_sclass', order: 1 }]"
     [totalRecords]="totalRecords"
     [lazy]="true"
     [loading]="loading"
