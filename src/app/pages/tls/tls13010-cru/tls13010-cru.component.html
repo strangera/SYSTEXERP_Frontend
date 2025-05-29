@@ -31,6 +31,7 @@
               controlName="tlt_name"
               [control]="dataForm.controls.tlt_name"
               [submitted]="submitted"
+              [disabled]="true"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -51,18 +52,16 @@
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="大分類"
-              controlName="bus_type"
-              [options]="businessTypeCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.bus_type"
+            <app-input-text
+              label="廠商名稱"
+              controlName="VEN_Name"
+              [control]="dataForm.controls.VEN_Name"
               [submitted]="submitted"
-            ></app-dropdown>
+              [disabled]="true"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
+            <app-dropdown
               label="廠商統一編號"
               controlName="ven_uniform"
               [options]="vendorOptions"
@@ -70,15 +69,7 @@
               optionValue="value"
               [control]="dataForm.controls.ven_uniform"
               [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="廠商名稱"
-              controlName="VEN_Name"
-              [control]="dataForm.controls.VEN_Name"
-              [submitted]="submitted"
-            ></app-input-text>
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -219,12 +210,12 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="組織代號"
-              controlName="org_id"
-              [options]="organizationOptions"
+              label="大分類"
+              controlName="bus_type"
+              [options]="businessTypeCodeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.org_id"
+              [control]="dataForm.controls.bus_type"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -247,6 +238,17 @@
               optionLabel="label"
               optionValue="value"
               [control]="dataForm.controls.bus_sclass"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="組織代號"
+              controlName="org_id"
+              [options]="organizationOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.org_id"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -629,7 +631,7 @@
     </p-accordionTab>
 
     <!-- 參加活動資訊 -->
-    <p-accordionTab
+    <!-- <p-accordionTab
       header="參加活動資訊"
       [selected]="true"
       class="line-height-3 m-0"
@@ -671,7 +673,7 @@
           </div>
         </div>
       </form>
-    </p-accordionTab>
+    </p-accordionTab> -->
 
     <!-- 聯絡資訊 -->
     <p-accordionTab
