@@ -244,7 +244,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   decorationOptions = TLS13010_DROPDOWN_OPTIONS.decorationType;
   moneyTypeOptions = TLS13010_DROPDOWN_OPTIONS.moneyType;
   checkTypeOptions = TLS13010_DROPDOWN_OPTIONS.checkType;
-  yesNoOptions = TLS13010_DROPDOWN_OPTIONS.yesNo;
+  yesNoOptions = [...TLS13010_DROPDOWN_OPTIONS.yesNo];
   meterTypeOptions = TLS13010_DROPDOWN_OPTIONS.meterType;
   paytypeOptions = TLS13010_DROPDOWN_OPTIONS.paytype;
   storeWayOptions = TLS13010_DROPDOWN_OPTIONS.storeWay;
