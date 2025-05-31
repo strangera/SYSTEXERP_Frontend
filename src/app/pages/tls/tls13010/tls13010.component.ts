@@ -24,9 +24,11 @@ import { PaymentMethod2Service } from '../../../service/basic/payment-method2.se
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
 import { formatCheckType, formatCommissionCompType, formatDecoType, formatMoneyType, formatOpenflagStatus, formatTltTermType } from './tls13010.constants';
-import { TLS13010_DROPDOWN_OPTIONS } from './tls13010.dropdown';
+import { DropdownOption, TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from './tls13010.dropdown';
 import { ContractFlowService, WorkflowStep } from '../../../service/API/tls/tls13010contract-flow/contract-flow.service'; // 新增這個
 import { TLS13010Service } from '../../../service/API/tls/tls13010.service';
+import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
+import { forkJoin } from 'rxjs';
 
 // 資料模型不變...
 interface ContractItem {
@@ -153,7 +155,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     org_idList: [[]], // 組織代碼清單
 
     // 財務與其他資訊
-    comm_comp_type: [[]], // 佣金計算方式清單
+    comm_comp_type: [['2']], // 佣金計算方式清單
     tlt_term_typeList: [[]], // 合約期間類型清單
     money_typeList: [[]], // 幣別清單
     paytypeList: [[]], // 付款方式清單
@@ -233,14 +235,12 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   commissionCompTypeOptions = TLS13010_DROPDOWN_OPTIONS.commissionCompType;
   businessTypeOptions = TLS13010_DROPDOWN_OPTIONS.businessType;
   commCompTypeDropdown = TLS13010_DROPDOWN_OPTIONS.commCompType;
+  tltopenflagOption = TLS13010_DROPDOWN_OPTIONS.openflagStatus; // 開幕狀態
 
   // API 來的選項 (保留原來的)
   vendorOptions: any[] = [];
   locationOptions: any[] = [];
   contractStatusOptions: any[] = [];
-  regionOptions: any[] = [];
-  buildingOptions: any[] = [];
-  floorOptions: any[] = [];
   negotiatorOptions: any[] = [];
   organizationOptions: any[] = [];
   operationStatusOptions: any[] = [];
@@ -252,11 +252,18 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   cooperationMethodOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
   bustypeOption: any[] = [];
+  // 新增這些屬性
+  public buildingOptions: DropdownOption[] = [];     // 館別
+  public floorOptions: DropdownOption[] = [];        // 樓層
+  public regionOptions: DropdownOption[] = [];       // 區域
+  public orgOptions: DropdownOption[] = [];          // 組織代碼
+  public paperTypeOptions: DropdownOption[] = [];          //營業型態
 
   constructor(
     public override router: Router, // 改為 public
+    private locationOptionsService: LocationOptionsService, // 新增這行
     private contractFlowService: ContractFlowService, // 新增
-    private Sysb800DropdownService: Sysb800DropdownService,
+    public tls13010DropdownService: TLS13010DropdownService, // 改成 public，這樣 template 可以直接用
     private businessTypeCodeService: BusinessTypeCodeService,
     private vendorService: VendorService,
     private locationService: LocationService,
@@ -287,15 +294,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     // 新增：檢查是否有進行中的工作流程
     this.checkExistingWorkflow();
 
-    this.Sysb800DropdownService.getSystemTypes().subscribe({
-      next: (response) => {
-        this.bustypeOption = response;
-      },
-      error: (error) => {
-        console.error('獲取大分類代碼失敗:', error);
-        this.messageService.errorBubble('無法載入大分類代碼，請稍後重試');
-      }
-    });
+
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
     // 載入所有下拉選單資料
@@ -326,9 +325,6 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
 
   private loadDropdownOptions(): void {
     // 只載入需要從 API 取得的選項
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
-      this.businessTypeCodeOptions = data;
-    });
 
     this.vendorService.getVendors().subscribe((data) => {
       this.vendorOptions = data;
@@ -494,5 +490,37 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   // 新增：取得進度百分比 (可用於 template 顯示)
   getProgressPercentage(): number {
     return this.contractFlowService.getProgressPercentage();
+  }
+
+  // 新增這個方法
+  private initLocationOptions(): void {
+    forkJoin({
+      building: this.locationOptionsService.getBuildingOptions(),
+      floor: this.locationOptionsService.getFloorOptions(),
+      region: this.locationOptionsService.getRegionOptions(),
+      org: this.locationOptionsService.getOrgOptions(),
+      location: this.locationOptionsService.getLocationOptions(),
+      paperType: this.locationOptionsService.getPaperTypeOptions()
+    }).subscribe({
+      next: (results) => {
+        this.buildingOptions = results.building;
+        this.floorOptions = results.floor;
+        this.regionOptions = results.region;
+        this.orgOptions = results.org;
+        this.locationOptions = results.location;
+        this.paperTypeOptions = results.paperType;
+      },
+      error: (error) => console.error('載入 Location 選項失敗:', error)
+    });
+  }
+
+  // 新增這些 getter 方法
+  getBuildingOptions(): DropdownOption[] { return this.buildingOptions; }
+  getFloorOptions(): DropdownOption[] { return this.floorOptions; }
+  getRegionOptions(): DropdownOption[] { return this.regionOptions; }
+  getOrgOptions(): DropdownOption[] { return this.orgOptions; }
+  getLocationOptions(): DropdownOption[] { return this.locationOptions; }
+  getPaperTypeOptions(): DropdownOption[] {
+    return this.paperTypeOptions;
   }
 }

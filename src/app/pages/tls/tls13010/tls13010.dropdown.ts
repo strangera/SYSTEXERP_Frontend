@@ -1,6 +1,9 @@
 // TLS13010 下拉選單選項
 // 基於 tls13010.constants.ts 的選項對照表
 
+import { Injectable } from '@angular/core';
+import { Observable, of, BehaviorSubject, forkJoin } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import {
   DECO_TYPE_OPTIONS,
   MONEY_TYPE_OPTIONS,
@@ -17,6 +20,8 @@ import {
   METER_TYPE_OPTIONS,
   OVERALL_STATUS_OPTIONS
 } from './tls13010.constants';
+import { Sysb800DropdownService } from '../../../service/API/sys/sysb800-dropdown.service';
+import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
 
 // ========== 介面定義 ==========
 export interface DropdownOption {
@@ -121,3 +126,263 @@ export const TLS13010_DROPDOWN_OPTIONS = {
   depositPayment: depositPaymentDropdownOptions,
   depositType: depositTypeDropdownOptions
 } as const;
+
+@Injectable({
+  providedIn: 'root'
+})
+export class TLS13010DropdownService {
+
+  // 大分類選項
+  public bustypeOptions: DropdownOption[] = [];
+  private bustypeLoaded = false;
+
+  // Location 相關選項
+  public locationOptions: DropdownOption[] = [];     // 位置
+  public buildingOptions: DropdownOption[] = [];     // 館別
+  public floorOptions: DropdownOption[] = [];        // 樓層
+  public regionOptions: DropdownOption[] = [];       // 區域
+  public orgOptions: DropdownOption[] = [];          // 組織代碼
+  public paperTypeOptions: DropdownOption[] = [];    //營業型態
+  // 載入狀態追蹤
+  private locationOptionsLoaded = {
+    building: false,
+    floor: false,
+    region: false,
+    org: false,
+    location: false
+  };
+
+  constructor(
+    private Sysb800DropdownService: Sysb800DropdownService,
+    private locationOptionsService: LocationOptionsService
+  ) {
+    // 自動載入所有選項
+    this.initAllOptions();
+  }
+
+  /**
+   * 初始化所有選項
+   */
+  private initAllOptions(): void {
+    this.initBustypeOptions();
+    this.initLocationOptions();
+  }
+
+  /**
+   * 自動初始化大分類選項
+   */
+  private initBustypeOptions(): void {
+    if (this.bustypeLoaded) return;
+
+    this.Sysb800DropdownService.getSystemTypes().subscribe({
+      next: (response: any[]) => {
+        this.bustypeOptions = response.map(item => ({
+          value: item.value || item.code || item.id,
+          label: item.label || item.name || item.description
+        }));
+        this.bustypeLoaded = true;
+        console.log('大分類選項自動載入完成:', this.bustypeOptions);
+      },
+      error: (error: any) => {
+        console.error('獲取大分類代碼失敗:', error);
+        this.bustypeOptions = [];
+      }
+    });
+  }
+
+  /**
+   * 初始化所有 Location 相關選項
+   */
+  private initLocationOptions(): void {
+    // 同時載入四個 API
+    forkJoin({
+      building: this.locationOptionsService.getBuildingOptions(),
+      floor: this.locationOptionsService.getFloorOptions(),
+      region: this.locationOptionsService.getRegionOptions(),
+      org: this.locationOptionsService.getOrgOptions(),
+      location: this.locationOptionsService.getLocationOptions(),
+      papertype: this.locationOptionsService.getPaperTypeOptions()
+    }).subscribe({
+      next: (results: { building: DropdownOption[]; floor: DropdownOption[]; region: DropdownOption[]; org: DropdownOption[]; location: DropdownOption[]; papertype: DropdownOption[]; }) => {
+        this.buildingOptions = results.building;
+        this.floorOptions = results.floor;
+        this.regionOptions = results.region;
+        this.orgOptions = results.org;
+        this.locationOptions = results.location;
+        this.paperTypeOptions = results.papertype;
+        // 更新載入狀態
+        Object.keys(this.locationOptionsLoaded).forEach(key => {
+          this.locationOptionsLoaded[key as keyof typeof this.locationOptionsLoaded] = true;
+        });
+
+        console.log('Location 選項載入完成:', {
+          building: this.buildingOptions.length,
+          floor: this.floorOptions.length,
+          region: this.regionOptions.length,
+          org: this.orgOptions.length,
+          location: this.locationOptions.length,
+          papertype: this.paperTypeOptions.length
+        });
+      },
+      error: (error: any) => {
+        console.error('載入 Location 選項失敗:', error);
+      }
+    });
+  }
+
+  // ========== Getter 方法 ==========
+
+  /**
+   * 取得大分類選項
+   */
+  getBustypeOptions(): DropdownOption[] {
+    return this.bustypeOptions;
+  }
+
+  /**
+   * 取得館別選項
+   */
+  getBuildingOptions(): DropdownOption[] {
+    return this.buildingOptions;
+  }
+
+  /**
+   * 取得樓層選項
+   */
+  getFloorOptions(): DropdownOption[] {
+    return this.floorOptions;
+  }
+
+  /**
+   * 取得區域選項
+   */
+  getRegionOptions(): DropdownOption[] {
+    return this.regionOptions;
+  }
+
+  /**
+   * 取得組織代碼選項
+   */
+  getOrgOptions(): DropdownOption[] {
+    return this.orgOptions;
+  }
+
+  // ========== 重新載入方法 ==========
+
+  /**
+   * 重新載入大分類
+   */
+  reloadBustypeOptions(): void {
+    this.bustypeLoaded = false;
+    this.initBustypeOptions();
+  }
+
+  /**
+   * 重新載入館別選項
+   */
+  reloadBuildingOptions(): void {
+    this.locationOptionsLoaded.building = false;
+    this.locationOptionsService.getBuildingOptions().subscribe({
+      next: (options: DropdownOption[]) => {
+        this.buildingOptions = options;
+        this.locationOptionsLoaded.building = true;
+        console.log('館別選項重新載入完成');
+      },
+      error: (error: any) => {
+        console.error('重新載入館別選項失敗:', error);
+      }
+    });
+  }
+
+  /**
+   * 重新載入樓層選項
+   */
+  reloadFloorOptions(): void {
+    this.locationOptionsLoaded.floor = false;
+    this.locationOptionsService.getFloorOptions().subscribe({
+      next: (options: DropdownOption[]) => {
+        this.floorOptions = options;
+        this.locationOptionsLoaded.floor = true;
+        console.log('樓層選項重新載入完成');
+      },
+      error: (error: any) => {
+        console.error('重新載入樓層選項失敗:', error);
+      }
+    });
+  }
+
+  /**
+   * 重新載入區域選項
+   */
+  reloadRegionOptions(): void {
+    this.locationOptionsLoaded.region = false;
+    this.locationOptionsService.getRegionOptions().subscribe({
+      next: (options: any) => {
+        this.regionOptions = options;
+        this.locationOptionsLoaded.region = true;
+        console.log('區域選項重新載入完成');
+      },
+      error: (error: any) => {
+        console.error('重新載入區域選項失敗:', error);
+      }
+    });
+  }
+
+  /**
+   * 重新載入組織代碼選項
+   */
+  reloadOrgOptions(): void {
+    this.locationOptionsLoaded.org = false;
+    this.locationOptionsService.getOrgOptions().subscribe({
+      next: (options: DropdownOption[]) => {
+        this.orgOptions = options;
+        this.locationOptionsLoaded.org = true;
+        console.log('組織代碼選項重新載入完成');
+      },
+      error: (error: any) => {
+        console.error('重新載入組織代碼選項失敗:', error);
+      }
+    });
+  }
+
+  /**
+   * 重新載入所有 Location 選項
+   */
+  reloadAllLocationOptions(): void {
+    Object.keys(this.locationOptionsLoaded).forEach(key => {
+      this.locationOptionsLoaded[key as keyof typeof this.locationOptionsLoaded] = false;
+    });
+    this.initLocationOptions();
+  }
+
+  // ========== 狀態檢查方法 ==========
+
+  /**
+   * 檢查所有選項是否已載入完成
+   */
+  isAllOptionsLoaded(): boolean {
+    return this.bustypeLoaded &&
+      Object.values(this.locationOptionsLoaded).every(loaded => loaded);
+  }
+
+  /**
+   * 檢查特定選項是否已載入
+   */
+  isOptionLoaded(optionType: 'bustype' | 'building' | 'floor' | 'region' | 'org'): boolean {
+    if (optionType === 'bustype') {
+      return this.bustypeLoaded;
+    }
+    return this.locationOptionsLoaded[optionType as keyof typeof this.locationOptionsLoaded];
+  }
+
+  /**
+   * 取得載入狀態
+   */
+  getLoadingStatus() {
+    return {
+      bustype: this.bustypeLoaded,
+      ...this.locationOptionsLoaded,
+      allLoaded: this.isAllOptionsLoaded()
+    };
+  }
+}

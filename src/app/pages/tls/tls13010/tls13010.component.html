@@ -42,7 +42,7 @@
             <app-multi-select
               label="大分類"
               controlName="bus_typeList"
-              [options]="bustypeOption"
+              [options]="tls13010DropdownService.bustypeOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.bus_typeList"
@@ -70,12 +70,12 @@
           </div>
           <div class="col-12 md:col-6 lg:col-6">
             <app-multi-select
-              label="營業型態"
-              controlName="paper_typeList"
-              [options]="businessTypeOptions"
+              label="營運狀況"
+              controlName="tlt_openflagList"
+              [options]="tltopenflagOption"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.paper_typeList"
+              [control]="queryForm.controls.tlt_openflagList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -95,7 +95,7 @@
               <app-multi-select
                 label="位置"
                 controlName="location_noList"
-                [options]="locationOptions"
+                [options]="tls13010DropdownService.locationOptions"
                 optionLabel="label"
                 optionValue="value"
                 [control]="queryForm.controls.location_noList"
@@ -106,7 +106,7 @@
               <app-multi-select
                 label="區域"
                 controlName="area_noList"
-                [options]="regionOptions"
+                [options]="tls13010DropdownService.regionOptions"
                 optionLabel="label"
                 optionValue="value"
                 [control]="queryForm.controls.area_noList"
@@ -117,7 +117,7 @@
               <app-multi-select
                 label="館別"
                 controlName="tlt_buildingList"
-                [options]="buildingOptions"
+                [options]="tls13010DropdownService.buildingOptions"
                 optionLabel="label"
                 optionValue="value"
                 [control]="queryForm.controls.tlt_buildingList"
@@ -128,7 +128,7 @@
               <app-multi-select
                 label="樓層"
                 controlName="tlt_floorList"
-                [options]="floorOptions"
+                [options]="tls13010DropdownService.floorOptions"
                 optionLabel="label"
                 optionValue="value"
                 [control]="queryForm.controls.tlt_floorList"
@@ -248,12 +248,12 @@
           <div class="grid p-fluid">
             <div class="col-12 md:col-6 lg:col-6">
               <app-multi-select
-                label="營運狀況"
-                controlName="tlt_openflagList"
-                [options]="operationStatusOptions"
+                label="營業型態"
+                controlName="paper_typeList"
+                [options]="this.tls13010DropdownService.paperTypeOptions"
                 optionLabel="label"
                 optionValue="value"
-                [control]="queryForm.controls.tlt_openflagList"
+                [control]="queryForm.controls.paper_typeList"
                 [submitted]="submitted"
               ></app-multi-select>
             </div>
@@ -261,7 +261,7 @@
               <app-multi-select
                 label="組織"
                 controlName="org_idList"
-                [options]="organizationOptions"
+                [options]="this.tls13010DropdownService.orgOptions"
                 optionLabel="label"
                 optionValue="value"
                 [control]="queryForm.controls.org_idList"
