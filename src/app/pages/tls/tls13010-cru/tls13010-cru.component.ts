@@ -1,33 +1,31 @@
-// tls13010-cru.component.ts (修改後)
-import { LocationCodeService } from './../../../service/basic/locationcode.service';
-import { Component, OnInit, OnDestroy } from '@angular/core'; // 新增 OnDestroy
+// tls13010-cru.component.ts (改善後版本)
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router'; // 新增 Router
-import { Subscription } from 'rxjs'; // 新增 Subscription
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BaseTypeService } from '../../../service/basic/base-type-service.service';
-import { ExcessHandlingMethodService } from '../../../service/basic/excess-handling-method.service';
-import { CommissionTypeService } from '../../../service/basic/commission-type.service';
-import { WhetherService } from '../../../service/basic/whether.service';
-import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
-import { ReconciliationMethodService } from '../../../service/basic/reconciliation-method.service';
-import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
-import { PaperTypeService } from '../../../service/basic/paper-type.service';
+import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+
+// 基礎組件
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+
+// 工作流程服務
+import { ContractFlowService, WorkflowStep } from '../../../service/API/tls/tls13010contract-flow/contract-flow.service';
+
+// 下拉選單服務和選項
+import { TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from '../tls13010/tls13010.dropdown';
+
+// API 服務（參考主頁面需要的服務）
 import { VendorService } from '../../../service/basic/vendor.service';
-import { BankAccountCodeService } from '../../../service/basic/bank-account-code.service';
+import { ContractStatusService } from '../../../service/basic/contract-status.service';
+import { UserCodeService } from '../../../service/basic/user-code.service';
+import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
+import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
 import { CooperationMethodService } from '../../../service/basic/cooperation-method.service';
 import { CounterCategoryService } from '../../../service/basic/counter-category.service';
-import { DecorationStyleService } from '../../../service/basic/decoration-style.service';
-import { CommissionCalculationService } from '../../../service/basic/commission-calculation.service';
+
+// 其他可能需要的服務（根據你的表單欄位）
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
-import { BusinessTypeService } from '../../../service/basic/businesstype.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { ProductCategoryService } from '../../../service/basic/product-category.service';
-import { SmallCategoryService } from '../../../service/basic/small-category.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ContractFlowService, WorkflowStep } from '../../../service/API/tls/tls13010contract-flow/contract-flow.service'; // 修改引入
-import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
+import { BankAccountCodeService } from '../../../service/basic/bank-account-code.service';
 
 interface CategoryItem {
   id: number;
@@ -73,47 +71,38 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   columns: any[] = [
     {
       field: 'locationCode', header: '位置編號', visible: true, type: 'dropdown',
-      options: [
-        { label: 'B123', value: 'B123' },
-        { label: 'C234', value: 'C234' },
-      ],
+      options: [], // 將從 API 載入
     },
     {
       field: 'floor', header: '樓層', visible: true,
       type: 'dropdown',
-      options: [
-        { label: '1樓', value: '1樓' },
-        { label: '2樓', value: '2樓' },
-        { label: '3樓', value: '3樓' },
-        { label: '4樓', value: '4樓' },
-        { label: '5樓', value: '5樓' },
-      ],
+      options: [], // 將從 API 載入
     },
-    { field: 'area', header: '區域', visible: true, type: 'input', },
+    { field: 'area', header: '區域', visible: true, type: 'input' },
     { field: 'businessArea', header: '營業坪數', visible: true, type: 'input' },
     { field: 'startDate', header: '使用起始日', visible: true, type: 'date' },
     { field: 'endDate', header: '使用截止日', visible: true, type: 'date' },
     { field: 'performanceShare', header: '業績分攤(%)', visible: true, type: 'input' },
   ];
 
-  // 主要表單定義
+  // 主要表單定義（加上驗證規則）
   dataForm = this.formBuilder.group({
     /** @description 合約ID */
     talent_id: [''],
     /** @description 專櫃招募編號 */
-    apply_no: [''],
+    apply_no: ['', [Validators.required]],
 
-    // 基本資訊
+    // ========== 基本資訊 ==========
     /** @description 專櫃名稱 */
-    tlt_name: [''],
+    tlt_name: ['', [Validators.required, Validators.maxLength(100)]],
     /** @description 專櫃編號 */
     tlt_no: [{ value: '契約書審核後才給號', disabled: true }],
     /** @description 廠商統一編號 */
-    ven_uniform: [''],
+    ven_uniform: ['', [Validators.required]],
     /** @description 廠商名稱 */
     VEN_Name: [''],
     /** @description 營業型態 */
-    paper_type: [''],
+    paper_type: ['', [Validators.required]],
     /** @description 大分類 */
     bus_type: [''],
     /** @description 中分類 */
@@ -123,7 +112,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     /** @description 版本編號 */
     contract_subno: [''],
 
-    // 合約資訊
+    // ========== 洽談階段資訊 ==========
     /** @description 合約起始日 */
     tlt_bdate: [''],
     /** @description 合約終止日 */
@@ -137,7 +126,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     /** @description 回函截止日 */
     due_date: [''],
 
-    // 營運資訊
+    // ========== 營運資訊 ==========
     /** @description 組織代號 */
     org_id: [''],
     /** @description 營運起始日 */
@@ -145,13 +134,21 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     /** @description 營運截止日 */
     tlt_contract_edate: [''],
 
-    // 財務資訊
+    // ========== 商務條件 ==========
+    /** @description 櫃別 */
+    tlt_kind: [''],
+    /** @description 裝潢方式 */
+    deco_type: [''],
     /** @description 抽成別 */
     tlt_term_type: [''],
     /** @description 抽成額計算方式，預設為除稅 */
-    comm_comp_type: ['2'],
-    /** @description 是否為抽成 */
-    comm_yn: [''],
+    comm_comp_type: ['2', [Validators.required]],
+    /** @description 是否使用業主商店代號 */
+    edc_yn: [''],
+    /** @description 包底類別 */
+    tlt_ctype_mtotal: [''],
+    /** @description 超出部份處理方式 */
+    overall_status: [''],
     /** @description 預收租金 */
     rent_ahead: [''],
     /** @description 預收租金期數 */
@@ -164,28 +161,14 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     total_amt: [''],
     /** @description 年預估營業額(廠商) */
     total_amt_vendor: [''],
-    /** @description 準時開業保證金付款方式 */
-    open_deposit: [''],
-    /** @description 準時開業保證金 */
-    open_fees: [''],
-    /** @description 裝潢方式 */
-    deco_type: [''],
-    /** @description 保證金付款方式 */
-    paymentMethods: [[]],
     /** @description 施工保證金 */
     construct_fees: [''],
     /** @description 付款期限(天數) */
     check_day: [''],
 
-    // 業務資訊
-    /** @description 櫃別 */
-    tlt_kind: [''],
-    /** @description 是否使用業主商店代號 */
-    edc_yn: [''],
-    /** @description 包底類別 */
-    tlt_ctype_mtotal: [''],
-    /** @description 超出部份處理方式 */
-    overall_status: [''],
+    // ========== 業務設定 ==========
+    /** @description 是否為抽成 */
+    comm_yn: [''],
     /** @description 是否開立業主發票 */
     rece_yn: [''],
     /** @description 是否使用業主收銀機 */
@@ -207,19 +190,19 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     /** @description 請款單據別 */
     invoice_type: ['1'],
 
-    // 抄表類型
+    // ========== 其他設定 ==========
     /** @description 抄表類型清單 */
     meter_typeList: [[]],
-
-    // 保證金相關
+    /** @description 保證金付款方式 */
+    paymentMethods: [[]],
     /** @description 保證金備註 */
     ticket_remarks: [''],
 
-    // 聯絡資訊
+    // ========== 聯絡資訊 ==========
     /** @description 電子信箱 */
-    email: [''],
+    email: ['', [Validators.email]],
     /** @description 發票電子郵件 */
-    invoice_email: [''],
+    invoice_email: ['', [Validators.email]],
     /** @description 票據抬頭 */
     CHECK_TITLE: [''],
     /** @description 專櫃電話號碼 */
@@ -240,72 +223,57 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     tlt_remark: [''],
   });
 
-  // 固定選項 (從 constants 來的)
-  decorationOptions = TLS13010_DROPDOWN_OPTIONS.decorationType;
-  moneyTypeOptions = TLS13010_DROPDOWN_OPTIONS.moneyType;
-  checkTypeOptions = TLS13010_DROPDOWN_OPTIONS.checkType;
+  // ========== 固定下拉選單選項 (從 constants 來的) ==========
+  decorationOptions = [...TLS13010_DROPDOWN_OPTIONS.decorationType];
+  moneyTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.moneyType];
+  checkTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.checkType];
   yesNoOptions = [...TLS13010_DROPDOWN_OPTIONS.yesNo];
-  meterTypeOptions = TLS13010_DROPDOWN_OPTIONS.meterType;
-  paytypeOptions = TLS13010_DROPDOWN_OPTIONS.paytype;
-  storeWayOptions = TLS13010_DROPDOWN_OPTIONS.storeWay;
-  invoiceTypeOptions = TLS13010_DROPDOWN_OPTIONS.invoiceType;
-  tltKindOptions = TLS13010_DROPDOWN_OPTIONS.tltKind;
-  openflagStatusOptions = TLS13010_DROPDOWN_OPTIONS.openflagStatus;
-  overallStatusOptions = TLS13010_DROPDOWN_OPTIONS.overallStatus;
-  depositTypeOptions = TLS13010_DROPDOWN_OPTIONS.depositType;
-  depositPaymentOptions = TLS13010_DROPDOWN_OPTIONS.depositPayment;
-  commissionCompTypeOptions = TLS13010_DROPDOWN_OPTIONS.commissionCompType;
-  businessTypeOptions = TLS13010_DROPDOWN_OPTIONS.businessType;
-  commCompTypeDropdown = TLS13010_DROPDOWN_OPTIONS.commCompType;
+  meterTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.meterType];
+  paytypeOptions = [...TLS13010_DROPDOWN_OPTIONS.paytype];
+  storeWayOptions = [...TLS13010_DROPDOWN_OPTIONS.storeWay];
+  invoiceTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.invoiceType];
+  tltKindOptions = [...TLS13010_DROPDOWN_OPTIONS.tltKind];
+  openflagStatusOptions = [...TLS13010_DROPDOWN_OPTIONS.openflagStatus];
+  overallStatusOptions = [...TLS13010_DROPDOWN_OPTIONS.overallStatus];
+  depositTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.depositType];
+  depositPaymentOptions = [...TLS13010_DROPDOWN_OPTIONS.depositPayment];
+  commissionCompTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.commissionCompType];
+  businessTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.businessType];
+  commCompTypeDropdown = [...TLS13010_DROPDOWN_OPTIONS.commCompType];
 
-  // API 來的選項
+  // ========== API 載入的下拉選單選項 ==========
   vendorOptions: any[] = [];
-  locationOptions: any[] = [];
   contractStatusOptions: any[] = [];
-  regionOptions: any[] = [];
-  buildingOptions: any[] = [];
-  floorOptions: any[] = [];
   negotiatorOptions: any[] = [];
-  organizationOptions: any[] = [];
-  operationStatusOptions: any[] = [];
-  commissionCalculationOptions: any[] = [];
-  counterCategoryOptions: any[] = [];
-  commissionTypeOptions: any[] = [];
   settlementMethodOptions: any[] = [];
   paymentMethodOptions: any[] = [];
   cooperationMethodOptions: any[] = [];
+  counterCategoryOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
+  organizationOptions: any[] = [];
+  bankOptions: any[] = [];
+  commissionTypeOptions: any[] = [];
+  commissionCalculationOptions: any[] = [];
 
   // 訂閱管理
   private subscriptions: Subscription[] = [];
 
   constructor(
-    public override router: Router, // 新增
+    public override router: Router,
     private contractFlowService: ContractFlowService,
-    private validationService: ValidationService,
-    private counterCategoryService: CounterCategoryService,
-    private decorationStyleService: DecorationStyleService,
-    private commissionTypeService: CommissionTypeService,
-    private commissionCalculationService: CommissionCalculationService,
-    private baseTypeService: BaseTypeService,
-    private excessHandlingMethodService: ExcessHandlingMethodService,
-    private checkoutMethodService: SettlementMethodService,
-    private cooperationMethodService: CooperationMethodService,
-    private reconciliationMethodService: ReconciliationMethodService,
-    private paymentMethodService: PaymentMethod2Service,
-    private bankAccountCodeService: BankAccountCodeService,
-    private invoiceDocumentTypeService: PaperTypeService,
-    private depositPaymentMethodService: PaymentMethod2Service,
-    private constructionDepositPaymentMethodService: PaymentMethod2Service,
-    private whetherService: WhetherService,
+    public tls13010DropdownService: TLS13010DropdownService,
+
+    // API 服務
     private vendorService: VendorService,
-    private businessTypeService: BusinessTypeService,
-    private OrganizationNumberService: OrganizationNumberService,
+    private contractStatusService: ContractStatusService,
+    private negotiatorService: UserCodeService,
+    private settlementMethodService: SettlementMethodService,
+    private paymentMethodService: PaymentMethod2Service,
+    private cooperationMethodService: CooperationMethodService,
+    private counterCategoryService: CounterCategoryService,
     private businessTypeCodeService: BusinessTypeCodeService,
-    private productCategoryService: ProductCategoryService,
-    private smallCategoryService: SmallCategoryService,
-    private userCodeService: UserCodeService,
-    private LocationCodeService: LocationCodeService,
+    private organizationNumberService: OrganizationNumberService,
+    private bankAccountCodeService: BankAccountCodeService,
   ) {
     super();
   }
@@ -313,6 +281,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   ngOnInit(): void {
     this.initializePage('TLS13010', this.dataForm);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
+    // 載入下拉選單選項
+    this.loadDropdownOptions();
 
     // 載入工作流程資料
     this.loadWorkflowData();
@@ -324,6 +295,112 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   ngOnDestroy(): void {
     // 清理訂閱
     this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  /**
+   * 載入下拉選單選項（參考主頁面的做法）
+   */
+  private loadDropdownOptions(): void {
+    // 廠商選項
+    this.vendorService.getVendors().subscribe({
+      next: (data) => {
+        this.vendorOptions = data;
+        console.log('廠商選項載入完成:', this.vendorOptions.length);
+      },
+      error: (err) => console.warn('載入廠商選項失敗:', err)
+    });
+
+    // 合約狀態選項
+    this.contractStatusService.getContractStatuses().subscribe({
+      next: (data) => {
+        this.contractStatusOptions = data;
+      },
+      error: (err) => console.warn('載入合約狀態選項失敗:', err)
+    });
+
+    // // 洽談者選項
+    // this.negotiatorService.getUsers().subscribe({
+    //   next: (data: any[]) => {
+    //     this.negotiatorOptions = data;
+    //   },
+    //   error: (err: any) => console.warn('載入洽談者選項失敗:', err)
+    // });
+
+    // 結帳方式選項
+    this.settlementMethodService.getSettlementMethods().subscribe({
+      next: (data) => {
+        this.settlementMethodOptions = data;
+      },
+      error: (err) => console.warn('載入結帳方式選項失敗:', err)
+    });
+
+    // 付款方式選項
+    this.paymentMethodService.getPaymentMethods().subscribe({
+      next: (data) => {
+        this.paymentMethodOptions = data;
+      },
+      error: (err) => console.warn('載入付款方式選項失敗:', err)
+    });
+
+    // 配合方式選項
+    this.cooperationMethodService.getCooperationMethods().subscribe({
+      next: (data) => {
+        this.cooperationMethodOptions = data;
+      },
+      error: (err) => console.warn('載入配合方式選項失敗:', err)
+    });
+
+    // 櫃別選項
+    this.counterCategoryService.getCounterCategories().subscribe({
+      next: (data) => {
+        this.counterCategoryOptions = data;
+      },
+      error: (err) => console.warn('載入櫃別選項失敗:', err)
+    });
+
+    // 大分類選項
+    this.businessTypeCodeService.getBusinessTypeCodes().subscribe({
+      next: (data) => {
+        this.businessTypeCodeOptions = data;
+      },
+      error: (err) => console.warn('載入大分類選項失敗:', err)
+    });
+
+    // 組織選項
+    this.organizationNumberService.getOrganizationNumbers().subscribe({
+      next: (data) => {
+        this.organizationOptions = data;
+      },
+      error: (err) => console.warn('載入組織選項失敗:', err)
+    });
+
+    // // 銀行選項
+    // this.bankAccountCodeService.getBankAccountCodes().subscribe({
+    //   next: (data) => {
+    //     this.bankOptions = data;
+    //   },
+    //   error: (err) => console.warn('載入銀行選項失敗:', err)
+    // });
+
+    // 更新表格欄位的選項
+    this.updateTableColumnOptions();
+  }
+
+  /**
+   * 更新表格欄位的下拉選項
+   */
+  private updateTableColumnOptions(): void {
+    // 位置編號選項
+    const locationColumn = this.columns.find(col => col.field === 'locationCode');
+    if (locationColumn) {
+      locationColumn.options = this.tls13010DropdownService.locationOptions;
+    }
+
+    // 樓層選項
+    const floorColumn = this.columns.find(col => col.field === 'floor');
+    if (floorColumn) {
+      floorColumn.options = this.tls13010DropdownService.floorOptions;
+    }
   }
 
   /**
@@ -348,11 +425,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         console.log('使用查詢結果初始化表單');
       }
 
-      // TODO: 載入地點資訊 (之後實作)
-      // if (workflowData.locationInfo && workflowData.locationInfo.length > 0) {
-      //   this.data = workflowData.locationInfo;
-      //   this.filteredData = [...this.data];
-      // }
+      // 載入地點資訊 (如果有的話)
+      if (workflowData.locationInfo && workflowData.locationInfo.length > 0) {
+        this.data = workflowData.locationInfo;
+        this.filteredData = [...this.data];
+      }
     } else {
       console.warn('沒有工作流程資料，重導向到查詢頁面');
       this.router.navigate(['/TLS/TLS13010']);
@@ -390,12 +467,12 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       tlt_contract_bdate: queryData.tlt_contract_bdate,
       tlt_contract_edate: queryData.tlt_contract_edate,
 
-      // 其他欄位根據需要對應
+      // 其他欄位
       deco_type: queryData.deco_type,
       money_type: queryData.money_type,
       check_type: queryData.check_type,
       tlt_term_type: queryData.tlt_term_type,
-      comm_comp_type: queryData.comm_comp_type,
+      comm_comp_type: queryData.comm_comp_type || '2', // 預設為除稅
       store_way: queryData.store_way,
       rece_yn: queryData.rece_yn,
       pos_yn: queryData.pos_yn,
@@ -403,7 +480,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       org_id: queryData.org_id,
       overall_status: queryData.overall_status,
       paytype: queryData.paytype,
-      invoice_type: queryData.invoice_type,
+      invoice_type: queryData.invoice_type || '1', // 預設為發票
       email: queryData.email,
       invoice_email: queryData.invoice_email,
       CHECK_TITLE: queryData.CHECK_TITLE,
@@ -422,8 +499,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
    * 設定自動儲存
    */
   private setupAutoSave(): void {
-    // 監聽表單變化，延遲儲存
-    const formSubscription = this.dataForm.valueChanges.subscribe(() => {
+    // 監聽表單變化，延遲儲存（避免過於頻繁）
+    const formSubscription = this.dataForm.valueChanges.pipe(
+      // 可以加上 debounceTime(1000) 來延遲儲存
+    ).subscribe(() => {
       this.saveToWorkflow();
     });
 
@@ -434,11 +513,16 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
    * 儲存到工作流程
    */
   private saveToWorkflow(): void {
-    if (this.dataForm.valid || this.dataForm.dirty) {
-      const formData = this.dataForm.value;
+    if (this.dataForm.dirty) {
+      const formData = this.dataForm.getRawValue(); // 包含 disabled 欄位
 
-      this.contractFlowService.saveStep1Data(formData);
+      // 合併地點資訊
+      const workflowData = {
+        ...formData,
+        locationInfo: this.data // 地點資訊
+      };
 
+      this.contractFlowService.saveStep1Data(workflowData);
       console.log('自動儲存表單資料到工作流程');
     }
   }
@@ -459,13 +543,27 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     if (!frm.valid) {
       this.messageService.warnBubble('請檢查必填欄位');
+      this.markFormGroupTouched(frm);
       return;
     }
 
     // 儲存到工作流程
     this.saveToWorkflow();
-
     this.messageService.successBubble('Step 1 完成，可以進入下一步');
+  }
+
+  /**
+   * 標記所有欄位為已觸碰（顯示驗證錯誤）
+   */
+  private markFormGroupTouched(formGroup: FormGroup): void {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      control?.markAsTouched();
+
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
   }
 
   /**
@@ -475,8 +573,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     if (this.dataForm.valid) {
       this.saveToWorkflow();
       this.router.navigate(['/TLS/TLS13010NEXT1']);
+      this.messageService.infoBubble('進入下一步：代扣款設定');
     } else {
       this.submitted = true;
+      this.markFormGroupTouched(this.dataForm);
       this.messageService.warnBubble('請完成必填欄位後再進入下一步');
     }
   }
@@ -489,6 +589,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     if (this.dataForm.dirty) {
       if (confirm('是否要儲存目前的編輯內容？')) {
         this.saveToWorkflow();
+        this.messageService.infoBubble('已儲存草稿');
       }
     }
 
@@ -499,13 +600,22 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
    * 清除表單
    */
   onClearForm(): void {
-    if (confirm('確定要清除所有輸入的資料嗎？')) {
+    if (confirm('確定要清除所有輸入的資料嗎？此操作無法復原。')) {
       this.dataForm.reset();
+
+      // 重新設定預設值
+      this.dataForm.patchValue({
+        comm_comp_type: '2', // 預設為除稅
+        invoice_type: '1'    // 預設為發票
+      });
+
       this.data = []; // 清除地點資訊
       this.filteredData = [];
 
       // 清除工作流程中的資料
       this.contractFlowService.clearTempData();
+
+      this.messageService.infoBubble('表單已清除');
     }
   }
 
@@ -551,6 +661,41 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.onSubmit(frm);
   }
 
+  /**
+   * 取得工作流程狀態 (用於 template 顯示)
+   */
+  getWorkflowStatus() {
+    return this.contractFlowService.getCurrentStatus();
+  }
+
+  /**
+   * 取得進度百分比 (用於 template 顯示)
+   */
+  getProgressPercentage(): number {
+    return this.contractFlowService.getProgressPercentage();
+  }
+
+  /**
+   * 檢查欄位是否有錯誤
+   */
+  hasFieldError(fieldName: string): boolean {
+    const field = this.dataForm.get(fieldName);
+    return !!(field && field.invalid && (field.dirty || field.touched || this.submitted));
+  }
+
+  /**
+   * 取得欄位錯誤訊息
+   */
+  getFieldErrorMessage(fieldName: string): string {
+    const field = this.dataForm.get(fieldName);
+    if (field && field.errors) {
+      if (field.errors['required']) return '此欄位為必填';
+      if (field.errors['email']) return '請輸入正確的 Email 格式';
+      if (field.errors['maxlength']) return `最多可輸入 ${field.errors['maxlength'].requiredLength} 個字元`;
+    }
+    return '';
+  }
+
   // ========== 以下保留您原有的 FormArray 相關方法 ==========
 
   cruForm = this.formBuilder.group({
@@ -585,19 +730,5 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   onRemoveItem(index: number): void {
     this.items.removeAt(index);
-  }
-
-  /**
-   * 取得工作流程狀態 (用於 template 顯示)
-   */
-  getWorkflowStatus() {
-    return this.contractFlowService.getCurrentStatus();
-  }
-
-  /**
-   * 取得進度百分比 (用於 template 顯示)
-   */
-  getProgressPercentage(): number {
-    return this.contractFlowService.getProgressPercentage();
   }
 }

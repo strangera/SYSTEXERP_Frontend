@@ -1,4 +1,4 @@
-// contract-flow.service.ts (增強版)
+// contract-flow.service.ts (修改後版本)
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -28,16 +28,19 @@ export interface WorkflowStatus {
 export class ContractFlowService {
   private readonly STORAGE_KEY = 'TLS13010_CONTRACT_FLOW';
 
-  // 保留您原有的資料結構，但加強功能
+  // ========== 新增：記憶體快取層 ==========
+  private memoryCache = new Map<string, any>();
+
+  // 保留您原有的資料結構
   private contractData: {
     contractId: string | null,
-    queryRowData: any | null,      // 新增：查詢頁面的原始資料
-    step1: any | null,             // CRU頁面的資料
-    step2: any[],                  // 代扣款資料
-    step3: any[],                  // 抽成設定資料
-    step4: any[],                  // 條件設定資料
-    step5: any | null,             // 最終資料
-    metadata: {                    // 新增：元資料
+    queryRowData: any | null,
+    step1: any | null,
+    step2: any[],
+    step3: any[],
+    step4: any[],
+    step5: any | null,
+    metadata: {
       createdAt: Date;
       lastModified: Date;
       version: number;
@@ -57,12 +60,13 @@ export class ContractFlowService {
       }
     };
 
-  // 新增：工作流程狀態管理
+  // 工作流程狀態管理
   private workflowStatusSubject = new BehaviorSubject<WorkflowStatus>(this.initializeStatus());
   public workflowStatus$ = this.workflowStatusSubject.asObservable();
 
   constructor(private http: HttpClient) {
     this.loadFromStorage();
+    this.setupAutoSave(); // 新增自動儲存設定
   }
 
   /**
@@ -129,10 +133,10 @@ export class ContractFlowService {
     return false;
   }
 
-  // ========== 保留您原有的方法，但加強功能 ==========
+  // ========== 保留您原有的方法，完全不變 ==========
 
   /**
-   * 儲存第1步資料 (增強版)
+   * 儲存第1步資料
    */
   saveStep1Data(formData: any): void {
     const contractId = formData.talent_id || formData.apply_no;
@@ -149,7 +153,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 取得第1步資料 (增強版)
+   * 取得第1步資料
    */
   getStep1Data(queryData?: any): any {
     if (queryData) {
@@ -164,7 +168,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 儲存第2步資料（代扣款）- 增強版
+   * 儲存第2步資料（代扣款）
    */
   saveStep2Data(data: any): void {
     if (this.contractData.contractId) {
@@ -186,7 +190,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 儲存第3步資料（抽成設定）- 新增
+   * 儲存第3步資料（抽成設定）
    */
   saveStep3Data(data: any): void {
     if (this.contractData.contractId) {
@@ -201,7 +205,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 儲存第4步資料（條件設定）- 新增
+   * 儲存第4步資料（條件設定）
    */
   saveStep4Data(data: any): void {
     if (this.contractData.contractId) {
@@ -314,8 +318,6 @@ export class ContractFlowService {
     return this.contractData.queryRowData;
   }
 
-  // ========== 原有方法保留 ==========
-
   /**
    * 清空所有暫存
    */
@@ -350,9 +352,6 @@ export class ContractFlowService {
   /**
    * 最終送出所有資料
    */
-  /**
-   * 最終送出所有資料
-   */
   submitAllData(): Observable<any> {
     console.log('送出所有暫存資料:', this.contractData);
 
@@ -384,12 +383,12 @@ export class ContractFlowService {
         observer.complete();
       }, 1000);
     });
-  } // contract-flow.service.ts (增強版)
+  }
 
-  // ========== 新增：儲存相關方法 ==========
+  // ========== 修改：儲存相關方法 (localStorage → sessionStorage + Memory) ==========
 
   /**
-   * 儲存到 localStorage
+   * 混合儲存：Memory + SessionStorage
    */
   private saveToStorage(): void {
     try {
@@ -398,53 +397,121 @@ export class ContractFlowService {
         workflowStatus: this.workflowStatusSubject.value,
         timestamp: new Date().getTime()
       };
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(saveData));
+
+      // 1. 立即儲存到記憶體（最快速）
+      this.memoryCache.set(this.STORAGE_KEY, saveData);
+
+      // 2. 備份到 sessionStorage（分頁關閉前保持）
+      sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(saveData));
+
+      console.log('資料已儲存到記憶體和 SessionStorage');
     } catch (error) {
-      console.warn('無法儲存工作流程資料到 localStorage:', error);
+      console.warn('無法儲存工作流程資料到 SessionStorage，但記憶體暫存仍有效:', error);
     }
   }
 
   /**
-   * 從 localStorage 載入
+   * 優先順序載入：Memory > SessionStorage
    */
   private loadFromStorage(): void {
     try {
-      const savedData = localStorage.getItem(this.STORAGE_KEY);
+      // 1. 優先從記憶體載入（最快）
+      if (this.memoryCache.has(this.STORAGE_KEY)) {
+        const memoryData = this.memoryCache.get(this.STORAGE_KEY);
+        this.applyLoadedData(memoryData);
+        console.log('從記憶體載入工作流程資料');
+        return;
+      }
+
+      // 2. 降級到 sessionStorage
+      const savedData = sessionStorage.getItem(this.STORAGE_KEY);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
 
-        // 檢查資料是否過期 (24小時)
-        const now = new Date().getTime();
-        const savedTime = parsedData.timestamp || 0;
-        const hoursDiff = (now - savedTime) / (1000 * 60 * 60);
-
-        if (hoursDiff < 24) {
-          this.contractData = parsedData.contractData;
-          this.workflowStatusSubject.next(parsedData.workflowStatus);
-          console.log('從 localStorage 載入工作流程資料');
-        } else {
-          this.clearStorage();
-          console.log('工作流程資料已過期，已清除');
-        }
+        // 同步回記憶體
+        this.memoryCache.set(this.STORAGE_KEY, parsedData);
+        this.applyLoadedData(parsedData);
+        console.log('從 SessionStorage 載入工作流程資料');
       }
     } catch (error) {
-      console.warn('無法從 localStorage 載入工作流程資料:', error);
+      console.warn('無法載入工作流程資料:', error);
       this.clearStorage();
     }
   }
 
   /**
-   * 清除 localStorage
+   * 套用載入的資料
+   */
+  private applyLoadedData(data: any): void {
+    this.contractData = data.contractData;
+    this.workflowStatusSubject.next(data.workflowStatus);
+  }
+
+  /**
+   * 清除所有儲存
    */
   private clearStorage(): void {
     try {
-      localStorage.removeItem(this.STORAGE_KEY);
+      // 清除記憶體快取
+      this.memoryCache.delete(this.STORAGE_KEY);
+
+      // 清除 sessionStorage
+      sessionStorage.removeItem(this.STORAGE_KEY);
     } catch (error) {
-      console.warn('無法清除 localStorage:', error);
+      console.warn('無法清除儲存:', error);
     }
   }
 
-  // ========== 輔助方法 ==========
+  // ========== 新增：自動儲存機制 ==========
+
+  /**
+   * 設定自動儲存機制
+   */
+  private setupAutoSave(): void {
+    // 每 30 秒自動備份到 sessionStorage
+    setInterval(() => {
+      if (this.contractData.contractId) {
+        this.saveToStorage();
+      }
+    }, 30000);
+
+    // 監聽分頁即將關閉，確保最後一次儲存
+    window.addEventListener('beforeunload', () => {
+      if (this.contractData.contractId) {
+        this.saveToStorage();
+      }
+    });
+
+    // 監聽分頁獲得焦點時，檢查是否有其他分頁的更新
+    window.addEventListener('focus', () => {
+      this.syncFromSessionStorage();
+    });
+  }
+
+  /**
+   * 從 sessionStorage 同步最新資料（多分頁情況）
+   */
+  private syncFromSessionStorage(): void {
+    try {
+      const savedData = sessionStorage.getItem(this.STORAGE_KEY);
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        const savedTimestamp = parsedData.timestamp || 0;
+        const currentTimestamp = this.memoryCache.get(this.STORAGE_KEY)?.timestamp || 0;
+
+        // 如果 sessionStorage 的資料比記憶體新，就同步過來
+        if (savedTimestamp > currentTimestamp) {
+          this.memoryCache.set(this.STORAGE_KEY, parsedData);
+          this.applyLoadedData(parsedData);
+          console.log('從其他分頁同步最新資料');
+        }
+      }
+    } catch (error) {
+      console.warn('同步資料失敗:', error);
+    }
+  }
+
+  // ========== 輔助方法保持不變 ==========
 
   /**
    * 取得步驟名稱
