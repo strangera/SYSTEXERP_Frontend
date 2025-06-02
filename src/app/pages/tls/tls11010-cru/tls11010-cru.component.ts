@@ -127,15 +127,18 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
 
 
     if (this.crudstatus === CRUDStatus.Read) {
+      // 給定所有可選項
+      this.LOCATION_Status_Options = [
+        { value: 0, label: '空位' },
+        { value: 1, label: '使用中' },
+        { value: 2, label: '停用' },
+      ];
 
-
-      // ✅ 替換 LOCATION_Status 為對應的 option value（避免 disabled 時 dropdown 顯示空白）
       const matched = this.LOCATION_Status_Options.find(
         opt => String(opt.value) === String(this.rowdata?.LOCATION_Status)
       );
       const labelValue = matched ? matched.value : null;
 
-      // ✅ 將原始資料補上對應值再 patch
       this.inputForm.patchValue({
         ...this.rowdata,
         LOCATION_Status: labelValue,
@@ -143,6 +146,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
 
       this.inputForm.disable();
     }
+
 
 
     // 其餘選項初始化
