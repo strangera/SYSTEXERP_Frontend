@@ -18,6 +18,8 @@ export class TreeDropdownNestComponent implements OnInit {
   // 用字串陣列指定每層對應的欄位key
   @Input() treeNodes: string[] = [];
   @Input() LeaveColumnLabel = ''; // 子節點顯示名稱
+  @Input() TitleButtonName = ''; // 標題按鈕名稱
+  @Input() TitleName = ''; // 標題
   @Input() onlySendLeaf? = true; // 是否只送葉節點資料，預設為 true
 
   @Output() confirmSelected = new EventEmitter<any[]>(); // 確定送出所選成員
@@ -44,8 +46,8 @@ export class TreeDropdownNestComponent implements OnInit {
         children: hasChildren ? this.convertToTreeNode(node.children) : undefined,
         leaf: !hasChildren,
         expanded: false,
-        selectable: node.IsEnable,
-        // selectable: true,
+        // selectable: node.IsEnable,
+        selectable: true, //能否勾選
         partialSelected: node.partialSelected ?? false
       };
     });
@@ -109,9 +111,22 @@ export class TreeDropdownNestComponent implements OnInit {
 
   // 只能展開到 maxLevel 層，超過就不展開
   private expandToLevelRecursive(node: TreeNode, currentLevel: number, maxLevel: number) {
+    const MAX_CHILDREN = 100; // 超過這個數量就不展開
+
+    if (node.children && node.children.length > MAX_CHILDREN) {
+      node.expanded = false;
+      if (currentLevel < maxLevel) {
+        alert(`「${node.label}」下層資料過多（${node.children.length} 筆），無法展開。`);
+      }
+      return;
+    }
+
     node.expanded = currentLevel < maxLevel;
+
     if (node.children) {
-      node.children.forEach(child => this.expandToLevelRecursive(child, currentLevel + 1, maxLevel));
+      node.children.forEach(child =>
+        this.expandToLevelRecursive(child, currentLevel + 1, maxLevel)
+      );
     }
   }
 

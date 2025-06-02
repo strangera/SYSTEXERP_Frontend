@@ -2,11 +2,11 @@
   <p-button
     (onClick)="op.toggle($event)"
     icon="pi pi-share-alt"
-    label="Share"
+    label="{{ TitleButtonName }}"
   />
   <p-overlayPanel #op [appendTo]="'body'">
     <div class="flex flex-column gap-3 w-25rem">
-      <span class="font-medium text-900 block mb-2">樹狀顯示資料</span>
+      <span class="font-medium text-900 block mb-2">{{ TitleName }}</span>
 
       <div class="font-bold mb-2 flex gap-4">
         <ng-container *ngFor="let col of treeNodes; let i = index">

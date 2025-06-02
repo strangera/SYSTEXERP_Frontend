@@ -56,7 +56,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <!-- <div class="card">
         <div class="col-13">
           <app-table
             tableKey="SYS0240CRU"
@@ -71,31 +71,6 @@
             [loading]="loading"
           ></app-table>
         </div>
-      </div>
-
-      <!-- <p-tree
-        [value]="roleUserData"
-        selectionMode="checkbox"
-        [(selection)]="selectedRoleUserData"
-        [propagateSelectionUp]="true"
-        [propagateSelectionDown]="true"
-        [metaKeySelection]="false"
-        selectionChange="onMembersSelected($event)"
-        [style]="{ width: '100%' }"
-      >
-        <ng-template let-node pTemplate="default">
-          <span>{{ node.label }}</span>
-        </ng-template>
-      </p-tree> -->
-
-      <!-- <div class="grid p-fluid">
-        <app-tree-dropdown
-          [members]="flatTreeDataTest"
-          [Columns]="treeNodesTest"
-          [LeaveColumnLabel]="LeaveColumnLabelTest"
-          (confirmSelected)="onMembersSelected($event)"
-          [onlySendLeaf]="true"
-        ></app-tree-dropdown>
       </div> -->
 
       <ng-container *ngIf="roleUserData.length > 0">
@@ -103,8 +78,10 @@
           [members]="roleUserData"
           [treeNodes]="treeNodes"
           [LeaveColumnLabel]="'label'"
+          TitleButtonName="查看權限"
+          TitleName="權限列表"
           (confirmSelected)="onMembersSelected($event)"
-          [onlySendLeaf]="true"
+          [onlySendLeaf]="false"
           [isNestedInput]="true"
         ></app-tree-dropdown-nest>
       </ng-container>
