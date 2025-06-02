@@ -5,6 +5,7 @@ import { Column } from '../../../shared/componentkit/table/table.model';
 import { apiOption, tblRole, tblUser } from '../../../shared/models/sys/sysb000.module';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { Sys0210Service } from '../../../service/API/sys/sys0210.service';
+import { Sys0230Service } from '../../../service/API/sys/sys0230.service';
 
 // 來源角色擁有的權限
 export interface AuthOption {
@@ -41,6 +42,7 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
   ];
 
   targetOptions: apiOption[] = []; //目標角色
+  roleUserAuthData: apiOption[] = []; //目標權限
   // ----------------------------------------------------------------
   roleUserColumns: Column[] = [
     {
@@ -78,6 +80,7 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
 
   constructor(
     private sys0210Service: Sys0210Service,
+    private sys0230Service: Sys0230Service,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -98,6 +101,19 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
           Name: item.Role_Name,
           Label: item.Role_No + '-' + item.Role_Name,
         }));
+    });
+
+    //角色權限
+    this.sys0230Service.queryRoleUsers({ Role_No: roleNo }).subscribe((response) => {
+      console.log('角色權限 回應', response);
+      this.roleUserAuthData = response.Data
+        .map((item: tblUser) => ({
+          No: item.user_No,
+          Name: item.user_Name,
+          Label: item.user_No + '-' + item.user_Name,
+        }));
+
+
     });
 
     // 樹狀圖 (顯示權限)

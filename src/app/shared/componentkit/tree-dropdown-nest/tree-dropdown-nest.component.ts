@@ -14,6 +14,7 @@ export interface Column {
 export class TreeDropdownNestComponent implements OnInit {
   @Input() members: any[] = []; // 允許外部傳入成員資料
   @Input() isNestedInput = false; // 是否直接傳入巢狀結構
+  @Input() canSelectAll = false; // 是否能夠全選
 
   // 用字串陣列指定每層對應的欄位key
   @Input() treeNodes: string[] = [];

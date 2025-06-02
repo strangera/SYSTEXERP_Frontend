@@ -43,51 +43,31 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <p-checkbox
-            label="X是否複製使用者權限"
+            label="複製全部"
             formControlName="IsAllCopy"
             [binary]="true"
           ></p-checkbox>
         </div>
       </div>
 
-      <!-- <div class="card">
+      <ng-container *ngIf="dataForm.controls.IsAllCopy.value === true">
         <div class="col-13">
           <app-table
             tableKey="SYS0240CRU"
-            [data]="roleUserData"
+            [data]="roleUserAuthData"
             [columns]="roleUserColumns"
             [showCheckBox]="true"
             [showManage]="false"
-            dataKey="id"
-            [multiSortMeta]="[{ field: 'partialSelected', order: -1 }]"
+            [showReportMode]="false"
+            [showDelete]="false"
+            dataKey="No"
+            [multiSortMeta]="[{ field: 'Match', order: -1 }]"
             [selectedItems]="selectedRoleUserData"
             (selectionChange)="onUserSelectionChange($event)"
             [loading]="loading"
           ></app-table>
         </div>
-      </div> -->
-
-      <!-- <app-expandable-edit-table
-    title="人員資料表"
-    [mainColumns]="mainColumns"
-    [detailColumns]="detailColumns"
-    [data]="roleUserData"
-    [loading]="expandLoading"
-    detailKey="details"
-    dataKey="id"
-    [showCheckBox]="true"
-    [showPaginator]="true"
-    [showAddButton]="true"
-    [showDetailAddButton]="true"
-    [defaultNewItem]="defaultNewPerson"
-    [defaultNewDetailItem]="defaultNewDetail"
-    (save)="onRowSave($event)"
-    (cancel)="onRowCancel($event)"
-    (detailSave)="onDetailSave($event)"
-    (detailCancel)="onDetailCancel($event)"
-    (addMainItem)="onAddPerson()"
-    (addDetailItem)="onAddDetail($event)"
-  > -->
+      </ng-container>
 
       <ng-container *ngIf="roleUserData.length > 0">
         <app-tree-dropdown-nest
@@ -96,6 +76,7 @@
           [LeaveColumnLabel]="'label'"
           TitleButtonName="查看權限"
           TitleName="權限列表"
+          [canSelectAll]="false"
           (confirmSelected)="onMembersSelected($event)"
           [onlySendLeaf]="false"
           [isNestedInput]="true"
