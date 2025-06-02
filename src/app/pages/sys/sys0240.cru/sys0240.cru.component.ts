@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Validators, FormGroup } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
-import { tblUser } from '../../../shared/models/sys/sysb000.module';
+import { apiOption, tblRole, tblUser } from '../../../shared/models/sys/sysb000.module';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { Sys0210Service } from '../../../service/API/sys/sys0210.service';
 
@@ -29,8 +29,9 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
     id: [], // ID
     Role_No: ['', [Validators.required, Validators.maxLength(10)]], // 來源角色代碼
     Role_Name: ['', [Validators.required, Validators.maxLength(30)]], // 來源角色名稱
-    Description: ['', [Validators.maxLength(50)]], // 角色註記
-    showScrapData: [],
+    Target_No: ['', [Validators.required, Validators.maxLength(10)]], // 目標角色代碼
+    Target_Name: ['', [Validators.maxLength(30)]], // 目標角色名稱
+    IsAllCopy: [false],
   });
 
   roleUserData: AuthOption[] = [];
@@ -38,6 +39,8 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
     { value: true, label: '是' },
     { value: false, label: '否' },
   ];
+
+  targetOptions: apiOption[] = []; //目標角色
   // ----------------------------------------------------------------
   roleUserColumns: Column[] = [
     {
@@ -86,6 +89,18 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
   // ----------------------------------------------------------------
   // 載入 角色之使用者
   loadOptions(roleNo: string) {
+    // 複製對象的角色
+    this.sys0210Service.queryRole({}).subscribe((response) => {
+      console.log('回應', response);
+      this.targetOptions = response.Data.filter((item: tblRole) => item.Role_No !== roleNo) //複製清單排除自己
+        .map((item: tblRole) => ({
+          No: item.Role_No,
+          Name: item.Role_Name,
+          Label: item.Role_No + '-' + item.Role_Name,
+        }));
+    });
+
+    // 樹狀圖 (顯示權限)
     this.sys0210Service.queryRolePrivileges({ Role_No: roleNo }).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
@@ -162,19 +177,12 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            // console.log('User資料', frm.value);
-            // console.log('變更後的清單', { RoleList: this.selectedRoleUserData.map(item => item.User_No) });
             // const requestBody = {
-            //   Role_No: frm.value.Role_No,
-            //   UserNoList: this.selectedRoleUserData
-            //     .filter(item => item.partialSelected === true)
-            //     .map(item => item.id),
-            //   DeleteUserNoList: this.selectedRoleUserData
-            //     .filter(item => item.partialSelected === false)
-            //     .map(item => item.id),
+            //   Source_No: frm.value.Role_No,
+            //   Target_No: frm.value.Target_No,
             // };
 
-            // console.log('更新的請求內容', requestBody);
+            console.log('更新的請求內容', frm.value);
             // this.sys0230Service.updateRoleUsers(requestBody).subscribe(() => {
             //   this.messageService.successBubble('更新成功');
             //   this.onCancel(); // 更新成功後返回查詢頁面

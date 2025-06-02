@@ -46,8 +46,8 @@ export class TreeDropdownNestComponent implements OnInit {
         children: hasChildren ? this.convertToTreeNode(node.children) : undefined,
         leaf: !hasChildren,
         expanded: false,
-        // selectable: node.IsEnable,
-        selectable: true, //能否勾選
+        selectable: node.IsEnable,
+        // selectable: true, //能否勾選
         partialSelected: node.partialSelected ?? false
       };
     });
