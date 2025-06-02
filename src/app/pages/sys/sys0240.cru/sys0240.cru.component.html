@@ -28,66 +28,60 @@
 
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <app-dropdown
             label="目標角色代碼"
-            controlName="Role_No"
-            [control]="dataForm.controls.Role_No"
+            controlName="Target_No"
+            [options]="targetOptions"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.Target_No"
             [submitted]="submitted"
-            [disabled]="true"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="目標角色名稱"
-            controlName="Role_Name"
-            [control]="dataForm.controls.Role_Name"
-            [submitted]="submitted"
-          ></app-input-text>
+          ></app-dropdown>
         </div>
       </div>
 
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <p-checkbox
-            label="X是否複製使用者權限"
-            formControlName="showScrapData"
+            label="複製全部"
+            formControlName="IsAllCopy"
             [binary]="true"
           ></p-checkbox>
         </div>
       </div>
 
-      <div class="card">
+      <ng-container *ngIf="dataForm.controls.IsAllCopy.value === true">
         <div class="col-13">
           <app-table
             tableKey="SYS0240CRU"
-            [data]="roleUserData"
+            [data]="roleUserAuthData"
             [columns]="roleUserColumns"
             [showCheckBox]="true"
             [showManage]="false"
-            dataKey="id"
-            [multiSortMeta]="[{ field: 'partialSelected', order: -1 }]"
+            [showReportMode]="false"
+            [showDelete]="false"
+            dataKey="No"
+            [multiSortMeta]="[{ field: 'Match', order: -1 }]"
             [selectedItems]="selectedRoleUserData"
             (selectionChange)="onUserSelectionChange($event)"
             [loading]="loading"
           ></app-table>
         </div>
-      </div>
+      </ng-container>
 
-      <p-tree
-        [value]="roleUserData"
-        selectionMode="checkbox"
-        [(selection)]="selectedRoleUserData"
-        [propagateSelectionUp]="true"
-        [propagateSelectionDown]="true"
-        [metaKeySelection]="false"
-        selectionChange="onMembersSelected($event)"
-        [style]="{ width: '100%' }"
-      >
-        <ng-template let-node pTemplate="default">
-          <span>{{ node.label }}</span>
-        </ng-template>
-      </p-tree>
-
+      <ng-container *ngIf="roleUserData.length > 0">
+        <app-tree-dropdown-nest
+          [members]="roleUserData"
+          [treeNodes]="treeNodes"
+          [LeaveColumnLabel]="'label'"
+          TitleButtonName="查看權限"
+          TitleName="權限列表"
+          [canSelectAll]="false"
+          (confirmSelected)="onMembersSelected($event)"
+          [onlySendLeaf]="false"
+          [isNestedInput]="true"
+        ></app-tree-dropdown-nest>
+      </ng-container>
       <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         *ngIf="!isFormReadable"
