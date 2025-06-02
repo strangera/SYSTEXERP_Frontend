@@ -52,15 +52,6 @@
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="廠商名稱"
-              controlName="VEN_Name"
-              [control]="dataForm.controls.VEN_Name"
-              [submitted]="submitted"
-              [disabled]="true"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="廠商統一編號"
               controlName="ven_uniform"
@@ -70,6 +61,15 @@
               [control]="dataForm.controls.ven_uniform"
               [submitted]="submitted"
             ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="廠商名稱"
+              controlName="VEN_Name"
+              [control]="dataForm.controls.VEN_Name"
+              [submitted]="submitted"
+              [disabled]="true"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
@@ -83,11 +83,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="營運狀況"
-              controlName="paper_type"
-              [options]="businessTypeOptions"
+              controlName="tlt_openflag"
+              [options]="tltopenflagOption"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.paper_type"
+              [control]="dataForm.controls.tlt_openflag"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -111,7 +111,7 @@
             <app-dropdown
               label="營業型態"
               controlName="paper_type"
-              [options]="businessTypeOptions"
+              [options]="tls13010DropdownService.paperTypeOptions"
               optionLabel="label"
               optionValue="value"
               [control]="dataForm.controls.paper_type"
@@ -122,7 +122,7 @@
             <app-dropdown
               label="組織代號"
               controlName="org_id"
-              [options]="organizationOptions"
+              [options]="tls13010DropdownService.orgOptions"
               optionLabel="label"
               optionValue="value"
               [control]="dataForm.controls.org_id"
@@ -133,7 +133,7 @@
             <app-dropdown
               label="大分類"
               controlName="bus_type"
-              [options]="businessTypeCodeOptions"
+              [options]="tls13010DropdownService.bustypeOptions"
               optionLabel="label"
               optionValue="value"
               [control]="dataForm.controls.bus_type"
@@ -144,7 +144,7 @@
             <app-dropdown
               label="中分類"
               controlName="bus_class"
-              [options]="yesNoOptions"
+              [options]="tls13010DropdownService.busClassOptions"
               optionLabel="label"
               optionValue="value"
               [control]="dataForm.controls.bus_class"
@@ -154,8 +154,8 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="小分類"
-              controlName="subCategory"
-              [options]="yesNoOptions"
+              controlName="bus_sclass"
+              [options]="tls13010DropdownService.busSClassOptions"
               optionLabel="label"
               optionValue="value"
               [control]="dataForm.controls.bus_sclass"
@@ -693,6 +693,114 @@
         </div>
       </form>
     </p-accordionTab> -->
+    <p-accordionTab
+      header="參加活動資訊"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="dataForm"
+        id="dataForm"
+        (ngSubmit)="onSubmit(dataForm)"
+      >
+        <!-- <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <p-checkbox
+              inputId="activity1"
+              name="activity1"
+              label="全館消費滿額集點活動"
+              formControlName="activity1"
+              [binary]="true"
+            />
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <p-checkbox
+              inputId="activity2"
+              name="activity2"
+              label="滿仟送佰"
+              formControlName="activity2"
+              [binary]="true"
+            />
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <p-checkbox
+              inputId="activity3"
+              name="activity3"
+              label="有價券"
+              formControlName="activity3"
+              [binary]="true"
+            />
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <p-checkbox
+              inputId="activity4"
+              name="activity4"
+              label="會員卡"
+              formControlName="activity4"
+              [binary]="true"
+            />
+          </div>
+        </div> -->
+
+        <!-- 或者使用 fieldset 來組織多個 checkbox -->
+        <fieldset class="mt-3">
+          <!-- <legend>參加活動選項</legend> -->
+          <div class="grid">
+            <div class="col-12 md:col-6">
+              <div class="field-checkbox">
+                <p-checkbox
+                  inputId="activity1_alt"
+                  name="activity1_alt"
+                  formControlName="activity1"
+                  [binary]="true"
+                />
+                <label for="activity1_alt">全館消費滿額集點活動</label>
+              </div>
+            </div>
+
+            <div class="col-12 md:col-6">
+              <div class="field-checkbox">
+                <p-checkbox
+                  inputId="activity2_alt"
+                  name="activity2_alt"
+                  formControlName="activity2"
+                  [binary]="true"
+                />
+                <label for="activity2_alt">滿仟送佰</label>
+              </div>
+            </div>
+
+            <div class="col-12 md:col-6">
+              <div class="field-checkbox">
+                <p-checkbox
+                  inputId="activity3_alt"
+                  name="activity3_alt"
+                  formControlName="activity3"
+                  [binary]="true"
+                />
+                <label for="activity3_alt">有價券</label>
+              </div>
+            </div>
+
+            <div class="col-12 md:col-6">
+              <div class="field-checkbox">
+                <p-checkbox
+                  inputId="activity4_alt"
+                  name="activity4_alt"
+                  formControlName="activity4"
+                  [binary]="true"
+                />
+                <label for="activity4_alt">會員卡</label>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+      </form>
+    </p-accordionTab>
 
     <!-- 聯絡資訊 -->
     <p-accordionTab

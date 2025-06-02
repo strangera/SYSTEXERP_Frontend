@@ -73,12 +73,14 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       field: 'locationCode', header: '位置編號', visible: true, type: 'dropdown',
       options: [], // 將從 API 載入
     },
+    { field: 'tlt_building', header: '館別', visible: true, type: 'dropdown' },
+    { field: 'area_no', header: '區域', visible: true, type: 'dropdown' },
     {
-      field: 'floor', header: '樓層', visible: true,
+      field: 'tlt_floor', header: '樓層', visible: true,
       type: 'dropdown',
       options: [], // 將從 API 載入
     },
-    { field: 'area', header: '區域', visible: true, type: 'input' },
+
     { field: 'businessArea', header: '營業坪數', visible: true, type: 'input' },
     { field: 'startDate', header: '使用起始日', visible: true, type: 'date' },
     { field: 'endDate', header: '使用截止日', visible: true, type: 'date' },
@@ -221,6 +223,12 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     contact_addr: [''],
     /** @description 備註 */
     tlt_remark: [''],
+
+    tlt_openflag: [''], // 預設為開啟
+    activity1: [''],
+    activity2: [''],
+    activity3: [''],
+    activity4: [''],
   });
 
   // ========== 固定下拉選單選項 (從 constants 來的) ==========
@@ -240,6 +248,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   commissionCompTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.commissionCompType];
   businessTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.businessType];
   commCompTypeDropdown = [...TLS13010_DROPDOWN_OPTIONS.commCompType];
+  tltopenflagOption = [...TLS13010_DROPDOWN_OPTIONS.openflagStatus];
 
   // ========== API 載入的下拉選單選項 ==========
   vendorOptions: any[] = [];
@@ -254,6 +263,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   bankOptions: any[] = [];
   commissionTypeOptions: any[] = [];
   commissionCalculationOptions: any[] = [];
+
+  // ========== 新增：中分類和小分類選項 ==========
+  busClassOptions: any[] = []; // 中分類選項
+  busSClassOptions: any[] = []; // 小分類選項
 
   // 訂閱管理
   private subscriptions: Subscription[] = [];
@@ -274,6 +287,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     private businessTypeCodeService: BusinessTypeCodeService,
     private organizationNumberService: OrganizationNumberService,
     private bankAccountCodeService: BankAccountCodeService,
+
   ) {
     super();
   }
@@ -290,6 +304,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 監聽表單變化並自動儲存
     this.setupAutoSave();
+
+    // 監聽大分類變化
+    this.setupBusTypeListener();
   }
 
   ngOnDestroy(): void {
@@ -408,24 +425,50 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
    */
   private loadWorkflowData(): void {
     const workflowData = this.contractFlowService.getCurrentData();
-
     console.log('載入工作流程資料:', workflowData);
 
     if (workflowData.contractId) {
-      // 載入已儲存的表單資料
       const savedFormData = this.contractFlowService.getStep1Data();
       console.log('載入表單資料:', savedFormData);
 
       if (savedFormData && Object.keys(savedFormData).length > 0) {
         this.dataForm.patchValue(savedFormData);
+
+        // ========== 修正：載入對應的分類選項 ==========
+        const busType = savedFormData.bus_type;
+        const busClass = savedFormData.bus_class;
+
+        if (busType) {
+          console.log('載入已儲存資料中的大分類，開始載入中分類:', busType);
+          this.tls13010DropdownService.loadBusClassOptions(busType).subscribe({
+            next: (options) => {
+              console.log('從已儲存資料載入中分類完成:', options.length);
+
+              // 如果還有中分類，載入小分類
+              if (busClass) {
+                console.log('載入已儲存資料中的中分類，開始載入小分類:', busClass);
+                this.tls13010DropdownService.loadBusSClassOptions(busType, busClass).subscribe({
+                  next: (sClassOptions) => {
+                    console.log('從已儲存資料載入小分類完成:', sClassOptions.length);
+                  },
+                  error: (error) => {
+                    console.warn('從已儲存資料載入小分類失敗:', error);
+                  }
+                });
+              }
+            },
+            error: (error) => {
+              console.warn('從已儲存資料載入中分類失敗:', error);
+            }
+          });
+        }
+
         console.log('使用已儲存的表單資料');
       } else if (workflowData.queryRowData) {
-        // 如果沒有已儲存的表單資料，使用查詢結果
         this.loadDataFromQueryResult(workflowData.queryRowData);
         console.log('使用查詢結果初始化表單');
       }
 
-      // 載入地點資訊 (如果有的話)
       if (workflowData.locationInfo && workflowData.locationInfo.length > 0) {
         this.data = workflowData.locationInfo;
         this.filteredData = [...this.data];
@@ -435,10 +478,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.router.navigate(['/TLS/TLS13010']);
     }
   }
+  // 修正 loadDataFromQueryResult() 方法
 
-  /**
-   * 從查詢結果載入資料
-   */
   private loadDataFromQueryResult(queryData: any): void {
     console.log('從查詢結果載入資料:', queryData);
 
@@ -493,6 +534,35 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       contact_addr: queryData.contact_addr,
       tlt_remark: queryData.tlt_remark,
     });
+
+    // ========== 修正：載入對應的分類選項 ==========
+    const busType = queryData.bus_type;
+    const busClass = queryData.bus_class;
+
+    if (busType) {
+      console.log('查詢結果有大分類，開始載入中分類:', busType);
+      this.tls13010DropdownService.loadBusClassOptions(busType).subscribe({
+        next: (options) => {
+          console.log('從查詢結果載入中分類完成:', options.length);
+
+          // 如果還有中分類，載入小分類
+          if (busClass) {
+            console.log('查詢結果有中分類，開始載入小分類:', busClass);
+            this.tls13010DropdownService.loadBusSClassOptions(busType, busClass).subscribe({
+              next: (sClassOptions) => {
+                console.log('從查詢結果載入小分類完成:', sClassOptions.length);
+              },
+              error: (error) => {
+                console.warn('從查詢結果載入小分類失敗:', error);
+              }
+            });
+          }
+        },
+        error: (error) => {
+          console.warn('從查詢結果載入中分類失敗:', error);
+        }
+      });
+    }
   }
 
   /**
@@ -731,4 +801,116 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   onRemoveItem(index: number): void {
     this.items.removeAt(index);
   }
+
+  private setupBusTypeListener(): void {
+    // 監聽大分類變化
+    const busTypeSubscription = this.dataForm.get('bus_type')?.valueChanges.subscribe(busType => {
+      console.log('大分類變化:', busType);
+
+      if (busType) {
+        // 載入中分類
+        this.tls13010DropdownService.loadBusClassOptions(busType).subscribe({
+          next: (options: any[]) => {
+            console.log('中分類載入完成:', options.length);
+
+            // 檢查當前中分類是否還有效
+            const currentBusClass = this.dataForm.get('bus_class')?.value;
+            const validBusClass = options.find((option: { value: string | null | undefined; }) => option.value === currentBusClass);
+
+            if (currentBusClass && !validBusClass) {
+              this.dataForm.get('bus_class')?.setValue('');
+              this.dataForm.get('bus_sclass')?.setValue('');
+            }
+          },
+          error: (error: any) => {
+            console.error('載入中分類失敗:', error);
+            this.messageService.warnBubble('載入中分類選項失敗，請重新選擇大分類');
+          }
+        });
+      } else {
+        // 清空中分類和小分類
+        this.tls13010DropdownService.clearBusClassOptions();
+        this.tls13010DropdownService.clearBusSClassOptions();
+        this.dataForm.get('bus_class')?.setValue('');
+        this.dataForm.get('bus_sclass')?.setValue('');
+      }
+    });
+
+    // 新增：監聽中分類變化
+    const busClassSubscription = this.dataForm.get('bus_class')?.valueChanges.subscribe(busClass => {
+      console.log('中分類變化:', busClass);
+
+      const busType = this.dataForm.get('bus_type')?.value;
+
+      if (busType && busClass) {
+        // 載入小分類
+        this.tls13010DropdownService.loadBusSClassOptions(busType, busClass).subscribe({
+          next: (options: any[]) => {
+            console.log('小分類載入完成:', options.length);
+
+            // 檢查當前小分類是否還有效
+            const currentBusSClass = this.dataForm.get('bus_sclass')?.value;
+            const validBusSClass = options.find((option: { value: string | null | undefined; }) => option.value === currentBusSClass);
+
+            if (currentBusSClass && !validBusSClass) {
+              this.dataForm.get('bus_sclass')?.setValue('');
+            }
+          },
+          error: (error: any) => {
+            console.error('載入小分類失敗:', error);
+            this.messageService.warnBubble('載入小分類選項失敗，請重新選擇中分類');
+          }
+        });
+      } else {
+        // 清空小分類
+        this.tls13010DropdownService.clearBusSClassOptions();
+        this.dataForm.get('bus_sclass')?.setValue('');
+      }
+    });
+
+    // 加入訂閱管理
+    if (busTypeSubscription) {
+      this.subscriptions.push(busTypeSubscription);
+    }
+    if (busClassSubscription) {
+      this.subscriptions.push(busClassSubscription);
+    }
+  }
+
+
+
+
+  /**
+ * 新增：供 template 使用的輔助方法
+ */
+  onRefreshBusClass(): void {
+    const busType = this.dataForm.get('bus_type')?.value;
+    if (busType) {
+      this.tls13010DropdownService.loadBusClassOptions(busType).subscribe({
+        next: () => this.messageService.infoBubble('中分類選項已重新載入'),
+        error: () => this.messageService.warnBubble('重新載入失敗')
+      });
+    } else {
+      this.messageService.warnBubble('請先選擇大分類');
+    }
+  }
+
+  /**
+   * 重新載入小分類選項
+   */
+  onRefreshBusSClass(): void {
+    const busType = this.dataForm.get('bus_type')?.value;
+    const busClass = this.dataForm.get('bus_class')?.value;
+
+    if (busType && busClass) {
+      this.tls13010DropdownService.loadBusSClassOptions(busType, busClass).subscribe({
+        next: () => this.messageService.infoBubble('小分類選項已重新載入'),
+        error: () => this.messageService.warnBubble('重新載入失敗')
+      });
+    } else {
+      this.messageService.warnBubble('請先選擇大分類和中分類');
+    }
+  }
+
+
 }

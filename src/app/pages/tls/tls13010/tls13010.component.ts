@@ -360,8 +360,24 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   override onEdit(rowData: ContractItem): void {
     if (this.contractFlowService.continueWorkflow(rowData)) {
       const currentStatus = this.contractFlowService.getCurrentStatus();
-      this.navigateToStep(currentStatus.currentStep);
-      this.messageService.infoBubble('繼續現有的編輯工作流程');
+      const stepName = this.contractFlowService.getStepName(currentStatus.currentStep);
+
+      // 詢問用戶是否要繼續目前進度或重新開始
+      const shouldContinue = confirm(
+        `發現此項目有進行中的編輯流程（目前在：${stepName}）\n\n` +
+        `點擊「確定」繼續目前進度\n` +
+        `點擊「取消」從契約資訊重新開始`
+      );
+
+      if (shouldContinue) {
+        // 繼續目前進度
+        this.navigateToStep(currentStatus.currentStep);
+        this.messageService.infoBubble(`繼續編輯流程：${stepName}`);
+      } else {
+        // 從第一步重新開始
+        this.navigateToStep(WorkflowStep.CONTRACT_INFO);
+        this.messageService.infoBubble('從契約資訊重新開始編輯');
+      }
     } else {
       this.contractFlowService.startWorkflow(rowData);
       this.navigateToStep(WorkflowStep.CONTRACT_INFO);
