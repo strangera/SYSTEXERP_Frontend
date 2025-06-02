@@ -58,7 +58,7 @@ export class AppMenulistService {
     const menuLookup = new Map<string, MenuItem>();
     const dynamicMenu: MenuItem[] = [];
     // 先處理所有節點，建立基本的 MenuItem 物件並放入 menuLookup
-    lists.forEach(({ prog_No, prog_name, prog_up, prog_ispage, prog_sort, sub_module_no }) => {
+    lists.forEach(({ prog_id, prog_No, prog_name, prog_up, prog_ispage, prog_sort, sub_module_no }) => {
       const menuItem: MenuItem = {
         prog_No: prog_No,
         label: prog_name,
@@ -71,7 +71,8 @@ export class AppMenulistService {
         prog_ispage: prog_ispage,
         prog_sort: prog_sort || 0, // 確保 prog_sort 有預設值，方便排序
         selected: false,
-        isSubModule: sub_module_no === "" && prog_up !== "" // 判斷是否為第一個子模組
+        isSubModule: sub_module_no === "" && prog_up !== "", // 判斷是否為第一個子模組
+        prog_id: prog_id
       };
       menuLookup.set(prog_No, menuItem);
     });

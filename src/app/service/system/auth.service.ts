@@ -84,7 +84,7 @@ export class AuthService {
     if (!token) {
       sessionStorage.clear();
       this.userSubject.next(null);
-      this.router.navigate(['/account/login'], { replaceUrl: true });
+      this.router.navigate(['/login'], { replaceUrl: true });
       this.queryStateService.clearAllQueryStates();
       this.notemessage.infoBubble('已成功登出');
       return;
@@ -98,7 +98,7 @@ export class AuthService {
       next: () => {
         sessionStorage.clear();
         this.userSubject.next(null);
-        this.router.navigate(['/account/login'], { replaceUrl: true });
+        this.router.navigate(['/login'], { replaceUrl: true });
         this.notemessage.infoBubble('已成功登出');
         this.queryStateService.clearAllQueryStates();
       },

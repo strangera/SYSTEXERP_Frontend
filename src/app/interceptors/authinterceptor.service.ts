@@ -15,7 +15,7 @@ export class AuthinterceptorService implements HttpInterceptor {
     const isLoggedIn = currentUser && currentUser.AccessToken;
 
     // 確認這不是登錄請求 && 確定登入
-    if (!req.url.includes('/account/login') && isLoggedIn) {
+    if (!req.url.includes('/login') && isLoggedIn) {
       const clonedReq = req.clone({
         headers: req.headers.set('Authorization', `Bearer ${currentUser.AccessToken}`)
       });

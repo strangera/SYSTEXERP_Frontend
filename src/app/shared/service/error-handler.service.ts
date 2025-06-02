@@ -38,7 +38,7 @@ export class ErrorHandlerService {
     } else if (error.status === 401) {
       // 未經授權 (Unauthorized)：Token 過期、無效或缺少。導向登入頁面。
       userFriendlyMessage = '您的會話已過期或未經授權，請重新登入。';
-      this.router.navigate(['/account/login']);
+      this.router.navigate(['/login']);
     } else if (error.status === 403) {
       // 禁止存取 (Forbidden)：有權限但無此操作權限。
       userFriendlyMessage = '您沒有執行此操作的權限。';
