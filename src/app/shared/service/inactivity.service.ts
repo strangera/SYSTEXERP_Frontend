@@ -41,7 +41,7 @@ export class InactivityService {
   logout(): void {
     this.ngZone.run(() => {
       this.authService.logout();
-      this.router.navigate(['/account/login']);
+      this.router.navigate(['/login']);
       alert('You have been logged out due to inactivity.');
     });
   }
