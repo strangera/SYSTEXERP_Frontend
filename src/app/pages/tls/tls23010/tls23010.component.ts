@@ -15,8 +15,12 @@ interface MainData {
   TXN_Date: string;
   ECR_No: string;
   TXN_No: number;
-  [key: string]: any; // 允許其他欄位存在
+  tlt_no?: string;
+  tlt_name?: string;
+  // 可依需求加更多欄位…
+  [key: string]: any;
 }
+
 
 const now = new Date();
 
@@ -72,28 +76,28 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
   ];
 
   columns: any[] = [
-     {
-    field: 'TXN_Date',
-    header: '交易日期',
-    visible: true,
-    format: (val: string) => {
-      const date = new Date(val);
-      return isNaN(date.getTime())
-        ? val
-        : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-    }
-  },
-        {
-    field: 'TXN_Time',
-    header: '交易時間',
-    visible: true,
-    format: (val: string) => {
-      const date = new Date(`1970-01-01T${val}`);
-      return isNaN(date.getTime())
-        ? val
-        : `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-    }
-  },
+    {
+      field: 'TXN_Date',
+      header: '交易日期',
+      visible: true,
+      format: (val: string) => {
+        const date = new Date(val);
+        return isNaN(date.getTime())
+          ? val
+          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+      }
+    },
+    {
+      field: 'TXN_Time',
+      header: '交易時間',
+      visible: true,
+      format: (val: string) => {
+        const date = new Date(`1970-01-01T${val}`);
+        return isNaN(date.getTime())
+          ? val
+          : `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+      }
+    },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -146,29 +150,29 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
   ];
 
 
-   mainColumns: any[] = [
-     {
-    field: 'TXN_Date',
-    header: '交易日期',
-    visible: true,
-    format: (val: string) => {
-      const date = new Date(val);
-      return isNaN(date.getTime())
-        ? val
-        : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-    }
-  },
-        {
-    field: 'TXN_Time',
-    header: '交易時間',
-    visible: true,
-    format: (val: string) => {
-      const date = new Date(`1970-01-01T${val}`);
-      return isNaN(date.getTime())
-        ? val
-        : `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-    }
-  },
+  mainColumns: any[] = [
+    {
+      field: 'TXN_Date',
+      header: '交易日期',
+      visible: true,
+      format: (val: string) => {
+        const date = new Date(val);
+        return isNaN(date.getTime())
+          ? val
+          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+      }
+    },
+    {
+      field: 'TXN_Time',
+      header: '交易時間',
+      visible: true,
+      format: (val: string) => {
+        const date = new Date(`1970-01-01T${val}`);
+        return isNaN(date.getTime())
+          ? val
+          : `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+      }
+    },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -219,8 +223,8 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
       format: (val: any) => this.getYesNoLabel(val)
     }
   ];
-  detailColumns: any[]=[
-      
+  detailColumns: any[] = [
+
     { field: 'TXN_Date', header: '交易日期', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     {
@@ -236,7 +240,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
     { field: 'TERM_No', header: '期別', visible: true }, //0=一般，其餘為分期的期數
     { field: 'TXN_PayAmt', header: '付款金額', visible: true },
   ];
-// 展開式表格的載入狀態
+  // 展開式表格的載入狀態
   expandLoading = false;
   //data為detailColumns 的data的data
 
@@ -276,82 +280,164 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
     });
   }
 
-onSubmit(form: FormGroup): void {
-  if (this.loading) return;
+  onSubmit(form: FormGroup): void {
+    if (this.loading) return;
 
-  this.handleSubmit(form, () => {
-    const formValue = { ...form.value };
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(form, () => {
+      const formValue = { ...form.value };
+      this.loading = true;
+      this.messageService.blockUi();
 
-    for (const key in formValue) {
-      if (formValue[key] === '') {
-        formValue[key] = null;
-      }
-    }
-
-    this.tls23010Service.queryTLS23010(formValue).subscribe({
-      next: (res) => {
-        if (res.Status === '0000') {
-          // ✅ 加入 id 組合鍵處理 SYS_StoreNo 門市店號
-this.data = (res.Data || []).map((item: MainData) => ({
-  ...item,
-  id: `${item.SYS_StoreNo}_${item.TXN_Date}_${item.ECR_No}_${item.TXN_No}`
-}));
-
-          this.totalRecords = res.TotalCount || this.data.length;
-          this.queryStateService.setQueryState(this.ProgNo, formValue);
-          this.messageService.successBubble('查詢成功');
-        } else {
-          this.data = [];
-          this.totalRecords = 0;
-          this.messageService.errorBubble('查詢失敗');
+      for (const key in formValue) {
+        if (formValue[key] === '') {
+          formValue[key] = null;
         }
-      },
-      error: () => {
-        this.messageService.errorBubble('查詢錯誤');
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
       }
+
+      this.tls23010Service.queryTLS23010(formValue).subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            this.data = (res.Data || []).map((item: MainData) => {
+              const isEven = Number(item.TXN_No) % 2 === 0;
+
+              const details = isEven
+                ? [
+                  {
+                    TXN_Date: item.TXN_Date,
+                    ECR_No: item.ECR_No,
+                    TXN_No: item.TXN_No,
+                    tlt_no: item.tlt_no,
+                    tlt_name: item.tlt_name,
+                    PAY_Type: '現金',
+                    CRD_Type: '',
+                    CRD_No: '',
+                    TERM_No: '0',
+                    TXN_PayAmt: 200,
+                  },
+                  {
+                    TXN_Date: item.TXN_Date,
+                    ECR_No: item.ECR_No,
+                    TXN_No: item.TXN_No,
+                    tlt_no: item.tlt_no,
+                    tlt_name: item.tlt_name,
+                    PAY_Type: '行動支付',
+                    CRD_Type: '',
+                    CRD_No: '',
+                    TERM_No: '0',
+                    TXN_PayAmt: 100,
+                  }
+                ]
+                : [
+                  {
+                    TXN_Date: item.TXN_Date,
+                    ECR_No: item.ECR_No,
+                    TXN_No: item.TXN_No,
+                    tlt_no: item.tlt_no,
+                    tlt_name: item.tlt_name,
+                    PAY_Type: '信用卡',
+                    CRD_Type: 'MASTER',
+                    CRD_No: '**** **** **** 5678',
+                    TERM_No: '6',
+                    TXN_PayAmt: 600,
+                  }
+                ];
+
+              return {
+                ...item,
+                details, // ✅ 直接預帶明細
+              };
+            });
+
+            this.totalRecords = res.TotalCount || this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, formValue);
+            this.messageService.successBubble('查詢成功');
+          } else {
+            this.data = [];
+            this.totalRecords = 0;
+            this.messageService.errorBubble('查詢失敗');
+          }
+        },
+        error: () => {
+          this.messageService.errorBubble('查詢錯誤');
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        complete: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        }
+      });
     });
-  });
-}
+  }
 
   getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find(opt => String(opt.value) === String(value));
     return found ? found.label : value;
   }
 
-  loadDetail(rowData: any) {
-  const request = {
-    SYS_StoreNo: rowData.SYS_StoreNo,
-    TXN_Date: rowData.TXN_Date,
-    ECR_No: rowData.ECR_No,
-    TXN_No: rowData.TXN_No,
-  };
 
-  this.expandLoading = true;
-  this.tls23010Service.queryTLS23010Detail(request).subscribe({
-    next: (res) => {
-      if (res.Status === '0000') {
-        rowData.details = res.Data || [];
-      } else {
-        rowData.details = [];
-        this.messageService.errorBubble('明細資料載入失敗');
-      }
-    },
-    error: () => {
-      rowData.details = [];
-      this.messageService.errorBubble('明細資料載入錯誤');
-    },
-    complete: () => {
-      this.expandLoading = false;
-    }
-  });
-}
+  loadDetail(rowData: any) {
+    console.log('展開資料 rowData:', rowData);
+    const isEven = Number(rowData.TXN_No) % 2 === 0;
+
+    rowData.details = isEven
+      ? [
+        {
+          TXN_Date: rowData.TXN_Date,
+          ECR_No: rowData.ECR_No,
+          TXN_No: rowData.TXN_No,
+          tlt_no: rowData.tlt_no,
+          tlt_name: rowData.tlt_name,
+          PAY_Type: '現金',
+          CRD_Type: '',
+          CRD_No: '',
+          TERM_No: '0',
+          TXN_PayAmt: 200,
+        },
+        {
+          TXN_Date: rowData.TXN_Date,
+          ECR_No: rowData.ECR_No,
+          TXN_No: rowData.TXN_No,
+          tlt_no: rowData.tlt_no,
+          tlt_name: rowData.tlt_name,
+          PAY_Type: '行動支付',
+          CRD_Type: '',
+          CRD_No: '',
+          TERM_No: '0',
+          TXN_PayAmt: 100,
+        }
+      ]
+      : [
+        {
+          TXN_Date: rowData.TXN_Date,
+          ECR_No: rowData.ECR_No,
+          TXN_No: rowData.TXN_No,
+          tlt_no: rowData.tlt_no,
+          tlt_name: rowData.tlt_name,
+          PAY_Type: '信用卡',
+          CRD_Type: 'MASTER',
+          CRD_No: '**** **** **** 5678',
+          TERM_No: '6',
+          TXN_PayAmt: 600,
+        }
+      ];
+    console.log('rowData.details:', rowData.details);
+  }
+  expandedRows: { [key: string]: boolean } = {};
+  override onDetail(rowData: any): void {
+    this.loadDetail(rowData); // ✅ 載入明細資料
+
+    // ✅ 僅展開該筆資料
+    this.expandedRows = {
+      [rowData.TXN_No]: true,
+    };
+  }
+  expansionColumns = [
+    { field: 'PAY_Type', header: '付款類型' },
+    { field: 'CRD_Type', header: '卡別' },
+    { field: 'CRD_No', header: '卡號' },
+    { field: 'TERM_No', header: '端末機號' },
+    { field: 'TXN_PayAmt', header: '付款金額' },
+  ];
 
 }

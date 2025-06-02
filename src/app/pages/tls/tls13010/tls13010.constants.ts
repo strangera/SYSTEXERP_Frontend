@@ -111,6 +111,15 @@ export const OVERALL_STATUS_OPTIONS = {
   '2': '部份',
 } as const;
 
+/* 合約狀態 = 申請案件內容(1:新設立 2:續約 3:合約異動 4:撤櫃)*/
+export const APPLY_TYPE_OPTIONS = {
+  '1': '新設立',
+  '2': '續約',
+  '3': '合約異動',
+  '4': '撤櫃'
+} as const;
+
+
 // ========== 格式化函數 ==========
 
 // 通用的多選格式化函數

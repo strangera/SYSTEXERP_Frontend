@@ -7,6 +7,7 @@ import { AuthService } from '../../../service/system/auth.service';
 import { CommonService } from '../../../shared/service/common.service';
 import { userLogin } from '../../../shared/models/system/userLogin';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { Router } from '@angular/router';
 
 registerLocaleData(zhHant, 'zh-tw');
 
@@ -30,10 +31,17 @@ export class LoginComponent implements OnInit {
     private formBuilder: FormBuilder,
     private notemessage: NotificationService,
     private commService: CommonService,
+    private router: Router,
   ) {
   }
 
   ngOnInit(): void {
+    // 檢查使用者是否已經登入
+    if (this.authService.currentUserValue) {
+      // 如果已經登入，則導向到主頁面（例如 dashboard）
+      this.router.navigate(['/SSO/dashboard']);
+      return; // 終止 ngOnInit 的執行，避免不必要的 IP 請求
+    }
     this.commService.getIPAddress().subscribe((result: any) => {
       this.ipAddress = result.ip;
     });

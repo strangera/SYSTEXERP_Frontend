@@ -52,15 +52,6 @@
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="廠商名稱"
-              controlName="VEN_Name"
-              [control]="dataForm.controls.VEN_Name"
-              [submitted]="submitted"
-              [disabled]="true"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="廠商統一編號"
               controlName="ven_uniform"
@@ -72,59 +63,40 @@
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="廠商名稱"
+              controlName="VEN_Name"
+              [control]="dataForm.controls.VEN_Name"
+              [submitted]="submitted"
+              [disabled]="true"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="版次"
+              controlName="contract_subno"
+              [control]="dataForm.controls.contract_subno"
+              [submitted]="submitted"
+              [disabled]="true"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="營業型態"
-              controlName="paper_type"
-              [options]="businessTypeOptions"
+              label="營運狀況"
+              controlName="tlt_openflag"
+              [options]="tltopenflagOption"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.paper_type"
+              [control]="dataForm.controls.tlt_openflag"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
         </div>
       </form>
     </p-accordionTab>
-
-    <!-- 櫃位地點資訊 -->
+    <!-- 洽談階段資訊 -->
     <p-accordionTab
-      header="櫃位地點資訊"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <div class="col-12">
-        <app-table
-          [data]="filteredData"
-          [columns]="columns"
-          [showCheckBox]="false"
-          dataKey="locationCode"
-          [loading]="loading"
-          [showDetail]="false"
-          [showRowEdit]="true"
-          [showInsert]="true"
-          [showEdit]="false"
-          [showReportMode]="false"
-          [showFooter]="false"
-          [showPaginator]="false"
-        >
-          <ng-template pTemplate="caption">
-            <div class="flex justify-content-end">
-              <app-button
-                btnType="create"
-                label="依營業坪數計算業績分攤"
-                icon=""
-                (onClick)="calculatePerformanceShare()"
-              ></app-button>
-            </div>
-          </ng-template>
-        </app-table>
-      </div>
-    </p-accordionTab>
-
-    <!-- 合約資訊 -->
-    <p-accordionTab
-      header="合約資訊"
+      header="洽談階段資訊"
       [selected]="true"
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
@@ -135,6 +107,61 @@
         (ngSubmit)="onSubmit(dataForm)"
       >
         <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="營業型態"
+              controlName="paper_type"
+              [options]="tls13010DropdownService.paperTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.paper_type"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="組織代號"
+              controlName="org_id"
+              [options]="tls13010DropdownService.orgOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.org_id"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="大分類"
+              controlName="bus_type"
+              [options]="tls13010DropdownService.bustypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.bus_type"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="中分類"
+              controlName="bus_class"
+              [options]="tls13010DropdownService.busClassOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.bus_class"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="小分類"
+              controlName="bus_sclass"
+              [options]="tls13010DropdownService.busSClassOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.bus_sclass"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar
               calendarType="dateOne"
@@ -156,9 +183,18 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar
               calendarType="dateOne"
-              label="洽談日期"
-              controlName="contact_Date"
-              [control]="dataForm.controls.contact_Date"
+              label="營運起始日"
+              controlName="tlt_contract_bdate"
+              [control]="dataForm.controls.tlt_contract_bdate"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              calendarType="dateOne"
+              label="營運截止日"
+              controlName="tlt_contract_edate"
+              [control]="dataForm.controls.tlt_contract_edate"
               [submitted]="submitted"
             ></app-calendar>
           </div>
@@ -181,6 +217,15 @@
             ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              calendarType="dateOne"
+              label="洽談日期"
+              controlName="contact_Date"
+              [control]="dataForm.controls.contact_Date"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="洽談者"
               controlName="contact_USR_Name"
@@ -194,89 +239,46 @@
         </div>
       </form>
     </p-accordionTab>
-
-    <!-- 營運資訊 -->
+    <!-- 櫃位地點資訊 -->
     <p-accordionTab
-      header="營運資訊"
+      header="櫃位地點資訊"
       [selected]="true"
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form
-        [formGroup]="dataForm"
-        id="dataForm"
-        (ngSubmit)="onSubmit(dataForm)"
-      >
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="大分類"
-              controlName="bus_type"
-              [options]="businessTypeCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.bus_type"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="中分類"
-              controlName="bus_class"
-              [options]="yesNoOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.bus_class"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="小分類"
-              controlName="subCategory"
-              [options]="yesNoOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.bus_sclass"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="組織代號"
-              controlName="org_id"
-              [options]="organizationOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.org_id"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateOne"
-              label="營運起始日"
-              controlName="tlt_contract_bdate"
-              [control]="dataForm.controls.tlt_contract_bdate"
-              [submitted]="submitted"
-            ></app-calendar>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateOne"
-              label="營運截止日"
-              controlName="tlt_contract_edate"
-              [control]="dataForm.controls.tlt_contract_edate"
-              [submitted]="submitted"
-            ></app-calendar>
-          </div>
-        </div>
-      </form>
+      <div class="col-12">
+        <app-table
+          [data]="filteredData"
+          [columns]="columns"
+          [showCheckBox]="true"
+          dataKey="locationCode"
+          [loading]="loading"
+          [showDetail]="false"
+          [showRowEdit]="true"
+          [showInsert]="true"
+          [showEdit]="false"
+          [showReportMode]="false"
+          [showFooter]="false"
+          [showPaginator]="false"
+          [showManage]="false"
+        >
+          <ng-template pTemplate="caption">
+            <div class="flex justify-content-end">
+              <app-button
+                btnType="create"
+                label="依營業坪數計算業績分攤"
+                icon=""
+                (onClick)="calculatePerformanceShare()"
+              ></app-button>
+            </div>
+          </ng-template>
+        </app-table>
+      </div>
     </p-accordionTab>
 
-    <!-- 財務資訊 -->
+    <!-- 商務條件 -->
     <p-accordionTab
-      header="財務資訊"
+      header="商務條件"
       [selected]="true"
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
@@ -287,6 +289,28 @@
         (ngSubmit)="onSubmit(dataForm)"
       >
         <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="櫃別"
+              controlName="tlt_kind"
+              [options]="counterCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.tlt_kind"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="裝潢方式"
+              controlName="decorationStyle"
+              [options]="decorationOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.deco_type"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="抽成別"
@@ -311,12 +335,34 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="是否為抽成"
-              controlName="comm_yn"
+              label="是否使用業主商店代號"
+              controlName="edc_yn"
               [options]="yesNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.comm_yn"
+              [control]="dataForm.controls.edc_yn"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="包底類別"
+              controlName="packageCategory"
+              [options]="tltKindOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.tlt_ctype_mtotal"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="超出部份處理方式"
+              controlName="overall_status"
+              [options]="overallStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.overall_status"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -356,140 +402,6 @@
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="年目標營業額(業主)"
-              controlName="total_amt"
-              [control]="dataForm.controls.total_amt"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="年預估營業額(廠商)"
-              controlName="total_amt_vendor"
-              [control]="dataForm.controls.total_amt_vendor"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="保證金付款方式"
-              controlName="paymentMethods"
-              [options]="paymentMethodOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.paymentMethods"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="履約保證金"
-              controlName="performanceBond"
-              [control]="dataForm.controls.paymentMethods"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="裝潢方式"
-              controlName="decorationStyle"
-              [options]="decorationOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.deco_type"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="施工保證金付款方式"
-              controlName="paytype"
-              [options]="paytypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.paytype"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="施工保證金"
-              controlName="construct_fees"
-              [control]="dataForm.controls.construct_fees"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="付款期限(天數)"
-              controlName="check_day"
-              [control]="dataForm.controls.check_day"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-        </div>
-      </form>
-    </p-accordionTab>
-
-    <!-- 業務資訊 -->
-    <p-accordionTab
-      header="業務資訊"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="dataForm"
-        id="dataForm"
-        (ngSubmit)="onSubmit(dataForm)"
-      >
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="櫃別"
-              controlName="tlt_kind"
-              [options]="counterCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.tlt_kind"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="是否使用業主商店代號"
-              controlName="edc_yn"
-              [options]="yesNoOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.edc_yn"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="包底類別"
-              controlName="packageCategory"
-              [options]="tltKindOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.tlt_ctype_mtotal"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="超出部份處理方式"
-              controlName="overall_status"
-              [options]="overallStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.overall_status"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="是否開立業主發票"
               controlName="issueOwnerInvoice"
@@ -519,6 +431,17 @@
               optionLabel="label"
               optionValue="value"
               [control]="dataForm.controls.cash_yn"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="是否為抽成"
+              controlName="comm_yn"
+              [options]="yesNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.comm_yn"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -586,15 +509,93 @@
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="目標營業額(業主)"
+              controlName="total_amt"
+              [control]="dataForm.controls.total_amt"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="請款單據別"
-              controlName="invoice_type"
-              [options]="invoiceTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.invoice_type"
+              label="目標營業額單位"
+              controlName="total_amt"
+              [control]="dataForm.controls.total_amt"
               [submitted]="submitted"
             ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="預估營業額(廠商)"
+              controlName="total_amt_vendor"
+              [control]="dataForm.controls.total_amt_vendor"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="預估營業額(廠商)單位"
+              controlName="total_amt"
+              [control]="dataForm.controls.total_amt"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="履約保證金付款方式"
+              controlName="paymentMethods"
+              [options]="paymentMethodOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.paymentMethods"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="履約保證金"
+              controlName="performanceBond"
+              [control]="dataForm.controls.paymentMethods"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="施工保證金付款方式"
+              controlName="paytype"
+              [options]="paytypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.paytype"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="施工保證金"
+              controlName="construct_fees"
+              [control]="dataForm.controls.construct_fees"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="契約屆滿保證金付款方式"
+              controlName="paytype"
+              [options]="paytypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.paytype"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="契約屆滿保證金"
+              controlName="construct_fees"
+              [control]="dataForm.controls.construct_fees"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
@@ -626,10 +627,28 @@
               [submitted]="submitted"
             ></app-input-text>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="付款期限(天數)"
+              controlName="check_day"
+              [control]="dataForm.controls.check_day"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="請款單據別"
+              controlName="invoice_type"
+              [options]="invoiceTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.invoice_type"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
         </div>
       </form>
     </p-accordionTab>
-
     <!-- 參加活動資訊 -->
     <!-- <p-accordionTab
       header="參加活動資訊"
@@ -674,6 +693,114 @@
         </div>
       </form>
     </p-accordionTab> -->
+    <p-accordionTab
+      header="參加活動資訊"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="dataForm"
+        id="dataForm"
+        (ngSubmit)="onSubmit(dataForm)"
+      >
+        <!-- <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <p-checkbox
+              inputId="activity1"
+              name="activity1"
+              label="全館消費滿額集點活動"
+              formControlName="activity1"
+              [binary]="true"
+            />
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <p-checkbox
+              inputId="activity2"
+              name="activity2"
+              label="滿仟送佰"
+              formControlName="activity2"
+              [binary]="true"
+            />
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <p-checkbox
+              inputId="activity3"
+              name="activity3"
+              label="有價券"
+              formControlName="activity3"
+              [binary]="true"
+            />
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <p-checkbox
+              inputId="activity4"
+              name="activity4"
+              label="會員卡"
+              formControlName="activity4"
+              [binary]="true"
+            />
+          </div>
+        </div> -->
+
+        <!-- 或者使用 fieldset 來組織多個 checkbox -->
+        <fieldset class="mt-3">
+          <!-- <legend>參加活動選項</legend> -->
+          <div class="grid">
+            <div class="col-12 md:col-6">
+              <div class="field-checkbox">
+                <p-checkbox
+                  inputId="activity1_alt"
+                  name="activity1_alt"
+                  formControlName="activity1"
+                  [binary]="true"
+                />
+                <label for="activity1_alt">全館消費滿額集點活動</label>
+              </div>
+            </div>
+
+            <div class="col-12 md:col-6">
+              <div class="field-checkbox">
+                <p-checkbox
+                  inputId="activity2_alt"
+                  name="activity2_alt"
+                  formControlName="activity2"
+                  [binary]="true"
+                />
+                <label for="activity2_alt">滿仟送佰</label>
+              </div>
+            </div>
+
+            <div class="col-12 md:col-6">
+              <div class="field-checkbox">
+                <p-checkbox
+                  inputId="activity3_alt"
+                  name="activity3_alt"
+                  formControlName="activity3"
+                  [binary]="true"
+                />
+                <label for="activity3_alt">有價券</label>
+              </div>
+            </div>
+
+            <div class="col-12 md:col-6">
+              <div class="field-checkbox">
+                <p-checkbox
+                  inputId="activity4_alt"
+                  name="activity4_alt"
+                  formControlName="activity4"
+                  [binary]="true"
+                />
+                <label for="activity4_alt">會員卡</label>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+      </form>
+    </p-accordionTab>
 
     <!-- 聯絡資訊 -->
     <p-accordionTab
