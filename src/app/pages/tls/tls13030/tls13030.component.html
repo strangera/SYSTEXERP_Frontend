@@ -62,26 +62,21 @@
           ></app-multi-select>
         </div>
 
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range
-            calendarType="dateRange"
+
+          <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
             label="合約起始日"
             [startControl]="queryForm.controls.tlt_bdate_start"
             [endControl]="queryForm.controls.tlt_bdate_end"
             [submitted]="submitted"
-          ></app-calendar-range>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range
-            calendarType="dateRange"
+          />
+                    <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
             label="合約截止日"
             [startControl]="queryForm.controls.tlt_edate_start"
             [endControl]="queryForm.controls.tlt_edate_end"
             [submitted]="submitted"
-          ></app-calendar-range>
-        </div>
-
+          />
         <div class="col-12 md:col-6 lg:col-4">
           <app-multi-select
             label="扣款類別"
@@ -104,25 +99,22 @@
           ></app-multi-select>
         </div>
 
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range
-            calendarType="dateRange"
+
+                    <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
             label="扣款起日"
             [startControl]="queryForm.controls.tpy_bdate_start"
             [endControl]="queryForm.controls.tpy_bdate_end"
             [submitted]="submitted"
-          ></app-calendar-range>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range
-            calendarType="dateRange"
+          />
+                              <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
             label="扣款迄日"
             [startControl]="queryForm.controls.tpy_edate_start"
             [endControl]="queryForm.controls.tpy_edate_end"
             [submitted]="submitted"
-          ></app-calendar-range>
-        </div>
+          />
+
 </div>
 
       <div
@@ -151,6 +143,7 @@
       [showManage] = "false"
       [loading]="loading"
       [showCheckBox]="false"
+      [showDelete] = "false" 
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     ></app-table>
 </div>

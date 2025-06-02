@@ -13,9 +13,9 @@ export class StatusFlagService {
 
   // 本地數據的狀態旗標選項
   options: any[] = [
-    { value: 1, label: '外交官零稅' },
-    { value: 2, label: '事後登錄' },
-    { value: 3, label: '預售' },
+    { value: '1', label: '外交官零稅' },
+    { value: '2', label: '事後登錄' },
+    { value: '3', label: '預售' },
     // 根據圖片可見的狀態旗標繼續添加
   ];
 

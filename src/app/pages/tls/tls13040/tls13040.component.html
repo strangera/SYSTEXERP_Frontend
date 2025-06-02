@@ -59,24 +59,22 @@
             [submitted]="submitted"
           ></app-multi-select>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range
+        <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
             label="合約起始日"
-            calendarType="dateRange"
             [startControl]="queryForm.controls.tlt_bdate_start"
             [endControl]="queryForm.controls.tlt_bdate_end"
             [submitted]="submitted"
-          ></app-calendar-range>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range
+          />
+      <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
             label="合約截止日"
-            calendarType="dateRange"
             [startControl]="queryForm.controls.tlt_edate_start"
             [endControl]="queryForm.controls.tlt_edate_end"
             [submitted]="submitted"
-          ></app-calendar-range>
-        </div>
+          />
+
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-multi-select
             label="抽成別"
@@ -130,7 +128,6 @@
     [columns]="columns"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
-    (delete)="onDelete($event)"
     [showCheckBox]="true"
     dataKey="tlt_no"
     [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]"
@@ -141,6 +138,7 @@
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
     [showManage]="false"
+    [showDelete] = "false" 
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
   ></app-table>
 </div>

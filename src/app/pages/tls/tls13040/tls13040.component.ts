@@ -227,29 +227,7 @@ formatYYYYMMDD(raw: string): string {
       });
     });
   }
-
-
-
-  onDelete(selectedItems: any[]): void {
-    if (!selectedItems.length) return;
-    const confirm = window.confirm('是否確定刪除選取項目？');
-    if (!confirm) return;
-
-    const idList = selectedItems.map((item) => item.id);
-
-    this.TLS13040Service.deleteTLS13040(idList).subscribe({
-      next: () => {
-        this.messageService.successBubble('刪除成功');
-        this.onSubmit(this.queryForm);
-      },
-      error: () => {
-        this.messageService.errorBubble('刪除失敗');
-      },
-    });
-  }
-
-
-  getLabelFromOptions(value: any, options: any[]): string {
+ getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find(opt => String(opt.value) === String(value));
     return found ? found.label : value;
   }

@@ -34,7 +34,7 @@ export class SYSB400CRUComponent
     p_level_id: ['', [Validators.required, Validators.maxLength(2)]], // 上層組織階層代碼
     p_level_name: ['', [Validators.maxLength(40)]], // 上層組織階層名稱
     stop_flag: ['N', [Validators.required, Validators.maxLength(1)]], // 是否停用
-    CanDel: [], // 是否可刪除
+    CanDel: [false], // 是否可刪除
   });
   showConfirm = false;
 
@@ -58,6 +58,13 @@ export class SYSB400CRUComponent
 
   ngOnInit(): void {
     this.initializePage('SYSB400', this.dataForm);
+    //新增模式的CanDel設定
+    if (this.crudstatus == 'Create') {
+      this.dataForm.patchValue({
+        CanDel: true
+      });
+    }
+
     this.loadOptions().then(() => {
       const levelId = this.dataForm.controls.level_id.value;
       if (this.crudstatus !== 'Create' && levelId) {

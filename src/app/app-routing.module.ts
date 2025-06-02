@@ -5,7 +5,7 @@ import { SsoDashboardComponent } from './pages/base/sso-dashboard/sso-dashboard.
 
 export const routes: Routes = [
   {
-    path: 'account',
+    path: '',
     loadChildren: () => import('./pages/base/login/login.module').then(m => m.LoginModule),
   },
   { path: 'SSO/dashboard', component: SsoDashboardComponent, canActivate: [AuthGuard] },

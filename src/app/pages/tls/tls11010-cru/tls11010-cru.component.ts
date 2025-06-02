@@ -67,30 +67,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
   usageOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
 
-  readonly locationStatusAll = [
-    { value: 0, label: '空位' },
-    { value: 1, label: '使用中' },
-    { value: 2, label: '停用' },
-  ];
 
-  readonly locationStatusCreate = [
-    { value: 0, label: '空位' },
-    { value: 2, label: '停用' },
-  ];
-
-  readonly locationStatusFromVacant = [
-    { value: 0, label: '空位' },
-    { value: 2, label: '停用' },
-  ];
-
-  readonly locationStatusFromDisabled = [
-    { value: 2, label: '停用' },
-    { value: 0, label: '空位' },
-  ];
-
-  readonly locationStatusFromUsed = [
-    { value: 1, label: '使用中' },
-  ];
 
 
   LOCATION_Status_Options: any[] = []; // 實際綁定的下拉選單選項
@@ -105,6 +82,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
   }
 
   ngOnInit(): void {
+
     this.initializePage('TLS11010', this.inputForm);
 
     // 建立或編輯時處理 LOCATION_Status 下拉選單
@@ -118,46 +96,49 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
       this.inputForm.get('LOCATION_Status')?.enable();
     }
 
-    if (this.crudstatus === CRUDStatus.Edit) {
-      const status = Number(this.rowdata?.LOCATION_Status);
 
-      if (status === 1) {
-        this.LOCATION_Status_Options = [{ value: 1, label: '使用中' }];
-        this.inputForm.patchValue({ ...this.rowdata, LOCATION_Status: 1 }); // ✅ 確保 value 是數字
-        this.inputForm.get('LOCATION_Status')?.disable(); // ✅ patch 後再 disable
-      } else if (status === 0) {
-        this.LOCATION_Status_Options = [
-          { value: 0, label: '空位' },
-          { value: 2, label: '停用' },
-        ];
-        this.inputForm.get('LOCATION_Status')?.enable();
-        this.inputForm.patchValue(this.rowdata);
-      } else if (status === 2) {
-        this.LOCATION_Status_Options = [
-          { value: 2, label: '停用' },
-          { value: 0, label: '空位' },
-        ];
-        this.inputForm.get('LOCATION_Status')?.enable();
-        this.inputForm.patchValue(this.rowdata);
+    // 根據實際狀態決定選項
+    if (this.crudstatus === CRUDStatus.Edit) {
+      const rawStatus = this.rowdata?.LOCATION_Status;
+      const status = rawStatus !== undefined && rawStatus !== null ? Number(rawStatus) : -1;
+
+      console.log('🎯 編輯狀態：', status);  // 看實際進來的值
+
+      this.inputForm.patchValue(this.rowdata); // 帶入整筆資料
+
+      // 根據實際狀態決定選項
+      switch (status) {
+        case 0:
+          this.LOCATION_Status_Options = [{ value: 0, label: '空位' }, { value: 2, label: '停用' }];
+          break;
+        case 2:
+          this.LOCATION_Status_Options = [{ value: 2, label: '停用' }, { value: 0, label: '空位' }];
+          break;
+        case 1:
+        default:
+          this.LOCATION_Status_Options = [{ value: 1, label: '使用中' }];
+          this.inputForm.get('LOCATION_Status')?.disable();
+          break;
       }
+
+      this.inputForm.patchValue({ LOCATION_Status: status });
+
     }
 
 
-
-
-
-
-
     if (this.crudstatus === CRUDStatus.Read) {
-      this.LOCATION_Status_Options = this.locationStatusAll;
+      // 給定所有可選項
+      this.LOCATION_Status_Options = [
+        { value: 0, label: '空位' },
+        { value: 1, label: '使用中' },
+        { value: 2, label: '停用' },
+      ];
 
-      // ✅ 替換 LOCATION_Status 為對應的 option value（避免 disabled 時 dropdown 顯示空白）
       const matched = this.LOCATION_Status_Options.find(
         opt => String(opt.value) === String(this.rowdata?.LOCATION_Status)
       );
       const labelValue = matched ? matched.value : null;
 
-      // ✅ 將原始資料補上對應值再 patch
       this.inputForm.patchValue({
         ...this.rowdata,
         LOCATION_Status: labelValue,
@@ -165,6 +146,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
 
       this.inputForm.disable();
     }
+
 
 
     // 其餘選項初始化
@@ -188,13 +170,14 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
   }
 
   onSubmit(): void {
+
     this.handleSubmit(this.inputForm, () => {
       const raw = this.inputForm.getRawValue();
 
       (raw as any).GROSS_SPACE = Number(raw.GROSS_SPACE);
       (raw as any).NET_SPACE = Number(raw.NET_SPACE);
       (raw as any).LOCATION_Status = String(raw.LOCATION_Status);
-
+      (raw as any).org_id = raw.org_id?.trim() === '' ? null : raw.org_id;
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
         console.log('📤 新增送出的 payload：', raw);
 
