@@ -1,0 +1,41 @@
+::ng-deep #expansion-row td {
+  padding: 1rem;
+  background-color: #f9f9f9;
+}
+
+::ng-deep app-table-expansion table th:nth-child(1),
+::ng-deep app-table-expansion table td:nth-child(1) {
+  width: 100px;
+}
+
+::ng-deep app-table-expansion table th:nth-child(2),
+::ng-deep app-table-expansion table td:nth-child(2) {
+  width: 100px;
+}
+
+::ng-deep app-table-expansion table th:nth-child(3),
+::ng-deep app-table-expansion table td:nth-child(3) {
+  width: 100px;
+}
+
+::ng-deep app-table-expansion table th:nth-child(4),
+::ng-deep app-table-expansion table td:nth-child(4) {
+  width: 100px;
+}
+
+::ng-deep app-table-expansion table th:nth-child(5),
+::ng-deep app-table-expansion table td:nth-child(5) {
+  width: 100px;
+}
+::ng-deep #expansion-row td {
+  padding: 1rem;
+  background-color: #f9f9f9;
+  width: auto !important; // 不繼承主表格寬度
+  max-width: unset !important; // 不限制最大寬度
+}
+
+::ng-deep app-table-expansion {
+  display: block; // 讓 expansion 區塊可自行決定寬度
+  width: fit-content; // 寬度依內容調整
+  min-width: 600px; // 可自行調整
+}

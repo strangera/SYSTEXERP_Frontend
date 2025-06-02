@@ -232,8 +232,8 @@
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
     [showCheckBox]="true"
-    dataKey="TXN_DateStart"
-    [multiSortMeta]="[{ field: 'TXN_DateStart', order: 1 }]"
+    dataKey="TXN_No"
+    [multiSortMeta]="[{ field: 'TXN_No', order: 1 }]"
     [totalRecords]="totalRecords"
     [lazy]="true"
     [loading]="loading"
@@ -241,21 +241,9 @@
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
     [showManage]="false"
-    [showDelete] = "false" 
+    [showDelete]="false"
+    [expansionDataKey]="'details'"
+    [expansionColumns]="expansionColumns"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
   ></app-table>
 </div>
-<app-expandable-edit-table
-  [mainColumns]="mainColumns"
-  [detailColumns]="detailColumns"
-  [data]="data"
-  [loading]="expandLoading"
-  detailKey="details"
-  dataKey="id" 
-  [showPaginator]="true"
-  [showCheckBox]="false"
-  [showAddButton]="false"
-  [showDetailAddButton]="false"
-  (onRowExpand)="loadDetail($event)" 
->
-</app-expandable-edit-table>
