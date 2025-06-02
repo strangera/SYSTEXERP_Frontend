@@ -73,7 +73,7 @@
         </div>
       </div>
 
-      <p-tree
+      <!-- <p-tree
         [value]="roleUserData"
         selectionMode="checkbox"
         [(selection)]="selectedRoleUserData"
@@ -86,8 +86,28 @@
         <ng-template let-node pTemplate="default">
           <span>{{ node.label }}</span>
         </ng-template>
-      </p-tree>
+      </p-tree> -->
 
+      <!-- <div class="grid p-fluid">
+        <app-tree-dropdown
+          [members]="flatTreeDataTest"
+          [Columns]="treeNodesTest"
+          [LeaveColumnLabel]="LeaveColumnLabelTest"
+          (confirmSelected)="onMembersSelected($event)"
+          [onlySendLeaf]="true"
+        ></app-tree-dropdown>
+      </div> -->
+
+      <ng-container *ngIf="roleUserData.length > 0">
+        <app-tree-dropdown-nest
+          [members]="roleUserData"
+          [treeNodes]="treeNodes"
+          [LeaveColumnLabel]="'label'"
+          (confirmSelected)="onMembersSelected($event)"
+          [onlySendLeaf]="true"
+          [isNestedInput]="true"
+        ></app-tree-dropdown-nest>
+      </ng-container>
       <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         *ngIf="!isFormReadable"

@@ -51,12 +51,27 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
   ]
 
   treeNodes = [
-    { value: 'label', label: '角色代號' },
-    { value: 'children', label: '角色名稱' },
-    { value: 'IsEnable', label: '是否允許' },
-    { value: 'partialSelected', label: '是否勾選' }
+    "模組", "系統", "作業", "分頁", "權限"
   ];
   selectedRoleUserData: AuthOption[] = []; // 選取的使用者資料
+
+  // tree dropDown==================================
+  flatTreeDataTest = [
+    { id: '1', department: 'Department A', role: 'Owner', name: 'Amy Elsner', email: 'amy@email.com', phone: '0911111111' },
+    { id: '2', department: 'Department A', role: 'Owner', name: 'Anna Fali', email: 'anna@email.com', phone: '0922222222' },
+    { id: '3', department: 'Department A', role: 'Viewer', name: 'Asiya Javayant', email: 'asiya@email.com', phone: '0933333333' },
+    { id: '4', department: 'Department B', role: 'Examiner', name: 'Bernardo Dominic', email: 'bernardo@email.com', phone: '0944444444' },
+    { id: '5', department: 'Department B', role: 'Reviewer', name: 'Elwin Sharvill', email: 'elwin@email.com', phone: '0955555555' }]; // 從 API 或資料庫取得
+  treeNodesTest = [
+    { value: 'department', label: '部門' },
+    { value: 'role', label: '角色' },
+    { value: 'mem', label: '成員' }
+  ];
+  LeaveColumnLabelTest = 'name'; // 子節點顯示欄位
+
+  onMembersSelectedTest(selected: any[]) {
+    console.log('從子元件選到的:', selected);
+  }
 
   constructor(
     private sys0210Service: Sys0210Service,
@@ -71,7 +86,6 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
   // ----------------------------------------------------------------
   // 載入 角色之使用者
   loadOptions(roleNo: string) {
-    console.log('需求:', roleNo);
     this.sys0210Service.queryRolePrivileges({ Role_No: roleNo }).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
@@ -86,7 +100,7 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
           // 初始化被選中的資料（Match 為 true）
           // this.selectedRoleUserData = this.roleUserData.filter(user => user.Match === true);
 
-          // const user0900 = response.Data.find((u: UserOption) => u.User_No === '0900000001');
+          // const user0900 = response.Data.find((u: any) => u.User_No === '0900000001');
           // console.log('⏱ 原始 Match 值:', JSON.parse(JSON.stringify(user0900)));
 
         } else {
@@ -129,6 +143,8 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
     });
 
     this.selectedRoleUserData = selectedItems;
+
+    console.log('選擇的項目', this.selectedRoleUserData);
   }
 
   // ----------------------------------------------------------------
