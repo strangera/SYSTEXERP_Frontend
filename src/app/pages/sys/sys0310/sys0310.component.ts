@@ -1,85 +1,53 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { RoleCodeServiceService } from '../../../service/basic/role-code-service.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { FormGroup, Validators } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
+import { Sys0210Service } from '../../../service/API/sys/sys0210.service';
+import { Role } from '../../../shared/models/sys/role.model';
 // 4-2-3-1角色系統權限設定
 @Component({
   selector: 'app-sys0310',
   templateUrl: './sys0310.component.html',
-  styleUrls: ['./sys0310.component.scss'],
 })
 
-export class SYS0310Component extends BasicQpageComponent implements OnInit {
-  // 查詢
+export class SYS0310Component extends BasicQueryPageComponent<Role> implements OnInit {
   queryForm = this.formBuilder.group({
-    roleCode: ['', [Validators.required]], // 角色代碼 DropDown
+    Role_No: ['', [Validators.maxLength(10)]], // 角色代碼
+    Role_Name: ['', [Validators.maxLength(30)]], // 角色名稱
   });
-  // 表格
-
-  userCodeOptions: any[] = [];
-
+  data: Role[] = [];
+  columns: Column[] = [
+    { field: 'Role_No', header: '角色編號', visible: true },
+    { field: 'Role_Name', header: '角色名稱', visible: true },
+    { field: 'Description', header: '描述', visible: true },
+    { field: 'CRT_Date', header: '建立日期', visible: false },
+    { field: 'CRT_USR_No', header: '建立人員編號', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
+    { field: 'UPD_Date', header: '變更日期', visible: false },
+    { field: 'UPD_USR_No', header: '變更人員編號', visible: false },
+    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
+  ];
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private roleCodeServiceService: RoleCodeServiceService,
+    private sys0210Service: Sys0210Service
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '420006';
-    // 初始化權限資訊
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // 加載使用者代碼選項
-    this.roleCodeServiceService.getSystemTypes().subscribe((data) => {
-      this.userCodeOptions = data;
-    });
+    this.initializePage('SYS0310', '/SYS/SYS0310CRU', this.queryForm, (form) => this.onSubmit(form));
   }
-
-  onSubmitNext(frm: FormGroup) {
-    this.onNext(frm);
-  }
-
-  onNext(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      this.router.navigate(['/SYS0000/SYS0310CRU']);
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交查詢邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+    this.handleSubmit(frm, () => {
+      this.sys0210Service.queryRole(frm.value).subscribe({
+        next: (response) => {
+          this.data = response.Data
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+        },
+      });
+    });
   }
 }

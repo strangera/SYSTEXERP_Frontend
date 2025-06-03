@@ -208,6 +208,8 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
       this.messageService.warnBubble(`您目前無檢視「${item.label}」的權限，請聯絡系統管理員開啟權限。`, '無法開啟畫面');
       return;
     }
+    this.activeTopMenuItem = null; // 點擊已激活的項，將其取消激活
+    this.topMenuClick.emit(null); // 發射 null 表示沒有激活的頂部菜單項
     this.router.navigate([`/${item.prog_No.slice(0, 3)}/${item.prog_No}`]);
     this.favorite.hide(); // 點擊後關閉最愛選單
   }
