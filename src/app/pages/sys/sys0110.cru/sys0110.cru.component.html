@@ -118,12 +118,15 @@
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <app-dropdown
             label="所屬專櫃編號"
             controlName="TLT_No"
+            [options]="tltNo_Options"
+            optionLabel="Label"
+            optionValue="No"
             [control]="dataForm.controls.TLT_No"
             [submitted]="submitted"
-          ></app-input-text>
+          ></app-dropdown>
         </div>
       </div>
       <div
