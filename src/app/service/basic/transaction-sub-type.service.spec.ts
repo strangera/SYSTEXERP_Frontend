@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { TransactionSubTypeService } from './transaction-sub-type.service';
+import { TransactionSubTypeService } from './TXN_Subtype.service';
 
 describe('TransactionSubTypeService', () => {
   let service: TransactionSubTypeService;

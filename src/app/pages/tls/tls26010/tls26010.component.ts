@@ -9,7 +9,7 @@ import {
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { CashierCodeService } from '../../../service/basic/cashier-code.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
 import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 // 預購活動檔期設定
@@ -50,7 +50,7 @@ export class TLS26010Component {
   });
 
   // 下拉選單選項
-  cashierCodeOptions: any[] = [];
+  ECRNoOptions: any[] = []; // 收銀機號下拉選單
   counterCodeOptions: any[] = [];
 
   // 表格資料
@@ -72,15 +72,19 @@ export class TLS26010Component {
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
     private authService: AuthService,
-    private cashierCodeService: CashierCodeService,  // 收銀機號 service
+    private ECRNoService: ECRNoService, // 收銀機號 service
     private counterCodeService: CounterCodeService,  // 專櫃編號 service
   ) { }
 
   ngOnInit(): void {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
-    this.cashierCodeService.getCashierCodes().subscribe((data) => {
-      this.cashierCodeOptions = data;
+    this.ECRNoService.getECRNo().subscribe((res) => {
+      this.ECRNoOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
     });
 
     this.counterCodeService.getCounterCodes().subscribe((data) => {

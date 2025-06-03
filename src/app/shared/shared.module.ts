@@ -60,6 +60,7 @@ import { CalendarRangeComponent } from './componentkit/calendar-range/calendar-r
 import { TableComponent } from './componentkit/table/table.component';
 import { TableExpansionComponent } from './componentkit/table/table-expansion/table-expansion.component';
 import { DropdownTableComponent } from './componentkit/dropdown-table/dropdown-table.component';
+import { TreeDropdownNestComponent } from './componentkit/tree-dropdown-nest/tree-dropdown-nest.component';
 import { TreeDropdownComponent } from './componentkit/tree-dropdown/tree-dropdown.component';
 import { InputTextareaComponent } from './componentkit/input-textarea/input-textarea.component';
 import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -87,6 +88,7 @@ import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autoc
     DropdownTableComponent,
     MultiSelectTableComponent,
     TreeDropdownComponent,
+    TreeDropdownNestComponent,
     InputTextareaComponent,
     ButtonDynamicallyaddComponent,
     ButtonDynamicallydeleteComponent,
@@ -186,6 +188,7 @@ import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autoc
     DropdownTableComponent,
     MultiSelectTableComponent,
     TreeDropdownComponent,
+    TreeDropdownNestComponent,
     InputTextareaComponent,
     InputNumberComponent,
     InputNumberRangeComponent,

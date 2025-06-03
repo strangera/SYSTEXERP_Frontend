@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { CashierCodeService } from '../../../service/basic/cashier-code.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
 @Component({
@@ -23,7 +23,7 @@ export class TLS24070Component extends BasicQpageComponent implements OnInit {
     selectedGroup: ['group1'], // Set default group
     test: ['', Validators.required]
   });
-  cashierCodeOptions: any[] = [];
+  ECRNoOptions: any[] = [];
   data: any[] = [];
   filteredData: any[] = [...this.data];
   columns: any[] = [
@@ -47,7 +47,7 @@ export class TLS24070Component extends BasicQpageComponent implements OnInit {
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
     private authService: AuthService,
-    private cashierCodeService: CashierCodeService
+    private ECRNoService: ECRNoService,
   ) {
     super();
     this.initializeForm();
@@ -56,8 +56,12 @@ export class TLS24070Component extends BasicQpageComponent implements OnInit {
   ngOnInit(): void {
     this.ProgNo = '220030';
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.cashierCodeService.getCashierCodes().subscribe(data => {
-      this.cashierCodeOptions = data;
+    this.ECRNoService.getECRNo().subscribe((res) => {
+      this.ECRNoOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
     });
     // Set default group to 'group1' and adjust controls accordingly
     this.onGroupSelect('group1');

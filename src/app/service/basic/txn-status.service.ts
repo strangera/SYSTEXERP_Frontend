@@ -7,20 +7,16 @@ import { catchError, Observable, of, tap } from 'rxjs';
 @Injectable({
   providedIn: 'root'
 })
-export class CashierCodeService {
+export class TxnStatusService {
+
   apiUrl: string = environment.ApiUrl;
-  title: string = '收銀機代號';
+  title: string = '交易狀態';
+
   options: any[] = [
-    { value: 1, label: '000221_TIGER虎牌' },
-    { value: 2, label: '000211_LECREUSET' },
-    { value: 3, label: '000181_dyson' },
-    { value: 4, label: '000121_tokuyo' },
-    { value: 5, label: '000101_集雅社' },
-    { value: 6, label: '000091_翰林茶棧' },
-    { value: 7, label: '000083_CoCo都可' },
-    { value: 8, label: '000081_CoCo都可' },
-    { value: 9, label: '000022_霹靂布袋戲' },
-    { value: 10, label: '000021_霹靂布袋戲' },
+    { value: 'N', label: '正常交易' },
+    { value: 'C', label: '交易取消' },
+    { value: 'D', label: '發票作廢' },
+    { value: 'E', label: '隔日發票作廢' },
   ];
 
   constructor(
@@ -28,35 +24,29 @@ export class CashierCodeService {
     private errorHandler: ErrorHandlerService
   ) {}
 
-  getCashierCodes(): Observable<any[]> {
+  getTxnStatusOptions(): Observable<any[]> {
     return of(this.options).pipe(
-      tap(data => console.debug('get options response', data)),
+      tap(data => console.debug('get txn status options', data)),
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
-    /*
-    return this.http.get<any[]>(this.apiUrl).pipe(
-      tap(data => console.debug('get response', data)),
-      catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
-    );
-    */
   }
 
-  getCashierCodeById(id: number): Observable<any> {
+  getTxnStatusById(id: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
       tap(data => console.debug('get by id response', data)),
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
-  createCashierCode(cashierCode: any): Observable<any> {
-    return this.http.post<any>(this.apiUrl, cashierCode).pipe(
+  createTxnStatus(status: any): Observable<any> {
+    return this.http.post<any>(this.apiUrl, status).pipe(
       tap(data => console.debug('post response', data)),
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
 
-  updateCashierCode(id: number, cashierCode: any): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/${id}`, cashierCode).pipe(
+  updateTxnStatus(id: string, status: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/${id}`, status).pipe(
       tap(data => console.debug('put response', data)),
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
