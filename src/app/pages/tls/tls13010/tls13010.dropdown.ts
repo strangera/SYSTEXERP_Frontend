@@ -14,7 +14,8 @@ import {
   TLT_KIND_OPTIONS,
   TLT_OPENFLAG_OPTIONS,
   METER_TYPE_OPTIONS,
-  OVERALL_STATUS_OPTIONS
+  OVERALL_STATUS_OPTIONS,
+  TLT_CTYPE_MTOTAL_OPTIONS
 } from './tls13010.constants';
 import { Sysb800DropdownService } from '../../../service/API/sys/sysb800-dropdown.service';
 import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
@@ -48,6 +49,7 @@ export const TLS13010_DROPDOWN_OPTIONS = {
   openflagStatus: convertToDropdownOptions(TLT_OPENFLAG_OPTIONS),
   meterType: convertToDropdownOptions(METER_TYPE_OPTIONS),
   overallStatus: convertToDropdownOptions(OVERALL_STATUS_OPTIONS),
+  tltCtypeMtotal: convertToDropdownOptions(TLT_CTYPE_MTOTAL_OPTIONS),
   yesNo: [{ value: 'Y', label: '是' }, { value: 'N', label: '否' }],
   depositPayment: [
     { value: 1, label: '現金' },

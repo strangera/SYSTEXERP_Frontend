@@ -256,6 +256,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   businessTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.businessType];
   commCompTypeDropdown = [...TLS13010_DROPDOWN_OPTIONS.commCompType];
   tltopenflagOption = [...TLS13010_DROPDOWN_OPTIONS.openflagStatus];
+  tltctypemtotalOption = [...TLS13010_DROPDOWN_OPTIONS.tltCtypeMtotal];
 
   // ========== API 載入的下拉選單選項 ==========
   vendorOptions: any[] = [];

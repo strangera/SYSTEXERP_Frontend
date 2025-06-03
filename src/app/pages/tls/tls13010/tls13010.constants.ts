@@ -119,6 +119,11 @@ export const APPLY_TYPE_OPTIONS = {
   '4': '撤櫃'
 } as const;
 
+export const TLT_CTYPE_MTOTAL_OPTIONS = {
+  '1': '年包',
+  '2': '月包',
+  '3': '期間包',
+} as const;
 
 // ========== 格式化函數 ==========
 
@@ -203,6 +208,11 @@ export const formatTltOpenflag = (value: string): string => {
 // 抄表類型格式化（複選）
 export const formatMeterType = (value: string): string => {
   return formatMultipleOptions(value, METER_TYPE_OPTIONS);
+};
+
+// 包底類別
+export const formatTltCtypeMototal = (value: string): string => {
+  return formatSingleOption(value, TLT_CTYPE_MTOTAL_OPTIONS);
 };
 
 // ========== 數字格式化 ==========
