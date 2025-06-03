@@ -54,7 +54,7 @@
         <div class="col-13">
           <app-table
             tableKey="SYS0240CRU"
-            [data]="roleUserData"
+            [data]="roleUserAuthData"
             [columns]="roleUserColumns"
             [showCheckBox]="false"
             [showManage]="false"
@@ -71,7 +71,7 @@
 
       <ng-container *ngIf="roleUserData.length > 0">
         <app-tree-dropdown-nest
-          [members]="roleUserData"
+          [members]="showUserData"
           [treeNodes]="treeNodes"
           [LeaveColumnLabel]="'label'"
           TitleButtonName="查看權限"

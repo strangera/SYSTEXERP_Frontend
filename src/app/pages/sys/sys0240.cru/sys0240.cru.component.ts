@@ -44,6 +44,7 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
   });
 
   roleUserData: AuthOption[] = [];
+  showUserData: AuthOption[] = [];
   whetherOptions: any[] = [
     { value: true, label: '是' },
     { value: false, label: '否' },
@@ -107,11 +108,8 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
 
           // console.log('回傳使用者資料:', this.roleUserData);
 
-          this.roleUserData = this.filterSelectedTree(this.roleUserData);
-          console.log('只保留已勾選的結構:', this.roleUserData);
-
-          // const filteredTree = this.filterSelectedTree(this.roleUserData);
-          // console.log('只保留已勾選的結構:', filteredTree);
+          this.showUserData = this.filterSelectedTree(this.roleUserData); //只保留勾選的結構
+          console.log('只保留已勾選的結構(顯示):', this.showUserData);
         } else {
           console.error('API error:', response.Status, response.Message);
         }
