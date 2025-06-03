@@ -16,6 +16,7 @@ export interface AuthOption {
   partialSelected: boolean; // 是否勾選
 }
 
+// 配對角色
 export interface UserOption {
   ID: string; // ID
   User_No: string; // 角色代號
@@ -66,24 +67,6 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
     "模組", "系統", "作業", "分頁", "權限"
   ];
   selectedRoleUserData: AuthOption[] = []; // 選取的使用者資料
-
-  // tree dropDown==================================
-  flatTreeDataTest = [
-    { id: '1', department: 'Department A', role: 'Owner', name: 'Amy Elsner', email: 'amy@email.com', phone: '0911111111' },
-    { id: '2', department: 'Department A', role: 'Owner', name: 'Anna Fali', email: 'anna@email.com', phone: '0922222222' },
-    { id: '3', department: 'Department A', role: 'Viewer', name: 'Asiya Javayant', email: 'asiya@email.com', phone: '0933333333' },
-    { id: '4', department: 'Department B', role: 'Examiner', name: 'Bernardo Dominic', email: 'bernardo@email.com', phone: '0944444444' },
-    { id: '5', department: 'Department B', role: 'Reviewer', name: 'Elwin Sharvill', email: 'elwin@email.com', phone: '0955555555' }]; // 從 API 或資料庫取得
-  treeNodesTest = [
-    { value: 'department', label: '部門' },
-    { value: 'role', label: '角色' },
-    { value: 'mem', label: '成員' }
-  ];
-  LeaveColumnLabelTest = 'name'; // 子節點顯示欄位
-
-  onMembersSelectedTest(selected: any[]) {
-    console.log('從子元件選到的:', selected);
-  }
 
   constructor(
     private sys0210Service: Sys0210Service,
@@ -149,18 +132,17 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
   }
 
   // ---樹狀資料---
-  toggleSelection(node: AuthOption, selected: boolean) {
-    node.partialSelected = selected;
-    if (node.children?.length) {
-      node.children.forEach(child => this.toggleSelection(child, selected));
-    }
-  }
+  // toggleSelection(node: AuthOption, selected: boolean) {
+  //   node.partialSelected = selected;
+  //   if (node.children?.length) {
+  //     node.children.forEach(child => this.toggleSelection(child, selected));
+  //   }
+  // }
 
   onMembersSelected(selected: any[]) {
     console.log('從子元件選到的:', selected);
   }
 
-  // ----------------------------------------------------------------
   // 點擊時變更 match狀態
   onUserSelectionChange(selectedItems: AuthOption[]) {
     // 先記錄目前選取的 ID
@@ -193,16 +175,17 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            // const requestBody = {
-            //   Source_No: frm.value.Role_No,
-            //   Target_No: frm.value.Target_No,
-            // };
+            const requestBody = {
+              Source_No: this.dataForm.get('Role_No')?.value ?? '',
+              Target_No: frm.value.Target_No,
+              IsAllCopy: frm.value.IsAllCopy
+            };
 
-            console.log('更新的請求內容', frm.value);
-            // this.sys0230Service.updateRoleUsers(requestBody).subscribe(() => {
-            //   this.messageService.successBubble('更新成功');
-            //   this.onCancel(); // 更新成功後返回查詢頁面
-            // });
+            console.log('更新的請求內容', requestBody);
+            this.sys0210Service.copyRoleSettings(requestBody).subscribe(() => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel(); // 更新成功後返回查詢頁面
+            });
           }
           break;
       }
