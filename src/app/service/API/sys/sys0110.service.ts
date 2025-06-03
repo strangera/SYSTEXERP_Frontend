@@ -40,4 +40,9 @@ export class Sys0110Service {
   queryUserPrivileges(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryUserPrivileges`, body);
   }
+
+  // 查詢 專櫃主檔案 資料表
+  queryTLTTALENT_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_DropDownList`, body);
+  }
 }

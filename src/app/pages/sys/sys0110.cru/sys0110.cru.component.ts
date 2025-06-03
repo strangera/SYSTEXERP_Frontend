@@ -52,6 +52,9 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser>
   SYS3100_Options: apiOption[] = [];
   userStatusOptions: option[] = [];
   userTypeOptions: option[] = [];
+  tltNo_Options: option[] = [];
+
+  // /queryTLTTALENT_DropDownList
 
   constructor(
     private sys0110Service: Sys0110Service,
@@ -85,13 +88,22 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser>
             console.log('新增', frm.value);
             this.sys0110Service.createUser(frm.value).subscribe(() => {
               this.messageService.successBubble('新增成功');
-              this.onCancel(); // 新增成功後返回查詢頁面
+              // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+              this.dataForm.reset(); // 重置表單
             });
           }
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             // console.log('編輯', frm.value);
+            // 先將user_Password加密
+            frm.value.user_Password = this.encrypt.getPassword(
+              frm.value.user_No,
+              frm.value.user_Password
+            );
+            console.log('userInfo', this.userInfo);
+            console.log('frm.value.user_Password', frm.value.user_Password);
+            console.log('編輯', frm.value);
             this.sys0110Service.updateUser(frm.value).subscribe(() => {
               this.messageService.successBubble('更新成功');
               this.onCancel(); // 更新成功後返回查詢頁面
@@ -134,12 +146,23 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser>
       SortBy: [{ field: 'org_id', order: 1 }],
     };
 
+    // 組織編號
     this.sysb400Service.querySYSB400(query_org).subscribe((response) => {
       this.SYS3100_Options = response.Data.map((item: Sysb400m) => ({
         No: item.org_id,
         Name: item.org_name,
         Label: item.org_id + '-' + item.org_name,
       }));
+    });
+
+    // 查專櫃主檔
+    this.sys0110Service.queryTLTTALENT_DropDownList({}).subscribe((response) => {
+      this.tltNo_Options = response.Data.map((item: any) => ({
+        No: item.No,
+        Name: item.Name,
+        Label: item.No + '-' + item.Name,
+      }));
+      // console.log('專櫃主檔', this.tltNo_Options);
     });
 
     this.userTypeOptions = [
