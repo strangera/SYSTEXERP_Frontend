@@ -20,8 +20,8 @@
             label="銷售日期"
             [startControl]="queryForm.controls.TXN_DateStart"
             [endControl]="queryForm.controls.TXN_DateEnd"
-            [submitted]="submitted">
-        </app-calendar-range-quick>
+            [submitted]="submitted"
+          ></app-calendar-range-quick>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
@@ -46,7 +46,7 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-           <app-multi-select
+            <app-multi-select
               label="專櫃編號"
               controlName="TLT_No"
               [options]="CounterOptions"
@@ -86,7 +86,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-                    <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="狀態旗標"
               controlName="TXN_FlagStatus"
@@ -97,7 +97,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-                              <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="交易附屬型態"
               controlName="TXN_Subtype"
@@ -240,7 +240,6 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-
         </div>
 
         <div
