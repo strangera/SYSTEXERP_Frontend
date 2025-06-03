@@ -50,6 +50,7 @@
         </div>
       </div>
 
+      <!-- 使用者權限區 -->
       <ng-container *ngIf="dataForm.controls.IsAllCopy.value === true">
         <div class="col-13">
           <app-table
@@ -69,6 +70,7 @@
         </div>
       </ng-container>
 
+      <!-- 權限樹狀圖 -->
       <ng-container *ngIf="roleUserData.length > 0">
         <app-tree-dropdown-nest
           [members]="showUserData"
@@ -82,6 +84,7 @@
           [isNestedInput]="true"
         ></app-tree-dropdown-nest>
       </ng-container>
+
       <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         *ngIf="!isFormReadable"
@@ -91,4 +94,25 @@
       </div>
     </form>
   </p-panel>
+</div>
+
+<!-- 加入展開式可編輯表格範例 -->
+<div class="card">
+  <p-divider align="left" type="solid">
+    <b class="text-blue-500 text-2xl">來源角色所擁有之權限(備用)</b>
+  </p-divider>
+
+  <app-expandable-edit-table
+    title="權限資料表"
+    [mainColumns]="mainColumns"
+    [detailColumns]="detailColumns"
+    [data]="showUserData"
+    [loading]="expandLoading"
+    detailKey="children"
+    dataKey="id"
+    [showCheckBox]="false"
+    [showPaginator]="true"
+    [showAddButton]="false"
+    [showDetailAddButton]="false"
+  />
 </div>

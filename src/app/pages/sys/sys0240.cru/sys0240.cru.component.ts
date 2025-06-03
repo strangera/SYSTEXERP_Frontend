@@ -6,6 +6,7 @@ import { apiOption, tblRole, tblUser } from '../../../shared/models/sys/sysb000.
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { Sys0210Service } from '../../../service/API/sys/sys0210.service';
 import { Sys0230Service } from '../../../service/API/sys/sys0230.service';
+import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 
 // 來源角色擁有的權限
 export interface AuthOption {
@@ -80,6 +81,29 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
     this.initializePage('SYS0240', this.dataForm);
     this.loadOptions(this.dataForm.get('Role_No')?.value ?? ''); // 載入選項
   }
+
+  // ---------------------------可能會放的元件-------------------------------------
+  // 展開式表格的欄位定義
+  mainColumns: ColumnDef[] = [
+    { field: 'label', header: '權限名稱', editable: false, type: 'text' },
+    { field: 'IsEnable', header: '是否啟用', editable: true, type: 'checkbox' },
+    { field: 'partialSelected', header: '是否已勾選', editable: false, type: 'checkbox' },
+  ];
+
+  // 詳細資料欄位定義
+  detailColumns: ColumnDef[] = [
+    { field: 'label', header: '權限名稱', editable: false, type: 'text' },
+    { field: 'IsEnable', header: '是否啟用', editable: true, type: 'checkbox' },
+    { field: 'partialSelected', header: '是否已勾選', editable: false, type: 'checkbox' },
+  ];
+
+  // 展開式表格的載入狀態
+  expandLoading = false;
+
+  isRowSelectable(rowData: any): boolean {
+    return rowData.isdelete;
+  }
+
   // ----------------------------------------------------------------
   // 載入 角色之使用者
   loadOptions(roleNo: string) {
@@ -106,7 +130,7 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
         if (response.Status === '0000') {
           this.roleUserData = response.Data || [];
 
-          // console.log('回傳使用者資料:', this.roleUserData);
+          console.log('回傳使用者資料:', response.Data);
 
           this.showUserData = this.filterSelectedTree(this.roleUserData); //只保留勾選的結構
           console.log('只保留已勾選的結構(顯示):', this.showUserData);
