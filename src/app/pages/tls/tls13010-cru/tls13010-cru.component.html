@@ -848,15 +848,17 @@
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-autocomplete
               label="廠商匯款銀行代號"
-              controlName="bankCode"
-              [options]="yesNoOptions"
-              optionLabel="label"
-              optionValue="value"
+              controlName="bank_id"
+              placeholder="請輸入銀行代碼或銀行名稱..."
               [control]="dataForm.controls.bank_id"
               [submitted]="submitted"
-            ></app-dropdown>
+              [forceSelection]="true"
+              [searchMethod]="searchBankOptions.bind(this)"
+              (selectEvent)="onBankSelect($event)"
+              (unselectEvent)="onBankUnselect()"
+            ></app-autocomplete>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text

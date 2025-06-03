@@ -67,6 +67,7 @@ import { TableExportComponent } from './componentkit/table/table-export/table-ex
 import { MultiSelectTableComponent } from './componentkit/multi-select-table/multi-select-table.component';
 import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/expandable-edit-table.module';
 import { MultiLocationFilterComponent } from './componentkit/multi-location-filter/multi-location-filter.component';
+import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autocomplete.component';
 
 @NgModule({
   declarations: [
@@ -95,6 +96,7 @@ import { MultiLocationFilterComponent } from './componentkit/multi-location-filt
     RadiobuttonComponent,
     HasPermissionDirective,
     MultiLocationFilterComponent,
+    AutoCompleteComponent,
   ],
   imports: [
     ReactiveFormsModule,
@@ -104,6 +106,7 @@ import { MultiLocationFilterComponent } from './componentkit/multi-location-filt
     DialogModule,
     TableModule,
     CardModule,
+    AutoCompleteModule,
     DropdownModule,
     MultiSelectModule,
     InputNumberModule,
@@ -198,6 +201,7 @@ import { MultiLocationFilterComponent } from './componentkit/multi-location-filt
     ExpandableEditTableModule,
     SelectButtonModule,
     MultiLocationFilterComponent,
+    AutoCompleteComponent,
   ],
 })
 export class SharedModule { }

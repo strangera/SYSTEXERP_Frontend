@@ -2,7 +2,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { map, Observable, Subscription } from 'rxjs';
 
 // 基礎組件
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -26,6 +26,9 @@ import { CounterCategoryService } from '../../../service/basic/counter-category.
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { BankAccountCodeService } from '../../../service/basic/bank-account-code.service';
+import { AutoCompleteOption } from '../../../shared/componentkit/app-autocomplete/app-autocomplete.component';
+import { BankService } from '../../../service/basic/bank.service';
+import { BankOptionsService } from '../../../service/API/dropdownservice/bank-option.service';
 
 interface CategoryItem {
   id: number;
@@ -229,6 +232,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     activity2: [''],
     activity3: [''],
     activity4: [''],
+
+    // ========== 新增：銀行 AutoComplete 相關屬性 ==========
+    /** @description 選中的銀行資訊 */
+    selectedBankInfo: null
   });
 
   // ========== 固定下拉選單選項 (從 constants 來的) ==========
@@ -270,6 +277,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   // 訂閱管理
   private subscriptions: Subscription[] = [];
+  selectedBankInfo: AutoCompleteOption | null = null;
 
   constructor(
     public override router: Router,
@@ -288,6 +296,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     private organizationNumberService: OrganizationNumberService,
     private bankAccountCodeService: BankAccountCodeService,
 
+    // ========== 新增：銀行 API 服務 ==========
+    private bankService: BankOptionsService,
   ) {
     super();
   }
@@ -390,14 +400,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       },
       error: (err) => console.warn('載入組織選項失敗:', err)
     });
-
-    // // 銀行選項
-    // this.bankAccountCodeService.getBankAccountCodes().subscribe({
-    //   next: (data) => {
-    //     this.bankOptions = data;
-    //   },
-    //   error: (err) => console.warn('載入銀行選項失敗:', err)
-    // });
 
     // 更新表格欄位的選項
     this.updateTableColumnOptions();
@@ -876,10 +878,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.subscriptions.push(busClassSubscription);
     }
   }
-
-
-
-
   /**
  * 新增：供 template 使用的輔助方法
  */
@@ -912,5 +910,44 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }
   }
 
+  /**
+   * 銀行選擇事件處理
+   */
+  onBankSelect(selectedBank: AutoCompleteOption): void {
+    console.log('選擇的銀行:', selectedBank);
+    this.selectedBankInfo = selectedBank;
 
+    // 更新表單中的銀行相關欄位
+    this.dataForm.patchValue({
+      bank_id: selectedBank.value
+    });
+
+    // 自動儲存
+    this.saveToWorkflow();
+  }
+
+  /**
+   * 銀行取消選擇事件處理
+   */
+  onBankUnselect(): void {
+    console.log('取消選擇銀行');
+    this.selectedBankInfo = null;
+
+    // 清空表單中的銀行相關欄位
+    this.dataForm.patchValue({
+      bank_id: ''
+    });
+
+    // 自動儲存
+    this.saveToWorkflow();
+  }
+
+  /**
+ * 銀行搜尋方法
+ */
+  searchBankOptions(searchKeyword: string): Observable<string[]> {
+    return this.bankService.getBankOptions(searchKeyword).pipe(
+      map((data: any[]) => data.map(item => `${item.value}${item.label}`))
+    );
+  }
 }
