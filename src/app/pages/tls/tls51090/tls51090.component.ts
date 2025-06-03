@@ -66,7 +66,7 @@ export class TLS51090Component {
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
     // ----------------------------------------------------------------
-    this.counterNameService.getSystemTypes().subscribe(data => {
+    this.counterNameService.getCounters().subscribe(data => {
       this.counterOptions = data;
     });
   }

@@ -6,6 +6,7 @@ import { apiOption, tblRole, tblUser } from '../../../shared/models/sys/sysb000.
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { Sys0210Service } from '../../../service/API/sys/sys0210.service';
 import { Sys0230Service } from '../../../service/API/sys/sys0230.service';
+import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 
 // 來源角色擁有的權限
 export interface AuthOption {
@@ -14,6 +15,14 @@ export interface AuthOption {
   children: AuthOption[]; // 角色名稱
   IsEnable: boolean; // 是否允許
   partialSelected: boolean; // 是否勾選
+}
+
+// 配對角色
+export interface UserOption {
+  ID: string; // ID
+  User_No: string; // 角色代號
+  User_Name: string; // 角色名稱
+  Match: boolean; // 是否配對
 }
 
 // 4-2-2-3角色複製 CRU
@@ -36,13 +45,14 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
   });
 
   roleUserData: AuthOption[] = [];
+  showUserData: AuthOption[] = [];
   whetherOptions: any[] = [
     { value: true, label: '是' },
     { value: false, label: '否' },
   ];
 
   targetOptions: apiOption[] = []; //目標角色
-  roleUserAuthData: apiOption[] = []; //目標權限
+  roleUserAuthData: UserOption[] = []; //目標權限
   // ----------------------------------------------------------------
   roleUserColumns: Column[] = [
     {
@@ -60,24 +70,6 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
   ];
   selectedRoleUserData: AuthOption[] = []; // 選取的使用者資料
 
-  // tree dropDown==================================
-  flatTreeDataTest = [
-    { id: '1', department: 'Department A', role: 'Owner', name: 'Amy Elsner', email: 'amy@email.com', phone: '0911111111' },
-    { id: '2', department: 'Department A', role: 'Owner', name: 'Anna Fali', email: 'anna@email.com', phone: '0922222222' },
-    { id: '3', department: 'Department A', role: 'Viewer', name: 'Asiya Javayant', email: 'asiya@email.com', phone: '0933333333' },
-    { id: '4', department: 'Department B', role: 'Examiner', name: 'Bernardo Dominic', email: 'bernardo@email.com', phone: '0944444444' },
-    { id: '5', department: 'Department B', role: 'Reviewer', name: 'Elwin Sharvill', email: 'elwin@email.com', phone: '0955555555' }]; // 從 API 或資料庫取得
-  treeNodesTest = [
-    { value: 'department', label: '部門' },
-    { value: 'role', label: '角色' },
-    { value: 'mem', label: '成員' }
-  ];
-  LeaveColumnLabelTest = 'name'; // 子節點顯示欄位
-
-  onMembersSelectedTest(selected: any[]) {
-    console.log('從子元件選到的:', selected);
-  }
-
   constructor(
     private sys0210Service: Sys0210Service,
     private sys0230Service: Sys0230Service,
@@ -89,6 +81,29 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
     this.initializePage('SYS0240', this.dataForm);
     this.loadOptions(this.dataForm.get('Role_No')?.value ?? ''); // 載入選項
   }
+
+  // ---------------------------可能會放的元件-------------------------------------
+  // 展開式表格的欄位定義
+  mainColumns: ColumnDef[] = [
+    { field: 'label', header: '權限名稱', editable: false, type: 'text' },
+    { field: 'IsEnable', header: '是否啟用', editable: true, type: 'checkbox' },
+    { field: 'partialSelected', header: '是否已勾選', editable: false, type: 'checkbox' },
+  ];
+
+  // 詳細資料欄位定義
+  detailColumns: ColumnDef[] = [
+    { field: 'label', header: '權限名稱', editable: false, type: 'text' },
+    { field: 'IsEnable', header: '是否啟用', editable: true, type: 'checkbox' },
+    { field: 'partialSelected', header: '是否已勾選', editable: false, type: 'checkbox' },
+  ];
+
+  // 展開式表格的載入狀態
+  expandLoading = false;
+
+  isRowSelectable(rowData: any): boolean {
+    return rowData.isdelete;
+  }
+
   // ----------------------------------------------------------------
   // 載入 角色之使用者
   loadOptions(roleNo: string) {
@@ -103,17 +118,10 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
         }));
     });
 
-    //角色權限
+    //查詢 角色權限
     this.sys0230Service.queryRoleUsers({ Role_No: roleNo }).subscribe((response) => {
       console.log('角色權限 回應', response);
       this.roleUserAuthData = response.Data
-        .map((item: tblUser) => ({
-          No: item.user_No,
-          Name: item.user_Name,
-          Label: item.user_No + '-' + item.user_Name,
-        }));
-
-
     });
 
     // 樹狀圖 (顯示權限)
@@ -122,18 +130,10 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
         if (response.Status === '0000') {
           this.roleUserData = response.Data || [];
 
-          console.log('回傳使用者資料:', this.roleUserData);
+          console.log('回傳使用者資料:', response.Data);
 
-          const filteredTree = this.filterSelectedTree(this.roleUserData);
-          console.log('只保留已勾選的結構:', filteredTree);
-
-
-          // 初始化被選中的資料（Match 為 true）
-          // this.selectedRoleUserData = this.roleUserData.filter(user => user.Match === true);
-
-          // const user0900 = response.Data.find((u: any) => u.User_No === '0900000001');
-          // console.log('⏱ 原始 Match 值:', JSON.parse(JSON.stringify(user0900)));
-
+          this.showUserData = this.filterSelectedTree(this.roleUserData); //只保留勾選的結構
+          console.log('只保留已勾選的結構(顯示):', this.showUserData);
         } else {
           console.error('API error:', response.Status, response.Message);
         }
@@ -149,18 +149,17 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
   }
 
   // ---樹狀資料---
-  toggleSelection(node: AuthOption, selected: boolean) {
-    node.partialSelected = selected;
-    if (node.children?.length) {
-      node.children.forEach(child => this.toggleSelection(child, selected));
-    }
-  }
+  // toggleSelection(node: AuthOption, selected: boolean) {
+  //   node.partialSelected = selected;
+  //   if (node.children?.length) {
+  //     node.children.forEach(child => this.toggleSelection(child, selected));
+  //   }
+  // }
 
   onMembersSelected(selected: any[]) {
     console.log('從子元件選到的:', selected);
   }
 
-  // ----------------------------------------------------------------
   // 點擊時變更 match狀態
   onUserSelectionChange(selectedItems: AuthOption[]) {
     // 先記錄目前選取的 ID
@@ -193,16 +192,17 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            // const requestBody = {
-            //   Source_No: frm.value.Role_No,
-            //   Target_No: frm.value.Target_No,
-            // };
+            const requestBody = {
+              Source_No: this.dataForm.get('Role_No')?.value ?? '',
+              Target_No: frm.value.Target_No,
+              IsAllCopy: frm.value.IsAllCopy
+            };
 
-            console.log('更新的請求內容', frm.value);
-            // this.sys0230Service.updateRoleUsers(requestBody).subscribe(() => {
-            //   this.messageService.successBubble('更新成功');
-            //   this.onCancel(); // 更新成功後返回查詢頁面
-            // });
+            console.log('更新的請求內容', requestBody);
+            this.sys0210Service.copyRoleSettings(requestBody).subscribe(() => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel(); // 更新成功後返回查詢頁面
+            });
           }
           break;
       }

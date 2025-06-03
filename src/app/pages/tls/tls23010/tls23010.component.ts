@@ -3,13 +3,16 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { TransactionTypeService } from '../../../service/basic/transaction-type.service';
 import { StatusFlagService } from '../../../service/basic/status-flag.service';
 import { WhetherService } from '../../../service/basic/whether.service';
-import { TransactionSubTypeService } from '../../../service/basic/transaction-sub-type.service';
+import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
 import { CarrierTypeService } from '../../../service/basic/carrier-type.service';
 import { TLS23010Service } from '../../../service/API/tls/tls23010.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { TxnStatusService } from '../../../service/basic/txn-status.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
 interface MainData {
   SYS_StoreNo: string;
   TXN_Date: string;
@@ -55,6 +58,8 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
     tlt_building: [''],          // 館別
     tlt_floor: [''],             // 樓層
     org_id: [''],                // 組織代碼
+    TXN_FlagStatus: [''],       // 狀態旗標
+    TXN_Subtype: [''],           // 交易附屬型態
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }])
   });
 
@@ -65,15 +70,18 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
   BUILDING_NO_Options: any[] = [];
   floorOptions: any[] = [];
   OrganizationCodeOptions: any[] = [];
-  transactionTypeOptions: any[] = [];
+  TXN_SubtypeOptions: any[] = [];
   statusFlagOptions: any[] = [];
   whetherOptions: any[] = [];
   transactionSubTypeOptions: any[] = [];
   carrierTypeOptions: any[] = [];
+  txnStatusOptions: any[] = [];
+  ECRNoOptions: any[] = []; // 收銀機號下拉選單
   checkTotalAmount = [
     { value: 1, label: '是' },
     { value: 2, label: '否' },
   ];
+  CounterOptions: any[] = []; // 專櫃選項
 
   columns: any[] = [
     {
@@ -253,10 +261,14 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
     private transactionTypeService: TransactionTypeService,
     private statusFlagService: StatusFlagService,
     private whetherService: WhetherService,
-    private transactionSubTypeService: TransactionSubTypeService,
+    private TXN_SubtypeService: TXN_SubtypeService,
     private carrierTypeService: CarrierTypeService,
     private tls11010Service: Tls11010Service,
     private floorService: FloorService,
+    private txnStatusService: TxnStatusService,
+    private counterNameService: CounterNameService,
+    private ECRNoService: ECRNoService,
+
 
   ) {
     super();
@@ -265,14 +277,29 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS23010', '', this.queryForm, (f) => this.onSubmit(f));
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
-    this.transactionTypeService.getTransactionTypes().subscribe(data => this.transactionTypeOptions = data);
+
     this.statusFlagService.getStatusFlags().subscribe(data => this.statusFlagOptions = data);
     this.whetherService.getWhetherOptions().subscribe(data => this.whetherOptions = data);
-    this.transactionSubTypeService.getTransactionSubType().subscribe(data => this.transactionSubTypeOptions = data);
+    this.TXN_SubtypeService.getTXNSubtype().subscribe(data => this.TXN_SubtypeOptions = data);
     this.carrierTypeService.getCarrierType().subscribe(data => this.carrierTypeOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
     this.tls11010Service.getOrgOptions().subscribe((res) => {
       this.OrganizationCodeOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
+    this.txnStatusService.getTxnStatusOptions().subscribe(data => this.txnStatusOptions = data);
+    this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
+    this.ECRNoService.getECRNo().subscribe((res) => {
+      this.ECRNoOptions = res?.map((x: any) => ({
         label: x.label,                                 // 給 table 用
         formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
         value: x.value,

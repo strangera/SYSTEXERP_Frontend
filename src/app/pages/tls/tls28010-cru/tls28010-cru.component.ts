@@ -12,7 +12,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { CardTypeService } from '../../../service/basic/card-type.service';
 import { CardCategoryService } from '../../../service/basic/card-category.service';
-import { CashierCodeService } from '../../../service/basic/cashier-code.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 @Component({
   selector: 'app-tls28010-cru',
@@ -91,7 +91,7 @@ export class TLS28010CRUComponent extends BasicCrupageComponent implements OnIni
   // 下拉選單選項
   cardTypeOptions: any[] = [];
   cardCategoryOptions: any[] = [];
-  cashierCodeOptions: any[] = [];
+  ECRNoOptions: any[] = []; // 收銀機號下拉選單
   // formTitle: string = '';
   // showConfirm: boolean = false;
   // crudstatus: CRUDStatus = CRUDStatus.Read;
@@ -102,7 +102,7 @@ export class TLS28010CRUComponent extends BasicCrupageComponent implements OnIni
     private authService: AuthService,
     private cardTypeService: CardTypeService,
     private cardCategoryService: CardCategoryService,
-    private cashierCodeService: CashierCodeService
+    private ECRNoService: ECRNoService,
   ) {
     super();  // 呼叫父類建構子
   }
@@ -115,8 +115,12 @@ export class TLS28010CRUComponent extends BasicCrupageComponent implements OnIni
       this.cardTypeOptions = data;
     });
 
-    this.cashierCodeService.getCashierCodes().subscribe((data) => {
-      this.cashierCodeOptions = data;
+    this.ECRNoService.getECRNo().subscribe((res) => {
+      this.ECRNoOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
     });
 
     this.cardCategoryService.getCardCategory().subscribe((data) => {

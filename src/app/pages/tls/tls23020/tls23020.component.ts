@@ -13,6 +13,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 import { CommissionTypeService } from '../../../service/basic/commission-type.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { TxnStatusService } from '../../../service/basic/txn-status.service';
 
 const now = new Date();
 
@@ -26,7 +27,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   totalRecords: number = 0;
   // 表單欄位
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [now, [Validators.required]],            // 交易日期起
+    TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],            // 交易日期起
     TXN_DateEnd: [now, [Validators.required]],              // 交易日期訖
     ECR_No: [''],                                           // 收銀機機號
     TXN_No_Start: [null, [this.validationService.numberValidator]],  // 交易序號起
@@ -49,24 +50,58 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }])
   });
 
-
-  // 欄位定義
+  // 欄位定義（依後端欄位為主）
   columns = [
-    { field: 'saleDate', header: '銷售日期', visible: true },
-    { field: 'cashRegisterStatus', header: '收銀機代號', visible: true },
-    { field: 'transactionSequence', header: '交易序號', visible: true },
-    { field: 'counterCode', header: '專櫃編號/名稱', visible: true },
-    { field: 'invoiceCode', header: '發票號碼', visible: true },
-    { field: 'unitPrice', header: '單項售價', visible: true },
-    { field: 'untaxedAmount', header: '未稅(免稅)金額', visible: true },
-    { field: 'tax', header: '稅額', visible: true },
-    { field: 'discountAmount', header: '折扣金額', visible: true },
-    { field: 'promotionCategory', header: '商品抽成類別', visible: true },
-    { field: 'originalDiscount', header: '原折扣', visible: true },
-    { field: 'categoryDiscount', header: '歸類折扣', visible: true },
-    { field: 'taxCategory', header: '稅別', visible: true },
-    { field: 'itemCode', header: '單品編號', visible: true },
-    { field: 'status', header: '狀態', visible: true },
+    {
+      field: 'TXN_Date',
+      header: '交易日期',
+      visible: true,
+      format: (val: string) => {
+        const date = new Date(val);
+        return isNaN(date.getTime())
+          ? val
+          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+      }
+    },
+    { field: 'ECR_No', header: '收銀機機號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true }, // 若無此欄位請移除
+    { field: 'TXN_GUINo', header: '發票號碼', visible: true },
+    { field: 'PLU_SalePrc', header: '售價', visible: true },
+    { field: 'TXN_Net', header: '未稅銷售金額', visible: true },
+    { field: 'TXN_Tax', header: '稅額', visible: true },
+    { field: 'TXN_Disc', header: '折扣總額', visible: true },
+
+    {
+      field: 'tlt_id',
+      header: '分類抽成類別',
+      visible: true,
+      format: (val: any) => this.getLabelFromOptions(val, this.commissionTypeOptions)
+    },
+    {
+      field: 'ORG_TXN_DiscCode', header: '原始折數', visible: true,
+      format: (val: any) => this.getLabelFromOptions(val, this.discountOptions)
+    }, // 查無該欄位，請確認是否有誤或應移除
+    {
+      field: 'TXN_DiscCode', header: '專櫃折數', visible: true,
+      format: (val: any) => this.getLabelFromOptions(val, this.discountOptions)
+    },
+
+    {
+      field: 'PLU_TaxType',
+      header: '稅別',
+      visible: true,
+      format: (val: any) => this.getLabelFromOptions(val, this.taxableOptions)
+    },
+    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
+
+    {
+      field: 'TXN_Status',
+      header: '交易狀態',
+      visible: true,
+      format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions)
+    },
   ];
 
   // 下拉選單選項
@@ -77,11 +112,13 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   BUILDING_NO_Options: any[] = [];
   commissionTypeOptions: any[] = [];
   whetherOptions: any[] = [];
+  txnStatusOptions: any[] = [];
   checkTotalAmount = [
     { value: 1, label: '是' },
     { value: 2, label: '否' },
   ];
   OrganizationCodeOptions: any[] = [];
+  
 
   constructor(
     private tls23020Service: TLS23020Service,
@@ -92,7 +129,9 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     private commissionTypeService: CommissionTypeService,
     private tls11010Service: Tls11010Service,
 
+
     private whetherService: WhetherService,
+    private txnStatusService: TxnStatusService,
     private validationService: ValidationService
   ) {
     super();
@@ -105,9 +144,17 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     this.discountService.getLocalDiscountOptions().subscribe(data => this.discountOptions = data);
     this.deductionbigCategoryService.getLocalDeductionCategories().subscribe(data => this.deductionbigCategoryOptions = data);
     this.whetherService.getWhetherOptions().subscribe(data => this.whetherOptions = data);
-    this.commissionTypeService.getCommissionTypes().subscribe(data => this.commissionTypeOptions = data);
+    this.txnStatusService.getTxnStatusOptions().subscribe(data => this.txnStatusOptions = data);
+    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.tls11010Service.getOrgOptions().subscribe((res) => {
       this.OrganizationCodeOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
+    this.commissionTypeService.getCommissionTypes().subscribe((res) => {
+      this.commissionTypeOptions = res?.map((x: any) => ({
         label: x.label,                                 // 給 table 用
         formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
         value: x.value,
@@ -151,5 +198,9 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
         }
       });
     });
+  }
+  getLabelFromOptions(value: any, options: any[]): string {
+    const found = options?.find(opt => String(opt.value) === String(value));
+    return found ? found.label : value;
   }
 }

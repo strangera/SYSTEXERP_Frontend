@@ -12,16 +12,15 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="交易日期*"
-              [startControl]="queryForm.controls.TXN_DateStart"
-              [endControl]="queryForm.controls.TXN_DateEnd"
-              [submitted]="submitted">
-            </app-calendar-range>
-          </div>
-
+     
+          <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
+            label="交易日期"
+            [startControl]="queryForm.controls.TXN_DateStart"
+            [endControl]="queryForm.controls.TXN_DateEnd"
+            [submitted]="submitted"
+          />
+        
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="收銀機機號" controlName="ECR_No"
               [control]="queryForm.controls.ECR_No" [submitted]="submitted">
@@ -49,7 +48,7 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="單項售價"
+            <app-input-number-range [useGrouping]="false" label="售價"
               [startControl]="queryForm.controls.PLU_SalePrc_Start"
               [endControl]="queryForm.controls.PLU_SalePrc_End"
               [submitted]="submitted">
@@ -64,7 +63,7 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="原始折扣代碼" controlName="ORG_TXN_DiscCode"
+            <app-dropdown label="原始折數" controlName="ORG_TXN_DiscCode"
               [options]="discountOptions" optionLabel="label" optionValue="value"
               [control]="queryForm.controls.ORG_TXN_DiscCode" [submitted]="submitted">
             </app-dropdown>
@@ -84,7 +83,7 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="專櫃折數代碼" controlName="TXN_DiscCode"
+            <app-dropdown label="專櫃折數" controlName="TXN_DiscCode"
               [options]="discountOptions" optionLabel="label" optionValue="value"
               [control]="queryForm.controls.TXN_DiscCode" [submitted]="submitted">
             </app-dropdown>
@@ -113,22 +112,22 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="所屬大樓" controlName="tlt_building"
+            <app-dropdown label="館別" controlName="tlt_building"
               [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
               [control]="queryForm.controls.tlt_building" [submitted]="submitted">
             </app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="所屬樓層" controlName="tlt_floor"
+            <app-dropdown label="樓層" controlName="tlt_floor"
               [options]="floorOptions" optionLabel="label" optionValue="value"
               [control]="queryForm.controls.tlt_floor" [submitted]="submitted">
             </app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="組織代碼" controlName="org_id"
-              [options]="OrganizationCodeOptions" optionLabel="label" optionValue="value"
+            <app-dropdown label="組織代碼/名稱" controlName="org_id"
+              [options]="OrganizationCodeOptions" optionLabel="formLabel" optionValue="value"
               [control]="queryForm.controls.org_id" [submitted]="submitted">
             </app-dropdown>
           </div>
