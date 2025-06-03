@@ -17,19 +17,22 @@
         <div class="grid p-fluid">
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
-            label="交易日期"
+            label="銷售日期"
             [startControl]="queryForm.controls.TXN_DateStart"
             [endControl]="queryForm.controls.TXN_DateEnd"
-            [submitted]="submitted"
-          />
+            [submitted]="submitted">
+        </app-calendar-range-quick>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="收銀機號"
+            <app-multi-select
+              label="收銀機代號---"
               controlName="ECR_No"
+              [options]="txnStatusOptions"
+              optionLabel="label"
+              optionValue="value"
               [control]="queryForm.controls.ECR_No"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -43,17 +46,20 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+           <app-multi-select
               label="專櫃編號"
               controlName="TLT_No"
+              [options]="CounterOptions"
+              optionLabel="formLabel"
+              optionValue="value"
               [control]="queryForm.controls.TLT_No"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="起始發票號碼"
+              label="發票起始號碼"
               controlName="TXN_GUIBegNo"
               [control]="queryForm.controls.TXN_GUIBegNo"
               [submitted]="submitted"
@@ -62,7 +68,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="結束發票號碼"
+              label="發票結束號碼"
               controlName="TXN_GUIEndNo"
               [control]="queryForm.controls.TXN_GUIEndNo"
               [submitted]="submitted"
@@ -70,13 +76,35 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="交易狀態"
+            <app-multi-select
+              label="交易型態---"
               controlName="TXN_Status"
-              [options]="statusFlagOptions"
+              [options]="txnStatusOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.TXN_Status"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="狀態旗標"
+              controlName="TXN_FlagStatus"
+              [options]="statusFlagOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.TXN_FlagStatus"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+                              <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="交易附屬型態"
+              controlName="TXN_Subtype"
+              [options]="TXN_SubtypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.TXN_Subtype"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -92,7 +120,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="預購單號"
+              label="預售/訂金編號"
               controlName="TXN_PreOrderNo"
               [control]="queryForm.controls.TXN_PreOrderNo"
               [submitted]="submitted"
@@ -101,7 +129,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="停車票卡/車牌"
+              label="停車卡號"
               controlName="TXN_PkngUID"
               [control]="queryForm.controls.TXN_PkngUID"
               [submitted]="submitted"
@@ -110,7 +138,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="會員識別碼"
+              label="會員卡號"
               controlName="TXN_MemCard"
               [control]="queryForm.controls.TXN_MemCard"
               [submitted]="submitted"
@@ -128,7 +156,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="電子發票愛心碼"
+              label="愛心碼"
               controlName="TXN_GUILoveCode"
               [control]="queryForm.controls.TXN_GUILoveCode"
               [submitted]="submitted"
@@ -136,20 +164,20 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="電子發票載具類別"
+            <app-multi-select
+              label="載具種類"
               controlName="TXN_GUI_CarrType"
               [options]="carrierTypeOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.TXN_GUI_CarrType"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="電子發票載具ID隱碼"
+              label="載具號碼"
               controlName="TXN_GUI_CarrId"
               [control]="queryForm.controls.TXN_GUI_CarrId"
               [submitted]="submitted"
@@ -192,26 +220,27 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="樓層"
               [options]="floorOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.tlt_floor"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="組織代碼/名稱"
               [options]="OrganizationCodeOptions"
               optionLabel="formLabel"
               optionValue="value"
               [control]="queryForm.controls.org_id"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
+
         </div>
 
         <div

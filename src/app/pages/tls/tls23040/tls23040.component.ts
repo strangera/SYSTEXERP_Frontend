@@ -14,8 +14,9 @@ import { HasPermissionsValue } from '../../../shared/directive/has-permission.di
 import { ValidationService } from '../../../shared/service/validation.service';
 import { SystemTypeService } from '../../../service/basic/system-type.service';
 import { StatusFlagService } from '../../../service/basic/status-flag.service';
-import { TransactionSubTypeService } from '../../../service/basic/transaction-sub-type.service';
+import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
 import { TransactionTypeService } from '../../../service/basic/transaction-type.service';
+import { TxnStatusService } from '../../../service/basic/txn-status.service';
 
 const now = new Date();
 
@@ -57,6 +58,7 @@ export class TLS23040Component {
     limitRecords: [], // 限制筆數
     membershipNumber: [], // 會員卡號
     invoiceNumber: [], // 發票號碼
+    TXN_type: [],
   });
 
   // 表格資料
@@ -79,6 +81,7 @@ export class TLS23040Component {
     { field: 'parkingCard', header: '停車卡號', visible: true },
     { field: 'originalTransactionDate', header: '原交易日期', visible: true },
     { field: 'originalRegisterStatus', header: '原收銀機狀況', visible: true },
+    
     {
       field: 'originalTransactionSequence',
       header: '原交易序號',
@@ -90,8 +93,9 @@ export class TLS23040Component {
 
   systemTypeOptions: any[] = [];
   statusFlagOptions: any[] = [];
-  transactionSubTypeOptions: any[] = [];
-  transactionTypeOptions: any[] = [];
+  TXN_SubtypeOptions: any[] = [];
+   txnStatusOptions: any[] = [];
+  
 
   constructor(
     private router: Router,
@@ -101,8 +105,10 @@ export class TLS23040Component {
     private validationService: ValidationService,
     private systemTypeService: SystemTypeService,
     private statusFlagService: StatusFlagService,
-    private transactionSubTypeService: TransactionSubTypeService,
-    private transactionTypeService: TransactionTypeService
+    private TXN_SubtypeService: TXN_SubtypeService,
+     private txnStatusService: TxnStatusService,
+     
+
   ) { }
 
   ngOnInit(): void {
@@ -113,12 +119,9 @@ export class TLS23040Component {
     this.statusFlagService.getStatusFlags().subscribe((data) => {
       this.statusFlagOptions = data;
     });
-    this.transactionSubTypeService.getTransactionSubType().subscribe((data) => {
-      this.transactionSubTypeOptions = data;
-    });
-    this.transactionTypeService.getTransactionTypes().subscribe((data) => {
-      this.transactionTypeOptions = data;
-    });
+    this.TXN_SubtypeService.getTXNSubtype().subscribe(data => this.TXN_SubtypeOptions = data);
+    this.txnStatusService.getTxnStatusOptions().subscribe(data => this.txnStatusOptions = data);
+
   }
 
   canQuery(): boolean {
