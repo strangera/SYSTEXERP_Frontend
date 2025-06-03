@@ -33,7 +33,7 @@ export class TreeDropdownNestComponent implements OnInit {
     if (this.isNestedInput) {
       this.treeData = this.convertToTreeNode(this.members);
       this.selectedMembers = this.getSelectedNodes(this.treeData);
-      console.log('導入1', this.treeData);
+      console.log('導入', this.treeData);
     }
   }
 

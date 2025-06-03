@@ -105,18 +105,13 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
         if (response.Status === '0000') {
           this.roleUserData = response.Data || [];
 
-          console.log('回傳使用者資料:', this.roleUserData);
+          // console.log('回傳使用者資料:', this.roleUserData);
 
-          const filteredTree = this.filterSelectedTree(this.roleUserData);
-          console.log('只保留已勾選的結構:', filteredTree);
+          this.roleUserData = this.filterSelectedTree(this.roleUserData);
+          console.log('只保留已勾選的結構:', this.roleUserData);
 
-
-          // 初始化被選中的資料（Match 為 true）
-          // this.selectedRoleUserData = this.roleUserData.filter(user => user.Match === true);
-
-          // const user0900 = response.Data.find((u: any) => u.User_No === '0900000001');
-          // console.log('⏱ 原始 Match 值:', JSON.parse(JSON.stringify(user0900)));
-
+          // const filteredTree = this.filterSelectedTree(this.roleUserData);
+          // console.log('只保留已勾選的結構:', filteredTree);
         } else {
           console.error('API error:', response.Status, response.Message);
         }
