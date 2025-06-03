@@ -35,4 +35,9 @@ export class Sys0110Service {
   queryAllSystemCode(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryAllSystemCode`, body);
   }
+
+  // 查詢 使用者權限 資料表
+  queryUserPrivileges(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryUserPrivileges`, body);
+  }
 }

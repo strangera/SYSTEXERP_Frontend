@@ -43,7 +43,7 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <p-checkbox
-            label="複製全部"
+            label="是否複製使用者權限"
             formControlName="IsAllCopy"
             [binary]="true"
           ></p-checkbox>
@@ -56,11 +56,11 @@
             tableKey="SYS0240CRU"
             [data]="roleUserAuthData"
             [columns]="roleUserColumns"
-            [showCheckBox]="true"
+            [showCheckBox]="false"
             [showManage]="false"
             [showReportMode]="false"
             [showDelete]="false"
-            dataKey="No"
+            dataKey="ID"
             [multiSortMeta]="[{ field: 'Match', order: -1 }]"
             [selectedItems]="selectedRoleUserData"
             (selectionChange)="onUserSelectionChange($event)"

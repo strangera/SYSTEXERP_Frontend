@@ -16,6 +16,13 @@ export interface AuthOption {
   partialSelected: boolean; // 是否勾選
 }
 
+export interface UserOption {
+  ID: string; // ID
+  User_No: string; // 角色代號
+  User_Name: string; // 角色名稱
+  Match: boolean; // 是否配對
+}
+
 // 4-2-2-3角色複製 CRU
 @Component({
   selector: 'app-sys0240.cru',
@@ -42,7 +49,7 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
   ];
 
   targetOptions: apiOption[] = []; //目標角色
-  roleUserAuthData: apiOption[] = []; //目標權限
+  roleUserAuthData: UserOption[] = []; //目標權限
   // ----------------------------------------------------------------
   roleUserColumns: Column[] = [
     {
@@ -103,17 +110,10 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblUser>
         }));
     });
 
-    //角色權限
+    //查詢 角色權限
     this.sys0230Service.queryRoleUsers({ Role_No: roleNo }).subscribe((response) => {
       console.log('角色權限 回應', response);
       this.roleUserAuthData = response.Data
-        .map((item: tblUser) => ({
-          No: item.user_No,
-          Name: item.user_Name,
-          Label: item.user_No + '-' + item.user_Name,
-        }));
-
-
     });
 
     // 樹狀圖 (顯示權限)
