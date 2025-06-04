@@ -179,6 +179,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
 
     // 保證金相關
     depositTypes: [[]],
+    open_deposit: [[]],
     paymentMethods: [[]],
 
     // 分頁配置

@@ -58,13 +58,16 @@ export class LocationOptionsService {
       );
   }
 
-  //營業型態
-  getPaperTypeOptions(): Observable<any[]> {
+  //營業型態 - 接受 SYS_Type 參數
+  getPaperTypeOptions(sysType: string): Observable<any[]> {
+    const requestBody = {
+      SYS_Type: sysType
+    };
+
     return this.http
-      .post<any>(`${this.apiUrl}/querySYS1000_DropDownList`, {})
+      .post<any>(`${this.apiUrl}/querySYS1000_DropDownList`, requestBody)
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? [])
       );
   }
-
 }

@@ -293,7 +293,7 @@
             <app-dropdown
               label="櫃別"
               controlName="tlt_kind"
-              [options]="counterCategoryOptions"
+              [options]="tltKindOptions"
               optionLabel="label"
               optionValue="value"
               [control]="dataForm.controls.tlt_kind"
@@ -610,12 +610,12 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
-              label="有無保證票"
+              label="有無保證金"
               controlName="guaranteeNote"
-              [options]="yesNoOptions"
+              [options]="depositTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="dataForm.controls.meter_typeList"
+              [control]="dataForm.controls.open_deposit"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -649,50 +649,6 @@
         </div>
       </form>
     </p-accordionTab>
-    <!-- 參加活動資訊 -->
-    <!-- <p-accordionTab
-      header="參加活動資訊"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="dataForm"
-        id="dataForm"
-        (ngSubmit)="onSubmit(dataForm)"
-      >
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox
-              label="全館消費滿額集點活動"
-              formControlName="activity1"
-              [binary]="true"
-            ></p-checkbox>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox
-              label="滿仟送佰"
-              formControlName="activity2"
-              [binary]="true"
-            ></p-checkbox>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox
-              label="有價券"
-              formControlName="activity3"
-              [binary]="true"
-            ></p-checkbox>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox
-              label="會員卡"
-              formControlName="activity4"
-              [binary]="true"
-            ></p-checkbox>
-          </div>
-        </div>
-      </form>
-    </p-accordionTab> -->
     <p-accordionTab
       header="參加活動資訊"
       [selected]="true"
@@ -753,24 +709,28 @@
             <div class="col-12 md:col-6">
               <div class="field-checkbox">
                 <p-checkbox
-                  inputId="activity1_alt"
-                  name="activity1_alt"
-                  formControlName="activity1"
+                  inputId="cap_saletype2_alt"
+                  name="cap_saletype2_alt"
+                  formControlName="cap_saletype2"
                   [binary]="true"
+                  trueValue="Y"
+                  falseValue="N"
                 />
-                <label for="activity1_alt">全館消費滿額集點活動</label>
+                <label for="cap_saletype2_alt">全館消費滿額集點活動</label>
               </div>
             </div>
 
             <div class="col-12 md:col-6">
               <div class="field-checkbox">
                 <p-checkbox
-                  inputId="activity2_alt"
-                  name="activity2_alt"
-                  formControlName="activity2"
+                  inputId="cap_saletype1_alt"
+                  name="cap_saletype1_alt"
+                  formControlName="cap_saletype1"
                   [binary]="true"
+                  trueValue="Y"
+                  falseValue="N"
                 />
-                <label for="activity2_alt">滿仟送佰</label>
+                <label for="cap_saletype1_alt">滿仟送佰</label>
               </div>
             </div>
 

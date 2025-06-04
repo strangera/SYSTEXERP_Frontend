@@ -345,7 +345,7 @@
             <app-multi-select
               label="櫃別"
               controlName="tlt_kindList"
-              [options]="counterCategoryOptions"
+              [options]="tltKindOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.tlt_kindList"
@@ -433,7 +433,7 @@
               [options]="depositTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.depositTypes"
+              [control]="queryForm.controls.open_deposit"
               [submitted]="submitted"
             ></app-multi-select>
           </div>

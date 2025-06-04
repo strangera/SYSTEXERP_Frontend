@@ -71,8 +71,8 @@ export const STORE_WAY_OPTIONS = {
 
 // 發票類型 invoice_type  /*請款單據別 0:發票 1:收據*/
 export const INVOICE_TYPE_OPTIONS = {
-  '1': '發票',
-  '2': '收據',
+  '0': '發票',
+  '1': '收據',
 } as const;
 
 // 專櫃種類 tlt_kind /*專櫃櫃別: 1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃 */

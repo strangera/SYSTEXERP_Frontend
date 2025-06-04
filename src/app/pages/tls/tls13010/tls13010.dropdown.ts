@@ -238,7 +238,7 @@ export class TLS13010DropdownService {
       region: this.locationService.getRegionOptions(),
       org: this.locationService.getOrgOptions(),
       location: this.locationService.getLocationOptions(),
-      paperType: this.locationService.getPaperTypeOptions()
+      paperType: this.locationService.getPaperTypeOptions('T101')
     }).subscribe({
       next: (results) => {
         this.buildingOptions = results.building;

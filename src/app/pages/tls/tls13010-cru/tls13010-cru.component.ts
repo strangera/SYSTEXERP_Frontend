@@ -8,7 +8,7 @@ import { map, Observable, Subscription } from 'rxjs';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
 // 工作流程服務
-import { ContractFlowService, WorkflowStep } from '../../../service/API/tls/tls13010contract-flow/contract-flow.service';
+import { ContractFlowService } from '../../../service/API/tls/tls13010contract-flow/contract-flow.service';
 
 // 下拉選單服務和選項
 import { TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from '../tls13010/tls13010.dropdown';
@@ -27,7 +27,6 @@ import { BusinessTypeCodeService } from '../../../service/basic/business-type-co
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { BankAccountCodeService } from '../../../service/basic/bank-account-code.service';
 import { AutoCompleteOption } from '../../../shared/componentkit/app-autocomplete/app-autocomplete.component';
-import { BankService } from '../../../service/basic/bank.service';
 import { BankOptionsService } from '../../../service/API/dropdownservice/bank-option.service';
 
 interface CategoryItem {
@@ -193,7 +192,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     /** @description 聯名卡折數 */
     credit_card: [''],
     /** @description 請款單據別 */
-    invoice_type: ['1'],
+    invoice_type: [''],
 
     // ========== 其他設定 ==========
     /** @description 抄表類型清單 */
@@ -228,10 +227,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     tlt_remark: [''],
 
     tlt_openflag: [''], // 預設為開啟
-    activity1: [''],
-    activity2: [''],
-    activity3: [''],
-    activity4: [''],
+    cap_saletype1: ['N'], // 滿千送百，預設為 'N'
+    cap_saletype2: ['N'], // 全館消費滿額集點，預設為 'N'
+    activity3: [false],   // 有價券，使用 boolean
+    activity4: [false],   // 會員卡，使用 boolean
+    open_deposit: [''],
 
     // ========== 新增：銀行 AutoComplete 相關屬性 ==========
     /** @description 選中的銀行資訊 */
@@ -524,7 +524,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       org_id: queryData.org_id,
       overall_status: queryData.overall_status,
       paytype: queryData.paytype,
-      invoice_type: queryData.invoice_type || '1', // 預設為發票
+      invoice_type: queryData.invoice_type,
       email: queryData.email,
       invoice_email: queryData.invoice_email,
       CHECK_TITLE: queryData.CHECK_TITLE,
@@ -536,6 +536,22 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       contact_fax: queryData.contact_fax,
       contact_addr: queryData.contact_addr,
       tlt_remark: queryData.tlt_remark,
+      comm_yn: queryData.comm_yn,
+      base_rent: queryData.base_rent,
+      tlt_kind: queryData.tlt_kind,
+      edc_yn: queryData.edc_yn,
+      tlt_ctype_mtotal: queryData.tlt_ctype_mtotal,
+      rent_ahead: queryData.rent_ahead,
+      rent_period: queryData.rent_period,
+      deposit: queryData.deposit,
+      vip_yn: queryData.vip_yn,
+      credit_card: queryData.credit_card,
+      total_amt: queryData.total_amt,
+      total_amt_vendor: queryData.total_amt_vendor,
+      construct_fees: queryData.construct_fees,
+      ticket_remarks: queryData.ticket_remarks,
+      cap_saletype1: queryData.cap_saletype1,
+      cap_saletype2: queryData.cap_saletype2,
     });
 
     // ========== 修正：載入對應的分類選項 ==========
