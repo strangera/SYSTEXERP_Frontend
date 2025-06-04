@@ -24,10 +24,9 @@ import { TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from './tls13010.d
 import { ContractFlowService, WorkflowStep } from '../../../service/API/tls/tls13010contract-flow/contract-flow.service';
 import { TLS13010Service } from '../../../service/API/tls/tls13010.service';
 
-// 其他必要服務（保留真正需要的）
+// API 服務
 import { VendorService } from '../../../service/basic/vendor.service';
 import { ContractStatusService } from '../../../service/basic/contract-status.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
 import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
 import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
 import { CooperationMethodService } from '../../../service/basic/cooperation-method.service';
@@ -222,7 +221,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   ];
 
   // ========== 下拉選單選項 ==========
-  // 固定選項（來自 constants）- 轉換為可變類型
+  // 固定選項
   decorationOptions = [...TLS13010_DROPDOWN_OPTIONS.decorationType];
   moneyTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.moneyType];
   checkTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.checkType];
@@ -232,19 +231,16 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   storeWayOptions = [...TLS13010_DROPDOWN_OPTIONS.storeWay];
   invoiceTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.invoiceType];
   tltKindOptions = [...TLS13010_DROPDOWN_OPTIONS.tltKind];
-  openflagStatusOptions = [...TLS13010_DROPDOWN_OPTIONS.openflagStatus];
   overallStatusOptions = [...TLS13010_DROPDOWN_OPTIONS.overallStatus];
   depositTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.depositType];
   depositPaymentOptions = [...TLS13010_DROPDOWN_OPTIONS.depositPayment];
   commissionCompTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.commissionCompType];
-  businessTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.businessType];
   commCompTypeDropdown = [...TLS13010_DROPDOWN_OPTIONS.commCompType];
   tltopenflagOption = [...TLS13010_DROPDOWN_OPTIONS.openflagStatus];
 
-  // API 載入的選項（保留真正需要的）
+  // API 載入的選項
   vendorOptions: any[] = [];
   contractStatusOptions: any[] = [];
-  negotiatorOptions: any[] = [];
   settlementMethodOptions: any[] = [];
   paymentMethodOptions: any[] = [];
   cooperationMethodOptions: any[] = [];
@@ -256,7 +252,6 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     public tls13010DropdownService: TLS13010DropdownService,
     private vendorService: VendorService,
     private contractStatusService: ContractStatusService,
-    private negotiatorService: UserCodeService,
     private settlementMethodService: SettlementMethodService,
     private paymentMethodService: PaymentMethod2Service,
     private cooperationMethodService: CooperationMethodService,
@@ -293,33 +288,34 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
    * 載入下拉選單選項
    */
   private loadDropdownOptions(): void {
-    // 只載入真正需要的 API 選項
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
+    this.vendorService.getVendors().subscribe({
+      next: (data) => this.vendorOptions = data,
+      error: (err) => console.warn('載入廠商選項失敗:', err)
     });
 
-    this.contractStatusService.getContractStatuses().subscribe((data) => {
-      this.contractStatusOptions = data;
+    this.contractStatusService.getContractStatuses().subscribe({
+      next: (data) => this.contractStatusOptions = data,
+      error: (err) => console.warn('載入合約狀態選項失敗:', err)
     });
 
-    // this.negotiatorService.getUsers().subscribe((data) => {
-    //   this.negotiatorOptions = data;
-    // });
-
-    this.settlementMethodService.getSettlementMethods().subscribe((data) => {
-      this.settlementMethodOptions = data;
+    this.settlementMethodService.getSettlementMethods().subscribe({
+      next: (data) => this.settlementMethodOptions = data,
+      error: (err) => console.warn('載入結帳方式選項失敗:', err)
     });
 
-    this.paymentMethodService.getPaymentMethods().subscribe((data) => {
-      this.paymentMethodOptions = data;
+    this.paymentMethodService.getPaymentMethods().subscribe({
+      next: (data) => this.paymentMethodOptions = data,
+      error: (err) => console.warn('載入付款方式選項失敗:', err)
     });
 
-    this.cooperationMethodService.getCooperationMethods().subscribe((data) => {
-      this.cooperationMethodOptions = data;
+    this.cooperationMethodService.getCooperationMethods().subscribe({
+      next: (data) => this.cooperationMethodOptions = data,
+      error: (err) => console.warn('載入配合方式選項失敗:', err)
     });
 
-    this.counterCategoryService.getCounterCategories().subscribe((data) => {
-      this.counterCategoryOptions = data;
+    this.counterCategoryService.getCounterCategories().subscribe({
+      next: (data) => this.counterCategoryOptions = data,
+      error: (err) => console.warn('載入櫃別選項失敗:', err)
     });
   }
 
@@ -359,29 +355,18 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
    * 編輯功能
    */
   override onEdit(rowData: ContractItem): void {
-    if (this.contractFlowService.continueWorkflow(rowData)) {
-      const currentStatus = this.contractFlowService.getCurrentStatus();
-      const stepName = this.contractFlowService.getStepName(currentStatus.currentStep);
+    // 統一使用 startWorkflow，內部會自動處理新資料或現有暫存
+    this.contractFlowService.startWorkflow(rowData);
 
-      // 詢問用戶是否要繼續目前進度或重新開始
-      const shouldContinue = confirm(
-        `發現此項目有進行中的編輯流程（目前在：${stepName}）\n\n` +
-        `點擊「確定」繼續目前進度\n` +
-        `點擊「取消」從契約資訊重新開始`
-      );
+    // 固定導向 CRU 頁面
+    this.navigateToStep(WorkflowStep.CONTRACT_INFO);
 
-      if (shouldContinue) {
-        // 繼續目前進度
-        this.navigateToStep(currentStatus.currentStep);
-        this.messageService.infoBubble(`繼續編輯流程：${stepName}`);
-      } else {
-        // 從第一步重新開始
-        this.navigateToStep(WorkflowStep.CONTRACT_INFO);
-        this.messageService.infoBubble('從契約資訊重新開始編輯');
-      }
+    // 檢查是否有暫存資料來顯示不同訊息
+    const hasExistingData = this.contractFlowService.getStep1Data(rowData);
+
+    if (hasExistingData) {
+      this.messageService.infoBubble('繼續編輯暫存資料（從契約資訊開始）');
     } else {
-      this.contractFlowService.startWorkflow(rowData);
-      this.navigateToStep(WorkflowStep.CONTRACT_INFO);
       this.messageService.infoBubble('開始新的編輯工作流程');
     }
   }

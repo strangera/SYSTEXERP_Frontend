@@ -20,6 +20,16 @@ export class TLS13010Service {
     );
   }
 
+  /** 查詢契約書維護地點資料 */
+  queryTLS13010Location(talentId: string) {
+    const payload = { TalentId: talentId };
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010Location`, payload).pipe(
+      tap((res) => console.log('查詢地點資料結果:', res)),
+      catchError(this.errorHandler.handleError)
+    );
+  }
+
+
   /** 刪除扣款項目資料 */
   deleteTLS11020(idList: number[]) {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/deleteTLS11020`, { idList }).pipe(

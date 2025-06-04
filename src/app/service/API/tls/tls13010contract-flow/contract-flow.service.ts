@@ -88,52 +88,53 @@ export class ContractFlowService {
   startWorkflow(queryRowData: any): void {
     const contractId = queryRowData.talent_id || queryRowData.apply_no || Date.now().toString();
 
-    // 清空舊資料
-    this.contractData = {
-      contractId: contractId,
-      queryRowData: queryRowData,
-      step1: null,
-      step2: [],
-      step3: [],
-      step4: [],
-      step5: null,
-      metadata: {
-        createdAt: new Date(),
-        lastModified: new Date(),
-        version: 1
-      }
-    };
-
-    // 更新狀態
-    const newStatus: WorkflowStatus = {
-      currentStep: WorkflowStep.CONTRACT_INFO,
-      completedSteps: [],
-      canProceed: true,
-      contractId: contractId,
-      lastModified: new Date()
-    };
-
-    this.workflowStatusSubject.next(newStatus);
-    this.saveToStorage();
-
-    console.log('開始新工作流程:', contractId, queryRowData);
-  }
-
-  /**
-   * 檢查是否可以繼續現有工作流程
-   */
-  continueWorkflow(queryRowData: any): boolean {
-    const contractId = queryRowData.talent_id || queryRowData.apply_no;
-
+    // 檢查是否有現有的暫存資料
     if (this.contractData.contractId === contractId) {
-      console.log('繼續現有工作流程:', contractId);
-      return true;
+      // 有暫存資料，統一從 CRU 開始，但保留已完成的步驟記錄
+      console.log('發現現有暫存資料，從 CRU 重新開始編輯:', contractId);
+
+      const newStatus: WorkflowStatus = {
+        currentStep: WorkflowStep.CONTRACT_INFO, // 固定從 CRU 開始
+        completedSteps: this.workflowStatusSubject.value.completedSteps, // 保留已完成步驟
+        canProceed: true,
+        contractId: contractId,
+        lastModified: new Date()
+      };
+
+      this.workflowStatusSubject.next(newStatus);
+      this.saveToStorage();
+
+    } else {
+      // 全新的資料，清空舊資料重新開始
+      console.log('開始新的工作流程:', contractId);
+
+      this.contractData = {
+        contractId: contractId,
+        queryRowData: queryRowData,
+        step1: null,
+        step2: [],
+        step3: [],
+        step4: [],
+        step5: null,
+        metadata: {
+          createdAt: new Date(),
+          lastModified: new Date(),
+          version: 1
+        }
+      };
+
+      const newStatus: WorkflowStatus = {
+        currentStep: WorkflowStep.CONTRACT_INFO,
+        completedSteps: [],
+        canProceed: true,
+        contractId: contractId,
+        lastModified: new Date()
+      };
+
+      this.workflowStatusSubject.next(newStatus);
+      this.saveToStorage();
     }
-
-    return false;
   }
-
-  // ========== 保留您原有的方法，完全不變 ==========
 
   /**
    * 儲存第1步資料
