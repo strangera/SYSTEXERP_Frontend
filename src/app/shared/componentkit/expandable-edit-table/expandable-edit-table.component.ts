@@ -55,16 +55,23 @@ export class ExpandableEditTableComponent {
   // 新增這些設定
   @Input() showAddButton: boolean = true;                    // 控制外層新增按鈕顯示
   @Input() showDetailAddButton: boolean = true;              // 控制內層新增按鈕顯示
+  @Input() showBatchDelete: boolean = true;                  // 控制批次刪除功能顯示
   @Input() defaultNewItem: any = {};                         // 預設新項目模板
   @Input() defaultNewDetailItem: any = {};                   // 預設新明細項目模板
+
   // 添加詳細資料選項卡相關屬性
   @Input() showDetailTabs: boolean = false; // 是否在詳細資料中顯示選項卡
   @Input() detailTabOptions: { id: string, label: string }[] = []; // 詳細資料選項卡選項
   @Input() defaultDetailTab: string = ''; // 預設選中的詳細資料選項卡
   @Input() detailColumnsMap: { [tabId: string]: ColumnDef[] } = {};  // 如果需要支持不同列定義，還需要添加:
+
+  @Input() showDetailBatchDelete: boolean = true;            // 控制明細批次刪除功能顯示
+
   // 用於儲存每行的選中選項卡
   detailSelectedTabs: { [key: string]: string } = {};
 
+  // 明細選取項目 - 使用巢狀結構儲存每個主項目的明細選取狀態
+  detailSelectedItems: { [mainRowKey: string]: any[] } = {};
 
   @Output() edit = new EventEmitter<any>();
   @Output() save = new EventEmitter<{ oldData: any, newData: any }>();
@@ -76,10 +83,11 @@ export class ExpandableEditTableComponent {
   @Output() rowUnselect = new EventEmitter<any>();
   @Output() detailTabChange = new EventEmitter<{ rowData: any, tabId: string }>();  // 添加事件發射器
 
-
   // 新增這些事件
   @Output() addMainItem = new EventEmitter<void>();          // 外層新增按鈕事件
   @Output() addDetailItem = new EventEmitter<any>();         // 內層新增按鈕事件，傳遞外層項目資料
+  @Output() batchDelete = new EventEmitter<any[]>();         // 批次刪除事件
+  @Output() detailBatchDelete = new EventEmitter<{ selectedDetails: any[], parentData: any, rowIndex: number }>();  // 明細批次刪除事件
 
   expandedRows: { [key: string]: boolean } = {};
   selectedItems: any[] = [];
@@ -98,7 +106,6 @@ export class ExpandableEditTableComponent {
   temporaryDate: Date | null = null;
 
   constructor(private cdr: ChangeDetectorRef) { }
-
 
   // 在組件初始化或數據載入時初始化輸入字段
   initializeInputFields() {
@@ -160,24 +167,59 @@ export class ExpandableEditTableComponent {
 
     // 觸發外部事件，讓父組件處理新增邏輯
     this.addMainItem.emit();
+  }
 
-    // 如果需要內部自己處理新增，可以使用以下程式碼
-    // const newItem = { ...this.defaultNewItem };
-    // // 若需要自動生成ID
-    // if (this.dataKey === 'id' && !newItem.id) {
-    //   newItem.id = this.generateNewId();
-    // }
-    // // 預設空的明細陣列
-    // if (this.detailKey && !newItem[this.detailKey]) {
-    //   newItem[this.detailKey] = [];
-    // }
+  // 批次刪除處理
+  onBatchDelete() {
+    if (this.selectedItems.length === 0) {
+      console.warn('請選擇要刪除的項目');
+      return;
+    }
 
-    // // 加入到資料中
-    // this.data.unshift(newItem);
-    // // 立即進入編輯模式
-    // setTimeout(() => {
-    //   this.onRowEditInit(newItem, 0);
-    // }, 0);
+    // 先檢查是否正在編輯中
+    if (this.editingRow !== null || this.editingDetail !== null) {
+      console.warn('請先完成當前編輯操作');
+      return;
+    }
+
+    // 觸發批次刪除事件
+    this.batchDelete.emit([...this.selectedItems]);
+  }
+
+  // 明細批次刪除處理
+  onDetailBatchDelete(parentData: any, rowIndex: number) {
+    const parentKey = parentData[this.dataKey];
+    const selectedDetails = this.detailSelectedItems[parentKey] || [];
+
+    if (selectedDetails.length === 0) {
+      console.warn('請選擇要刪除的明細項目');
+      return;
+    }
+
+    // 先檢查是否正在編輯中
+    if (this.editingRow !== null || this.editingDetail !== null) {
+      console.warn('請先完成當前編輯操作');
+      return;
+    }
+
+    // 觸發明細批次刪除事件
+    this.detailBatchDelete.emit({
+      selectedDetails: [...selectedDetails],
+      parentData: parentData,
+      rowIndex: rowIndex
+    });
+  }
+
+  // 明細選取項目變更處理
+  onDetailSelectionChange(parentData: any, selectedItems: any[]) {
+    const parentKey = parentData[this.dataKey];
+    this.detailSelectedItems[parentKey] = selectedItems;
+  }
+
+  // 獲取明細選取項目數量
+  getDetailSelectedCount(parentData: any): number {
+    const parentKey = parentData[this.dataKey];
+    return this.detailSelectedItems[parentKey]?.length || 0;
   }
 
   // 行追踨
@@ -476,7 +518,6 @@ export class ExpandableEditTableComponent {
       date.getDate() === day;
   }
 
-
   // 取消日期選擇
   cancelDateSelection() {
     this.datePickerVisible = false;
@@ -508,7 +549,6 @@ export class ExpandableEditTableComponent {
 
     this.openDatePicker(detailData, field, true, rowIndex, detailIndex);
   }
-
 
   // 處理手動輸入日期（更穩健的版本）
   onDateInputChange(data: any, field: string, isDetail: boolean = false, rowIndex?: number, detailIndex?: number) {
@@ -673,6 +713,33 @@ export class ExpandableEditTableComponent {
     }
   }
 
+  // 新增：專門處理日期輸入的方法
+  getDateInputValue(rowData: any, field: string): string {
+    // 先檢查是否有專用的輸入值
+    if (rowData[field + '_input']) {
+      return rowData[field + '_input'];
+    }
+
+    // 如果沒有，從原始日期值生成
+    return this.getFormattedDateValue(rowData[field]);
+  }
+
+  // 新增：處理日期輸入變更
+  onDateInputModelChange(rowData: any, field: string, inputValue: string) {
+    // 更新輸入字段
+    rowData[field + '_input'] = inputValue;
+
+    // 嘗試解析為日期對象
+    if (inputValue) {
+      const parsedDate = this.parseDate(inputValue);
+      if (parsedDate) {
+        rowData[field] = parsedDate;
+      }
+    } else {
+      rowData[field] = null;
+    }
+  }
+
   // 內層新增明細項目處理
   onAddDetailItem(parentData: any, rowIndex: number) {
     // 先檢查是否正在編輯中
@@ -683,31 +750,8 @@ export class ExpandableEditTableComponent {
 
     // 觸發外部事件，讓父組件處理
     this.addDetailItem.emit(parentData);
-
-    // 如果需要內部自己處理新增，可以使用以下程式碼
-    // // 建立新明細項目
-    // const newDetailItem = { ...this.defaultNewDetailItem };
-    // // 若需要自動生成ID
-    // if (!newDetailItem.id) {
-    //   newDetailItem.id = this.generateNewDetailId(parentData);
-    // }
-
-    // // 如果明細陣列不存在則建立
-    // if (!parentData[this.detailKey]) {
-    //   parentData[this.detailKey] = [];
-    // }
-
-    // // 加入到明細陣列
-    // parentData[this.detailKey].unshift(newDetailItem);
-
-    // // 確保該行已展開
-    // this.expandedRows[parentData[this.dataKey]] = true;
-
-    // // 立即進入編輯模式
-    // setTimeout(() => {
-    //   this.onDetailEditInit(newDetailItem, parentData, rowIndex, 0);
-    // }, 0);
   }
+
   // 詳細資料選項卡切換方法
   onDetailTabChange(rowData: any, tabId: string) {
     const rowKey = rowData[this.dataKey];

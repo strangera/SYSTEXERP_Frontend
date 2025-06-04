@@ -24,6 +24,7 @@ import { BusinessTypeCodeService } from '../../../service/basic/business-type-co
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { BankOptionsService } from '../../../service/API/dropdownservice/bank-option.service';
 import { AutoCompleteOption } from '../../../shared/componentkit/app-autocomplete/app-autocomplete.component';
+import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 
 interface CategoryItem {
   id: number;
@@ -42,12 +43,90 @@ interface CategoryItem {
   UPD_USR_Name: string;
 }
 
+// 地點資訊相關介面
+interface LocationItem {
+  id: number;
+  location_no: string;        // 店位代碼
+  tlt_building: string;       // 館別代碼
+  tlt_floor: string;          // 樓層
+  area_no: string;            // 區域代碼
+  businessArea: number;       // 營業坪數
+  startDate: Date;            // 使用起始日
+  endDate: Date;              // 使用截止日
+  performanceShare: number;   // 業績分攤(%)
+  _status?: 'new' | 'modified' | 'deleted' | 'original';
+  _originalData?: any;
+}
+
 @Component({
   selector: 'app-tls13010-cru',
   templateUrl: './tls13010-cru.component.html',
   styleUrls: ['./tls13010-cru.component.scss'],
 })
 export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
+
+  // 地點資訊資料
+  locationItems: LocationItem[] = [];
+
+  // 地點資訊表格列定義
+  locationColumns: ColumnDef[] = [
+    {
+      field: 'location_no',
+      header: '位置代碼',
+      type: 'text',
+      editable: false,
+      style: 'min-width: 120px'
+    },
+    {
+      field: 'tlt_building',
+      header: '館別',
+      type: 'text',
+      editable: false,
+      style: 'min-width: 100px'
+    },
+    {
+      field: 'tlt_floor',
+      header: '樓層',
+      type: 'text',
+      editable: false,
+      style: 'min-width: 100px'
+    },
+    {
+      field: 'area_no',
+      header: '區域',
+      type: 'text',
+      editable: false,
+      style: 'min-width: 100px'
+    },
+    {
+      field: 'businessArea',
+      header: '營業坪數',
+      type: 'number',
+      editable: true,
+      style: 'min-width: 120px'
+    },
+    {
+      field: 'startDate',
+      header: '使用起始日',
+      type: 'date',
+      editable: true,
+      style: 'min-width: 140px'
+    },
+    {
+      field: 'endDate',
+      header: '使用截止日',
+      type: 'date',
+      editable: true,
+      style: 'min-width: 140px'
+    },
+    {
+      field: 'performanceShare',
+      header: '業績分攤(%)',
+      type: 'number',
+      editable: true,
+      style: 'min-width: 120px'
+    }
+  ];
 
   // ==========  地點資訊表格 ==========
   data: any[] = [
