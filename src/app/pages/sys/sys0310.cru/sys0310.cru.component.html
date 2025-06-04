@@ -7,32 +7,48 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <p-tabView class="col-12">
-          <p-tabPanel *ngFor="let module of privilegeBehaviorList" [header]="module.label">
+          <p-tabPanel *ngFor="let module of privilegeBehaviorList">
+            <ng-template pTemplate="header">
+              <div class="flex align-items-center gap-2">
+                <i [ngClass]="getIconClass(module.id)"></i>
+                <span class="font-bold white-space-nowrap m-0">
+                  {{module.label}}
+                </span>
+              </div>
+            </ng-template>
             <p-accordion [multiple]="true" [activeIndex]="allIndexes">
-              <p-accordionTab [header]="tab.label" *ngFor="let tab of module.children">
-                <p-table [value]="tab.children" [columns]="columns" [(selection)]="selectedItems" sortMode="multiple"
-                  selectionMode="multiple" dataKey="id" [resizableColumns]="true"
+              <p-accordionTab *ngFor="let tab of module.children">
+                <ng-template pTemplate="header">
+                  <div class="flex align-items-center gap-2">
+                    <p-checkbox [label]="tab.label" [name]="tab['label']" [binary]="true"
+                      (click)="onSelectAll($event, tab)" [(ngModel)]="tab.IsEnable"
+                      [ngModelOptions]="{standalone: true}" />
+                  </div>
+                </ng-template>
+                <p-table *ngFor=" let child of tab.children" [value]="child.children"
+                  [(selection)]="child.selectChildren" [columns]="columns" dataKey="id" [rowTrackBy]="trackByRow"
                   styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines">
                   <ng-template pTemplate="header" let-columns>
                     <tr>
                       <th class="w-1rem">
                         <p-tableHeaderCheckbox />
                       </th>
-                      <th *ngFor="let col of columns" class="text-center">
-                        {{ col.header }}
-                      </th>
+                      <th colspan="3">{{ child.label }}</th>
                     </tr>
                   </ng-template>
-                  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns"
-                    let-expanded="expanded" let-ri="rowIndex">
-                    <tr #htmlTableRowElement [pSelectableRow]="rowData" [pEditableRow]="rowData"
-                      [pSelectableRow]="rowData" [pSelectableRowIndex]="rowIndex">
+                  <ng-template pTemplate="body" let-rowData let-columns="columns">
+                    <tr>
                       <td>
-                        <p-tableCheckbox class="flex justify-content-center pointer-events-none"
-                          [pSelectableRow]="rowData" [value]="rowData" />
+                        <p-tableCheckbox [value]="rowData" />
                       </td>
-                      <td *ngFor="let col of columns" class="text-center">
-                        <span>{{ rowData[col.field] }}</span>
+                      <td>
+                        <b>{{ rowData['label'] }}</b>
+                      </td>
+                      <td class="flex gap-2">
+                        <div *ngFor="let row of rowData['children']" class="inline-flex gap-2 justify-content-center">
+                          <p-checkbox [label]="row.label" [name]="rowData['label']" [binary]="true"
+                            [(ngModel)]="row.IsEnable" [ngModelOptions]="{standalone: true}" />
+                        </div>
                       </td>
                     </tr>
                   </ng-template>
