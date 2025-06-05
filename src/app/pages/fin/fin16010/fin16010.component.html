@@ -5,125 +5,208 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="發票日期"
-              [startControl]="queryForm.controls.invoiceDateFrom" [endControl]="queryForm.controls.invoiceDateTo"
-              [submitted]="submitted">
-            </app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="發票日期"
+              [startControl]="queryForm.controls.invoiceDateFrom"
+              [endControl]="queryForm.controls.invoiceDateTo"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="發票格式" controlName="invoiceFormat" [options]="invoiceFormatOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.invoiceFormat"
-              [submitted]="submitted">
-            </app-multi-select>
+            <app-multi-select
+              label="發票格式"
+              controlName="invoiceFormat"
+              [options]="invoiceFormatOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.invoiceFormat"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="字軌" controlName="wordTrack" [control]="queryForm.controls.wordTrack"
-              [submitted]="submitted">
-            </app-input-text>
+            <app-input-text
+              label="字軌"
+              controlName="wordTrack"
+              [control]="queryForm.controls.wordTrack"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="發票號碼"
-              [startControl]="queryForm.controls.invoiceNumberFrom" [endControl]="queryForm.controls.invoiceNumberTo"
-              [submitted]="submitted">
-            </app-input-number-range>
+            <app-input-number-range
+              [useGrouping]="false"
+              label="發票號碼"
+              [startControl]="queryForm.controls.invoiceNumberFrom"
+              [endControl]="queryForm.controls.invoiceNumberTo"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateMonthOne" label="申報年月" [control]="queryForm.controls.declareYm"
-              [submitted]="submitted">
-            </app-calendar>
+            <app-calendar
+              calendarType="dateMonthOne"
+              label="申報年月"
+              [control]="queryForm.controls.declareYm"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateMonthRange" label="資料所屬年月"
-              [startControl]="queryForm.controls.belongYmFrom" [endControl]="queryForm.controls.belongYmTo"
-              [submitted]="submitted">
-            </app-calendar-range>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="廠商編號(統一編號)"
-              [startControl]="queryForm.controls.vendorUidFrom" [endControl]="queryForm.controls.vendorUidTo"
-              [submitted]="submitted">
-            </app-input-number-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="扣扺代號" controlName="deductionCode" [options]="deductionCodeOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.deductionCode"
-              [submitted]="submitted">
-            </app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="類別區分" controlName="category" [options]="categoryOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.category" [submitted]="submitted">
-            </app-multi-select>
+            <app-calendar-range
+              calendarType="dateMonthRange"
+              label="資料所屬年月"
+              [startControl]="queryForm.controls.belongYmFrom"
+              [endControl]="queryForm.controls.belongYmTo"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="課稅別" controlName="taxType" [options]="taxTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.taxType" [submitted]="submitted">
-            </app-multi-select>
+            <app-input-number-range
+              [useGrouping]="false"
+              label="廠商編號(統一編號)"
+              [startControl]="queryForm.controls.vendorUidFrom"
+              [endControl]="queryForm.controls.vendorUidTo"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="憑證單號"
+            <app-multi-select
+              label="扣扺代號"
+              controlName="deductionCode"
+              [options]="deductionCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.deductionCode"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="類別區分"
+              controlName="category"
+              [options]="categoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.category"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="課稅別"
+              controlName="taxType"
+              [options]="taxTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.taxType"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              [useGrouping]="false"
+              label="憑證單號"
               [startControl]="queryForm.controls.certificateNumberFrom"
-              [endControl]="queryForm.controls.certificateNumberTo" [submitted]="submitted">
-            </app-input-number-range>
+              [endControl]="queryForm.controls.certificateNumberTo"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="傳票號碼"
-              [startControl]="queryForm.controls.summonsNumberFrom" [endControl]="queryForm.controls.summonsNumberTo"
-              [submitted]="submitted">
-            </app-input-number-range>
+            <app-input-number-range
+              [useGrouping]="false"
+              label="傳票號碼"
+              [startControl]="queryForm.controls.summonsNumberFrom"
+              [endControl]="queryForm.controls.summonsNumberTo"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="發票使用類別" controlName="usage" [options]="usageOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.usage" [submitted]="submitted">
-            </app-multi-select>
+            <app-multi-select
+              label="發票使用類別"
+              controlName="usage"
+              [options]="usageOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.usage"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="系統別" controlName="systemCategory" [options]="systemCategoryOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.systemCategory"
-              [submitted]="submitted">
-            </app-multi-select>
+            <app-multi-select
+              label="系統別"
+              controlName="systemCategory"
+              [options]="systemCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.systemCategory"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateTimeRange" label="建立日期"
-              [startControl]="queryForm.controls.buildDateFrom" [endControl]="queryForm.controls.buildDateTo"
-              [submitted]="submitted">
-            </app-calendar-range>
+            <app-calendar-range
+              calendarType="dateTimeRange"
+              label="建立日期"
+              [startControl]="queryForm.controls.buildDateFrom"
+              [endControl]="queryForm.controls.buildDateTo"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="傳票建立者" controlName="summonsBuilder" [control]="queryForm.controls.summonsBuilder"
-              [submitted]="submitted">
-            </app-input-text>
+            <app-input-text
+              label="傳票建立者"
+              controlName="summonsBuilder"
+              [control]="queryForm.controls.summonsBuilder"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="資料型態" groupname="dateType" [control]="queryForm.controls.dateType"
-              [options]="dateTypeOptions" [submitted]="submitted">
-            </app-radiobutton>
+            <app-radiobutton
+              label="資料型態"
+              groupname="dateType"
+              [control]="queryForm.controls.dateType"
+              [options]="dateTypeOptions"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="每頁列印筆數" controlName="printPage"
-              [control]="queryForm.controls.printPage" [submitted]="submitted">
-            </app-input-number>
+            <app-input-number
+              [useGrouping]="false"
+              label="每頁列印筆數"
+              controlName="printPage"
+              [control]="queryForm.controls.printPage"
+              [submitted]="submitted"
+            ></app-input-number>
           </div>
         </div>
-        <div *appHasPermission="queryPermission" class="col">
+        <div>
           <div class="grid justify-content-end">
             <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+            <app-button
+              btnType="query"
+              (onClick)="onSubmitQuery(queryForm)"
+              [loading]="loading"
+            ></app-button>
           </div>
         </div>
       </form>
@@ -132,7 +215,11 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-    </app-table>
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
   </div>
 </div>

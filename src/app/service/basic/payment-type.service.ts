@@ -13,15 +13,22 @@ export class PaymentTypeService {
 
   // 本地數據的付款別選項
   options: any[] = [
-    { value: 1, label: '現金' },
-    { value: 2, label: '聯合連線' },
-    { value: 3, label: '聯合離線' },
+    { value: '0', label: '信用卡' },
+    { value: '1', label: '現金' },
+    { value: '2', label: '非信用卡' },
+    { value: '5', label: '銷退單' },
+    { value: '6', label: '禮券' },
+    { value: '7', label: '分期付款' },
+    { value: '8', label: '金融卡' },
+    { value: 'A', label: '應收帳款' },
+    { value: 'B', label: '抵用券' },
+    { value: 'C', label: '紅利點' },
   ];
 
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getPaymentTypes(): Observable<any[]> {
     return of(this.options).pipe(

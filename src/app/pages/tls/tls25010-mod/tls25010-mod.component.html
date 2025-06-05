@@ -7,32 +7,47 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab header="修改條件" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+    <p-accordionTab
+      header="修改條件"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
       <!-- 查詢條件表單 -->
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmitMOD()">
         <div class="grid p-fluid">
           <!-- 違規類別編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="違規類別編號" controlName="violationCategoryCode"
-              [control]="queryForm.controls.violationCategoryCode" [submitted]="submitted">
-            </app-input-text>
+            <app-input-text
+              label="違規類別編號"
+              controlName="violationCategoryCode"
+              [control]="queryForm.controls.violationCategoryCode"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <!-- 違規類別名稱 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="違規類別名稱" controlName="violationCategoryName"
-              [control]="queryForm.controls.violationCategoryName" [submitted]="submitted">
-            </app-input-text>
+            <app-input-text
+              label="違規類別名稱"
+              controlName="violationCategoryName"
+              [control]="queryForm.controls.violationCategoryName"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
 
-        <div *appHasPermission="queryPermission" class="col">
+        <div>
           <div class="grid justify-content-end">
             <!-- 清除按鈕 -->
             <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
 
             <!-- 確認按鈕 -->
-            <app-button btnType="create" label="確認修改" type="submit"></app-button>
+            <app-button
+              btnType="create"
+              label="確認修改"
+              type="submit"
+            ></app-button>
           </div>
         </div>
       </form>

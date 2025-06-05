@@ -5,35 +5,65 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateMonthOne" label="年月" controlName="year" [control]="queryForm.controls.year"
-              [submitted]="submitted"></app-calendar>
+            <app-calendar
+              calendarType="dateMonthOne"
+              label="年月"
+              controlName="year"
+              [control]="queryForm.controls.year"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="部門" controlName=" department" [options]="departmentOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.department" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="部門"
+              controlName=" department"
+              [options]="departmentOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.department"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="類別" [control]="queryForm.controls.type" [options]="typeOptions"
-              [submitted]="submitted">
-            </app-radiobutton>
+            <app-radiobutton
+              label="類別"
+              [control]="queryForm.controls.type"
+              [options]="typeOptions"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="單位金額表示" groupname="systemtyperadio" [control]="queryForm.controls.unit"
-              [options]="unitOptions" [submitted]="submitted">
-            </app-radiobutton>
+            <app-radiobutton
+              label="單位金額表示"
+              groupname="systemtyperadio"
+              [control]="queryForm.controls.unit"
+              [options]="unitOptions"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
         </div>
       </form>
-      <div *appHasPermission="queryPermission" class="col">
+      <div>
         <div class="grid justify-content-end">
           <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+          <app-button
+            btnType="query"
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -41,6 +71,11 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"></app-table>
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
   </div>
 </div>

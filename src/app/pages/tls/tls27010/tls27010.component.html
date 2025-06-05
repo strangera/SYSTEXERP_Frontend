@@ -8,17 +8,27 @@
                 </div> -->
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div>
-            <app-file-upload [uploadUrl]="uploadUrl" [fileType]="fileType">
-            </app-file-upload>
+            <app-file-upload
+              [uploadUrl]="uploadUrl"
+              [fileType]="fileType"
+            ></app-file-upload>
           </div>
         </div>
       </form>
-      <!-- <div *appHasPermission="queryPermission" class="col">
+      <!-- <div>
                 <div class="grid justify-content-end">
 
                     <app-button btnType="create" (onClick)="onInput()" label="轉入來源檔" icon="pi pi-upload"></app-button>

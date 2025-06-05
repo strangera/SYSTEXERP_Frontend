@@ -4,52 +4,97 @@
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
     <div *appHasPermission="addPermission">
-      <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
+      <app-button
+        btnType="create"
+        (click)="onCreate()"
+        class="col"
+      ></app-button>
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="零用金單號" controlName="PettyCashOrderNumber" [options]="PettyCashOrderNumber"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.PettyCashOrderNumber"
-              [submitted]="submitted">
-            </app-dropdown>
+            <app-dropdown
+              label="零用金單號"
+              controlName="PettyCashOrderNumber"
+              [options]="PettyCashOrderNumber"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.PettyCashOrderNumber"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="申請日期"
-              [startControl]="queryForm.controls.sApplicationdate" [endControl]="queryForm.controls.eApplicationdate"
-              [submitted]="submitted">
-            </app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="申請日期"
+              [startControl]="queryForm.controls.sApplicationdate"
+              [endControl]="queryForm.controls.eApplicationdate"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="零用金金額" [startControl]="queryForm.controls.sPetty"
-              [endControl]="queryForm.controls.ePetty" [submitted]="submitted">
-            </app-input-number-range>
+            <app-input-number-range
+              label="零用金金額"
+              [startControl]="queryForm.controls.sPetty"
+              [endControl]="queryForm.controls.ePetty"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="零用金申請人" controlName="Pettycashapplicant" [options]="usercode" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.Pettycashapplicant"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="零用金申請人"
+              controlName="Pettycashapplicant"
+              [options]="usercode"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Pettycashapplicant"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="零用金保管人" controlName="Pettycashcustodian" [options]="usercode" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.Pettycashcustodian"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="零用金保管人"
+              controlName="Pettycashcustodian"
+              [options]="usercode"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Pettycashcustodian"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="狀態" controlName="status" [options]="statusOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.status" [submitted]="submitted">
-            </app-dropdown>
+            <app-dropdown
+              label="狀態"
+              controlName="status"
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.status"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
       </form>
-      <div *appHasPermission="queryPermission" class="col">
+      <div>
         <div class="grid justify-content-end">
           <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+          <app-button
+            btnType="query"
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -58,8 +103,12 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [showCheckBox]="true" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-      (detail)="onDetail($event)">
-    </app-table>
+    <app-table
+      [showCheckBox]="true"
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
   </div>
 </div>

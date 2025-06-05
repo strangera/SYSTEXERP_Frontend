@@ -1,229 +1,151 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+import { FormGroup, Validators } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { CardTypeService } from '../../../service/basic/card-type.service';
+import { TLS23090Service } from '../../../service/API/tls/tls23090.service';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
+import { FloorService } from '../../../service/basic/floor.service';
+import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 @Component({
   selector: 'app-tls23090',
   templateUrl: './tls23090.component.html',
   styleUrls: ['./tls23090.component.scss']
 })
-export class TLS23090Component {
-
-  ProgNo: string = '220018';
-
-  // 權限
-  funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS23090Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    saleStartDate: [, [Validators.required]], // 銷售開始日期
-    saleEndDate: [, [Validators.required]],   // 銷售結束日期
-    cashRegisterCode: [], // 收銀機代號
-    counterCode: [], // 專櫃編號
-    creditCardType: [], // 信用卡別
-    creditCardNumber: [], // 信用卡號
-    amount: [], // 金額
-    recordsPerPage: [] // 每頁顯示筆數
+    TXN_DateStart: [new Date(), [Validators.required]],
+    TXN_DateEnd: [new Date(), [Validators.required]],
+    ECR_No: [''],
+    tlt_no: [''],
+    CRD_Type: [''],
+    CRD_No: [''],
+    TXN_PayAmt: [null],
+      tlt_building: [''],                                  // 樓層建物
+  tlt_floor: [''],                                     // 樓層編號
+  org_id: [''],                                        // 組織代碼
+    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }])
   });
 
-  // 表格資料
-  data: any[] = [];
-  filteredData: any[] = [...this.data];
+  cardTypeOptions: any[] = [];
+   floorOptions: any[] = [];
+  BUILDING_NO_Options: any[] = [];
+  OrganizationCodeOptions: any[] = []
+    data: any[] = [];
+  totalRecords = 0;
 
-  // 列定義
   columns: any[] = [
-    { field: 'saleDate', header: '銷售日期', visible: true },
-    { field: 'cashRegisterCode', header: '收銀機代號', visible: true },
-    { field: 'transactionNumber', header: '交易序號', visible: true },
-    { field: 'counterCodeOrName', header: '專櫃編號/名稱', visible: true },
-    { field: 'creditCardType', header: '信用卡卡別', visible: true },
-    { field: 'creditCardNumber', header: '信用卡卡號', visible: true },
-    { field: 'amount', header: '金額', visible: true },
-    { field: 'bonus', header: '紅利', visible: true },
-    { field: 'installment', header: '分期', visible: true },
-    { field: 'installmentPeriodType', header: '分期期別', visible: true },
-    { field: 'installmentPeriods', header: '分期期數', visible: true },
-    { field: 'downPayment', header: '頭期款分期金額', visible: true },
-    { field: 'monthlyPayment', header: '每期分期金額', visible: true },
+    { field: 'TXN_Date', header: '銷售日期', visible: true },
+    { field: 'ECR_No', header: '收銀機代號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'tlt_no', header: '專櫃編號/名稱', visible: true },
+    { field: 'CRD_Type', header: '信用卡卡別', visible: true },
+    { field: 'CRD_No', header: '信用卡卡號', visible: true },
+    {
+      field: 'TXN_PayAmt', header: '金額', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0'
+    },
+    {
+      field: 'TXN_Bonus', header: '紅利', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0'
+    },
+    { field: 'TXN_Installment', header: '分期', visible: true },
+    { field: 'TXN_PeriodType', header: '分期期別', visible: true },
+    { field: 'TXN_Periods', header: '分期期數', visible: true },
+    {
+      field: 'TXN_DownPayAmt', header: '頭期款分期金額', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0'
+    },
+    {
+      field: 'TXN_MonthlyAmt', header: '每期分期金額', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0'
+    },
   ];
-
-  // 切換的報表列定義
-  reportColumns: any[] = [
-
-    { field: 'salesDate', header: '銷售日期', visible: true },
-    { field: 'cashierMachine', header: '收銀機', visible: true },
-    { field: 'franchiseNumberName', header: '專櫃編號/名稱', visible: true },
-    { field: 'aeCount', header: 'AE-筆數', visible: true },
-    { field: 'aeAmount', header: 'AE-金額', visible: true },
-    { field: 'daCount', header: 'DA-筆數', visible: true },
-    { field: 'daAmount', header: 'DA-金額', visible: true },
-    { field: 'masterCount', header: 'MASTER-筆數', visible: true },
-    { field: 'masterAmount', header: 'MASTER-金額', visible: true },
-    { field: 'visaCount', header: 'VISA-筆數', visible: true },
-    { field: 'visaAmount', header: 'VISA-金額', visible: true },
-    { field: 'jcbCount', header: 'JCB-筆數', visible: true },
-    { field: 'jcbAmount', header: 'JCB-金額', visible: true },
-    { field: 'unionPayCount', header: '銀聯卡-筆數', visible: true },
-    { field: 'unionPayAmount', header: '銀聯卡-金額', visible: true },
-    { field: 'otherCount', header: '其他-筆數', visible: true },
-    { field: 'otherAmount', header: '其他-金額', visible: true },
-    { field: 'totalCount', header: '合計-筆數', visible: true },
-    { field: 'totalAmount', header: '合計-金額', visible: true },
-  ];
-
-  creditCardTypeOptions: any[] = [];
-  recordsPerPageOptions: any[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private cardTypeService: CardTypeService,
-  ) { }
+    private tls23090Service: TLS23090Service,
+        private floorService: FloorService,
+    private tls11010Service: Tls11010Service
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS23090', '', this.queryForm, (form) => this.onSubmit(form));
     this.cardTypeService.getCardType().subscribe(data => {
-      this.creditCardTypeOptions = data;
+      this.cardTypeOptions = data;
+    });
+        this.floorService.getFloors().subscribe(data => this.floorOptions = data);
+    this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
+    this.tls11010Service.getOrgOptions().subscribe((res) => {
+      this.OrganizationCodeOptions = res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];});
+  }
+
+   onSubmit(form: FormGroup): void {
+    this.submitted = true;
+    if (this.loading) return;
+
+    if (form.invalid) {
+      this.messageService.warnBubble('請確認欄位資料是否完整');
+      return;
+    }
+
+    this.handleSubmit(form, () => {
+      const payload = { ...form.value };
+
+      // ✅ 將 'Y' / 'N' 轉成 true / false
+      if (payload.IsHaveTERM_No === 'Y') {
+        payload.IsHaveTERM_No = true;
+      } else if (payload.IsHaveTERM_No === 'N') {
+        payload.IsHaveTERM_No = false;
+      }
+
+      // ✅ 將空字串轉 null
+      Object.keys(payload).forEach(key => {
+        if (payload[key] === '') payload[key] = null;
+      });
+
+      console.log('查詢參數:', payload);
+
+      this.tls23090Service.queryTLS23090(payload).subscribe({
+        next: (res) => {
+          console.log('查詢結果:', res);
+          if (res.Status === '0000') {
+            this.data = res.Data || [];
+            this.totalRecords = res.TotalCount || this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, payload);
+            this.messageService.successBubble('查詢成功');
+          } else {
+            this.data = [];
+            this.totalRecords = 0;
+            this.messageService.errorBubble('查詢失敗');
+          }
+        },
+        error: () => {
+          this.data = [];
+          this.totalRecords = 0;
+          this.loading = false;
+          this.messageService.errorBubble('查詢錯誤');
+        },
+        complete: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        }
+      });
     });
   }
 
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交查詢邏輯
-      this.data = this.getMockData(); // 使用模擬數據
-      this.filteredData = [...this.data];
-      this.columns = this.getDefaultColumns(); // 顯示默認表格列
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onShowReport() {
-    // 切換為報表的列顯示
-    this.columns = [...this.reportColumns];
-    this.data = this.getMockReportData(); // 使用模擬報表數據
-    this.filteredData = [...this.data];
-  }
-
-  getDefaultColumns(): any[] {
-    // 返回默認的表格列
-    return [
-      { field: 'saleDate', header: '銷售日期', visible: true },
-      { field: 'cashRegisterCode', header: '收銀機代號', visible: true },
-      { field: 'transactionNumber', header: '交易序號', visible: true },
-      { field: 'counterCodeOrName', header: '專櫃編號/名稱', visible: true },
-      { field: 'creditCardType', header: '信用卡卡別', visible: true },
-      { field: 'creditCardNumber', header: '信用卡卡號', visible: true },
-      { field: 'amount', header: '金額', visible: true },
-      { field: 'bonus', header: '紅利', visible: true },
-      { field: 'installment', header: '分期', visible: true },
-      { field: 'installmentPeriodType', header: '分期期別', visible: true },
-      { field: 'installmentPeriods', header: '分期期數', visible: true },
-      { field: 'downPayment', header: '頭期款分期金額', visible: true },
-      { field: 'monthlyPayment', header: '每期分期金額', visible: true },
-    ];
-  }
-
-  getMockData(): any[] {
-    // 返回模擬查詢數據
-    return [
-      { saleDate: '2024-10-25', cashRegisterCode: '001', transactionNumber: '123456', counterCodeOrName: 'A001', creditCardType: 'VISA', creditCardNumber: '1234-****-5678', amount: 1000, bonus: 100, installment: '是', installmentPeriodType: '一般', installmentPeriods: 3, downPayment: 300, monthlyPayment: 350 },
-      // 模擬更多數據...
-    ];
-  }
-
-  getMockReportData(): any[] {
-    // 返回模擬報表數據
-    return [
-      { sequence: 1, salesDate: '2024-10-25', cashierMachine: '001', franchiseNumberName: 'A001', aeCount: 10, aeAmount: 1000, daCount: 5, daAmount: 500, masterCount: 7, masterAmount: 700, visaCount: 8, visaAmount: 800, jcbCount: 2, jcbAmount: 200, unionPayCount: 3, unionPayAmount: 300, otherCount: 1, otherAmount: 100, totalCount: 36, totalAmount: 3600 },
-      // 模擬更多報表數據...
-    ];
-  }
-
-  onClearForm() {
-    this.queryForm.reset();
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm.value,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm.value,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm.value,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+  getLabelFromOptions(value: any, options: any[]): string {
+    const found = options?.find(opt => String(opt.value) === String(value));
+    return found ? found.label : value;
   }
 }

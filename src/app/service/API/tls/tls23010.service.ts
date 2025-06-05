@@ -21,7 +21,7 @@ export class TLS23010Service {
     );
   }
   queryTLS23010Detail(payload: {
-    // SYS_StoreNo: string;
+    SYS_StoreNo: string;
     TXN_Date: string;
     ECR_No: string;
     TXN_No: number;

@@ -5,33 +5,59 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" label="銷售日期" [control]="queryForm.controls.salesDate"
-              [submitted]="submitted">
-            </app-calendar>
+            <app-calendar
+              calendarType="dateOne"
+              label="銷售日期"
+              [control]="queryForm.controls.salesDate"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="收銀機編號" controlName="cashRegisterNumber" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.cashRegisterNumber" [submitted]="submitted">
-            </app-input-number>
+            <app-input-number
+              label="收銀機編號"
+              controlName="cashRegisterNumber"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.cashRegisterNumber"
+              [submitted]="submitted"
+            ></app-input-number>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="樓層" controlName="floor" [options]="floorOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.floor" [submitted]="submitted">
-            </app-dropdown>
+            <app-dropdown
+              label="樓層"
+              controlName="floor"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.floor"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
       </form>
-      <div *appHasPermission="queryPermission" class="col">
+      <div>
         <div class="grid justify-content-end">
           <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+          <app-button
+            btnType="query"
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -39,7 +65,11 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-    </app-table>
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
   </div>
 </div>

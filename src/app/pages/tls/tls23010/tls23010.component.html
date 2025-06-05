@@ -25,9 +25,9 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
-              label="收銀機代號---"
+              label="收銀機代號"
               controlName="ECR_No"
-              [options]="txnStatusOptions"
+              [options]="ECRNoOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.ECR_No"
@@ -77,7 +77,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
-              label="交易型態---"
+              label="交易型態"
               controlName="TXN_Status"
               [options]="txnStatusOptions"
               optionLabel="label"
@@ -109,13 +109,17 @@
             ></app-dropdown>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+
+                    <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
               label="收銀員號碼"
               controlName="USR_No"
+              [options]="cashierOptions"
+              optionLabel="formLabel"
+              optionValue="value"
               [control]="queryForm.controls.USR_No"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">

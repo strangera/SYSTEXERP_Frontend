@@ -5,68 +5,144 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品牌名稱(中文)" controlName="brandName" [options]="brandCodeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.brandName" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="品牌名稱(中文)"
+              controlName="brandName"
+              [options]="brandCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.brandName"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="管理編號" controlName="managementID" [options]="managementIDOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.managementID" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="管理編號"
+              controlName="managementID"
+              [options]="managementIDOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.managementID"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="管理編號
-                  (管編,管編,管編)" controlName="managementIDText" [control]="queryForm.controls.managementIDText"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="管理編號
+                  (管編,管編,管編)"
+              controlName="managementIDText"
+              [control]="queryForm.controls.managementIDText"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="國際條碼" controlName="barcode" [control]="queryForm.controls.barcode"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="國際條碼"
+              controlName="barcode"
+              [control]="queryForm.controls.barcode"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商貨號" controlName="vendorItemNumber" [control]="queryForm.controls.vendorItemNumber"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="廠商貨號"
+              controlName="vendorItemNumber"
+              [control]="queryForm.controls.vendorItemNumber"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="大分類代碼" controlName="bigCategoryCode" [options]="bigCategoryOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.bigCategoryCode" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="大分類代碼"
+              controlName="bigCategoryCode"
+              [options]="bigCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.bigCategoryCode"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="中分類代碼" controlName="midCategoryCode" [options]="midCategoryOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.midCategoryCode" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="中分類代碼"
+              controlName="midCategoryCode"
+              [options]="midCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.midCategoryCode"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="小分類代碼" controlName="smallCategoryCode" [options]="smallCategoryOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.smallCategoryCode"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="小分類代碼"
+              controlName="smallCategoryCode"
+              [options]="smallCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.smallCategoryCode"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-editor-text label="系列" controlName="series" [style]="{ height: '100px' }"
-              [control]="queryForm.controls.series" [submitted]="submitted"></app-editor-text>
+            <app-editor-text
+              label="系列"
+              controlName="series"
+              [style]="{ height: '100px' }"
+              [control]="queryForm.controls.series"
+              [submitted]="submitted"
+            ></app-editor-text>
           </div>
           <!-- Additional fields for checkboxes and input fields -->
           <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox label="顯示庫存為零" formControlName="displayEmptyStock"></p-checkbox>
+            <p-checkbox
+              label="顯示庫存為零"
+              formControlName="displayEmptyStock"
+            ></p-checkbox>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox label="顯示標準進價" formControlName="displayStandardCost"></p-checkbox>
+            <p-checkbox
+              label="顯示標準進價"
+              formControlName="displayStandardCost"
+            ></p-checkbox>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox label="顯示圖片" formControlName="displayImage"></p-checkbox>
+            <p-checkbox
+              label="顯示圖片"
+              formControlName="displayImage"
+            ></p-checkbox>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="顯示行數" controlName="rows" [control]="queryForm.controls.rows"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="顯示行數"
+              controlName="rows"
+              [control]="queryForm.controls.rows"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
       </form>
-      <div *appHasPermission="queryPermission" class="col">
+      <div>
         <div class="grid justify-content-end">
           <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+          <app-button
+            btnType="query"
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -74,6 +150,11 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"></app-table>
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
   </div>
 </div>

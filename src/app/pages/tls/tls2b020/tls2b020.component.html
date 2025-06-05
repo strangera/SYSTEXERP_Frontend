@@ -1,58 +1,91 @@
 <div class="grid">
-    <div class="col-12">
-        <div class="card">
-            <div class="grid align-items-center">
-                <div class="col" style="flex: 1;">
-                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
-                </div>
-            </div>
-            <p-accordion>
-                <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true"
-                    class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
-                    <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
-                        <div class="grid p-fluid">
-                            <div class="col-12 md:col-6 lg:col-6">
-                                <app-calendar calendarType="dateMonthOne" label="銷售年/月"
-                                    [control]="queryForm.controls.onedatemm" [submitted]="submitted">
-                                </app-calendar>
-                            </div>
-                            <div class="col-12 md:col-6 lg:col-6">
-                                <app-input-number [useGrouping]="false" label="收銀員代號" controlName="casherID"
-                                    [control]="queryForm.controls.casherID" [submitted]="submitted">>
-                                </app-input-number>
-                            </div>
-                        </div>
-                        <div class="grid p-fluid">
-                            <div class="col-12 md:col-6 lg:col-6">
-                                <app-radiobutton label="收銀員區分" groupname="cashierradio"
-                                    [control]="queryForm.controls.cashierDistinction"
-                                    [options]="cashierDistinctionOptions" [submitted]="submitted">
-                                </app-radiobutton>
-                            </div>
-                            <div class="col-12 md:col-6 lg:col-6">
-                                <app-radiobutton label="溢欠狀態" groupname="overflowradio"
-                                    [control]="queryForm.controls.overflowStatus" [options]="overflowStatusOptions"
-                                    [submitted]="submitted">
-                                </app-radiobutton>
-                            </div>
-                        </div>
-                        <h6>最近關帳日期:2020/2/9</h6>
-                        <div *appHasPermission="queryPermission" class="col">
-                            <div class="grid justify-content-end">
-                                <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-                                <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
-                                    [loading]="loading"></app-button>
-                            </div>
-                        </div>
-                    </form>
-                </p-accordionTab>
-            </p-accordion>
+  <div class="col-12">
+    <div class="card">
+      <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+          <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
-        <div class="card">
-            <div class="col-13">
-                <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-                </app-table>
+      </div>
+      <p-accordion>
+        <p-accordionTab
+          header="{{ 'query-conditions' | translate }}"
+          [selected]="true"
+          class="line-height-3 m-0"
+          [headerStyleClass]="'query-accordionTab'"
+        >
+          <form
+            [formGroup]="queryForm"
+            id="queryForm"
+            (ngSubmit)="onSubmit(queryForm)"
+          >
+            <div class="grid p-fluid">
+              <div class="col-12 md:col-6 lg:col-6">
+                <app-calendar
+                  calendarType="dateMonthOne"
+                  label="銷售年/月"
+                  [control]="queryForm.controls.onedatemm"
+                  [submitted]="submitted"
+                ></app-calendar>
+              </div>
+              <div class="col-12 md:col-6 lg:col-6">
+                <app-input-number
+                  [useGrouping]="false"
+                  label="收銀員代號"
+                  controlName="casherID"
+                  [control]="queryForm.controls.casherID"
+                  [submitted]="submitted"
+                >
+                  >
+                </app-input-number>
+              </div>
             </div>
-        </div>
+            <div class="grid p-fluid">
+              <div class="col-12 md:col-6 lg:col-6">
+                <app-radiobutton
+                  label="收銀員區分"
+                  groupname="cashierradio"
+                  [control]="queryForm.controls.cashierDistinction"
+                  [options]="cashierDistinctionOptions"
+                  [submitted]="submitted"
+                ></app-radiobutton>
+              </div>
+              <div class="col-12 md:col-6 lg:col-6">
+                <app-radiobutton
+                  label="溢欠狀態"
+                  groupname="overflowradio"
+                  [control]="queryForm.controls.overflowStatus"
+                  [options]="overflowStatusOptions"
+                  [submitted]="submitted"
+                ></app-radiobutton>
+              </div>
+            </div>
+            <h6>最近關帳日期:2020/2/9</h6>
+            <div>
+              <div class="grid justify-content-end">
+                <app-button
+                  btnType="clear"
+                  (onClick)="onClearForm()"
+                ></app-button>
+                <app-button
+                  btnType="query"
+                  (onClick)="onSubmitQuery(queryForm)"
+                  [loading]="loading"
+                ></app-button>
+              </div>
+            </div>
+          </form>
+        </p-accordionTab>
+      </p-accordion>
     </div>
+    <div class="card">
+      <div class="col-13">
+        <app-table
+          [data]="data"
+          [columns]="columns"
+          (edit)="onEdit($event)"
+          (detail)="onDetail($event)"
+        ></app-table>
+      </div>
+    </div>
+  </div>
 </div>

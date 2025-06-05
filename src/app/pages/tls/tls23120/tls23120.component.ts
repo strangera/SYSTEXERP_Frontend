@@ -1,205 +1,172 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// 權限相關
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// 共用服務
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { FormGroup, Validators } from '@angular/forms';
 import { RegionService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { WhetherService } from '../../../service/basic/whether.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+import { TLS23120Service } from '../../../service/API/tls/tls23120.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+
+import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 
 @Component({
   selector: 'app-tls23120',
   templateUrl: './tls23120.component.html',
   styleUrls: ['./tls23120.component.scss']
 })
-export class TLS23120Component {
-
-  ProgNo: string = '220021';
-
-  // 權限變數
-  funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS23120Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    saleDateStart: [, [Validators.required]], // 銷售日期起
-    saleDateEnd: [, [Validators.required]],   // 銷售日期迄
-    organizationCode: [{ value: '', disabled: true }],  // 專櫃編號
-    regionCode: [{ value: '', disabled: true }],  // 區域
-    floorCode: [{ value: '', disabled: true }],  // 樓層
-    businessTypeCode: [{ value: '', disabled: true }],  // 大分類
-    whetherDisplayBusinessType: [],  // 是否顯示大分類
-    locationRadio: ['']  // 地點選項單選
+    saleDateStart: [new Date(), [Validators.required]],
+    saleDateEnd: [new Date(), [Validators.required]],
+    organizationCode: [{ value: '', disabled: true }],
+    regionCode: [{ value: '', disabled: true }],
+   
+    businessTypeCode: [{ value: '', disabled: true }],
+    whetherDisplayBusinessType: [],
+    locationRadio: [''],
+      tlt_building: [''],                                  // 樓層建物
+  tlt_floor: [''],                                     // 樓層編號
+  org_id: [''],                                        // 組織代碼
+    ...createPaginationConfig([{ field: 'area', order: 1 }])
   });
 
-  // 表格資料
   data: any[] = [];
-  filteredData: any[] = [...this.data];
+  totalRecords = 0;
+
   columns: any[] = [
     { field: 'area', header: '區分', visible: true },
     { field: 'transactionCount', header: '銷貨筆數', visible: true },
-    { field: 'netSales', header: '淨銷貨', visible: true },
-    { field: 'businessTax', header: '營業稅', visible: true },
-    { field: 'transactionAmount', header: '銷貨金額', visible: true },
+    { field: 'netSales', header: '淨銷貨', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
+    { field: 'businessTax', header: '營業稅', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
+    { field: 'transactionAmount', header: '銷貨金額', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
     { field: 'preSaleCount', header: '預售筆數', visible: true },
-    { field: 'preSaleAmount', header: '預售金額', visible: true },
+    { field: 'preSaleAmount', header: '預售金額', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
     { field: 'settleCount', header: '結帳筆數', visible: true },
-    { field: 'settleAmount', header: '結帳金額', visible: true },
+    { field: 'settleAmount', header: '結帳金額', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' }
   ];
 
-  // 下拉選單選項
   organizationOptions: any[] = [];
   regionOptions: any[] = [];
-  floorOptions: any[] = [];
+ 
   businessTypeCodeOptions: any[] = [];
   whetherOptions: any[] = [];
+    floorOptions: any[] = [];
+  BUILDING_NO_Options: any[] = [];
+  OrganizationCodeOptions: any[] = []
+
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private RegionService: RegionService, // 區域 service
-    private floorService: FloorService, // 樓層 service
-    private businessTypeCodeService: BusinessTypeCodeService, // 大分類 service
-    private organizationNumberService: OrganizationNumberService, // 專櫃編號 service
-    private whetherService: WhetherService, // 是否顯示大分類 service
-  ) { }
+    private tls23120Service: TLS23120Service,
+    private regionService: RegionService,
+    
+    private businessTypeCodeService: BusinessTypeCodeService,
+    private organizationNumberService: OrganizationNumberService,
+    private whetherService: WhetherService,
+        private floorService: FloorService,
+    private tls11010Service: Tls11010Service
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS23120', '', this.queryForm, (form) => this.onSubmit(form));
 
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
-      this.organizationOptions = data;
-    });
-    this.RegionService.getRegionOptions().subscribe((data) => {
-      this.regionOptions = data;
-    });
-    this.floorService.getFloors().subscribe((data) => {
-      this.floorOptions = data;
-    });
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
-      this.businessTypeCodeOptions = data;
-    });
-    this.whetherService.getWhetherOptions().subscribe((data) => {
-      this.whetherOptions = data;
-    });
+    this.organizationNumberService.getOrganizationNumbers().subscribe(data => this.organizationOptions = data);
+    this.regionService.getRegionOptions().subscribe(data => this.regionOptions = data);
+    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
+    this.businessTypeCodeService.getBusinessTypeCodes().subscribe(data => this.businessTypeCodeOptions = data);
+    this.whetherService.getWhetherOptions().subscribe(data => this.whetherOptions = data);
 
-    // Initialize radio button behavior for location selection
     this.queryForm.controls.locationRadio.valueChanges.subscribe(value => {
-      // Reset and disable all fields
       this.queryForm.controls.organizationCode.disable();
       this.queryForm.controls.regionCode.disable();
-      this.queryForm.controls.floorCode.disable();
+      this.queryForm.controls.tlt_floor.disable();
       this.queryForm.controls.businessTypeCode.disable();
+
       this.queryForm.controls.organizationCode.reset();
       this.queryForm.controls.regionCode.reset();
-      this.queryForm.controls.floorCode.reset();
+      this.queryForm.controls.tlt_floor.reset();
       this.queryForm.controls.businessTypeCode.reset();
 
-      // Enable the selected field(s)
       if (value === 'organizationCode') {
         this.queryForm.controls.organizationCode.enable();
       } else if (value === 'regionOrFloor') {
         this.queryForm.controls.regionCode.enable();
-        this.queryForm.controls.floorCode.enable();
+        this.queryForm.controls.tlt_floor.enable();
       } else if (value === 'businessTypeCode') {
         this.queryForm.controls.businessTypeCode.enable();
       }
     });
+
+         this.floorService.getFloors().subscribe(data => this.floorOptions = data);
+    this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
+    this.tls11010Service.getOrgOptions().subscribe((res) => {
+      this.OrganizationCodeOptions = res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];});
   }
 
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
+  onSubmit(form: FormGroup): void {
     this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    if (this.loading) return;
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
+    if (form.invalid) {
+      this.messageService.warnBubble('請確認欄位資料是否完整');
+      return;
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
+    this.handleSubmit(form, () => {
+      const payload = { ...form.value };
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
+      // ✅ 將 'Y' / 'N' 轉成 true / false
+      if (payload.IsHaveTERM_No === 'Y') {
+        payload.IsHaveTERM_No = true;
+      } else if (payload.IsHaveTERM_No === 'N') {
+        payload.IsHaveTERM_No = false;
+      }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
+      // ✅ 將空字串轉 null
+      Object.keys(payload).forEach(key => {
+        if (payload[key] === '') payload[key] = null;
+      });
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm.value,
+      console.log('查詢參數:', payload);
+
+      this.tls23120Service.queryTLS23120(payload).subscribe({
+        next: (res) => {
+          console.log('查詢結果:', res);
+          if (res.Status === '0000') {
+            this.data = res.Data || [];
+            this.totalRecords = res.TotalCount || this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, payload);
+            this.messageService.successBubble('查詢成功');
+          } else {
+            this.data = [];
+            this.totalRecords = 0;
+            this.messageService.errorBubble('查詢失敗');
+          }
         },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm.value,
+        error: () => {
+          this.data = [];
+          this.totalRecords = 0;
+          this.loading = false;
+          this.messageService.errorBubble('查詢錯誤');
         },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
+        complete: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        }
+      });
+    });
   }
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm.value,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+
+  getLabelFromOptions(value: any, options: any[]): string {
+    const found = options?.find(opt => String(opt.value) === String(value));
+    return found ? found.label : value;
   }
 }

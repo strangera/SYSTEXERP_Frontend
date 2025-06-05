@@ -15,16 +15,22 @@
      
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
-            label="交易日期"
+            label="銷售日期"
             [startControl]="queryForm.controls.TXN_DateStart"
             [endControl]="queryForm.controls.TXN_DateEnd"
             [submitted]="submitted"
           />
         
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="收銀機機號" controlName="ECR_No"
-              [control]="queryForm.controls.ECR_No" [submitted]="submitted">
-            </app-input-text>
+            <app-multi-select
+              label="收銀機代號"
+              controlName="ECR_No"
+              [options]="ECRNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_No"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -36,19 +42,25 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="專櫃編號" controlName="TLT_No"
-              [control]="queryForm.controls.TLT_No" [submitted]="submitted">
-            </app-input-text>
+            <app-multi-select
+              label="專櫃編號"
+              controlName="TLT_No"
+              [options]="CounterOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.TLT_No"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="發票號碼" controlName="TXN_GUINo"
+            <app-input-text label="字軌發票號碼" controlName="TXN_GUINo"
               [control]="queryForm.controls.TXN_GUINo" [submitted]="submitted">
             </app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="售價"
+            <app-input-number-range [useGrouping]="false" label="單項售價"
               [startControl]="queryForm.controls.PLU_SalePrc_Start"
               [endControl]="queryForm.controls.PLU_SalePrc_End"
               [submitted]="submitted">
@@ -63,27 +75,27 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="原始折數" controlName="ORG_TXN_DiscCode"
+            <app-dropdown label="原折扣別" controlName="ORG_TXN_DiscCode"
               [options]="discountOptions" optionLabel="label" optionValue="value"
               [control]="queryForm.controls.ORG_TXN_DiscCode" [submitted]="submitted">
             </app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="分類抽成類別" controlName="tlt_id"
+            <app-dropdown label="商品抽成類別" controlName="tlt_id"
               [options]="commissionTypeOptions" optionLabel="label" optionValue="value"
               [control]="queryForm.controls.tlt_id" [submitted]="submitted">
             </app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="商品管理編號" controlName="PLU_MagNo"
+            <app-input-text label="單品編號" controlName="PLU_MagNo"
               [control]="queryForm.controls.PLU_MagNo" [submitted]="submitted">
             </app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="專櫃折數" controlName="TXN_DiscCode"
+            <app-dropdown label="歸屬折扣別" controlName="TXN_DiscCode"
               [options]="discountOptions" optionLabel="label" optionValue="value"
               [control]="queryForm.controls.TXN_DiscCode" [submitted]="submitted">
             </app-dropdown>
@@ -91,21 +103,21 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <p-checkbox
-              label="自營櫃無條碼商品"
+              label="自營櫃無單品條碼"
               binary="true"
               formControlName="IsNoPLU_No">
             </p-checkbox>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="是否代收" controlName="rece_yn"
+            <app-dropdown label="是否開立業主發票" controlName="rece_yn"
               [options]="whetherOptions" optionLabel="label" optionValue="value"
               [control]="queryForm.controls.rece_yn" [submitted]="submitted">
             </app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="是否代售" controlName="cash_yn"
+            <app-dropdown label="是否為業主收現收現" controlName="cash_yn"
               [options]="whetherOptions" optionLabel="label" optionValue="value"
               [control]="queryForm.controls.cash_yn" [submitted]="submitted">
             </app-dropdown>
@@ -119,17 +131,25 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="樓層" controlName="tlt_floor"
-              [options]="floorOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.tlt_floor" [submitted]="submitted">
-            </app-dropdown>
+            <app-multi-select
+              label="樓層"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_floor"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="組織代碼/名稱" controlName="org_id"
-              [options]="OrganizationCodeOptions" optionLabel="formLabel" optionValue="value"
-              [control]="queryForm.controls.org_id" [submitted]="submitted">
-            </app-dropdown>
+            <app-multi-select
+              label="組織代碼/名稱"
+              [options]="OrganizationCodeOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.org_id"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
         </div>

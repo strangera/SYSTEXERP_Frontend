@@ -5,171 +5,314 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <!-- 票據號碼 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="票據號碼" controlName="billNumber" [control]="queryForm.controls.billNumber"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="票據號碼"
+              controlName="billNumber"
+              [control]="queryForm.controls.billNumber"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <!-- 廠客代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="廠客代號" controlName="vendorCode" [options]="vendorCodeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.vendorCode" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="廠客代號"
+              controlName="vendorCode"
+              [options]="vendorCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.vendorCode"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <!-- 公司銀行科目代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="銀行代號" controlName="bankAccountCode" [options]="bankAccountCodeOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.bankAccountCode"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="銀行代號"
+              controlName="bankAccountCode"
+              [options]="bankAccountCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.bankAccountCode"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <!-- 客戶銀行帳號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="客戶銀行帳號" controlName="customerBankAccount"
-              [control]="queryForm.controls.customerBankAccount" [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="客戶銀行帳號"
+              controlName="customerBankAccount"
+              [control]="queryForm.controls.customerBankAccount"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <!-- 託收日 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="託收日" controlName="issueDate"
-              [startControl]="queryForm.controls.issueDateStart" [endControl]="queryForm.controls.issueDateEnd"
-              [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="託收日"
+              controlName="issueDate"
+              [startControl]="queryForm.controls.issueDateStart"
+              [endControl]="queryForm.controls.issueDateEnd"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
 
           <!-- 公司銀行科目代號託收銀行 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="公司銀行科目代號託收銀行" controlName="bankAccountCodeForCollection"
-              [options]="bankAccountCodeOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.bankAccountCodeForCollection" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="公司銀行科目代號託收銀行"
+              controlName="bankAccountCodeForCollection"
+              [options]="bankAccountCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.bankAccountCodeForCollection"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <!-- 收票日 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="收票日" controlName="dueDate"
-              [startControl]="queryForm.controls.dueDateStart" [endControl]="queryForm.controls.dueDateEnd"
-              [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="收票日"
+              controlName="dueDate"
+              [startControl]="queryForm.controls.dueDateStart"
+              [endControl]="queryForm.controls.dueDateEnd"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
 
           <!-- 收票業務員代碼 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="收票業務員代碼" controlName="salesmanCode" [options]="salesmanCodeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.salesmanCode" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="收票業務員代碼"
+              controlName="salesmanCode"
+              [options]="salesmanCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.salesmanCode"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <!-- 收款單號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="收款單號" controlName="billTitle" [control]="queryForm.controls.billTitle"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="收款單號"
+              controlName="billTitle"
+              [control]="queryForm.controls.billTitle"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <!-- 到期日 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="到期日" controlName="expiryDate"
-              [startControl]="queryForm.controls.expiryDateStart" [endControl]="queryForm.controls.expiryDateEnd"
-              [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="到期日"
+              controlName="expiryDate"
+              [startControl]="queryForm.controls.expiryDateStart"
+              [endControl]="queryForm.controls.expiryDateEnd"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
 
           <!-- 預兌日 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="預兌日" controlName="expectedCashDate"
+            <app-calendar-range
+              calendarType="dateRange"
+              label="預兌日"
+              controlName="expectedCashDate"
               [startControl]="queryForm.controls.expectedCashDateStart"
-              [endControl]="queryForm.controls.expectedCashDateEnd" [submitted]="submitted"></app-calendar-range>
+              [endControl]="queryForm.controls.expectedCashDateEnd"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
 
           <!-- 兌現日 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="兌現日" controlName="cashDate"
-              [startControl]="queryForm.controls.cashDateStart" [endControl]="queryForm.controls.cashDateEnd"
-              [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="兌現日"
+              controlName="cashDate"
+              [startControl]="queryForm.controls.cashDateStart"
+              [endControl]="queryForm.controls.cashDateEnd"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
 
           <!-- 票面金額 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="票面金額" controlName="amount"
-              [startControl]="queryForm.controls.amountStart" [endControl]="queryForm.controls.amountEnd"
-              [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range
+              [useGrouping]="false"
+              label="票面金額"
+              controlName="amount"
+              [startControl]="queryForm.controls.amountStart"
+              [endControl]="queryForm.controls.amountEnd"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
 
           <!-- 票據種類 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="票據種類" controlName="billType" [options]="billTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.billType" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="票據種類"
+              controlName="billType"
+              [options]="billTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.billType"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <!-- 是否客票 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="是否客票" controlName="isCustomerBill" [options]="isCustomerBillOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.isCustomerBill"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="是否客票"
+              controlName="isCustomerBill"
+              [options]="isCustomerBillOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.isCustomerBill"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <!-- 備註 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="備註" controlName="remarks" [control]="queryForm.controls.remarks"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="備註"
+              controlName="remarks"
+              [control]="queryForm.controls.remarks"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <!-- 組織代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="組織代號" controlName="organizationCode" [options]="organizationCodeOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.organizationCode"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="組織代號"
+              controlName="organizationCode"
+              [options]="organizationCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.organizationCode"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <!-- 活動代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="活動代號" controlName="eventCode" [options]="eventCodeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.eventCode" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="活動代號"
+              controlName="eventCode"
+              [options]="eventCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.eventCode"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <!-- 狀態 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="狀態" controlName="status" [options]="statusOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.status" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="狀態"
+              controlName="status"
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.status"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <!-- 票據狀態 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="票據狀態" controlName="billStatus" [options]="billStatusOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.billStatus" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="票據狀態"
+              controlName="billStatus"
+              [options]="billStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.billStatus"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <!-- 應收票據會計科目 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="應收票據會計科目" controlName="paymentBillNumber"
-              [control]="queryForm.controls.paymentBillNumber" [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="應收票據會計科目"
+              controlName="paymentBillNumber"
+              [control]="queryForm.controls.paymentBillNumber"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <!-- 傳票號碼 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="傳票號碼" controlName="voucherNumber" [control]="queryForm.controls.voucherNumber"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="傳票號碼"
+              controlName="voucherNumber"
+              [control]="queryForm.controls.voucherNumber"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <!-- 對象別編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="對象別編號" controlName="targetCode" [options]="targetCodeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.targetCode" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="對象別編號"
+              controlName="targetCode"
+              [options]="targetCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.targetCode"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <!-- 對帳KEY值 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="對帳KEY值" controlName="reconciliationKey"
-              [control]="queryForm.controls.reconciliationKey" [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="對帳KEY值"
+              controlName="reconciliationKey"
+              [control]="queryForm.controls.reconciliationKey"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
       </form>
 
       <!-- Buttons -->
-      <div *appHasPermission="queryPermission" class="col">
+      <div>
         <div class="grid justify-content-end">
           <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+          <app-button
+            btnType="query"
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -179,6 +322,11 @@
 <!-- Table -->
 <div class="card">
   <div class="col-12">
-    <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"></app-table>
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
   </div>
 </div>

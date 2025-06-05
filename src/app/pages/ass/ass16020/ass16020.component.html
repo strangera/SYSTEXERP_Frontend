@@ -8,51 +8,96 @@
           </div> -->
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="盤點單號" controlName="Inventoryordernumber" [options]="Inventoryordenumber"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.Inventoryordernumber"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="盤點單號"
+              controlName="Inventoryordernumber"
+              [options]="Inventoryordenumber"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Inventoryordernumber"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="盤點狀態" controlName="Inventorystatus" [options]="Inventorystatus" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.Inventorystatus" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="盤點狀態"
+              controlName="Inventorystatus"
+              [options]="Inventorystatus"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Inventorystatus"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="盤點日期" [startControl]="queryForm.controls.SInventorydate"
-              [endControl]="queryForm.controls.EInventorydate" [submitted]="submitted">
-            </app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="盤點日期"
+              [startControl]="queryForm.controls.SInventorydate"
+              [endControl]="queryForm.controls.EInventorydate"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="結案日期" [startControl]="queryForm.controls.SClosingdate"
-              [endControl]="queryForm.controls.EClosingdate" [submitted]="submitted">
-            </app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="結案日期"
+              [startControl]="queryForm.controls.SClosingdate"
+              [endControl]="queryForm.controls.EClosingdate"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="盤點人員" controlName="Counter" [options]="usercode" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.Counter" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="盤點人員"
+              controlName="Counter"
+              [options]="usercode"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Counter"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="說明" controlName="illustrate" [control]="queryForm.controls.illustrate"
-              [submitted]="submitted">
-            </app-input-text>
-
+            <app-input-text
+              label="說明"
+              controlName="illustrate"
+              [control]="queryForm.controls.illustrate"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="報表型態" [control]="queryForm.controls.Reporttype" [options]="Reporttype"
-              [submitted]="submitted">
-            </app-radiobutton>
+            <app-radiobutton
+              label="報表型態"
+              [control]="queryForm.controls.Reporttype"
+              [options]="Reporttype"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
         </div>
       </form>
-      <div *appHasPermission="queryPermission" class="col">
+      <div>
         <div class="grid justify-content-end">
           <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+          <app-button
+            btnType="query"
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -61,7 +106,11 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-    </app-table>
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
   </div>
 </div>

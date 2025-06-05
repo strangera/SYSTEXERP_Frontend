@@ -1,57 +1,88 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-            [headerStyleClass]="'query-accordionTab'">
-            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-calendar calendarType="dateMonthOne" label="申報年月" [control]="queryForm.controls.declareYm"
-                            [submitted]="submitted">
-                        </app-calendar>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-calendar calendarType="dateOne" label="退出/折讓日期" [control]="queryForm.controls.returnDate"
-                            [submitted]="submitted">
-                        </app-calendar>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-number [useGrouping]="false" label="收銀機號" controlName="registerID"
-                            [control]="queryForm.controls.registerID" [submitted]="submitted">
-                        </app-input-number>
-                    </div>
-                </div>
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="發票字軌" controlName="wordTrack" [control]="queryForm.controls.wordTrack"
-                            [submitted]="submitted">
-                        </app-input-text>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-number-range [useGrouping]="false" label="發票號碼"
-                            [startControl]="queryForm.controls.invoiceNumberFrom"
-                            [endControl]="queryForm.controls.invoiceNumberTo" [submitted]="submitted">
-                        </app-input-number-range>
-                    </div>
-                </div>
-                <div *appHasPermission="queryPermission" class="col">
-                    <div class="grid justify-content-end">
-                        <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-                        <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)"
-                            [loading]="loading"></app-button>
-                    </div>
-                </div>
-            </form>
-        </p-accordionTab>
-    </p-accordion>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              calendarType="dateMonthOne"
+              label="申報年月"
+              [control]="queryForm.controls.declareYm"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              calendarType="dateOne"
+              label="退出/折讓日期"
+              [control]="queryForm.controls.returnDate"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="收銀機號"
+              controlName="registerID"
+              [control]="queryForm.controls.registerID"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="發票字軌"
+              controlName="wordTrack"
+              [control]="queryForm.controls.wordTrack"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              [useGrouping]="false"
+              label="發票號碼"
+              [startControl]="queryForm.controls.invoiceNumberFrom"
+              [endControl]="queryForm.controls.invoiceNumberTo"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+        </div>
+        <div>
+          <div class="grid justify-content-end">
+            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+            <app-button
+              btnType="query"
+              (onClick)="onSubmitQuery(queryForm)"
+              [loading]="loading"
+            ></app-button>
+          </div>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
 </div>
 <div class="card">
-    <div class="col-13">
-        <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-        </app-table>
-    </div>
+  <div class="col-13">
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
+  </div>
 </div>
