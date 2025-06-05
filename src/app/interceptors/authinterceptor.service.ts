@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpErrorResponse } from '@angular/common/http';
+import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from '../service/system/auth.service';
 
@@ -8,14 +8,14 @@ import { AuthService } from '../service/system/auth.service';
 @Injectable()
 export class AuthinterceptorService implements HttpInterceptor {
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const currentUser = this.authService.currentUserValue;
     const isLoggedIn = currentUser && currentUser.AccessToken;
 
     // 確認這不是登錄請求 && 確定登入
-    if (!req.url.includes('/account/login') && isLoggedIn) {
+    if (!req.url.includes('/login') && isLoggedIn) {
       const clonedReq = req.clone({
         headers: req.headers.set('Authorization', `Bearer ${currentUser.AccessToken}`)
       });

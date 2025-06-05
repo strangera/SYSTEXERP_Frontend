@@ -1,8 +1,7 @@
 import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
 import { HasPermissionsValue } from '../../directive/has-permission.directive';
 import { NavigationExtras, Router } from '@angular/router';
-import { CRUDStatus } from '../../enum/CRUDstatus';
-import { ReportHead } from '../../models/ReportHead';
+import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { UserInfo } from '../../models/system/userInfo';
 
 export class BasicQpageComponent {
@@ -21,17 +20,19 @@ export class BasicQpageComponent {
   // ----------------------------------------------------------------
   loading = false;
   submitted = false;
-  reportHead: ReportHead = { outputvisible: true };   //報表表頭(預設匯出顯示資料)
   // 權限
   // ----------------------------------------------------------------
   canQuery(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.query) as boolean;
+    return true
+    // return true;
   }
   canAdd(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
+    return true
+    // return true;
   }
   canEdit(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
+    return true
+    // return true;
   }
   // 傳送的資料
   // ----------------------------------------------------------------

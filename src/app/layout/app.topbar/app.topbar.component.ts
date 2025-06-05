@@ -51,7 +51,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     {
       label: '個人資料',
       items: [
-        { label: '修改使用者密碼', icon: 'pi pi-pen-to-square', command: () => this.router.navigate(['/changepsw/changepsw']) },
+        { label: '修改使用者密碼', icon: 'pi pi-pen-to-square', command: () => this.router.navigate(['/changepsw']) },
         { label: '登出', icon: 'pi pi-sign-out', command: () => this.authService.logout() }
       ]
     },
@@ -70,11 +70,11 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     private messageService: NotificationService,
   ) { }
   ngOnInit() {
-    // 訂閱 AccessService 的 menuUpdated，當選單資料更新時重新建立選單
+    // 當權限更新時
     this.menuUpdatedSubscription = this.authService.menuUpdated.subscribe((newData: FunsrightInfo[]) => {
       if (newData?.length > 0) {
         this.funRightsInfo = newData.map((item: FunsrightInfo) => ({
-          ...item, label: `${item.prog_no} ${item.prog_name}` // 建立 label 屬性
+          ...item, label: `${item.prog_id} ${item.prog_name}` // 建立 label 屬性
         }));
         this.topLevelMenuItems = this.funRightsInfo
           .filter(item => item.prog_up === '')
@@ -82,14 +82,41 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
             const sortA = parseInt(a.prog_sort, 10);
             const sortB = parseInt(b.prog_sort, 10);
             return sortA - sortB;
+          }).map(item => {
+            let iconName = '';
+            switch (item.prog_No) {
+              case 'FIN00000':
+                iconName = 'pi pi-users';
+                break;
+              case 'ASS00000':
+                iconName = 'pi pi-briefcase';
+                break;
+              case 'TLS00000':
+                iconName = 'pi pi-shopping-bag';
+                break;
+              case 'SYS0000':
+                iconName = 'pi pi-user';
+                break;
+              case 'CPM0000':
+                iconName = 'pi pi-chart-pie';
+                break;
+              default:
+                iconName = 'pi pi-circle';
+                break;
+            }
+            return { ...item, icon: iconName };
           });
         this.initFavorites(); // 初始化最愛功能
+        console.log(this.topLevelMenuItems);
+
       }
     });
+    // 當使用者更新時
     this.userSubscription = this.authService.user.subscribe((userInfo: UserInfo | null) => {
       this.data = userInfo;
       this.initFavorites();
     });
+    // 時間更新時
     this.timerSubscription = interval(500).subscribe(() => {
       this.now = new Date();
     });
@@ -101,40 +128,50 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
       this.topMenuClick.emit(null); // 發射 null 表示沒有激活的頂部菜單項
     } else {
       this.activeTopMenuItem = item; // 點擊未激活的項，將其激活
-      this.topMenuClick.emit(item.prog_no);
+      this.topMenuClick.emit(item.prog_No);
     }
   }
-  // 搜尋程式編碼
+  // 搜尋快速碼或名稱
   filteredProgs: { label: string; value: FunsrightInfo }[] = [];
   filterProgNo(event: AutoCompleteCompleteEvent) {
     const filtered: { label: string; value: FunsrightInfo }[] = [];
-    const query = event.query;
+    const query = event.query ? event.query.toLowerCase() : '';
+    if (!this.funRightsInfo || !Array.isArray(this.funRightsInfo)) {
+      this.filteredProgs = [];
+      return;
+    }
     for (const f of this.funRightsInfo) {
       if (f.prog_ispage === 'Y') {
-        if (f.label?.toLowerCase().includes(query.toLowerCase())) {
+        const matchProgNo = f.prog_No && f.prog_No.toLowerCase().includes(query);
+        const matchProgID = f.prog_id && f.prog_id.toLowerCase().includes(query);
+        const matchProgName = f.prog_name && f.prog_name.toLowerCase().includes(query);
+        if (f.label && (matchProgNo || matchProgID || matchProgName)) {
           filtered.push({ label: f.label, value: f });
         }
       }
     }
     this.filteredProgs = filtered;
-    console.log(this.filteredProgs);
-
   }
   // 按下搜尋確認
   onSubmit(frm: FormGroup) {
     const query = frm.controls["query_data"].value;
+    if (!query) { return; }
     let matchedItem: FunsrightInfo | undefined;
     if (typeof query === 'string') {
       // 如果 query 是字串，直接在 funRightsInfo 中尋找 label 包含該字串的項目
+      const lowerCaseQuery = query.toLowerCase();
       matchedItem = this.funRightsInfo.find(item =>
-        item.label?.toLowerCase().includes(query.toLowerCase()) && item.prog_ispage === 'Y'
+        (item.label?.toLowerCase().includes(lowerCaseQuery) || // 檢查 label 是否包含
+          item.prog_id?.toLowerCase() === lowerCaseQuery) &&   // 或者 prog_id 是否完全匹配
+        item.prog_ispage === 'Y'                              // 並且必須是頁面
       );
     } else if (typeof query === 'object' && query !== null && 'value' in query) {
       // 如果 query 是選中的自動完成選項（包含 value 屬性），直接使用 query.value
       matchedItem = query.value;
     }
     if (matchedItem) {
-      this.router.navigate([`/${matchedItem.prog_no.slice(0, 3)}/${matchedItem.prog_no.charAt(3)}/${matchedItem.prog_no}`]); // 導向到該頁面，並傳遞 prog_no 參數到該頁面路由matchedItem.]);
+      console.log(matchedItem);
+      this.router.navigate([`/${matchedItem.prog_No.slice(0, 3)}/${matchedItem.prog_No}`]); // 導向到該頁面，並傳遞 prog_no 參數到該頁面路由matchedItem.]);
       this.queryForm.reset();
     } else {
       this.messageService.warnBubble('輸入的代碼不存在，或您目前無權限存取對應頁面。', '查無此快速碼');
@@ -153,14 +190,14 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
         const favoritesWithDetails: FunsrightInfo[] = [];
         if (response.Data.length === 0) { this.Favorites = []; return; }
         response.Data.forEach((fav: Favorite) => {
-          const matchingFunRight = this.funRightsInfo.find(item => item.prog_no === fav.PROG_No);
+          const matchingFunRight = this.funRightsInfo.find(item => item.prog_No === fav.PROG_No);
           if (matchingFunRight) favoritesWithDetails.push(matchingFunRight);
         });
         sessionStorage.setItem('Favorites', JSON.stringify(response.Data));
         this.Favorites = favoritesWithDetails.map(item => ({
           ...item,
           label: item.label,
-          path: `/${item.prog_no.slice(0, 3)}/${item.prog_no.charAt(3)}/${item.prog_no}`,
+          path: `/${item.prog_No.slice(0, 3)}/${item.prog_No}`,
         }));
       }, error: error => { console.error('Error fetching favorites:', error); }
     });
@@ -171,22 +208,24 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
       this.messageService.warnBubble(`您目前無檢視「${item.label}」的權限，請聯絡系統管理員開啟權限。`, '無法開啟畫面');
       return;
     }
-    this.router.navigate([`/${item.prog_no.slice(0, 3)}/${item.prog_no.charAt(3)}/${item.prog_no}`]);
+    this.activeTopMenuItem = null; // 點擊已激活的項，將其取消激活
+    this.topMenuClick.emit(null); // 發射 null 表示沒有激活的頂部菜單項
+    this.router.navigate([`/${item.prog_No.slice(0, 3)}/${item.prog_No}`]);
     this.favorite.hide(); // 點擊後關閉最愛選單
   }
-  // 進入編輯我的最愛模式
   editFavorites() {
     this.editingFavorites = !this.editingFavorites; // 切換編輯狀態
+    this.selectedFavorites = []; // 清空已選中的項目
   }
   // 刪除我的最愛
   deleteSelectedFavorites() {
     if (this.selectedFavorites && this.selectedFavorites.length > 0 && this.Favorites) {
       const remainingFavorites = this.Favorites.filter(favorite =>
-        !this.selectedFavorites.some(selected => selected['prog_no'] === favorite['prog_no'])
+        !this.selectedFavorites.some(selected => selected['prog_No'] === favorite['prog_No'])
       );
       const body = remainingFavorites.map((favorite, index) => ({
         USER_No: this.data?.user_No,
-        PROG_No: favorite['prog_no'],
+        PROG_No: favorite['prog_No'],
         FVT_SeqNo: index + 1,
       }));
       this.authService.UpdateUserFavorite(body).subscribe({
@@ -200,7 +239,6 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
         }
       });
     } else {
-      this.editingFavorites = false; // 取消編輯狀態
       this.selectedFavorites = []; // 清空已選中的項目
     }
   }
@@ -208,7 +246,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
   onRowReorder() {
     const body = this.Favorites.map((favorite, index) => ({
       USER_No: this.data?.user_No,
-      PROG_No: favorite['prog_no'],
+      PROG_No: favorite['prog_No'],
       FVT_SeqNo: index + 1, // 根據目前的順序生成 FVT_SeqNo
     }))
     this.authService.UpdateUserFavorite(body).subscribe({

@@ -1,0 +1,75 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
+    <app-button
+      btnType="create"
+      label="下一步(XX設定)"
+      (click)="onSubmitNext()"
+    ></app-button>
+    <app-button btnType="cancel" (click)="onCancel()"></app-button>
+  </div>
+
+  <p-accordion>
+    <p-accordionTab
+      header="專櫃契約書資訊"
+      [selected]="true"
+      class="line-height-3 m-0"
+    >
+      <div class="col-12 custom-table-red">
+        <app-table
+          tableKey="stocks"
+          [lazy]="true"
+          [loading]="loading"
+          [showEdit]="false"
+          [showDetail]="false"
+          [showRowEdit]="false"
+          [data]="inventoryItems"
+          [columns]="stocksColumns"
+          [showManage]="false"
+          [showCaption]="false"
+          [showPaginator]="false"
+        ></app-table>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+
+  <div class="setting-content mt-2">
+    <!-- 共用的抽成設定區塊 -->
+    <p-accordion>
+      <p-accordionTab
+        header="抽成設定"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
+        <app-expandable-edit-table
+          [data]="commissionItems"
+          [mainColumns]="commissionColumns"
+          [detailKey]="'detailItems'"
+          [dataKey]="'id'"
+          [showCheckBox]="false"
+          [readonly]="false"
+          [showDetailTabs]="true"
+          [detailTabOptions]="settingTabs"
+          [showCheckBox]="true"
+          [defaultDetailTab]="'discount'"
+          [detailColumnsMap]="{
+            discount: discountColumns,
+            annual: annualColumns,
+            level: levelColumns,
+          }"
+          (detailTabChange)="onDetailTabChange($event)"
+          (edit)="onItemEdit($event)"
+          (save)="onItemSave($event)"
+          (cancel)="onItemCancel($event)"
+          (detailEdit)="onDetailEdit($event)"
+          (detailCancel)="onDetailCancel($event)"
+        ></app-expandable-edit-table>
+      </p-accordionTab>
+    </p-accordion>
+  </div>
+
+  <!-- <div class="pt-3">
+    <app-button-dynamicallyadd (click)="onAddCommissionItem()"></app-button-dynamicallyadd>
+  </div> -->
+</div>

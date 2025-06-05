@@ -67,6 +67,9 @@
     padding: 0.5rem;
     border-radius: var(--border-radius);
     cursor: pointer;
+    &.favorites {
+      border: 1px solid var(--surface-border);
+    }
 
     &:hover {
       background-color: var(--surface-hover); /* 使用你的 hover 背景顏色變數 */
@@ -76,7 +79,7 @@
   .p-inputtext {
     border-radius: var(--border-radius) !important;
     background-color: var(--surface-a) !important;
-    border: 1px solid var(--text-color-secondary) !important;
+    border: 1px solid var(--surface-border);
     color: var(--text-color) !important; /* 使用你的文字顏色變數 */
   }
 }
@@ -116,8 +119,12 @@
     border-radius: 0.75rem !important;
   }
 }
-.p-overlaypanel-content .p-datatable.p-datatable-hoverable-rows .p-datatable-tbody > tr:not(.p-highlight):hover td {
-  border-radius: 0 !important; 
+.p-overlaypanel-content
+  .p-datatable.p-datatable-hoverable-rows
+  .p-datatable-tbody
+  > tr:not(.p-highlight):hover
+  td {
+  border-radius: 0 !important;
 }
 
 .p-overlaypanel {
@@ -144,7 +151,7 @@
       width: 100%;
       margin: 0; /* 增加一些上下 margin */
       display: flex;
-      justify-content: space-between;
+      justify-content: space-around;
     }
 
     .layout-topbar-menu {
@@ -160,4 +167,13 @@
       margin-right: 0 !important;
     }
   }
+}
+
+.p-button.p-button-secondary.p-button-text:not(:disabled):hover,
+.p-buttonset.p-button-secondary > .p-button.p-button-text:not(:disabled):hover,
+.p-splitbutton.p-button-secondary
+  > .p-button.p-button-text:not(:disabled):hover {
+  background: rgba(96, 125, 139, 0.4);
+  border-color: transparent;
+  color: #607d8b;
 }

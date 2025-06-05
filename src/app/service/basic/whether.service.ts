@@ -11,10 +11,10 @@ export class WhetherService {
 
   apiUrl: string = environment.ApiUrl;
   title: string = '是否';
-  options: any[] = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-  ];
+options: any[] = [
+  { value: 'Y', label: '是' },
+  { value: 'N', label: '否' },
+];
 
   constructor(
     private http: HttpClient,

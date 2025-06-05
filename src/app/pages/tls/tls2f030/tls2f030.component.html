@@ -1,0 +1,81 @@
+<div class="grid">
+  <div class="col-12">
+    <div class="card">
+      <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+          <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+      </div>
+      <p-accordion>
+        <p-accordionTab
+          header="{{ 'query-conditions' | translate }}"
+          [selected]="true"
+          class="line-height-3 m-0"
+          [headerStyleClass]="'query-accordionTab'"
+        >
+          <form
+            [formGroup]="queryForm"
+            id="queryForm"
+            (ngSubmit)="onSubmit(queryForm)"
+          >
+            <div class="grid p-fluid">
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-calendar
+                  calendarType="dateMonthOne"
+                  label="結帳年月"
+                  [control]="queryForm.controls.onedatemm"
+                  [submitted]="submitted"
+                ></app-calendar>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-multi-select
+                  label="結帳方式"
+                  controlName="checkoutMethod"
+                  [options]="checkoutMethodOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.checkoutMethod"
+                  [submitted]="submitted"
+                ></app-multi-select>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-multi-select
+                  label="樓層"
+                  controlName="floor"
+                  [options]="floorOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.floor"
+                  [submitted]="submitted"
+                ></app-multi-select>
+              </div>
+            </div>
+            <div>
+              <div class="grid justify-content-end">
+                <app-button
+                  btnType="clear"
+                  (onClick)="onClearForm()"
+                ></app-button>
+                <app-button
+                  btnType="query"
+                  (onClick)="onSubmitQuery(queryForm)"
+                  [loading]="loading"
+                ></app-button>
+              </div>
+            </div>
+          </form>
+        </p-accordionTab>
+      </p-accordion>
+    </div>
+    <div class="card">
+      <div class="col-13">
+        <app-table
+          [data]="data"
+          [columns]="columns"
+          (edit)="onEdit($event)"
+          (detail)="onDetail($event)"
+        ></app-table>
+      </div>
+    </div>
+  </div>
+</div>

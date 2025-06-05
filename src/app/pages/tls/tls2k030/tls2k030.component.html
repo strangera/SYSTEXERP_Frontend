@@ -1,0 +1,90 @@
+<div class="grid">
+  <div class="col-12">
+    <div class="card">
+      <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+          <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+      </div>
+      <p-accordion>
+        <p-accordionTab
+          header="{{ 'query-conditions' | translate }}"
+          [selected]="true"
+          class="line-height-3 m-0"
+          [headerStyleClass]="'query-accordionTab'"
+        >
+          <form
+            [formGroup]="queryForm"
+            id="queryForm"
+            (ngSubmit)="onSubmit(queryForm)"
+          >
+            <div class="grid p-fluid">
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="卡片發行店別"
+                  controlName="shop"
+                  [control]="queryForm.controls.shop"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-calendar-range
+                  calendarType="dateRange"
+                  label="最後使用日"
+                  [startControl]="queryForm.controls.startdate"
+                  [endControl]="queryForm.controls.enddate"
+                  [submitted]="submitted"
+                ></app-calendar-range>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-number
+                  [useGrouping]="false"
+                  label="餘代卡卡號"
+                  controlName="cardID"
+                  [control]="queryForm.controls.cardID"
+                  [submitted]="submitted"
+                ></app-input-number>
+              </div>
+            </div>
+            <div class="grid p-fluid">
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-multi-select
+                  label="餘代卡狀態"
+                  controlName="status"
+                  [options]="statusOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.status"
+                  [submitted]="submitted"
+                ></app-multi-select>
+              </div>
+            </div>
+            <div>
+              <div class="grid justify-content-end">
+                <app-button
+                  btnType="clear"
+                  (onClick)="onClearForm()"
+                ></app-button>
+                <app-button
+                  btnType="query"
+                  (onClick)="onSubmitQuery(queryForm)"
+                  [loading]="loading"
+                ></app-button>
+              </div>
+            </div>
+          </form>
+        </p-accordionTab>
+      </p-accordion>
+    </div>
+    <div class="card">
+      <div class="col-13">
+        <app-table
+          [data]="data"
+          [columns]="columns"
+          (edit)="onEdit($event)"
+          (detail)="onDetail($event)"
+        ></app-table>
+      </div>
+    </div>
+  </div>
+</div>

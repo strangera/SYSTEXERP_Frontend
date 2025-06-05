@@ -1,0 +1,132 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
+    <!-- <app-button
+      btnType="create"
+      label="下一步(XX設定)"
+      (click)="onSubmitNext()"
+    ></app-button> -->
+    <app-button btnType="cancel" (click)="onCancel()"></app-button>
+  </div>
+</div>
+
+<p-accordion>
+  <p-accordionTab
+    header="專櫃契約書資訊"
+    [selected]="true"
+    class="line-height-3 m-0"
+  >
+    <div class="col-12 custom-table-red">
+      <app-table
+        tableKey="stocks"
+        [lazy]="true"
+        [loading]="loading"
+        [showEdit]="false"
+        [showDetail]="false"
+        [showRowEdit]="false"
+        [data]="inventoryItems"
+        [columns]="stocksColumns"
+        [showManage]="false"
+        [showPaginator]="false"
+        [showCaption]="false"
+      ></app-table>
+    </div>
+  </p-accordionTab>
+</p-accordion>
+
+<p-accordion *ngIf="shouldShowCommissionType('階梯式')">
+  <p-accordionTab
+    header="階梯式抽成"
+    [selected]="true"
+    class="line-height-3 m-0"
+  >
+    <div>
+      <app-table
+        tableKey="Graduated"
+        [lazy]="true"
+        [loading]="loading"
+        [showEdit]="false"
+        [showDetail]="false"
+        [showRowEdit]="false"
+        [data]="graduatedItems"
+        [columns]="graduatedColumns"
+        [showManage]="true"
+        [showPaginator]="false"
+        [showRowEdit]="true"
+        [showInsert]="true"
+        [showCheckBox]="true"
+      ></app-table>
+    </div>
+  </p-accordionTab>
+</p-accordion>
+
+<p-accordion *ngIf="shouldShowCommissionType('包底加階梯')">
+  <p-accordionTab
+    header="包底加階梯"
+    [selected]="true"
+    class="line-height-3 m-0"
+  >
+    <div>
+      <app-table
+        tableKey="stocks"
+        [lazy]="true"
+        [loading]="loading"
+        [showEdit]="false"
+        [showDetail]="false"
+        [showRowEdit]="false"
+        [data]="baseTierItems"
+        [columns]="baseTierColumns"
+        [showManage]="true"
+        [showPaginator]="false"
+        [showRowEdit]="true"
+        [showInsert]="true"
+        [showCheckBox]="true"
+      ></app-table>
+    </div>
+  </p-accordionTab>
+</p-accordion>
+
+<p-accordion *ngIf="shouldShowCommissionType('包底')">
+  <p-accordionTab header="包底抽成" [selected]="true" class="line-height-3 m-0">
+    <div>
+      <app-table
+        tableKey="stocks"
+        [lazy]="true"
+        [loading]="loading"
+        [showEdit]="false"
+        [showDetail]="false"
+        [showRowEdit]="false"
+        [data]="baseCommissionItems"
+        [columns]="baseCommissionColumns"
+        [showManage]="true"
+        [showPaginator]="false"
+        [showRowEdit]="true"
+        [showInsert]="true"
+        [showCheckBox]="true"
+      ></app-table>
+    </div>
+  </p-accordionTab>
+</p-accordion>
+
+<p-accordion *ngIf="shouldShowCommissionType('固定')">
+  <p-accordionTab header="固定租金" [selected]="true" class="line-height-3 m-0">
+    <div>
+      <app-table
+        tableKey="stocks"
+        [lazy]="true"
+        [loading]="loading"
+        [showEdit]="false"
+        [showDetail]="false"
+        [showRowEdit]="false"
+        [data]="fixedRentItems"
+        [columns]="fixedRentColumns"
+        [showManage]="true"
+        [showPaginator]="false"
+        [showRowEdit]="true"
+        [showInsert]="true"
+        [showCheckBox]="true"
+      ></app-table>
+    </div>
+  </p-accordionTab>
+</p-accordion>

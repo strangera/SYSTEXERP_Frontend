@@ -1,0 +1,33 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [customBreadcrumbItems]="customBreadcrumbItems" class="flex-1"></app-menubar>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="userForm" (ngSubmit)="changePass(userForm)" class="sm:px-4 md:px-6 lg:px-8">
+        <div class="grid fields">
+          <app-input-text class="col-12 sm:col-6" label="使用者代號" controlName="User_No"
+            [control]="userForm.controls.User_No" [submitted]="submitted" />
+          <app-input-text class="col-12 sm:col-6" label="使用者姓名" controlName="User_Name"
+            [control]="userForm.controls.User_Name" [submitted]="submitted" />
+          <app-password class="col-12" label="舊密碼" controlName="Old_password" [control]="userForm.controls.Old_password"
+            [submitted]="submitted" [showPasswordRule]="false" [feedback]="false" />
+          <app-password class="col-12" label="新密碼" controlName="New_password" [control]="userForm.controls.New_password"
+            [submitted]="submitted">
+            <div class="text-primary-500 text-sm flex align-items-center gap-1 mt-1">
+              <i class="pi pi-exclamation-circle"></i>
+              <span>密碼需要4-8碼，且包含大小寫英文、數字與特殊符號</span>
+            </div>
+          </app-password>
+          <app-password class="col-12" label="重新輸入新密碼" controlName="New_password2"
+            [control]="userForm.controls.New_password2" [submitted]="submitted" [errorForGroup]="true"
+            [showPasswordRule]="false" [feedback]="false" />
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 border-top-1 surface-border pt-3">
+          <app-button btnType="submit" [loading]="loading" />
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>

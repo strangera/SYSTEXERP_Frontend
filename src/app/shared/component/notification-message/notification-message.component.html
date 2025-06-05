@@ -1,7 +1,3 @@
-<!-- <p-blockUI [blocked]="blockedDocument">
-  <p-progressSpinner></p-progressSpinner>
-</p-blockUI> -->
-
 <p-confirmDialog #cd>
   <ng-template pTemplate="headless" let-message>
     <div class="flex flex-column align-items-center p-5 surface-overlay border-round">
@@ -22,7 +18,7 @@
   </ng-template>
 </p-confirmDialog>
 
-<p-toast position="top-right" preventOpenDuplicates="true"
+<p-toast position="bottom-right" preventOpenDuplicates="true"
   [breakpoints]="{ '960px': { width: '100%', right: '0', left: '0' } }"></p-toast>
 
 <p-dialog [header]="msgBoxHeader" [(visible)]="msgBoxDisplay" [modal]="true" [closeOnEscape]="true"

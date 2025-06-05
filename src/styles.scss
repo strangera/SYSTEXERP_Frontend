@@ -75,6 +75,45 @@ body {
   }
 }
 
+::placeholder,
+::-webkit-input-placeholder,
+.p-placeholder {
+  color: var(--surface-900);
+  opacity: 0.35; /* Firefox */
+}
+
+input[disabled],
+.p-dropdown.p-disabled,
+.p-component:disabled,
+.p-component.p-disabled {
+  background-color: #d6d6d6 !important;
+  color: #495057;
+  font-weight: bold;
+  cursor: not-allowed;
+  border: 1px solid #e9ecef;
+  opacity: 0.65;
+  pointer-events: none;
+  span,
+  p {
+    color: #000;
+  }
+
+  span.p-button-icon {
+    color: #898989 !important;
+  }
+}
+
+.p-inputswitch {
+  border-radius: 30px;
+}
+
+.p-overlaypanel {
+  box-shadow:
+    0 2px 4px -1px rgba(0, 0, 0, 0.2),
+    0 4px 5px 0 rgba(0, 0, 0, 0.14),
+    0 1px 10px 0 rgba(0, 0, 0, 0.12) !important;
+}
+
 // 以下用來調整暗黑明亮模式(需要用var()來調整)
 .p-accordion .p-accordion-content,
 .p-panel .p-panel-content {
@@ -89,14 +128,15 @@ body {
   border: 1px solid var(--surface-d);
 }
 
+.p-datatable .p-datatable-wrapper,
+.p-paginator,
+.p-datatable.p-datatable-sm .p-datatable-footer {
+  border: 1px solid var(--surface-border) !important;
+}
 .p-panel .p-panel-header {
   border: 1px solid var(--surface-d);
   background: var(--surface-d);
   color: var(--text-color);
-}
-
-.p-dialog-mask-scrollblocker {
-  z-index: 9999 !important;
 }
 
 .p-toast {
@@ -105,7 +145,19 @@ body {
 
 .p-accordion-header-link {
   font-size: 14px;
-  background-color: #a2e7c6;
-  color: black;
+  background-color: var(--surface-d) !important;
+  color: var(--text-color) !important;
   font-weight: bold;
+}
+
+.p-selectbutton {
+  display: flex;
+  .p-button {
+    flex-grow: 1;
+  }
+}
+
+.p-inputtext,
+.p-dropdown {
+  background-color: transparent;
 }

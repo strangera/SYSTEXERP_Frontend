@@ -9,10 +9,14 @@
 .layout-menuitem {
   .menuitem-selected {
     /* 更具體的選擇器 */
-    background-color: #0288d1 !important; /* 使用 !important 提高權重 */
+    background-color: #2196f3 !important; /* 使用 !important 提高權重 */
     color: white !important; /* 使用 !important 提高權重 */
     i.layout-menuitem-icon {
       color: white !important; /* 使用 !important 提高權重 */
     }
   }
+}
+
+.menuitem {
+  border-left: 1px solid var(--surface-border);
 }

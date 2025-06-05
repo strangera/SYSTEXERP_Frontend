@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { CashierCodeService } from './cashier-code.service';
+import { CashierCodeService } from './ECRNo.service';
 
 describe('CashierCodeService', () => {
   let service: CashierCodeService;

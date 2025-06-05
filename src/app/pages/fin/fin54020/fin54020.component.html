@@ -1,0 +1,175 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton
+              label="過帳方式"
+              controlName="Postingmethod"
+              [options]="Postingmethod"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Postingmethod"
+              [submitted]="submitted"
+            ></app-radiobutton>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              calendarType="dateMonthOne"
+              label="過帳年月"
+              controlName="yearmm"
+              [control]="queryForm.controls.yearmm"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4"></div>
+        </div>
+        <hr />
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-1">
+            <app-button
+              btnType="create"
+              (onClick)="onSubmitQuery(queryForm)"
+              label="計算張數"
+              class="col"
+            ></app-button>
+          </div>
+          <div class="col-12 md:col-6 lg:col-11"></div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="建立狀態傳票張數"
+              controlName="buildnumber"
+              [control]="queryForm.controls.buildnumber"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="確認狀態傳票張數"
+              controlName="Subpoenasummary"
+              [control]="queryForm.controls.Subpoenasummary"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="過帳狀態傳票張數"
+              controlName="Subpoenasummary"
+              [control]="queryForm.controls.Subpoenasummary"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+        </div>
+        <hr />
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              [useGrouping]="false"
+              label="傳票號碼"
+              [startControl]="queryForm.controls.startserialticket"
+              [endControl]="queryForm.controls.endserialticket"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="傳票種類"
+              controlName="Subpoenatype"
+              [options]="Subpoenatype"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Subpoenatype"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="傳票日期"
+              controlName="accountsummary"
+              [startControl]="queryForm.controls.SSubpoenadate"
+              [endControl]="queryForm.controls.ESubpoenadate"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="傳票狀態"
+              controlName="Subpoenatype2"
+              [options]="Subpoenatype2"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Subpoenatype2"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="傳票摘要"
+              controlName="Subpoenasummary"
+              [control]="queryForm.controls.Subpoenasummary"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="傳票型態"
+              controlName="Subpoenastatus"
+              [options]="Subpoenastatus"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Subpoenastatus"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="建立者"
+              controlName="builder"
+              [options]="usercode"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.builder"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+      </form>
+      <div>
+        <div class="grid justify-content-end">
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button
+            btnType="query"
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<!-- <div class="card">
+    <div class="col-12">
+      <app-table
+        [data]="data"
+        [columns]="columns"
+        (edit)="onEdit($event)"
+        (detail)="onDetail($event)"
+      ></app-table>
+    </div>
+  </div> -->

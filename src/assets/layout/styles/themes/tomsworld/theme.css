@@ -57,6 +57,7 @@
   --sidebar-item-bg-active: #f4f6f8; /* 一個較淺的灰色作為 active 背景 */
   --sidebar-item-text-active: #2196F3; /* 使用你的主要顏色作為 active 文字 */
   --sidebar-border-color: #dee2e6; /* 使用你的 surface-border 作為邊框顏色 */
+  --table-header-bg: #c7d2fe;
   color-scheme: light;
 }
 
@@ -66,7 +67,7 @@
   --blue-200:#a0d2fa;
   --blue-300:#75bef8;
   --blue-400:#4baaf5;
-  --blue-500:#2196f3;
+  --blue-500:#2196F3;
   --blue-600:#1c80cf;
   --blue-700:#1769aa;
   --blue-800:#125386;
@@ -176,7 +177,7 @@
   --primary-200:#a0d2fa;
   --primary-300:#75bef8;
   --primary-400:#4baaf5;
-  --primary-500:#2196f3;
+  --primary-500:#2196F3;
   --primary-600:#1c80cf;
   --primary-700:#1769aa;
   --primary-800:#125386;
@@ -238,6 +239,8 @@
   --sidebar-item-bg-active: #4b5563; /* 一個更深的灰色作為 active 背景 */
   --sidebar-item-text-active: #64b5f6; /* 一個較亮的藍色作為 active 文字 */
   --sidebar-border-color: #4b5563; /* 一個較深的灰色作為邊框顏色 */
+  --table-header-bg: #2c3e50;
+  --table-header-color:#ecf0f1;
   color-scheme: dark;
 }
 
@@ -2007,7 +2010,6 @@
     padding: 0.5rem 1rem;
     font-size: 1rem;
     transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
-    border-radius: 3px;
   }
   .p-button:not(:disabled):hover {
     background: #0d89ec;
@@ -2225,8 +2227,8 @@
 .p-buttonset.p-button-info > .p-button,
 .p-splitbutton.p-button-info > .p-button {
     color: #ffffff;
-    background: #0288d1;
-    border: 1px solid #0288d1;
+    background: #2196F3;
+    border: 1px solid #2196F3;
   }
   .p-button.p-button-info:not(:disabled):hover,
 .p-buttonset.p-button-info > .p-button:not(:disabled):hover,
@@ -2251,28 +2253,28 @@
 .p-buttonset.p-button-info > .p-button.p-button-outlined,
 .p-splitbutton.p-button-info > .p-button.p-button-outlined {
     background-color: transparent;
-    color: #0288d1;
+    color: #2196F3;
     border: 1px solid;
   }
   .p-button.p-button-info.p-button-outlined:not(:disabled):hover,
 .p-buttonset.p-button-info > .p-button.p-button-outlined:not(:disabled):hover,
 .p-splitbutton.p-button-info > .p-button.p-button-outlined:not(:disabled):hover {
     background: rgba(2, 136, 209, 0.04);
-    color: #0288d1;
+    color: #2196F3;
     border: 1px solid;
   }
   .p-button.p-button-info.p-button-outlined:not(:disabled):active,
 .p-buttonset.p-button-info > .p-button.p-button-outlined:not(:disabled):active,
 .p-splitbutton.p-button-info > .p-button.p-button-outlined:not(:disabled):active {
     background: rgba(2, 136, 209, 0.16);
-    color: #0288d1;
+    color: #2196F3;
     border: 1px solid;
   }
   .p-button.p-button-info.p-button-text,
 .p-buttonset.p-button-info > .p-button.p-button-text,
 .p-splitbutton.p-button-info > .p-button.p-button-text {
     background-color: transparent;
-    color: #0288d1;
+    color: #2196F3;
     border-color: transparent;
   }
   .p-button.p-button-info.p-button-text:not(:disabled):hover,
@@ -2280,14 +2282,14 @@
 .p-splitbutton.p-button-info > .p-button.p-button-text:not(:disabled):hover {
     background: rgba(2, 136, 209, 0.04);
     border-color: transparent;
-    color: #0288d1;
+    color: #2196F3;
   }
   .p-button.p-button-info.p-button-text:not(:disabled):active,
 .p-buttonset.p-button-info > .p-button.p-button-text:not(:disabled):active,
 .p-splitbutton.p-button-info > .p-button.p-button-text:not(:disabled):active {
     background: rgba(2, 136, 209, 0.16);
     border-color: transparent;
-    color: #0288d1;
+    color: #2196F3;
   }
 
   .p-button.p-button-success,
@@ -2777,31 +2779,31 @@
 
   .p-splitbutton.p-button-info.p-button-outlined > .p-button {
     background-color: transparent;
-    color: #0288d1;
+    color: #2196F3;
     border: 1px solid;
   }
   .p-splitbutton.p-button-info.p-button-outlined > .p-button:not(:disabled):hover {
     background: rgba(2, 136, 209, 0.04);
-    color: #0288d1;
+    color: #2196F3;
   }
   .p-splitbutton.p-button-info.p-button-outlined > .p-button:not(:disabled):active {
     background: rgba(2, 136, 209, 0.16);
-    color: #0288d1;
+    color: #2196F3;
   }
   .p-splitbutton.p-button-info.p-button-text > .p-button {
     background-color: transparent;
-    color: #0288d1;
+    color: #2196F3;
     border-color: transparent;
   }
   .p-splitbutton.p-button-info.p-button-text > .p-button:not(:disabled):hover {
     background: rgba(2, 136, 209, 0.04);
     border-color: transparent;
-    color: #0288d1;
+    color: #2196F3;
   }
   .p-splitbutton.p-button-info.p-button-text > .p-button:not(:disabled):active {
     background: rgba(2, 136, 209, 0.16);
     border-color: transparent;
-    color: #0288d1;
+    color: #2196F3;
   }
 
   .p-splitbutton.p-button-success.p-button-outlined > .p-button {
@@ -2974,17 +2976,17 @@
     border-radius: 0;
   }
   .p-datatable .p-datatable-header {
-    background: #f8f9fa;
-    color: #495057;
-    border: 1px solid #e9ecef;
+    background: var(--table-header-bg);
+    color: var(--table-header-color);
+    border: 1px solid var(--surface-border);
     border-width: 1px 0 1px 0;
     padding: 1rem 1rem;
     font-weight: 600;
   }
   .p-datatable .p-datatable-footer {
-    background: #f8f9fa;
-    color: #495057;
-    border: 1px solid #e9ecef;
+    background: var(--table-header-bg);
+    color: var(--table-header-color);
+    border: 1px solid var(--surface-border);
     border-width: 0 0 1px 0;
     padding: 1rem 1rem;
     font-weight: 600;
@@ -2992,21 +2994,21 @@
   .p-datatable .p-datatable-thead > tr > th {
     text-align: left;
     padding: 1rem 1rem;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--surface-border);
     border-width: 0 0 1px 0;
     font-weight: 600;
-    color: #495057;
-    background: #f8f9fa;
+    color: var(--table-header-color);
+    background: var(--table-header-bg);
     transition: box-shadow 0.2s;
   }
   .p-datatable .p-datatable-tfoot > tr > td {
     text-align: left;
     padding: 1rem 1rem;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--surface-border);
     border-width: 0 0 1px 0;
     font-weight: 600;
-    color: #495057;
-    background: #f8f9fa;
+    color: var(--table-header-color);
+    background: var(--table-header-bg);
   }
   .p-datatable .p-sortable-column .p-sortable-column-icon {
     color: #6c757d;
@@ -4165,7 +4167,7 @@
     padding: 0 1rem;
   }
   .p-divider.p-divider-horizontal:before {
-    border-top: 1px #dee2e6;
+    /* border-top: 1px #dee2e6; */
   }
   .p-divider.p-divider-horizontal .p-divider-content {
     padding: 0 0.5rem;
@@ -4440,7 +4442,7 @@
   }
 
   .p-dialog {
-    border-radius: 3px;
+    border-radius: 12px;
     box-shadow: 0px 11px 15px -7px rgba(0, 0, 0, 0.2), 0px 24px 38px 3px rgba(0, 0, 0, 0.14), 0px 9px 46px 8px rgba(0, 0, 0, 0.12);
     border: 0 none;
   }
@@ -4449,8 +4451,8 @@
     background: #ffffff;
     color: #495057;
     padding: 1.5rem;
-    border-top-right-radius: 3px;
-    border-top-left-radius: 3px;
+    border-top-right-radius: 12px;
+    border-top-left-radius: 12px;
   }
   .p-dialog .p-dialog-header .p-dialog-title {
     font-weight: 600;
@@ -4485,8 +4487,8 @@
     padding: 0 1.5rem 2rem 1.5rem;
   }
   .p-dialog .p-dialog-content:last-of-type {
-    border-bottom-right-radius: 3px;
-    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 12px;
+    border-bottom-left-radius: 12px;
   }
   .p-dialog .p-dialog-footer {
     border-top: 0 none;
@@ -4494,8 +4496,8 @@
     color: #495057;
     padding: 0 1.5rem 1.5rem 1.5rem;
     text-align: right;
-    border-bottom-right-radius: 3px;
-    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 12px;
+    border-bottom-left-radius: 12px;
   }
   .p-dialog .p-dialog-footer button {
     margin: 0 0.5rem 0 0;
@@ -6173,7 +6175,7 @@
     color: #ffffff;
   }
   .p-badge.p-badge-info {
-    background-color: #0288d1;
+    background-color: #2196F3;
     color: #ffffff;
   }
   .p-badge.p-badge-warning {
@@ -6307,7 +6309,7 @@
     color: #ffffff;
   }
   .p-tag.p-tag-info {
-    background-color: #0288d1;
+    background-color: #2196F3;
     color: #ffffff;
   }
   .p-tag.p-tag-warning {

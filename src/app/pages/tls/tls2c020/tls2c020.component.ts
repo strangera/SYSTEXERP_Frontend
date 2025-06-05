@@ -1,0 +1,157 @@
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { NavigationExtras, Router } from '@angular/router';
+// Permissions
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
+// Shared
+import { AuthService } from '../../../service/system/auth.service';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+import { ValidationService } from '../../../shared/service/validation.service';
+
+@Component({
+  selector: 'app-tls2c020',
+  templateUrl: './tls2c020.component.html',
+  styleUrl: './tls2c020.component.scss'
+})
+export class TLS2C020Component {
+  ProgNo: string = '220059';
+  // 權限
+  funInfo?: FunsrightInfo;
+  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
+  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
+  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+  // 查詢
+  // ----------------------------------------------------------------
+  loading: boolean = false;
+  submitted: boolean = false;
+  queryForm = this.formBuilder.group({
+    onedatedd: [], // 日期
+    casherID: ['', [Validators.maxLength(6)]], // 收銀機代碼
+    duplicateCheck: [,], // 是否檢核發票重複
+    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+  });
+  // 表格
+  // ----------------------------------------------------------------
+  data: any[] = [
+    // { contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
+    // { contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
+    // { contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
+    // 其他資料
+  ];
+  filteredData: any[] = [...this.data];
+  columns: any[] = [
+    { field: 'contactPerson', header: '(1) 檢查收銀機對帳查詢是否有不平的資料  。', visible: true },
+    { field: 'contactDate', header: '(2) 檢查發票金額是否為應稅金額 + 免稅金額的加總。(不含訂金)', visible: true },
+    { field: 'UID', header: '(5) 檢查發票金額 01 -> 金額等於大於 0，03 -> 金額小於等於 0。', visible: true },
+    { field: 'industryType', header: ' (7) 檢查折扣開放區間是否重複。', visible: true },
+    { field: 'category', header: '(8) 交易有某個 專櫃代號但合約檔沒有。', visible: true },
+    { field: 'version', header: ' (9) 檢核POS 終止日期過期。', visible: true },
+    { field: 'rentNumber', header: '(10) 比對有(現金,信用卡)實收資料，卻無系統帳的。', visible: true },
+    { field: 'progress', header: '(14) 只檢核單日發票號碼是否重複。', visible: true },
+    { field: 'col1', header: '(15) 比對有Z帳無銷售資料,請確認是否是銷售資料欠落 。', visible: true },
+    { field: 'col2', header: '(17) 檢查交易發票是否存在於發票主檔 。', visible: true },
+    { field: 'col3', header: '(19) 檢核系統帳與實收帳是否等於溢收欠金額。', visible: true },
+    { field: 'col4', header: ' (20) 檢核合約抽成類別是否尚未設定。', visible: true },
+    // 其他欄位
+  ];
+  // ----------------------------------------------------------------
+
+  constructor(
+    private router: Router,
+    private formBuilder: FormBuilder,
+    private messageService: NotificationService,
+    private authService: AuthService,
+    private validationService: ValidationService,
+  ) {
+  }
+
+  ngOnInit(): void {
+    //
+    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+  }
+
+  canQuery(): boolean {
+    return true;
+  }
+
+  canAdd(): boolean {
+    return true;
+  }
+
+  canEdit(): boolean {
+    return true;
+  }
+
+  onSubmit(frm: FormGroup) {
+    console.log(frm.value);
+    this.submitted = true;
+    this.loading = true;
+    this.messageService.blockUi();
+
+    if (frm.valid && this.canQuery()) {
+      // 提交邏輯
+      // Service
+      // this.xxxService.queryMachine(frm.value as xxxInterface)
+      //  .subscribe((response: any) => {
+      //    this.rows = response.xxx;
+      // });
+    }
+
+    this.loading = false;
+    this.messageService.unblockUi();
+  }
+
+  onSubmitQuery(frm: FormGroup) {
+    // 查詢邏輯
+    this.onSubmit(frm);
+  }
+
+  onClearForm() {
+    this.queryForm.reset();  // 重置表單
+  }
+
+  onCreate() {
+    if (this.canAdd()) {
+      let extras: NavigationExtras = {
+        state: {
+          crudstatus: CRUDStatus.Create,
+          queryform: this.queryForm,
+        },
+        skipLocationChange: true
+      };
+
+      //console.log("extra", extras);
+      this.router.navigate(['/TLS2000/TLS2C020CRU'], extras);
+    }
+  }
+
+  onEdit(data: any) {
+    if (this.canEdit()) {
+      let extras: NavigationExtras = {
+        state: {
+          crudstatus: CRUDStatus.Edit,
+          rowdata: data,
+          queryform: this.queryForm,
+        },
+        skipLocationChange: true
+      };
+
+      this.router.navigate(['/TLS2000/TLS2C020CRU'], extras);
+    }
+  }
+
+  onDetail(data: any) {
+    let extras: NavigationExtras = {
+      state: {
+        crudstatus: CRUDStatus.Read,
+        rowdata: data,
+        queryform: this.queryForm,
+      },
+      skipLocationChange: true
+    };
+
+    this.router.navigate(['/TLS2000/TLS2C020CRU'], extras);
+  }
+}

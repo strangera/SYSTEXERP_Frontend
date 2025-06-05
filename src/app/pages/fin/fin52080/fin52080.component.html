@@ -1,0 +1,179 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <div *appHasPermission="addPermission">
+      <app-button
+        btnType="create"
+        (click)="onCreate()"
+        class="col"
+      ></app-button>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="科目代號"
+              controlName="three-codecategorycode,"
+              [control]="queryForm.controls.accountcategorycode"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="科目名稱"
+              controlName="Objectnumber"
+              [control]="queryForm.controls.accountcategoryname"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="科目英文名稱"
+              controlName="objectalias"
+              [control]="queryForm.controls.accountcategoryEname"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="借/貸"
+              controlName="borrowloan"
+              [options]="borrowloanOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.borrowloan"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="統制/明細"
+              controlName="detail"
+              [options]="detail"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.detail"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="三碼代號"
+              controlName="threecodecategorycode"
+              [options]="threecodecategorycodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.threecodecategorycode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="是否為沖帳代號"
+              controlName="offsetcode"
+              [options]="ifOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.offsetcode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="傳票格式"
+              controlName="Subpoenaformatl"
+              [options]="Subpoenaformatl"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Subpoenaformatl"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="是否為預算科目"
+              controlName="Budgetaccount"
+              [options]="ifOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Budgetaccount"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="是否設定部門代號"
+              controlName="Departmentcode"
+              [options]="ifOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Departmentcode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="折舊攤提年限"
+              controlName="Depreciation"
+              [control]="queryForm.controls.Depreciation"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="殘值年限"
+              controlName="Residualvalueyears"
+              [control]="queryForm.controls.Residualvalueyears"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="是否可輸"
+              controlName="input"
+              [options]="ifOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.input"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+      </form>
+      <div>
+        <div class="grid justify-content-end">
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button
+            btnType="query"
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <div class="col-12">
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
+  </div>
+</div>

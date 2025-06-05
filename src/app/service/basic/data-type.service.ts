@@ -12,7 +12,7 @@ export class DataTypeService {
   title: string = '資料類別';
   options: any[] = [
     { value: 1, label: '專櫃基本資料' },
-    { value: 2, label: '商品類別資料' },
+    { value: 2, label: '中分類資料' },
     { value: 3, label: '快速鍵商品資料' },
     { value: 4, label: '單品資料異動下傳 異動區間：' },
     { value: 5, label: '贈品活動設定資料' },
@@ -31,7 +31,7 @@ export class DataTypeService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getSystemTypes(): Observable<any[]> {
     return of(this.options).pipe(

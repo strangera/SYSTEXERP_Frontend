@@ -1,0 +1,113 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <!-- <div *appHasPermission="addPermission" class="col-2 md:col-2 lg:col-2">
+      <p-button
+        (click)="onCreate()"
+        label="新增"
+        icon="pi pi-plus"
+        severity="info"
+      ></p-button>
+    </div> -->
+    <p-panel [header]="formTitle" class="line-height-3 m-0">
+      <form
+        [formGroup]="dataForm"
+        id="dataForm"
+        (ngSubmit)="onSubmit(dataForm)"
+      >
+        <hr />
+        <ng-container formArrayName="items">
+          <ng-container
+            *ngFor="let item of items.controls; let i = index"
+            [formGroupName]="i"
+          >
+            <div class="grid align-items-center">
+              <div class="col" style="flex: 1">
+                <p></p>
+              </div>
+
+              <div>
+                <app-button-dynamicallydelete
+                  (click)="onRemoveItem(i)"
+                  [crudstatus]="crudstatus"
+                  class="col"
+                ></app-button-dynamicallydelete>
+              </div>
+            </div>
+            <div class="grid p-fluid">
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-dropdown
+                  label="收銀機代號"
+                  controlName="cashierCode"
+                  [options]="ECRNoOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="getFormControl(i, 'cashierCodeOptions')"
+                  [submitted]="submitted"
+                ></app-dropdown>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="專櫃編號"
+                  controlName="countercode"
+                  [control]="getFormControl(i, 'countercode')"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="專櫃名稱"
+                  controlName="countername"
+                  [control]="getFormControl(i, 'countername')"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="專櫃合約截止日"
+                  controlName="contractEnddate"
+                  [control]="getFormControl(i, 'contractEnddate')"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-number
+                  label="起始條碼"
+                  controlName="startcode"
+                  [control]="getFormControl(i, 'startcode')"
+                  [submitted]="submitted"
+                ></app-input-number>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-number
+                  label="結束條碼"
+                  controlName="endcode"
+                  [control]="getFormControl(i, 'endcode')"
+                  [submitted]="submitted"
+                ></app-input-number>
+              </div>
+            </div>
+            <hr />
+          </ng-container>
+        </ng-container>
+        <div class="pt-1">
+          <app-button-dynamicallyadd
+            (click)="onAddItem()"
+          ></app-button-dynamicallyadd>
+        </div>
+      </form>
+      <div class="col pt-4">
+        <div class="grid justify-content-end">
+          <app-button btnType="cancel" (click)="onCancel()"></app-button>
+          <app-button
+            btnType="submit"
+            (click)="submitForm(dataForm)"
+            *ngIf="isFormEditable"
+          ></app-button>
+        </div>
+      </div>
+    </p-panel>
+  </div>
+</div>

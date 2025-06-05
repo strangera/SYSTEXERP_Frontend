@@ -9,7 +9,7 @@ import { catchError, Observable, of, tap } from 'rxjs';
 })
 export class TicketCategoryService {
   apiUrl: string = environment.ApiUrl;
-  title: string = '卷別';
+  title: string = '券別';
   options: any[] = [
     { value: 1, label: 'APP抵用券' },
     { value: 2, label: 'APP提貨單' },
@@ -20,7 +20,7 @@ export class TicketCategoryService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getSystemTypes(): Observable<any[]> {
     return of(this.options).pipe(

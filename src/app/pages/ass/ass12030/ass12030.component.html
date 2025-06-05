@@ -1,0 +1,220 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <!-- <div *appHasPermission="addPermission">
+            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
+        </div> -->
+    <div *appHasPermission="addPermission">
+      <app-button
+        btnType="create"
+        label="新增(已詢價)"
+        (click)="onCreate()"
+        class="col"
+      ></app-button>
+    </div>
+    <div *appHasPermission="addPermission">
+      <app-button
+        btnType="create"
+        label="新增(未詢價)"
+        (click)="onCreate()"
+        class="col"
+      ></app-button>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="採購單號"
+              controlName="purchaseNumber"
+              [control]="queryForm.controls.purchaseNumber"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="品項編號"
+              controlName="itemCode"
+              [options]="itemCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.itemCode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="申請人編號"
+              controlName="applicantCode"
+              [options]="applicantCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.applicantCode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="部門代號"
+              controlName="organizationNumber"
+              [options]="organizationNumberOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.organizationNumber"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="申請日期"
+              [startControl]="queryForm.controls.applicationDateFrom"
+              [endControl]="queryForm.controls.applicationDateTo"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="供應商編號"
+              controlName="supplierCode"
+              [options]="supplierCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.supplierCode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              [useGrouping]="false"
+              label="稅額"
+              [startControl]="queryForm.controls.taxAmountFrom"
+              [endControl]="queryForm.controls.taxAmountTo"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              [useGrouping]="false"
+              label="未稅總金額"
+              [startControl]="queryForm.controls.noTaxAmountFrom"
+              [endControl]="queryForm.controls.noTaxAmountTo"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              [useGrouping]="false"
+              label="含稅總金額"
+              [startControl]="queryForm.controls.totalTaxAmountFrom"
+              [endControl]="queryForm.controls.totalTaxAmountTo"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="採購單狀態"
+              controlName="paperStatus"
+              [options]="paperStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.paperStatus"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="審核人編號"
+              controlName="reviewerCode"
+              [options]="applicantCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.reviewerCode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="審核日期"
+              [startControl]="queryForm.controls.reviewDateFrom"
+              [endControl]="queryForm.controls.reviewDateTo"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="結帳日期"
+              [startControl]="queryForm.controls.checkoutDateFrom"
+              [endControl]="queryForm.controls.checkoutDateTo"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="倉別"
+              controlName="storage"
+              [options]="storageOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.storage"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="項次列印筆數"
+              controlName="printNumber"
+              [control]="queryForm.controls.printNumber"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+        </div>
+        <div>
+          <div class="grid justify-content-end">
+            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+            <app-button
+              btnType="query"
+              (onClick)="onSubmitQuery(queryForm)"
+              [loading]="loading"
+            ></app-button>
+          </div>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <div class="col-13">
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
+  </div>
+</div>

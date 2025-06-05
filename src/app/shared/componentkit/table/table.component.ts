@@ -1,59 +1,60 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, EventEmitter, Input, SimpleChanges, OnChanges, Output, ViewChild } from '@angular/core';
-import { Table, TableLazyLoadEvent, TablePageEvent, TableRowUnSelectEvent } from 'primeng/table';
+import { Component, EventEmitter, Input, SimpleChanges, OnChanges, Output, ViewChild, OnDestroy, OnInit } from '@angular/core';
+import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
-import { AddButton, Column, FieldChangeEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
+import { AddButton, Column, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
 import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { QueryStateService } from '../../service/query-state.service';
-import { ReportHead } from '../../models/ReportHead';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
+import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
+import { Subject, takeUntil } from 'rxjs';
+import { FunsrightInfo } from '../../models/system/funsrightInfo';
 @Component({
   selector: 'app-table',
   templateUrl: './table.component.html',
   styleUrl: './table.component.scss',
   animations: [toggleButtons],
 })
-export class TableComponent extends BasicPrintDataComponent implements OnChanges {
+export class TableComponent extends BasicPrintDataComponent implements OnInit, OnChanges, OnDestroy {
   // 基本設置
   @ViewChild('dt', { static: false }) dt!: Table;                               // table 元件
   @ViewChild('fileUpload') fileUpload!: FileUpload;                             // 檔案上傳 元件
-  @Input() dataKey = 'id';                                                               // table 資料key
+  @Input() dataKey = 'id';                                                      // table 資料key
   @Input() tableKey: string | undefined = undefined;                            // table 唯一標識 (必填)
-  @Input() title: string | undefined = undefined;                               // table 標題 (必填)
+  @Input() title: string | undefined = undefined;                               // table 標題
   @Input() columns!: Column[];                                                  // table 欄位配置 (必填)
-  @Input() printColumns: Column[] = [];                                         // table 列印模式需要的欄位
   selectedColumns!: Column[];                                                   // table 預設顯示欄位
   @Input() data: any[] = [];                                                    // table 資料 (必填)
-  @Input() tableDisabled = false;                                               // 是否禁用 Table
-  @Input() required = false;                                                    // 是否為必填欄位
   @Input() loading = false;                                                     // 是否顯示 loading
   // select 選擇Row相關
   @Input() showCheckBox = false;                                                // 是否顯示 checkbox
   @Input() selectionMode: 'multiple' | 'single' | null | undefined = 'multiple';// table 勾選 Mode (預設多選)
-  @Input() selectedItems: any[] = [];                                           // table 已勾選資料
+  @Input() selectedItems: any = [];                                           // table 已勾選資料
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true; // 可選擇(條件)
+  @Output() select = new EventEmitter<TableRowSelectEvent>();               // 資料取消勾選(事件)
   @Output() unSelect = new EventEmitter<TableRowUnSelectEvent>();               // 資料取消勾選(事件)
   @Output() selectionChange = new EventEmitter<any>();                          // 資料勾選(事件)
   // Sort 相關
   @Input() multiSortMeta: SortMeta[] = [{ field: this.dataKey, order: 1 }];     // table 排序依據 (多重排序 {field欄位、order排序方向} )
-  // Edit 相關
+  // rowEdit 相關
+  @Input() rowEditing = false;                                                  // 是否正在編輯Row
   clonedProducts: Record<string, any> = {};                                     // 儲存編輯前資料
   @Output() rowEditInit = new EventEmitter<any>();                              // Row 編輯初始化事件
   @Output() rowEditSave = new EventEmitter<RowEditSaveEvent>();                 // Row 編輯保存事件
   @Output() rowEditCancel = new EventEmitter<any>();                            // Row 編輯取消事件
   @Input() rowEditDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
+  // Header 相關
+  @Input() showCaption = true;                                                  // 是否顯示 Caption
   // Header(左) 相關
   @Input() showHeader = true;                                          // 是否顯示 Header
-  @Input() reportHead!: ReportHead;                                    // 列印PDF 配置
-  @Input() exportFilename = 'download';                                // table 匯出CSV檔案名稱
   @Input() showInsert = false;                                         // 是否顯示 Insert新增按鈕
   @Output() insert = new EventEmitter<any>();                          // 新增事件
   @Input() insertDisabled = false;                                     // 新增按鈕是否禁用
   @Output() delete = new EventEmitter<any>();                          // 刪除事件
   // expansion 收合展開
-  @Input() expansionDataKey = '';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
+  @Input() expansionDataKey = '';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionSortField = '';          // 收合展開 排序欄位(單一排序)
   @Input() expansionSortOrder = 0;           // 收合展開 排序方向 (1:升序、-1:降序)
   expression = false;                        // 收合展開 狀態 (true:展開、false:收合)
@@ -72,7 +73,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Output() edit = new EventEmitter<any>();  // 編輯事件
   @Input() addButton: AddButton[] = [];      // 自定義 管理按鈕
   @Input() showRowEdit = false;              // 是否顯示 Row編輯按鈕
-  @Input() rowEditing = false;               // 是否正在編輯Row
   // body
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件
   @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
@@ -80,6 +80,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() showFooter = false;                      // 是否顯示 Footer
   // 分頁器
   @Input() scrollHeight = '600px';                  // table 高度
+  @Input() scrollable = true                        // 是否要滾輪
   @Input() showPaginator = true;                    // 是否顯示 分頁器
   @Input() totalRecords = 0;                        // 記錄總數
   totalPages = 0;                                   // 共幾頁數
@@ -88,23 +89,41 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   pages: { label: string, value: number }[] = [];   // (右上)下拉選單 頁數選項
   selectedPage: number | null = 1;                  // (右上)下拉選單 當前選擇的頁數
   @Input() lazy = false;                                      // 是否啟用 Lazy 加載
-  @Output() lazyLoad = new EventEmitter<TableLazyLoadEvent>(); // Lazy 加載事件
+  @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>(); // Lazy 加載事件
   // 其他
   @Input() emptyMessage = '查無資料';                // table 無資料時顯示文字
+
+  @Input() showReportMode = true;                // 是否顯示報表模式切換按鈕
+  @Input() showDelete = true;                    // 是否顯示刪除按鈕
+  // 權限
+  private ngUnsubscribe = new Subject<void>();
+  public funInfo: FunsrightInfo | undefined;
+
   constructor(
     private readonly queryStateService: QueryStateService,
     private readonly messageService: NotificationService,
+    private readonly currentPageService: CurrentPageService,
+
   ) { super(); }
+  ngOnInit(): void {
+    this.currentPageService.currentPageProgNo$.pipe(takeUntil(this.ngUnsubscribe)).subscribe(progNo => {
+      if (progNo) {
+        this.funInfo = this.authService.getUserPermissions(progNo);
+      } else {
+        this.funInfo = undefined;
+      }
+    });
+  }
   // 當 data 發生變化時，重置分頁與頁碼
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
-      this.calculateTotalPages(); // 計算總頁數
-      this.selectedPage = this.queryStateService.getQueryState(this.tableKey + 'Page')?.value ?? 1; // 取得頁數
-      this.first = this.queryStateService.getQueryState(this.tableKey + 'First')?.value ?? 0; // 取得起始索引
       setTimeout(() => {
+        const dataLength = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+        if (dataLength > 0) {
+          this.calculateTotalPages(); // 計算總頁數
+        }
         this.selectionChange.emit(this.selectedItems);
-        this.cdr.detectChanges();
-      }, 0);
+      });
     }
     if (changes['columns']) {
       this.columns = this.columns.filter(col => !col.hidden);
@@ -112,23 +131,24 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
       this.selectedColumns = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value ?? this.columns.filter(col => col.visible !== false); // 取得顯示欄位
     }
   }
+  ngOnDestroy(): void {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
+  }
   // 計算總頁數並生成頁面選項
   calculateTotalPages() {
-    setTimeout(() => {
-      this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-      this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
-      this.pages = Array.from({ length: this.totalPages }, (_, index) => ({ label: `第 ${index + 1} 頁`, value: index + 1 }));
-      // 若當前頁數超過最大頁數，則移動到最大頁數，但至少為 1
-      if (this.selectedPage && this.selectedPage > this.totalPages) { this.goToPage(Math.max(this.totalPages, 1)); }
-    }, 0);
+    this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+    this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
+    this.pages = Array.from({ length: this.totalPages }, (_, index) => ({ label: `第 ${index + 1} 頁`, value: index + 1 }));
+    // 若當前頁數超過最大頁數，則移動到最大頁數，但至少為 1
+    if (this.selectedPage && this.selectedPage > this.totalPages) { this.goToPage(Math.max(this.totalPages, 1)); }
+    this.cdr.detectChanges(); // 在计算完所有页面信息后，通知 Angular 更新 UI
   }
   // 右上dropdown 跳轉頁數
   goToPage(pageNumber: number) {
     this.first = (pageNumber - 1) * this.rows; // 計算起始索引
     this.selectedPage = pageNumber; // 更新選擇的頁數
-    this.queryStateService.setQueryState(this.tableKey + 'Page', this.selectedPage);
-    this.queryStateService.setQueryState(this.tableKey + 'First', this.first);
-    this.lazyLoad.emit({ first: this.first, rows: this.rows, multiSortMeta: this.multiSortMeta });
+    this.lazyLoadData.emit({ pageIndex: this.selectedPage, pageSize: this.rows, SortBy: this.multiSortMeta });
   }
   // Table內建 分頁器變動
   onPageChange(event: TablePageEvent) {
@@ -136,8 +156,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     this.rows = event.rows;     // 更新每頁行數
     this.selectedPage = Math.ceil((event.first / event.rows) + 1); // 更新下拉選單中的頁碼
     this.calculateTotalPages();
-    this.queryStateService.setQueryState(this.tableKey + 'Page', this.selectedPage);
-    this.queryStateService.setQueryState(this.tableKey + 'First', this.first);
   }
   onSort(event: any) {
     this.multiSortMeta = event.multisortmeta;
@@ -145,7 +163,11 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   }
   loadDataLazy(event: TableLazyLoadEvent) {
     setTimeout(() => {
-      this.lazyLoad.emit(event);
+      if (this.totalRecords === 0) { return; }
+      const pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+      const pageIndex = (event.first ?? 0) / pageSize + 1;
+      const SortBy = event.multiSortMeta ?? [{ field: this.dataKey, order: 1 }];
+      this.lazyLoadData.emit({ pageIndex, pageSize, SortBy });
     });
   }
   /* =================================核心程式碼======================================= */
@@ -198,7 +220,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   }
   // 資料勾選
   onSelectionChange(event: any) {
-    const selected = Array.isArray(event) ? event : [event];
+    const selected = Array.isArray(event) ? event : event ? [event] : [];
     this.selectedItems = selected.filter((item: any) => this.isRowSelectable(item));
     this.selectionChange.emit(this.selectedItems);
   }
@@ -216,5 +238,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   onImportExcel(event: FileSelectEvent) {                           // 匯入Excel
     this.importExcel.emit(event);
     this.fileUpload.clear();
+  }
+  // 權限
+  canPerformAction(action: string): boolean {
+    return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
 }

@@ -1,0 +1,124 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="銷售日期*"
+              [startControl]="queryForm.controls.TXN_DateStart"
+              [endControl]="queryForm.controls.TXN_DateEnd"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="是否收銀"
+              controlName="rece_yn"
+              [options]="typeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.rece_yn"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="收銀機代號(起)"
+              controlName="ECR_No_Start"
+              [control]="queryForm.controls.ECR_No_Start"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="收銀機代號(迄)"
+              controlName="ECR_No_End"
+              [control]="queryForm.controls.ECR_No_End"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="專櫃編號"
+              controlName="tlt_no"
+              [control]="queryForm.controls.tlt_no"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="館別"
+              controlName="tlt_building"
+              [options]="BUILDING_NO_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_building"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="樓層"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_floor"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="組織代碼/名稱"
+              [options]="OrganizationCodeOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.org_id"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+        </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <app-table
+    tableKey="TLS23060"
+    [data]="data"
+    [columns]="columns"
+    [showCheckBox]="true"
+    dataKey="TXN_No"
+    [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [loading]="loading"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    [showManage]="false"
+    [showDelete]="false"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+  ></app-table>
+</div>

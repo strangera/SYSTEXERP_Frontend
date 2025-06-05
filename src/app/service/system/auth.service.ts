@@ -9,6 +9,7 @@ import { environment } from '../../../environments/environment';
 import { FunsrightInfo } from '../../shared/models/system/funsrightInfo';
 import { UserInfo } from '../../shared/models/system/userInfo';
 import { NotificationService } from '../../shared/component/notification-message/notification.service';
+import { QueryStateService } from '../../shared/service/query-state.service';
 
 export interface ApiResponse<T> {
   Status: string;
@@ -42,6 +43,7 @@ export class AuthService {
     private http: HttpClient,
     private encrypt: EncryptionService,
     private notemessage: NotificationService,
+    private queryStateService: QueryStateService
   ) {
     const userStorage: any = this.getUserInfo();
     this.userSubject = new BehaviorSubject(userStorage);
@@ -82,7 +84,8 @@ export class AuthService {
     if (!token) {
       sessionStorage.clear();
       this.userSubject.next(null);
-      this.router.navigate(['/account/login'], { replaceUrl: true });
+      this.router.navigate(['/login'], { replaceUrl: true });
+      this.queryStateService.clearAllQueryStates();
       this.notemessage.infoBubble('已成功登出');
       return;
     }
@@ -95,34 +98,12 @@ export class AuthService {
       next: () => {
         sessionStorage.clear();
         this.userSubject.next(null);
-        this.router.navigate(['/account/login'], { replaceUrl: true });
+        this.router.navigate(['/login'], { replaceUrl: true });
         this.notemessage.infoBubble('已成功登出');
+        this.queryStateService.clearAllQueryStates();
       },
       error: (error) => { console.error('Logout error:', error); }
     });
-  }
-  getUserPermissions(progNo: string): FunsrightInfo {
-    const initialFunsrightInfo: FunsrightInfo = {
-      id: "",
-      prog_no: '',
-      prog_id: '',
-      prog_name: '',
-      prog_up: '',
-      module_no: '',
-      sub_module_no: '',
-      prog_ispage: '',
-      prog_stopflag: '',
-      prog_sort: "",
-      label: '',
-      PrivilegeBehavior: [],
-    };
-    try {
-      const funs: FunsrightInfo[] = JSON.parse(sessionStorage.getItem("FunRightsInfo") || '');
-      return initialFunsrightInfo;
-    } catch (error) {
-      console.error('Error', error);
-      return initialFunsrightInfo;
-    }
   }
   // 獲取我的最愛
   getFavorites(user_No?: string): Observable<any> {
@@ -136,7 +117,7 @@ export class AuthService {
   UpdateUserFavorite(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/User/UpdateUserFavorite`, { Favorites: body });
   }
-
+  // 獲取使用者權限
   getFunRightsInfo(): Observable<any> {
     return this.http.get<any>(`assets/service/User/FunRightsInfo.json`).pipe(
       // return this.http.post<any>(`${this.apiUrl}/User/GetUserDashboard`, {}).pipe(
@@ -151,7 +132,30 @@ export class AuthService {
       })
     );
   }
-
+  // 獲得系統代碼檔
+  queryAllSystemCode(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/User/queryAllSystemCode`, {}).pipe(
+      map((response: any) => {
+        sessionStorage.setItem('SYS1000', JSON.stringify(response.Data));
+        return response;
+      }),
+      catchError((error) => {
+        console.error('Error fetching SystemCode', error);
+        return throwError(() => error);
+      })
+    );
+  }
+  // 當頁面移動，獲取目前頁面使用者權限
+  getUserPermissions(progNo: string): FunsrightInfo | undefined {
+    try {
+      const funs = this._menuUpdated.getValue();
+      return funs.find(fun => fun.prog_No === progNo);
+    } catch (error) {
+      console.error('Error parsing FunRightsInfo from sessionStorage', error);
+      return undefined;
+    }
+  }
+  // 獲取使用者資訊
   getUserInfo(): any {
     const userInfo = sessionStorage.getItem('UserInfo');
     if (userInfo) {

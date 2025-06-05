@@ -1,0 +1,83 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <!-- 統計日期 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="統計日期"
+              [startControl]="queryForm.controls.startDate"
+              [endControl]="queryForm.controls.endDate"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+
+          <!-- 倉別 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="倉別"
+              controlName="warehouse"
+              [options]="warehouseOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.warehouse"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <!-- 品項編號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="品項編號"
+              controlName="itemNumber"
+              [options]="itemNumberOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.itemNumber"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+      </form>
+
+      <div>
+        <div class="grid justify-content-end">
+          <app-button btnType="clear" (click)="onClearForm()"></app-button>
+          <app-button
+            btnType="query"
+            (click)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <div class="col-12">
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
+  </div>
+</div>

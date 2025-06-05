@@ -1,0 +1,281 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
+            label="銷售日期"
+            [startControl]="queryForm.controls.TXN_DateStart"
+            [endControl]="queryForm.controls.TXN_DateEnd"
+            [submitted]="submitted"
+          ></app-calendar-range-quick>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="收銀機代號"
+              controlName="ECR_No"
+              [options]="ECRNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_No"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              [useGrouping]="false"
+              label="交易序號(起/迄)"
+              [startControl]="queryForm.controls.TXN_No_Start"
+              [endControl]="queryForm.controls.TXN_No_End"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="專櫃編號"
+              controlName="TLT_No"
+              [options]="CounterOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.TLT_No"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="發票起始號碼"
+              controlName="TXN_GUIBegNo"
+              [control]="queryForm.controls.TXN_GUIBegNo"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="發票結束號碼"
+              controlName="TXN_GUIEndNo"
+              [control]="queryForm.controls.TXN_GUIEndNo"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="交易型態"
+              controlName="TXN_Status"
+              [options]="txnStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.TXN_Status"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="狀態旗標"
+              controlName="TXN_FlagStatus"
+              [options]="statusFlagOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.TXN_FlagStatus"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="交易附屬型態"
+              controlName="TXN_Subtype"
+              [options]="TXN_SubtypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.TXN_Subtype"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+
+                    <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="收銀員號碼"
+              controlName="USR_No"
+              [options]="cashierOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.USR_No"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="預售/訂金編號"
+              controlName="TXN_PreOrderNo"
+              [control]="queryForm.controls.TXN_PreOrderNo"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="停車卡號"
+              controlName="TXN_PkngUID"
+              [control]="queryForm.controls.TXN_PkngUID"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="會員卡號"
+              controlName="TXN_MemCard"
+              [control]="queryForm.controls.TXN_MemCard"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="統一編號"
+              controlName="TXN_Uniform"
+              [control]="queryForm.controls.TXN_Uniform"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="愛心碼"
+              controlName="TXN_GUILoveCode"
+              [control]="queryForm.controls.TXN_GUILoveCode"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="載具種類"
+              controlName="TXN_GUI_CarrType"
+              [options]="carrierTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.TXN_GUI_CarrType"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="載具號碼"
+              controlName="TXN_GUI_CarrId"
+              [control]="queryForm.controls.TXN_GUI_CarrId"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="是否開立業主發票"
+              controlName="rece_yn"
+              [options]="whetherOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.rece_yn"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="是否為業主收現"
+              controlName="cash_yn"
+              [options]="whetherOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.cash_yn"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="館別"
+              [options]="BUILDING_NO_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_building"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="樓層"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_floor"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="組織代碼/名稱"
+              [options]="OrganizationCodeOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.org_id"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+        </div>
+
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table
+    tableKey="TLS23010"
+    [data]="data"
+    [columns]="columns"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    [showCheckBox]="true"
+    dataKey="TXN_No"
+    [multiSortMeta]="[{ field: 'TXN_No', order: 1 }]"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [loading]="loading"
+    [showCheckBox]="false"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    [showManage]="false"
+    [showDelete]="false"
+    [expansionDataKey]="'details'"
+    [expansionColumns]="expansionColumns"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+  ></app-table>
+</div>

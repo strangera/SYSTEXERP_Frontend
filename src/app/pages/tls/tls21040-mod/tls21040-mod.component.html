@@ -1,0 +1,119 @@
+<div class="grid">
+  <div class="col-12">
+    <div class="card">
+      <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+          <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+      </div>
+      <p-accordion>
+        <p-accordionTab
+          header="修改條件"
+          [selected]="true"
+          class="line-height-3 m-0"
+          [headerStyleClass]="'query-accordionTab'"
+        >
+          <form
+            [formGroup]="queryForm"
+            id="queryForm"
+            (ngSubmit)="onSubmit(queryForm)"
+          >
+            <div class="grid p-fluid">
+              <!-- 銀行代碼 -->
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="銀行代碼"
+                  controlName="bankCode"
+                  [control]="queryForm.controls.bankCode"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+
+              <!-- 銀行名稱 -->
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="銀行名稱"
+                  controlName="bankName"
+                  [control]="queryForm.controls.bankName"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+
+              <!-- 卡種 -->
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-dropdown
+                  label="卡種"
+                  controlName="cardType"
+                  [options]="cardTypeOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.cardType"
+                  [submitted]="submitted"
+                ></app-dropdown>
+              </div>
+
+              <!-- 卡別 -->
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-dropdown
+                  label="卡別"
+                  controlName="cardCategory"
+                  [options]="cardCategoryOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.cardCategory"
+                  [submitted]="submitted"
+                ></app-dropdown>
+              </div>
+
+              <!-- 第幾碼開始 -->
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="第幾碼開始"
+                  controlName="startBin"
+                  [control]="queryForm.controls.startBin"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+
+              <!-- 取幾碼 -->
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="取幾碼"
+                  controlName="binCount"
+                  [control]="queryForm.controls.binCount"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+
+              <!-- 卡種識別碼 -->
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="卡種識別碼"
+                  controlName="cardIdentifier"
+                  [control]="queryForm.controls.cardIdentifier"
+                  [submitted]="submitted"
+                ></app-input-text>
+              </div>
+            </div>
+          </form>
+
+          <!-- 操作按鈕 -->
+          <div>
+            <div class="grid justify-content-end">
+              <app-button
+                btnType="clear"
+                (onClick)="onClearForm()"
+              ></app-button>
+              <app-button
+                btnType="create"
+                (onClick)="onSubmitQuery(queryForm)"
+                label="確定修改"
+                icon=""
+              ></app-button>
+            </div>
+          </div>
+        </p-accordionTab>
+      </p-accordion>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,385 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <div *appHasPermission="addPermission">
+      <app-button
+        btnType="create"
+        (click)="onCreate()"
+        class="col"
+      ></app-button>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="資產代號"
+              controlName="assetsCode"
+              [control]="queryForm.controls.assetsCode"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="品項編號"
+              controlName="itemCode"
+              [options]="itemCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.itemCode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="原資產編號"
+              controlName="original_assetsCode"
+              [control]="queryForm.controls.original_assetsCode"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="資產狀態"
+              controlName="assetsStatus"
+              [options]="assetsStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.assetsStatus"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="資產類型"
+              controlName="assetsType"
+              [options]="assetsTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.assetsType"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="採購單號"
+              controlName="purchaseNumber"
+              [options]="orderNumberOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.purchaseNumber"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="購入日期"
+              [startControl]="queryForm.controls.purchaseDateFrom"
+              [endControl]="queryForm.controls.purchaseDateTo"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              label="原購入金額"
+              [startControl]="queryForm.controls.original_priceFrom"
+              [endControl]="queryForm.controls.original_priceTo"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="供應商編號"
+              controlName="supplierCode"
+              [options]="supplierCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.supplierCode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="所屬會計科目(借)"
+              controlName="accounting_Borrow"
+              [options]="depreciationOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.accounting_Borrow"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="會計科目(貸)"
+              controlName="accounting_Borrow"
+              [options]="depreciationOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.accounting_Borrow"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="入帳日期"
+              [startControl]="queryForm.controls.entryDateFrom"
+              [endControl]="queryForm.controls.entryDateTo"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="設備編號"
+              controlName="deviceCode"
+              [control]="queryForm.controls.deviceCode"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="折舊會計科目"
+              controlName="depreciation"
+              [options]="depreciationOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.depreciation"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="累計折舊科目"
+              controlName="totalDepreciation"
+              [options]="depreciationOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.totalDepreciation"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+        <hr />
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              [useGrouping]="false"
+              label="折舊年限"
+              [startControl]="queryForm.controls.depreciationLifeFrom"
+              [endControl]="queryForm.controls.depreciationLifeTo"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              [useGrouping]="false"
+              label="預留殘值"
+              [startControl]="queryForm.controls.residualFrom"
+              [endControl]="queryForm.controls.residualTo"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="保管人"
+              controlName="keepingPerson"
+              [options]="applicantCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.keepingPerson"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="保管單位"
+              controlName="keepingUnit"
+              [options]="supplierCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.keepingUnit"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="使用人"
+              controlName="user"
+              [options]="applicantCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.user"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="使用單位"
+              controlName="userUnit"
+              [options]="supplierCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.userUnit"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+        <hr />
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="位置編號"
+              controlName="locationCode"
+              [control]="queryForm.controls.locationCode"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="維修合約編號"
+              controlName="maintenanceCode"
+              [control]="queryForm.controls.maintenanceCode"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="出借狀態"
+              controlName="rentStatus"
+              [options]="rentStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.rentStatus"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="處份日期(變賣或報廢)"
+              [startControl]="queryForm.controls.disposalDateFrom"
+              [endControl]="queryForm.controls.disposalDateTo"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="處份廠商"
+              controlName="dispose_Manufacturers"
+              [options]="supplierCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.dispose_Manufacturers"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="處份傳票編號"
+              controlName="dispose_Manufacturers_Summons"
+              [control]="queryForm.controls.dispose_Manufacturers_Summons"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              [useGrouping]="false"
+              label="變賣金額"
+              controlName="soldAmount"
+              [startControl]="queryForm.controls.soldAmountFrom"
+              [endControl]="queryForm.controls.soldAmountTo"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              label="顯示筆數"
+              controlName="displayNumber"
+              [control]="queryForm.controls.displayNumber"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+        </div>
+        <hr />
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-editor-text
+              label="處份說明(變賣或報廢)"
+              controlName="disposeRemark"
+              [control]="queryForm.controls.disposeRemark"
+              [style]="{ height: '100px' }"
+              [submitted]="submitted"
+            ></app-editor-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-editor-text
+              label="說明"
+              controlName="remark"
+              [control]="queryForm.controls.remark"
+              [style]="{ height: '100px' }"
+              [submitted]="submitted"
+            ></app-editor-text>
+          </div>
+        </div>
+        <hr />
+        <div>
+          <div class="grid justify-content-end">
+            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+            <app-button
+              btnType="query"
+              (onClick)="onSubmitQuery(queryForm)"
+              [loading]="loading"
+            ></app-button>
+          </div>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <div class="col-13">
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
+  </div>
+</div>

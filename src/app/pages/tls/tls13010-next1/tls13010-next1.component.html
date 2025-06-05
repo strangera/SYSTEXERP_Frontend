@@ -1,0 +1,193 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
+    <app-button
+      btnType="create"
+      label="下一步(抽成設定)"
+      (click)="onSubmitNext()"
+    ></app-button>
+    <app-button btnType="cancel" (click)="onCancel()"></app-button>
+  </div>
+
+  <!-- Scroll Container Wrapper -->
+  <div class="scroll-container">
+    <!-- 專櫃契約書資訊表格 -->
+    <p-accordion>
+      <p-accordionTab
+        header="專櫃契約書資訊"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
+        <div class="col-12 custom-table-red">
+          <app-table
+            tableKey="stocks"
+            [lazy]="true"
+            [loading]="loading"
+            [showEdit]="false"
+            [showDetail]="false"
+            [showRowEdit]="false"
+            [data]="stocks"
+            [columns]="stocksColumns"
+            [showManage]="false"
+          ></app-table>
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+    <!-- 一次扣款表格 -->
+    <p-accordion>
+      <p-accordionTab
+        header="一次扣款"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
+        <div class="col-12">
+          <app-table
+            tableKey="deductions"
+            [lazy]="true"
+            [loading]="loading"
+            [showEdit]="false"
+            [showDetail]="false"
+            [showRowEdit]="true"
+            [data]="deductions"
+            [columns]="deductionColumns"
+            [showInsert]="true"
+          ></app-table>
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+
+    <!-- 每月扣款表格 -->
+    <p-accordion>
+      <p-accordionTab
+        header="每月扣款"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
+        <div class="col-12">
+          <app-table
+            tableKey="deductions1"
+            [lazy]="true"
+            [loading]="loading"
+            [showEdit]="false"
+            [showDetail]="false"
+            [showRowEdit]="true"
+            [data]="deductions1"
+            [columns]="deduction1Columns"
+            [showInsert]="true"
+          ></app-table>
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+    <!-- 需要全選按鈕 -->
+
+    <p-accordion>
+      <p-accordionTab
+        header="平均分攤"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
+        <div class="col-12">
+          <app-table
+            tableKey="deductions2"
+            [lazy]="true"
+            [loading]="loading"
+            [showEdit]="false"
+            [showDetail]="false"
+            [showRowEdit]="true"
+            [data]="deductions2"
+            [columns]="deduction2Columns"
+            [showInsert]="true"
+          ></app-table>
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+
+    <p-accordion>
+      <p-accordionTab
+        header="比率分攤"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
+        <span>
+          比率分攤(比率或元欄位如輸入比率請輸入1以下數字,如2%請輸入0.02!!)
+        </span>
+        <div class="col-12">
+          <app-table
+            tableKey="deductions3"
+            [lazy]="true"
+            [loading]="loading"
+            [showEdit]="false"
+            [showDetail]="false"
+            [showRowEdit]="true"
+            [data]="deductions3"
+            [columns]="deduction3Columns"
+            [showInsert]="true"
+          ></app-table>
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+    <!--
+    <p-accordion>
+      <p-accordionTab [selected]="true" class="line-height-3 m-0">
+        <ng-template pTemplate="header">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <span>比率分攤(比率或元欄位如輸入比率請輸入1以下數字,如2%請輸入0.02!!)</span>
+            <div class="button-container" style="display: flex; gap: 10px;">
+              <app-button btnType="create" label="顯示所有扣款項目" icon="pi pi-filter-fill"></app-button>
+              <app-button btnType="create" label="顯示已勾選項目" icon="pi pi-check-square"></app-button>
+            </div>
+          </div>
+        </ng-template>
+        <p-table [value]="deductions2">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>序號</th>
+              <th>是否新增</th>
+              <th>扣款代號</th>
+              <th>扣款名稱</th>
+              <th>扣款起始年月</th>
+              <th>扣款結束年月</th>
+              <th>單位</th>
+              <th>比率或元</th>
+              <th>組織</th>
+              <th>是否開立發票</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-deduction>
+            <tr>
+              <td>{{ deduction.serialNumber }}</td>
+              <td>
+                <p-checkbox [(ngModel)]="deduction.isNew" binary="true"></p-checkbox>
+              </td>
+              <td>{{ deduction.deductionCode }}</td>
+              <td>{{ deduction.deductionName }}</td>
+              <td>
+                <p-dropdown [options]="years" [(ngModel)]="deduction.startYear"></p-dropdown>
+                <p-dropdown [options]="months" [(ngModel)]="deduction.startMonth"></p-dropdown>
+              </td>
+              <td>
+                <p-dropdown [options]="years" [(ngModel)]="deduction.endYear"></p-dropdown>
+                <p-dropdown [options]="months" [(ngModel)]="deduction.endMonth"></p-dropdown>
+              </td>
+              <td>
+                <p-dropdown [options]="units" [(ngModel)]="deduction.unit"></p-dropdown>
+              </td>
+              <td><input type="text" pInputText [(ngModel)]="deduction.rateOrAmount"></td>
+              <td>
+                <p-dropdown [options]="organizations" [(ngModel)]="deduction.organization"></p-dropdown>
+              </td>
+              <td>
+                <p-dropdown [options]="invoiceStatuses" [(ngModel)]="deduction.invoiceStatus"></p-dropdown>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+        <div class="button-container" style="display: flex; gap: 10px; margin-top: 10px;">
+          <button pButton type="button" label="全部選擇" (click)="selectAllDeductions2()"></button>
+          <button pButton type="button" label="取消選擇" (click)="deselectAllDeductions2()"></button>
+        </div>
+      </p-accordionTab>
+    </p-accordion> -->
+  </div>
+</div>

@@ -12,19 +12,19 @@ export class CommissionTypeService {
   apiUrl: string = environment.ApiUrl;
   title: string = '抽成類型';
   options: any[] = [
-    { value: 1, label: '包底抽成' },
-    { value: 2, label: '階梯式抽成' },
-    { value: 3, label: '包底加階梯' },
-    { value: 4, label: '固定租金' },
-    { value: 5, label: '底租抽成取高者' },
-    { value: 6, label: '一般抽成' },
-
+    { value: '1', label: '固定租金' },
+    { value: '2', label: '底租抽成取高者' },
+    { value: '3', label: '一般抽成' },
+    { value: '4', label: '包底抽成' },
+    { value: '5', label: '階梯式抽成' },
+    { value: '6', label: '包底加階梯' },
   ];
+
 
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getCommissionTypes(): Observable<any[]> {
     return of(this.options).pipe(

@@ -1,0 +1,177 @@
+<div class="grid">
+  <div class="col-12">
+    <div class="card">
+      <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+          <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+        <div *appHasPermission="addPermission">
+          <app-button
+            btnType="create"
+            (click)="onCreate()"
+            class="col"
+          ></app-button>
+        </div>
+      </div>
+      <p-accordion>
+        <p-accordionTab
+          header="{{ 'query-conditions' | translate }}"
+          [selected]="true"
+          class="line-height-3 m-0"
+          [headerStyleClass]="'query-accordionTab'"
+        >
+          <form
+            [formGroup]="queryForm"
+            id="queryForm"
+            (ngSubmit)="onSubmit(queryForm)"
+          >
+            <div class="grid p-fluid">
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-number
+                  [useGrouping]="false"
+                  label="進貨驗收單號"
+                  controlName="incomeOrder"
+                  [control]="queryForm.controls.incomeOrder"
+                  [submitted]="submitted"
+                ></app-input-number>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-dropdown
+                  label="倉別"
+                  controlName="storage"
+                  [options]="storageOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.storage"
+                  [submitted]="submitted"
+                ></app-dropdown>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-dropdown
+                  label="管理編號"
+                  controlName="managementID"
+                  [options]="managementIDOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.managementID"
+                  [submitted]="submitted"
+                ></app-dropdown>
+              </div>
+            </div>
+            <div class="grid p-fluid">
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-dropdown
+                  label="品牌編號"
+                  controlName="brandID"
+                  [options]="brandIDOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.brandID"
+                  [submitted]="submitted"
+                ></app-dropdown>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-dropdown
+                  label="廠商編號"
+                  controlName="vendorID"
+                  [options]="vendorIDOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.vendorID"
+                  [submitted]="submitted"
+                ></app-dropdown>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-multi-select
+                  label="單據狀態"
+                  controlName="paperStatus"
+                  [options]="paperStatusOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.paperStatus"
+                  [submitted]="submitted"
+                ></app-multi-select>
+              </div>
+            </div>
+            <div class="grid p-fluid">
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-dropdown
+                  label="申請人"
+                  controlName="applicant"
+                  [options]="applicantOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.applicant"
+                  [submitted]="submitted"
+                ></app-dropdown>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-calendar-range
+                  calendarType="dateRange"
+                  label="申請日期"
+                  [startControl]="queryForm.controls.applicantStartdate"
+                  [endControl]="queryForm.controls.applicantEnddate"
+                  [submitted]="submitted"
+                ></app-calendar-range>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-number
+                  [useGrouping]="false"
+                  label="採購單號"
+                  controlName="purchaseNumber"
+                  [control]="queryForm.controls.purchaseNumber"
+                  [submitted]="submitted"
+                ></app-input-number>
+              </div>
+            </div>
+            <div class="grid p-fluid">
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-dropdown
+                  label="審核人"
+                  controlName="checkPerson"
+                  [options]="applicantOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.checkPerson"
+                  [submitted]="submitted"
+                ></app-dropdown>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-calendar-range
+                  calendarType="dateRange"
+                  label="審核日期"
+                  [startControl]="queryForm.controls.checkStartdate"
+                  [endControl]="queryForm.controls.checkEnddate"
+                  [submitted]="submitted"
+                ></app-calendar-range>
+              </div>
+            </div>
+            <div>
+              <div class="grid justify-content-end">
+                <app-button
+                  btnType="clear"
+                  (onClick)="onClearForm()"
+                ></app-button>
+                <app-button
+                  btnType="query"
+                  (onClick)="onSubmitQuery(queryForm)"
+                  [loading]="loading"
+                ></app-button>
+              </div>
+            </div>
+          </form>
+        </p-accordionTab>
+      </p-accordion>
+    </div>
+    <div class="card">
+      <div class="col-13">
+        <app-table
+          [data]="data"
+          [columns]="columns"
+          (edit)="onEdit($event)"
+          (detail)="onDetail($event)"
+        ></app-table>
+      </div>
+    </div>
+  </div>
+</div>

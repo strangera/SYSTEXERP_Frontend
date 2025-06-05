@@ -19,6 +19,7 @@ interface Favorite {
 })
 export class MenubarComponent implements OnInit, OnDestroy {
   @Input() ProgNo = '';
+  @Input() customBreadcrumbItems: MenuItem[] = [];
   home?: { icon: string, routerLink: string };
   breadcrumbItems: MenuItem[] = [];
   menu: string[] = [];
@@ -37,14 +38,17 @@ export class MenubarComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.home = { icon: 'pi pi-home', routerLink: '/dashboard' };
+    if (this.customBreadcrumbItems.length > 0) {
+      return;
+    }
     this.breadcrumbItems = [];
     this.userSubscription = this.authService.user.subscribe((userInfo: UserInfo | null) => {
       this.data = userInfo;
     });
     this.menuUpdatedSubscription = this.authService.menuUpdated.subscribe((newData: FunsrightInfo[]) => {
       this.funRightsInfo = [
-        { id: "", prog_no: "dashboard", prog_id: "", prog_name: "佈告欄", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
-        { id: "", prog_no: "900001", prog_id: "", prog_name: "範例", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
+        { id: "", prog_No: "dashboard", prog_id: "", prog_name: "佈告欄", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
+        { id: "", prog_No: "900001", prog_id: "", prog_name: "範例", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
         ...newData
       ];
       this.getMenuName(this.funRightsInfo, this.ProgNo);
@@ -62,9 +66,7 @@ export class MenubarComponent implements OnInit, OnDestroy {
   }
 
   getMenuName(funs: FunsrightInfo[], progNo: string) {
-    console.log(funs);
-    console.log(progNo);
-    const prog = funs.filter(x => x.prog_no == progNo);
+    const prog = funs.filter(x => x.prog_No == progNo);
     if (prog.length > 0) {
       if (prog[0].prog_up !== '') {
         this.menu.push(prog[0].prog_name);

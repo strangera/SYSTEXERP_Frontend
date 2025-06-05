@@ -13,9 +13,11 @@ export class CarrierTypeService {
 
   // 本地數據的載具種類選項
   options: any[] = [
-    { value: 1, label: '手機條碼' },
-    { value: 2, label: '自然人憑證條碼' },
-    { value: 3, label: '悠遊卡載具' },
+    { value: '3J0002', label: '手機條碼' },
+    { value: 'CQ0001', label: '自然人憑證條碼' },
+    { value: '1K0001', label: '悠遊卡載具' },
+    { value: '1H0001', label: '一卡通載具' },
+    { value: 'EK0002', label: '信用卡載具' },
     // 根據圖片顯示的選項繼續添加
   ];
 

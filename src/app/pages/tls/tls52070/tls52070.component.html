@@ -1,0 +1,115 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="廠商編號"
+              controlName="vendorCode"
+              [options]="vendorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.vendorCode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="品牌編號"
+              controlName="brandCode"
+              [options]="brandCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.brandCode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="大分類"
+              controlName="bigCategory"
+              [options]="bigCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.bigCategory"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="中分類"
+              controlName="midCategory"
+              [options]="midCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.midCategory"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="小分類"
+              controlName="smallCategory"
+              [options]="smallCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.smallCategory"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="進貨數量"
+              controlName="quantity"
+              [control]="queryForm.controls.quantity"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              calendarType="dateOne"
+              label="啟用日期"
+              [control]="queryForm.controls.startDate"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+        </div>
+      </form>
+      <div>
+        <div class="grid justify-content-end">
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button
+            btnType="query"
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<!-- <div class="card">
+  <div class="col-12">
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
+  </div>
+</div> -->

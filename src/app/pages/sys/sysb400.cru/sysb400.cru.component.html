@@ -1,0 +1,90 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-12 lg:col-4">
+          <app-dropdown
+            label="組織階層代碼/名稱"
+            controlName="level_id"
+            [options]="upgroup_Options"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.level_id"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="組織代碼"
+            controlName="org_id"
+            [control]="dataForm.controls.org_id"
+            [disabled]="!dataForm.controls.CanDel.value"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="組織名稱"
+            controlName="org_name"
+            [control]="dataForm.controls.org_name"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+      <!-- 上層組織代碼區域：僅當 org_id 不為零時顯示 -->
+      <div
+        class="grid p-fluid"
+        *ngIf="dataForm.get('org_id')?.value !== '100000'"
+      >
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="上層組織階層代碼/名稱"
+            controlName="p_level_id"
+            [options]="filtered_p_level_Options"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.p_level_id"
+            [submitted]="submitted"
+            (disabled)="(dataForm.controls.p_level_id.disabled)"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="上層組織代碼/名稱"
+            controlName="p_org_id"
+            [options]="org_Option"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.p_org_id"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="是否停用"
+            controlName="stop_flag"
+            [options]="whetherOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.stop_flag"
+            [submitted]="submitted"
+            *ngIf="!isFormCreateable"
+          ></app-dropdown>
+        </div>
+      </div>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable"
+      >
+        <app-button btnType="cancel"></app-button>
+        <app-button btnType="submit"></app-button>
+      </div>
+    </form>
+  </p-panel>
+</div>

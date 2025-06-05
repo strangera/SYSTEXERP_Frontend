@@ -1,0 +1,166 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <!--<div *appHasPermission="addPermission">
+              <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
+          </div>-->
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <!-- 活動開始日期 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              calendarType="dateOne"
+              label="活動開始日期"
+              controlName="eventStartDate"
+              [control]="queryForm.controls.eventStartDate"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+
+          <!-- 活動結束日期 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              calendarType="dateOne"
+              label="活動結束日期"
+              controlName="eventEndDate"
+              [control]="queryForm.controls.eventEndDate"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+
+          <!-- 最後入庫日期 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              calendarType="dateOne"
+              label="最後入庫日期"
+              controlName="lastStorageDate"
+              [control]="queryForm.controls.lastStorageDate"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+
+          <!-- 行銷檔期代號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="行銷檔期代號"
+              controlName="marketingCampaignCode"
+              [options]="marketingCampaignCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.marketingCampaignCode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <!-- 檔期名稱 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="檔期名稱"
+              controlName="campaignName"
+              [control]="queryForm.controls.campaignName"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <!-- 用品管理單號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="用品管理單號"
+              controlName="suppliesManagementNumber"
+              [control]="queryForm.controls.suppliesManagementNumber"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <!-- 廠商編號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="廠商編號"
+              controlName="manufacturerCode"
+              [options]="manufacturerCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.manufacturerCode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <!-- 最後入庫人員 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="最後入庫人員"
+              controlName="lastStoragePerson"
+              [options]="lastStoragePersonOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.lastStoragePerson"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <!-- 用品狀況 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="用品狀況"
+              controlName="suppliesCondition"
+              [options]="suppliesConditionOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.suppliesCondition"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <!-- 入庫狀況 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="入庫狀況"
+              controlName="storageStatus"
+              [options]="storageStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.storageStatus"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+      </form>
+      <div>
+        <div class="grid justify-content-end">
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button
+            btnType="query"
+            (click)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<!-- Data Table -->
+<div class="card">
+  <div class="col-12">
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
+  </div>
+</div>

@@ -22,7 +22,7 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
     public el: ElementRef,
     private currentPageService: CurrentPageService, // 注入 Service
     private authService: AuthService,
-    private appMenulistService: AppMenulistService
+    private appMenulistService: AppMenulistService,
   ) { }
 
   ngOnInit(): void {
@@ -54,6 +54,12 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
     if (item) {
       item['selected'] = true;
       this.markParentsActiveRecursive(item);
+      setTimeout(() => {
+        const selectedElement = this.el.nativeElement.querySelector('.menuitem-selected');
+        if (selectedElement) {
+          selectedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 101);
     }
   }
 
@@ -75,7 +81,6 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
   private markParentsActiveRecursive(item: MenuItem | null) {
     if (item && item['parent_id'] !== '') {
       const parent = this.findItemRecursive(this.model, item['parent_id']);
-      console.log(parent);
       if (parent) {
         parent['selected'] = true;
         parent.expanded = true;
@@ -86,7 +91,7 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
 
   private findItemRecursive(items: MenuItem[], progNo: string): MenuItem | null {
     for (const item of items) {
-      if (item['prog_no'] === progNo) {
+      if (item['prog_No'] === progNo) {
         return item;
       }
       if (item.items) {
@@ -103,6 +108,6 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
   }
 
   get filteredMenu(): MenuItem[] {
-    return this.activeTopMenuProgNo ? this.model.filter(item => item['prog_no'] === this.activeTopMenuProgNo) : this.model;
+    return this.activeTopMenuProgNo ? this.model.filter(item => item['prog_No'] === this.activeTopMenuProgNo) : this.model;
   }
 }

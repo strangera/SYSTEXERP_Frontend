@@ -1,0 +1,85 @@
+<h3>
+  <B>專櫃位置圖</B>
+</h3>
+<div class="card">
+  <div class="grid p-fluid ">
+    <div class="col-12 md:col-10 lg:col-6 ">
+      選擇場館
+      <p-dropdown [options]="dropdown1"></p-dropdown>
+    </div>
+    <div class="col-12 md:col-10 lg:col-6 ">
+      選擇樓層
+      <p-dropdown [options]="dropdown2" (onChange)="onImageSelect($event)"></p-dropdown>
+    </div>
+  </div>
+</div>
+<div class="card">
+  <table>
+    <tr>
+      <td style="vertical-align: top;">
+        <img width="100%" [src]="'assets/TLS12050/'+ selectedImage" />
+      </td>
+      <td style="vertical-align: top;">
+        <table style="width: 350px;height: 100%; border-collapse: collapse;" border="1" cellspacing="10"
+          cellpadding="10">
+          <tbody>
+            <tr>
+              <td colspan="2">
+                <B>目前營運資訊</B>
+              </td>
+            </tr>
+            <tr>
+              <td style="width: 28%;background-color: rgb(185, 236, 219);">
+                <B>項目</B>
+              </td>
+              <td style="width: 72%;background-color: rgb(185, 236, 219);">
+                <B>資訊</B>
+              </td>
+            </tr>
+            <tr>
+              <td style="width: 28%;">檢視進度</td>
+              <td style="width: 72%;">
+                <p-dropdown [options]="dropdown3" [style]="{'width':'100%'}"></p-dropdown>
+              </td>
+            </tr>
+            <tr>
+              <td style="width: 28%;">樓層</td>
+              <td style="width: 72%;">{{selectedFloor}}</td>
+            </tr>
+            <tr>
+              <td style="width: 28%;">總計</td>
+              <td style="width: 72%;">{{selectedFloorCNT}}</td>
+            </tr>
+            <tr>
+              <td style="width: 28%;background-color: rgb(185, 236, 219);">
+                <B>色彩</B>
+              </td>
+              <td style="width: 72%;background-color: rgb(185, 236, 219);">
+                <B>狀態</B>
+              </td>
+            </tr>
+            <tr>
+              <td style="width: 28%;"><i class="pi pi-star-fill" style="color: rgb(88, 88, 88)"></i></td>
+              <td style="width: 72%;">閒置中(%):0.1</td>
+            </tr>
+            <tr>
+              <td style="width: 28%;"><i class="pi pi-star-fill" style="color: rgb(255, 167, 236)"></i></td>
+              <td style="width: 72%;">追蹤中(%):11.09</td>
+            </tr>
+            <tr>
+              <td style="width: 28%;"><i class="pi pi-star-fill" style="color: rgb(255, 191, 52)"></i></td>
+              <td style="width: 72%;">要約書階段 LOO Status(%):0</td>
+            </tr>
+            <tr>
+              <td style="width: 28%;"><i class="pi pi-star-fill" style="color: rgb(104, 220, 231)"></i></td>
+              <td style="width: 72%;">內裝施工階段Fitout Construction Status(%):0</td>
+            </tr>
+          </tbody>
+        </table>
+        <!-- DivTable.com -->
+
+      </td>
+    </tr>
+  </table>
+
+</div>

@@ -1,5 +1,5 @@
 import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
-import { CRUDStatus } from '../../enum/CRUDstatus';
+import { CRUDStatus } from '../../models/system/CRUDstatus';
 
 export class BasicCrupageComponent {
   // Page No
@@ -27,10 +27,10 @@ export class BasicCrupageComponent {
   }
   // ----------------------------------------------------------------
   canAdd(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
+    return true
   }
 
   canEdit(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
+    return true
   }
 }

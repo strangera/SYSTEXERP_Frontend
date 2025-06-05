@@ -1,0 +1,69 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <div *appHasPermission="addPermission">
+      <app-button
+        btnType="create"
+        (click)="onCreate()"
+        class="col"
+      ></app-button>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div>
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown
+                label="顧客意見責任單位編號"
+                controlName="opinionCode"
+                [options]="opinionCodeOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="queryForm.controls.opinionCode"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="責任單位名稱"
+                controlName="unitName"
+                [control]="queryForm.controls.unitName"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+          </div>
+          <div class="grid justify-content-end">
+            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+            <app-button
+              btnType="query"
+              (onClick)="onSubmitQuery(queryForm)"
+              [loading]="loading"
+            ></app-button>
+          </div>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table
+    [showCheckBox]="true"
+    [data]="data"
+    [columns]="columns"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+  ></app-table>
+</div>

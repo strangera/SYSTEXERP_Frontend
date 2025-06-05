@@ -1,0 +1,197 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="使用者編號"
+            controlName="user_No"
+            [control]="dataForm.controls.user_No"
+            [submitted]="submitted"
+            [disabled]="true"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="使用者名稱"
+            controlName="user_Name"
+            [control]="dataForm.controls.user_Name"
+            [submitted]="submitted"
+            [disabled]="true"
+          ></app-input-text>
+        </div>
+
+        <!-- <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="使用者密碼-加密"
+            controlName="user_Password"
+            [control]="dataForm.controls.user_Password"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div> -->
+      </div>
+      <!-- <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-5"
+            label="職稱代碼"
+            controlName="title"
+            [options]="titleOptions"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.title"
+            [submitted]="submitted"
+          />
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-5"
+            label="組織編號"
+            controlName="org_ID"
+            [options]="SYS3100_Options"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.org_ID"
+            [submitted]="submitted"
+          />
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            class="col-12 md:col-6 lg:col-5"
+            label="帳號有效起始日期"
+            [control]="dataForm.controls.str_dateStart"
+            controlName="str_dateStart"
+            [submitted]="submitted"
+          />
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            class="col-12 md:col-6 lg:col-5"
+            label="帳號有效終止日期"
+            [control]="dataForm.controls.str_dateEnd"
+            controlName="str_dateEnd"
+            [submitted]="submitted"
+          />
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="使用者狀態"
+            controlName="status"
+            [options]="userStatusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.status"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="使用者型態"
+            controlName="user_type"
+            [options]="userTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.user_type"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="使用者email帳號"
+            controlName="user_email"
+            [control]="dataForm.controls.user_email"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="所屬專櫃編號"
+            controlName="TLT_No"
+            [control]="dataForm.controls.TLT_No"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <app-editor-text
+          class="col-12"
+          label="備註"
+          controlName="remarks"
+          [control]="dataForm.controls.remarks"
+          [submitted]="submitted"
+        />
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="使用者等級"
+            controlName="user_priority"
+            [control]="dataForm.controls.user_priority"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            class="col-12 md:col-6 lg:col-5"
+            label="密碼到期日"
+            [control]="dataForm.controls.USER_PwdExpireDate"
+            controlName="USER_PwdExpireDate"
+            [submitted]="submitted"
+          />
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateTimeOne"
+            class="col-12 md:col-6 lg:col-5"
+            label="最近一次登入"
+            [control]="dataForm.controls.last_Login"
+            controlName="last_Login"
+            [submitted]="submitted"
+          />
+        </div>
+      </div> -->
+
+      <div class="card">
+        <div class="col-13">
+          <app-table
+            tableKey="SYS0230CRU"
+            [data]="roleUserData"
+            [columns]="roleUserColumns"
+            [showCheckBox]="true"
+            [showManage]="false"
+            [showReportMode]="false"
+            [showDelete]="false"
+            dataKey="ID"
+            [multiSortMeta]="[{ field: 'Match', order: -1 }]"
+            [selectedItems]="selectedRoleUserData"
+            (selectionChange)="onUserSelectionChange($event)"
+            [loading]="loading"
+          ></app-table>
+        </div>
+      </div>
+
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable"
+      >
+        <app-button btnType="cancel"></app-button>
+        <app-button btnType="submit"></app-button>
+      </div>
+    </form>
+  </p-panel>
+</div>

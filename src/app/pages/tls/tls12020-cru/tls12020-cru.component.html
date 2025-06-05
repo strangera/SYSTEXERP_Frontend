@@ -1,0 +1,138 @@
+<div class="card">
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1;">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown label="廠商統一編號" controlName="vendorUID" [options]="vendorUIDOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.vendorUID"
+                        [submitted]="submitted">
+                    </app-dropdown>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="廠商名稱(中文)" controlName="vendorCName" [control]="dataForm.controls.vendorCName"
+                        [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="廠商名稱(英文)" controlName="vendorEName" [control]="dataForm.controls.vendorEName"
+                        [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="品牌" controlName="brand" [control]="dataForm.controls.brand"
+                        [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown label="大分類" controlName="industryCode" [options]="industryCodeOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.industryCode"
+                        [submitted]="submitted">
+                    </app-dropdown>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="聯絡人" controlName="contactPerson" [control]="dataForm.controls.contactPerson"
+                        [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+            </div>
+
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="聯絡人電話(O)" controlName="oContactPhone"
+                        [control]="dataForm.controls.oContactPhone" [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="聯絡人頭銜" controlName="contactTitle" [control]="dataForm.controls.contactTitle"
+                        [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="聯絡人電話(F)" controlName="fContactPhone"
+                        [control]="dataForm.controls.fContactPhone" [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="聯絡人行動電話" controlName="contactPhone"
+                        [control]="dataForm.controls.contactPhone" [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="聯絡人電子郵件" controlName="contactEmail"
+                        [control]="dataForm.controls.contactEmail" [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="公司住址" controlName="companyAddress"
+                        [control]="dataForm.controls.companyAddress" [submitted]="submitted">>
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-calendar calendarType="dateOne" label="訪談日期" [control]="dataForm.controls.interviewDate"
+                        [submitted]="submitted">
+                    </app-calendar>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-calendar calendarType="timeOne" label="訪談時間(24H)" [control]="dataForm.controls.interviewDate24"
+                        [submitted]="submitted">
+                    </app-calendar>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown label="意願等級" controlName="willingnessLevel" [options]="willingnessLevelOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.willingnessLevel"
+                        [submitted]="submitted">
+                    </app-dropdown>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown label="接洽樓層" controlName="floor" [options]="floorOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.floor" [submitted]="submitted">
+                    </app-dropdown>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number [useGrouping]="false" label="接洽位置編號" controlName="locationNumber"
+                        [control]="dataForm.controls.locationNumber" [submitted]="submitted">
+                    </app-input-number>
+                </div>
+            </div>
+            <hr>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-editor-text label="洽談重點及交換資料記錄" controlName="negotiationPoints"
+                        [control]="dataForm.controls.negotiationPoints" [style]="{ height: '100px' }"
+                        [submitted]="submitted">
+                    </app-editor-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark"
+                        [style]="{ height: '100px' }" [submitted]="submitted">
+                    </app-editor-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown label="訪談人員" controlName="interviewer" [options]="interviewerOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.interviewer"
+                        [submitted]="submitted">
+                    </app-dropdown>
+                </div>
+            </div>
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
+            </div>
+        </div>
+    </p-panel>
+</div>

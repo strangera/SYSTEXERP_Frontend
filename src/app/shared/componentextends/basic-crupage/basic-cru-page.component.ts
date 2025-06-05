@@ -1,16 +1,16 @@
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
 import { UserInfo } from '../../models/system/userInfo';
-import { CRUDStatus } from '../../enum/CRUDstatus';
+import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 
 export class BasicCruPageComponent<T> {
   // Page No
-  ProgNo = '900001';
+  ProgNo = '';
   funInfo?: FunsrightInfo;
   rowdata: T | null = null;
   // 權限
@@ -29,25 +29,28 @@ export class BasicCruPageComponent<T> {
   messageService = inject(NotificationService);
   formBuilder = inject(FormBuilder);
   currentPageService: CurrentPageService = inject(CurrentPageService);
-  // ----------------------------------------------------------------
+  activatedRoute = inject(ActivatedRoute);
+  previousRoute: string | null = null; // 新增用於儲存前一個路由的屬性
+  // 判斷目前頁面是新增、修改、明細--------------------------------
   get isFormEditable(): boolean {
     return (this.crudstatus === CRUDStatus.Edit && this.canEdit());
   }
-
   get isFormCreateable(): boolean {
     return (this.crudstatus === CRUDStatus.Create && this.canAdd());
   }
-
   get isFormReadable(): boolean {
     return this.crudstatus === CRUDStatus.Read;
   }
   // ----------------------------------------------------------------
   canAdd(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.add) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === '20') || false; // 假設 '20' 是新增的 function_code
   }
-
   canEdit(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.includes(PermissionsInfo.edit) as boolean;
+    return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === '30') || false; // 假設 '30' 是編輯的 function_code
+  }
+  // 通用的權限檢查方法
+  canPerformAction(action: string): boolean {
+    return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
   initializePage(progNo: string, form?: FormGroup) {
     this.user = this.authService.getUserInfo() as UserInfo;
@@ -55,15 +58,12 @@ export class BasicCruPageComponent<T> {
     this.currentPageService.setCurrentProgNo(this.ProgNo);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     const state = this.router.lastSuccessfulNavigation?.extras.state;
+    this.previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/dashboard';
     this.rowdata = state?.['rowdata'];
-    console.log(this.rowdata);
     switch (state?.['crudstatus']) {
       case CRUDStatus.Create:
         this.formTitle = '新增資訊';
         this.crudstatus = CRUDStatus.Create;
-        if (this.rowdata) {
-          form?.patchValue(this.rowdata);
-        }
         break;
       case CRUDStatus.Edit:
         this.formTitle = '編輯資料';
@@ -106,5 +106,8 @@ export class BasicCruPageComponent<T> {
         });
       }
     });
+  }
+  onCancel() {
+    this.router.navigate([this.previousRoute]);
   }
 }

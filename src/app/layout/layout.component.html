@@ -2,9 +2,9 @@
   <div #appTopbarDiv>
     <app-topbar (topMenuClick)="selectedTopMenuProgNo = $event"></app-topbar>
   </div>
-  <div class="px-4 pt-0 layout-sidebar w-full sm:w-22rem border-noround sm:border-round-xl">
-    <div class="layout-sidebar-scroll-content flex lg:flex-row-reverse w-full sticky top-0 z-5 pt-4 pb-2">
-      <div class="flex flex-row justify-content-between align-items-center gap-2 w-full">
+  <div #sidebarContainer class="px-0 pt-0 layout-sidebar w-full sm:w-22rem border-noround sm:border-round-xl">
+    <div #scrollContent class="layout-sidebar-scroll-content flex w-full sticky top-0 z-5 pt-3 px-3 pb-2">
+      <div class="flex flex-row justify-content-between align-items-center gap-2 w-full lg:flex-row-reverse">
         <button type="button" class="p-link" (click)="onToggleTheme()">
           <i class="pi text-2xl cursor-pointer" [ngClass]="{'pi-sun': !isDarkMode(), 'pi-moon': isDarkMode()}"
             style="color: var(--text-color);"></i>

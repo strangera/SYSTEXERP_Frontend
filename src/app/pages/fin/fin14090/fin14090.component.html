@@ -1,0 +1,235 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <div *appHasPermission="addPermission">
+      <app-button
+        btnType="create"
+        (click)="onCreate()"
+        class="col"
+      ></app-button>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="字軌"
+              controlName="wordTrack"
+              [control]="queryForm.controls.wordTrack"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="發票號碼"
+              controlName="invoiceNumber"
+              [control]="queryForm.controls.invoiceNumber"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="發票日期"
+              [startControl]="queryForm.controls.invoiceDateFrom"
+              [endControl]="queryForm.controls.invoiceDateTo"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              calendarType="dateMonthOne"
+              label="資料所屬年月"
+              [control]="queryForm.controls.belongYm"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              calendarType="dateMonthOne"
+              label="申報年月"
+              [control]="queryForm.controls.declareYm"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="專櫃編號"
+              controlName="counterID"
+              [control]="queryForm.controls.counterID"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="廠客代號"
+              controlName="factoryID"
+              [control]="queryForm.controls.factoryID"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="銷售人統一編號"
+              controlName="salesPersonUid"
+              [control]="queryForm.controls.salesPersonUid"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="買受人統一編號"
+              controlName="buyerPersonUid"
+              [control]="queryForm.controls.buyerPersonUid"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="發票格式"
+              controlName="invoiveFormat"
+              [control]="queryForm.controls.invoiveFormat"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              [useGrouping]="false"
+              label="發票總金額"
+              [startControl]="queryForm.controls.totalPriceFrom"
+              [endControl]="queryForm.controls.totalPriceTo"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="課稅別"
+              controlName="taxType"
+              [options]="taxTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.taxType"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              [useGrouping]="false"
+              label="發票未稅金額"
+              [startControl]="queryForm.controls.nonTaxPriceFrom"
+              [endControl]="queryForm.controls.nonTaxPriceTo"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              [useGrouping]="false"
+              label="稅額"
+              [startControl]="queryForm.controls.taxPriceFrom"
+              [endControl]="queryForm.controls.taxPriceTo"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="憑證單號"
+              controlName="certificateNumber"
+              [control]="queryForm.controls.certificateNumber"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="傳票號碼"
+              controlName="summonsNumber"
+              [control]="queryForm.controls.summonsNumber"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="資產註記"
+              controlName="assetsRemrk"
+              [options]="assetsRemrkOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.assetsRemrk"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="系統別"
+              controlName="systemCategory"
+              [options]="systemCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.systemCategory"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="備註"
+              controlName="remark"
+              [control]="queryForm.controls.remark"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+        </div>
+        <div>
+          <div class="grid justify-content-end">
+            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+            <app-button
+              btnType="query"
+              (onClick)="onSubmitQuery(queryForm)"
+              [loading]="loading"
+            ></app-button>
+          </div>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <div class="col-13">
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
+  </div>
+</div>

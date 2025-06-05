@@ -1,0 +1,143 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="專櫃編號"
+              controlName="counterCode"
+              [control]="queryForm.controls.counterCode"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="專櫃名稱(品牌)"
+              controlName="counterName"
+              [control]="queryForm.controls.counterName"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="位置編號"
+              controlName="LocationCodeOptions"
+              [options]="LocationCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.LocationCodeOptions"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="區域"
+              controlName="regionCode"
+              [options]="regionOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.regionCode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="樓層"
+              controlName="floorCode"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.floorCode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="大分類"
+              controlName="businessTypeCode"
+              [options]="businessTypeCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.businessTypeCodeOptions"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="營運狀況"
+              controlName="operationStatus"
+              [options]="operationStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.operationStatus"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              [useGrouping]="false"
+              label="版本編號"
+              [startControl]="queryForm.controls.startserial"
+              [endControl]="queryForm.controls.endserial"
+              [submitted]="submitted"
+            ></app-input-number-range>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="合約狀態"
+              controlName="contractStatus"
+              [options]="contractStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.contractStatus"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="日期條件"
+              [startControl]="queryForm.controls.startDate"
+              [endControl]="queryForm.controls.endDate"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+        </div>
+      </form>
+      <div>
+        <div class="grid justify-content-end">
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button
+            btnType="query"
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<!-- <div class="card">
+    <div class="col-12">
+        <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+        </app-table>
+    </div>
+</div> -->

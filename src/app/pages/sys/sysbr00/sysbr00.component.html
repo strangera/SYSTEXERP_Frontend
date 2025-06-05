@@ -1,0 +1,72 @@
+<div class="card">
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="縣市代碼"
+              controlName="city_no"
+              [control]="queryForm.controls.city_no"
+              [submitted]="submitted"
+            >
+              >
+            </app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="縣市名稱"
+              controlName="city_name"
+              [control]="queryForm.controls.city_name"
+              [submitted]="submitted"
+            >
+              >
+            </app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [useGrouping]="false"
+              label="區域"
+              controlName="city_group"
+              [control]="queryForm.controls.city_group"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+        </div>
+        <div>
+          <div class="grid justify-content-end">
+            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+            <app-button
+              btnType="query"
+              (onClick)="onSubmitQuery(queryForm)"
+              [loading]="loading"
+            ></app-button>
+          </div>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table
+    [data]="data"
+    [columns]="columns"
+    [expansionColumns]="subColumns"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+  ></app-table>
+</div>

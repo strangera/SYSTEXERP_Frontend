@@ -57,9 +57,11 @@
       background: transparent;
       border: none;
       padding: 0;
-      .caption-left p-multiselect {
+      p-multiselect {
         width: 35px;
         height: 35px;
+      }
+      p-multiselect {
         .p-multiselect-label {
           display: none;
         }
@@ -119,7 +121,7 @@
         // 叉叉效果
         &::before,
         &::after {
-          content: '';
+          content: "";
           position: absolute;
           top: 50%;
           left: 50%;
@@ -154,6 +156,7 @@
     }
     .p-paginator {
       padding: 0.2rem 0.2rem;
+      background: transparent;
     }
 
     .p-scroller .p-scroller-inline {
@@ -162,21 +165,6 @@
 
     .p-component-overlay {
       background-color: rgb(217 217 217 / 40%) !important;
-    }
-  }
-  .table-disabled {
-    background-color: #f0f0f0;
-    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1);
-    opacity: 0.85;
-    border-radius: 4px;
-    table {
-      pointer-events: none;
-      tr > th {
-        background: #e0e0e0; // Disable的顏色
-      }
-      tr > td {
-        background: #ffffff; // Disable的顏色
-      }
     }
   }
   .whitespace-pre-wrap {
@@ -198,5 +186,30 @@
     left: 50%;
     top: 67%;
     transform: translate(-50%, -50%);
+  }
+  .no-wrap {
+    white-space: nowrap;
+    div {
+      display: inline;
+    }
+  }
+  .p-datatable .p-datatable-thead > tr > th {
+    background: var(--table-header-bg);
+  }
+
+  .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+    background: #eef2ff;
+  }
+
+  .icon-button button {
+    background-color: rgba(239, 246, 255);
+    border-radius: 5px;
+    border: 1px solid rgb(212 212 212);
+    &:hover {
+      background-color: rgba(0, 123, 255, 0.2);
+    }
+    span.p-button-icon.pi {
+      color: #007bff;
+    }
   }
 }

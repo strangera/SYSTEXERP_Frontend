@@ -14,7 +14,7 @@
   </button>
   <div class="topbar-menu flex-grow-1  flex flex-row align-items-center">
     <ng-container *ngFor="let item of topLevelMenuItems">
-      <p-button [label]="item.prog_name" [rounded]="true" [text]="true" severity="secondary" class="m-1"
+      <p-button [label]="item.prog_name" [rounded]="true" [text]="true" severity="secondary" [icon]="item.icon"
         (click)="onTopMenuItemClick(item)" [styleClass]="activeTopMenuItem === item ? 'active-top-menu-item' : ''">
       </p-button>
     </ng-container>
@@ -32,12 +32,12 @@
         <p-iconField iconPosition="right" class="h-full" styleClass="h-full">
           <p-autoComplete formControlName="query_data" [suggestions]="filteredProgs" emptyMessage="查無此快速碼"
             (completeMethod)="filterProgNo($event)" optionLabel="label" placeholder="搜尋選單的名稱編號" styleClass="h-2rem"
-            (keydown.enter)="onSubmit(queryForm)" />
+            (keydown.enter)="onSubmit(queryForm)" (onSelect)="onSubmit(queryForm)" />
           <p-inputIcon styleClass="pi pi-search" onclick="onSubmit(queryForm);" />
         </p-iconField>
       </form>
       <button type="button"
-        class="p-link layout-topbar-button border-1 w-2rem h-2rem p-2 m-0 justify-content-center align-items-center"
+        class="favorites p-link layout-topbar-button border-1 w-2rem h-2rem p-2 m-0 justify-content-center align-items-center"
         pTooltip="我的最愛" (click)="initFavorites($event)">
         <i class="pi pi-star-fill text-yellow-400"></i>
       </button>
@@ -58,8 +58,8 @@
                   </th>
                   <th *ngIf="editingFavorites"
                     class="border-round-xl p-0 flex justify-content-between align-items-center">
-                    <p-button class="w-full" styleClass="w-full border-round-lg" severity="danger" label="刪除我的最愛"
-                      icon="pi pi-trash" iconPos="right" (click)="deleteSelectedFavorites()" />
+                    <p-button class="w-full" styleClass="w-full border-round-lg" severity="secondary" label="關閉編輯模式"
+                      (click)="editFavorites()" />
                   </th>
                 </tr>
               </ng-template>
@@ -89,6 +89,9 @@
                 </tr>
               </ng-template>
             </p-table>
+            <p-button *ngIf="editingFavorites" class="w-full" styleClass="w-full border-round-lg" severity="danger"
+              label="刪除我的最愛" icon="pi pi-trash" iconPos="right" (click)="deleteSelectedFavorites()"
+              [disabled]="!selectedFavorites.length" />
           </div>
         </div>
       </p-overlayPanel>

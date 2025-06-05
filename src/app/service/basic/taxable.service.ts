@@ -11,14 +11,14 @@ export class TaxableService {
   apiUrl: string = environment.ApiUrl;
   title: string = '應免稅';
   options: any[] = [
-    { value: 1, label: '應稅' },
-    { value: 2, label: '免稅' },
+    { value: '1', label: '應稅' },
+    { value: '2', label: '免稅' },
   ];
 
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getSystemTypes(): Observable<any[]> {
     return of(this.options).pipe(

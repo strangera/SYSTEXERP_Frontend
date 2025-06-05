@@ -1,0 +1,86 @@
+<div class="grid">
+  <div class="col-12">
+    <div class="card">
+      <div class="grid align-items-center">
+        <div class="col" style="flex: 1">
+          <app-menubar [ProgNo]="ProgNo"></app-menubar>
+        </div>
+        <div *appHasPermission="addPermission">
+          <app-button btnType="create" label="結算" class="col"></app-button>
+        </div>
+      </div>
+      <p-accordion>
+        <p-accordionTab
+          header="{{ 'query-conditions' | translate }}"
+          [selected]="true"
+          class="line-height-3 m-0"
+          [headerStyleClass]="'query-accordionTab'"
+        >
+          <form
+            [formGroup]="queryForm"
+            id="queryForm"
+            (ngSubmit)="onSubmit(queryForm)"
+          >
+            <div class="grid p-fluid">
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-calendar
+                  calendarType="dateMonthOne"
+                  label="租金結算年月"
+                  [control]="queryForm.controls.onedatemm"
+                  [submitted]="submitted"
+                ></app-calendar>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-input-text
+                  label="單一專櫃查詢"
+                  controlName="counterSearch"
+                  [control]="queryForm.controls.counterSearch"
+                  [submitted]="submitted"
+                >
+                  >
+                </app-input-text>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-calendar-range
+                  calendarType="dateMonthRange"
+                  label="起迄年月"
+                  [startControl]="queryForm.controls.startdate"
+                  [endControl]="queryForm.controls.enddate"
+                  [submitted]="submitted"
+                ></app-calendar-range>
+              </div>
+            </div>
+            <h6>租金結算操作流程說明 :</h6>
+            <ul>
+              <li>每一次結算的流程</li>
+              <li>專櫃租金結算作業 : 租金結算及傳票資料產生</li>
+              <li>租金發票套印作業 : 租金發票資料產生及套印</li>
+              <li>
+                暫存傳票審核作業 : 租金傳票拋至總帳系統 , 租金發票拋至媒申系統
+              </li>
+            </ul>
+            <div>
+              <div class="grid justify-content-end">
+                <app-button
+                  btnType="clear"
+                  (onClick)="onClearForm()"
+                ></app-button>
+                <app-button
+                  btnType="query"
+                  (onClick)="onSubmitQuery(queryForm)"
+                  [loading]="loading"
+                ></app-button>
+              </div>
+            </div>
+          </form>
+        </p-accordionTab>
+      </p-accordion>
+    </div>
+    <!-- <div class="card">
+            <div class="col-13">
+                <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
+                </app-table>
+            </div>
+        </div> -->
+  </div>
+</div>

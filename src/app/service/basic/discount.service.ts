@@ -11,18 +11,18 @@ export class DiscountService {
   apiUrl: string = `${environment.ApiUrl}/discount-options`; // 假設 API 的路徑為 /discount-options
   title: string = '折扣別';
   options: any[] = [
-    { value: 1, label: '正品' },
-    { value: 2, label: '95折' },
-    { value: 3, label: '90折' },
-    { value: 4, label: '85折' },
-    { value: 5, label: '80折' },
-    { value: 6, label: '75折' },
-    { value: 7, label: '70折' },
-    { value: 8, label: '65折' },
-    { value: 9, label: '60折' },
-    { value: 10, label: '55折' },
-    { value: 11, label: '50折' },
-    { value: 12, label: '特價' },
+    { value: '000', label: '正品' },
+    { value: '095', label: '95折' },
+    { value: '090', label: '90折' },
+    { value: '085', label: '85折' },
+    { value: '080', label: '80折' },
+    { value: '075', label: '75折' },
+    { value: '070', label: '70折' },
+    { value: '065', label: '65折' },
+    { value: '060', label: '60折' },
+    { value: '055', label: '55折' },
+    { value: '050', label: '50折' },
+    { value: '999', label: '特價' },
   ];
 
   constructor(

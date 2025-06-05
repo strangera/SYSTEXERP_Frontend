@@ -1,0 +1,441 @@
+.expandable-edit-table-container {
+  // 整體容器樣式
+  margin: 1rem;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  .expandable-table-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 1rem;
+  }
+}
+
+:host ::ng-deep {
+  // PrimeNG表格樣式自定義
+  .p-datatable {
+    // 表格標題行
+    .p-datatable-header {
+      background: transparent;
+      border: none;
+      padding: 0.5rem;
+    }
+
+    // 表格頭
+    .p-datatable-thead > tr > th {
+      background: #c7d2fe;
+      text-align: center;
+      padding: 0.75rem 0.5rem;
+      border: 1px solid #e9ecef;
+      font-weight: 600;
+    }
+
+    // 表格偶數行
+    .p-datatable-tbody > tr:nth-child(even) {
+      background: #eef2ff;
+    }
+
+    // 行懸停效果
+    .p-datatable-tbody > tr:not(.p-highlight):hover {
+      background-color: #e3f2fd;
+      cursor: pointer;
+    }
+
+    // 選中行樣式
+    .p-datatable-tbody > tr.p-highlight {
+      background-color: #c5e4fc;
+      color: #000000;
+    }
+
+    // 表格單元格
+    .p-datatable-tbody > tr > td {
+      padding: 0.6rem 0.5rem;
+      border: 1px solid #e9ecef;
+      text-align: center;
+    }
+
+    // 展開按鈕樣式
+    .expanded-button {
+      background-color: #f0f7ff;
+      &:hover {
+        background-color: #dae8fc;
+      }
+    }
+
+    // 編輯按鈕樣式
+    .edit-buttons,
+    .detail-edit-buttons {
+      .p-button {
+        width: 2rem;
+        height: 2rem;
+
+        &:hover {
+          background-color: rgba(0, 123, 255, 0.1);
+        }
+
+        &.p-button-success:hover {
+          background-color: rgba(40, 167, 69, 0.1);
+        }
+
+        &.p-button-danger:hover {
+          background-color: rgba(220, 53, 69, 0.1);
+        }
+      }
+    }
+
+    // 展開詳細資料樣式
+    .expanded-detail {
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+      margin: 0.5rem;
+
+      .p-datatable {
+        box-shadow: none;
+
+        .p-datatable-thead > tr > th {
+          background: #dfe7f6;
+          font-size: 0.9rem;
+          padding: 0.5rem 0.5rem;
+        }
+
+        .p-datatable-tbody > tr > td {
+          padding: 0.5rem 0.5rem;
+          font-size: 0.9rem;
+        }
+      }
+    }
+
+    // // 新增: 方形按鈕式選項卡樣式
+    // .detail-tab-buttons {
+    //   .tab-button-group {
+    //     display: flex;
+    //     gap: 0.25rem;
+
+    //     .tab-button {
+    //       min-width: 80px; // 設定最小寬度
+    //       border-radius: 3px;
+    //       font-size: 0.875rem;
+    //       padding: 0.25rem 0.5rem;
+    //       transition: all 0.2s;
+
+    //       &.p-button-primary {
+    //         background-color: #3b82f6;
+    //         border-color: #3b82f6;
+    //         color: #ffffff;
+    //       }
+
+    //       &.p-button-outlined {
+    //         background-color: transparent;
+    //         border-color: #ced4da;
+    //         color: #495057;
+
+    //         &:hover {
+    //           background-color: #f0f7ff;
+    //           border-color: #3b82f6;
+    //           color: #3b82f6;
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
+
+    // // 調整內層標題區域與選項卡的布局
+    // .detail-table-header {
+    //   margin-bottom: 0.75rem;
+
+    //   .detail-table-header-left {
+    //     display: flex;
+    //     align-items: center;
+    //     gap: 0.75rem;
+
+    //     // 新增按鈕樣式
+    //     .p-button-rounded {
+    //       margin-left: 0.5rem;
+    //     }
+    //   }
+    // }
+
+    .detail-tab-buttons {
+      .tab-button-group {
+        display: flex;
+        gap: 0.5rem; // 增加選項卡之間的間距
+        padding: 0.5rem 0;
+
+        .tab-button {
+          min-width: 120px; // 加寬選項卡
+          font-size: 1rem; // 增加文字大小
+          font-weight: 500; // 稍微加粗文字
+          padding: 0.5rem 1rem; // 增加內部間距
+          border-radius: 4px; // 輕微圓角
+          transition: all 0.2s ease;
+          border-width: 1px;
+
+          &.p-button-primary {
+            background-color: #4a89dc; // 更鮮明的藍色
+            border-color: #4a89dc;
+            color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); // 添加陰影效果
+          }
+
+          &.p-button-outlined {
+            background-color: #ffffff;
+            border-color: #d9d9d9;
+            color: #595959;
+
+            &:hover {
+              background-color: #f0f7ff;
+              border-color: #4a89dc;
+              color: #4a89dc;
+            }
+          }
+
+          // 添加簡單的底部邊框樣式（模仿您提供的圖片）
+          &.p-button-primary::after {
+            content: "";
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: #4a89dc;
+            border-radius: 3px 3px 0 0;
+          }
+        }
+      }
+    }
+
+    // 確保選項卡下方內容區域有適當的間距
+    .detail-table-header {
+      margin: 0.5rem 0 1rem 0;
+    }
+
+    // 分頁器樣式
+    .p-paginator {
+      background: transparent;
+      padding: 0.5rem;
+
+      .p-paginator-pages .p-paginator-page.p-highlight {
+        background: #007ad9;
+        color: #ffffff;
+      }
+    }
+
+    // 無資料時的提示樣式
+    .p-datatable-emptymessage > td {
+      text-align: center;
+      padding: 1rem;
+      font-style: italic;
+      color: #6c757d;
+    }
+  }
+
+  // 表格禁用樣式
+  .table-disabled {
+    opacity: 0.7;
+    pointer-events: none;
+    background-color: #f0f0f0;
+
+    .p-datatable-thead > tr > th {
+      background: #e0e0e0;
+    }
+  }
+
+  // 自定義表格頭部控制欄
+  .table-caption {
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .table-caption-left,
+    .table-caption-right {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+  }
+
+  // 確保單元格內容不會換行
+  .nowrap {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // 自定義輸入控件寬度
+  .p-inputtext,
+  .p-dropdown,
+  .p-calendar,
+  .p-inputnumber {
+    width: 100%;
+  }
+
+  .date-selector-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .date-display {
+      flex-grow: 1;
+      padding-right: 5px;
+    }
+
+    .date-input {
+      flex-grow: 1;
+      padding-right: 5px;
+      width: calc(100% - 2rem);
+    }
+
+    .date-picker-button {
+      width: 2rem !important;
+      height: 2rem !important;
+      padding: 0 !important;
+    }
+  }
+
+  /* 對話框樣式 */
+  .date-picker-container {
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  /* 日期選擇器對話框樣式調整 */
+  :host ::ng-deep {
+    .date-picker-dialog {
+      .p-dialog-content {
+        padding-bottom: 0;
+        overflow: visible !important;
+      }
+
+      .p-datepicker {
+        min-width: 280px;
+        padding: 0.5rem;
+
+        table {
+          margin: 0.25rem 0;
+        }
+
+        .p-datepicker-header {
+          padding: 0.25rem;
+        }
+
+        th {
+          padding: 0.25rem;
+        }
+
+        td {
+          padding: 0.15rem;
+
+          > span {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+
+            &.p-highlight {
+              background: #3b82f6;
+              color: #ffffff;
+            }
+          }
+        }
+
+        .p-datepicker-buttonbar {
+          padding: 0.25rem;
+
+          button {
+            padding: 0.25rem 0.5rem;
+          }
+        }
+      }
+
+      .p-dialog-footer {
+        padding: 0.75rem;
+        border-top: 1px solid #e9ecef;
+      }
+    }
+
+    /* 完全移除底部滾動條 */
+    .date-picker-dialog {
+      .p-dialog-content::-webkit-scrollbar {
+        display: none;
+      }
+
+      .p-dialog-content {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+      }
+    }
+
+    /* 日期選擇容器調整 */
+    .date-picker-container {
+      display: flex;
+      justify-content: center;
+      padding: 0.5rem;
+
+      .p-datepicker {
+        border: none;
+        box-shadow: none;
+      }
+    }
+
+    /* 對話框頁腳調整 */
+    .dialog-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    /* 完全隱藏滾動條 - 應用於所有日期選擇對話框 */
+    .p-dialog.date-picker-dialog .p-dialog-content::-webkit-scrollbar,
+    .p-dialog-content::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    .p-dialog.date-picker-dialog .p-dialog-content,
+    .p-dialog-content {
+      -ms-overflow-style: none !important; /* IE and Edge */
+      scrollbar-width: none !important; /* Firefox */
+    }
+
+    /* 強制禁用滾動條 - 嘗試更強的選擇器 */
+    .p-dialog.date-picker-dialog {
+      .p-component,
+      .p-dialog-content,
+      .p-dialog-content > * {
+        overflow: visible !important;
+        overflow-y: hidden !important;
+      }
+    }
+
+    /* 確保日期選擇器對話框有足夠的高度 */
+    .p-dialog.date-picker-dialog {
+      height: auto !important;
+      max-height: 90vh !important;
+    }
+
+    // 新增: Checkbox 相關樣式
+    .checkbox-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      .p-checkbox {
+        // 確保 checkbox 在單元格中居中
+        margin: 0 auto;
+      }
+    }
+  }
+}
