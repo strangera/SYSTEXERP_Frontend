@@ -247,21 +247,25 @@
       [headerStyleClass]="'query-accordionTab'"
     >
       <div class="col-12">
-        <app-table
-          [data]="filteredData"
-          [columns]="columns"
+        <app-expandable-edit-table
+          [data]="locationData"
+          [mainColumns]="locationColumns"
           [showCheckBox]="true"
-          dataKey="locationCode"
-          [loading]="loading"
-          [showDetail]="false"
-          [showRowEdit]="true"
-          [showInsert]="true"
-          [showEdit]="false"
-          [showReportMode]="false"
-          [showFooter]="false"
           [showPaginator]="false"
-          [showManage]="false"
-        ></app-table>
+          [showAddButton]="true"
+          [showBatchDelete]="true"
+          [loading]="loading"
+          dataKey="id"
+          [readonly]="false"
+          detailKey=""
+          emptyMessage="尚未設定位置資訊，請點擊新增按鈕開始設定"
+          (addMainItem)="onAddLocationItem()"
+          (batchDelete)="onBatchDeleteLocation($event)"
+          (save)="onLocationTableSave($event)"
+          (edit)="onLocationTableEdit($event)"
+          (cancel)="onLocationTableCancel($event)"
+          (dropdownChange)="onLocationDropdownChange($event)"
+        ></app-expandable-edit-table>
       </div>
     </p-accordionTab>
 

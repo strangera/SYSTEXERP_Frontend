@@ -70,4 +70,19 @@ export class LocationOptionsService {
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? [])
       );
   }
+
+  // 位置代碼選項 - 包含自動帶入用的館別、樓層、區域資訊
+  getLocationWithDetailsOptions(): Observable<any[]> {
+    return this.http
+      .post<any>(`${this.apiUrl}/queryPOS2002_Location_DropDownList`, {})
+      .pipe(
+        map((res) => res?.Data?.map((x: any) => ({
+          label: x.No,           // 下拉選單顯示用
+          value: x.No,           // 下拉選單選擇值
+          buildingNo: x.BuildingNo,  // 自動帶入用 - 館別
+          floorNo: x.FloorNo,        // 自動帶入用 - 樓層
+          areaNo: x.AreaNo           // 自動帶入用 - 區域
+        })) ?? [])
+      );
+  }
 }

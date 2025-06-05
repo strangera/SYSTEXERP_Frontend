@@ -25,6 +25,7 @@ import { OrganizationNumberService } from '../../../service/basic/organization-n
 import { BankOptionsService } from '../../../service/API/dropdownservice/bank-option.service';
 import { AutoCompleteOption } from '../../../shared/componentkit/app-autocomplete/app-autocomplete.component';
 import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
 
 interface CategoryItem {
   id: number;
@@ -46,16 +47,28 @@ interface CategoryItem {
 // 地點資訊相關介面
 interface LocationItem {
   id: number;
-  location_no: string;        // 店位代碼
-  tlt_building: string;       // 館別代碼
+  location_no?: string;        // 店位代碼（可選）
+  locationCode: string;        // 位置編號
+  tlt_building: string;        // 館別代碼
   tlt_floor: string;          // 樓層
   area_no: string;            // 區域代碼
   businessArea: number;       // 營業坪數
-  startDate: Date;            // 使用起始日
-  endDate: Date;              // 使用截止日
-  performanceShare: number;   // 業績分攤(%)
+  startDate?: Date;           // 使用起始日（可選）
+  endDate?: Date;             // 使用截止日（可選）
+  performanceShare?: number;  // 業績分攤(%)（可選）
   _status?: 'new' | 'modified' | 'deleted' | 'original';
   _originalData?: any;
+  locationCodeOptions?: any[]; // 新增：下拉選單選項
+}
+
+interface LocationDetailItem {
+  id: number;
+  locationCode: string;       // 位置編號
+  tlt_building: string;       // 館別
+  tlt_floor: string;          // 樓層
+  area_no: string;            // 區域
+  businessArea: number;       // 營業坪數
+  _status?: 'new' | 'modified' | 'deleted' | 'original';
 }
 
 @Component({
@@ -64,18 +77,20 @@ interface LocationItem {
   styleUrls: ['./tls13010-cru.component.scss'],
 })
 export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
-
   // 地點資訊資料
   locationItems: LocationItem[] = [];
 
-  // 地點資訊表格列定義
+  // 位置選項資料
+  locationWithDetailsOptions: any[] = [];
+
+  // 新的位置表格欄位定義
   locationColumns: ColumnDef[] = [
     {
-      field: 'location_no',
-      header: '位置代碼',
-      type: 'text',
-      editable: false,
-      style: 'min-width: 120px'
+      field: 'locationCode',
+      header: '位置編號',
+      type: 'dropdown',
+      editable: true,
+      style: 'min-width: 150px'
     },
     {
       field: 'tlt_building',
@@ -104,29 +119,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       type: 'number',
       editable: true,
       style: 'min-width: 120px'
-    },
-    {
-      field: 'startDate',
-      header: '使用起始日',
-      type: 'date',
-      editable: true,
-      style: 'min-width: 140px'
-    },
-    {
-      field: 'endDate',
-      header: '使用截止日',
-      type: 'date',
-      editable: true,
-      style: 'min-width: 140px'
-    },
-    {
-      field: 'performanceShare',
-      header: '業績分攤(%)',
-      type: 'number',
-      editable: true,
-      style: 'min-width: 120px'
     }
   ];
+
+  // 新的位置資料陣列
+  locationData: any[] = [];
 
   // ==========  地點資訊表格 ==========
   data: any[] = [
@@ -300,6 +297,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     private businessTypeCodeService: BusinessTypeCodeService,
     private organizationNumberService: OrganizationNumberService,
     private bankService: BankOptionsService,
+    private locationOptionsService: LocationOptionsService,
   ) {
     super();
   }
@@ -369,7 +367,36 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       error: (err) => console.warn('載入組織選項失敗:', err)
     });
 
+
     this.updateTableColumnOptions();
+    // 載入位置詳細選項
+    this.loadLocationWithDetailsOptions();
+  }
+
+  // 載入位置詳細選項
+  private loadLocationWithDetailsOptions(): void {
+    this.locationOptionsService.getLocationWithDetailsOptions().subscribe({
+      next: (data) => {
+        this.locationWithDetailsOptions = data;
+        this.updateLocationColumnOptions();
+        console.log('位置詳細選項載入完成:', data.length);
+      },
+      error: (err) => {
+        console.warn('載入位置詳細選項失敗:', err);
+        this.messageService.warnBubble('載入位置選項失敗，請重新整理頁面');
+      }
+    });
+  }
+
+  // 更新位置欄位的下拉選單選項
+  private updateLocationColumnOptions(): void {
+    // 為每個位置項目設定下拉選單選項
+    this.locationData.forEach(item => {
+      item.locationCodeOptions = this.locationWithDetailsOptions.map(option => ({
+        label: option.label,
+        value: option.value
+      }));
+    });
   }
 
   private updateTableColumnOptions(): void {
@@ -644,6 +671,120 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.messageService.successBubble('業績分攤計算完成');
     } else {
       this.messageService.warnBubble('請先輸入營業坪數');
+    }
+  }
+
+  // ==========  位置表格事件處理 ==========
+
+  // 新增位置項目
+  onAddLocationItem(): void {
+    const newLocationItem: LocationItem = {
+      id: Date.now(),
+      locationCode: '',
+      tlt_building: '',
+      tlt_floor: '',
+      area_no: '',
+      businessArea: 0,
+      _status: 'new'
+    };
+
+    // 為新項目設定下拉選單選項
+    newLocationItem.locationCodeOptions = this.locationWithDetailsOptions.map(option => ({
+      label: option.label,
+      value: option.value
+    }));
+
+    this.locationData.push(newLocationItem);
+    this.saveToWorkflow();
+    this.messageService.infoBubble('已新增位置項目，請選擇位置編號');
+  }
+
+  // 批次刪除位置項目
+  onBatchDeleteLocation(selectedItems: any[]): void {
+    if (confirm(`確定要刪除 ${selectedItems.length} 個位置項目嗎？`)) {
+      selectedItems.forEach(item => {
+        const index = this.locationData.findIndex(d => d.id === item.id);
+        if (index > -1) {
+          this.locationData.splice(index, 1);
+        }
+      });
+
+      this.saveToWorkflow();
+      this.messageService.successBubble(`已刪除 ${selectedItems.length} 個位置項目`);
+    }
+  }
+
+  // 位置表格儲存事件
+  onLocationTableSave(event: { oldData: any, newData: any }): void {
+    console.log('位置資料已儲存:', event);
+    this.saveToWorkflow();
+    this.messageService.successBubble('位置資料已儲存');
+  }
+
+  // 位置表格編輯事件
+  onLocationTableEdit(rowData: any): void {
+    console.log('開始編輯位置資料:', rowData);
+  }
+
+  // 位置表格取消事件
+  onLocationTableCancel(rowData: any): void {
+    console.log('取消編輯位置資料:', rowData);
+  }
+
+  // 處理下拉選單變更（位置編號選擇時自動帶入）
+  onLocationDropdownChange(event: { rowData: any, field: string, newValue: any, oldValue: any }): void {
+    const { rowData, field, newValue, oldValue } = event;
+
+    if (field === 'locationCode' && newValue !== oldValue) {
+      const selectedLocation = this.locationWithDetailsOptions.find(
+        location => location.value === newValue
+      );
+
+      if (selectedLocation) {
+        // 自動帶入相關資訊
+        rowData.tlt_building = selectedLocation.buildingNo || '';
+        rowData.tlt_floor = selectedLocation.floorNo || '';
+        rowData.area_no = selectedLocation.areaNo || '';
+
+        this.saveToWorkflow();
+        this.messageService.infoBubble(`已自動帶入位置 ${newValue} 的相關資訊`);
+      }
+    }
+
+    // 其他欄位變更也觸發儲存
+    this.saveToWorkflow();
+  }
+
+  // 清除所有位置
+  onClearAllLocations(): void {
+    if (confirm('確定要清除所有位置資訊嗎？此操作無法復原。')) {
+      this.locationData = [];
+      this.data = [];
+      this.filteredData = [];
+      this.saveToWorkflow();
+      this.messageService.infoBubble('已清除所有位置資訊');
+    }
+  }
+
+  // 取得位置總營業坪數
+  getTotalBusinessArea(): number {
+    return this.locationData.reduce((total, item) => {
+      const area = parseFloat(item.businessArea) || 0;
+      return total + area;
+    }, 0);
+  }
+
+  // 取得位置設定狀態
+  getLocationSetupStatus(): { text: string, class: string } {
+    if (this.locationData.length === 0) {
+      return { text: '未設定', class: 'text-red-500' };
+    } else {
+      const hasEmptyLocation = this.locationData.some(item => !item.locationCode);
+      if (hasEmptyLocation) {
+        return { text: '設定不完整', class: 'text-orange-500' };
+      } else {
+        return { text: '設定完成', class: 'text-green-500' };
+      }
     }
   }
 

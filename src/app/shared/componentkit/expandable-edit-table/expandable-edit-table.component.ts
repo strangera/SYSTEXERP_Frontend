@@ -29,6 +29,7 @@ export interface ColumnDef {
   editable?: boolean;
   hidden?: boolean;
   style?: string;
+  options?: any[];  // 新增：下拉選單選項
 }
 
 @Component({
@@ -88,6 +89,12 @@ export class ExpandableEditTableComponent {
   @Output() addDetailItem = new EventEmitter<any>();         // 內層新增按鈕事件，傳遞外層項目資料
   @Output() batchDelete = new EventEmitter<any[]>();         // 批次刪除事件
   @Output() detailBatchDelete = new EventEmitter<{ selectedDetails: any[], parentData: any, rowIndex: number }>();  // 明細批次刪除事件
+  @Output() dropdownChange = new EventEmitter<{
+    rowData: any,
+    field: string,
+    newValue: any,
+    oldValue: any
+  }>();
 
   expandedRows: { [key: string]: boolean } = {};
   selectedItems: any[] = [];
@@ -775,5 +782,35 @@ export class ExpandableEditTableComponent {
       return this.detailColumnsMap[selectedTab];
     }
     return this.detailColumns; // 預設使用原有的 detailColumns
+  }
+
+  // 獲取欄位選項的方法
+  getFieldOptions(rowData: any, field: string): any[] {
+    // 首先檢查該行是否有專屬選項
+    if (rowData[field + 'Options']) {
+      return rowData[field + 'Options'];
+    }
+
+    // 然後檢查欄位定義中的選項
+    const column = this.mainColumns.find(col => col.field === field);
+    if (column && column.options) {
+      return column.options;
+    }
+
+    return [];
+  }
+
+  // 處理下拉選單變更
+  onDropdownChange(rowData: any, field: string, newValue: any): void {
+    const oldValue = rowData[field];
+    rowData[field] = newValue;
+
+    // 發射變更事件給父組件處理
+    this.dropdownChange.emit({
+      rowData,
+      field,
+      newValue,
+      oldValue
+    });
   }
 }

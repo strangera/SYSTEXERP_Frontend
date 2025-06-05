@@ -151,8 +151,9 @@
                 <!-- 下拉選單 -->
                 <p-dropdown
                   *ngSwitchCase="'dropdown'"
-                  [options]="rowData[col.field + 'Options']"
+                  [options]="getFieldOptions(rowData, col.field)"
                   [(ngModel)]="rowData[col.field]"
+                  (ngModelChange)="onDropdownChange(rowData, col.field, $event)"
                   [style]="{ width: '100%' }"
                 ></p-dropdown>
 
@@ -438,8 +439,11 @@
                         <!-- 下拉選單 -->
                         <p-dropdown
                           *ngSwitchCase="'dropdown'"
-                          [options]="detailData[col.field + 'Options']"
+                          [options]="getFieldOptions(detailData, col.field)"
                           [(ngModel)]="detailData[col.field]"
+                          (ngModelChange)="
+                            onDropdownChange(detailData, col.field, $event)
+                          "
                           [style]="{ width: '100%' }"
                         ></p-dropdown>
 
