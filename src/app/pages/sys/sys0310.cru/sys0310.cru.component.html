@@ -37,9 +37,9 @@
                   <p-accordionTab [header]="i.label" *ngFor="let i of item.children; trackBy: trackByFn">
                     <ng-container *ngIf="i.IsEnable">
                       <div *ngFor="let program of i.children; trackBy: trackByFn" class="flex align-items-center gap-2">
-                        <span class="min-w-max">{{program.label}}</span>
+                        <span class="min-w-max w-25rem">{{program.label}}</span>
                         <div class="flex align-items-center gap-2 w-full">
-                          <cdk-virtual-scroll-viewport itemSize="40"
+                          <cdk-virtual-scroll-viewport itemSize="31"
                             class="checkbox-virtual-scroll-viewport overflow-hidden">
                             <div *cdkVirtualFor="let behavior of program.children; trackBy: trackByFn">
                               <p-checkbox [label]="behavior.label" [name]="program.label" [binary]="true"
