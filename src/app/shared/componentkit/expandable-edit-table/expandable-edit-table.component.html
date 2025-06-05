@@ -155,6 +155,10 @@
                   [(ngModel)]="rowData[col.field]"
                   (ngModelChange)="onDropdownChange(rowData, col.field, $event)"
                   [style]="{ width: '100%' }"
+                  appendTo="body"
+                  [showClear]="true"
+                  optionLabel="label"
+                  optionValue="value"
                 ></p-dropdown>
 
                 <!-- 日期選擇 -->
@@ -445,6 +449,7 @@
                             onDropdownChange(detailData, col.field, $event)
                           "
                           [style]="{ width: '100%' }"
+                          appendTo="body"
                         ></p-dropdown>
 
                         <!-- 日期選擇 -->

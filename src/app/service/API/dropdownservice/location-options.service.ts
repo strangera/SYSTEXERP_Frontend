@@ -72,17 +72,27 @@ export class LocationOptionsService {
   }
 
   // 位置代碼選項 - 包含自動帶入用的館別、樓層、區域資訊
-  getLocationWithDetailsOptions(): Observable<any[]> {
+  getLocationWithDetailsOptions(talentId?: string): Observable<any[]> {
+    // 如果有 talentId 就傳入，沒有就傳空物件
+    const body = talentId ? { talentId } : {};
+
     return this.http
-      .post<any>(`${this.apiUrl}/queryPOS2002_Location_DropDownList`, {})
+      .post<any>(`${this.apiUrl}/queryPOS2002_Location_DropDownList`, body)
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({
-          label: x.No,           // 下拉選單顯示用
-          value: x.No,           // 下拉選單選擇值
-          buildingNo: x.BuildingNo,  // 自動帶入用 - 館別
-          floorNo: x.FloorNo,        // 自動帶入用 - 樓層
-          areaNo: x.AreaNo           // 自動帶入用 - 區域
+          label: x.location_no,           // 下拉選單顯示用
+          value: x.location_no,           // 下拉選單選擇值
+          tlt_building: x.tlt_building,   // 自動帶入用 - 館別
+          tlt_floor: x.tlt_floor,         // 自動帶入用 - 樓層
+          area_no: x.area_no,             // 自動帶入用 - 區域
+          tlt_space: x.businessArea || 0, // 自動帶入用 - 營業面積
         })) ?? [])
       );
   }
+
+  // "location_no": "string",
+  //     "tlt_building": "string",
+  //     "tlt_floor": "string",
+  //     "area_no": "string",
+  //     "businessArea": 0
 }
