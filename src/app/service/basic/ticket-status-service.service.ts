@@ -9,13 +9,13 @@ import { catchError, Observable, of, tap } from 'rxjs';
 })
 export class TicketStatusService {
   apiUrl: string = environment.ApiUrl;
-  title: string = '券類(己開/未開)';
+  title: string = '券類';
 
   // 本地數據的券類狀態選項
   options: any[] = [
-    { value: 1, label: '全部' },
-    { value: 2, label: '己開券類' },
-    { value: 3, label: '未開券類' },
+    { value: '1', label: '未稅' },
+    { value: '2', label: '已稅' },
+   
   ];
 
   constructor(

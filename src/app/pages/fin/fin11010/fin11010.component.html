@@ -2,47 +2,89 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <!-- <div *appHasPermission="addPermission"> -->
-    <app-button btnType="create" label="匯出申報資料" icon="pi pi-download" (click)="onExportReporting()"></app-button>
-    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
+    <app-button
+      btnType="create"
+      label="匯出申報資料"
+      icon="pi pi-download"
+      (click)="onExportReporting()"
+    ></app-button>
+    <app-button
+      btnType="create"
+      (click)="onCreate()"
+      label="{{ 'create' | translate }}"
+    ></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="營業人統編" controlName="bId" [control]="queryForm.controls.bId"
-              [submitted]="submitted">
-            </app-input-number>
+            <app-input-number
+              [useGrouping]="false"
+              label="營業人統編"
+              controlName="bId"
+              [control]="queryForm.controls.bId"
+              [submitted]="submitted"
+            ></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="營業人名稱" controlName="bName" [control]="queryForm.controls.bName"
-              [submitted]="submitted">
-            </app-input-text>
+            <app-input-text
+              label="營業人名稱"
+              controlName="bName"
+              [control]="queryForm.controls.bName"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="營業地址" controlName="bAddress" [control]="queryForm.controls.bAddress"
-              [submitted]="submitted">
-            </app-input-text>
+            <app-input-text
+              label="營業地址"
+              controlName="bAddress"
+              [control]="queryForm.controls.bAddress"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="總繳代號" controlName="allPayCode" [options]="payMethodOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.allPayCode" [submitted]="submitted">
-            </app-multi-select>
+            <app-multi-select
+              label="總繳代號"
+              controlName="allPayCode"
+              [options]="payMethodOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.allPayCode"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="審核狀態" controlName="status" [options]="whetherOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.status" [submitted]="submitted">
-            </app-multi-select>
+            <app-multi-select
+              label="審核狀態"
+              controlName="status"
+              [options]="whetherOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.status"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateMonthRange" label="申報年月" [startControl]="queryForm.controls.startdate"
-              [endControl]="queryForm.controls.enddate" [submitted]="submitted">
-            </app-calendar-range>
+            <app-calendar-range
+              calendarType="dateMonthRange"
+              label="申報年月"
+              [startControl]="queryForm.controls.startdate"
+              [endControl]="queryForm.controls.enddate"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
         </div>
-        <!-- <div *appHasPermission="queryPermission" class="col"> -->
+        <!-- <div> -->
         <div class="col">
           <div class="grid justify-content-end">
             <app-button btnType="clear"></app-button>
@@ -54,5 +96,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)" />
+  <app-table
+    [data]="data"
+    [columns]="columns"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+  />
 </div>

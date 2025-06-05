@@ -1,8 +1,6 @@
 import { Component } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
 import { TaxableService } from '../../../service/basic/taxable.service';
 import { DiscountService } from '../../../service/basic/discount.service';
 import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
@@ -14,6 +12,8 @@ import { CommissionTypeService } from '../../../service/basic/commission-type.se
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 import { TxnStatusService } from '../../../service/basic/txn-status.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
 
 const now = new Date();
 
@@ -64,14 +64,30 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       }
     },
     { field: 'ECR_No', header: '收銀機機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true, style: 'text-right' },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true }, // 若無此欄位請移除
+    { field: 'tlt_name', header: '櫃位名稱', visible: true }, // 若無此欄位請移除
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
-    { field: 'PLU_SalePrc', header: '售價', visible: true },
-    { field: 'TXN_Net', header: '未稅銷售金額', visible: true },
-    { field: 'TXN_Tax', header: '稅額', visible: true },
-    { field: 'TXN_Disc', header: '折扣總額', visible: true },
+    {
+      field: 'PLU_SalePrc', header: '銷售金額', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0'
+    },
+    {
+      field: 'TXN_Net', header: '未稅銷售金額', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0'
+    },
+    {
+      field: 'TXN_Tax', header: '稅額', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0'
+    },
+    {
+      field: 'TXN_Disc', header: '折扣總額', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0'
+    },
 
     {
       field: 'tlt_id',
@@ -118,7 +134,9 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     { value: 2, label: '否' },
   ];
   OrganizationCodeOptions: any[] = [];
-  
+  ECRNoOptions: any[] = []; // 收銀機號下拉選單
+  CounterOptions: any[] = []; // 專櫃選項
+
 
   constructor(
     private tls23020Service: TLS23020Service,
@@ -128,7 +146,8 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     private deductionbigCategoryService: DeductionbigCategoryService,
     private commissionTypeService: CommissionTypeService,
     private tls11010Service: Tls11010Service,
-
+    private ECRNoService: ECRNoService,
+    private counterNameService: CounterNameService,
 
     private whetherService: WhetherService,
     private txnStatusService: TxnStatusService,
@@ -155,6 +174,20 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     });
     this.commissionTypeService.getCommissionTypes().subscribe((res) => {
       this.commissionTypeOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
+    this.ECRNoService.getECRNo().subscribe((res) => {
+      this.ECRNoOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
+    this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions = res?.map((x: any) => ({
         label: x.label,                                 // 給 table 用
         formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
         value: x.value,

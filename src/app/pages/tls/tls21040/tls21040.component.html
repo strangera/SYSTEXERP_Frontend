@@ -6,40 +6,80 @@
           <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <div *appHasPermission="addPermission">
-          <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
+          <app-button
+            btnType="create"
+            (click)="onCreate()"
+            class="col"
+          ></app-button>
         </div>
       </div>
       <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'">
-          <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <p-accordionTab
+          header="{{ 'query-conditions' | translate }}"
+          [selected]="true"
+          class="line-height-3 m-0"
+          [headerStyleClass]="'query-accordionTab'"
+        >
+          <form
+            [formGroup]="queryForm"
+            id="queryForm"
+            (ngSubmit)="onSubmit(queryForm)"
+          >
             <div class="grid p-fluid">
               <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown label="銀行" controlName="bank" optionLabel="label" optionValue="value"
-                  [options]="bankOptions" [control]="queryForm.controls.bank" [submitted]="submitted">
-                </app-dropdown>
+                <app-dropdown
+                  label="銀行"
+                  controlName="bank"
+                  optionLabel="label"
+                  optionValue="value"
+                  [options]="bankOptions"
+                  [control]="queryForm.controls.bank"
+                  [submitted]="submitted"
+                ></app-dropdown>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown label="卡種" controlName="cardType" [options]="cardTypeOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.cardType" [submitted]="submitted">
-                </app-dropdown>
+                <app-dropdown
+                  label="卡種"
+                  controlName="cardType"
+                  [options]="cardTypeOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.cardType"
+                  [submitted]="submitted"
+                ></app-dropdown>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown label="卡別" controlName="cardCategory" [options]="cardCategoryOptions" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.cardCategory" [submitted]="submitted">
-                </app-dropdown>
+                <app-dropdown
+                  label="卡別"
+                  controlName="cardCategory"
+                  [options]="cardCategoryOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.cardCategory"
+                  [submitted]="submitted"
+                ></app-dropdown>
               </div>
               <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text label="BIN" controlName="bin" [control]="queryForm.controls.bin"
-                  [submitted]="submitted">
-                </app-input-text>
+                <app-input-text
+                  label="BIN"
+                  controlName="bin"
+                  [control]="queryForm.controls.bin"
+                  [submitted]="submitted"
+                ></app-input-text>
               </div>
             </div>
           </form>
-          <div *appHasPermission="queryPermission" class="col">
+          <div>
             <div class="grid justify-content-end">
-              <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-              <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+              <app-button
+                btnType="clear"
+                (onClick)="onClearForm()"
+              ></app-button>
+              <app-button
+                btnType="query"
+                (onClick)="onSubmitQuery(queryForm)"
+                [loading]="loading"
+              ></app-button>
             </div>
           </div>
         </p-accordionTab>
@@ -47,9 +87,13 @@
     </div>
     <div class="card">
       <div class="col-12">
-        <app-table [showCheckBox]="true" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-          (detail)="onDetail($event)">
-        </app-table>
+        <app-table
+          [showCheckBox]="true"
+          [data]="data"
+          [columns]="columns"
+          (edit)="onEdit($event)"
+          (detail)="onDetail($event)"
+        ></app-table>
       </div>
     </div>
   </div>

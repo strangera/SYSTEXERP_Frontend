@@ -1,24 +1,30 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- Radio + 銷售日期區間 -->
+          <!-- Radio + 銷售日期 -->
           <div class="col-12 md:col-6 lg:col-4">
             <div class="grid align-items-center">
               <div class="col-2">
                 <input type="radio" formControlName="dateRadio" [value]="'saleDate'" />
               </div>
               <div class="col-10">
-                <app-calendar-range calendarType="dateRange" label="日期"
-                  [startControl]="queryForm.controls.saleDateStart" [endControl]="queryForm.controls.saleDateEnd"
-                  [submitted]="submitted"></app-calendar-range>
+                <app-calendar-range
+                  calendarType="dateRange"
+                  label="日期"
+                  [startControl]="queryForm.controls.saleDateStart"
+                  [endControl]="queryForm.controls.saleDateEnd"
+                  [submitted]="submitted"
+                ></app-calendar-range>
               </div>
             </div>
           </div>
@@ -30,33 +36,161 @@
                 <input type="radio" formControlName="dateRadio" [value]="'saleMonthYear'" />
               </div>
               <div class="col-10">
-                <app-calendar calendarType="dateMonthOne" label="年/月" [control]="queryForm.controls.saleMonthYear"
-                  [submitted]="submitted"></app-calendar>
+                <app-calendar
+                  calendarType="dateMonthOne"
+                  label="年/月"
+                  [control]="queryForm.controls.saleMonthYear"
+                  [submitted]="submitted"
+                ></app-calendar>
               </div>
             </div>
           </div>
 
           <!-- 卡種 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="卡種" controlName="bankType" [options]="bankOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.bankType" [submitted]="submitted"></app-dropdown>
+             <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="信用卡別"
+              controlName="CRD_Type"
+              [options]="cardTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.CRD_Type"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
+
+          <!-- Radio + 專櫃編號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <div class="grid align-items-center">
+              <div class="col-2">
+                <input type="radio" formControlName="locationRadio" [value]="'organizationCode'" />
+              </div>
+              <div class="col-10">
+                <app-dropdown
+                  label="專櫃編號"
+                  controlName="organizationCode"
+                  [options]="organizationOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.organizationCode"
+                  [submitted]="submitted"
+                ></app-dropdown>
+              </div>
+            </div>
+          </div>
+
+          <!-- Radio + 區域與樓層 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <div class="grid align-items-center">
+              <div class="col-2">
+                <input type="radio" formControlName="locationRadio" [value]="'regionOrFloor'" />
+              </div>
+              <div class="col-10">
+                <app-dropdown
+                  label="區域"
+                  controlName="regionCode"
+                  [options]="regionOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.regionCode"
+                  [submitted]="submitted"
+                ></app-dropdown>
+                <app-multi-select
+                  label="樓層"
+                  [options]="floorOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.tlt_floor"
+                  [submitted]="submitted"
+                ></app-multi-select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Radio + 大分類 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <div class="grid align-items-center">
+              <div class="col-2">
+                <input type="radio" formControlName="locationRadio" [value]="'businessTypeCode'" />
+              </div>
+              <div class="col-10">
+                <app-dropdown
+                  label="大分類"
+                  controlName="businessTypeCode"
+                  [options]="businessTypeCodeOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.businessTypeCode"
+                  [submitted]="submitted"
+                ></app-dropdown>
+              </div>
+            </div>
+          </div>
+
+          <!-- 是否顯示業種 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="是否顯示業種"
+              controlName="whetherDisplayBusinessType"
+              [options]="whetherOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.whetherDisplayBusinessType"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <!-- 館別 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="館別"
+              controlName="tlt_building"
+              [options]="BUILDING_NO_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_building"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <!-- 組織代碼/名稱 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="組織代碼/名稱"
+              [options]="OrganizationCodeOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.org_id"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+
+        </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div *appHasPermission="queryPermission" class="col">
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
+</div>
 
-  <!-- Data Table -->
-  <div class="col-12">
-    <div class="card">
-      <app-table [data]="filteredData" [columns]="columns" (edit)="onEdit($event)"
-        (detail)="onDetail($event)"></app-table>
-    </div>
-  </div>
+<div class="card">
+  <app-table
+    tableKey="TLS23130"
+    [data]="data"
+    [columns]="columns"
+    [showCheckBox]="true"
+    dataKey="TXN_No"
+    [multiSortMeta]="[{ field: 'cardNumber', order: 1 }]"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [loading]="loading"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    [showManage]="false"
+    [showDelete]="false"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+  ></app-table>
 </div>

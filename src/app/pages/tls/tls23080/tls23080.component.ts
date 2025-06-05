@@ -1,193 +1,122 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { WhetherService } from './../../../service/basic/whether.service';
+import { Component } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { WhetherService } from '../../../service/basic/whether.service';
+import { TLS23080Service } from '../../../service/API/tls/tls23080.service';
+import { FloorService } from '../../../service/basic/floor.service';
+import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 
 @Component({
   selector: 'app-tls23080',
   templateUrl: './tls23080.component.html',
   styleUrls: ['./tls23080.component.scss']
 })
-export class TLS23080Component implements OnInit {
-
-  ProgNo: string = '220017';
-
-  // 權限
-  funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS23080Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    queryStartDate: [{ value: null, disabled: true }],  // 查詢開始日期
-    queryEndDate: [{ value: null, disabled: true }],    // 查詢結束日期
-    cashRegisterCode: [],                               // 收銀機代號
-    onedatemm: [{ value: null, disabled: true }],       // 月查詢
-    whether: [],                                        // 是否
-    radioOption: [''],                                  // Radio 選項
+    TXN_DateStart: [null, [Validators.required]],
+    TXN_DateEnd: [null, [Validators.required]],
+    ECR_No: [''],
+    tlt_no: [''],
+    tlt_building: [''],
+    tlt_floor: [''],
+    org_id: [''],
+    ...createPaginationConfig([{ field: 'TXN_DateStart', order: 1 }])
   });
 
-  // 表格資料
   data: any[] = [];
-  filteredData: any[] = [...this.data];
+  totalRecords = 0;
+
   columns: any[] = [
-    { field: 'salesDate', header: '銷售日期', visible: true },
-    { field: 'cash', header: '現金', visible: true },
-    { field: 'creditCardUnionGeneral', header: '[信用卡]聯合 一般卡', visible: true },
-    { field: 'creditCardUnionAE', header: '[信用卡]聯合 AE卡', visible: true },
-    { field: 'creditCardUnionDiner', header: '[信用卡]聯合 DINER卡', visible: true },
-    { field: 'creditCardCitiGeneral', header: '[信用卡]中信 一般卡', visible: true },
-    { field: 'creditCardCitiAE', header: '[信用卡]中信 AE卡', visible: true },
-    { field: 'creditCardCitiDiner', header: '[信用卡]中信 DINER卡', visible: true },
-    { field: 'creditCardCitiParkingGeneral', header: '[信用卡]中信·停車場 一般卡', visible: true },
-    { field: 'creditCardCitiParkingAE', header: '[信用卡]中信·停車場 AE卡', visible: true },
-    { field: 'creditCardCitiParkingDiner', header: '[信用卡]中信·停車場 DINER卡', visible: true },
-    { field: 'easyCardParking', header: '[一卡通]停車場', visible: true },
-    { field: 'voucher', header: '禮券', visible: true },
-    { field: 'productCollectionOrder', header: '商品提貨單', visible: true },
-    { field: 'thankYouVoucher', header: '感謝紙抵用券', visible: true },
-    { field: 'productVoucher', header: '商品抵用券', visible: true },
-    { field: 'expensiveGoodsReceipt', header: '貴賓提貨單(應收帳款)', visible: true },
-    { field: 'externalGiftVoucher', header: '外來禮券(抵用券)', visible: true },
-    { field: 'externalGoodsReceiptVoucher', header: '外來提貨單(抵用券)', visible: true },
-    { field: 'selfRunActivityVoucher', header: '活動券(自營)', visible: true },
-    { field: 'discountVoucher', header: '折價券', visible: true },
-    { field: 'cashVoucher', header: '現抵', visible: true },
-    { field: 'voucherRemainingCard', header: '禮券餘代卡', visible: true },
-    { field: 'goodsReceiptRemainingCard', header: '提貨單餘代卡', visible: true },
-    { field: 'memberDiscount', header: '會員折抵', visible: true },
-    { field: 'linePay', header: 'LINE PAY', visible: true },
-    { field: 'linePayParking', header: '[LINE PAY] 停車場', visible: true },
-    { field: 'appVoucher', header: 'APP抵用券', visible: true },
-    { field: 'appGoodsReceipt', header: 'APP提貨單', visible: true },
-    { field: 'totalAmount', header: '總金額', visible: true },
+    { field: 'TXN_Date', header: '銷售日期', visible: true, format: (val: string) => {
+      const date = new Date(val);
+      return isNaN(date.getTime())
+        ? val
+        : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+    }},
+    { field: 'TXN_TotPayAmt', header: '總金額', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
+    { field: 'TXN_PayAmt10', header: '現金', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
+    { field: 'TXN_PayAmt41', header: '聯信連線', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
+    { field: 'TXN_PayAmt42', header: '聯信離線', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
+    { field: 'TXN_PayAmt12', header: '聯信紅利', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
+    { field: 'TXN_CancelAmt', header: '作廢', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
   ];
 
   WhetherOptions: any[] = [];
+  
+  floorOptions: any[] = [];
+  BUILDING_NO_Options: any[] = [];
+  OrganizationCodeOptions: any[] = []
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private whetherService: WhetherService,
-  ) { }
+    private tls23080Service: TLS23080Service,
+        private floorService: FloorService,
+    private tls11010Service: Tls11010Service
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    // Initialize permissions
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS23080', '', this.queryForm, (form) => this.onSubmit(form));
 
-    // Load 'whether' options
-    this.whetherService.getWhetherOptions().subscribe(data => {
-      this.WhetherOptions = data;
+    this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
+      this.floorService.getFloors().subscribe(data => this.floorOptions = data);
+    this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
+    this.tls11010Service.getOrgOptions().subscribe((res) => {
+      this.OrganizationCodeOptions = res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];});
+  }
+
+  onSubmit(form: FormGroup): void {
+    this.submitted = true;
+    if (this.loading) return;
+
+    if (form.invalid) {
+      this.messageService.warnBubble('請確認欄位資料是否完整');
+      return;
+    }
+
+    this.handleSubmit(form, () => {
+      const payload = { ...form.value };
+
+      // 將空字串轉為 null
+      Object.keys(payload).forEach(key => {
+        if (payload[key] === '') payload[key] = null;
+      });
+
+ this.tls23080Service.queryTLS23080(payload).subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            this.data = res.Data || [];
+            this.totalRecords = res.TotalCount || this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, payload);
+            this.messageService.successBubble('查詢成功');
+          } else {
+            this.data = [];
+            this.totalRecords = 0;
+            this.messageService.errorBubble('查詢失敗');
+          }
+        },
+        error: () => {
+          this.data = [];
+          this.totalRecords = 0;
+          this.loading = false;
+          this.messageService.errorBubble('查詢錯誤');
+        },
+        complete: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        }
+      });
     });
   }
 
-  // Handle Radio Button Selection
-  onRadioSelect(selected: string): void {
-    if (selected === 'month') {
-      this.queryForm.controls.radioOption.setValue('month');
-      this.queryForm.controls.onedatemm.enable();
-      this.queryForm.controls.queryStartDate.disable();
-      this.queryForm.controls.queryEndDate.disable();
-    } else if (selected === 'dateRange') {
-      this.queryForm.controls.radioOption.setValue('dateRange');
-      this.queryForm.controls.queryStartDate.enable();
-      this.queryForm.controls.queryEndDate.enable();
-      this.queryForm.controls.onedatemm.disable();
-    }
-  }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
-  onSubmit(frm: FormGroup): void {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Original query logic
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup): void {
-    this.onSubmit(frm);
-  }
-
-  onClearForm(): void {
-    this.queryForm.reset();  // Reset form
-    this.queryForm.controls.onedatemm.disable();        // Disable 月查詢
-    this.queryForm.controls.queryStartDate.disable();   // Disable 查詢開始日期
-    this.queryForm.controls.queryEndDate.disable();     // Disable 查詢結束日期
-  }
-
-  onCreate(): void {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm.value,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onEdit(data: any): void {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm.value,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onDetail(data: any): void {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm.value,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+  getLabelFromOptions(value: any, options: any[]): string {
+    const found = options?.find(opt => String(opt.value) === String(value));
+    return found ? found.label : value;
   }
 }

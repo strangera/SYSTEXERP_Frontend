@@ -5,48 +5,88 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="付款銀行" controlName="Companybankcode" [options]="bankOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.Companybankcode" [submitted]="submitted">
-            </app-dropdown>
+            <app-dropdown
+              label="付款銀行"
+              controlName="Companybankcode"
+              [options]="bankOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Companybankcode"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="票據號碼" [startControl]="queryForm.controls.STicketnumber"
-              [endControl]="queryForm.controls.ETicketnumber" [submitted]="submitted">
-            </app-input-number-range>
+            <app-input-number-range
+              [useGrouping]="false"
+              label="票據號碼"
+              [startControl]="queryForm.controls.STicketnumber"
+              [endControl]="queryForm.controls.ETicketnumber"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="到期日" controlName="searchDate "
-              [startControl]="queryForm.controls.SExpirationDate" [endControl]="queryForm.controls.EExpirationDate"
-              [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="到期日"
+              controlName="searchDate "
+              [startControl]="queryForm.controls.SExpirationDate"
+              [endControl]="queryForm.controls.EExpirationDate"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商代號" controlName="Manufacturercode" [control]="queryForm.controls.Manufacturercode"
-              [submitted]="submitted">
-            </app-input-text>
+            <app-input-text
+              label="廠商代號"
+              controlName="Manufacturercode"
+              [control]="queryForm.controls.Manufacturercode"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="開票單號" controlName="Billingordernumber" [options]="Billingordernumber"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.Billingordernumber"
-              [submitted]="submitted">
-            </app-dropdown>
+            <app-dropdown
+              label="開票單號"
+              controlName="Billingordernumber"
+              [options]="Billingordernumber"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Billingordernumber"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="開票日期" controlName="searchDate "
-              [startControl]="queryForm.controls.SInvoicingday" [endControl]="queryForm.controls.EInvoicingday"
-              [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="開票日期"
+              controlName="searchDate "
+              [startControl]="queryForm.controls.SInvoicingday"
+              [endControl]="queryForm.controls.EInvoicingday"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
         </div>
       </form>
-      <div *appHasPermission="queryPermission" class="col">
+      <div>
         <div class="grid justify-content-end">
           <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+          <app-button
+            btnType="query"
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -54,6 +94,11 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"></app-table>
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
   </div>
 </div>

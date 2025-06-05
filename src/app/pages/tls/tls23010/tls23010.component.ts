@@ -13,6 +13,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { CashierService } from '../../../service/basic/cashier.service';
 interface MainData {
   SYS_StoreNo: string;
   TXN_Date: string;
@@ -35,9 +36,8 @@ const now = new Date();
 })
 export class TLS23010Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],
-
-    TXN_DateEnd: [new Date(), [Validators.required]],   // 銷售日期迄
+    TXN_DateStart: [null,[Validators.required]],
+    TXN_DateEnd: [null,[Validators.required]],   // 銷售日期迄
     ECR_No: [''],                 // 收銀機代號
     TXN_No_Start: [null],        // 交易序號(起)
     TXN_No_End: [null],          // 交易序號(迄)
@@ -76,6 +76,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
   transactionSubTypeOptions: any[] = [];
   carrierTypeOptions: any[] = [];
   txnStatusOptions: any[] = [];
+  cashierOptions: any[] = []; // 收銀員下拉選單
   ECRNoOptions: any[] = []; // 收銀機號下拉選單
   checkTotalAmount = [
     { value: 1, label: '是' },
@@ -86,7 +87,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
   columns: any[] = [
     {
       field: 'TXN_Date',
-      header: '交易日期',
+      header: '銷售日期',
       visible: true,
       format: (val: string) => {
         const date = new Date(val);
@@ -97,43 +98,72 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
     },
     {
       field: 'TXN_Time',
-      header: '交易時間',
+      header: '銷售時間',
       visible: true,
       format: (val: string) => {
-        const date = new Date(`1970-01-01T${val}`);
-        return isNaN(date.getTime())
-          ? val
-          : `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+        const date = new Date(val);
+        if (isNaN(date.getTime())) return val;
+
+        const yyyy = date.getFullYear();
+        const MM = (date.getMonth() + 1).toString().padStart(2, '0');
+        const dd = date.getDate().toString().padStart(2, '0');
+        const HH = date.getHours().toString().padStart(2, '0');
+        const mm = date.getMinutes().toString().padStart(2, '0');
+
+        return `${yyyy}/${MM}/${dd} ${HH}:${mm}`;
       }
     },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'SYS_StoreNo', header: '店號', visible: false },
+    { field: 'TXN_No', header: '交易序號', visible: true, style: 'text-right' },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true }, // 非 POS5006 欄位，UI 顯示用
+    { field: 'tlt_name', header: '專櫃名稱', visible: true, style: 'text-left' }, // 非 POS5006 欄位，UI 顯示用
     { field: 'TXN_Uniform', header: '統一編號', visible: true },
     { field: 'TXN_GUIBegNoFirstNo', header: '字軌', visible: true }, // 假設為字軌顯示
     { field: 'TXN_GUIBegNo', header: '起始發票號碼', visible: true },
     { field: 'TXN_GUIEndNo', header: '結束發票號碼', visible: true },
-    { field: 'TXN_TotGUI', header: '總發票金額', visible: true },
-    { field: 'TXN_TotSaleAmt', header: '總銷售金額', visible: true },
-    { field: 'TXN_TotOver', header: '總溢收金額', visible: true },
+    {
+      field: 'TXN_TotGUI', header: '總發票金額', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0'
+    },
+    {
+      field: 'TXN_TotSaleAmt',
+      header: '總銷售金額',
+      visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0'
+    },
+    {
+      field: 'TXN_TotOver', header: '總溢收金額', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0'
+    },
     {
       field: 'TXN_Status',
-      header: '交易狀態',
+      header: '交易型態',
       visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.statusFlagOptions)
+      format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions)
     },
-    { field: 'TXN_TotPayAmt', header: '總付款金額', visible: true },
+    {
+      field: 'TXN_TotPayAmt', header: '總付款金額', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0'
+    },
     { field: 'TXN_TaxFreeCertNo', header: '免稅證證號', visible: true },
 
-    { field: 'USR_No', header: '收銀員號碼', visible: true },
+    { field: 'USR_No', header: '收銀員號碼', visible: true, style: 'text-left' },
     { field: 'TXN_PreOrderNo', header: '預購單號', visible: true },
     { field: 'ORG_TXN_Date', header: '原始交易日期', visible: true },
     { field: 'ORG_ECR_No', header: '原始收銀機號', visible: true },
     { field: 'ORG_TXN_No', header: '原始交易序號', visible: true },
     { field: 'TXN_PkngUID', header: '停車票卡/車牌', visible: true },
     { field: 'TXN_MemID', header: '會員識別碼', visible: true },
-    { field: 'TXN_TotDisc', header: '折扣總額', visible: true },
+    {
+      field: 'TXN_TotDisc', header: '折扣總額', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0'
+    },
     {
       field: 'TXN_DonateType',
       header: '捐贈狀態',
@@ -155,99 +185,11 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
       visible: true,
       format: (val: any) => this.getYesNoLabel(val)
     }
+
   ];
 
 
-  mainColumns: any[] = [
-    {
-      field: 'TXN_Date',
-      header: '交易日期',
-      visible: true,
-      format: (val: string) => {
-        const date = new Date(val);
-        return isNaN(date.getTime())
-          ? val
-          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-      }
-    },
-    {
-      field: 'TXN_Time',
-      header: '交易時間',
-      visible: true,
-      format: (val: string) => {
-        const date = new Date(`1970-01-01T${val}`);
-        return isNaN(date.getTime())
-          ? val
-          : `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-      }
-    },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true }, // 非 POS5006 欄位，UI 顯示用
-    { field: 'TXN_Uniform', header: '統一編號', visible: true },
-    { field: 'TXN_GUIBegNoFirstNo', header: '字軌', visible: true }, // 假設為字軌顯示
-    { field: 'TXN_GUIBegNo', header: '起始發票號碼', visible: true },
-    { field: 'TXN_GUIEndNo', header: '結束發票號碼', visible: true },
-    { field: 'TXN_TotGUI', header: '總發票金額', visible: true },
-    { field: 'TXN_TotSaleAmt', header: '總銷售金額', visible: true },
-    { field: 'TXN_TotOver', header: '總溢收金額', visible: true },
-    {
-      field: 'TXN_Status',
-      header: '交易狀態',
-      visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.statusFlagOptions)
-    },
-    { field: 'TXN_TotPayAmt', header: '總付款金額', visible: true },
-    { field: 'TXN_TaxFreeCertNo', header: '免稅證證號', visible: true },
 
-    { field: 'USR_No', header: '收銀員號碼', visible: true },
-    { field: 'TXN_PreOrderNo', header: '預購單號', visible: true },
-    { field: 'ORG_TXN_Date', header: '原始交易日期', visible: true },
-    { field: 'ORG_ECR_No', header: '原始收銀機號', visible: true },
-    { field: 'ORG_TXN_No', header: '原始交易序號', visible: true },
-    { field: 'TXN_PkngUID', header: '停車票卡/車牌', visible: true },
-    { field: 'TXN_MemID', header: '會員識別碼', visible: true },
-    { field: 'TXN_TotDisc', header: '折扣總額', visible: true },
-    {
-      field: 'TXN_DonateType',
-      header: '捐贈狀態',
-      visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.whetherOptions)
-    },
-    { field: 'TXN_GUILoveCode', header: '電子發票愛心碼', visible: true },
-    { field: 'TXN_GUIRemark', header: '電子發票隨機碼', visible: true },
-    {
-      field: 'TXN_GUI_CarrType',
-      header: '電子發票載具類別',
-      visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.carrierTypeOptions)
-    },
-    { field: 'TXN_GUI_CarrId', header: '電子發票載具ID隱碼', visible: true },
-    {
-      field: 'TXN_PrintGUI',
-      header: '電子發票是否列印', //是從 **POS5006.TXN_PrintTimes** 計算出來的結果。
-      visible: true,
-      format: (val: any) => this.getYesNoLabel(val)
-    }
-  ];
-  detailColumns: any[] = [
-
-    { field: 'TXN_Date', header: '交易日期', visible: true },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    {
-      field: 'TXN_No',
-      header: '交易序號',
-      visible: true,
-    },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'PAY_Type', header: '付款別型態', visible: true }, //POS1006.PAY_Type
-    { field: 'CRD_Type', header: '付款信用卡卡別', visible: true }, //V=VISA、M=MASTER、J=JCB、A=AE、D=DINVER、S=銀聯卡*/
-    { field: 'CRD_No', header: '付款卡號', visible: true },
-    { field: 'TERM_No', header: '期別', visible: true }, //0=一般，其餘為分期的期數
-    { field: 'TXN_PayAmt', header: '付款金額', visible: true },
-  ];
   // 展開式表格的載入狀態
   expandLoading = false;
   //data為detailColumns 的data的data
@@ -258,7 +200,6 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
 
   constructor(
     private tls23010Service: TLS23010Service,
-    private transactionTypeService: TransactionTypeService,
     private statusFlagService: StatusFlagService,
     private whetherService: WhetherService,
     private TXN_SubtypeService: TXN_SubtypeService,
@@ -268,6 +209,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
     private txnStatusService: TxnStatusService,
     private counterNameService: CounterNameService,
     private ECRNoService: ECRNoService,
+    private cashierService: CashierService,
 
 
   ) {
@@ -305,8 +247,14 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
         value: x.value,
       })) || [];
     });
+    this.cashierService.getCashierOptions().subscribe((res) => {
+      this.cashierOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
   }
-
   onSubmit(form: FormGroup): void {
     if (this.loading) return;
 
@@ -324,60 +272,18 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
       this.tls23010Service.queryTLS23010(formValue).subscribe({
         next: (res) => {
           if (res.Status === '0000') {
-            this.data = (res.Data || []).map((item: MainData) => {
-              const isEven = Number(item.TXN_No) % 2 === 0;
-
-              const details = isEven
-                ? [
-                  {
-                    TXN_Date: item.TXN_Date,
-                    ECR_No: item.ECR_No,
-                    TXN_No: item.TXN_No,
-                    tlt_no: item.tlt_no,
-                    tlt_name: item.tlt_name,
-                    PAY_Type: '現金',
-                    CRD_Type: '',
-                    CRD_No: '',
-                    TERM_No: '0',
-                    TXN_PayAmt: 200,
-                  },
-                  {
-                    TXN_Date: item.TXN_Date,
-                    ECR_No: item.ECR_No,
-                    TXN_No: item.TXN_No,
-                    tlt_no: item.tlt_no,
-                    tlt_name: item.tlt_name,
-                    PAY_Type: '行動支付',
-                    CRD_Type: '',
-                    CRD_No: '',
-                    TERM_No: '0',
-                    TXN_PayAmt: 100,
-                  }
-                ]
-                : [
-                  {
-                    TXN_Date: item.TXN_Date,
-                    ECR_No: item.ECR_No,
-                    TXN_No: item.TXN_No,
-                    tlt_no: item.tlt_no,
-                    tlt_name: item.tlt_name,
-                    PAY_Type: '信用卡',
-                    CRD_Type: 'MASTER',
-                    CRD_No: '**** **** **** 5678',
-                    TERM_No: '6',
-                    TXN_PayAmt: 600,
-                  }
-                ];
-
-              return {
-                ...item,
-                details, // ✅ 直接預帶明細
-              };
-            });
+            this.data = (res.Data || []).map((item: MainData) => ({
+              ...item,
+              details: []
+            }));
 
             this.totalRecords = res.TotalCount || this.data.length;
             this.queryStateService.setQueryState(this.ProgNo, formValue);
             this.messageService.successBubble('查詢成功');
+
+            // ✅ 自動載入每筆明細
+            this.data.forEach(item => this.loadDetail(item));
+
           } else {
             this.data = [];
             this.totalRecords = 0;
@@ -397,6 +303,8 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
     });
   }
 
+
+
   getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find(opt => String(opt.value) === String(value));
     return found ? found.label : value;
@@ -404,52 +312,43 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
 
 
   loadDetail(rowData: any) {
-    console.log('展開資料 rowData:', rowData);
-    const isEven = Number(rowData.TXN_No) % 2 === 0;
+    this.expandLoading = true;
 
-    rowData.details = isEven
-      ? [
-        {
-          TXN_Date: rowData.TXN_Date,
-          ECR_No: rowData.ECR_No,
-          TXN_No: rowData.TXN_No,
-          tlt_no: rowData.tlt_no,
-          tlt_name: rowData.tlt_name,
-          PAY_Type: '現金',
-          CRD_Type: '',
-          CRD_No: '',
-          TERM_No: '0',
-          TXN_PayAmt: 200,
-        },
-        {
-          TXN_Date: rowData.TXN_Date,
-          ECR_No: rowData.ECR_No,
-          TXN_No: rowData.TXN_No,
-          tlt_no: rowData.tlt_no,
-          tlt_name: rowData.tlt_name,
-          PAY_Type: '行動支付',
-          CRD_Type: '',
-          CRD_No: '',
-          TERM_No: '0',
-          TXN_PayAmt: 100,
+    const query = {
+      SYS_StoreNo: rowData.SYS_StoreNo,
+      TXN_Date: rowData.TXN_Date,
+      ECR_No: rowData.ECR_No,
+      TXN_No: rowData.TXN_No,
+    };
+
+    console.log('📦 傳給明細API的參數:', query);
+
+    this.tls23010Service.queryTLS23010Detail(query).subscribe({
+      next: (res) => {
+        console.log('📥 明細API回傳:', res);
+
+        // ✅ 正確使用 Data 欄位
+        if (res.Status === '0000') {
+          rowData.details = res.Data || [];
+        } else {
+          rowData.details = [];
+          this.messageService.warnBubble('查無明細資料');
         }
-      ]
-      : [
-        {
-          TXN_Date: rowData.TXN_Date,
-          ECR_No: rowData.ECR_No,
-          TXN_No: rowData.TXN_No,
-          tlt_no: rowData.tlt_no,
-          tlt_name: rowData.tlt_name,
-          PAY_Type: '信用卡',
-          CRD_Type: 'MASTER',
-          CRD_No: '**** **** **** 5678',
-          TERM_No: '6',
-          TXN_PayAmt: 600,
-        }
-      ];
-    console.log('rowData.details:', rowData.details);
+
+        // ✅ 展開該筆
+        this.expandedRows = {
+          [rowData.TXN_No]: true,
+        };
+      },
+      error: () => {
+        this.messageService.errorBubble('載入明細失敗');
+      },
+      complete: () => {
+        this.expandLoading = false;
+      }
+    });
   }
+
   expandedRows: { [key: string]: boolean } = {};
   override onDetail(rowData: any): void {
     this.loadDetail(rowData); // ✅ 載入明細資料
@@ -460,11 +359,28 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
     };
   }
   expansionColumns = [
-    { field: 'PAY_Type', header: '付款類型' },
+
+    {
+      field: 'TXN_Date',
+      header: '銷售日期',
+      visible: true,
+      format: (val: string) => {
+        const date = new Date(val);
+        return isNaN(date.getTime())
+          ? val
+          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+      }
+    },
+
+    { field: 'ECR_No', header: '收銀機代號' },
+    { field: 'TXN_No', header: '交易序號' },
+    { field: 'tlt_no', header: '專櫃編號' },
+    { field: 'tlt_name', header: '櫃位名稱' },
+    { field: 'PAY_Type', header: '付款類別' },
     { field: 'CRD_Type', header: '卡別' },
     { field: 'CRD_No', header: '卡號' },
-    { field: 'TERM_No', header: '端末機號' },
-    { field: 'TXN_PayAmt', header: '付款金額' },
+    { field: 'TERM_No', header: '分期期數' },
+    { field: 'TXN_PayAmt', header: '銷售金額' },
   ];
 
 }

@@ -1,213 +1,229 @@
-import { WhetherService } from './../../../service/basic/whether.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { SystemTypeService } from '../../../service/basic/system-type.service';
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
+import { FormGroup, Validators } from '@angular/forms';
+import { TLS23030Service } from '../../../service/API/tls/tls23030.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { WhetherService } from '../../../service/basic/whether.service';
+import { DisplayModeService } from '../../../service/basic/display-mode.service';
 import { PaymentTypeService } from '../../../service/basic/payment-type.service';
 import { TransactionTypeService } from '../../../service/basic/transaction-type.service';
 import { CardTypeService } from '../../../service/basic/card-type.service';
 import { TicketStatusService } from '../../../service/basic/ticket-status-service.service';
-import { DisplayModeService } from '../../../service/basic/display-mode.service';
-
-const now = new Date();
+import { TaxableService } from '../../../service/basic/taxable.service';
+import { DiscountService } from '../../../service/basic/discount.service';
+import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
+import { CommissionTypeService } from '../../../service/basic/commission-type.service';
+import { FloorService } from '../../../service/basic/floor.service';
+import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { TxnStatusService } from '../../../service/basic/txn-status.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
 
 @Component({
   selector: 'app-tls23030',
   templateUrl: './tls23030.component.html',
-  styleUrl: './tls23030.component.scss'
+  styleUrls: ['./tls23030.component.scss']
 })
-export class TLS23030Component {
-  ProgNo: string = '220012';
-
-  // 权限
-  funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
-
-  // 查询表单
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS23030Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    saleDateStart: [now, [Validators.required]], // 銷售日期 起
-    saleDateEnd: [now, [Validators.required]], // 銷售日期 迄
-    cashierCode: [], // 收銀機代號
-    transactionSerialStart: [, [this.validationService.numberValidator]], // 交易序號(起)
-    transactionSerialEnd: [, [this.validationService.numberValidator]], // 交易序號(迄)
-    counterCode: [], // 專櫃編號
-    paymentType: [], // 付款別
-    amountStart: [], // 金額 起
-    amountEnd: [], // 金額 迄
-    transactionType: [], // 交易型態
-    membershipNumber: [], // 會員卡號
-    creditCardType: [], // 信用卡別
-    creditCardNumber: [], // 信用卡卡號
-    installment: [], // 是否分期
-    voucherStatus: [], // 券類(己開/未開)
-    organizationCode: [], // 組識編號
-    batchVoucherSearch: [], // 是否查詢券類大批
-    issueOwnerInvoice: [], // 是否開立業主發票
-    ownerCollectCash: [], // 是否為業主收現
-    recordsPerPage: [], // 每頁顯示筆數
-    limitnumber: [, Validators.required],//限制筆數
-    displayMode: [], // 顯示方式
+    TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],
+    TXN_DateEnd: [new Date(), [Validators.required]],
+    ECR_No: [''],
+    TXN_No_Start: [null],
+    TXN_No_End: [null],
+    TLT_No: [''],
+    PAY_Type: [''],
+    TXN_PayAmt_Start: [null],
+    TXN_PayAmt_End: [null],
+    TXN_Status: [''],
+    TXN_MemCard: [''],
+    CRD_Type: [''],
+    CRD_No: [''],
+
+    pay_taxtype: [''],
+    org_id: [''],
+    rece_yn: [''],
+    cash_yn: [''],
+    tlt_building: [''],
+    tlt_floor: [''],
+    IsHaveTERM_No: [null], // 預設為 null 而不是 true
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }])
   });
 
-  // 表格数据
-  data: any[] = [
+  data: any[] = [];
+  totalRecords = 0;
 
-    // 其他数据
-  ];
-  filteredData: any[] = [...this.data];
   columns: any[] = [
-    { field: 'salesDate', header: '銷售日期', visible: true },
-    { field: 'cashierNumber', header: '收銀機代號', visible: true },
-    { field: 'transactionSequence', header: '交易序號', visible: true },
-    { field: 'franchiseNumber', header: '專櫃編號', visible: true },
-    { field: 'transactionType', header: '交易型態', visible: true },
-    { field: 'paymentType', header: '付款別', visible: true },
-    { field: 'amount', header: '金額', visible: true },
-    { field: 'taxAmount', header: '備抵稅額', visible: true },
-    { field: 'creditCardType', header: '信用卡類別', visible: true },
-    { field: 'creditCardNumber', header: '信用卡卡號/條碼', visible: true },
-    { field: 'isInstallment', header: '是否分期', visible: true },
-    { field: 'memberCardNumber', header: '會員卡號', visible: true },
-    { field: 'organizationNumber', header: '組織編號', visible: true }
+    {
+      field: 'TXN_Date', header: '銷售日期', visible: true, format: (val: string) => {
+        const date = new Date(val);
+        return isNaN(date.getTime())
+          ? val
+          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+      }
+    },
+    { field: 'ECR_No', header: '收銀機代號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'TXN_Status', header: '交易型態', visible: true, format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions) },
+    { field: 'PAY_Type', header: '付款別', visible: true, format: (val: any) => this.getLabelFromOptions(val, this.paymentTypeOptions) },
+    {
+      field: 'TXN_PayAmt', header: '金額', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0'
+    },
+    {
+      field: 'TXN_TaxAlwnc', header: '備抵稅額', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0'
+    },
+    { field: 'CRD_Type', header: '信用卡別', visible: true },
+    {
+      field: 'CRD_No', header: '信用卡卡號/條碼', visible: true,
+      style: 'text-right'
+    },
+    { field: 'IsHaveTERM_No', header: '是否分期', visible: true, format: (val: any) => this.getLabelFromOptions(val, this.WhetherOptions) },
+    { field: 'TXN_MemCard', header: '會員卡號', visible: true },
+    { field: 'org_id', header: '組織編號', visible: true },
   ];
 
-  systemTypeOptions: any[] = [];
+  displayModeOptions: any[] = [];
+  WhetherOptions: any[] = [];
   paymentTypeOptions: any[] = [];
   transactionTypeOptions: any[] = [];
   cardTypeOptions: any[] = [];
-  WhetherOptions: any[] = [];
   ticketStatusOptions: any[] = [];
-  displayModeOptions: any[] = [];
+  taxableOptions: any[] = [];
+  discountOptions: any[] = [];
+  deductionbigCategoryOptions: any[] = [];
+  floorOptions: any[] = [];
+  BUILDING_NO_Options: any[] = [];
+  commissionTypeOptions: any[] = [];
+  txnStatusOptions: any[] = [];
+  OrganizationCodeOptions: any[] = [];
+  ECRNoOptions: any[] = [];
+  CounterOptions: any[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private systemTypeService: SystemTypeService,
+    private whetherService: WhetherService,
+    private displayModeService: DisplayModeService,
     private paymentTypeService: PaymentTypeService,
     private transactionTypeService: TransactionTypeService,
     private cardTypeService: CardTypeService,
-    private whetherService: WhetherService,
     private ticketStatusService: TicketStatusService,
-    private displayModeService: DisplayModeService,
-  ) { }
+    private taxableService: TaxableService,
+    private discountService: DiscountService,
+    private deductionbigCategoryService: DeductionbigCategoryService,
+    private commissionTypeService: CommissionTypeService,
+    private floorService: FloorService,
+    private tls11010Service: Tls11010Service,
+    private tls23030Service: TLS23030Service,
+    private txnStatusService: TxnStatusService,
+    private ECRNoService: ECRNoService,
+    private counterNameService: CounterNameService,
+
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS23030', '', this.queryForm, (form) => this.onSubmit(form));
 
-    this.systemTypeService.getSystemTypes().subscribe(data => {
-      this.systemTypeOptions = data;
+    this.displayModeService.getDisplayModes().subscribe(data => this.displayModeOptions = data);
+    this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
+    this.paymentTypeService.getPaymentTypes().subscribe(data => this.paymentTypeOptions = data);
+    this.transactionTypeService.getTransactionTypes().subscribe(data => this.transactionTypeOptions = data);
+    this.cardTypeService.getCardType().subscribe(data => this.cardTypeOptions = data);
+    this.ticketStatusService.getTicketStatuses().subscribe(data => this.ticketStatusOptions = data);
+    this.taxableService.getSystemTypes().subscribe(data => this.taxableOptions = data);
+    this.discountService.getLocalDiscountOptions().subscribe(data => this.discountOptions = data);
+    this.deductionbigCategoryService.getLocalDeductionCategories().subscribe(data => this.deductionbigCategoryOptions = data);
+    this.commissionTypeService.getCommissionTypes().subscribe(data => this.commissionTypeOptions = data);
+    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
+    this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
+    this.tls11010Service.getOrgOptions().subscribe((res) => {
+      this.OrganizationCodeOptions = res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
     });
-    this.displayModeService.getDisplayModes().subscribe((data) => (this.displayModeOptions = data));
-    this.paymentTypeService.getPaymentTypes().subscribe(data => {
-      this.paymentTypeOptions = data;
+    this.txnStatusService.getTxnStatusOptions().subscribe(data => this.txnStatusOptions = data);
+    this.ECRNoService.getECRNo().subscribe((res) => {
+      this.ECRNoOptions = res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
     });
-    this.transactionTypeService.getTransactionTypes().subscribe(data => {
-      this.transactionTypeOptions = data;
-    });
-    this.cardTypeService.getCardType().subscribe(data => {
-      this.cardTypeOptions = data;
-    });
-    this.whetherService.getWhetherOptions().subscribe(data => {
-      this.WhetherOptions = data;
-    });
-    this.ticketStatusService.getTicketStatuses().subscribe(data => {
-      this.ticketStatusOptions = data;
+    this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions = res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
     });
   }
 
-  canQuery(): boolean {
-    return true;
-  }
 
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
+  onSubmit(form: FormGroup): void {
     this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    if (this.loading) return;
 
-    if (frm.valid && this.canQuery()) {
-      // 提交逻辑
+    if (form.invalid) {
+      this.messageService.warnBubble('請確認欄位資料是否完整');
+      return;
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
+    this.handleSubmit(form, () => {
+      const payload = { ...form.value };
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
+      // ✅ 將 'Y' / 'N' 轉成 true / false
+      if (payload.IsHaveTERM_No === 'Y') {
+        payload.IsHaveTERM_No = true;
+      } else if (payload.IsHaveTERM_No === 'N') {
+        payload.IsHaveTERM_No = false;
+      }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
+      // ✅ 將空字串轉 null
+      Object.keys(payload).forEach(key => {
+        if (payload[key] === '') payload[key] = null;
+      });
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
+      console.log('查詢參數:', payload);
+
+      this.tls23030Service.queryTLS23030(payload).subscribe({
+        next: (res) => {
+          console.log('查詢結果:', res);
+          if (res.Status === '0000') {
+            this.data = res.Data || [];
+            this.totalRecords = res.TotalCount || this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, payload);
+            this.messageService.successBubble('查詢成功');
+          } else {
+            this.data = [];
+            this.totalRecords = 0;
+            this.messageService.errorBubble('查詢失敗');
+          }
         },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
+        error: () => {
+          this.data = [];
+          this.totalRecords = 0;
+          this.loading = false;
+          this.messageService.errorBubble('查詢錯誤');
         },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
+        complete: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        }
+      });
+    });
   }
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+
+  getLabelFromOptions(value: any, options: any[]): string {
+    const found = options?.find(opt => String(opt.value) === String(value));
+    return found ? found.label : value;
   }
 }

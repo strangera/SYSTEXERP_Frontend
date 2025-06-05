@@ -1,120 +1,87 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// 權限相關
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// 共用服務
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { SystemTypeService } from '../../../service/basic/system-type.service';
-import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
+import { FormGroup, Validators } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
+import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { TypeService } from '../../../service/basic/type.service';
 import { CategoryService } from '../../../service/basic/category.service';
+import { TLS23110Service } from '../../../service/API/tls/tls23110.service';
+import { FloorService } from '../../../service/basic/floor.service';
+import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls23110',
   templateUrl: './tls23110.component.html',
   styleUrls: ['./tls23110.component.scss']
 })
-export class TLS23110Component {
-
-  ProgNo: string = '220020';
-
-  // 權限變數
-  funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS23110Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    saleDateStart: [{ value: '', disabled: true }, Validators.required], // 銷售日期起
-    saleDateEnd: [{ value: '', disabled: true }, Validators.required],   // 銷售日期迄
-    saleMonthYear: [{ value: '', disabled: true }], // 年月
-    productCategory: [],  // 商品抽成類別
-    type: [],  // 類型
-    category: [{ value: '', disabled: true }],  // 類別
-    counterCode: [{ value: '', disabled: true }],  // 專櫃編號
-    organizationCode: [{ value: '', disabled: true }],  // 組織代碼
-    dateRadio: [''],  // 日期選項單選
-    categoryRadio: ['']  // 類別選項單選
+    saleDateStart: [null, Validators.required],
+    saleDateEnd: [null, Validators.required],
+    saleMonthYear: [''],
+    productCategory: [''],
+    type: [''],
+    category: [''],
+    counterCode: [''],
+    organizationCode: [''],
+    dateRadio: ['saleDate'],
+    categoryRadio: ['category'],
+          tlt_building: [''],                                  // 樓層建物
+      tlt_floor: [''],                                     // 樓層編號
+      org_id: [''],                                        // 組織代碼
+        ...createPaginationConfig([{ field: 'saleDateStart', order: 1 }])
   });
 
-  // 表格資料
   data: any[] = [];
-  filteredData: any[] = [...this.data];
+  totalRecords = 0;
+
   columns: any[] = [
-    { field: 'fullPriceWithoutTax', header: '正品 - 未稅', visible: true },
-    { field: 'fullPriceExemptedTax', header: '正品 - 免稅', visible: true },
-    // ... existing columns ...
-    { field: 'grandTotal', header: '合計 - 加總', visible: true },
+    { field: 'fullPriceWithoutTax', header: '正品 - 未稅', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
+    { field: 'fullPriceExemptedTax', header: '正品 - 免稅', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
+    { field: 'grandTotal', header: '合計 - 加總', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
   ];
 
-  // 下拉選單選項
-  systemTypeOptions: any[] = [];
   DeductionbigCategoryOptions: any[] = [];
   TypeOptions: any[] = [];
   CategoryOptions: any[] = [];
   CounterCodeOptions: any[] = [];
   OrganizationNumberOptions: any[] = [];
 
+    floorOptions: any[] = [];
+  BUILDING_NO_Options: any[] = [];
+  OrganizationCodeOptions: any[] = []
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private systemTypeService: SystemTypeService,
-    private DeductionbigCategoryService: DeductionbigCategoryService,
-    private TypeService: TypeService,
-    private CategoryService: CategoryService,
-    private CounterCodeService: CounterCodeService,
-    private OrganizationNumberService: OrganizationNumberService,
-  ) { }
+    private tls23110Service: TLS23110Service,
+    private deductionbigCategoryService: DeductionbigCategoryService,
+    private typeService: TypeService,
+    private categoryService: CategoryService,
+    private counterCodeService: CounterCodeService,
+    private organizationNumberService: OrganizationNumberService,
+        private floorService: FloorService,
+    private tls11010Service: Tls11010Service
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.systemTypeService.getSystemTypes().subscribe(data => {
-      this.systemTypeOptions = data;
-    });
-    this.DeductionbigCategoryService.getLocalDeductionCategories().subscribe(data => {
-      this.DeductionbigCategoryOptions = data;
-    });
-    this.TypeService.getTypeOptions().subscribe(data => {
-      this.TypeOptions = data;
-    });
-    this.CategoryService.getCategories().subscribe(data => {
-      this.CategoryOptions = data;
-    });
-    this.CounterCodeService.getCounterCodes().subscribe(data => {
-      this.CounterCodeOptions = data;
-    });
-    this.OrganizationNumberService.getOrganizationNumbers().subscribe(data => {
-      this.OrganizationNumberOptions = data;
-    });
+    this.initializePage('TLS23110', '', this.queryForm, (form) => this.onSubmit(form));
 
-    // Initialize radio button behaviors
+    this.deductionbigCategoryService.getLocalDeductionCategories().subscribe(data => this.DeductionbigCategoryOptions = data);
+    this.typeService.getTypeOptions().subscribe(data => this.TypeOptions = data);
+    this.categoryService.getCategories().subscribe(data => this.CategoryOptions = data);
+    this.counterCodeService.getCounterCodes().subscribe(data => this.CounterCodeOptions = data);
+    this.organizationNumberService.getOrganizationNumbers().subscribe(data => this.OrganizationNumberOptions = data);
+
     this.queryForm.controls.dateRadio.valueChanges.subscribe(value => {
       if (value === 'saleDate') {
         this.queryForm.controls.saleDateStart.enable();
         this.queryForm.controls.saleDateEnd.enable();
         this.queryForm.controls.saleMonthYear.disable();
         this.queryForm.controls.saleMonthYear.reset();
-      } else if (value === 'saleMonthYear') {
+      } else {
         this.queryForm.controls.saleDateStart.disable();
         this.queryForm.controls.saleDateEnd.disable();
         this.queryForm.controls.saleDateStart.reset();
@@ -139,79 +106,72 @@ export class TLS23110Component {
         this.queryForm.controls.organizationCode.enable();
       }
     });
+             this.floorService.getFloors().subscribe(data => this.floorOptions = data);
+    this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
+    this.tls11010Service.getOrgOptions().subscribe((res) => {
+      this.OrganizationCodeOptions = res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];});
   }
 
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
+  onSubmit(form: FormGroup): void {
     this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    if (this.loading) return;
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
+    if (form.invalid) {
+      this.messageService.warnBubble('請確認欄位資料是否完整');
+      return;
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
+    this.handleSubmit(form, () => {
+      const payload = { ...form.value };
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
+      // ✅ 將 'Y' / 'N' 轉成 true / false
+      if (payload.IsHaveTERM_No === 'Y') {
+        payload.IsHaveTERM_No = true;
+      } else if (payload.IsHaveTERM_No === 'N') {
+        payload.IsHaveTERM_No = false;
+      }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
+      // ✅ 將空字串轉 null
+      Object.keys(payload).forEach(key => {
+        if (payload[key] === '') payload[key] = null;
+      });
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm.value,
+      console.log('查詢參數:', payload);
+
+      this.tls23110Service.queryTLS23110(payload).subscribe({
+        next: (res) => {
+          console.log('查詢結果:', res);
+          if (res.Status === '0000') {
+            this.data = res.Data || [];
+            this.totalRecords = res.TotalCount || this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, payload);
+            this.messageService.successBubble('查詢成功');
+          } else {
+            this.data = [];
+            this.totalRecords = 0;
+            this.messageService.errorBubble('查詢失敗');
+          }
         },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm.value,
+        error: () => {
+          this.data = [];
+          this.totalRecords = 0;
+          this.loading = false;
+          this.messageService.errorBubble('查詢錯誤');
         },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
+        complete: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        }
+      });
+    });
   }
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm.value,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+  getLabelFromOptions(value: any, options: any[]): string {
+    const found = options?.find(opt => String(opt.value) === String(value));
+    return found ? found.label : value;
   }
 }

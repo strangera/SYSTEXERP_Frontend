@@ -4,13 +4,25 @@
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
     <div *appHasPermission="addPermission">
-      <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
+      <app-button
+        btnType="create"
+        (click)="onCreate()"
+        class="col"
+      ></app-button>
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <!-- <div class="col-12 md:col-6 lg:col-4">
                 <app-radiobutton
@@ -22,23 +34,44 @@
                 </app-radiobutton>
               </div> -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateMonthOne" label="結算年月" controlName="remark"
-              [control]="queryForm.controls.remark" [submitted]="submitted">
-            </app-calendar>
+            <app-calendar
+              calendarType="dateMonthOne"
+              label="結算年月"
+              controlName="remark"
+              [control]="queryForm.controls.remark"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" label="抄錶日期" controlName="remark" [control]="queryForm.controls.remark"
-              [submitted]="submitted">
-            </app-calendar>
+            <app-calendar
+              calendarType="dateOne"
+              label="抄錶日期"
+              controlName="remark"
+              [control]="queryForm.controls.remark"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="能源類型" controlName="Energytype" [options]="Energytype" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.Energytype" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="能源類型"
+              controlName="Energytype"
+              [options]="Energytype"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Energytype"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="電錶編號" controlName="ironNumberOptions" [options]="ironNumberOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ironNumberOptions"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="電錶編號"
+              controlName="ironNumberOptions"
+              [options]="ironNumberOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ironNumberOptions"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <!-- <div class="col-12 md:col-6 lg:col-4">
                 <app-dropdown
@@ -52,16 +85,21 @@
                 ></app-dropdown>
               </div> -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="抄錶度數" controlName="remark" [control]="queryForm.controls.remark"
-              [submitted]="submitted">
-            </app-input-text>
+            <app-input-text
+              label="抄錶度數"
+              controlName="remark"
+              [control]="queryForm.controls.remark"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
-
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="備註" controlName="remark" [control]="queryForm.controls.remark"
-              [submitted]="submitted">
-            </app-input-text>
+            <app-input-text
+              label="備註"
+              controlName="remark"
+              [control]="queryForm.controls.remark"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <!-- <div class="col-12 md:col-6 lg:col-4">
                   <app-datemm-one
@@ -72,7 +110,6 @@
                   >
                   </app-calendar>
                 </div> -->
-
 
           <!-- <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown
@@ -160,10 +197,14 @@
             </div> -->
         </div>
       </form>
-      <div *appHasPermission="queryPermission" class="col">
+      <div>
         <div class="grid justify-content-end">
           <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+          <app-button
+            btnType="query"
+            (onClick)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -172,7 +213,11 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-    </app-table>
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
   </div>
 </div>

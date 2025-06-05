@@ -6,55 +6,96 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <!-- 活動年度別 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateYearRange" label="活動年度別" [startControl]="queryForm.controls.startYear"
-              [endControl]="queryForm.controls.endYear" [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateYearRange"
+              label="活動年度別"
+              [startControl]="queryForm.controls.startYear"
+              [endControl]="queryForm.controls.endYear"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
 
           <!-- 活動季別 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="活動季別" controlName="activityCategoryCode" [options]="activityCategoryOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.activityCategoryCode"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="活動季別"
+              controlName="activityCategoryCode"
+              [options]="activityCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.activityCategoryCode"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <!-- 活動類別代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="活動類別代號" controlName="activityCategoryCode" [options]="activityCategoryOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.activityCategoryCode"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="活動類別代號"
+              controlName="activityCategoryCode"
+              [options]="activityCategoryOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.activityCategoryCode"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <!-- 活動類別名稱 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="活動類別名稱" controlName="activityCategoryName"
-              [control]="queryForm.controls.activityCategoryName" [submitted]="submitted">
-            </app-input-text>
+            <app-input-text
+              label="活動類別名稱"
+              controlName="activityCategoryName"
+              [control]="queryForm.controls.activityCategoryName"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <!-- 行銷檔期代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="行銷檔期代號" controlName="marketingCampaignCode" [options]="marketingCampaignOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.marketingCampaignCode"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="行銷檔期代號"
+              controlName="marketingCampaignCode"
+              [options]="marketingCampaignOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.marketingCampaignCode"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <!-- 檔期名稱 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="行銷檔期名稱" controlName="campaignName" [control]="queryForm.controls.campaignName"
-              [submitted]="submitted">
-            </app-input-text>
+            <app-input-text
+              label="行銷檔期名稱"
+              controlName="campaignName"
+              [control]="queryForm.controls.campaignName"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
       </form>
 
-      <div *appHasPermission="queryPermission" class="col">
+      <div>
         <div class="grid justify-content-end">
           <app-button btnType="clear" (click)="onClearForm()"></app-button>
-          <app-button btnType="query" (click)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+          <app-button
+            btnType="query"
+            (click)="onSubmitQuery(queryForm)"
+            [loading]="loading"
+          ></app-button>
         </div>
       </div>
     </p-accordionTab>

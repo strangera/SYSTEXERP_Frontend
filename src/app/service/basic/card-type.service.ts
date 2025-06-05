@@ -13,17 +13,19 @@ export class CardTypeService {
 
   // 本地數據的卡種選項，使用數字作為 value
   options: any[] = [
-    { value: 1, label: 'VISA' },
-    { value: 2, label: 'MASTER' },
-    { value: 3, label: 'JCB' },
-    { value: 4, label: 'AE' },
+    { value: 'V', label: 'VISA' },
+    { value: 'M', label: 'MASTER' },
+    { value: 'J', label: 'JCB' },
+    { value: 'A', label: 'AE' },
+    { value: 'D', label: 'DINVER' },
+    { value: 'S', label: '銀聯卡' },
     // 可以繼續添加其他選項
   ];
 
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   // 獲取所有卡別（本地數據）
   getCardType(): Observable<any[]> {

@@ -5,59 +5,96 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="廠客代號"
-              [startControl]="queryForm.controls.startFactoryID" [endControl]="queryForm.controls.endFactoryID"
-              [submitted]="submitted">
-            </app-input-number-range>
+            <app-input-number-range
+              [useGrouping]="false"
+              label="廠客代號"
+              [startControl]="queryForm.controls.startFactoryID"
+              [endControl]="queryForm.controls.endFactoryID"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="立帳日期"
-              [startControl]="queryForm.controls.startEstablishDate" [endControl]="queryForm.controls.endEstablishfDate"
-              [submitted]="submitted">
-            </app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="立帳日期"
+              [startControl]="queryForm.controls.startEstablishDate"
+              [endControl]="queryForm.controls.endEstablishfDate"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="收款日期"
-              [startControl]="queryForm.controls.receive_Date_From" [endControl]="queryForm.controls.receive_Date_To"
-              [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="收款日期"
+              [startControl]="queryForm.controls.receive_Date_From"
+              [endControl]="queryForm.controls.receive_Date_To"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="調整日期"
-              [startControl]="queryForm.controls.adjust_Date_From" [endControl]="queryForm.controls.adjust_Date_To"
-              [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="調整日期"
+              [startControl]="queryForm.controls.adjust_Date_From"
+              [endControl]="queryForm.controls.adjust_Date_To"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="科目代號"
-              [startControl]="queryForm.controls.startSubjectID" [endControl]="queryForm.controls.endSubjectID"
-              [submitted]="submitted">
-            </app-input-number-range>
+            <app-input-number-range
+              [useGrouping]="false"
+              label="科目代號"
+              [startControl]="queryForm.controls.startSubjectID"
+              [endControl]="queryForm.controls.endSubjectID"
+              [submitted]="submitted"
+            ></app-input-number-range>
           </div>
         </div>
-        <hr>
+        <hr />
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="應付金額是否顯示" groupname="systemtyperadio" [control]="queryForm.controls.display"
-              [options]="showUpOptions" [submitted]="submitted">
-            </app-radiobutton>
+            <app-radiobutton
+              label="應付金額是否顯示"
+              groupname="systemtyperadio"
+              [control]="queryForm.controls.display"
+              [options]="showUpOptions"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="帳款餘額為零是否顯示" groupname="showUp" [control]="queryForm.controls.showUp"
-              [options]="showUpOptions" [submitted]="submitted">
-            </app-radiobutton>
+            <app-radiobutton
+              label="帳款餘額為零是否顯示"
+              groupname="showUp"
+              [control]="queryForm.controls.showUp"
+              [options]="showUpOptions"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
         </div>
-        <hr>
-        <div *appHasPermission="queryPermission" class="col">
+        <hr />
+        <div>
           <div class="grid justify-content-end">
             <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+            <app-button
+              btnType="query"
+              (onClick)="onSubmitQuery(queryForm)"
+              [loading]="loading"
+            ></app-button>
           </div>
         </div>
       </form>
@@ -66,7 +103,11 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-    </app-table>
+    <app-table
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
   </div>
 </div>
