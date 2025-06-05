@@ -4,57 +4,49 @@
     <app-button btnType="back" (click)="onCancel()" />
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="角色代碼" controlName="Role_No"
+          [control]="dataForm.controls.Role_No" [submitted]="submitted" />
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="角色名稱" controlName="Role_Name"
+          [control]="dataForm.controls.Role_Name" [submitted]="submitted" />
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="描述" controlName="Description"
+          [control]="dataForm.controls.Description" [submitted]="submitted" />
         <p-tabView class="col-12">
           <p-tabPanel *ngFor="let module of privilegeBehaviorList">
             <ng-template pTemplate="header">
               <div class="flex align-items-center gap-2">
-                <i [ngClass]="getIconClass(module.id)"></i>
+                <i [ngClass]="getIconClass(module.key)"></i>
                 <span class="font-bold white-space-nowrap m-0">
-                  {{module.label}}
+                  {{module.data.label}}
                 </span>
               </div>
             </ng-template>
-            <p-accordion [multiple]="true" [activeIndex]="allIndexes">
-              <p-accordionTab *ngFor="let tab of module.children">
-                <ng-template pTemplate="header">
-                  <div class="flex align-items-center gap-2">
-                    <p-checkbox [label]="tab.label" [name]="tab['label']" [binary]="true"
-                      (click)="onSelectAll($event, tab)" [(ngModel)]="tab.IsEnable"
-                      [ngModelOptions]="{standalone: true}" />
-                  </div>
-                </ng-template>
-                <p-table *ngFor=" let child of tab.children" [value]="child.children"
-                  [(selection)]="child.selectChildren" [columns]="columns" dataKey="id" [rowTrackBy]="trackByRow"
-                  styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines">
-                  <ng-template pTemplate="header" let-columns>
-                    <tr>
-                      <th class="w-1rem">
-                        <p-tableHeaderCheckbox />
-                      </th>
-                      <th colspan="3">{{ child.label }}</th>
-                    </tr>
-                  </ng-template>
-                  <ng-template pTemplate="body" let-rowData let-columns="columns">
-                    <tr>
-                      <td>
-                        <p-tableCheckbox [value]="rowData" />
-                      </td>
-                      <td>
-                        <b>{{ rowData['label'] }}</b>
-                      </td>
-                      <td class="flex gap-2">
-                        <div *ngFor="let row of rowData['children']" class="inline-flex gap-2 justify-content-center">
-                          <p-checkbox [label]="row.label" [name]="rowData['label']" [binary]="true"
-                            [(ngModel)]="row.IsEnable" [ngModelOptions]="{standalone: true}" />
-                        </div>
-                      </td>
-                    </tr>
-                  </ng-template>
-                </p-table>
-              </p-accordionTab>
-            </p-accordion>
+            <p-treeTable #tt [value]="module.children" [columns]="columns" selectionMode="checkbox"
+              [(selectionKeys)]="selectionKeys" dataKey="key" filterMode="lenient"
+              styleClass="p-treetable-sm p-treetable-gridlines">
+              <ng-template pTemplate="header" let-columns>
+                <tr>
+                  <th *ngFor="let col of columns">
+                    {{ col.header }}
+                  </th>
+                </tr>
+                <tr>
+                  <th *ngFor="let col of columns">
+                    <input pInputText type="text" (input)="onFilterInput($event, col.field, col.filterMatchMode)" />
+                  </th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-rowNode let-rowData="rowData" let-columns="columns">
+                <tr [ttRow]="rowNode" [ttSelectableRow]="rowNode">
+                  <td *ngFor="let col of columns; let i = index">
+                    <p-treeTableToggler [rowNode]="rowNode" *ngIf="i === 0" />
+                    <p-treeTableCheckbox [value]="rowNode" *ngIf="i === 0" />
+                    {{ rowData[col.field] }}
+                  </td>
+                </tr>
+              </ng-template>
+            </p-treeTable>
           </p-tabPanel>
         </p-tabView>
       </div>

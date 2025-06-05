@@ -16,8 +16,10 @@ export interface TreeNode {
   label: string;
   IsEnable: boolean;
   partialSelected: boolean;
-  children: TreeNode[]; // 遞迴定義，表示子節點也是相同結構
-  selectChildren?: TreeNode[]; // 新增：用於存儲選中的子節點
-  parent_id?: string;    // 新增：直接父節點的 ID
-  parent_label?: string; // 新增：直接父節點的 Label
+  children: TreeNode[];
+}
+export interface PrimeTreeNode {
+  key: string; // PrimeNG 建議有 key 屬性
+  data?: any; // 實際的節點資料
+  children?: PrimeTreeNode[]; // 子節點
 }

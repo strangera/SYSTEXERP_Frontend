@@ -39,6 +39,7 @@ import { TreeModule } from 'primeng/tree';
 import { FileUploadModule } from 'primeng/fileupload';
 import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
+import { FieldsetModule } from 'primeng/fieldset';
 import { EditorModule } from 'primeng/editor';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { MenubarComponent } from './component/menubar/menubar.component';
@@ -176,6 +177,7 @@ import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autoc
     InputGroupAddonModule,
     IconFieldModule,
     InputIconModule,
+    FieldsetModule,
     // Custom
     MenubarComponent,
     ControlMessagesComponent,
