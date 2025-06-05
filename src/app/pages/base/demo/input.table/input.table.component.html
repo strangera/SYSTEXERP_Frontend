@@ -115,6 +115,7 @@
             (confirmSelected)="onMembersSelected($event)"
             [onlySendLeaf]="true"
           ></app-tree-dropdown>
+          <<<<<<< HEAD =======
           <!-- --- -->
         </div>
         <p-divider align="left" type="solid">
@@ -129,6 +130,7 @@
             [onlySendLeaf]="true"
             (confirmSelected)="onMembersSelected($event)"
           ></app-tree-dropdown-nest>
+          >>>>>>> main
           <!-- --- -->
         </div>
         <p-divider align="left" type="solid">
@@ -423,4 +425,81 @@
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
   ></app-table>
+</div>
+
+<!-- 銀行選擇 AutoComplete 測試區域 -->
+<div class="card">
+  <p-divider align="left" type="solid">
+    <b class="text-green-500 text-2xl">銀行選擇 AutoComplete (新)</b>
+  </p-divider>
+
+  <form [formGroup]="bankTestForm" (ngSubmit)="onBankTestSubmit()">
+    <div class="grid p-fluid">
+      <!-- 使用新的 AutoComplete 組件 -->
+      <div class="col-12 md:col-8 lg:col-6">
+        <app-autocomplete
+          label="廠商匯款銀行代號"
+          controlName="bank_id"
+          [control]="bankTestForm.controls.bank_id"
+          [submitted]="bankTestSubmitted"
+          [options]="bankOptions"
+          placeholder="輸入銀行代號、銀行名稱或分行名稱搜尋..."
+          [dropdown]="true"
+          [forceSelection]="false"
+          [maxResults]="10"
+          (selectEvent)="onBankSelect($event)"
+          (unselectEvent)="onBankUnselect()"
+          (changeEvent)="onBankChange($event)"
+        ></app-autocomplete>
+      </div>
+
+      <!-- 顯示選擇結果的額外資訊 -->
+      <div class="col-12 md:col-4 lg:col-6" *ngIf="selectedBankInfo">
+        <div class="bg-blue-50 border-1 border-blue-200 border-round p-3">
+          <h6 class="text-blue-800 mt-0 mb-2">
+            <i class="pi pi-info-circle mr-1"></i>
+            選擇資訊
+          </h6>
+          <div class="text-sm space-y-1">
+            <div>
+              <strong>完整代碼:</strong>
+              <code>{{ selectedBankInfo.value }}</code>
+            </div>
+            <div>
+              <strong>銀行代號:</strong>
+              {{ selectedBankInfo.bankCode }}
+            </div>
+            <div>
+              <strong>銀行名稱:</strong>
+              {{ selectedBankInfo.bankName }}
+            </div>
+            <div>
+              <strong>分行代號:</strong>
+              {{ selectedBankInfo.branchCode }}
+            </div>
+            <div>
+              <strong>分行名稱:</strong>
+              {{ selectedBankInfo.branchName }}
+            </div>
+            <div>
+              <strong>原始文字:</strong>
+              {{ selectedBankInfo.fullText }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 表單操作按鈕 -->
+    <!-- <div
+      class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+    >
+      <app-button btnType="clear" (click)="clearBankTest()"></app-button>
+      <app-button
+        btnType="query"
+        [loading]="bankTestLoading"
+        label="測試提交"
+      ></app-button>
+    </div> -->
+  </form>
 </div>

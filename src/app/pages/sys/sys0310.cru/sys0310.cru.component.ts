@@ -1,430 +1,118 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import {
-  FormArray,
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  Validators,
-} from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { KeyValue } from '@angular/common';
-import { TreeNode } from 'primeng/api';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormGroup, } from '@angular/forms';
+import { Role, TreeNode } from '../../../shared/models/sys/role.model';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Sys0210Service } from '../../../service/API/sys/sys0210.service';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
-interface RowData {
-  subsystemItem: string;
-  operationName?: string;
-  checked: boolean;
-  operationChecked: boolean;
-  functionButtons: Record<string, boolean>;
-  remark: string; // 新增的備註屬性
+export interface PrivilegeChildItem {
+  id: string;
+  label: string;
+  IsEnable: boolean;
+  partialSelected: boolean;
+  children?: PrivilegeChildItem[]; // 如果還有更深層，則保留
+  parent?: string; // 新增的 parent 屬性
 }
-
 // 4.2.3.1 角色系統權限設定 CRU
 @Component({
   selector: 'app-sys0310.cru',
   templateUrl: './sys0310.cru.component.html',
-  styleUrls: ['./sys0310.cru.component.scss'],
 })
 // 角色系統權限設定 CRU
-export class SYS0310CRUComponent extends BasicCrupageComponent implements OnInit {
-  // ----------------------------------------------------------------
-  sourceProducts: any[] = [{
-    id: 1,
-    cName: 'agnès b.',
-    area: 'A1館',
-    floor: '1F',
-  }, {
-    id: 2,
-    cName: 'GAP',
-    area: 'A1館',
-    floor: '1F',
-  }, {
-    id: 3,
-    cName: 'HEARTS ON FIRE',
-    area: 'A1館',
-    floor: '1F',
-  },];
-  targetProducts: any[] = [];
-
-  // ----------------------------------------------------------------
-  selectedFiles: TreeNode[] = [];
-  PrivilegeBehaviorlist = [
-    {
-      "key": "0",
-      "label": "人資財會模組",
-      "icon": "pi pi-book",
-      "data": "人資財會模組 Folder",
-      "children": [
-        {
-          "key": "0-0",
-          "label": "發票暨媒體申報系統",
-          "icon": "pi pi-home",
-          "data": "發票暨媒體申報系統",
-          "children": [
-            {
-              "key": "0-0-0",
-              "label": "營業人申報設定",
-              "icon": "pi pi-bookmark",
-              "data": "營業人申報設定",
-              "children": [
-                { "key": "0-0-0-0", "label": "查詢", "icon": "pi pi-search", "data": "查詢" },
-                { "key": "0-0-0-1", "label": "新增", "icon": "pi pi-plus", "data": "新增" },
-                { "key": "0-0-0-2", "label": "修改", "icon": "pi pi-file-edit", "data": "修改" },
-                { "key": "0-0-0-3", "label": "刪除", "icon": "pi pi-trash", "data": "刪除" }
-              ]
-            },
-            {
-              "key": "0-0-1",
-              "label": "發票基本資料維護",
-              "icon": "pi pi-bookmark",
-              "data": "發票基本資料維護",
-              "children": [
-                { "key": "0-0-1-0", "label": "新增", "icon": "pi pi-plus", "data": "新增" },
-                { "key": "0-0-1-1", "label": "修改", "icon": "pi pi-file-edit", "data": "修改" },
-                { "key": "0-0-1-2", "label": "刪除", "icon": "pi pi-trash", "data": "刪除" }
-              ]
-            },
-            {
-              "key": "0-0-2",
-              "label": "銷項品項資料設定",
-              "icon": "pi pi-bookmark",
-              "data": "銷項品項資料設定",
-              "children": [
-                { "key": "0-0-2-0", "label": "新增", "icon": "pi pi-plus", "data": "新增" },
-                { "key": "0-0-2-1", "label": "修改", "icon": "pi pi-file-edit", "data": "修改" },
-                { "key": "0-0-2-2", "label": "刪除", "icon": "pi pi-trash", "data": "刪除" }
-              ]
-            }
-          ]
-        },
-        {
-          "key": "0-1",
-          "label": "應付帳款系統",
-          "icon": "pi pi-home",
-          "data": "應付帳款系統 Folder",
-          "children": [
-            {
-              "key": "0-1-0",
-              "label": "公司銀行資料維護",
-              "icon": "pi pi-bookmark",
-              "data": "公司銀行資料維護",
-              "children": [
-                { "key": "0-1-0-0", "label": "新增", "icon": "pi pi-plus", "data": "新增" },
-                { "key": "0-1-0-1", "label": "修改", "icon": "pi pi-file-edit", "data": "修改" },
-                { "key": "0-1-0-2", "label": "刪除", "icon": "pi pi-trash", "data": "刪除" }
-              ]
-            },
-            {
-              "key": "0-1-1",
-              "label": "費率對照維護",
-              "icon": "pi pi-bookmark",
-              "data": "費率對照維護",
-              "children": [
-                { "key": "0-1-1-0", "label": "新增", "icon": "pi pi-plus", "data": "新增" },
-                { "key": "0-1-1-1", "label": "修改", "icon": "pi pi-file-edit", "data": "修改" },
-                { "key": "0-1-1-2", "label": "刪除", "icon": "pi pi-trash", "data": "刪除" }
-              ]
-            },
-            {
-              "key": "0-1-2",
-              "label": "廠客資料維護",
-              "icon": "pi pi-bookmark",
-              "data": "廠客資料維護",
-              "children": [
-                { "key": "0-1-2-0", "label": "新增", "icon": "pi pi-plus", "data": "新增" },
-                { "key": "0-1-2-1", "label": "修改", "icon": "pi pi-file-edit", "data": "修改" },
-                { "key": "0-1-2-2", "label": "刪除", "icon": "pi pi-trash", "data": "刪除" }
-              ]
-            }
-          ]
-        },
-        {
-          "key": "0-2",
-          "label": "應收帳款系統",
-          "icon": "pi pi-home",
-          "data": "應收帳款系統 Folder",
-          "children": [
-            {
-              "key": "0-2-0",
-              "label": "收款項目對照會計科目維護",
-              "icon": "pi pi-bookmark",
-              "data": "收款項目對照會計科目維護",
-              "children": [
-                { "key": "0-2-0-0", "label": "新增", "icon": "pi pi-plus", "data": "新增" },
-                { "key": "0-2-0-1", "label": "修改", "icon": "pi pi-file-edit", "data": "修改" },
-                { "key": "0-2-0-2", "label": "刪除", "icon": "pi pi-trash", "data": "刪除" }
-              ]
-            },
-            {
-              "key": "0-2-1",
-              "label": "應收調整科目設定維護",
-              "icon": "pi pi-bookmark",
-              "data": "應收調整科目設定維護",
-              "children": [
-                { "key": "0-2-1-0", "label": "新增", "icon": "pi pi-plus", "data": "新增" },
-                { "key": "0-2-1-1", "label": "修改", "icon": "pi pi-file-edit", "data": "修改" },
-                { "key": "0-2-1-2", "label": "刪除", "icon": "pi pi-trash", "data": "刪除" }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "key": "1",
-      "label": "商場管理模組",
-      "icon": "pi pi-book",
-      "data": "商場管理模組 Folder",
-      "children": [
-        {
-          "key": "1-0",
-          "label": "招商暨合約系統",
-          "icon": "pi pi-home",
-          "data": "招商暨合約系統",
-          "children": [
-            {
-              "key": "1-0-0",
-              "label": "專櫃位置資料維護",
-              "icon": "pi pi-bookmark",
-              "data": "專櫃位置資料維護",
-              "children": [
-                { "key": "1-0-0-0", "label": "新增", "icon": "pi pi-plus", "data": "新增" },
-                { "key": "1-0-0-1", "label": "修改", "icon": "pi pi-file-edit", "data": "修改" },
-                { "key": "1-0-0-2", "label": "刪除", "icon": "pi pi-trash", "data": "刪除" }
-              ]
-            },
-            {
-              "key": "1-0-1",
-              "label": "扣款項目維護作業",
-              "icon": "pi pi-bookmark",
-              "data": "扣款項目維護作業",
-              "children": [
-                { "key": "1-0-1-0", "label": "新增", "icon": "pi pi-plus", "data": "新增" },
-                { "key": "1-0-1-1", "label": "修改", "icon": "pi pi-file-edit", "data": "修改" },
-                { "key": "1-0-1-2", "label": "刪除", "icon": "pi pi-trash", "data": "刪除" }
-              ]
-            }
-          ]
-        },
-        {
-          "key": "1-1",
-          "label": "專櫃營運管理",
-          "icon": "pi pi-home",
-          "data": "專櫃營運管理",
-          "children": [
-            {
-              "key": "1-1-0",
-              "label": "傳票項目之會計科目設定作業",
-              "icon": "pi pi-bookmark",
-              "data": "傳票項目之會計科目設定作業",
-              "children": [
-                { "key": "1-1-0-0", "label": "新增", "icon": "pi pi-plus", "data": "新增" },
-                { "key": "1-1-0-1", "label": "修改", "icon": "pi pi-file-edit", "data": "修改" },
-                { "key": "1-1-0-2", "label": "刪除", "icon": "pi pi-trash", "data": "刪除" }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ];
-
-  // ----------------------------------------------------------------
+export class SYS0310CRUComponent extends BasicCruPageComponent<Role> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    roleCode: [], // 角色代碼
-    roleName: [], // 角色名稱
-    searchCriteria: [], // 查詢條件
-    items: this.formBuilder.array([this.createItem()]), // 動態表單項目
+    roleCode: [''], // 角色代碼
+    roleName: [''], // 角色名稱
+    Description: [''], // 查詢條件
   });
-
-  Role: any[] = [
-    { value: 1, label: '全部' },
-    { value: 2, label: '公司人員' },
-    { value: 3, label: '專櫃人員' },
-    { value: 4, label: '其他' },
+  privilegeBehaviorList: TreeNode[] = [];
+  selectedItems: TreeNode[] = [];
+  allIndexes: number[] = [];
+  columns: Column[] = [
+    { field: 'label', header: '作業名稱' },
+    { field: 'children', header: '作業行為', type: 'checkbox' },
   ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
+    private sys0210Service: Sys0210Service,
     private cdr: ChangeDetectorRef
   ) {
     super();
   }
-
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '420006';
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      rowdata: any;
-    };
-
-    this.formTitle = 'edit-conditions';
-    this.accordionTabCss = 'edit-accordionTab';
-    this.crudstatus = CRUDStatus.Edit;
-    this.showConfirm = this.canEdit();
-    // ----------------------------------------------------------------
-    this.cdr.markForCheck();
-  }
-
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      mainSystemCode: [], // 主系統代碼
-      mainSystemName: [], // 主系統名稱
+    this.initializePage('SYS0310', this.dataForm);
+    this.sys0210Service.queryRolePrivileges({ Role_No: `${this.rowdata?.Role_No}` }).subscribe({
+      next: (response) => {
+        this.privilegeBehaviorList = this.addSelectChildrenToNodes(response.Data);
+      },
+      error: (err) => { // 最好也接收錯誤物件以便調試
+        console.error('查詢角色權限失敗：', err);
+        this.loading = false;
+      },
     });
   }
+  private addSelectChildrenToNodes(nodes: TreeNode[]): TreeNode[] {
+    return nodes.map(node => {
+      const newNode: TreeNode = { ...node };
+      newNode.selectChildren = [];
+      if (node.children && node.children.length > 0) {
+        newNode.children = this.addSelectChildrenToNodes(node.children);
+      }
+      return newNode;
+    });
+  }
+  trackByRow = (index: number, item: any) => { return item?.['id'] || index; }
 
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
+  onSelectAll(event: any, items: TreeNode) {
+    event.stopPropagation();
+    const newIsEnableState = items.IsEnable ?? false;
+
+    // 創建一個新的輔助方法，同時處理 IsEnable 和 selectChildren
+    this.updateTreeSelection(items.children, newIsEnableState);
+
+    this.cdr.detectChanges(); // 強制 Angular 重新檢測變化
+    console.log(items);
   }
 
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
+  // 新增或修改這個遞迴方法
+  private updateTreeSelection(nodes: TreeNode[] | undefined, enableState: boolean) {
+    if (!nodes) { return; }
 
-  onReset() {
-    // 重新設定的邏輯
-    console.log('重新設定');
-  }
+    nodes.forEach(node => {
+      node.IsEnable = enableState; // 設定當前節點的 IsEnable
 
-  onBack() {
-    this.router.navigate(['/SYS0000/SYS0310']);
-  }
+      // 如果當前節點有孫子節點 (即 p-table 的 value)，則更新其 selectChildren
+      if (node.children && node.children.length > 0) {
+        // 遞迴呼叫自身來處理更深層的 IsEnable 狀態
+        this.updateTreeSelection(node.children, enableState);
 
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(
-        this.translate.instant('form_error_message')
-      );
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          this.messageService.successBubble(
-            this.translate.instant('success_message')
-          );
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          this.messageService.successBubble(
-            this.translate.instant('updated-successfully')
-          );
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCancel() {
-    this.router.navigate(['SYS0000/SYS0230']);
-  }
-
-  // ----------------------------------------------------------------
-  rows: RowData[] = [
-    { subsystemItem: '基本資料維護', operationName: '扣款項目維護作業', checked: false, operationChecked: false, functionButtons: { 刪除: false, 查詢: false, 確定修改: false }, remark: '' },
-    { subsystemItem: '基本資料維護', operationName: '專櫃位置資料維護', checked: false, operationChecked: false, functionButtons: { 刪除: false, 查詢: false, 確定修改: false }, remark: '' },
-    { subsystemItem: '商場招商管理', operationName: '潛在客戶資料維護', checked: false, operationChecked: false, functionButtons: { 刪除: false, 查詢: false, 確定修改: false }, remark: '' },
-    { subsystemItem: '商場招商管理', operationName: '專櫃訪談記錄維護', checked: false, operationChecked: false, functionButtons: { 刪除: false, 查詢: false, 確定修改: false }, remark: '' },
-  ];
-
-  // 計算子系統項目的 rowspan 值
-  getRowspan(subsystemItem: string): number {
-    return this.rows.filter(row => row.subsystemItem === subsystemItem).length;
-  }
-
-  // 檢查是否應顯示子系統項目欄位（只在第一次出現時顯示）
-  shouldShowSubsystemItem(row: RowData, index: number): boolean {
-    return index === this.rows.findIndex(r => r.subsystemItem === row.subsystemItem);
-  }
-
-  // 當子系統項目被勾選時，自動勾選後面的所有項目
-  onSubsystemCheckboxChange(subsystemItem: string, event: Event): void {
-    const isChecked = (event.target as HTMLInputElement).checked;
-    this.rows.forEach(row => {
-      if (row.subsystemItem === subsystemItem) {
-        row.checked = isChecked;
-        row.operationChecked = isChecked;
-        Object.keys(row.functionButtons).forEach(key => {
-          row.functionButtons[key] = isChecked;
-        });
+        // 在遞迴完成後，為當前 node 的 selectChildren 賦值
+        // 這裡篩選的是 node.children 中 IsEnable 為 true 的，
+        // 也就是表格（由 node.children 填充）中應被選中的那些行
+        node.selectChildren = node.children.filter(grandChild => grandChild.IsEnable === true);
+      } else {
+        // 如果是最底層的節點（沒有 children），其 selectChildren 通常是空的
+        node.selectChildren = [];
       }
     });
   }
-
-  // 當作業名稱被勾選時，自動勾選所有功能按鈕
-  onOperationCheckboxChange(row: RowData, event: Event): void {
-    const isChecked = (event.target as HTMLInputElement).checked;
-    row.operationChecked = isChecked;
-    Object.keys(row.functionButtons).forEach(key => {
-      row.functionButtons[key] = isChecked;
-    });
-
-    this.checkSubsystemItem(row.subsystemItem);
+  onSubmit(frm: FormGroup) {
   }
 
-  // 檢查子系統項目是否應勾選
-  checkSubsystemItem(subsystemItem: string): void {
-    const relatedRows = this.rows.filter(row => row.subsystemItem === subsystemItem);
-    const allOperationsChecked = relatedRows.every(row => row.operationChecked);
-    const allButtonsChecked = relatedRows.every(row => Object.values(row.functionButtons).every(val => val === true));
-
-    // 當所有作業名稱和功能按鈕都被勾選時，自動勾選子系統項目
-    if (allOperationsChecked && allButtonsChecked) {
-      relatedRows.forEach(row => row.checked = true);
-    } else {
-      relatedRows.forEach(row => row.checked = false);
+  getIconClass(moduleId: string): string {
+    switch (moduleId) {
+      case 'FIN00000':
+        return 'pi pi-users';
+      case 'ASS00000':
+        return 'pi pi-briefcase';
+      case 'TLS00000':
+        return 'pi pi-shopping-bag';
+      case 'SYS0000':
+        return 'pi pi-user';
+      case 'CPM0000':
+        return 'pi pi-chart-pie';
+      default:
+        return 'pi pi-circle';
     }
-  }
-
-  // 設置功能按鈕值
-  setButtonValue(row: RowData, key: unknown, value: boolean): void {
-    row.functionButtons[key as string] = value;
-    this.checkAllButtonsSelected(row);
-    this.checkSubsystemItem(row.subsystemItem);
-  }
-
-  // 檢查所有功能按鈕是否勾選
-  checkAllButtonsSelected(row: RowData): void {
-    const allChecked = Object.values(row.functionButtons).every(val => val === true);
-    row.operationChecked = allChecked;
-  }
-
-  trackByKey(index: number, item: KeyValue<unknown, unknown>): string {
-    return String(item.key);
-  }
-
-  getButtonValue(row: RowData, key: unknown): boolean {
-    return row.functionButtons[key as string];
   }
 }

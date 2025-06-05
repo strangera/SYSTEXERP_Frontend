@@ -50,6 +50,44 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
   // 在父組件中聲明
   @ViewChild(ExpandableEditTableComponent) expandableTable!: ExpandableEditTableComponent;
 
+  // 銀行測試表單
+  bankTestForm = this.formBuilder.group({
+    bank_id: ['', [Validators.required]]
+  });
+
+  // 銀行選項（模擬 API 資料）
+  bankOptions: string[] = [
+    '0041539 臺灣銀行內湖分行',
+    '0041540 臺灣銀行松山分行',
+    '0041541 臺灣銀行信義分行',
+    '0041542 臺灣銀行大安分行',
+    '0069021 合作金庫商業銀行台北分行',
+    '0069022 合作金庫商業銀行板橋分行',
+    '0069023 合作金庫商業銀行新莊分行',
+    '0069024 合作金庫商業銀行三重分行',
+    '0069025 合作金庫商業銀行中和分行',
+    '0071021 第一商業銀行台北分行',
+    '0071022 第一商業銀行忠孝分行',
+    '0071023 第一商業銀行信義分行',
+    '0071024 第一商業銀行南京分行',
+    '0082021 華南商業銀行台北分行',
+    '0082022 華南商業銀行敦化分行',
+    '0082023 華南商業銀行南京分行',
+    '0082024 華南商業銀行信義分行',
+    '0111021 上海商業儲蓄銀行台北分行',
+    '0111022 上海商業儲蓄銀行忠孝分行',
+    '0111023 上海商業儲蓄銀行松江分行',
+    '0121021 台北富邦銀行台北分行',
+    '0121022 台北富邦銀行忠孝分行',
+    '0121023 台北富邦銀行信義分行',
+    '0121024 台北富邦銀行敦化分行'
+  ];
+
+  // 銀行測試狀態
+  bankTestSubmitted = false;
+  bankTestLoading = false;
+  selectedBankInfo: any = null;
+
   queryForm = this.formBuilder.group({
     dateRangeQuick1: [null, [Validators.required]],
     dateRangeQuick2: [null, [Validators.required]],
@@ -184,6 +222,9 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
       this.systemTypeOptions = data;
     });
     this.locationSubscribe();
+
+    // ========== 新增：載入銀行資料 ==========
+    this.loadBankData();
   }
   // tree dropDown==================================
   flatTreeData = [
@@ -334,4 +375,92 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     const maxId = Math.max(...person.details.map((d: any) => d.id), 0);
     return maxId + 1;
   }
+
+  // ========== 新增：載入銀行資料方法 ==========
+  private loadBankData(): void {
+    // 在實際專案中，這裡會從 API 載入
+    // this.bankService.getBankBranches().subscribe(data => {
+    //   this.bankOptions = data;
+    // });
+    console.log('載入銀行資料:', this.bankOptions.length, '筆');
+  }
+
+  // ========== 新增：銀行選擇事件處理 ==========
+
+  /**
+   * 選擇銀行時的處理
+   */
+  onBankSelect(option: any): void {
+    console.log('選擇銀行:', option);
+    this.selectedBankInfo = option;
+
+    // 這裡可以加入額外的業務邏輯
+    // 例如：載入對應的帳戶資訊、驗證銀行狀態等
+    this.messageService.infoBubble(`已選擇: ${option.bankName} ${option.branchName}`);
+  }
+
+  /**
+   * 取消選擇銀行時的處理
+   */
+  onBankUnselect(): void {
+    console.log('取消選擇銀行');
+    this.selectedBankInfo = null;
+    this.messageService.infoBubble('已清除銀行選擇');
+  }
+
+  /**
+   * 銀行變更時的處理
+   */
+  onBankChange(option: any): void {
+    console.log('銀行選擇變更:', option);
+  }
+
+  /**
+   * 測試銀行選擇功能
+   */
+  testBankSelection(bankId: string): void {
+    // 直接設定表單值來測試編輯模式
+    this.bankTestForm.patchValue({
+      bank_id: bankId
+    });
+
+    console.log('測試設定銀行代碼:', bankId);
+    this.messageService.infoBubble(`測試設定銀行代碼: ${bankId}`);
+  }
+
+  /**
+   * 清除銀行測試
+   */
+  clearBankTest(): void {
+    this.bankTestForm.reset();
+    this.selectedBankInfo = null;
+    this.bankTestSubmitted = false;
+    this.messageService.infoBubble('已清除銀行測試資料');
+  }
+
+  /**
+   * 銀行測試表單提交
+   */
+  onBankTestSubmit(): void {
+    this.bankTestSubmitted = true;
+    this.bankTestLoading = true;
+
+    if (this.bankTestForm.valid) {
+      // 模擬 API 提交
+      setTimeout(() => {
+        const bankId = this.bankTestForm.get('bank_id')?.value;
+        console.log('提交銀行測試資料:', {
+          bankId: bankId,
+          selectedBankInfo: this.selectedBankInfo
+        });
+
+        this.messageService.successBubble('銀行資料測試提交成功！');
+        this.bankTestLoading = false;
+      }, 1000);
+    } else {
+      this.messageService.warnBubble('請選擇銀行後再提交');
+      this.bankTestLoading = false;
+    }
+  }
+
 }
