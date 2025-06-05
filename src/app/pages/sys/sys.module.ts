@@ -58,6 +58,7 @@ import { SYSBR00CRUComponent } from './sysbr00.cru/sysbr00.cru.component';
 import { SYSBR10CRUComponent } from './sysbr10.cru/sysbr10.cru.component';
 import { Sysb400OsComponent } from './sysb400.os/sysb400.os.component';
 import { SharedModule } from '../../shared/shared.module';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 
 
 @NgModule({
@@ -122,6 +123,7 @@ import { SharedModule } from '../../shared/shared.module';
     CommonModule,
     SysRoutingModule,
     SharedModule,
+    ScrollingModule
   ]
 })
 export class SysModule { }

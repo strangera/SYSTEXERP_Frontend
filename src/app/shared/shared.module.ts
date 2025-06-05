@@ -178,6 +178,7 @@ import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autoc
     IconFieldModule,
     InputIconModule,
     FieldsetModule,
+    InputSwitchModule,
     // Custom
     MenubarComponent,
     ControlMessagesComponent,
