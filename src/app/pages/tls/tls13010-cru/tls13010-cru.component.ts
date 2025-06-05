@@ -52,7 +52,7 @@ interface LocationItem {
   tlt_building: string;        // 館別
   tlt_floor: string;          // 樓層
   area_no: string;            // 區域
-  businessArea: number;       // 營業坪數
+  tlt_space: number;       // 營業坪數
   _status?: 'new' | 'modified' | 'deleted' | 'original'; // 前端狀態管理
 }
 
@@ -612,26 +612,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
             ...item,
             _status: 'original' // 標記為原始資料
           }));
-
-          // 將已使用的位置加入選項（如果選項中沒有的話）
-          response.Data.Locations.forEach((item: LocationItem) => {
-            const existsInOptions = this.locationWithDetailsOptions.find(
-              opt => opt.location_no === item.location_no
-            );
-
-            if (!existsInOptions) {
-              // 要轉換成跟 service 一樣的格式
-              this.locationWithDetailsOptions.push({
-                label: item.location_no,        // ✅ 加上 label
-                value: item.location_no,        // ✅ 加上 value
-                buildingNo: item.tlt_building,  // ✅ 轉換欄位名稱
-                floorNo: item.tlt_floor,        // ✅ 轉換欄位名稱
-                areaNo: item.area_no,          // ✅ 轉換欄位名稱
-                tlt_space: item.businessArea || 0
-              });
-            }
-          });
-
           this.updateLocationColumnOptions();
           console.log('位置資料載入完成:', this.locationData);
         }
@@ -698,13 +678,13 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   calculatePerformanceShare(): void {
     const totalArea = this.data.reduce((sum, item) => {
-      const area = parseFloat(item.businessArea) || 0;
+      const area = parseFloat(item.tlt_space) || 0;
       return sum + area;
     }, 0);
 
     if (totalArea > 0) {
       this.data.forEach(item => {
-        const area = parseFloat(item.businessArea) || 0;
+        const area = parseFloat(item.tlt_space) || 0;
         item.performanceShare = Math.round((area / totalArea) * 100);
       });
       this.filteredData = [...this.data];
@@ -724,7 +704,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       tlt_building: '',
       tlt_floor: '',
       area_no: '',
-      businessArea: 0,
+      tlt_space: 0,
       _status: 'new'
     };
 
@@ -817,7 +797,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         rowData.tlt_building = selectedLocation.tlt_building;  // ✅
         rowData.tlt_floor = selectedLocation.tlt_floor;        // ✅
         rowData.area_no = selectedLocation.area_no;           // ✅
-        rowData.businessArea = selectedLocation.businessArea || 0;
+        rowData.tlt_space = selectedLocation.tlt_space || 0;
 
         // 標記狀態變更
         if (rowData._status === 'original') {
@@ -857,9 +837,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   // 取得位置總營業坪數
-  getTotalBusinessArea(): number {
+  getTotaltlt_space(): number {
     return this.locationData.reduce((total, item) => {
-      const area = parseFloat(item.businessArea) || 0;
+      const area = parseFloat(item.tlt_space) || 0;
       return total + area;
     }, 0);
   }
@@ -977,7 +957,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   //       errors.push(`第 ${index + 1} 行：位置編號不能為空`);
   //       isValid = false;
   //     }
-  //     if (!item.businessArea || item.businessArea <= 0) {
+  //     if (!item.tlt_space || item.tlt_space <= 0) {
   //       errors.push(`第 ${index + 1} 行：營業坪數必須大於 0`);
   //       isValid = false;
   //     }
