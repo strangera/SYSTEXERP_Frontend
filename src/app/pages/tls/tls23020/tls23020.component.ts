@@ -148,7 +148,6 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     private tls11010Service: Tls11010Service,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
-
     private whetherService: WhetherService,
     private txnStatusService: TxnStatusService,
     private validationService: ValidationService

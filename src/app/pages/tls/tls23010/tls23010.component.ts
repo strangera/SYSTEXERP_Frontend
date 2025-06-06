@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { TransactionTypeService } from '../../../service/basic/transaction-type.service';
+import { FormGroup, Validators } from '@angular/forms';
 import { StatusFlagService } from '../../../service/basic/status-flag.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';

@@ -5,7 +5,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 import { TLS23050Service } from '../../../service/API/tls/tls23050.service';
 import { TypeService } from '../../../service/basic/type.service';
 import { WhetherService } from '../../../service/basic/whether.service';
-
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 
@@ -17,14 +17,15 @@ import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 })
 export class TLS23050Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [new Date(), [Validators.required]],  // 銷售日期起
+    TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],  // 銷售日期起
     TXN_DateEnd: [new Date(), [Validators.required]],    // 銷售日期迄
     rece_yn: [''],                                       // 是否收銀
-    ECR_No_Start: [''],                                  // 收銀機號起
-    ECR_No_End: [''],                                    // 收銀機號迄
+    // ECR_No_Start: [''],                                  // 收銀機號起
+    // ECR_No_End: [''],                                    // 收銀機號迄
     tlt_building: [''],                                  // 樓層建物
     tlt_floor: [''],                                     // 樓層編號
-    org_id: [''],                                        // 組織代碼
+    org_id: [''],
+    ECR_No: [''],
     ...createPaginationConfig([{ field: 'TXN_DateStart', order: 1 }])
   });
 
@@ -35,7 +36,7 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
   columns: any[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'TXN_TotPayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat },
     { field: 'TXN_PayAmt10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat },
     { field: 'TXN_PayAmt41', header: '聯信連線', visible: true, style: 'text-right', format: this.moneyFormat },
@@ -88,7 +89,7 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
 
   WhetherOptions: any[] = [];
   typeOptions: any[] = [];
-
+  ECRNoOptions: any[] = []; // 收銀機號下拉選單
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = []
@@ -98,6 +99,7 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
     private whetherService: WhetherService,
     private typeService: TypeService,
     private floorService: FloorService,
+    private ECRNoService: ECRNoService,
     private tls11010Service: Tls11010Service
   ) {
     super();
@@ -117,6 +119,13 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
         value: x.value,
       })) || [];
     });
+    this.ECRNoService.getECRNo().subscribe((res) => {
+      this.ECRNoOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
 
 
   }
@@ -129,7 +138,13 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
       this.messageService.warnBubble('請確認欄位資料是否完整');
       return;
     }
-
+    const payload = { ...form.value };
+    // ✅ 將 'Y' / 'N' 轉成 true / false
+    if (payload.IsHaveTERM_No === 'Y') {
+      payload.IsHaveTERM_No = true;
+    } else if (payload.IsHaveTERM_No === 'N') {
+      payload.IsHaveTERM_No = false;
+    }
     this.handleSubmit(form, () => {
       const payload = { ...form.value };
       Object.keys(payload).forEach(key => {

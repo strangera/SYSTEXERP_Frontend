@@ -2,11 +2,12 @@ import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { TLS23060Service } from '../../../service/API/tls/tls23060.service';
 import { TypeService } from '../../../service/basic/type.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
 
 @Component({
   selector: 'app-tls23060',
@@ -15,15 +16,16 @@ import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 })
 export class TLS23060Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [new Date(), [Validators.required]],  // 銷售日期起
+    TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],  // 銷售日期起
     TXN_DateEnd: [new Date(), [Validators.required]],    // 銷售日期迄
     rece_yn: [''],                                       // 是否收銀
-    ECR_No_Start: [''],                                  // 收銀機代號起
-    ECR_No_End: [''],                                    // 收銀機代號迄
+    // ECR_No_Start: [''],                                  // 收銀機代號起
+    // ECR_No_End: [''],                                    // 收銀機代號迄
     tlt_no: [''],                                        // 專櫃編號
     tlt_building: [''],                                  // 樓層建物
     tlt_floor: [''],                                     // 樓層編號
     org_id: [''],                                        // 組織代號
+    ECR_No: [''],
     ...createPaginationConfig([{ field: 'TXN_DateStart', order: 1 }])
   });
 
@@ -91,11 +93,15 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
   BUILDING_NO_Options: any[] = [];
   WhetherOptions: any[] = [];
   OrganizationCodeOptions: any[] = []
+  ECRNoOptions: any[] = []; // 收銀機號下拉選單
+  CounterOptions: any[] = []; // 專櫃選項
 
   constructor(
     private tls23060Service: TLS23060Service,
     private typeService: TypeService,
     private floorService: FloorService,
+    private ECRNoService: ECRNoService,
+    private counterNameService: CounterNameService,
     private tls11010Service: Tls11010Service
   ) {
     super();
@@ -113,6 +119,21 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
         value: x.value,
       })) || [];
     });
+    this.ECRNoService.getECRNo().subscribe((res) => {
+      this.ECRNoOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
+        this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
+
   }
 
   onSubmit(form: FormGroup): void {

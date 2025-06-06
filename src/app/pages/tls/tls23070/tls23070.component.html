@@ -11,23 +11,25 @@
     >
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              label="銷售日期"
-              [startControl]="queryForm.controls.TXN_DateStart"
-              [endControl]="queryForm.controls.TXN_DateEnd"
-              calendarType="dateRange"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
+         <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
+            label="銷售日期"
+            [startControl]="queryForm.controls.TXN_DateStart"
+            [endControl]="queryForm.controls.TXN_DateEnd"
+            [submitted]="submitted"
+          ></app-calendar-range-quick>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+
+         <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
               label="專櫃編號"
-              controlName="tlt_no"
+              controlName="TLT_No"
+              [options]="CounterOptions"
+              optionLabel="formLabel"
+              optionValue="value"
               [control]="queryForm.controls.tlt_no"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
