@@ -71,6 +71,7 @@ import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/
 import { MultiLocationFilterComponent } from './componentkit/multi-location-filter/multi-location-filter.component';
 import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autocomplete.component';
 import { QueryYearMonthComponent } from './componentkit/query-year-month/query-year-month.component';
+import { InputGroupComponent } from './componentkit/input-group/input-group.component';
 
 @NgModule({
   declarations: [
@@ -96,6 +97,7 @@ import { QueryYearMonthComponent } from './componentkit/query-year-month/query-y
     ButtonDynamicallydeleteComponent,
     InputNumberRangeComponent,
     FileUploadComponent,
+    InputGroupComponent,
     EditorTextComponent,
     RadiobuttonComponent,
     HasPermissionDirective,
@@ -198,6 +200,7 @@ import { QueryYearMonthComponent } from './componentkit/query-year-month/query-y
     InputNumberComponent,
     InputNumberRangeComponent,
     FileUploadComponent,
+    InputGroupComponent,
     EditorTextComponent,
     MultiSelectComponent,
     CalendarComponent,

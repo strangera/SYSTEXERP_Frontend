@@ -359,6 +359,7 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
     this.sys0230Service.updateUserPrivileges(body).subscribe({
       next: (response: ApiResponse<any>) => {
         console.log('Update Role Privileges Response:', response);
+        this.messageService.successBubble('更新成功');
         this.loading = false;
         this.onCancel();
       },

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Sys0210Service } from '../../../service/API/sys/sys0210.service';
 import { Role } from '../../../shared/models/sys/role.model';
 // 4-2-3-1角色系統權限設定
@@ -14,7 +14,9 @@ export class SYS0310Component extends BasicQueryPageComponent<Role> implements O
   queryForm = this.formBuilder.group({
     Role_No: ['', [Validators.maxLength(10)]], // 角色代碼
     Role_Name: ['', [Validators.maxLength(30)]], // 角色名稱
+    ...createPaginationConfig([{ field: 'Role_No', order: 1 }]), // 分頁和排序參數
   });
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: Role[] = [];
   columns: Column[] = [
     { field: 'Role_No', header: '角色編號', visible: true },
@@ -41,6 +43,7 @@ export class SYS0310Component extends BasicQueryPageComponent<Role> implements O
       this.sys0210Service.queryRole(frm.value).subscribe({
         next: (response) => {
           this.data = response.Data
+          this.totalRecords = response.TotalCount || response.Data.length;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
           this.loading = false;
         },
