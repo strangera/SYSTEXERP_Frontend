@@ -12,15 +12,13 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- 銷售日期 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="銷售日期"
-              [startControl]="queryForm.controls.TXN_DateStart"
-              [endControl]="queryForm.controls.TXN_DateEnd"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
+   <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
+            label="銷售日期"
+            [startControl]="queryForm.controls.TXN_DateStart"
+            [endControl]="queryForm.controls.TXN_DateEnd"
+            [submitted]="submitted"
+          ></app-calendar-range-quick>
 
           <!-- 收銀機代號 -->
           <div class="col-12 md:col-6 lg:col-4">

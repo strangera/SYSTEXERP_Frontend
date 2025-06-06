@@ -14,7 +14,7 @@ import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 })
 export class TLS23090Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [new Date(), [Validators.required]],
+    TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],
     TXN_DateEnd: [new Date(), [Validators.required]],
     ECR_No: [''],
     tlt_no: [''],
