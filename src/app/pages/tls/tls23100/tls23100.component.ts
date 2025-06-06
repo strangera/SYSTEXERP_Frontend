@@ -6,6 +6,8 @@ import { TLS23100Service } from '../../../service/API/tls/tls23100.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
 
 @Component({
   selector: 'app-tls23100',
@@ -16,9 +18,13 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
 
   queryForm = this.formBuilder.group({
     counterCode: [''],
+        TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],
+    TXN_DateEnd: [new Date(), [Validators.required]],
     pstarttime: [new Date('2020-01-01'), [Validators.required]],
     pendtime: [new Date(), [Validators.required]],
     paymentType: [''],
+    TLT_No: [''],
+     ECR_No: [''],
     tlt_building: [''],                                  // 樓層建物
     tlt_floor: [''],                                     // 樓層編號
     org_id: [''],                                        // 組織代碼
@@ -31,7 +37,10 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   columns: any[] = [
     { field: 'cashRegisterCode', header: '收銀機代號', visible: true },
     { field: 'transactionNumber', header: '交易序號', visible: true },
-    { field: 'counterCodeOrName', header: '專櫃編號/名稱', visible: true },
+        { field: 'tlt_no', header: '專櫃編號', visible: true,
+      style: 'text-left' },
+          { field: 'tlt_no', header: '櫃位名稱', visible: true,
+      style: 'text-left',format: (val: any) => this.getLabelFromOptions(val, this.CounterOptions) },
     { field: 'paymentType', header: '付款別', visible: true, format: (val: any) => this.getLabelFromOptions(val, this.paymentTypeOptions) },
     { field: 'cardType', header: '卡別', visible: true },
     { field: 'cardNumber', header: '號碼', visible: true },
@@ -45,13 +54,17 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   paymentTypeOptions: any[] = [];
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
-  OrganizationCodeOptions: any[] = []
+  OrganizationCodeOptions: any[] = [];
+  CounterOptions: any[] = [];
+  ECRNoOptions: any[] = [];
 
 
   constructor(
     private paymentTypeService: PaymentTypeService,
     private tls23100Service: TLS23100Service,
     private floorService: FloorService,
+        private ECRNoService: ECRNoService,
+    private counterNameService: CounterNameService,
     private tls11010Service: Tls11010Service
   ) {
     super();
@@ -67,6 +80,20 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
     this.tls11010Service.getOrgOptions().subscribe((res) => {
       this.OrganizationCodeOptions = res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
+    });
+        this.ECRNoService.getECRNo().subscribe((res) => {
+      this.ECRNoOptions = res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
+    });
+    this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions = res?.map((x: any) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
         value: x.value,
