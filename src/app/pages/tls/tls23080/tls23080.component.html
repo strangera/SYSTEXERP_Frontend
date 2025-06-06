@@ -9,7 +9,11 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <!-- 銷售日期 -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -20,6 +24,16 @@
               [endControl]="queryForm.controls.TXN_DateEnd"
               [submitted]="submitted"
             ></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-query-year-month
+              [formGroup]="queryForm"
+              [submitted]="submitted"
+              [onlyOddMonths]="true"
+              label="查詢年月"
+              [yearControl]="queryForm.controls.TXN_Year"
+              [monthControl]="queryForm.controls.TXN_Month"
+            ></app-query-year-month>
           </div>
 
           <!-- 收銀機代號 -->
@@ -81,7 +95,9 @@
         </div>
 
         <!-- 按鈕列 -->
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>

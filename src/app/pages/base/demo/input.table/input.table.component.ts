@@ -117,6 +117,9 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     dateYearRange2: [null, [Validators.required]], // Dropdown
     radiolist: [null, [Validators.required]], // Dropdown
     editortext: [null, [Validators.required]], // Dropdown
+    Year  : [null, [Validators.required]], // Dropdown
+    Month: [null, [Validators.required]], // Dropdown
+
   });
   // 表格
   data: any[] = [

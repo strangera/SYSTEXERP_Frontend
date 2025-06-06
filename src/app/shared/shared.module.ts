@@ -69,6 +69,7 @@ import { MultiSelectTableComponent } from './componentkit/multi-select-table/mul
 import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/expandable-edit-table.module';
 import { MultiLocationFilterComponent } from './componentkit/multi-location-filter/multi-location-filter.component';
 import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autocomplete.component';
+import { QueryYearMonthComponent } from './componentkit/query-year-month/query-year-month.component';
 
 @NgModule({
   declarations: [
@@ -99,6 +100,7 @@ import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autoc
     HasPermissionDirective,
     MultiLocationFilterComponent,
     AutoCompleteComponent,
+    QueryYearMonthComponent
   ],
   imports: [
     ReactiveFormsModule,
@@ -205,6 +207,7 @@ import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autoc
     SelectButtonModule,
     MultiLocationFilterComponent,
     AutoCompleteComponent,
+    QueryYearMonthComponent
   ],
 })
 export class SharedModule { }
