@@ -6,6 +6,8 @@ import { WhetherService } from '../../../service/basic/whether.service';
 import { TLS23080Service } from '../../../service/API/tls/tls23080.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
 
 @Component({
   selector: 'app-tls23080',
@@ -30,12 +32,14 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   totalRecords = 0;
 
   columns: any[] = [
-    { field: 'TXN_Date', header: '銷售日期', visible: true, format: (val: string) => {
-      const date = new Date(val);
-      return isNaN(date.getTime())
-        ? val
-        : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-    }},
+    {
+      field: 'TXN_Date', header: '銷售日期', visible: true, format: (val: string) => {
+        const date = new Date(val);
+        return isNaN(date.getTime())
+          ? val
+          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+      }
+    },
     { field: 'TXN_TotPayAmt', header: '總金額', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
     { field: 'TXN_PayAmt10', header: '現金', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
     { field: 'TXN_PayAmt41', header: '聯信連線', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
@@ -45,15 +49,19 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   ];
 
   WhetherOptions: any[] = [];
-  
+
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = []
+  ECRNoOptions: any[] = []; // 收銀機號下拉選單
+  CounterOptions: any[] = []; // 專櫃選項
 
   constructor(
     private whetherService: WhetherService,
     private tls23080Service: TLS23080Service,
-        private floorService: FloorService,
+    private floorService: FloorService,
+    private ECRNoService: ECRNoService,
+    private counterNameService: CounterNameService,
     private tls11010Service: Tls11010Service
   ) {
     super();
@@ -63,14 +71,29 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     this.initializePage('TLS23080', '', this.queryForm, (form) => this.onSubmit(form));
 
     this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
-      this.floorService.getFloors().subscribe(data => this.floorOptions = data);
+    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
     this.tls11010Service.getOrgOptions().subscribe((res) => {
       this.OrganizationCodeOptions = res?.map((x: any) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
         value: x.value,
-      })) || [];});
+      })) || [];
+    });
+    this.ECRNoService.getECRNo().subscribe((res) => {
+      this.ECRNoOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
+            this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
   }
 
   onSubmit(form: FormGroup): void {
@@ -90,7 +113,7 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
         if (payload[key] === '') payload[key] = null;
       });
 
- this.tls23080Service.queryTLS23080(payload).subscribe({
+      this.tls23080Service.queryTLS23080(payload).subscribe({
         next: (res) => {
           if (res.Status === '0000') {
             this.data = res.Data || [];
