@@ -15,11 +15,9 @@ export interface TreeNode {
   id: string;
   label: string;
   IsEnable: boolean;
-  partialSelected: boolean;
+  partialSelected?: boolean;
+  isOpen?: boolean;
   children: TreeNode[];
-}
-export interface PrimeTreeNode {
-  key: string; // PrimeNG 建議有 key 屬性
-  data?: any; // 實際的節點資料
-  children?: PrimeTreeNode[]; // 子節點
+  actions: TreeNode[];
+  parent?: TreeNode;
 }

@@ -63,27 +63,33 @@ export class SYS0310CRUComponent extends BasicCruPageComponent<Role> implements 
       next: (response: ApiResponse<TreeNode[]>) => {
         if (response.Data && Array.isArray(response.Data)) {
           response.Data.forEach(node => {
-            switch (node.id) { // 這裡改為使用 node.id
+            // 在這裡呼叫輔助方法，為每個節點及其子節點設置 parent 引用
+            const transformedNode = this.setParentReferences(node);
+
+            switch (transformedNode.id) {
               case 'ASS00000':
-                this.ASS00000Data = node; // 賦值單個 TreeNode 物件
+                this.ASS00000Data = transformedNode;
                 break;
               case 'CPM0000':
-                this.CPM0000Data = node;
+                this.CPM0000Data = transformedNode;
                 break;
               case 'FIN00000':
-                this.FIN00000Data = node;
+                this.FIN00000Data = transformedNode;
                 break;
               case 'SYS0000':
-                this.SYS0000Data = node;
+                this.SYS0000Data = transformedNode;
                 break;
               case 'TLS00000':
-                this.TLS00000Data = node;
+                this.TLS00000Data = transformedNode;
                 break;
               default:
                 break;
             }
           });
-          this.cdr.markForCheck();
+          // 初始載入時，更新所有父節點的 partialSelected 狀態
+          this.updateAllParentNodeStatuses();
+          this.setInitialOpenStateForSecondLevelNodes();
+          this.cdr.markForCheck(); // 觸發一次變更檢測
         }
       },
       error: () => {
@@ -91,6 +97,225 @@ export class SYS0310CRUComponent extends BasicCruPageComponent<Role> implements 
       },
     });
   }
+  private setParentReferences(node: TreeNode, parent: TreeNode | null = null): TreeNode {
+    const newNode: TreeNode = { ...node, parent: parent || undefined };
+
+    // 初始化 partialSelected 和 isOpen
+    if (newNode.partialSelected === undefined) {
+      newNode.partialSelected = false;
+    }
+    // 為第二層節點（模組下的直接子節點）初始化 isOpen
+    // 我們假設 `item` 是指模組的直接子節點，它們會有 `isOpen` 屬性
+    if (parent && parent.id && parent.id.endsWith('00000') || parent?.id.endsWith('0000')) { // 判斷是否為模組的直接子節點
+      if (newNode.isOpen === undefined) {
+        newNode.isOpen = false;
+      }
+    }
+
+
+    if (newNode.children && newNode.children.length > 0) {
+      newNode.children = newNode.children.map(child =>
+        this.setParentReferences(child, newNode)
+      );
+    }
+
+    if (newNode.actions && newNode.actions.length > 0) {
+      newNode.actions = newNode.actions.map(action =>
+        this.setParentReferences(action, newNode)
+      );
+    }
+
+    return newNode;
+  }
+
+  private updateAllParentNodeStatuses() {
+    const modules = [this.FIN00000Data, this.ASS00000Data, this.TLS00000Data, this.SYS0000Data, this.CPM0000Data];
+    modules.forEach(moduleData => {
+      if (moduleData) {
+        // 從最底層的 behavior 開始，向上更新所有父節點的狀態
+        this.traverseAndCalculateStatus(moduleData);
+      }
+    });
+  }
+
+  private traverseAndCalculateStatus(node: TreeNode) {
+    // 先遞迴處理子節點和 actions，確保它們的狀態是最新的
+    if (node.children) {
+      node.children.forEach(child => this.traverseAndCalculateStatus(child));
+    }
+    if (node.actions) {
+      node.actions.forEach(action => this.traverseAndCalculateStatus(action));
+    }
+
+    // 計算當前節點 (node) 的 IsEnable 和 partialSelected 狀態
+    // 只有當節點有 children 或 actions 時才需要計算
+    if ((node.children && node.children.length > 0) || (node.actions && node.actions.length > 0)) {
+      let totalSelectableItems = 0;
+      let selectedItemsCount = 0;
+      let hasPartialSelectedChild = false;
+
+      // 統計所有直接子節點的狀態
+      if (node.children) {
+        node.children.forEach(child => {
+          totalSelectableItems++; // 每個子節點本身是可選單元
+          if (child.IsEnable) {
+            selectedItemsCount++;
+          }
+          if (child.partialSelected) {
+            hasPartialSelectedChild = true;
+          }
+        });
+      }
+
+      // 統計所有 actions (行為) 的狀態
+      if (node.actions) {
+        node.actions.forEach(action => {
+          totalSelectableItems++; // 每個 action 也是可選單元
+          if (action.IsEnable) {
+            selectedItemsCount++;
+          }
+        });
+      }
+
+      // 根據子項的狀態更新當前節點
+      if (totalSelectableItems === 0) {
+        // 沒有任何可選項目，父節點應該是未勾選
+        node.IsEnable = false;
+        node.partialSelected = false;
+      } else if (selectedItemsCount === totalSelectableItems) {
+        // 所有可選項目都已選中，父節點完全勾選
+        node.IsEnable = true;
+        node.partialSelected = false;
+      } else if (selectedItemsCount > 0 || hasPartialSelectedChild) {
+        // 有部分項目選中或有部分選中的子節點，父節點部分勾選
+        node.IsEnable = false; // 不是完全勾選
+        node.partialSelected = true;
+      } else {
+        // 沒有任何項目選中，父節點未勾選
+        node.IsEnable = false;
+        node.partialSelected = false;
+      }
+    }
+  }
+  private setInitialOpenStateForSecondLevelNodes() {
+    const modules = [this.FIN00000Data, this.ASS00000Data, this.TLS00000Data, this.SYS0000Data, this.CPM0000Data];
+    modules.forEach(moduleData => {
+      if (moduleData && moduleData.children) {
+        moduleData.children.forEach(item => { // 這就是你說的第二層 `item`
+          // 檢查 `item` 的直接子節點或 actions 中是否有任何 `partialSelected` 為 true
+          let shouldOpen = false;
+          if (item.children) {
+            if (item.children.some(child => child.partialSelected || child.IsEnable)) {
+              shouldOpen = true;
+            }
+          }
+          if (item.actions) {
+            // 雖然 actions 通常不會有 partialSelected 屬性，但為了通用性還是檢查一下
+            if (item.actions.some(action => action.partialSelected || action.IsEnable)) {
+              shouldOpen = true;
+            }
+          }
+
+          // 如果 item 本身是 partialSelected，也應該打開
+          if (item.partialSelected) {
+            shouldOpen = true;
+          }
+
+          item.isOpen = shouldOpen;
+        });
+      }
+    });
+  }
+  onNodeCheckboxChange(node: TreeNode, newValue: boolean) {
+    node.IsEnable = newValue; // 更新當前節點的 IsEnable
+
+    // 1. 向下聯動：如果當前節點被勾選/取消勾選，則其所有子節點和 actions 都應同步
+    this.cascadeDown(node, newValue);
+
+    // 2. 向上聯動：從當前節點開始，向上更新所有父節點的 IsEnable 和 partialSelected
+    this.cascadeUp(node);
+
+    this.cdr.markForCheck(); // 觸發變更檢測以更新 UI
+  }
+  private cascadeUp(node: TreeNode) {
+    if (!node.parent) {
+      return; // 如果沒有父節點，則停止遞迴
+    }
+
+    const parentNode = node.parent;
+    let totalSelectableChildrenAndActions = 0;
+    let selectedChildrenAndActionsCount = 0;
+    let hasPartialSelectedChildOrAction = false;
+
+    // 計算父節點的所有直接子節點和 actions 的狀態
+    // 注意：這裡應該是統計父節點的所有直接子節點 (children) 和 actions
+    if (parentNode.children) {
+      parentNode.children.forEach(child => {
+        totalSelectableChildrenAndActions++;
+        if (child.IsEnable) {
+          selectedChildrenAndActionsCount++;
+        }
+        if (child.partialSelected) { // 檢查子節點是否有部分選中狀態
+          hasPartialSelectedChildOrAction = true;
+        }
+      });
+    }
+
+    if (parentNode.actions) {
+      parentNode.actions.forEach(action => {
+        totalSelectableChildrenAndActions++;
+        if (action.IsEnable) {
+          selectedChildrenAndActionsCount++;
+        }
+      });
+    }
+
+    // 根據子項的狀態更新父節點
+    const oldParentIsEnable = parentNode.IsEnable;
+    const oldParentPartialSelected = parentNode.partialSelected;
+
+    if (totalSelectableChildrenAndActions === 0) {
+      parentNode.IsEnable = false;
+      parentNode.partialSelected = false;
+    } else if (selectedChildrenAndActionsCount === totalSelectableChildrenAndActions) {
+      // 所有子項都已選中，父節點完全勾選
+      parentNode.IsEnable = true;
+      parentNode.partialSelected = false;
+    } else if (selectedChildrenAndActionsCount > 0 || hasPartialSelectedChildOrAction) {
+      // 有部分子項選中或有部分選中的子節點，父節點部分勾選
+      parentNode.IsEnable = false; // 不是完全勾選
+      parentNode.partialSelected = true;
+    } else {
+      // 沒有任何子項選中
+      parentNode.IsEnable = false;
+      parentNode.partialSelected = false;
+    }
+
+    // 如果父節點的狀態發生了改變，則繼續向上遞迴
+    if (oldParentIsEnable !== parentNode.IsEnable || oldParentPartialSelected !== parentNode.partialSelected) {
+      this.cascadeUp(parentNode);
+    }
+  }
+
+  private cascadeDown(node: TreeNode, enableValue: boolean) {
+    node.IsEnable = enableValue;
+    node.partialSelected = false; // 當父節點明確勾選或取消勾選時，它不再是 partialSelected
+
+    if (node.children) {
+      node.children.forEach(child => this.cascadeDown(child, enableValue));
+    }
+    if (node.actions) {
+      node.actions.forEach(action => this.cascadeDown(action, enableValue));
+    }
+  }
+
+  inputSwitchOpen(node: TreeNode): void {
+    if (node.partialSelected) {
+      return;
+    }
+    node.isOpen = !node.isOpen;
+  }
+
   onSubmit(): void {
     const privilegeList: PrivilegeOutput[] = [];
 
@@ -118,7 +343,7 @@ export class SYS0310CRUComponent extends BasicCruPageComponent<Role> implements 
             }
 
             // 遍歷 Level 5: behavior (functions, e.g., program.children)
-            program.children.forEach(behavior => {
+            program.actions.forEach(behavior => {
               // 檢查 behavior 的 IsEnable 狀態
               if (behavior.IsEnable !== undefined && behavior.IsEnable) { // 確保 IsEnable 存在
                 privilegeList.push({
