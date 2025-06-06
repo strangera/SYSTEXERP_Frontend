@@ -769,4 +769,82 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
   onSubmitNext(): void {
     this.router.navigate(['TLS/TLS13010NEXT3']);
   }
+
+  // 批次刪除處理
+  onBatchDelete(selectedItems: any[]) {
+    console.log('批次刪除項目:', selectedItems);
+
+    if (confirm(`確定要刪除選取的 ${selectedItems.length} 個項目嗎？`)) {
+      // 從資料中移除選取的項目
+      selectedItems.forEach(item => {
+        const index = this.commissionItems.findIndex(x => x.id === item.id);
+        if (index > -1) {
+          this.commissionItems.splice(index, 1);
+        }
+      });
+
+      console.log('刪除完成');
+    }
+  }
+
+  // 新增明細項目處理
+  onAddDetailItem(parentData: any) {
+    console.log('新增明細項目:', parentData);
+
+    // 根據當前選擇的選項卡類型添加對應的項目
+    switch (this.selectedSettingTab) {
+      case 'discount':
+        this.addDiscountSettingItem(parentData);
+        break;
+      case 'annual':
+        this.addAnnualPerformanceItem(parentData);
+        break;
+      case 'level':
+        this.addDiscountLevelItem(parentData);
+        break;
+    }
+  }
+
+  // 明細批次刪除處理
+  onDetailBatchDelete(event: { selectedDetails: any[], parentData: any, rowIndex: number }) {
+    console.log('明細批次刪除:', event);
+
+    const { selectedDetails, parentData } = event;
+
+    if (confirm(`確定要刪除選取的 ${selectedDetails.length} 個明細項目嗎？`)) {
+      // 從明細陣列中移除選取的項目
+      selectedDetails.forEach(detail => {
+        const detailIndex = parentData.detailItems.findIndex((d: any) => d.id === detail.id);
+        if (detailIndex > -1) {
+          parentData.detailItems.splice(detailIndex, 1);
+        }
+
+        // 同時從對應的設定陣列中移除
+        switch (this.selectedSettingTab) {
+          case 'discount':
+            const discountIndex = parentData.discountSettingItems.findIndex((d: any) => d.id === detail.id);
+            if (discountIndex > -1) {
+              parentData.discountSettingItems.splice(discountIndex, 1);
+            }
+            break;
+          case 'annual':
+            const annualIndex = parentData.annualPerformanceItems.findIndex((d: any) => d.id === detail.id);
+            if (annualIndex > -1) {
+              parentData.annualPerformanceItems.splice(annualIndex, 1);
+            }
+            break;
+          case 'level':
+            const levelIndex = parentData.discountLevelItems.findIndex((d: any) => d.id === detail.id);
+            if (levelIndex > -1) {
+              parentData.discountLevelItems.splice(levelIndex, 1);
+            }
+            break;
+        }
+      });
+
+      // 更新顯示
+      this.updateDetailItemsForDisplay();
+      console.log('明細刪除完成');
+    }
+  }
 }

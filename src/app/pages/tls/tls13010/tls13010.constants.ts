@@ -1,8 +1,5 @@
-// TLS13010 相關的常數定義和格式化函數
 
-// ========== 選項對照表 ==========
-
-// 裝潢方式 (1:統設統裝(A統) 2:統設自裝 3:自設統裝 4:自設自裝) (TLTTALENT.deco_type)
+// 裝潢方式 (1:統設統裝(A統) 2:統設自裝 3:自設統裝 4:自設自裝)
 export const DECO_TYPE_OPTIONS = {
   '1': '統設統裝(A統)',
   '2': '統設自裝',
@@ -17,13 +14,12 @@ export const MONEY_TYPE_OPTIONS = {
   '30': '月結'
 } as const;
 
-// 對帳方式(1:傳真 2:郵寄 3:網路 )可複選
+// 對帳方式(1:傳真 2:郵寄 3:網路)可複選
 export const CHECK_TYPE_OPTIONS = {
   '1': '傳真',
   '2': '郵寄',
   '3': '網路'
 } as const;
-
 
 // 抽成別
 export const COMMISSION_COMP_TYPE_OPTIONS = {
@@ -35,28 +31,13 @@ export const COMMISSION_COMP_TYPE_OPTIONS = {
   '6': '包底加階梯'
 } as const;
 
-
-//抽成額計算方式(1:含稅, 2:除稅)--畫面上只有2的選項
-export const COMM_COMP_TYPE_OPTIONS = {
-  '1': '含稅',
-  '2': '除稅'
-} as const;
-
 // 配合方式(1=專櫃 2=自營)
 export const TLT_TERM_TYPE_OPTIONS = {
   '1': '專櫃',
   '2': '自營'
 } as const;
 
-// 營業類型 paper_type /*營業型態(sys1000.T101)*/
-export const BUSINESS_TYPE_OPTIONS = {
-  '1': '零售',
-  '2': '餐飲',
-  '3': '服務業',
-  '4': '其他'
-} as const;
-
-// 付款方式 /*付款方式(1:匯款  2:支票)*/
+// 付款方式(1:匯款 2:支票)
 export const PAYTYPE_OPTIONS = {
   '1': '匯款',
   '2': '支票'
@@ -69,13 +50,13 @@ export const STORE_WAY_OPTIONS = {
   '3': '分期收款'
 } as const;
 
-// 發票類型 invoice_type  /*請款單據別 0:發票 1:收據*/
+// 發票類型 invoice_type(0:發票 1:收據)
 export const INVOICE_TYPE_OPTIONS = {
-  '1': '發票',
-  '2': '收據',
+  '0': '發票',
+  '1': '收據',
 } as const;
 
-// 專櫃種類 tlt_kind /*專櫃櫃別: 1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃 */
+// 專櫃種類 tlt_kind(1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
 export const TLT_KIND_OPTIONS = {
   '1': '正櫃',
   '2': '臨時櫃',
@@ -91,13 +72,6 @@ export const TLT_OPENFLAG_OPTIONS = {
   '9': '核准時合約尚未開始'
 } as const;
 
-// // 開幕狀態
-// export const TLT_OPENFLAG_OPTIONS = {
-//   '1': '已開幕',
-//   '2': '未開幕',
-//   '3': '籌備中'
-// } as const;
-
 // 抄表類型
 export const METER_TYPE_OPTIONS = {
   'WATER': '水表',
@@ -111,14 +85,7 @@ export const OVERALL_STATUS_OPTIONS = {
   '2': '部份',
 } as const;
 
-/* 合約狀態 = 申請案件內容(1:新設立 2:續約 3:合約異動 4:撤櫃)*/
-export const APPLY_TYPE_OPTIONS = {
-  '1': '新設立',
-  '2': '續約',
-  '3': '合約異動',
-  '4': '撤櫃'
-} as const;
-
+// 包底類別
 export const TLT_CTYPE_MTOTAL_OPTIONS = {
   '1': '年包',
   '2': '月包',
@@ -148,11 +115,6 @@ export const formatSingleOption = (value: string, options: Record<string, string
 // 對帳方式格式化
 export const formatCheckType = (value: string): string => {
   return formatMultipleOptions(value, CHECK_TYPE_OPTIONS);
-};
-
-// 營業類型格式化
-export const formatBusinessType = (value: string): string => {
-  return formatSingleOption(value, BUSINESS_TYPE_OPTIONS);
 };
 
 // 結帳方式格式化
@@ -200,17 +162,12 @@ export const formatOpenflagStatus = (value: string): string => {
   return formatSingleOption(value, TLT_OPENFLAG_OPTIONS);
 };
 
-// 開幕狀態格式化
-export const formatTltOpenflag = (value: string): string => {
-  return formatSingleOption(value, TLT_OPENFLAG_OPTIONS);
-};
-
 // 抄表類型格式化（複選）
 export const formatMeterType = (value: string): string => {
   return formatMultipleOptions(value, METER_TYPE_OPTIONS);
 };
 
-// 包底類別
+// 包底類別格式化
 export const formatTltCtypeMototal = (value: string): string => {
   return formatSingleOption(value, TLT_CTYPE_MTOTAL_OPTIONS);
 };

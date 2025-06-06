@@ -36,7 +36,22 @@
             severity="success"
             class="p-button-rounded"
           ></button>
-          <ng-content select="[caption-left]"></ng-content>
+
+          <!-- 批次刪除按鈕 - 圓形按鈕，常駐顯示 -->
+          <button
+            *ngIf="!readonly && showBatchDelete"
+            pButton
+            pRipple
+            type="button"
+            icon="pi pi-trash"
+            pTooltip="批次刪除"
+            [disabled]="selectedItems.length === 0"
+            (click)="onBatchDelete()"
+            severity="danger"
+            class="p-button-rounded"
+            [ngClass]="{ 'p-button-outlined': selectedItems.length === 0 }"
+          ></button>
+
           <ng-content select="[caption-left]"></ng-content>
         </div>
 
@@ -136,9 +151,14 @@
                 <!-- 下拉選單 -->
                 <p-dropdown
                   *ngSwitchCase="'dropdown'"
-                  [options]="rowData[col.field + 'Options']"
+                  [options]="getFieldOptions(rowData, col.field)"
                   [(ngModel)]="rowData[col.field]"
+                  (ngModelChange)="onDropdownChange(rowData, col.field, $event)"
                   [style]="{ width: '100%' }"
+                  appendTo="body"
+                  [showClear]="true"
+                  optionLabel="label"
+                  optionValue="value"
                 ></p-dropdown>
 
                 <!-- 日期選擇 -->
@@ -146,8 +166,10 @@
                   <input
                     pInputText
                     type="text"
-                    [ngModel]="getFormattedDateValue(rowData[col.field])"
-                    (ngModelChange)="rowData[col.field] = $event"
+                    [ngModel]="getDateInputValue(rowData, col.field)"
+                    (ngModelChange)="
+                      onDateInputModelChange(rowData, col.field, $event)
+                    "
                     [placeholder]="'YYYY/MM/DD'"
                     (blur)="onDateInputChange(rowData, col.field, false, ri)"
                     class="date-input"
@@ -247,32 +269,38 @@
         <!-- 操作按鈕 -->
         <td *ngIf="!readonly" style="text-align: center">
           <div class="edit-buttons flex justify-content-center gap-2">
+            <!-- 編輯按鈕 -->
             <button
               *ngIf="!isRowEditing(ri)"
               pButton
               pRipple
               type="button"
               icon="pi pi-pencil"
+              pTooltip="編輯"
               class="p-button-rounded p-button-text"
               (click)="onRowEditInit(rowData, ri)"
             ></button>
 
+            <!-- 確認按鈕 -->
             <button
               *ngIf="isRowEditing(ri)"
               pButton
               pRipple
               type="button"
               icon="pi pi-check"
+              pTooltip="確認"
               class="p-button-rounded p-button-text p-button-success"
               (click)="onRowEditSave(rowData)"
             ></button>
 
+            <!-- 取消按鈕 -->
             <button
               *ngIf="isRowEditing(ri)"
               pButton
               pRipple
               type="button"
               icon="pi pi-times"
+              pTooltip="取消"
               class="p-button-rounded p-button-text p-button-danger"
               (click)="onRowEditCancel(rowData, ri)"
             ></button>
@@ -323,9 +351,27 @@
                   pRipple
                   type="button"
                   icon="pi pi-plus"
+                  pTooltip="新增明細"
                   severity="success"
                   class="p-button-rounded"
                   (click)="onAddDetailItem(rowData, ri)"
+                ></button>
+
+                <!-- 明細批次刪除按鈕 -->
+                <button
+                  *ngIf="!readonly && showDetailBatchDelete"
+                  pButton
+                  pRipple
+                  type="button"
+                  icon="pi pi-trash"
+                  pTooltip="批次刪除明細"
+                  [disabled]="getDetailSelectedCount(rowData) === 0"
+                  (click)="onDetailBatchDelete(rowData, ri)"
+                  severity="danger"
+                  class="p-button-rounded"
+                  [ngClass]="{
+                    'p-button-outlined': getDetailSelectedCount(rowData) === 0,
+                  }"
                 ></button>
               </div>
               <div class="detail-table-header-right">
@@ -337,10 +383,17 @@
             <p-table
               [value]="rowData[detailKey]"
               [columns]="getDetailColumnsForTab(rowData)"
+              [(selection)]="detailSelectedItems[rowData[dataKey]]"
+              [dataKey]="dataKey"
+              selectionMode="multiple"
+              (selectionChange)="onDetailSelectionChange(rowData, $event)"
             >
               <ng-template pTemplate="header">
                 <tr>
                   <th style="width: 4rem; text-align: center">序號</th>
+                  <th style="width: 4rem; text-align: center">
+                    <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                  </th>
                   <th
                     *ngFor="let col of getDetailColumnsForTab(rowData)"
                     [hidden]="col.hidden"
@@ -357,6 +410,10 @@
               <ng-template pTemplate="body" let-detailData let-di="rowIndex">
                 <tr>
                   <td style="text-align: center">{{ di + 1 }}</td>
+
+                  <td style="text-align: center">
+                    <p-tableCheckbox [value]="detailData"></p-tableCheckbox>
+                  </td>
 
                   <td
                     *ngFor="let col of getDetailColumnsForTab(rowData)"
@@ -386,9 +443,13 @@
                         <!-- 下拉選單 -->
                         <p-dropdown
                           *ngSwitchCase="'dropdown'"
-                          [options]="detailData[col.field + 'Options']"
+                          [options]="getFieldOptions(detailData, col.field)"
                           [(ngModel)]="detailData[col.field]"
+                          (ngModelChange)="
+                            onDropdownChange(detailData, col.field, $event)
+                          "
                           [style]="{ width: '100%' }"
+                          appendTo="body"
                         ></p-dropdown>
 
                         <!-- 日期選擇 -->
@@ -399,7 +460,14 @@
                           <input
                             pInputText
                             type="text"
-                            [(ngModel)]="detailData[col.field + '_input']"
+                            [ngModel]="getDateInputValue(detailData, col.field)"
+                            (ngModelChange)="
+                              onDateInputModelChange(
+                                detailData,
+                                col.field,
+                                $event
+                              )
+                            "
                             [placeholder]="'YYYY/MM/DD'"
                             (blur)="
                               onDateInputComplete(
@@ -508,32 +576,38 @@
                     <div
                       class="detail-edit-buttons flex justify-content-center gap-2"
                     >
+                      <!-- 編輯按鈕 -->
                       <button
                         *ngIf="!isDetailEditing(ri, di)"
                         pButton
                         pRipple
                         type="button"
                         icon="pi pi-pencil"
+                        pTooltip="編輯"
                         class="p-button-rounded p-button-text"
                         (click)="onDetailEditInit(detailData, rowData, ri, di)"
                       ></button>
 
+                      <!-- 確認按鈕 -->
                       <button
                         *ngIf="isDetailEditing(ri, di)"
                         pButton
                         pRipple
                         type="button"
                         icon="pi pi-check"
+                        pTooltip="確認"
                         class="p-button-rounded p-button-text p-button-success"
                         (click)="onDetailEditSave(detailData, rowData)"
                       ></button>
 
+                      <!-- 取消按鈕 -->
                       <button
                         *ngIf="isDetailEditing(ri, di)"
                         pButton
                         pRipple
                         type="button"
                         icon="pi pi-times"
+                        pTooltip="取消"
                         class="p-button-rounded p-button-text p-button-danger"
                         (click)="
                           onDetailEditCancel(detailData, rowData, ri, di)
@@ -548,7 +622,7 @@
               <ng-template pTemplate="emptymessage">
                 <tr>
                   <td
-                    [attr.colspan]="detailColumns.length + 2"
+                    [attr.colspan]="detailColumns.length + 3"
                     style="text-align: center"
                   >
                     查無詳細資料

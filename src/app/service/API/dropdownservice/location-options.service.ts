@@ -58,13 +58,41 @@ export class LocationOptionsService {
       );
   }
 
-  //營業型態
-  getPaperTypeOptions(): Observable<any[]> {
+  //營業型態 - 接受 SYS_Type 參數
+  getPaperTypeOptions(sysType: string): Observable<any[]> {
+    const requestBody = {
+      SYS_Type: sysType
+    };
+
     return this.http
-      .post<any>(`${this.apiUrl}/querySYS1000_DropDownList`, {})
+      .post<any>(`${this.apiUrl}/querySYS1000_DropDownList`, requestBody)
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? [])
       );
   }
 
+  // 位置代碼選項 - 包含自動帶入用的館別、樓層、區域資訊
+  getLocationWithDetailsOptions(talentId?: string): Observable<any[]> {
+    // 如果有 talentId 就傳入，沒有就傳空物件
+    const body = talentId ? { talentId } : {};
+
+    return this.http
+      .post<any>(`${this.apiUrl}/queryPOS2002_Location_DropDownList`, body)
+      .pipe(
+        map((res) => res?.Data?.map((x: any) => ({
+          label: x.location_no,           // 下拉選單顯示用
+          value: x.location_no,           // 下拉選單選擇值
+          tlt_building: x.tlt_building,   // 自動帶入用 - 館別
+          tlt_floor: x.tlt_floor,         // 自動帶入用 - 樓層
+          area_no: x.area_no,             // 自動帶入用 - 區域
+          tlt_space: x.tlt_space || 0,    // 自動帶入用 - 營業面積
+        })) ?? [])
+      );
+  }
+
+  // "location_no": "string",
+  //     "tlt_building": "string",
+  //     "tlt_floor": "string",
+  //     "area_no": "string",
+  //     "businessArea": 0
 }
