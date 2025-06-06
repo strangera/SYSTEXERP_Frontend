@@ -50,7 +50,7 @@ export class TLS13050Component {
   columns: any[] = [
     { field: 'recruitmentCode', header: '專櫃招募編號', visible: true },
     { field: 'counterCode', header: '專櫃編號', visible: true },
-    { field: 'counterName', header: '專櫃名稱', visible: true },
+    { field: 'counterName', header: '櫃位名稱', visible: true },
     { field: 'startDate', header: '起始日期', visible: true },
     { field: 'endDate', header: '結束日期', visible: true },
     { field: 'baseAmount', header: '包底金額', visible: true },

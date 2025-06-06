@@ -108,7 +108,7 @@ export class TLS13020Component {
   filteredData: any[] = [...this.data];
   columns: any[] = [
     { field: 'recruitmentCode', header: '專櫃招募編號', visible: true },
-    { field: 'counterName', header: '專櫃名稱', visible: true },
+    { field: 'counterName', header: '櫃位名稱', visible: true },
     { field: 'counterCode', header: '專櫃編號', visible: true },
     { field: 'vendorCode', header: '廠商編號（廠商名稱）', visible: true },
     { field: 'versionCode', header: '版本編號', visible: true },

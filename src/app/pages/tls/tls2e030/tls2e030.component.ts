@@ -32,7 +32,7 @@ export class TLS2E030Component {
   queryForm = this.formBuilder.group({
     onedatemm: [, [Validators.required]], // 結帳年月
     checkout: [], // 結帳方式/帳次
-    counterName: [], // 專櫃名稱
+    counterName: [], // 櫃位名稱
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
   });
   // 表格

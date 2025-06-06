@@ -36,8 +36,8 @@ const now = new Date();
 })
 export class TLS23010Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [null,[Validators.required]],
-    TXN_DateEnd: [null,[Validators.required]],   // 銷售日期迄
+    TXN_DateStart: [null, [Validators.required]],
+    TXN_DateEnd: [null, [Validators.required]],   // 銷售日期迄
     ECR_No: [''],                 // 收銀機代號
     TXN_No_Start: [null],        // 交易序號(起)
     TXN_No_End: [null],          // 交易序號(迄)
@@ -117,7 +117,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
     { field: 'SYS_StoreNo', header: '店號', visible: false },
     { field: 'TXN_No', header: '交易序號', visible: true, style: 'text-right' },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true, style: 'text-left' }, // 非 POS5006 欄位，UI 顯示用
+    { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' }, // 非 POS5006 欄位，UI 顯示用
     { field: 'TXN_Uniform', header: '統一編號', visible: true },
     { field: 'TXN_GUIBegNoFirstNo', header: '字軌', visible: true }, // 假設為字軌顯示
     { field: 'TXN_GUIBegNo', header: '起始發票號碼', visible: true },

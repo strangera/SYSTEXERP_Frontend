@@ -57,7 +57,7 @@ export class TLS2K040Component {
     { field: 'UID', header: '機號', visible: true },
     { field: 'industryType', header: '交易序號', visible: true },
     { field: 'category', header: '專櫃編號', visible: true },
-    { field: 'version', header: '專櫃名稱', visible: true },
+    { field: 'version', header: '櫃位名稱', visible: true },
     { field: 'rentNumber', header: '已開金額', visible: true },
     { field: 'progress', header: '未開金額', visible: true },
     { field: 'progress', header: '備註', visible: true },

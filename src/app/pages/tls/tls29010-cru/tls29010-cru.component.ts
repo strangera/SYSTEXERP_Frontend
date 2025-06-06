@@ -73,7 +73,7 @@ export class TLS29010CRUComponent {
 
   columns: any[] = [
     { field: 'projectNumber', header: '專櫃編號', visible: true },
-    { field: 'projectName', header: '專櫃名稱', visible: true },
+    { field: 'projectName', header: '櫃位名稱', visible: true },
     { field: 'activity', header: '活動', visible: true },
     { field: 'startDate', header: '開始起始日', visible: true },
     { field: 'endDate', header: '開始終止日', visible: true },

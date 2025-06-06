@@ -43,7 +43,7 @@ export class TLS51090Component {
   filteredData: any[] = [...this.data];
   columns: any[] = [
     { field: 'contactPerson', header: '專櫃編號', visible: true },
-    { field: 'contactDate', header: '專櫃名稱', visible: true },
+    { field: 'contactDate', header: '櫃位名稱', visible: true },
     { field: 'UID', header: '合約狀態', visible: true },
     { field: 'industryType', header: '專櫃配合方式', visible: true },
     // 其他欄位

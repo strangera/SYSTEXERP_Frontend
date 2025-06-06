@@ -27,7 +27,7 @@ export class TLS27020CRUComponent extends BasicCrupageComponent implements OnIni
     barcode: ['', Validators.required], // 條碼
     magneticCardNumber: ['', Validators.required], // 磁卡編號
     counterNumber: ['', Validators.required], // 專櫃編號
-    counterName: ['', Validators.required], // 專櫃名稱
+    counterName: ['', Validators.required], // 櫃位名稱
     amount: ['', Validators.required], // 金額
     items: this.formBuilder.array([
       this.createItem()

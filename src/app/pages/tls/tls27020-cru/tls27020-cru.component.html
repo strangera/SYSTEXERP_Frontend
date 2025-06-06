@@ -3,71 +3,94 @@
     <div class="col" style="flex: 1">
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-
         <!-- 銷售日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="銷售日期" [control]="dataForm.controls.saleDate"
-            [submitted]="submitted">
-          </app-calendar>
+          <app-calendar
+            calendarType="dateOne"
+            label="銷售日期"
+            [control]="dataForm.controls.saleDate"
+            [submitted]="submitted"
+          ></app-calendar>
         </div>
 
         <!-- 收銀機號 -->
         <div class="col-12 md:col-6 lg:col-2">
-          <app-input-text label="收銀機號" controlName="cashRegisterNumber" [control]="dataForm.controls.cashRegisterNumber"
-            [submitted]="submitted">
-          </app-input-text>
+          <app-input-text
+            label="收銀機號"
+            controlName="cashRegisterNumber"
+            [control]="dataForm.controls.cashRegisterNumber"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
 
         <!-- 條碼 -->
         <div class="col-12 md:col-6 lg:col-2">
-          <app-input-text label="條碼" controlName="barcode" [control]="dataForm.controls.barcode"
-            [submitted]="submitted">
-          </app-input-text>
+          <app-input-text
+            label="條碼"
+            controlName="barcode"
+            [control]="dataForm.controls.barcode"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4"></div>
         <!-- 磁卡編號 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="磁卡編號" controlName="magneticCardNumber" [control]="dataForm.controls.magneticCardNumber"
-            [submitted]="submitted">
-          </app-input-text>
+          <app-input-text
+            label="磁卡編號"
+            controlName="magneticCardNumber"
+            [control]="dataForm.controls.magneticCardNumber"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-8"></div>
 
         <!-- 專櫃編號 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="專櫃編號" controlName="counterNumber" [control]="dataForm.controls.counterNumber"
-            [submitted]="submitted">
-          </app-input-text>
+          <app-input-text
+            label="專櫃編號"
+            controlName="counterNumber"
+            [control]="dataForm.controls.counterNumber"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
 
-        <!-- 專櫃名稱 -->
+        <!-- 櫃位名稱 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="專櫃名稱" controlName="counterName" [control]="dataForm.controls.counterName"
-            [submitted]="submitted">
-          </app-input-text>
+          <app-input-text
+            label="櫃位名稱"
+            controlName="counterName"
+            [control]="dataForm.controls.counterName"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4"></div>
 
         <!-- 金額 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="金額" controlName="amount" [control]="dataForm.controls.amount" [submitted]="submitted">
-          </app-input-text>
+          <app-input-text
+            label="金額"
+            controlName="amount"
+            [control]="dataForm.controls.amount"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
-
       </div>
     </form>
 
     <div class="col pt-4">
       <div class="grid justify-content-end">
         <app-button btnType="cancel" (click)="onCancel()"></app-button>
-        <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
+        <app-button
+          btnType="submit"
+          (click)="submitForm(dataForm)"
+          *ngIf="isFormEditable"
+        ></app-button>
       </div>
     </div>
   </p-panel>

@@ -1,84 +1,133 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1;">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="收銀員編號" controlName="USR_No"
-                        [control]="dataForm.controls.USR_No" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="收銀員姓名" controlName="USR_Name" [control]="dataForm.controls.USR_Name"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="密碼" controlName="USR_Passwd" [control]="dataForm.controls.USR_Passwd"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="收銀員授權等級" controlName="USR_Auth"
-                        [control]="dataForm.controls.USR_Auth" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="收銀員狀態" controlName="USR_JobStatus" [options]="USR_JobStatus_Options"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.USR_JobStatus"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="收銀員等級" controlName="USR_Class" [options]="USR_Class_Options"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.USR_Class"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="收銀員區分" controlName="USR_RegType" [options]="USR_RegType_Options"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.USR_RegType"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="收銀員所屬櫃編" controlName="USR_TLT_No" [options]="USR_TLT_No_Options"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.USR_TLT_No"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="收銀員所屬專櫃名稱" controlName="USR_TLT_Name"
-                        [control]="dataForm.controls.USR_TLT_Name" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar calendarType="dateOne" label="啟用日期" controlName="USR_OnJobDate"
-                        [control]="dataForm.controls.USR_OnJobDate" [submitted]="submitted">
-                    </app-calendar>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar calendarType="dateOne" label="停用日期" controlName="USR_QuitDate"
-                        [control]="dataForm.controls.USR_QuitDate" [submitted]="submitted">
-                    </app-calendar>
-                </div>
-            </div>
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
-            </div>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            [useGrouping]="false"
+            label="收銀員編號"
+            controlName="USR_No"
+            [control]="dataForm.controls.USR_No"
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
-    </p-panel>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="收銀員姓名"
+            controlName="USR_Name"
+            [control]="dataForm.controls.USR_Name"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="密碼"
+            controlName="USR_Passwd"
+            [control]="dataForm.controls.USR_Passwd"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            [useGrouping]="false"
+            label="收銀員授權等級"
+            controlName="USR_Auth"
+            [control]="dataForm.controls.USR_Auth"
+            [submitted]="submitted"
+          ></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="收銀員狀態"
+            controlName="USR_JobStatus"
+            [options]="USR_JobStatus_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.USR_JobStatus"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="收銀員等級"
+            controlName="USR_Class"
+            [options]="USR_Class_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.USR_Class"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="收銀員區分"
+            controlName="USR_RegType"
+            [options]="USR_RegType_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.USR_RegType"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="收銀員所屬櫃編"
+            controlName="USR_TLT_No"
+            [options]="USR_TLT_No_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.USR_TLT_No"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="收銀員所屬櫃位名稱"
+            controlName="USR_TLT_Name"
+            [control]="dataForm.controls.USR_TLT_Name"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="啟用日期"
+            controlName="USR_OnJobDate"
+            [control]="dataForm.controls.USR_OnJobDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="停用日期"
+            controlName="USR_QuitDate"
+            [control]="dataForm.controls.USR_QuitDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+      </div>
+    </form>
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+        <app-button
+          btnType="submit"
+          (click)="submitForm(dataForm)"
+          *ngIf="isFormEditable"
+        ></app-button>
+      </div>
+    </div>
+  </p-panel>
 </div>

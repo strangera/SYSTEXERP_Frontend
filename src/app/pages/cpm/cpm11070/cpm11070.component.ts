@@ -47,7 +47,7 @@ export class CPM11070Component extends BasicQpageComponent implements OnInit {
   ];
   columns: any[] = [
     { field: 'counterNumber', header: '專櫃編號', visible: true },
-    { field: 'counterBrand', header: '品牌 (專櫃名稱)', visible: true },
+    { field: 'counterBrand', header: '品牌 (櫃位名稱)', visible: true },
     { field: 'vendorName', header: '廠商名稱', visible: true },
 
     // { field: 'phone', header: '專櫃電話號碼', visible: false },  // 需求文件要求移除

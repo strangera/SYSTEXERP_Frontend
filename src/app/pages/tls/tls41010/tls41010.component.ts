@@ -41,7 +41,7 @@ export class TLS41010Component
     ECR_GUI_Type: [, [Validators.maxLength(2)]], // 發票使用類別 00=不開發票 03=二聯式收銀機發票 07=電子發票(預設值)
     //
     ECR_TLT_No: [, [Validators.maxLength(20)]], // 機台所屬專櫃編號，專櫃機台(自收)必須設定專櫃編號
-    ECR_TLT_Name: ['', [Validators.maxLength(60)]], // 機台所屬專櫃名稱
+    ECR_TLT_Name: ['', [Validators.maxLength(60)]], // 機台所屬櫃位名稱
     ECR_USR_No: [, [Validators.maxLength(8)]], // 機台所屬收銀員，集中收銀(統收)必須設定收銀員
     ECR_USR_Name: ['', [Validators.maxLength(20)]], // 機台所屬收銀員姓名
     ECR_ActiveDate_From: [], // 啟用日期
@@ -173,7 +173,7 @@ export class TLS41010Component
     { field: 'ECR_LocNo', header: '位置', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'ECR_TLT_No', header: '專櫃編號', visible: true },
-    { field: 'ECR_TLT_Name', header: '專櫃名稱', visible: true },
+    { field: 'ECR_TLT_Name', header: '櫃位名稱', visible: true },
     { field: 'ECR_ActiveDate', header: '啟用日期', visible: true },
     { field: 'ECR_CloseDate', header: '停用日期', visible: true },
     { field: 'posServer', header: 'POS SERVER', visible: true },

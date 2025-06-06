@@ -60,7 +60,7 @@ export class TLS26020Component {
   filteredData: any[] = [...this.data];
   columns: any[] = [
     { field: 'counterNumber', header: '專櫃編號', visible: true },
-    { field: 'counterName', header: '專櫃名稱', visible: true },
+    { field: 'counterName', header: '櫃位名稱', visible: true },
     { field: 'invoiceAmount', header: '發票金額', visible: true },
     { field: 'businessIncome', header: '業績金額', visible: true }
   ];

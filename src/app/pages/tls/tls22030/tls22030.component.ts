@@ -53,7 +53,7 @@ export class TLS22030Component {
   columns: any[] = [
     { field: 'transactionTotal', header: '總合', visible: true },
     { field: 'counterCode', header: '專櫃編號', visible: true },
-    { field: 'counterName', header: '專櫃名稱', visible: true },
+    { field: 'counterName', header: '櫃位名稱', visible: true },
     { field: 'date', header: '日期', visible: true },
     { field: 'backendTransactionCode', header: '後台交易電腦', visible: true },
     { field: 'backendTransactionDetails', header: '後台交易記錄', visible: true },

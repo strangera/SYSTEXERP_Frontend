@@ -64,7 +64,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
 
   columns: any[] = [
     { field: 'tlt_no', header: '專櫃代碼', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
     {
       field: 'tlt_building',
       header: '館別',
@@ -75,18 +75,18 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     { field: 'area_no', header: '區域', visible: true },
     { field: 'bus_type_name', header: '大分類', visible: true },
     { field: 'bus_class_name', header: '商品類別', visible: true },
-{
-  field: 'tlt_bdate',
-  header: '合約起日',
-  visible: true,
-  format: (value: string) => this.formatYYYYMMDD(value),
-},
-{
-  field: 'tlt_edate',
-  header: '合約迄日',
-  visible: true,
-  format: (value: string) => this.formatYYYYMMDD(value),
-},
+    {
+      field: 'tlt_bdate',
+      header: '合約起日',
+      visible: true,
+      format: (value: string) => this.formatYYYYMMDD(value),
+    },
+    {
+      field: 'tlt_edate',
+      header: '合約迄日',
+      visible: true,
+      format: (value: string) => this.formatYYYYMMDD(value),
+    },
     { field: 'tlt_id_desc', header: '合約類型', visible: true },
     { field: 'cag_taxtype', header: '課稅別', visible: true },
     { field: 'cag_barcode', header: '折數', visible: true },
@@ -111,16 +111,16 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
 
     { field: 'org_name', header: '組織名稱', visible: true },
   ];
-formatYYYYMMDD(raw: string): string {
-  if (!raw) return '';
-  const date = new Date(raw);
-  if (isNaN(date.getTime())) return raw; // 傳入不是有效日期就直接回傳原值
+  formatYYYYMMDD(raw: string): string {
+    if (!raw) return '';
+    const date = new Date(raw);
+    if (isNaN(date.getTime())) return raw; // 傳入不是有效日期就直接回傳原值
 
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  return `${yyyy}/${mm}/${dd}`;
-}
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}/${mm}/${dd}`;
+  }
 
 
   constructor(
@@ -227,7 +227,7 @@ formatYYYYMMDD(raw: string): string {
       });
     });
   }
- getLabelFromOptions(value: any, options: any[]): string {
+  getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find(opt => String(opt.value) === String(value));
     return found ? found.label : value;
   }

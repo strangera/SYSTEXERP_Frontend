@@ -98,7 +98,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     apply_no: ['', [Validators.required]],
 
     // ========== 基本資訊 ==========
-    /** @description 專櫃名稱 */
+    /** @description 櫃位名稱 */
     tlt_name: ['', [Validators.required, Validators.maxLength(100)]],
     /** @description 專櫃編號 */
     tlt_no: [{ value: '契約書審核後才給號', disabled: true }],

@@ -51,7 +51,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
 
   columns: any[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
 
     {
       field: 'tlt_building',

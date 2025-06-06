@@ -26,7 +26,7 @@ export class TLS41020CRUComponent
     EDC_EdnDate: [, [Validators.required]], // 停用日期
     EDC_Status: [, [Validators.required, Validators.maxLength(2)]], // 信用卡刷卡機狀態 A=啟用 C=停用
     ECR_TLT_No: [, [Validators.maxLength(20)]], // 機台所屬專櫃編號
-    ECR_TLT_Name: ['', [Validators.maxLength(60)]], // 機台所屬專櫃名稱
+    ECR_TLT_Name: ['', [Validators.maxLength(60)]], // 機台所屬櫃位名稱
     //
     EDC_IP1: [, [Validators.maxLength(20)]], // 第一台信用卡刷卡機IP
     EDC_IP2: [, [Validators.maxLength(20)]], // 第二台信用卡刷卡機IP

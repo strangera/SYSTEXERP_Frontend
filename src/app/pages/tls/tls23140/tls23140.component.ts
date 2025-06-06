@@ -28,7 +28,7 @@ export class TLS23140Component extends BasicQueryPageComponent<any> {
     { field: 'transactionDate', header: '交易日期', visible: true },
     { field: 'transactionMachineNumber', header: '交易機號', visible: true },
     { field: 'franchiseNumber', header: '專櫃編號', visible: true },
-    { field: 'franchiseName', header: '專櫃名稱', visible: true },
+    { field: 'franchiseName', header: '櫃位名稱', visible: true },
     { field: 'recruitmentNumber', header: '招募編號', visible: true },
     { field: 'transactionSerialNumber', header: '交易序號', visible: true },
     {
@@ -55,7 +55,7 @@ export class TLS23140Component extends BasicQueryPageComponent<any> {
     });
   }
 
-   onSubmit(form: FormGroup): void {
+  onSubmit(form: FormGroup): void {
     this.submitted = true;
     if (this.loading) return;
 

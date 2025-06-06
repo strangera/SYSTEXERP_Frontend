@@ -35,7 +35,7 @@ export class TLS26010CRUComponent extends BasicCrupageComponent implements OnIni
   columns: any[] = [
     { field: 'cashRegisterNumber', header: '收銀機代號', visible: true },
     { field: 'counterNumber', header: '專櫃編號', visible: true },
-    { field: 'counterName', header: '專櫃名稱', visible: true },
+    { field: 'counterName', header: '櫃位名稱', visible: true },
   ];
   // 表格資料
   data2: any[] = [
@@ -45,7 +45,7 @@ export class TLS26010CRUComponent extends BasicCrupageComponent implements OnIni
   columns2: any[] = [
 
     { field: 'counterNumber', header: '專櫃編號', visible: true },
-    { field: 'counterName', header: '專櫃名稱', visible: true },
+    { field: 'counterName', header: '櫃位名稱', visible: true },
   ];
   // ----------------------------------------------------------------
   constructor(

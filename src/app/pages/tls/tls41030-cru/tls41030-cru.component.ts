@@ -30,7 +30,7 @@ export class TLS41030CRUComponent extends BasicCrupageComponent implements OnIni
     USR_RegType: [2, [Validators.required, Validators.maxLength(2)]], // 收銀員區分 2=獨立收銀(預設) 1=集中收銀
 
     USR_TLT_No: [, [Validators.maxLength(20)]], // 收銀員所屬櫃編
-    USR_TLT_Name: ['', [Validators.maxLength(60)]], // 收銀員所屬專櫃名稱
+    USR_TLT_Name: ['', [Validators.maxLength(60)]], // 收銀員所屬櫃位名稱
 
     USR_OnJobDate: [], // 啟用日期
     USR_QuitDate: [], // 停用日期

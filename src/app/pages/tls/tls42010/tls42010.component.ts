@@ -39,7 +39,7 @@ export class TLS42010Component {
     SBM_Type: ['', [Validators.maxLength(6)]], // 菜單類別 (1=一般菜單(預設值)  2=員工菜單)
     PLU_No: ['', [Validators.maxLength(20)]], // 商品條碼，預設為商品貨號
     TLT_No: ['', [Validators.maxLength(20)]], // 專櫃編號
-    TLT_Name: ['', [Validators.maxLength(60)]], // 專櫃名稱
+    TLT_Name: ['', [Validators.maxLength(60)]], // 櫃位名稱
     SBM_BegDate_From: [], // 有效啟始日期
     SBM_BegDate_To: [], // 有效啟始日期
     SBM_EndDate_From: [], // 有效結束日期
@@ -89,7 +89,7 @@ export class TLS42010Component {
   columns: any[] = [
     { field: 'SBM_Type', header: '菜單類別', visible: true },
     { field: 'TLT_No', header: '專櫃編號', visible: true },
-    { field: 'TLT_Name', header: '專櫃名稱', visible: true },
+    { field: 'TLT_Name', header: '櫃位名稱', visible: true },
     // 其他欄位
   ];
   subColumns: any[] = [

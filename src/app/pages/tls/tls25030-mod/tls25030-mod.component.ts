@@ -45,7 +45,7 @@ export class TLS25030ModComponent implements OnInit, OnDestroy {
     documentNumber: [],           // 單據號碼
     counterCode: [],              // 專櫃編號
     operationEndDate: [],         // 營運截止日
-    counterName: [],              // 專櫃名稱
+    counterName: [],              // 櫃位名稱
     deductionItem: [],            // 扣款項目
     violationCategoryCode: [],        // 違規類別編號
     deductionContent: [],         // 扣款內容

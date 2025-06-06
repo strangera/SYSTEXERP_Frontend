@@ -62,7 +62,7 @@ export class TLS29010Component {
   filteredData: any[] = [...this.data];
   columns: any[] = [
     { field: 'specialCounterNumber', header: '專櫃編號', visible: true },
-    { field: 'specialCounterName', header: '專櫃名稱', visible: true },
+    { field: 'specialCounterName', header: '櫃位名稱', visible: true },
     { field: 'productCategory', header: '中分類', visible: true },
     { field: 'productCategoryName', header: '中分類名稱', visible: true },
     { field: 'discountType', header: '折扣別', visible: true },

@@ -24,7 +24,7 @@ export class TLS42010CRUComponent extends BasicCrupageComponent implements OnIni
     SBM_Type: [1, [Validators.required, Validators.maxLength(6)]], // 菜單類別 (1=一般菜單(預設值)  2=員工菜單)
     PLU_No: ['', [Validators.maxLength(20)]], // 商品條碼，預設為商品貨號
     TLT_No: ['', [Validators.required, Validators.maxLength(20)]], // 專櫃編號
-    TLT_Name: ['', [Validators.maxLength(60)]], // 專櫃名稱
+    TLT_Name: ['', [Validators.maxLength(60)]], // 櫃位名稱
     SBM_BegDate: [, [Validators.required]], // 有效啟始日期
     SBM_EndDate: [, [Validators.required]], // 有效結束日期
 

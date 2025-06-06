@@ -50,7 +50,7 @@ export class TLS25030Component {
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
     counterCode: [],  // 專櫃編號
-    counterName: [],  // 專櫃名稱
+    counterName: [],  // 櫃位名稱
     violationCategory: [],  // 違規類別編號
     deductionItem: [],  // 扣款項目
     amountStart: [],  // 金額開始
@@ -93,7 +93,7 @@ export class TLS25030Component {
   columns: any[] = [
     { field: 'documentNumber', header: '單據號碼', visible: true },
     { field: 'counterCode', header: '專櫃編號', visible: true },
-    { field: 'counterName', header: '專櫃名稱', visible: true },
+    { field: 'counterName', header: '櫃位名稱', visible: true },
     { field: 'deductionDate', header: '扣款日期', visible: true },
     { field: 'violationCategoryCode', header: '違規類別編號', visible: true },
     { field: 'deductionItem', header: '扣款項目', visible: true },

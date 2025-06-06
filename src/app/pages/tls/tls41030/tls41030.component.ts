@@ -41,7 +41,7 @@ export class TLS41030Component {
     USR_RegType: [, [Validators.maxLength(2)]], // 收銀員區分 2=獨立收銀 1=集中收銀
 
     USR_TLT_No: [, [Validators.maxLength(20)]], // 收銀員所屬櫃編
-    USR_TLT_Name: ['', [Validators.maxLength(60)]], // 收銀員所屬專櫃名稱
+    USR_TLT_Name: ['', [Validators.maxLength(60)]], // 收銀員所屬櫃位名稱
 
     USR_OnJobDate: [], // 啟用日期
     USR_QuitDate: [], // 停用日期
@@ -80,7 +80,7 @@ export class TLS41030Component {
     { field: 'USR_Class', header: '收銀員等級', visible: true },
     { field: 'USR_RegType', header: '收銀員區分', visible: true },
     { field: 'USR_TLT_No', header: '收銀員所屬櫃編', visible: true },
-    { field: 'USR_TLT_Name', header: '收銀員所屬專櫃名稱', visible: true },
+    { field: 'USR_TLT_Name', header: '收銀員所屬櫃位名稱', visible: true },
 
     { field: 'USR_TitleName', header: '職稱', visible: false },
     { field: 'USR_OnJobDate', header: '到職日期', visible: false },
