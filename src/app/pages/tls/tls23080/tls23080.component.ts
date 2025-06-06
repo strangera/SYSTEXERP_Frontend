@@ -25,6 +25,7 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     org_id: [''],
     TXN_Year: [''],
     TXN_Month: [''],
+    queryMonthYear: [''],
     ...createPaginationConfig([{ field: 'TXN_DateStart', order: 1 }])
   });
 
