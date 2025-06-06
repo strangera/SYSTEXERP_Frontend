@@ -10,30 +10,32 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <!-- Radio + 銷售日期區間 -->
           <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar-range-quick
-                  calendarType="dateRange"
-                  label="銷售日期區間"
-                  [startControl]="queryForm.controls.saleDateStart"
-                  [endControl]="queryForm.controls.saleDateEnd"
-                  [submitted]="submitted"
-                ></app-calendar-range-quick>
-              </div>
-  
+            <app-calendar-range-quick
+              calendarType="dateRange"
+              label="銷售日期區間"
+              [startControl]="queryForm.controls.saleDateStart"
+              [endControl]="queryForm.controls.saleDateEnd"
+              [submitted]="submitted"
+            ></app-calendar-range-quick>
+          </div>
 
           <!-- Radio + 銷售年/月 -->
           <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar
-                  calendarType="dateMonthOne"
-                  label="銷售年/月"
-                  [control]="queryForm.controls.saleMonthYear"
-                  [submitted]="submitted"
-                ></app-calendar>
-              </div>
-
+            <app-calendar
+              calendarType="dateMonthOne"
+              label="銷售年/月"
+              [control]="queryForm.controls.saleMonthYear"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
 
           <!-- 商品抽成類別 -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -60,7 +62,7 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-        <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="專櫃編號"
               controlName="TLT_No"
@@ -110,12 +112,9 @@
           </div>
         </div>
 
-
-
-
-
-
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>

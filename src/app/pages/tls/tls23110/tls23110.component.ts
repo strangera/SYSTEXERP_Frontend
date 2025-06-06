@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
+
 import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { TypeService } from '../../../service/basic/type.service';
