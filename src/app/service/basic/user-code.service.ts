@@ -116,7 +116,7 @@ export class UserCodeService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getUserCode(): Observable<any[]> {
     return of(this.options).pipe(

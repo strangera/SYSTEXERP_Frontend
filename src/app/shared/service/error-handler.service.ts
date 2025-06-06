@@ -30,7 +30,6 @@ export class ErrorHandlerService {
    */
   handleError(error: HttpErrorResponse): Observable<never> {
     let userFriendlyMessage = '發生未知錯誤，請稍後再試。'; // 預設使用者友善的錯誤訊息
-
     // 根據 HTTP 狀態碼判斷錯誤類型並設定對應訊息
     if (error.status === 0) {
       // 網路錯誤 (如斷線、DNS 解析失敗) 或請求逾時
