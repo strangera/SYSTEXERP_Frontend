@@ -360,6 +360,7 @@ export class SYS0310CRUComponent extends BasicCruPageComponent<Role> implements 
     this.sys0230Service.updateRolePrivileges(body).subscribe({
       next: (response: ApiResponse<any>) => {
         console.log('Update Role Privileges Response:', response);
+        this.messageService.successBubble('更新成功');
         this.loading = false;
         this.onCancel();
       },

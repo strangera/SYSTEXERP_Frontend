@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { Sys0110Service } from '../../../service/API/sys/sys0110.service';
 import { UserData } from '../../../shared/models/sys/user.model';
 
@@ -14,7 +14,9 @@ export class SYS0320Component extends BasicQueryPageComponent<UserData> implemen
   queryForm = this.formBuilder.group({
     user_No: ['', [Validators.maxLength(10)]], // 使用者代碼
     user_Name: ['', [Validators.maxLength(30)]], // 使用者名稱
+    ...createPaginationConfig([{ field: 'user_No', order: 1 }]), // 分頁和排序參數
   });
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: UserData[] = []; columns: Column[] = [
     { field: 'user_No', header: '使用者編號', visible: true },
     { field: 'user_Name', header: '使用者名稱', visible: true },
@@ -42,6 +44,7 @@ export class SYS0320Component extends BasicQueryPageComponent<UserData> implemen
       this.sys0110Service.queryUser(frm.value).subscribe({
         next: (response) => {
           this.data = response.Data
+          this.totalRecords = response.TotalCount || response.Data.length;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
           this.loading = false;
         },
