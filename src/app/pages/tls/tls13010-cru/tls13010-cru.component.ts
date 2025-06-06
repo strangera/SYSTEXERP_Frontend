@@ -68,6 +68,12 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // 位置選項資料
   locationWithDetailsOptions: any[] = [];
 
+  //廠商統一編號
+  pos2013Options: any[] = [];
+
+  // 洽談者選項
+  negotiatorOptions: any[] = [];
+
   // 新的位置表格欄位定義
   locationColumns: ColumnDef[] = [
     {
@@ -130,6 +136,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     tlt_bdate: [''],
     tlt_edate: [''],
     contact_Date: [''],
+    contact_USR_No: [''],
     contact_USR_Name: [''],
     feedback_date: [''],
     due_date: [''],
@@ -260,6 +267,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 然後載入位置選項
     this.loadLocationWithDetailsOptions();
+    // 載入 POS2013 選項
+    this.loadPOS2013Options();
+    // 載入洽談者選項
+    this.loadNegotiatorOptions();
     this.loadWorkflowData();
     this.setupAutoSave();
     this.setupBusTypeListener();
@@ -340,6 +351,31 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         this.messageService.warnBubble('載入位置選項失敗，請重新整理頁面');
       }
     });
+  }
+
+  private loadPOS2013Options(): void {
+    // 直接從服務取得
+    this.pos2013Options = this.tls13010DropdownService.pos2013Options;
+
+    // 或者等服務載入完成
+    if (this.pos2013Options.length === 0) {
+      setTimeout(() => {
+        this.pos2013Options = this.tls13010DropdownService.getPOS2013Options();
+      }, 500);
+    }
+  }
+
+  private loadNegotiatorOptions(): void {
+    // 直接從服務取得
+    this.negotiatorOptions = this.tls13010DropdownService.negotiatorOptions;
+
+    // 或者等服務載入完成
+    if (this.negotiatorOptions.length === 0) {
+      setTimeout(() => {
+        this.negotiatorOptions = this.tls13010DropdownService.getNegotiatorOptionsData();
+        console.log('洽談者選項載入完成 (CRU頁面):', this.negotiatorOptions.length);
+      }, 500);
+    }
   }
 
   // 更新位置欄位的下拉選單選項
@@ -461,6 +497,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       ticket_remarks: queryData.ticket_remarks,
       cap_saletype1: queryData.cap_saletype1,
       cap_saletype2: queryData.cap_saletype2,
+      contact_USR_No: queryData.contact_USR_No,
+      contact_USR_Name: queryData.contact_USR_Name,
     });
 
     this.loadBusinessClassifications(queryData.bus_type, queryData.bus_class);

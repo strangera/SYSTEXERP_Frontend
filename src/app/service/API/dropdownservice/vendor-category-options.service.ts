@@ -24,7 +24,10 @@ export class VendorCategoryOptionsService {
     return this.http
       .post<any>(`${this.apiUrl}/queryPOS2013_DropDownList`, requestBody)
       .pipe(
-        map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? [])
+        map((res) => res?.Data?.map((x: any) => ({
+          label: `${x.No} - ${x.Name}`,  // 改這裡
+          value: x.No
+        })) ?? [])
       );
   }
 }

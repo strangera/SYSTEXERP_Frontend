@@ -245,6 +245,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   paymentMethodOptions: any[] = [];
   cooperationMethodOptions: any[] = [];
   counterCategoryOptions: any[] = [];
+  pos2013Options: any[] = [];
 
   constructor(
     public override router: Router,
@@ -266,6 +267,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     this.checkExistingWorkflow();
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.loadDropdownOptions();
+    this.loadPOS2013Options();
   }
 
   /**
@@ -317,6 +319,22 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
       next: (data) => this.counterCategoryOptions = data,
       error: (err) => console.warn('載入櫃別選項失敗:', err)
     });
+  }
+
+  /**
+   * 載入 POS2013 選項
+   */
+  private loadPOS2013Options(): void {
+    // 如果 DropdownService 中已經載入完成，直接使用
+    if (this.tls13010DropdownService.pos2013Options.length > 0) {
+      this.pos2013Options = this.tls13010DropdownService.getPOS2013Options();
+    } else {
+      // 否則延遲載入
+      setTimeout(() => {
+        this.pos2013Options = this.tls13010DropdownService.getPOS2013Options();
+        console.log('POS2013選項載入完成 (查詢頁面):', this.pos2013Options.length);
+      }, 500);
+    }
   }
 
   /**
@@ -470,5 +488,9 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
    */
   getProgressPercentage(): number {
     return this.contractFlowService.getProgressPercentage();
+  }
+
+  isPOS2013OptionsLoaded(): boolean {
+    return this.pos2013Options.length > 0;
   }
 }
