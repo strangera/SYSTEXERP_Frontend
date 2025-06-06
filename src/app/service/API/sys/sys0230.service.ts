@@ -36,4 +36,8 @@ export class Sys0230Service {
   updateRolePrivileges(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateRolePrivileges`, body);
   }
+  // 更新 使用者權限
+  updateUserPrivileges(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateUserPrivileges`, body);
+  }
 }

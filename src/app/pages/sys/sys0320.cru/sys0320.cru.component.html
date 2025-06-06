@@ -10,44 +10,264 @@
           [control]="dataForm.controls.user_No" [submitted]="submitted" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="使用者名稱" controlName="user_Name"
           [control]="dataForm.controls.user_Name" [submitted]="submitted" />
-        <p-tabView class="col-12">
-          <p-tabPanel *ngFor="let module of privilegeBehaviorList">
+        <p-tabView class="col-12" [(activeIndex)]="activeIndex">
+          <p-tabPanel *ngIf="FIN00000Data">
             <ng-template pTemplate="header">
               <div class="flex align-items-center gap-2">
-                <i [ngClass]="getIconClass(module.key)"></i>
+                <i [ngClass]="getIconClass(FIN00000Data.id)"></i>
                 <span class="font-bold white-space-nowrap m-0">
-                  {{module.data.label}}
+                  {{FIN00000Data.label}}
                 </span>
               </div>
             </ng-template>
-            <p-treeTable #tt [value]="module.children" [columns]="columns" selectionMode="checkbox"
-              [(selectionKeys)]="selectionKeys" dataKey="key" styleClass="p-treetable-sm p-treetable-gridlines">
-              <ng-template pTemplate="header" let-columns>
-                <tr>
-                  <th *ngFor="let col of columns">
-                    {{ col.header }}
-                  </th>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="body" let-rowNode let-rowData="rowData" let-columns="columns">
-                <tr [ttRow]="rowNode" [ttSelectableRow]="rowNode">
-                  <td *ngFor="let col of columns; let i = index">
-                    <p-treeTableToggler [rowNode]="rowNode" *ngIf="i === 0" />
-                    <p-treeTableCheckbox [value]="rowNode" *ngIf="i === 0" />
-                    <ng-container *ngIf="col.field === 'actions'; else defaultContent">
-                      <div *ngFor="let row of rowData['actions']" class="inline-flex justify-content-center pr-2">
-                        <p-checkbox [label]="row.label" [name]="rowData['label']" [binary]="true"
-                          [(ngModel)]="row.IsEnable" [ngModelOptions]="{standalone: true}"
-                          (ngModelChange)="onActionCheckboxChange(row, rowNode.node)" />
-                      </div>
-                    </ng-container>
-                    <ng-template #defaultContent>
-                      {{ rowData[col.field] }}
+            <div *ngFor="let item of FIN00000Data.children; trackBy: trackByFn"
+              class="flex flex-column py-2 border-bottom-1 surface-border">
+              <p-button [text]="true" styleClass="flex align-items-center justify-content-between"
+                (click)="item.isOpen = !item.isOpen">
+                <span class="font-bold text-xl">{{item.label}}</span>
+                <p-inputSwitch class="flex" [ngModel]="item.IsEnable" (click)="$event.stopPropagation()"
+                  (ngModelChange)="inputSwitchOpen(item);onNodeCheckboxChange(item, $event)"
+                  [ngModelOptions]="{standalone: true}" />
+              </p-button>
+              <div *ngIf="item.isOpen" class="flex-column gap-2 justify-content-between py-2 child-options-container">
+                <p-accordion>
+                  <p-accordionTab *ngFor="let i of item.children; trackBy: trackByFn">
+                    <ng-template pTemplate="header">
+                      <span class="flex align-items-center gap-2 w-full">
+                        <p-checkbox [name]="item.label" [binary]="true" [ngModel]="i.IsEnable"
+                          (ngModelChange)="onNodeCheckboxChange(i, $event)" [ngModelOptions]="{standalone: true}"
+                          (click)="$event.stopPropagation()" /> <span class="font-bold white-space-nowrap">
+                          {{i.label}}
+                        </span>
+                      </span>
                     </ng-template>
-                  </td>
-                </tr>
-              </ng-template>
-            </p-treeTable>
+                    <div *ngFor="let program of i.children; trackBy: trackByFn" class="flex align-items-center gap-2">
+                      <p-checkbox class="min-w-max w-25rem" [label]="program.label" [name]="i.label" [binary]="true"
+                        [ngModel]="program.IsEnable" (ngModelChange)="onNodeCheckboxChange(program, $event)"
+                        [ngModelOptions]="{standalone: true}" />
+                      <div class="flex align-items-center gap-2 w-full">
+                        <cdk-virtual-scroll-viewport itemSize="31"
+                          class="checkbox-virtual-scroll-viewport overflow-hidden">
+                          <div *cdkVirtualFor="let behavior of program.actions; trackBy: trackByFn"> <p-checkbox
+                              [label]="behavior.label" [name]="program.label" [binary]="true"
+                              [ngModel]="behavior.IsEnable" (ngModelChange)="onNodeCheckboxChange(behavior, $event)"
+                              [ngModelOptions]="{standalone: true}" />
+                          </div>
+                        </cdk-virtual-scroll-viewport>
+                      </div>
+                    </div>
+                  </p-accordionTab>
+                </p-accordion>
+              </div>
+            </div>
+          </p-tabPanel>
+
+          <p-tabPanel *ngIf="ASS00000Data">
+            <ng-template pTemplate="header">
+              <div class="flex align-items-center gap-2">
+                <i [ngClass]="getIconClass(ASS00000Data.id)"></i>
+                <span class="font-bold white-space-nowrap m-0">
+                  {{ASS00000Data.label}}
+                </span>
+              </div>
+            </ng-template>
+            <div *ngFor="let item of ASS00000Data.children; trackBy: trackByFn"
+              class="flex flex-column py-2 border-bottom-1 surface-border">
+              <p-button [text]="true" styleClass="flex align-items-center justify-content-between"
+                (click)="item.isOpen = !item.isOpen">
+                <span class="font-bold text-xl">{{item.label}}</span>
+                <p-inputSwitch class="flex" [ngModel]="item.IsEnable" (click)="$event.stopPropagation()"
+                  (ngModelChange)="inputSwitchOpen(item);onNodeCheckboxChange(item, $event)"
+                  [ngModelOptions]="{standalone: true}" />
+              </p-button>
+              <div *ngIf="item.isOpen" class="flex-column gap-2 justify-content-between py-2 child-options-container">
+                <p-accordion>
+                  <p-accordionTab *ngFor="let i of item.children; trackBy: trackByFn">
+                    <ng-template pTemplate="header">
+                      <span class="flex align-items-center gap-2 w-full">
+                        <p-checkbox [name]="item.label" [binary]="true" [ngModel]="i.IsEnable"
+                          (ngModelChange)="onNodeCheckboxChange(i, $event)" [ngModelOptions]="{standalone: true}"
+                          (click)="$event.stopPropagation()" />
+                        <span class="font-bold white-space-nowrap">
+                          {{i.label}}
+                        </span>
+                      </span>
+                    </ng-template>
+                    <div *ngFor="let program of i.children; trackBy: trackByFn" class="flex align-items-center gap-2">
+                      <p-checkbox class="min-w-max w-25rem" [label]="program.label" [name]="i.label" [binary]="true"
+                        [ngModel]="program.IsEnable" (ngModelChange)="onNodeCheckboxChange(program, $event)"
+                        [ngModelOptions]="{standalone: true}" />
+                      <div class="flex align-items-center gap-2 w-full">
+                        <cdk-virtual-scroll-viewport itemSize="40"
+                          class="checkbox-virtual-scroll-viewport overflow-hidden">
+                          <div *cdkVirtualFor="let behavior of program.actions; trackBy: trackByFn"> <p-checkbox
+                              [label]="behavior.label" [name]="program.label" [binary]="true"
+                              [ngModel]="behavior.IsEnable" (ngModelChange)="onNodeCheckboxChange(behavior, $event)"
+                              [ngModelOptions]="{standalone: true}" />
+                          </div>
+                        </cdk-virtual-scroll-viewport>
+                      </div>
+                    </div>
+                  </p-accordionTab>
+                </p-accordion>
+              </div>
+            </div>
+          </p-tabPanel>
+
+          <p-tabPanel *ngIf="TLS00000Data">
+            <ng-template pTemplate="header">
+              <div class="flex align-items-center gap-2">
+                <i [ngClass]="getIconClass(TLS00000Data.id)"></i>
+                <span class="font-bold white-space-nowrap m-0">
+                  {{TLS00000Data.label}}
+                </span>
+              </div>
+            </ng-template>
+            <div *ngFor="let item of TLS00000Data.children; trackBy: trackByFn"
+              class="flex flex-column py-2 border-bottom-1 surface-border">
+              <p-button [text]="true" styleClass="flex align-items-center justify-content-between"
+                (click)="item.isOpen = !item.isOpen">
+                <span class="font-bold text-xl">{{item.label}}</span>
+                <p-inputSwitch class="flex" [ngModel]="item.IsEnable" (click)="$event.stopPropagation()"
+                  (ngModelChange)="inputSwitchOpen(item);onNodeCheckboxChange(item, $event)"
+                  [ngModelOptions]="{standalone: true}" />
+              </p-button>
+              <div *ngIf="item.isOpen" class="flex-column gap-2 justify-content-between py-2 child-options-container">
+                <p-accordion>
+                  <p-accordionTab *ngFor="let i of item.children; trackBy: trackByFn">
+                    <ng-template pTemplate="header">
+                      <span class="flex align-items-center gap-2 w-full">
+                        <p-checkbox [name]="item.label" [binary]="true" [ngModel]="i.IsEnable"
+                          (ngModelChange)="onNodeCheckboxChange(i, $event)" [ngModelOptions]="{standalone: true}"
+                          (click)="$event.stopPropagation()" />
+                        <span class="font-bold white-space-nowrap">
+                          {{i.label}}
+                        </span>
+                      </span>
+                    </ng-template>
+                    <div *ngFor="let program of i.children; trackBy: trackByFn" class="flex align-items-center gap-2">
+                      <p-checkbox class="min-w-max w-25rem" [label]="program.label" [name]="i.label" [binary]="true"
+                        [ngModel]="program.IsEnable" (ngModelChange)="onNodeCheckboxChange(program, $event)"
+                        [ngModelOptions]="{standalone: true}" />
+                      <div class="flex align-items-center gap-2 w-full">
+                        <cdk-virtual-scroll-viewport itemSize="40"
+                          class="checkbox-virtual-scroll-viewport overflow-hidden">
+                          <div *cdkVirtualFor="let behavior of program.actions; trackBy: trackByFn"> <p-checkbox
+                              [label]="behavior.label" [name]="program.label" [binary]="true"
+                              [ngModel]="behavior.IsEnable" (ngModelChange)="onNodeCheckboxChange(behavior, $event)"
+                              [ngModelOptions]="{standalone: true}" />
+                          </div>
+                        </cdk-virtual-scroll-viewport>
+                      </div>
+                    </div>
+                  </p-accordionTab>
+                </p-accordion>
+              </div>
+            </div>
+          </p-tabPanel>
+
+          <p-tabPanel *ngIf="SYS0000Data">
+            <ng-template pTemplate="header">
+              <div class="flex align-items-center gap-2">
+                <i [ngClass]="getIconClass(SYS0000Data.id)"></i>
+                <span class="font-bold white-space-nowrap m-0">
+                  {{SYS0000Data.label}}
+                </span>
+              </div>
+            </ng-template>
+            <div *ngFor="let item of SYS0000Data.children; trackBy: trackByFn"
+              class="flex flex-column py-2 border-bottom-1 surface-border">
+              <p-button [text]="true" styleClass="flex align-items-center justify-content-between"
+                (click)="item.isOpen = !item.isOpen">
+                <span class="font-bold text-xl">{{item.label}}</span>
+                <p-inputSwitch class="flex" [ngModel]="item.IsEnable" (click)="$event.stopPropagation()"
+                  (ngModelChange)="inputSwitchOpen(item);onNodeCheckboxChange(item, $event)"
+                  [ngModelOptions]="{standalone: true}" />
+              </p-button>
+              <div *ngIf="item.isOpen" class="flex-column gap-2 justify-content-between py-2 child-options-container">
+                <p-accordion>
+                  <p-accordionTab *ngFor="let i of item.children; trackBy: trackByFn">
+                    <ng-template pTemplate="header">
+                      <span class="flex align-items-center gap-2 w-full">
+                        <p-checkbox [name]="item.label" [binary]="true" [ngModel]="i.IsEnable"
+                          (ngModelChange)="onNodeCheckboxChange(i, $event)" [ngModelOptions]="{standalone: true}"
+                          (click)="$event.stopPropagation()" />
+                        <span class="font-bold white-space-nowrap">
+                          {{i.label}}
+                        </span>
+                      </span>
+                    </ng-template>
+                    <div *ngFor="let program of i.children; trackBy: trackByFn" class="flex align-items-center gap-2">
+                      <p-checkbox class="min-w-max w-25rem" [label]="program.label" [name]="i.label" [binary]="true"
+                        [ngModel]="program.IsEnable" (ngModelChange)="onNodeCheckboxChange(program, $event)"
+                        [ngModelOptions]="{standalone: true}" />
+                      <div class="flex align-items-center gap-2 w-full">
+                        <cdk-virtual-scroll-viewport itemSize="40"
+                          class="checkbox-virtual-scroll-viewport overflow-hidden">
+                          <div *cdkVirtualFor="let behavior of program.actions; trackBy: trackByFn"> <p-checkbox
+                              [label]="behavior.label" [name]="program.label" [binary]="true"
+                              [ngModel]="behavior.IsEnable" (ngModelChange)="onNodeCheckboxChange(behavior, $event)"
+                              [ngModelOptions]="{standalone: true}" />
+                          </div>
+                        </cdk-virtual-scroll-viewport>
+                      </div>
+                    </div>
+                  </p-accordionTab>
+                </p-accordion>
+              </div>
+            </div>
+          </p-tabPanel>
+
+          <p-tabPanel *ngIf="CPM0000Data">
+            <ng-template pTemplate="header">
+              <div class="flex align-items-center gap-2">
+                <i [ngClass]="getIconClass(CPM0000Data.id)"></i>
+                <span class="font-bold white-space-nowrap m-0">
+                  {{CPM0000Data.label}}
+                </span>
+              </div>
+            </ng-template>
+            <div *ngFor="let item of CPM0000Data.children; trackBy: trackByFn"
+              class="flex flex-column py-2 border-bottom-1 surface-border">
+              <p-button [text]="true" styleClass="flex align-items-center justify-content-between"
+                (click)="item.isOpen = !item.isOpen">
+                <span class="font-bold text-xl">{{item.label}}</span>
+                <p-inputSwitch class="flex" [ngModel]="item.IsEnable" (click)="$event.stopPropagation()"
+                  (ngModelChange)="inputSwitchOpen(item);onNodeCheckboxChange(item, $event)"
+                  [ngModelOptions]="{standalone: true}" />
+              </p-button>
+              <div *ngIf="item.isOpen" class="flex-column gap-2 justify-content-between py-2 child-options-container">
+                <p-accordion>
+                  <p-accordionTab *ngFor="let i of item.children; trackBy: trackByFn">
+                    <ng-template pTemplate="header">
+                      <span class="flex align-items-center gap-2 w-full">
+                        <p-checkbox [name]="item.label" [binary]="true" [ngModel]="i.IsEnable"
+                          (ngModelChange)="onNodeCheckboxChange(i, $event)" [ngModelOptions]="{standalone: true}"
+                          (click)="$event.stopPropagation()" />
+                        <span class="font-bold white-space-nowrap">
+                          {{i.label}}
+                        </span>
+                      </span>
+                    </ng-template>
+                    <div *ngFor="let program of i.children; trackBy: trackByFn" class="flex align-items-center gap-2">
+                      <p-checkbox class="min-w-max w-25rem" [label]="program.label" [name]="i.label" [binary]="true"
+                        [ngModel]="program.IsEnable" (ngModelChange)="onNodeCheckboxChange(program, $event)"
+                        [ngModelOptions]="{standalone: true}" />
+                      <div class="flex align-items-center gap-2 w-full">
+                        <cdk-virtual-scroll-viewport itemSize="40"
+                          class="checkbox-virtual-scroll-viewport overflow-hidden">
+                          <div *cdkVirtualFor="let behavior of program.actions; trackBy: trackByFn"> <p-checkbox
+                              [label]="behavior.label" [name]="program.label" [binary]="true"
+                              [ngModel]="behavior.IsEnable" (ngModelChange)="onNodeCheckboxChange(behavior, $event)"
+                              [ngModelOptions]="{standalone: true}" />
+                          </div>
+                        </cdk-virtual-scroll-viewport>
+                      </div>
+                    </div>
+                  </p-accordionTab>
+                </p-accordion>
+              </div>
+            </div>
           </p-tabPanel>
         </p-tabView>
       </div>

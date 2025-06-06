@@ -4,21 +4,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { Sys0210Service } from '../../../service/API/sys/sys0210.service';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { ApiResponse } from '../../../service/system/auth.service';
-import { trigger, style, animate, transition } from '@angular/animations';
 import { Sys0230Service } from '../../../service/API/sys/sys0230.service';
-
-export const expandAnimation = trigger('expandAnimation', [
-  // 當元素進入 DOM 時 (item.IsEnable 從 false 變 true)
-  transition(':enter', [
-    style({ height: '0px', opacity: 0, overflow: 'hidden' }), // 初始狀態
-    animate('200ms ease-in-out', style({ height: '*', opacity: 1 })) // 動畫到完全顯示
-  ]),
-  // 當元素離開 DOM 時 (item.IsEnable 從 true 變 false)
-  transition(':leave', [
-    style({ height: '*', opacity: 1, overflow: 'hidden' }), // 初始狀態 (當前高度)
-    animate('200ms ease-in-out', style({ height: '0px', opacity: 0 })) // 動畫到完全隱藏
-  ])
-]);
 
 interface PrivilegeOutput {
   prog_no: string;
@@ -31,7 +17,6 @@ interface PrivilegeOutput {
   selector: 'app-sys0310.cru',
   templateUrl: './sys0310.cru.component.html',
   styleUrls: ['./sys0310.cru.component.scss'],
-  animations: [expandAnimation],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 // 角色系統權限設定 CRU
