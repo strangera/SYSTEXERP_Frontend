@@ -16,8 +16,8 @@ import { CounterNameService } from '../../../service/basic/counter-name.service'
 })
 export class TLS23080Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [null, [Validators.required]],
-    TXN_DateEnd: [null, [Validators.required]],
+    TXN_DateStart: [null,],
+    TXN_DateEnd: [null,],
     ECR_No: [''],
     tlt_no: [''],
     tlt_building: [''],
@@ -87,7 +87,7 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
         value: x.value,
       })) || [];
     });
-            this.counterNameService.getCounters().subscribe((res) => {
+    this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions = res?.map((x: any) => ({
         label: x.label,                                 // 給 table 用
         formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用

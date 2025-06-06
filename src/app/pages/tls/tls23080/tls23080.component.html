@@ -27,13 +27,13 @@
           </div>
           <!-- 銷售日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
+            <app-calendar-range-quick
+              
               label="查詢日期"
               [startControl]="queryForm.controls.TXN_DateStart"
               [endControl]="queryForm.controls.TXN_DateEnd"
               [submitted]="submitted"
-            ></app-calendar-range>
+            ></app-calendar-range-quick>
           </div>
 
           <!-- 收銀機代號 -->

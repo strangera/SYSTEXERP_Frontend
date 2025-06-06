@@ -12,12 +12,16 @@ export class InstallmentPeriodService {
   title: string = '分期期數';
 
   // 本地數據的分期期數選項，使用數字作為 value
+
   options: any[] = [
-    { value: 1, label: '三期' },
-    { value: 2, label: '六期' },
-    { value: 3, label: '十二期' },
-    // 可以繼續添加其他選項
+    { value: 0, label: '不分期' },
+    { value: 3, label: '3期' },
+    { value: 6, label: '6期' },
+    { value: 12, label: '12期' },
+    { value: 24, label: '24期' }
   ];
+    // 可以繼續添加其他選項
+
 
   constructor(
     private http: HttpClient,

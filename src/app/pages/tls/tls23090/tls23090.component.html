@@ -9,10 +9,14 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <!-- 銷售日期 -->
-   <app-calendar-range-quick
+          <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="銷售日期"
             [startControl]="queryForm.controls.TXN_DateStart"
@@ -21,23 +25,30 @@
           ></app-calendar-range-quick>
 
           <!-- 收銀機代號 -->
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <app-multi-select
               label="收銀機代號"
               controlName="ECR_No"
+              [options]="ECRNoOptions"
+              optionLabel="label"
+              optionValue="value"
               [control]="queryForm.controls.ECR_No"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-multi-select>
           </div>
 
           <!-- 專櫃編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <app-multi-select
               label="專櫃編號"
-              controlName="tlt_no"
+              controlName="TLT_No"
+              [options]="CounterOptions"
+              optionLabel="formLabel"
+              optionValue="value"
               [control]="queryForm.controls.tlt_no"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-multi-select>
           </div>
 
           <!-- 信用卡卡別 -->
@@ -72,6 +83,51 @@
               [submitted]="submitted"
             ></app-input-text>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="是否分期"
+              controlName="IsHaveTERM_No"
+              [options]="WhetherOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.IsHaveTERM_No"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="期別"
+              controlName="IPeriod"
+              [options]="installmentPeriodOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.IPeriod"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="收單行"
+              controlName="AcqBank"
+              [options]="acquiringBankOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.AcqBank"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+                              <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="連線狀態"
+              controlName="ConnStatus"
+              [options]="connectionStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ConnStatus"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          
 
           <!-- 館別 -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -112,7 +168,9 @@
         </div>
 
         <!-- 查詢按鈕區 -->
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
