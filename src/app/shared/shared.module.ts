@@ -39,6 +39,7 @@ import { TreeModule } from 'primeng/tree';
 import { FileUploadModule } from 'primeng/fileupload';
 import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
+import { FieldsetModule } from 'primeng/fieldset';
 import { EditorModule } from 'primeng/editor';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { MenubarComponent } from './component/menubar/menubar.component';
@@ -178,6 +179,8 @@ import { QueryYearMonthComponent } from './componentkit/query-year-month/query-y
     InputGroupAddonModule,
     IconFieldModule,
     InputIconModule,
+    FieldsetModule,
+    InputSwitchModule,
     // Custom
     MenubarComponent,
     ControlMessagesComponent,

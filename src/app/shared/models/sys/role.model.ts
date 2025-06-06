@@ -15,9 +15,9 @@ export interface TreeNode {
   id: string;
   label: string;
   IsEnable: boolean;
-  partialSelected: boolean;
-  children: TreeNode[]; // 遞迴定義，表示子節點也是相同結構
-  selectChildren?: TreeNode[]; // 新增：用於存儲選中的子節點
-  parent_id?: string;    // 新增：直接父節點的 ID
-  parent_label?: string; // 新增：直接父節點的 Label
+  partialSelected?: boolean;
+  isOpen?: boolean;
+  children: TreeNode[];
+  actions: TreeNode[];
+  parent?: TreeNode;
 }
