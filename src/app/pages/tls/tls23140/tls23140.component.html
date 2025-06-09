@@ -12,31 +12,42 @@
  <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="交易日期"
+            <app-calendar-range-quick calendarType="dateRange" label="交易日期"
               [startControl]="queryForm.controls.transactionDateStart"
               [endControl]="queryForm.controls.transactionDateEnd" [submitted]="submitted">
-            </app-calendar-range>
+            </app-calendar-range-quick>
+          </div>
+           <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="收銀機代號"
+              controlName="ECR_No"
+              [options]="ECRNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_No"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+       <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="專櫃編號"
+              controlName="TLT_No"
+              [options]="CounterOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.TLT_No"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="交易機號" controlName="transactionMachine" [options]="transactionMachineOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.transactionMachine"
-              [submitted]="submitted">
-            </app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="專櫃編號" controlName="counterNumber"
-              [control]="queryForm.controls.counterNumber" [submitted]="submitted">
-            </app-input-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="單筆交易中有價券總金額達N萬" controlName="voucherAmount"
+            <app-input-text  label="單筆交易中有價券總金額達N萬" controlName="voucherAmount"
               [control]="queryForm.controls.voucherAmount" [submitted]="submitted">
-            </app-input-number>
+            </app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="交易序號" controlName="transactionSerialNumber"
+            <app-input-text  label="交易序號" controlName="transactionSerialNumber"
               [control]="queryForm.controls.transactionSerialNumber" [submitted]="submitted">
-            </app-input-number>
+            </app-input-text>
     </div>
         </div>
 
