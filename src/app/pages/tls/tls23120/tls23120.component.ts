@@ -32,6 +32,7 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
     org_id: [[]],     // ✅
     bus_typeList: [[]],
     tlt_no: [[]],     // ✅
+    
 
     ...createPaginationConfig([{ field: 'area', order: 1 }])
   });

@@ -11,6 +11,8 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 import { CardTypeService } from '../../../service/basic/card-type.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
 
 @Component({
   selector: 'app-tls23130',
@@ -21,16 +23,18 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     saleDateStart: [new Date(), [Validators.required]],
     saleDateEnd: [new Date(), [Validators.required]],
-    organizationCode: [{ value: '', disabled: true }],
-    regionCode: [{ value: '', disabled: true }],
+    organizationCode: [{ value: '' }],
+    regionCode: [[]], // ✅ 改為陣列
     saleMonthYear: [''],   // 銷售年月
     CRD_Type: [''], // 銀行代碼
-    businessTypeCode: [{ value: '', disabled: true }],
+    businessTypeCode: [{ value: '' }],
     whetherDisplayBusinessType: [],
     locationRadio: [''],
     tlt_building: [''],                                  // 樓層建物
     tlt_floor: [''],                                     // 樓層編號
     org_id: [''],                                        // 組織代碼
+    tlt_no: [''],                                      // 專櫃編號
+    bus_typeList: [[]],                                  // 業務類別
     ...createPaginationConfig([{ field: 'area', order: 1 }])
   });
 
@@ -41,7 +45,10 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
     { field: 'transactionSequence', header: '交易序號', visible: true },
     { field: 'machineNumber', header: '機號/名稱', visible: true },
     { field: 'amount', header: '金額', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-    { field: 'date', header: '日期', visible: true },
+    { field: 'TXN_Date', header: '日期', visible: true },
+    { field: 'TXN_GUINo', header: '發票號碼', visible: true },
+    { field: 'TXN_Time', header: '交易時間', visible: true },
+
     { field: 'installmentPeriod', header: '分期數', visible: true },
     { field: 'initialPayment', header: '頭期', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
     { field: 'monthlyPayment', header: '每期', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' }
@@ -58,6 +65,8 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = [];
   cardTypeOptions: any[] = [];
+  CounterOptions: any[] = [];
+  bus_typeOptions: any[] = [];
 
 
   constructor(
@@ -68,6 +77,8 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
     private organizationNumberService: OrganizationNumberService,
     private whetherService: WhetherService,
     private floorService: FloorService,
+    private counterNameService: CounterNameService,
+    private bigCategoryCodeService: BigCategoryCodeService,
     private tls11010Service: Tls11010Service
   ) {
     super();
@@ -79,35 +90,28 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
     this.organizationNumberService.getOrganizationNumbers().subscribe(data => this.organizationOptions = data);
     this.regionService.getRegionOptions().subscribe(data => this.regionOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe(data => this.businessTypeCodeOptions = data);
+    this.bigCategoryCodeService.getSystemTypes().subscribe((res) => {
+      this.bus_typeOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: x.label,           // 給下拉選單用
+        value: x.value,
+      })) || [];});
     this.whetherService.getWhetherOptions().subscribe(data => this.whetherOptions = data);
 
-    this.queryForm.controls.locationRadio.valueChanges.subscribe(value => {
-      this.queryForm.controls.organizationCode.disable();
-      this.queryForm.controls.regionCode.disable();
-
-      this.queryForm.controls.businessTypeCode.disable();
-
-      this.queryForm.controls.organizationCode.reset();
-      this.queryForm.controls.regionCode.reset();
-
-      this.queryForm.controls.businessTypeCode.reset();
-
-      if (value === 'organizationCode') {
-        this.queryForm.controls.organizationCode.enable();
-      } else if (value === 'regionOrFloor') {
-        this.queryForm.controls.regionCode.enable();
-        this.queryForm.controls.tlt_floor.enable();
-      } else if (value === 'businessTypeCode') {
-        this.queryForm.controls.businessTypeCode.enable();
-      }
-    });
+    
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
     this.tls11010Service.getOrgOptions().subscribe((res) => {
       this.OrganizationCodeOptions = res?.map((x: any) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
+    });
+    this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
         value: x.value,
       })) || [];
     });
