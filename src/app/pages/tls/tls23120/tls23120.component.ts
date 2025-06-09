@@ -22,19 +22,20 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     saleDateStart: [new Date(), [Validators.required]],
     saleDateEnd: [new Date(), [Validators.required]],
-    organizationCode: [{ value: ''}],
-    regionCode: [{ value: ''}],
-
+    organizationCode: [{ value: '' }],
+    regionCode: [[]], // ✅ 改為陣列
     businessTypeCode: [{ value: '' }],
     whetherDisplayBusinessType: [],
     locationRadio: [''],
-    tlt_building: [''],                                  // 樓層建物
-    tlt_floor: [''],                                     // 樓層編號
-    org_id: [''],                                        // 組織代碼
-     bus_typeList: [[] as string[]],
-    tlt_no: [''],
+    tlt_building: [''],
+    tlt_floor: [[]], // ✅
+    org_id: [[]],     // ✅
+    bus_typeList: [[]],
+    tlt_no: [[]],     // ✅
+
     ...createPaginationConfig([{ field: 'area', order: 1 }])
   });
+
 
   data: any[] = [];
   totalRecords = 0;
@@ -53,7 +54,7 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
 
   organizationOptions: any[] = [];
   regionOptions: any[] = [];
-bus_typeOptions: any[] = [];
+  bus_typeOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
   whetherOptions: any[] = [];
   floorOptions: any[] = [];
@@ -65,14 +66,12 @@ bus_typeOptions: any[] = [];
   constructor(
     private tls23120Service: TLS23120Service,
     private regionService: RegionService,
-
     private businessTypeCodeService: BusinessTypeCodeService,
     private organizationNumberService: OrganizationNumberService,
     private whetherService: WhetherService,
     private floorService: FloorService,
-     private counterNameService: CounterNameService,
-      private bigCategoryCodeService: BigCategoryCodeService,
-      private locationOptionsService:LocationOptionsService,
+    private counterNameService: CounterNameService,
+    private bigCategoryCodeService: BigCategoryCodeService,
     private tls11010Service: Tls11010Service
   ) {
     super();
@@ -82,32 +81,11 @@ bus_typeOptions: any[] = [];
     this.initializePage('TLS23120', '', this.queryForm, (form) => this.onSubmit(form));
 
     this.organizationNumberService.getOrganizationNumbers().subscribe(data => this.organizationOptions = data);
-    this.locationOptionsService.getRegionOptions().subscribe(data => this.regionOptions = data);
+    this.regionService.getRegionOptions().subscribe(data => this.regionOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.businessTypeCodeService.getBusinessTypeCodes().subscribe(data => this.businessTypeCodeOptions = data);
     this.whetherService.getWhetherOptions().subscribe(data => this.whetherOptions = data);
-this.bigCategoryCodeService.getSystemTypes().subscribe(data => this.bus_typeOptions = data);
-    this.queryForm.controls.locationRadio.valueChanges.subscribe(value => {
-      this.queryForm.controls.organizationCode.disable();
-      this.queryForm.controls.regionCode.disable();
-      this.queryForm.controls.tlt_floor.disable();
-      this.queryForm.controls.businessTypeCode.disable();
-
-      this.queryForm.controls.organizationCode.reset();
-      this.queryForm.controls.regionCode.reset();
-      this.queryForm.controls.tlt_floor.reset();
-      this.queryForm.controls.businessTypeCode.reset();
-
-      if (value === 'organizationCode') {
-        this.queryForm.controls.organizationCode.enable();
-      } else if (value === 'regionOrFloor') {
-        this.queryForm.controls.regionCode.enable();
-        this.queryForm.controls.tlt_floor.enable();
-      } else if (value === 'businessTypeCode') {
-        this.queryForm.controls.businessTypeCode.enable();
-      }
-    });
-
+    this.bigCategoryCodeService.getSystemTypes().subscribe(data => this.bus_typeOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
     this.tls11010Service.getOrgOptions().subscribe((res) => {
@@ -117,7 +95,7 @@ this.bigCategoryCodeService.getSystemTypes().subscribe(data => this.bus_typeOpti
         value: x.value,
       })) || [];
     });
-        this.counterNameService.getCounters().subscribe((res) => {
+    this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions = res?.map((x: any) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
