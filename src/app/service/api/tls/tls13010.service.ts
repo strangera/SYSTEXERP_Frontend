@@ -16,7 +16,6 @@ export class TLS13010Service {
   queryTLS13010(payload: any) {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010`, payload).pipe(
       tap((res) => console.log('查詢結果:', res)),
-      catchError(this.errorHandler.handleError)
     );
   }
 
@@ -25,7 +24,14 @@ export class TLS13010Service {
     const payload = { TalentId: talentId };
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010Location`, payload).pipe(
       tap((res) => console.log('查詢地點資料結果:', res)),
-      catchError(this.errorHandler.handleError)
+    );
+  }
+
+  /** 查詢契約書維護地點資料 */
+  queryTLS13010Fare(talentId: string) {
+    const payload = { TalentId: talentId };
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010Fare`, payload).pipe(
+      tap((res) => console.log('查詢地點資料結果:', res)),
     );
   }
 
