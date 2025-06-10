@@ -3,8 +3,8 @@ import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { option, Sysb400m } from '../../../shared/models/sys/sysb000.module';
-import { Sysb300Service } from '../../../service/API/sys/sysb300.service';
-import { Sysb400Service } from '../../../service/API/sys/sysb400.service';
+import { Sysb300Service } from '../../../service/api/sys/sysb300.service';
+import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 import { apiOption } from '../../../shared/models/tls/tls000.model';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 

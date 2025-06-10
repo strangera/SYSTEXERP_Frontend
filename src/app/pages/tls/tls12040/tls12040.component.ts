@@ -48,7 +48,7 @@ export class TLS12040Component {
     recruitmentNumber: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 專櫃招募編號
     industryCode: [[] as number[]], // 大分類代號
     counterID: [, [this.validationService.numberValidator]], // 專櫃編號
-    counterName: ['', [Validators.maxLength(50)]], // 專櫃名稱
+    counterName: ['', [Validators.maxLength(50)]], // 櫃位名稱
     vendorUID: [[] as number[]], // 廠商統一編號
     locationNumber: [[] as number[]], // 位置編號
     startVersionNumber: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 版本編號
@@ -97,7 +97,7 @@ export class TLS12040Component {
   columns: any[] = [
     { field: 'recruitmentNumber', header: '專櫃招募編號', visible: true },
     { field: 'brandCName', header: '專櫃編號', visible: true },
-    { field: 'vendorUID', header: '專櫃名稱', visible: true },
+    { field: 'vendorUID', header: '櫃位名稱', visible: true },
     { field: 'versionNumber', header: '合約狀態', visible: true },
     { field: 'contactor', header: '營運狀況', visible: true },
     { field: 'industryCode', header: '回函狀態', visible: true },

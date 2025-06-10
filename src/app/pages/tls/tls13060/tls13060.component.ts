@@ -48,7 +48,7 @@ export class TLS13060Component {
     counterRecruitmentCode: [], // 專櫃招募編號
     vendorCode: [], // 廠商統一編號
     counterCode: [], // 專櫃編號
-    counterName: [], // 專櫃名稱
+    counterName: [], // 櫃位名稱
     locationCode: [], // 位置編號
     operationStatus: [], // 營運狀況
     contractStartDate: [], // 契約起始日
@@ -72,7 +72,7 @@ export class TLS13060Component {
     { field: 'updateTime', header: '更新時間', visible: true },
     { field: 'locationNumber', header: '位置編號', visible: true },
     { field: 'vendorName', header: '廠商名稱', visible: true },
-    { field: 'counterName', header: '專櫃名稱', visible: true },
+    { field: 'counterName', header: '櫃位名稱', visible: true },
     { field: 'counterNumber', header: '專櫃編號', visible: true },
     { field: 'isOwnerPOS', header: '是否使用業主收款機', visible: true },
     { field: 'isOwnerInvoice', header: '是否使用業主發票', visible: true },

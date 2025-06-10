@@ -97,7 +97,7 @@ export class ASS23030Component extends BasicQpageComponent implements OnInit {
   columns: any[] = [
     { field: 'meterCode', header: '錶號', visible: true },
     { field: 'energyType', header: '能源種類', visible: true },
-    { field: 'categoryName', header: '專櫃名稱', visible: true },
+    { field: 'categoryName', header: '櫃位名稱', visible: true },
     { field: 'previousReading', header: '上次抄錶度數', visible: true },
     { field: 'currentReading', header: '本次抄錶度數', visible: true },
     { field: 'currentUsage', header: '本月使用度數', visible: true },

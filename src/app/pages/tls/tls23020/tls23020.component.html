@@ -83,7 +83,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="商品抽成類別" controlName="tlt_id"
-              [options]="commissionTypeOptions" optionLabel="label" optionValue="value"
+              [options]="deductionbigCategoryOptions" optionLabel="label" optionValue="value"
               [control]="queryForm.controls.tlt_id" [submitted]="submitted">
             </app-dropdown>
           </div>
@@ -102,6 +102,7 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
+             <label>顯示狀態</label>
             <p-checkbox
               label="自營櫃無單品條碼"
               binary="true"

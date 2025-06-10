@@ -71,7 +71,7 @@
                   <td *ngIf="editingFavorites" class="text-center">
                     <span class="pi pi-bars" pReorderableRowHandle></span>
                   </td>
-                  <td class="p-2 text-center">
+                  <td class="p-2 text-left">
                     <span *ngIf="!editingFavorites" (click)="onFavoriteItemClick(item)"
                       (keyup.enter)="onFavoriteItemClick(item)" (keyup.space)="onFavoriteItemClick(item)" tabindex="0"
                       class="min-w-max p-2">{{item.label}}</span>

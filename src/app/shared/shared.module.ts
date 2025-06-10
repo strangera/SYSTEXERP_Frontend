@@ -39,6 +39,7 @@ import { TreeModule } from 'primeng/tree';
 import { FileUploadModule } from 'primeng/fileupload';
 import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
+import { FieldsetModule } from 'primeng/fieldset';
 import { EditorModule } from 'primeng/editor';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { MenubarComponent } from './component/menubar/menubar.component';
@@ -69,6 +70,8 @@ import { MultiSelectTableComponent } from './componentkit/multi-select-table/mul
 import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/expandable-edit-table.module';
 import { MultiLocationFilterComponent } from './componentkit/multi-location-filter/multi-location-filter.component';
 import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autocomplete.component';
+import { QueryYearMonthComponent } from './componentkit/query-year-month/query-year-month.component';
+import { InputGroupComponent } from './componentkit/input-group/input-group.component';
 
 @NgModule({
   declarations: [
@@ -94,11 +97,13 @@ import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autoc
     ButtonDynamicallydeleteComponent,
     InputNumberRangeComponent,
     FileUploadComponent,
+    InputGroupComponent,
     EditorTextComponent,
     RadiobuttonComponent,
     HasPermissionDirective,
     MultiLocationFilterComponent,
     AutoCompleteComponent,
+    QueryYearMonthComponent
   ],
   imports: [
     ReactiveFormsModule,
@@ -176,6 +181,8 @@ import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autoc
     InputGroupAddonModule,
     IconFieldModule,
     InputIconModule,
+    FieldsetModule,
+    InputSwitchModule,
     // Custom
     MenubarComponent,
     ControlMessagesComponent,
@@ -193,6 +200,7 @@ import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autoc
     InputNumberComponent,
     InputNumberRangeComponent,
     FileUploadComponent,
+    InputGroupComponent,
     EditorTextComponent,
     MultiSelectComponent,
     CalendarComponent,
@@ -205,6 +213,7 @@ import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autoc
     SelectButtonModule,
     MultiLocationFilterComponent,
     AutoCompleteComponent,
+    QueryYearMonthComponent
   ],
 })
 export class SharedModule { }

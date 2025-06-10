@@ -13,15 +13,14 @@
         <div class="grid p-fluid">
 
           <!-- 銷售日期 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              label="銷售日期*"
-              calendarType="dateRange"
-              [startControl]="queryForm.controls.TXN_DateStart"
-              [endControl]="queryForm.controls.TXN_DateEnd"
-              [submitted]="submitted">
-            </app-calendar-range>
-          </div>
+
+         <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
+            label="銷售日期"
+            [startControl]="queryForm.controls.TXN_DateStart"
+            [endControl]="queryForm.controls.TXN_DateEnd"
+            [submitted]="submitted"
+          ></app-calendar-range-quick>
 
           <!-- 是否收銀 -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -36,25 +35,21 @@
             </app-dropdown>
           </div>
 
-          <!-- 收銀機號(起) -->
+          <!-- 收銀機號 -->
+   
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="收銀機號(起)"
-              controlName="ECR_No_Start"
-              [control]="queryForm.controls.ECR_No_Start"
-              [submitted]="submitted">
-            </app-input-text>
+            <app-multi-select
+              label="收銀機代號"
+              controlName="ECR_No"
+              [options]="ECRNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_No"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
-          <!-- 收銀機號(迄) -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="收銀機號(迄)"
-              controlName="ECR_No_End"
-              [control]="queryForm.controls.ECR_No_End"
-              [submitted]="submitted">
-            </app-input-text>
-          </div>
+ 
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -107,7 +102,7 @@
     tableKey="TLS23050"
     [data]="data"
     [columns]="columns"
-    [showCheckBox]="true"
+    [showCheckBox]="false"
     dataKey="ECR_No"
     [multiSortMeta]="[{ field: 'TXN_DateStart', order: 1 }]"
     [totalRecords]="totalRecords"

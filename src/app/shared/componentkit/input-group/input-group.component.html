@@ -1,0 +1,40 @@
+<label [for]="controlName">{{ label }}
+  <span *ngIf="isRequired" class="required">*</span>
+</label>
+<div class="custom-input-group p-inputgroup">
+  <p-autoComplete class="w-full" [id]="controlName" [formControl]="control"
+    [placeholder]="control.disabled ? '' : placeholder" [dropdown]="!control.disabled" [suggestions]="filteredOptions"
+    [optionLabel]="optionValue" [optionValue]="optionValue" styleClass="w-full flex flex-row-reverse"
+    inputStyleClass="w-full border-noround" (completeMethod)="filterOptions($event)" [appendTo]="'body'"
+    (onSelect)="onSelect($event)" [maxlength]="maxLength" emptyMessage="無符合資料" [forceSelection]="true"
+    [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}">
+    <ng-template let-option pTemplate="item">
+      <div class="flex align-items-center gap-2">
+        <div>{{ option[this.optionValue] }}</div>
+        <div>{{ option[this.optionLabel] }}</div>
+      </div>
+    </ng-template>
+  </p-autoComplete>
+  <div class="flex w-full">
+    <input title='請輸入' class="border-none border-noround" type="text" pInputText [disabled]="true" [value]="value"
+      [placeholder]="'請選擇' + label" />
+    <button *ngIf="!control.disabled" pButton class="p-inputgroup-addon" icon="pi pi-search" (click)="search()"
+      type="button" aria-label="Search" [disabled]="control.disabled">
+    </button>
+  </div>
+</div>
+<app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>
+<p-dialog [header]="label" [resizable]="false" [modal]="true" [maximizable]="true" appendTo="body"
+  [(visible)]="dialogVisible" [style]="{width: '40rem'}">
+  <ng-template pTemplate="content">
+    <div [formGroup]="searchForm" class="grid p-fluid">
+      <div *ngFor="let i of columns;" class="col-12 md:col">
+        <label [for]="i.field">{{i.header}}</label>
+        <input title='請輸入' [id]="i.field" [formControlName]="i.field" placeholder="{{i.header}}" pInputText />
+      </div>
+    </div>
+    <app-table [tableKey]="'customInputGroup'" [columns]="columns" selectionMode="single" [data]="filteredData"
+      [showHeader]="false" [showManage]="false" [showCheckBox]="true" (selectionChange)="onRowSelect($event)"
+      [multiSortMeta]="[{ field: controlName , order: 1 }]" />
+  </ng-template>
+</p-dialog>

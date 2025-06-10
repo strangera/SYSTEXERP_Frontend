@@ -69,7 +69,7 @@ export class TLS2E050Component {
     { field: 'contactPerson', header: '廠編', visible: true },
     { field: 'contactDate', header: '廠商名稱', visible: true },
     { field: 'UID', header: '專櫃編號', visible: true },
-    { field: 'industryType', header: '專櫃名稱', visible: true },
+    { field: 'industryType', header: '櫃位名稱', visible: true },
     { field: 'category', header: '抽成方式', visible: true },
     { field: 'version', header: '結帳年月', visible: true },
     { field: 'rentNumber', header: '大分類', visible: true },

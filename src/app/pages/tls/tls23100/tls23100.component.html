@@ -16,24 +16,37 @@
       >
         <div class="grid p-fluid">
           <!-- 銷售日期 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="銷售日期"
-              [startControl]="queryForm.controls.pstarttime"
-              [endControl]="queryForm.controls.pendtime"
+      
+            <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
+            label="銷售日期"
+            [startControl]="queryForm.controls.TXN_DateStart"
+            [endControl]="queryForm.controls.TXN_DateEnd"
+            [submitted]="submitted"
+          ></app-calendar-range-quick>
+ 
+         <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="收銀機代號"
+              controlName="ECR_No"
+              [options]="ECRNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_No"
               [submitted]="submitted"
-            ></app-calendar-range>
+            ></app-multi-select>
           </div>
-
           <!-- 專櫃編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+             <app-multi-select
               label="專櫃編號"
-              controlName="counterCode"
-              [control]="queryForm.controls.counterCode"
+              controlName="TLT_No"
+              [options]="CounterOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.TLT_No"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-multi-select>
           </div>
 
           <!-- 付款別 -->
@@ -104,7 +117,7 @@
     tableKey="TLS23100"
     [data]="data"
     [columns]="columns"
-    [showCheckBox]="true"
+    [showCheckBox]="false"
     dataKey="transactionNumber"
     [multiSortMeta]="[{ field: 'counterCode', order: 1 }]"
     [totalRecords]="totalRecords"

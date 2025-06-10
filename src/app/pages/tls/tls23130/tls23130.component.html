@@ -13,38 +13,16 @@
         <div class="grid p-fluid">
           <!-- Radio + 銷售日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <div class="grid align-items-center">
-              <div class="col-2">
-                <input type="radio" formControlName="dateRadio" [value]="'saleDate'" />
-              </div>
-              <div class="col-10">
-                <app-calendar-range
+  
+                <app-calendar-range-quick
                   calendarType="dateRange"
                   label="日期"
                   [startControl]="queryForm.controls.saleDateStart"
                   [endControl]="queryForm.controls.saleDateEnd"
                   [submitted]="submitted"
-                ></app-calendar-range>
+                ></app-calendar-range-quick>
               </div>
-            </div>
-          </div>
 
-          <!-- Radio + 銷售年/月 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <div class="grid align-items-center">
-              <div class="col-2">
-                <input type="radio" formControlName="dateRadio" [value]="'saleMonthYear'" />
-              </div>
-              <div class="col-10">
-                <app-calendar
-                  calendarType="dateMonthOne"
-                  label="年/月"
-                  [control]="queryForm.controls.saleMonthYear"
-                  [submitted]="submitted"
-                ></app-calendar>
-              </div>
-            </div>
-          </div>
 
           <!-- 卡種 -->
              <div class="col-12 md:col-6 lg:col-4">
@@ -59,86 +37,7 @@
             ></app-dropdown>
           </div>
 
-          <!-- Radio + 專櫃編號 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <div class="grid align-items-center">
-              <div class="col-2">
-                <input type="radio" formControlName="locationRadio" [value]="'organizationCode'" />
-              </div>
-              <div class="col-10">
-                <app-dropdown
-                  label="專櫃編號"
-                  controlName="organizationCode"
-                  [options]="organizationOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.organizationCode"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-            </div>
-          </div>
 
-          <!-- Radio + 區域與樓層 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <div class="grid align-items-center">
-              <div class="col-2">
-                <input type="radio" formControlName="locationRadio" [value]="'regionOrFloor'" />
-              </div>
-              <div class="col-10">
-                <app-dropdown
-                  label="區域"
-                  controlName="regionCode"
-                  [options]="regionOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.regionCode"
-                  [submitted]="submitted"
-                ></app-dropdown>
-                <app-multi-select
-                  label="樓層"
-                  [options]="floorOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.tlt_floor"
-                  [submitted]="submitted"
-                ></app-multi-select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Radio + 大分類 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <div class="grid align-items-center">
-              <div class="col-2">
-                <input type="radio" formControlName="locationRadio" [value]="'businessTypeCode'" />
-              </div>
-              <div class="col-10">
-                <app-dropdown
-                  label="大分類"
-                  controlName="businessTypeCode"
-                  [options]="businessTypeCodeOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.businessTypeCode"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-            </div>
-          </div>
-
-          <!-- 是否顯示業種 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="是否顯示業種"
-              controlName="whetherDisplayBusinessType"
-              [options]="whetherOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.whetherDisplayBusinessType"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
 
           <!-- 館別 -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -151,6 +50,27 @@
               [control]="queryForm.controls.tlt_building"
               [submitted]="submitted"
             ></app-dropdown>
+          </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="區域"
+              controlName="regionCode"
+              [options]="regionOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.regionCode"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="樓層"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_floor"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <!-- 組織代碼/名稱 -->
@@ -181,7 +101,7 @@
     tableKey="TLS23130"
     [data]="data"
     [columns]="columns"
-    [showCheckBox]="true"
+    [showCheckBox]="false"
     dataKey="TXN_No"
     [multiSortMeta]="[{ field: 'cardNumber', order: 1 }]"
     [totalRecords]="totalRecords"

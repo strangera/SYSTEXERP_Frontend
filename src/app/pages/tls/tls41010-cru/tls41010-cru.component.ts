@@ -33,7 +33,7 @@ export class TLS41010CRUComponent
     ECR_GUI_Type: [7, [Validators.required, Validators.maxLength(2)]], // 發票使用類別 00=不開發票 03=二聯式收銀機發票 07=電子發票(預設值)
     //
     ECR_TLT_No: [, [Validators.maxLength(20)]], // 機台所屬專櫃編號
-    ECR_TLT_Name: ['', [Validators.maxLength(60)]], // 機台所屬專櫃名稱
+    ECR_TLT_Name: ['', [Validators.maxLength(60)]], // 機台所屬櫃位名稱
     ECR_USR_No: [, [Validators.maxLength(8)]], // 機台所屬收銀員，集中收銀(統收)必須設定收銀員
     ECR_USR_Name: ['', [Validators.maxLength(20)]], // 機台所屬收銀員姓名
     ECR_ActiveDate: [], // 啟用日期

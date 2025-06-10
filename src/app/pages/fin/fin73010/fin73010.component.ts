@@ -25,7 +25,7 @@ import { OrganizationNumberService } from './../../../service/basic/organization
 export class FIN73010Component extends BasicQpageComponent implements OnInit {
   queryForm = this.formBuilder.group({
     counterCode: [],  // 專櫃編號
-    counterName: [],  // 專櫃名稱
+    counterName: [],  // 櫃位名稱
     violationCategory: [],  // 違規類別編號
     deductionItem: [],  // 扣款項目
     amountStart: [],  // 金額開始

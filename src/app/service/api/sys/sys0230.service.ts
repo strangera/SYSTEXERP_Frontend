@@ -32,4 +32,12 @@ export class Sys0230Service {
   updateUserRoles(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateUserRoles`, body);
   }
+  // 更新 角色權限
+  updateRolePrivileges(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateRolePrivileges`, body);
+  }
+  // 更新 使用者權限
+  updateUserPrivileges(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateUserPrivileges`, body);
+  }
 }

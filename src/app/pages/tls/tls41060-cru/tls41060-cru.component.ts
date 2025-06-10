@@ -76,7 +76,7 @@ export class TLS41060CRUComponent extends BasicCrupageComponent implements OnIni
     ECR_GUI_Type: [, [Validators.required, Validators.maxLength(2)]], // 發票使用類別
     //
     ECR_TLT_No: [, [Validators.maxLength(20)]], // 機台所屬專櫃編號
-    ECR_TLT_Name: ['', [Validators.maxLength(60)]], // 機台所屬專櫃名稱
+    ECR_TLT_Name: ['', [Validators.maxLength(60)]], // 機台所屬櫃位名稱
     ECR_ActiveDate: [], // 啟用日期
     ECR_CloseDate: [], // 停用日期
     ECR_Status: [, [Validators.maxLength(2)]], // 收銀機狀態

@@ -1,17 +1,16 @@
-import { Sys0110Service } from './../../../service/API/sys/sys0110.service';
+import { Sys0110Service } from './../../../service/api/sys/sys0110.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { apiOption, option, SYS1000, Sysb400m, tblUser } from '../../../shared/models/sys/sysb000.module';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { Sysb400Service } from '../../../service/API/sys/sysb400.service';
+import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 
 // 4-2-1-1 使用者基本資料維護
 @Component({
   selector: 'app-sys0110',
   templateUrl: './sys0110.component.html',
-  styleUrls: ['./sys0110.component.scss'],
 })
 
 export class SYS0110Component extends BasicQueryPageComponent<tblUser> implements OnInit {

@@ -44,7 +44,7 @@ export class TLS26010Component {
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
     cashierCode: [],  // 收銀機號
-    counterName: [],  // 專櫃名稱
+    counterName: [],  // 櫃位名稱
     startDate: [],  // 起始日期
     endDate: [],  // 截止日期
   });
@@ -61,7 +61,7 @@ export class TLS26010Component {
   columns: any[] = [
     { field: 'cashRegisterNumber', header: '收銀機代碼', visible: true },
     { field: 'counterNumber', header: '專櫃編號', visible: true },
-    { field: 'counterName', header: '專櫃名稱', visible: true },
+    { field: 'counterName', header: '櫃位名稱', visible: true },
     { field: 'startDate', header: '起始日期', visible: true },
     { field: 'endDate', header: '截止日期', visible: true },
   ];

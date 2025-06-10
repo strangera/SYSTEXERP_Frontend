@@ -7,6 +7,14 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { WhetherService } from '../../../service/basic/whether.service';
+import { InstallmentPeriodService } from '../../../service/basic/installment-period.service';
+import { AcquiringBankService } from '../../../service/basic/acquiring-bank.service';
+import { ConnectionStatusService } from '../../../service/basic/connection-status.service';
+
 @Component({
   selector: 'app-tls23090',
   templateUrl: './tls23090.component.html',
@@ -14,31 +22,46 @@ import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 })
 export class TLS23090Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [new Date(), [Validators.required]],
+    TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],
     TXN_DateEnd: [new Date(), [Validators.required]],
     ECR_No: [''],
     tlt_no: [''],
     CRD_Type: [''],
     CRD_No: [''],
     TXN_PayAmt: [null],
-      tlt_building: [''],                                  // 樓層建物
-  tlt_floor: [''],                                     // 樓層編號
-  org_id: [''],                                        // 組織代碼
+    tlt_building: [''],                                  // 樓層建物
+    tlt_floor: [''],                                     // 樓層編號
+    org_id: [''],  
+    IPeriod: [''],     
+    AcqBank:  [''],  
+    ConnStatus     :  [''],                                  // 組織代碼
+    IsHaveTERM_No: [null], // 預設為 null 而不是 true
     ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }])
   });
 
   cardTypeOptions: any[] = [];
-   floorOptions: any[] = [];
+  floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = []
-    data: any[] = [];
+  ECRNoOptions: any[] = []; // 收銀機號下拉選單
+  CounterOptions: any[] = []; // 專櫃選項
+  WhetherOptions: any[] = [];
+  installmentPeriodOptions: any[] = []; // 分期期數選項
+  acquiringBankOptions: any[] = []; // 收單銀行選項
+  connectionStatusOptions: any[] = []; // 連線狀態選項
+
+
+  data: any[] = [];
   totalRecords = 0;
 
   columns: any[] = [
     { field: 'TXN_Date', header: '銷售日期', visible: true },
     { field: 'ECR_No', header: '收銀機代號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'tlt_no', header: '專櫃編號/名稱', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true,
+      style: 'text-left' },
+          { field: 'tlt_no', header: '櫃位名稱', visible: true,
+      style: 'text-left',format: (val: any) => this.getLabelFromOptions(val, this.CounterOptions) },
     { field: 'CRD_Type', header: '信用卡卡別', visible: true },
     { field: 'CRD_No', header: '信用卡卡號', visible: true },
     {
@@ -69,7 +92,13 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   constructor(
     private cardTypeService: CardTypeService,
     private tls23090Service: TLS23090Service,
-        private floorService: FloorService,
+    private floorService: FloorService,
+    private ECRNoService: ECRNoService,
+    private counterNameService: CounterNameService,
+    private whetherService: WhetherService,
+    private installmentPeriodService:InstallmentPeriodService,
+    private acquiringBankService:AcquiringBankService,
+    private connectionStatusService:ConnectionStatusService,
     private tls11010Service: Tls11010Service
   ) {
     super();
@@ -80,17 +109,39 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     this.cardTypeService.getCardType().subscribe(data => {
       this.cardTypeOptions = data;
     });
-        this.floorService.getFloors().subscribe(data => this.floorOptions = data);
+    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
+     this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
     this.tls11010Service.getOrgOptions().subscribe((res) => {
       this.OrganizationCodeOptions = res?.map((x: any) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
         value: x.value,
-      })) || [];});
-  }
+      })) || [];
+    });
+    this.ECRNoService.getECRNo().subscribe((res) => {
+      this.ECRNoOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
+    this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
 
-   onSubmit(form: FormGroup): void {
+     this.installmentPeriodService.getInstallmentPeriods().subscribe(data => this.installmentPeriodOptions = data);
+  this.acquiringBankService.getAcquiringBanks().subscribe(data => this.acquiringBankOptions = data);
+    this.connectionStatusService.getConnectionStatusOptions().subscribe(data => this.connectionStatusOptions = data);
+
+
+}
+
+  onSubmit(form: FormGroup): void {
     this.submitted = true;
     if (this.loading) return;
 

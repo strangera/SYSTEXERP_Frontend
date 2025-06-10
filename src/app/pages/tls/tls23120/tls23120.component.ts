@@ -10,7 +10,9 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
-
+import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
+import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
 @Component({
   selector: 'app-tls23120',
   templateUrl: './tls23120.component.html',
@@ -20,17 +22,21 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     saleDateStart: [new Date(), [Validators.required]],
     saleDateEnd: [new Date(), [Validators.required]],
-    organizationCode: [{ value: '', disabled: true }],
-    regionCode: [{ value: '', disabled: true }],
-   
-    businessTypeCode: [{ value: '', disabled: true }],
+    organizationCode: [{ value: '' }],
+    regionCode: [[]], // ✅ 改為陣列
+    businessTypeCode: [{ value: '' }],
     whetherDisplayBusinessType: [],
     locationRadio: [''],
-      tlt_building: [''],                                  // 樓層建物
-  tlt_floor: [''],                                     // 樓層編號
-  org_id: [''],                                        // 組織代碼
+    tlt_building: [''],
+    tlt_floor: [[]], // ✅
+    org_id: [[]],     // ✅
+    bus_typeList: [[]],
+    tlt_no: [[]],     // ✅
+    
+
     ...createPaginationConfig([{ field: 'area', order: 1 }])
   });
+
 
   data: any[] = [];
   totalRecords = 0;
@@ -49,22 +55,24 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
 
   organizationOptions: any[] = [];
   regionOptions: any[] = [];
- 
+  bus_typeOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
   whetherOptions: any[] = [];
-    floorOptions: any[] = [];
+  floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = []
+  CounterOptions: any[] = [];
 
 
   constructor(
     private tls23120Service: TLS23120Service,
     private regionService: RegionService,
-    
     private businessTypeCodeService: BusinessTypeCodeService,
     private organizationNumberService: OrganizationNumberService,
     private whetherService: WhetherService,
-        private floorService: FloorService,
+    private floorService: FloorService,
+    private counterNameService: CounterNameService,
+    private bigCategoryCodeService: BigCategoryCodeService,
     private tls11010Service: Tls11010Service
   ) {
     super();
@@ -78,36 +86,23 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.businessTypeCodeService.getBusinessTypeCodes().subscribe(data => this.businessTypeCodeOptions = data);
     this.whetherService.getWhetherOptions().subscribe(data => this.whetherOptions = data);
-
-    this.queryForm.controls.locationRadio.valueChanges.subscribe(value => {
-      this.queryForm.controls.organizationCode.disable();
-      this.queryForm.controls.regionCode.disable();
-      this.queryForm.controls.tlt_floor.disable();
-      this.queryForm.controls.businessTypeCode.disable();
-
-      this.queryForm.controls.organizationCode.reset();
-      this.queryForm.controls.regionCode.reset();
-      this.queryForm.controls.tlt_floor.reset();
-      this.queryForm.controls.businessTypeCode.reset();
-
-      if (value === 'organizationCode') {
-        this.queryForm.controls.organizationCode.enable();
-      } else if (value === 'regionOrFloor') {
-        this.queryForm.controls.regionCode.enable();
-        this.queryForm.controls.tlt_floor.enable();
-      } else if (value === 'businessTypeCode') {
-        this.queryForm.controls.businessTypeCode.enable();
-      }
-    });
-
-         this.floorService.getFloors().subscribe(data => this.floorOptions = data);
+    this.bigCategoryCodeService.getSystemTypes().subscribe(data => this.bus_typeOptions = data);
+    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
     this.tls11010Service.getOrgOptions().subscribe((res) => {
       this.OrganizationCodeOptions = res?.map((x: any) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
         value: x.value,
-      })) || [];});
+      })) || [];
+    });
+    this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions = res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
+    });
   }
 
   onSubmit(form: FormGroup): void {

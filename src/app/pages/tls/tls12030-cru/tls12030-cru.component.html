@@ -1,161 +1,261 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1;">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <h4>基本資料</h4>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="專櫃招募編號" controlName="recruitmentNumber"
-                        [control]="dataForm.controls.recruitmentNumber" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="品牌(專櫃名稱)" controlName="brandName" [control]="dataForm.controls.brandName"
-                        [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="廠商統一編號" controlName="vendorUID" [options]="vendorUIDOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.vendorUID"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="版本編號" controlName="versionNumber"
-                        [control]="dataForm.controls.versionNumber" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-            </div>
-            <hr>
-            <h4>洽談階段資訊</h4>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="營業型態" controlName="businessType" [options]="businessTypeOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.businessType"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="洽談者" controlName="negotiator" [options]="negotiatorOptions" optionLabel="label"
-                        optionValue="value" [control]="dataForm.controls.negotiator" [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar calendarType="dateOne" label="洽談日期" [control]="dataForm.controls.negotiationDate"
-                        [submitted]="submitted">
-                    </app-calendar>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="大分類" controlName="industryCode" [options]="industryCodeOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.industryCode"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar calendarType="dateOne" label="回函日期" [control]="dataForm.controls.replyDate"
-                        [submitted]="submitted">
-                    </app-calendar>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar calendarType="dateOne" label="回函截止日" [control]="dataForm.controls.replyEndDate"
-                        [submitted]="submitted">
-                    </app-calendar>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar calendarType="dateOne" label="合約起始日" [control]="dataForm.controls.contractStartDate"
-                        [submitted]="submitted">
-                    </app-calendar>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar calendarType="dateOne" label="合約截止日" [control]="dataForm.controls.contractEndDate"
-                        [submitted]="submitted">
-                    </app-calendar>
-                </div>
-            </div>
-            <hr>
-            <h4>商務條件</h4>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="配合方式" controlName="cooperationMethod" [options]="cooperateOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.cooperationMethod"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="意願等級" controlName="willingnessLevel" [options]="willingnessLevelOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.willingnessLevel"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="履約保證金" controlName="margin" [control]="dataForm.controls.margin"
-                        [submitted]="submitted">
-                    </app-input-number>
-                </div>
-            </div>
-            <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark"
-                [style]="{ height: '100px' }" [submitted]="submitted">
-            </app-editor-text>
-            <!---->
-            <hr>
-            <ng-container formArrayName="items">
-                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                    <div class="grid align-items-center">
-                        <div class="col" style="flex: 1;">
-                            <h5>租賃位置 {{i+1}}</h5>
-                        </div>
-                        <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
-                                class="col"></app-button-dynamicallydelete>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="位置編號" controlName="locationNumber" [options]="locationNumberOptions"
-                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'locationNumber')"
-                                [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="樓層" controlName="floor" [options]="floorOptions" optionLabel="label"
-                                optionValue="value" [control]="getFormControl(i, 'floor')" [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="區域" controlName="region" [options]="regionOptions" optionLabel="label"
-                                optionValue="value" [control]="getFormControl(i, 'region')" [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="營業坪數" controlName="squareMeters"
-                                [control]="getFormControl(i, 'squareMeters')" [submitted]="submitted">>
-                            </app-input-number>
-                        </div>
-                    </div>
-                    <hr />
-                </ng-container>
-            </ng-container>
-            <div class="pt-1">
-                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
-            </div>
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
-            </div>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <h4>基本資料</h4>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            [useGrouping]="false"
+            label="專櫃招募編號"
+            controlName="recruitmentNumber"
+            [control]="dataForm.controls.recruitmentNumber"
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
-    </p-panel>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="品牌(櫃位名稱)"
+            controlName="brandName"
+            [control]="dataForm.controls.brandName"
+            [submitted]="submitted"
+          >
+            >
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="廠商統一編號"
+            controlName="vendorUID"
+            [options]="vendorUIDOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.vendorUID"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            [useGrouping]="false"
+            label="版本編號"
+            controlName="versionNumber"
+            [control]="dataForm.controls.versionNumber"
+            [submitted]="submitted"
+          ></app-input-number>
+        </div>
+      </div>
+      <hr />
+      <h4>洽談階段資訊</h4>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="營業型態"
+            controlName="businessType"
+            [options]="businessTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.businessType"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="洽談者"
+            controlName="negotiator"
+            [options]="negotiatorOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.negotiator"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="洽談日期"
+            [control]="dataForm.controls.negotiationDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="大分類"
+            controlName="industryCode"
+            [options]="industryCodeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.industryCode"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="回函日期"
+            [control]="dataForm.controls.replyDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="回函截止日"
+            [control]="dataForm.controls.replyEndDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="合約起始日"
+            [control]="dataForm.controls.contractStartDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="合約截止日"
+            [control]="dataForm.controls.contractEndDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+      </div>
+      <hr />
+      <h4>商務條件</h4>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="配合方式"
+            controlName="cooperationMethod"
+            [options]="cooperateOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.cooperationMethod"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="意願等級"
+            controlName="willingnessLevel"
+            [options]="willingnessLevelOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.willingnessLevel"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="履約保證金"
+            controlName="margin"
+            [control]="dataForm.controls.margin"
+            [submitted]="submitted"
+          ></app-input-number>
+        </div>
+      </div>
+      <app-editor-text
+        label="備註"
+        controlName="remark"
+        [control]="dataForm.controls.remark"
+        [style]="{ height: '100px' }"
+        [submitted]="submitted"
+      ></app-editor-text>
+      <!---->
+      <hr />
+      <ng-container formArrayName="items">
+        <ng-container
+          *ngFor="let item of items.controls; let i = index"
+          [formGroupName]="i"
+        >
+          <div class="grid align-items-center">
+            <div class="col" style="flex: 1">
+              <h5>租賃位置 {{ i + 1 }}</h5>
+            </div>
+            <div>
+              <app-button-dynamicallydelete
+                (click)="onRemoveItem(i)"
+                [crudstatus]="crudstatus"
+                class="col"
+              ></app-button-dynamicallydelete>
+            </div>
+          </div>
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown
+                label="位置編號"
+                controlName="locationNumber"
+                [options]="locationNumberOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="getFormControl(i, 'locationNumber')"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown
+                label="樓層"
+                controlName="floor"
+                [options]="floorOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="getFormControl(i, 'floor')"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown
+                label="區域"
+                controlName="region"
+                [options]="regionOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="getFormControl(i, 'region')"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </div>
+          </div>
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-number
+                label="營業坪數"
+                controlName="squareMeters"
+                [control]="getFormControl(i, 'squareMeters')"
+                [submitted]="submitted"
+              >
+                >
+              </app-input-number>
+            </div>
+          </div>
+          <hr />
+        </ng-container>
+      </ng-container>
+      <div class="pt-1">
+        <app-button-dynamicallyadd
+          (click)="onAddItem()"
+        ></app-button-dynamicallyadd>
+      </div>
+    </form>
+    <div class="col pt-4">
+      <div class="grid justify-content-end">
+        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+        <app-button
+          btnType="submit"
+          (click)="submitForm(dataForm)"
+          *ngIf="isFormEditable"
+        ></app-button>
+      </div>
+    </div>
+  </p-panel>
 </div>

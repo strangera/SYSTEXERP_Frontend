@@ -73,7 +73,7 @@ export class TLS2F010Component {
   filteredData: any[] = [...this.data];
   columns: any[] = [
     { field: 'contactPerson', header: '專櫃編號', visible: true },
-    { field: 'contactDate', header: '專櫃名稱', visible: true },
+    { field: 'contactDate', header: '櫃位名稱', visible: true },
     { field: 'UID', header: '單據種類', visible: true },
     { field: 'industryType', header: '發票/收據號碼', visible: true },
     { field: 'category', header: '單據日期', visible: true },

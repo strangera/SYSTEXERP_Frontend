@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
+
 import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { TypeService } from '../../../service/basic/type.service';
@@ -10,6 +10,8 @@ import { TLS23110Service } from '../../../service/API/tls/tls23110.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { CounterOpCatService } from '../../../service/basic/counter-op-cat.service';
 
 @Component({
   selector: 'app-tls23110',
@@ -28,10 +30,12 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     organizationCode: [''],
     dateRadio: ['saleDate'],
     categoryRadio: ['category'],
-          tlt_building: [''],                                  // 樓層建物
-      tlt_floor: [''],                                     // 樓層編號
-      org_id: [''],                                        // 組織代碼
-        ...createPaginationConfig([{ field: 'saleDateStart', order: 1 }])
+    tlt_building: [''],                                  // 樓層建物
+    tlt_floor: [''],                                     // 樓層編號
+    org_id: [''],
+    tlt_no: [''],
+    CounterOpCat: [''], // 專櫃經營類別
+    ...createPaginationConfig([{ field: 'saleDateStart', order: 1 }])
   });
 
   data: any[] = [];
@@ -46,21 +50,24 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   DeductionbigCategoryOptions: any[] = [];
   TypeOptions: any[] = [];
   CategoryOptions: any[] = [];
-  CounterCodeOptions: any[] = [];
+  
   OrganizationNumberOptions: any[] = [];
-
-    floorOptions: any[] = [];
+  CounterOptions: any[] = [];
+  floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
-  OrganizationCodeOptions: any[] = []
+  OrganizationCodeOptions: any[] = [];
+  CounterOpCatOptions: any[] = [];
 
   constructor(
     private tls23110Service: TLS23110Service,
     private deductionbigCategoryService: DeductionbigCategoryService,
     private typeService: TypeService,
     private categoryService: CategoryService,
-    private counterCodeService: CounterCodeService,
+    private counterOpCatService:CounterOpCatService,
+    
+    private counterNameService: CounterNameService,
     private organizationNumberService: OrganizationNumberService,
-        private floorService: FloorService,
+    private floorService: FloorService,
     private tls11010Service: Tls11010Service
   ) {
     super();
@@ -72,8 +79,17 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     this.deductionbigCategoryService.getLocalDeductionCategories().subscribe(data => this.DeductionbigCategoryOptions = data);
     this.typeService.getTypeOptions().subscribe(data => this.TypeOptions = data);
     this.categoryService.getCategories().subscribe(data => this.CategoryOptions = data);
-    this.counterCodeService.getCounterCodes().subscribe(data => this.CounterCodeOptions = data);
+        this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions = res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
+    });
     this.organizationNumberService.getOrganizationNumbers().subscribe(data => this.OrganizationNumberOptions = data);
+    this.counterOpCatService.getCounterOpCat().subscribe(data => this.CounterOpCatOptions = data);
+  
+
 
     this.queryForm.controls.dateRadio.valueChanges.subscribe(value => {
       if (value === 'saleDate') {
@@ -106,14 +122,15 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
         this.queryForm.controls.organizationCode.enable();
       }
     });
-             this.floorService.getFloors().subscribe(data => this.floorOptions = data);
+    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
     this.tls11010Service.getOrgOptions().subscribe((res) => {
       this.OrganizationCodeOptions = res?.map((x: any) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
         value: x.value,
-      })) || [];});
+      })) || [];
+    });
   }
 
   onSubmit(form: FormGroup): void {

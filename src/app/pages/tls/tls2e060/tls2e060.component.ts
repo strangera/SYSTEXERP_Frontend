@@ -34,7 +34,7 @@ export class TLS2E060Component {
     onedatemm: [], // 查詢年月
     checkout: [], // 結帳方式
     tax: [], // 應免稅
-    counterName: [], // 專櫃名稱
+    counterName: [], // 櫃位名稱
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
   });
   // 表格

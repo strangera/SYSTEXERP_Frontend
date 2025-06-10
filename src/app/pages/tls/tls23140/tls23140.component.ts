@@ -4,7 +4,8 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { TLS23140Service } from '../../../service/API/tls/tls23140.service';
 import { TransactionMachineService } from '../../../service/basic/transaction-machine.service';
-
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
 @Component({
   selector: 'app-tls23140',
   templateUrl: './tls23140.component.html',
@@ -18,6 +19,8 @@ export class TLS23140Component extends BasicQueryPageComponent<any> {
     counterNumber: [''],
     voucherAmount: [''],
     transactionSerialNumber: [''],
+    ECR_No: [[]],
+    TLT_No: [[]],
     ...createPaginationConfig([{ field: 'transactionDate', order: 1 }])
   });
 
@@ -28,7 +31,7 @@ export class TLS23140Component extends BasicQueryPageComponent<any> {
     { field: 'transactionDate', header: '交易日期', visible: true },
     { field: 'transactionMachineNumber', header: '交易機號', visible: true },
     { field: 'franchiseNumber', header: '專櫃編號', visible: true },
-    { field: 'franchiseName', header: '專櫃名稱', visible: true },
+    { field: 'franchiseName', header: '櫃位名稱', visible: true },
     { field: 'recruitmentNumber', header: '招募編號', visible: true },
     { field: 'transactionSerialNumber', header: '交易序號', visible: true },
     {
@@ -39,9 +42,13 @@ export class TLS23140Component extends BasicQueryPageComponent<any> {
   ];
 
   transactionMachineOptions: any[] = [];
+  ECRNoOptions: any[] = [];
+   CounterOptions: any[] = []; // 專櫃選項
 
   constructor(
     private tls23140Service: TLS23140Service,
+    private ECRNoService: ECRNoService,
+     private counterNameService: CounterNameService,
     private transactionMachineService: TransactionMachineService
   ) {
     super();
@@ -53,9 +60,23 @@ export class TLS23140Component extends BasicQueryPageComponent<any> {
     this.transactionMachineService.getTransactionMachines().subscribe(data => {
       this.transactionMachineOptions = data;
     });
+        this.ECRNoService.getECRNo().subscribe((res) => {
+      this.ECRNoOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
+     this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions = res?.map((x: any) => ({
+        label: x.label,                                 // 給 table 用
+        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
+        value: x.value,
+      })) || [];
+    });
   }
 
-   onSubmit(form: FormGroup): void {
+  onSubmit(form: FormGroup): void {
     this.submitted = true;
     if (this.loading) return;
 

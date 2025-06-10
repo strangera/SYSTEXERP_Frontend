@@ -55,7 +55,7 @@ export class TLS2B030Component {
   columns: any[] = [
     { field: 'contactPerson', header: '收銀機代號', visible: true },
     { field: 'contactDate', header: '專櫃編號', visible: true },
-    { field: 'UID', header: '專櫃名稱', visible: true },
+    { field: 'UID', header: '櫃位名稱', visible: true },
     { field: 'industryType', header: '現金', visible: true },
     { field: 'category', header: '信用卡', visible: true },
     { field: 'version', header: '一卡通', visible: true },

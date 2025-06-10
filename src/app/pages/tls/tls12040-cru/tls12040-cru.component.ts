@@ -120,7 +120,7 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
     brandedCardCooperate: [,], // 是否配合聯名卡
 
     vendorName: ['', [Validators.required, Validators.maxLength(60)]], // 廠商名稱
-    counterName: ['', [Validators.required, Validators.maxLength(50)]], // 品牌(專櫃名稱)
+    counterName: ['', [Validators.required, Validators.maxLength(50)]], // 品牌(櫃位名稱)
     email: ['', [Validators.required, Validators.maxLength(20)]], // 電子郵件
     invoiceEmail: ['', [Validators.required, Validators.maxLength(20)]], // 發票電子郵件
     ticketTitle: ['', [Validators.maxLength(20)]], // 票據抬頭

@@ -195,7 +195,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   columns: Column[] = [
     { field: 'apply_no', header: '專櫃招募編號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
     { field: 'ven_no', header: '廠商編號', visible: true },
     { field: 'VEN_Name', header: '廠商名稱', visible: true },
     { field: 'contract_subno', header: '版本編號', visible: true },

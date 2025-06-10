@@ -4,8 +4,8 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
-import { Sysb900DropdownService } from '../../../service/API/sys/sysb900-dropdown.service';
-import { Sysb800DropdownService } from '../../../service/API/sys/sysb800-dropdown.service';
+import { Sysb900DropdownService } from '../../../service/api/sys/sysb900-dropdown.service';
+import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 
 // 資料模型：分類項目
 interface CategoryItem {

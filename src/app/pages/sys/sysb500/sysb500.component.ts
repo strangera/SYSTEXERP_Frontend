@@ -3,7 +3,7 @@ import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Sysb500m } from '../../../shared/models/sys/sysb000.module';
-import { Sysb500Service } from '../../../service/API/sys/sysb500.service';
+import { Sysb500Service } from '../../../service/api/sys/sysb500.service';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({

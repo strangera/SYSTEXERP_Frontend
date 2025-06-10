@@ -45,7 +45,7 @@ export class TLS2E100Component {
   columns: any[] = [
     { field: 'contactPerson', header: '招募編號	', visible: true },
     { field: 'contactDate', header: '專櫃編號', visible: true },
-    { field: 'UID', header: '專櫃名稱', visible: true },
+    { field: 'UID', header: '櫃位名稱', visible: true },
     { field: 'industryType', header: '廠商編號', visible: true },
     { field: 'category', header: '類別代號', visible: true },
     { field: 'version', header: '類別名稱', visible: true },

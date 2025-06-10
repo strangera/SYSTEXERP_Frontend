@@ -37,7 +37,7 @@ export class TLS12030Component {
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
     recruitmentNumber: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 專櫃招募編號
-    brandName: ['', [Validators.maxLength(50)]], // 品牌(專櫃名稱)
+    brandName: ['', [Validators.maxLength(50)]], // 品牌(櫃位名稱)
     vendorUID: [[] as number[]], // 廠商統一編號
     versionNumber: [, [this.validationService.numberValidator, Validators.maxLength(10)]], // 版本編號
     negotiator: [[] as number[]], // 洽談者

@@ -159,7 +159,7 @@ export class FIN72050CRUComponent
     TOCBAC: [],
     founder: [],
     counterCode: [], // 專櫃編號
-    counterName: [], // 專櫃名稱
+    counterName: [], // 櫃位名稱
     violationCategory: [], // 違規類別編號
     deductionItem: [], // 扣款項目
     amountStart: [], // 金額開始

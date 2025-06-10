@@ -7,8 +7,9 @@ import { StatusFlagService } from '../../../service/basic/status-flag.service';
 import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
-
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
 
 @Component({
   selector: 'app-tls23040',
@@ -17,7 +18,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 })
 export class TLS23040Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [new Date(), [Validators.required]],
+    TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],
     TXN_DateEnd: [new Date(), [Validators.required]],
     ECR_No: [''],
     TXN_No_Start: [null],
@@ -30,6 +31,9 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     tlt_building: [''],
     tlt_floor: [''],
     org_id: [''],
+    TXN_FlagStatus: [''],
+    TXN_Subtype: [''],
+
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }])
   });
 
@@ -51,33 +55,43 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'ECR_No', header: '收銀機代號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'TXN_GUIBegNoFirstNo', header: '發票起號(字軌)', visible: true },
     { field: 'TXN_GUIBegNo', header: '發票號碼(起)', visible: true },
     { field: 'TXN_GUIEndNo', header: '發票號碼(迄)', visible: true },
     {
       field: 'TXN_TotGUI',
-      header: '發票總金額',
+      header: '發票金額',
       visible: true,
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0'
     },
     {
       field: 'TXN_TotSaleAmt',
-      header: '總銷售金額',
+      header: '業績金額',
       visible: true,
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0'
     },
     {
       field: 'TXN_Status',
-      header: '交易狀態',
+      header: '交易型態',
       visible: true,
       format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions)
     },
-    { field: 'TXN_TaxFreeCertNo', header: '免稅證號', visible: true },
-    { field: 'USR_No', header: '收銀員代號', visible: true },
-    { field: 'TXN_PkngUID', header: '車卡號', visible: true },
+    {
+      field: 'TXN_FlagStatus',
+      header: '狀態旗標',
+      visible: true,
+    },
+   {
+      field: 'TXN_Subtype',
+      header: '交易附屬型態',
+      visible: true,
+    },
+    { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
+    { field: 'USR_No', header: '收銀員', visible: true },
+    { field: 'TXN_PkngUID', header: '停車卡號', visible: true },
     {
       field: 'ORG_TXN_Date',
       header: '原交易日期',
@@ -94,7 +108,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_MemCard', header: '會員卡號', visible: true },
     {
       field: 'TXN_TotPayScoreAmt',
-      header: '會員積點折抵金額',
+      header: '會員積點折抵',
       visible: true,
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0'
@@ -107,7 +121,10 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   BUILDING_NO_Options: any[] = [];
   floorOptions: any[] = [];
   OrganizationCodeOptions: any[] = [];
+  ECRNoOptions: any[] = [];
   WhetherOptions: any[] = [];
+  CounterOptions: any[] = [];
+
 
   constructor(
     private tls23040Service: TLS23040Service,
@@ -115,6 +132,9 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     private TXN_SubtypeService: TXN_SubtypeService,
     private txnStatusService: TxnStatusService,
     private floorService: FloorService,
+    private ECRNoService: ECRNoService,
+    private counterNameService: CounterNameService,
+
     private tls11010Service: Tls11010Service
   ) {
     super();
@@ -126,10 +146,25 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     this.statusFlagService.getStatusFlags().subscribe(data => this.statusFlagOptions = data);
     this.TXN_SubtypeService.getTXNSubtype().subscribe(data => this.TXN_SubtypeOptions = data);
     this.txnStatusService.getTxnStatusOptions().subscribe(data => this.txnStatusOptions = data);
+
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
     this.tls11010Service.getOrgOptions().subscribe((res) => {
       this.OrganizationCodeOptions = res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
+    });
+    this.ECRNoService.getECRNo().subscribe((res) => {
+      this.ECRNoOptions = res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
+    });
+    this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions = res?.map((x: any) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
         value: x.value,
