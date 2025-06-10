@@ -53,17 +53,10 @@ interface LocationItem {
   tlt_floor: string;          // 樓層
   area_no: string;            // 區域
   tlt_space: number;       // 營業坪數
+  building_desc: string; // 館別描述
+  floor_desc: string;    // 樓層描述
+  area_desc: string;     // 區域描述
   _status?: 'new' | 'modified' | 'deleted' | 'original'; // 前端狀態管理
-}
-
-interface LocationDetailItem {
-  id: number;
-  location_no: string;       // 位置編號
-  tlt_building: string;       // 館別
-  tlt_floor: string;          // 樓層
-  area_no: string;            // 區域
-  tlt_space: number;       // 營業坪數
-  _status?: 'new' | 'modified' | 'deleted' | 'original';
 }
 
 @Component({
@@ -72,11 +65,14 @@ interface LocationDetailItem {
   styleUrls: ['./tls13010-cru.component.scss'],
 })
 export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
-  // 地點資訊資料
-  locationItems: LocationItem[] = [];
-
   // 位置選項資料
   locationWithDetailsOptions: any[] = [];
+
+  //廠商統一編號
+  pos2013Options: any[] = [];
+
+  // 洽談者選項
+  negotiatorOptions: any[] = [];
 
   // 新的位置表格欄位定義
   locationColumns: ColumnDef[] = [
@@ -89,21 +85,21 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       options: [] // 這裡會在 updateLocationColumnOptions 中更新
     },
     {
-      field: 'tlt_building',
+      field: 'building_desc',
       header: '館別',
       type: 'text',
       editable: false,
       style: 'min-width: 100px'
     },
     {
-      field: 'tlt_floor',
+      field: 'floor_desc',
       header: '樓層',
       type: 'text',
       editable: false,
       style: 'min-width: 100px'
     },
     {
-      field: 'area_no',
+      field: 'area_desc',
       header: '區域',
       type: 'text',
       editable: false,
@@ -121,21 +117,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // 新的位置資料陣列
   locationData: any[] = [];
 
-  // ==========  地點資訊表格 ==========
-  data: any[] = [
-    {
-      isNew: false,
-      location_no: 'B123',
-      floor: '2樓',
-      area: 'B區',
-      tlt_space: '100坪',
-      startDate: '2023/12/01',
-      endDate: '2024/11/30',
-      performanceShare: 100,
-    },
-  ];
-
-  filteredData: any[] = [...this.data];
   // ==========  主要表單定義 ==========
   dataForm = this.formBuilder.group({
     // 基本資訊
@@ -155,6 +136,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     tlt_bdate: [''],
     tlt_edate: [''],
     contact_Date: [''],
+    contact_USR_No: [''],
     contact_USR_Name: [''],
     feedback_date: [''],
     due_date: [''],
@@ -285,6 +267,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 然後載入位置選項
     this.loadLocationWithDetailsOptions();
+    // 載入 POS2013 選項
+    this.loadPOS2013Options();
+    // 載入洽談者選項
+    this.loadNegotiatorOptions();
     this.loadWorkflowData();
     this.setupAutoSave();
     this.setupBusTypeListener();
@@ -367,6 +353,31 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     });
   }
 
+  private loadPOS2013Options(): void {
+    // 直接從服務取得
+    this.pos2013Options = this.tls13010DropdownService.pos2013Options;
+
+    // 或者等服務載入完成
+    if (this.pos2013Options.length === 0) {
+      setTimeout(() => {
+        this.pos2013Options = this.tls13010DropdownService.getPOS2013Options();
+      }, 500);
+    }
+  }
+
+  private loadNegotiatorOptions(): void {
+    // 直接從服務取得
+    this.negotiatorOptions = this.tls13010DropdownService.negotiatorOptions;
+
+    // 或者等服務載入完成
+    if (this.negotiatorOptions.length === 0) {
+      setTimeout(() => {
+        this.negotiatorOptions = this.tls13010DropdownService.getNegotiatorOptionsData();
+        console.log('洽談者選項載入完成 (CRU頁面):', this.negotiatorOptions.length);
+      }, 500);
+    }
+  }
+
   // 更新位置欄位的下拉選單選項
   private updateLocationColumnOptions(): void {
     console.log('開始更新表格欄位選項...');
@@ -381,20 +392,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       console.log('已更新表格下拉選單選項:', locationColumn.options.length, '筆');
     } else {
       console.warn('找不到 location_no 欄位！'); // 改回原本的訊息
-    }
-  }
-
-
-  private updateTableColumnOptions(): void {
-    // 這個方法可能會覆蓋位置選項，先註解掉看看
-    const locationColumn = this.locationColumns.find(col => col.field === 'location_no');
-    if (locationColumn) {
-      locationColumn.options = this.tls13010DropdownService.locationOptions;
-    }
-
-    const floorColumn = this.locationColumns.find(col => col.field === 'floor');
-    if (floorColumn) {
-      floorColumn.options = this.tls13010DropdownService.floorOptions;
     }
   }
 
@@ -500,6 +497,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       ticket_remarks: queryData.ticket_remarks,
       cap_saletype1: queryData.cap_saletype1,
       cap_saletype2: queryData.cap_saletype2,
+      contact_USR_No: queryData.contact_USR_No,
+      contact_USR_Name: queryData.contact_USR_Name,
     });
 
     this.loadBusinessClassifications(queryData.bus_type, queryData.bus_class);
@@ -607,13 +606,29 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.tls13010Service.queryTLS13010Location(talentId).subscribe({
       next: (response) => {
         if (response?.Data?.Locations && response.Data.Locations.length > 0) {
-          // 直接使用，只需標記為原始資料
-          this.locationData = response.Data.Locations.map((item: LocationItem) => ({
-            ...item,
-            _status: 'original' // 標記為原始資料
-          }));
-          this.updateLocationColumnOptions();
-          console.log('位置資料載入完成:', this.locationData);
+          this.locationData = response.Data.Locations.map((item: LocationItem) => {
+            // 從位置選項中找出對應的描述
+            const locationOption = this.locationWithDetailsOptions.find(
+              opt => opt.value === item.location_no
+            );
+
+            const mappedItem = {
+              ...item,
+              // ✅ 確保描述欄位有值
+              building_desc: item.building_desc || locationOption?.building_desc || '',
+              floor_desc: item.floor_desc || locationOption?.floor_desc || '',
+              area_desc: item.area_desc || locationOption?.area_desc || '',
+              _status: 'original'
+            };
+
+            console.log('載入的位置項目:', mappedItem);
+            return mappedItem;
+          });
+
+          console.log('完整載入的位置資料:', this.locationData);
+
+          // ✅ 強制觸發變更偵測
+          this.locationData = [...this.locationData];
         }
       },
       error: (err) => {
@@ -669,29 +684,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         comm_comp_type: '2',
         invoice_type: '1'
       });
-      this.data = [];
-      this.filteredData = [];
+      this.locationData = []; // 加入這行清除位置資料
       this.contractFlowService.clearTempData();
       this.messageService.infoBubble('表單已清除');
-    }
-  }
-
-  calculatePerformanceShare(): void {
-    const totalArea = this.data.reduce((sum, item) => {
-      const area = parseFloat(item.tlt_space) || 0;
-      return sum + area;
-    }, 0);
-
-    if (totalArea > 0) {
-      this.data.forEach(item => {
-        const area = parseFloat(item.tlt_space) || 0;
-        item.performanceShare = Math.round((area / totalArea) * 100);
-      });
-      this.filteredData = [...this.data];
-      this.saveToWorkflow();
-      this.messageService.successBubble('業績分攤計算完成');
-    } else {
-      this.messageService.warnBubble('請先輸入營業坪數');
     }
   }
 
@@ -699,16 +694,25 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   onAddLocationItem(): void {
     const newLocationItem: LocationItem = {
-      id: this.generateTempId(), // 簡單的臨時ID生成
+      id: this.generateTempId(),
       location_no: '',
       tlt_building: '',
       tlt_floor: '',
       area_no: '',
       tlt_space: 0,
+      building_desc: '',
+      floor_desc: '',
+      area_desc: '',
       _status: 'new'
     };
 
-    this.locationData.push(newLocationItem);
+    console.log('新增的位置項目:', newLocationItem);
+
+    // ✅ 確保使用陣列參考更新
+    this.locationData = [...this.locationData, newLocationItem];
+
+    console.log('新增後的 locationData:', this.locationData);
+
     this.saveToWorkflow();
     this.messageService.infoBubble('已新增位置項目，請選擇位置編號');
   }
@@ -771,14 +775,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     console.log('欄位:', field);
     console.log('新值:', newValue);
     console.log('舊值:', oldValue);
-    console.log('當前 rowData:', rowData);
+    console.log('rowData ID:', rowData.id);
 
-    // 加入這些檢查
-    console.log('field 是否等於 location_no:', field === 'location_no');
-    console.log('newValue 是否有值:', !!newValue);
-    console.log('newValue 是否不等於 oldValue:', newValue !== oldValue);
-    console.log('三個條件:', field === 'location_no', !!newValue, newValue !== oldValue);
-
+    // ✅ 簡化條件判斷，只要是 location_no 欄位且有新值就處理
     if (field === 'location_no' && newValue) {
       console.log('位置編號變更，開始自動帶入...');
 
@@ -790,32 +789,48 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       console.log('找到的位置資料:', selectedLocation);
 
       if (selectedLocation) {
-        console.log('帶入前的 rowData:', JSON.stringify(rowData, null, 2));
+        // ✅ 找到陣列中對應的項目並直接修改
+        const targetIndex = this.locationData.findIndex(item => item.id === rowData.id);
 
-        // 直接複製屬性 - 欄位名稱完全一致！
-        // 修正版本 - 直接用後端的欄位名稱
-        rowData.tlt_building = selectedLocation.tlt_building;  // ✅
-        rowData.tlt_floor = selectedLocation.tlt_floor;        // ✅
-        rowData.area_no = selectedLocation.area_no;           // ✅
-        rowData.tlt_space = selectedLocation.tlt_space || 0;
+        if (targetIndex > -1) {
+          // 直接修改陣列中的項目
+          this.locationData[targetIndex] = {
+            ...this.locationData[targetIndex],
+            location_no: newValue,
+            // 設定代碼（後端儲存用）
+            tlt_building: selectedLocation.tlt_building,
+            tlt_floor: selectedLocation.tlt_floor,
+            area_no: selectedLocation.area_no,
+            tlt_space: selectedLocation.tlt_space || 0,
+            // 設定描述（前端顯示用）
+            building_desc: selectedLocation.building_desc,
+            floor_desc: selectedLocation.floor_desc,
+            area_desc: selectedLocation.area_desc,
+            // 更新狀態
+            _status: this.locationData[targetIndex]._status === 'original' ? 'modified' : 'new'
+          };
 
-        // 標記狀態變更
-        if (rowData._status === 'original') {
-          rowData._status = 'modified';
-        } else if (!rowData._status) {
-          rowData._status = 'new';
+          console.log('更新後的項目:', this.locationData[targetIndex]);
+
+          // ✅ 重新建立陣列參考觸發變更偵測
+          this.locationData = [...this.locationData];
+
+          // ✅ 額外確保 rowData 也被更新（給表格組件用）
+          Object.assign(rowData, this.locationData[targetIndex]);
+
+          this.saveToWorkflow();
+          this.messageService.infoBubble(`已自動帶入位置 ${newValue} 的詳細資訊`);
+
+          // ✅ 延遲檢查確保更新成功
+          setTimeout(() => {
+            console.log('延遲確認更新結果:', this.locationData[targetIndex]);
+          }, 100);
+        } else {
+          console.warn('找不到對應的資料項目');
         }
-
-        console.log('帶入後的 rowData:', JSON.stringify(rowData, null, 2));
-
-        // 強制觸發表格更新
-        this.locationData = [...this.locationData];
-
-        this.saveToWorkflow();
-        this.messageService.infoBubble(`已自動帶入位置 ${newValue} 的詳細資訊`);
       } else {
         console.warn('找不到位置詳細資料:', newValue);
-        console.warn('可用的位置:', this.locationWithDetailsOptions.map(opt => opt.location_no));
+        console.warn('可用的位置選項:', this.locationWithDetailsOptions.map(opt => opt.value));
         this.messageService.warnBubble(`找不到位置 ${newValue} 的詳細資訊`);
       }
     }
@@ -829,8 +844,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   onClearAllLocations(): void {
     if (confirm('確定要清除所有位置資訊嗎？此操作無法復原。')) {
       this.locationData = [];
-      this.data = [];
-      this.filteredData = [];
       this.saveToWorkflow();
       this.messageService.infoBubble('已清除所有位置資訊');
     }
@@ -939,56 +952,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }
   }
 
-  // // 驗證位置資料
-  // private validateLocationData(): boolean {
-  //   // 過濾掉已刪除的資料進行驗證
-  //   const activeData = this.locationData.filter(item => item._status !== 'deleted');
-
-  //   if (activeData.length === 0) {
-  //     this.messageService.warnBubble('至少需要設定一個位置');
-  //     return false;
-  //   }
-
-  //   let isValid = true;
-  //   const errors: string[] = [];
-
-  //   activeData.forEach((item, index) => {
-  //     if (!item.location_no) {
-  //       errors.push(`第 ${index + 1} 行：位置編號不能為空`);
-  //       isValid = false;
-  //     }
-  //     if (!item.tlt_space || item.tlt_space <= 0) {
-  //       errors.push(`第 ${index + 1} 行：營業坪數必須大於 0`);
-  //       isValid = false;
-  //     }
-  //   });
-
-  //   if (!isValid) {
-  //     this.messageService.warnBubble(`位置資料驗證失敗：\n${errors.join('\n')}`);
-  //   }
-
-  //   return isValid;
-  // }
-
-  // 偵錯方法（顯示暫存和API格式）
-  debugLocationData(): void {
-    console.log('=== 位置資料偵錯資訊 ===');
-    console.log('前端暫存格式:', this.locationData);
-
-    // 刪除這些會報錯的行
-    // const apiData = TLS13010Mapper.fromFrontendToApiSave(this.locationData);
-    // console.log('將來會送到API的格式:', apiData);
-    // console.log('新增資料:', apiData.filter(item => item._operation === 'INSERT'));
-    // console.log('修改資料:', apiData.filter(item => item._operation === 'UPDATE'));
-    // console.log('刪除資料:', apiData.filter(item => item._operation === 'DELETE'));
-
-    // 改用這個
-    // console.log('API 送出格式:', this.getLocationDataForApi());
-
-    const workflowData = this.contractFlowService.getStep1Data();
-    console.log('工作流程暫存資料:', workflowData?.locationInfo);
-  }
-
   private getOperationType(status?: string): string {
     switch (status) {
       case 'new': return 'INSERT';
@@ -997,19 +960,4 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       default: return 'NONE';
     }
   }
-
-  // 偵錯方法 - 檢查資料流
-  debugLocationFlow(): void {
-    console.log('=== 位置資料流偵錯 ===');
-    console.log('選項資料:', this.locationWithDetailsOptions);
-    console.log('表格資料:', this.locationData);
-    console.log('表格欄位選項:', this.locationColumns.find(col => col.field === 'location_no')?.options);
-
-    // 檢查第一筆選項資料的結構
-    if (this.locationWithDetailsOptions.length > 0) {
-      console.log('第一筆選項的所有屬性:', Object.keys(this.locationWithDetailsOptions[0]));
-      console.log('第一筆選項的值:', this.locationWithDetailsOptions[0]);
-    }
-  }
-
 }
