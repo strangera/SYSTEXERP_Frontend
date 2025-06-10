@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { Sys0210Service } from '../../../service/API/sys/sys0210.service';
+import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
 import { Role } from '../../../shared/models/sys/role.model';
 // 4-2-3-1角色系統權限設定
 @Component({

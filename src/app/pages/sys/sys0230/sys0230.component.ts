@@ -4,7 +4,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { tblRole } from '../../../shared/models/sys/sysb000.module';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { Sys0210Service } from '../../../service/API/sys/sys0210.service';
+import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
 // 4-2-2-2角色之使用者設定維護
 @Component({
   selector: 'app-sys0230',

@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Role, TreeNode } from '../../../shared/models/sys/role.model';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Sys0210Service } from '../../../service/API/sys/sys0210.service';
+import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { ApiResponse } from '../../../service/system/auth.service';
-import { Sys0230Service } from '../../../service/API/sys/sys0230.service';
+import { Sys0230Service } from '../../../service/api/sys/sys0230.service';
 
 interface PrivilegeOutput {
   prog_no: string;
@@ -356,6 +356,7 @@ export class SYS0310CRUComponent extends BasicCruPageComponent<Role> implements 
       Role_No: this.dataForm.value.Role_No,
       data: privilegeList
     };
+    this.loading = true;
 
     this.sys0230Service.updateRolePrivileges(body).subscribe({
       next: (response: ApiResponse<any>) => {

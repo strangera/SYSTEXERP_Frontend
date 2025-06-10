@@ -1,4 +1,4 @@
-import { Sys0230Service } from './../../../service/API/sys/sys0230.service';
+import { Sys0230Service } from './../../../service/api/sys/sys0230.service';
 import { Component, OnInit } from '@angular/core';
 import {
   FormGroup,

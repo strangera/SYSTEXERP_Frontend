@@ -4,7 +4,7 @@ import { FormGroup, Validators } from '@angular/forms';
 // import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { apiOption, Sysb300m } from '../../../shared/models/sys/sysb000.module';
-import { Sysb300Service } from '../../../service/API/sys/sysb300.service';
+import { Sysb300Service } from '../../../service/api/sys/sysb300.service';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({

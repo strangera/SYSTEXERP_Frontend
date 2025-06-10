@@ -4,7 +4,7 @@ import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Sysb300Service } from '../../../service/API/sys/sysb300.service';
+import { Sysb300Service } from '../../../service/api/sys/sysb300.service';
 
 @Component({
   selector: 'app-sysb300.cru',

@@ -16,9 +16,9 @@ import {
   OVERALL_STATUS_OPTIONS,
   TLT_CTYPE_MTOTAL_OPTIONS
 } from './tls13010.constants';
-import { Sysb800DropdownService } from '../../../service/API/sys/sysb800-dropdown.service';
+import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
-import { Sysb900DropdownService } from '../../../service/API/sys/sysb900-dropdown.service';
+import { Sysb900DropdownService } from '../../../service/api/sys/sysb900-dropdown.service';
 import { BussclassDropdownService } from '../../../service/API/dropdownservice/tltbussclass-options.service';
 
 // ========== 介面定義 ==========

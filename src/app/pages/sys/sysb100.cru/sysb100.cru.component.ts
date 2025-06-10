@@ -1,4 +1,4 @@
-import { Sysb100Service } from './../../../service/API/sys/sysb100.service';
+import { Sysb100Service } from './../../../service/api/sys/sysb100.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
