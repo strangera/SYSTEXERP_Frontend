@@ -4,7 +4,7 @@ import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { apiOption, option, SYS1000, Sysb400m, tblUser } from '../../../shared/models/sys/sysb000.module';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 
 // 4-2-1-1 使用者基本資料維護
@@ -43,19 +43,18 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     { field: 'user_No', header: '使用者編號', visible: true },
     { field: 'user_Name', header: '使用者名稱', visible: true },
     {
-      field: 'title', header: '職稱代碼', visible: false, format: (value: string) =>
+      field: 'title', header: '職稱代碼', visible: true, format: (value: string) =>
         this.titleOptions.find((option) => option.No === value)?.Label || value
     },
     {
       field: 'org_ID', header: '組織編號', visible: true, format: (value: string) =>
-        this.SYS3100_Options.find((option) => option.No === value)?.Label ||
-        value
+        this.SYS3100_Options.find((option) => option.No === value)?.Label || value
     },
-    { field: 'str_dateStart', header: '帳號有效開始日期', visible: true },
-    { field: 'str_dateEnd', header: '帳號有效結束日期', visible: true },
-    { field: 'lastLogin', header: '上次登入時間', visible: true },  // 還沒串資料
+    { field: 'str_date', header: '帳號有效開始日期', visible: true, format: formatDate },
+    { field: 'end_date', header: '帳號有效結束日期', visible: true, format: formatDate },
+    { field: 'last_Login', header: '上次登入時間', visible: true, format: formatDateTime },  // 還沒串資料
     {
-      field: 'status', header: '使用者狀態', visible: true, format: (value: string) =>
+      field: 'status', header: '狀態', visible: true, format: (value: string) =>
         this.userStatusOptions.find((option) => option.value === value)?.label ||
         value
     },
@@ -64,13 +63,17 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
         this.userTypeOptions.find((option) => option.value === value)?.label ||
         value
     },
-    { field: 'user_email', header: '使用者等級', visible: true },
-    { field: 'user_priority', header: '使用者等級', visible: true },
-    { field: 'user_email', header: '使用者email帳號', visible: false },
-    { field: 'TLT_No', header: '所屬專櫃編號', visible: false },
+    { field: 'user_email', header: 'Email', visible: true },
+    { field: 'TLT_No', header: '所屬專櫃編號', visible: true },
     { field: 'remarks', header: '備註', visible: true },
-    { field: 'user_priority', header: '使用者等級', visible: false },
-
+    { field: 'user_priority', header: '使用者等級', visible: true },
+    { field: 'USER_PwdExpireDate', header: '密碼到期日', visible: true, format: formatDate },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime },
+    { field: 'CRT_USR_No', header: '建立人員編號', visible: true },
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
+    { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDateTime },
+    { field: 'UPD_USR_No', header: '變更人員編號', visible: true },
+    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
   ];
   selectedItems: tblUser[] = [];// 多選項目
 
