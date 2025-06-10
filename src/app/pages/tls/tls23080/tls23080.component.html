@@ -24,6 +24,7 @@
               [yearControl]="queryForm.controls.TXN_Year"
               [monthControl]="queryForm.controls.TXN_Month"
             ></app-query-year-month>
+            
           </div>
                  <div class="col-12 md:col-6 lg:col-4">
                 <app-calendar
@@ -126,7 +127,7 @@
     tableKey="TLS23080"
     [data]="data"
     [columns]="columns"
-    [showCheckBox]="true"
+    [showCheckBox]="false"
     dataKey="TXN_No"
     [multiSortMeta]="[{ field: 'TXN_DateStart', order: 1 }]"
     [totalRecords]="totalRecords"

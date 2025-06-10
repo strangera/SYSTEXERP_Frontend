@@ -49,9 +49,11 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   deductionCodeNameServOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
 
+
   columns: any[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true,
+      style: 'text-left' },
 
     {
       field: 'tlt_building',
@@ -60,7 +62,8 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
       format: (value: any) => this.getLabelFromOptions(value, this.BUILDING_NO_Options),
     },
     { field: 'floor_desc', header: '樓層', visible: true },
-    { field: 'area_desc', header: '區域', visible: true },
+    { field: 'area_desc', header: '區域', visible: true,
+      style: 'text-left' },
     // ✅ 新增兩個欄位來取代舊的「大分類」
     {
       field: 'bus_type',
@@ -88,27 +91,59 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     },
 
     { field: 'cap_type', header: '扣款類別', visible: true },
-    { field: 'CAP_Name', header: '扣款項目名稱', visible: true },
+    { field: 'CAP_Name', header: '扣款名稱', visible: true,
+      style: 'text-left' },
     {
       field: 'tpy_bdate',
       header: '扣款起日',
       visible: true,
-      format: (value: string) => this.formatYYYYMM(value),
+      // format: (value: string) => this.formatYYYYMM(value),
     },
     {
       field: 'tpy_edate',
       header: '扣款迄日',
       visible: true,
-      format: (value: string) => this.formatYYYYMM(value),
+      // format: (value: string) => this.formatYYYYMM(value),
     },
 
 
-    { field: 'tpy_totalamt', header: '總金額', visible: true },
-    { field: 'down_payment', header: '頭期款', visible: true },
+    {
+      field: 'tpy_totalamt', header: '總金額', visible: true,
+      format: (value: any) => this.moneyFormat(value),
+      style: 'text-right'
+    },
+    {
+      field: 'down_payment', header: '頭期款', visible: true,
+      format: (value: any) => this.moneyFormat(value),
+      style: 'text-right'
+    },
     { field: 'period_nos', header: '期數', visible: true },
-    { field: 'tpy_amount', header: '每月扣款金額', visible: true },
-    { field: 'tpy_rate', header: '費用計算的比率', visible: true },
+    {
+      field: 'tpy_amount', header: '每期金額', visible: true,
+      format: (value: any) => this.moneyFormat(value),
+      style: 'text-right'
+    },
+    {
+      field: 'tpy_rate',
+      header: '比率或元(月利率%)',
+      visible: true,
+      format: (value: any) => {
+        const num = parseFloat(value);
+        return isNaN(num) ? '' : num.toFixed(2);
+      },
+      style: 'text-right'
+    },
+
+    { field: 'defSalesAmt', header: '預設營業額', visible: true, format: (value: any) => value ?? 0,
+      style: 'text-right' },
+    { field: 'commRate', header: '抽成百分比%', visible: true, format: (value: any) => value ?? 0,
+      style: 'text-right' },
+
   ];
+  moneyFormat(value: number): string {
+    return value != null ? value.toLocaleString('en-US') : '0';
+  }
+
   // ✅ 合約日格式（YYYY/MM/DD）
   formatFullDate(raw: string): string {
     if (!raw) return '';
@@ -165,6 +200,29 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     });
   }
 
+  processResultData(resData: any[]): any[] {
+    const formatYYYYMM = (value: string): string => {
+      if (value && value.length === 6) {
+        return `${value.substring(0, 4)}/${value.substring(4, 2)}`;
+      }
+      return value;
+    };
+
+    return (resData || []).map((item: any) => {
+      const [code, name] = (item.bus_type ?? '').split('/');
+      return {
+        ...item,
+        defSalesAmt: item.defSalesAmt ?? 0,
+        commRate: item.commRate ?? 0,
+        bus_type_code: code ?? '',
+        bus_type_name: name ?? '',
+        tpy_bdate: formatYYYYMM(item.tpy_bdate),
+        tpy_edate: formatYYYYMM(item.tpy_edate),
+      };
+    });
+  }
+
+
   onSubmit(form: FormGroup): void {
     console.log('送出的查詢條件：', form.value);
 
@@ -208,6 +266,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
       }
     }
 
+
     // ✅ dropdown 欄位處理
     if (formValue.tlt_building && typeof formValue.tlt_building === 'object') {
       formValue.tlt_building = formValue.tlt_building?.value;
@@ -221,7 +280,8 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
       .subscribe({
         next: (res) => {
           if (res.Status === '0000') {
-            this.data = res.Data || [];
+            this.data = this.processResultData(res.Data);
+
             this.totalRecords = res.TotalCount || this.data.length;
             this.messageService.successBubble('查詢成功');
             this.queryStateService.setQueryState(this.ProgNo, formValue);
@@ -231,7 +291,6 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
         },
         error: () => {
           this.messageService.errorBubble('查詢錯誤');
-          // 🔴 錯誤時也要清除 loading 狀態
           this.loading = false;
           this.messageService.unblockUi();
         },
@@ -240,6 +299,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
           this.messageService.unblockUi();
         }
       });
+
   }
 
 

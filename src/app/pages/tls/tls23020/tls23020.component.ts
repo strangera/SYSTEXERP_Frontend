@@ -54,7 +54,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   columns = [
     {
       field: 'TXN_Date',
-      header: '交易日期',
+      header: '銷售日期',
       visible: true,
       format: (val: string) => {
         const date = new Date(val);
@@ -63,44 +63,48 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
           : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
       }
     },
-    { field: 'ECR_No', header: '收銀機機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true, style: 'text-right' },
+    { field: 'ECR_No', header: '收銀機代號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true }, // 若無此欄位請移除
+    { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' }, // 若無此欄位請移除
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
+    
+    
     {
-      field: 'PLU_SalePrc', header: '銷售金額', visible: true,
+      field: 'PLU_SalePrc', header: '單項售價', visible: true,
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0'
     },
     {
-      field: 'TXN_Net', header: '未稅銷售金額', visible: true,
+      field: 'TXN_Net', header: '未稅(免稅)金額', visible: true,
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0'
     },
+
+
     {
       field: 'TXN_Tax', header: '稅額', visible: true,
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0'
     },
-    {
-      field: 'TXN_Disc', header: '折扣總額', visible: true,
+        {
+      field: 'TXN_Disc', header: '折扣金額', visible: true,
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0'
     },
 
     {
       field: 'tlt_id',
-      header: '分類抽成類別',
+      header: '商品抽成類別',
       visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.commissionTypeOptions)
+      format: (val: any) => this.getLabelFromOptions(val, this.deductionbigCategoryOptions)
     },
     {
-      field: 'ORG_TXN_DiscCode', header: '原始折數', visible: true,
+      field: 'ORG_TXN_DiscCode', header: '原折扣', visible: true,
       format: (val: any) => this.getLabelFromOptions(val, this.discountOptions)
     }, // 查無該欄位，請確認是否有誤或應移除
     {
-      field: 'TXN_DiscCode', header: '專櫃折數', visible: true,
+      field: 'TXN_DiscCode', header: '歸屬折扣', visible: true,
       format: (val: any) => this.getLabelFromOptions(val, this.discountOptions)
     },
 
@@ -110,11 +114,11 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       visible: true,
       format: (val: any) => this.getLabelFromOptions(val, this.taxableOptions)
     },
-    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
+    { field: 'PLU_MagNo', header: '單品編號', visible: true },
 
     {
       field: 'TXN_Status',
-      header: '交易狀態',
+      header: '狀態',
       visible: true,
       format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions)
     },
@@ -150,6 +154,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     private counterNameService: CounterNameService,
     private whetherService: WhetherService,
     private txnStatusService: TxnStatusService,
+    
     private validationService: ValidationService
   ) {
     super();

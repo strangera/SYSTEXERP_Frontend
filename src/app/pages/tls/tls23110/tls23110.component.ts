@@ -11,6 +11,7 @@ import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { CounterOpCatService } from '../../../service/basic/counter-op-cat.service';
 
 @Component({
   selector: 'app-tls23110',
@@ -33,6 +34,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     tlt_floor: [''],                                     // 樓層編號
     org_id: [''],
     tlt_no: [''],
+    CounterOpCat: [''], // 專櫃經營類別
     ...createPaginationConfig([{ field: 'saleDateStart', order: 1 }])
   });
 
@@ -53,13 +55,15 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   CounterOptions: any[] = [];
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
-  OrganizationCodeOptions: any[] = []
+  OrganizationCodeOptions: any[] = [];
+  CounterOpCatOptions: any[] = [];
 
   constructor(
     private tls23110Service: TLS23110Service,
     private deductionbigCategoryService: DeductionbigCategoryService,
     private typeService: TypeService,
     private categoryService: CategoryService,
+    private counterOpCatService:CounterOpCatService,
     
     private counterNameService: CounterNameService,
     private organizationNumberService: OrganizationNumberService,
@@ -83,6 +87,9 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
       })) || [];
     });
     this.organizationNumberService.getOrganizationNumbers().subscribe(data => this.OrganizationNumberOptions = data);
+    this.counterOpCatService.getCounterOpCat().subscribe(data => this.CounterOpCatOptions = data);
+  
+
 
     this.queryForm.controls.dateRadio.valueChanges.subscribe(value => {
       if (value === 'saleDate') {

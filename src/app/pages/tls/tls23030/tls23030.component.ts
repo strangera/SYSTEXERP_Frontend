@@ -66,6 +66,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     { field: 'ECR_No', header: '收銀機代號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' }, // 若無此欄位請移除
     { field: 'TXN_Status', header: '交易型態', visible: true, format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions) },
     { field: 'PAY_Type', header: '付款別', visible: true, format: (val: any) => this.getLabelFromOptions(val, this.paymentTypeOptions) },
     {
@@ -78,6 +79,21 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0'
     },
+    { field: 'TXN_GUINo', header: '發票號碼', visible: true },
+    {
+      field: 'TXN_Time', header: '交易時間', visible: true, format: (val: string) => {
+        const date = new Date(val);
+        if (isNaN(date.getTime())) return val;
+
+        const yyyy = date.getFullYear();
+        const MM = (date.getMonth() + 1).toString().padStart(2, '0');
+        const dd = date.getDate().toString().padStart(2, '0');
+        const HH = date.getHours().toString().padStart(2, '0');
+        const mm = date.getMinutes().toString().padStart(2, '0');
+
+        return `${yyyy}/${MM}/${dd} ${HH}:${mm}`;
+      }
+    },
     { field: 'CRD_Type', header: '信用卡別', visible: true },
     {
       field: 'CRD_No', header: '信用卡卡號/條碼', visible: true,
@@ -86,6 +102,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     { field: 'IsHaveTERM_No', header: '是否分期', visible: true, format: (val: any) => this.getLabelFromOptions(val, this.WhetherOptions) },
     { field: 'TXN_MemCard', header: '會員卡號', visible: true },
     { field: 'org_id', header: '組織編號', visible: true },
+    { field: 'org_id', header: '組織名稱', visible: true, format: (val: any) => this.getLabelFromOptions(val, this.OrganizationCodeOptions) },
   ];
 
   displayModeOptions: any[] = [];

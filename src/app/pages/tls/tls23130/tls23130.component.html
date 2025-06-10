@@ -24,18 +24,6 @@
               </div>
 
 
-          <!-- Radio + 銷售年/月 -->
-          <div class="col-12 md:col-6 lg:col-4">
-
-                <app-calendar
-                  calendarType="dateMonthOne"
-                  label="年/月"
-                  [control]="queryForm.controls.saleMonthYear"
-                  [submitted]="submitted"
-                ></app-calendar>
-              </div>
-
-
           <!-- 卡種 -->
              <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -49,46 +37,7 @@
             ></app-dropdown>
           </div>
 
-          <!-- Radio + 專櫃編號 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="專櫃編號"
-              controlName="TLT_No"
-              [options]="CounterOptions"
-              optionLabel="formLabel"
-              optionValue="value"
-              [control]="queryForm.controls.tlt_no"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
 
-
-
-          <!-- Radio + 大分類 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="大分類"
-              [options]="bus_typeOptions"
-              [control]="queryForm.controls.bus_typeList"
-              optionLabel="formLabel"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-
-
-          <!-- 是否顯示業種 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="是否顯示大分類"
-              controlName="whetherDisplayBusinessType"
-              [options]="whetherOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.whetherDisplayBusinessType"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
 
           <!-- 館別 -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -152,7 +101,7 @@
     tableKey="TLS23130"
     [data]="data"
     [columns]="columns"
-    [showCheckBox]="true"
+    [showCheckBox]="false"
     dataKey="TXN_No"
     [multiSortMeta]="[{ field: 'cardNumber', order: 1 }]"
     [totalRecords]="totalRecords"

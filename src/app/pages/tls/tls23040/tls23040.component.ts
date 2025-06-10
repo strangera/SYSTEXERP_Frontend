@@ -61,27 +61,37 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_GUIEndNo', header: '發票號碼(迄)', visible: true },
     {
       field: 'TXN_TotGUI',
-      header: '發票總金額',
+      header: '發票金額',
       visible: true,
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0'
     },
     {
       field: 'TXN_TotSaleAmt',
-      header: '總銷售金額',
+      header: '業績金額',
       visible: true,
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0'
     },
     {
       field: 'TXN_Status',
-      header: '交易狀態',
+      header: '交易型態',
       visible: true,
       format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions)
     },
-    { field: 'TXN_TaxFreeCertNo', header: '免稅證號', visible: true },
-    { field: 'USR_No', header: '收銀員代號', visible: true },
-    { field: 'TXN_PkngUID', header: '車卡號', visible: true },
+    {
+      field: 'TXN_FlagStatus',
+      header: '狀態旗標',
+      visible: true,
+    },
+   {
+      field: 'TXN_Subtype',
+      header: '交易附屬型態',
+      visible: true,
+    },
+    { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
+    { field: 'USR_No', header: '收銀員', visible: true },
+    { field: 'TXN_PkngUID', header: '停車卡號', visible: true },
     {
       field: 'ORG_TXN_Date',
       header: '原交易日期',
@@ -98,7 +108,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_MemCard', header: '會員卡號', visible: true },
     {
       field: 'TXN_TotPayScoreAmt',
-      header: '會員積點折抵金額',
+      header: '會員積點折抵',
       visible: true,
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0'

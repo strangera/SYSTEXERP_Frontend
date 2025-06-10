@@ -62,6 +62,18 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+                    <!-- 類型 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="專櫃類別"
+              controlName="CounterOpCat"
+              [options]="CounterOpCatOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.CounterOpCat"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="專櫃編號"
@@ -129,7 +141,7 @@
     tableKey="TLS23110"
     [data]="data"
     [columns]="columns"
-    [showCheckBox]="true"
+    [showCheckBox]="false"
     dataKey="grandTotal"
     [multiSortMeta]="[{ field: 'saleDateStart', order: 1 }]"
     [totalRecords]="totalRecords"
