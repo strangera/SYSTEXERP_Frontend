@@ -4,8 +4,8 @@ import { FormGroup, Validators } from '@angular/forms';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { Sys0110Service } from '../../../service/API/sys/sys0110.service';
-import { Sysb400Service } from '../../../service/API/sys/sysb400.service';
+import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
+import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 import { tblUser, apiOption, option, SYS1000, Sysb400m } from '../../../shared/models/sys/sysb000.module';
 
 // 4-2-2-4使用者之角色設定維護

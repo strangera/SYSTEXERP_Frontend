@@ -1,4 +1,4 @@
-import { Sysb800DropdownService } from '../../../service/API/sys/sysb800-dropdown.service';
+import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';

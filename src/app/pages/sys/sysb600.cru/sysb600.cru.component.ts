@@ -5,7 +5,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //
 import { TranslateService } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Sysb600Service } from '../../../service/API/sys/sysb600.service';
+import { Sysb600Service } from '../../../service/api/sys/sysb600.service';
 import { Sysb600m } from '../../../shared/models/sys/sysb000.module';
 
 @Component({

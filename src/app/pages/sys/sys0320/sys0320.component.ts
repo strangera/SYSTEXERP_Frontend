@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { Sys0110Service } from '../../../service/API/sys/sys0110.service';
+import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { UserData } from '../../../shared/models/sys/user.model';
 
 @Component({
