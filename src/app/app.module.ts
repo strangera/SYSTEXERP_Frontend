@@ -15,6 +15,7 @@ import { NotificationMessageComponent } from './shared/component/notification-me
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
+import { SuccessInterceptor } from './interceptors/successinterceptor.service';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -58,6 +59,11 @@ export function HttpLoaderFactory(http: HttpClient) {
     {
       provide: HTTP_INTERCEPTORS,
       useClass: ErrorinterceptorService,        // 最後處理錯誤
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: SuccessInterceptor,        // 最後處理錯誤
       multi: true
     },
   ],

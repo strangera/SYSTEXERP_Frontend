@@ -11,15 +11,15 @@ export class WhetherService {
 
   apiUrl: string = environment.ApiUrl;
   title: string = '是否';
-options: any[] = [
-  { value: 'Y', label: '是' },
-  { value: 'N', label: '否' },
-];
+  options: any[] = [
+    { value: 'Y', label: '是' },
+    { value: 'N', label: '否' },
+  ];
 
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getWhetherOptions(): Observable<any[]> {
     return of(this.options).pipe(

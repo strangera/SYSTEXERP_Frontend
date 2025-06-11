@@ -19,7 +19,7 @@ interface ButtonConfig {
   styleUrl: './button.component.scss'
 })
 export class ButtonComponent implements OnInit, OnDestroy {
-  @Input() btnType: 'default' | 'create' | 'edit' | 'delete' | 'query' | 'cancel' | 'clear' | 'submit' | 'next' | 'previous' | 'smartclear' | 'back' = 'default';
+  @Input() btnType: 'default' | 'create' | 'edit' | 'delete' | 'query' | 'cancel' | 'clear' | 'submit' | 'next' | 'previous' | 'smartclear' | 'back' | 'CSV' = 'default';
   @Input() loading = false;
   @Output() clickEvent = new EventEmitter<void>();
   // --- 以下為按鈕配置 ---
