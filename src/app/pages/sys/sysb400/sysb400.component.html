@@ -71,6 +71,19 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+
+<div class="card">
+  <p-tree
+    [value]="treeNodes"
+    selectionMode="single"
+    [(selection)]="selectedNode"
+  >
+    <ng-template let-node pTemplate="default">
+      {{ node.label }}
+    </ng-template>
+  </p-tree>
+</div>
+
 <div class="card">
   <div class="col-13">
     <app-table

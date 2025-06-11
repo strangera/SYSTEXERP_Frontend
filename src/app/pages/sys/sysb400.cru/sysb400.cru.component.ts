@@ -119,7 +119,7 @@ export class SYSB400CRUComponent
       item.Level && filteredNos.includes(item.Level)
     );
 
-    console.log('org_Option', this.org_Option);
+    // console.log('org_Option', this.org_Option); // 檢查[上層階層] 預帶的 [上層組織代碼/名稱] 是否正確
   }
 
   loadOptions(): Promise<void> {
