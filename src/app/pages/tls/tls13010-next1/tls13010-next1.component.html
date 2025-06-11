@@ -52,8 +52,9 @@
         >
           <div class="col-12">
             <app-expandable-edit-table
-              [data]="[currentContractData]"
-              [mainColumns]="[]"
+              class="custom-table-red"
+              [data]="contractInfoData"
+              [mainColumns]="contractInfoColumns"
               [showCheckBox]="false"
               [showPaginator]="false"
               [showAddButton]="false"

@@ -1,3 +1,4 @@
+import { option } from './../../../shared/models/sys/sysb000.module';
 import { Column } from './../../../shared/componentkit/table/table.model';
 import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Component, OnInit, OnDestroy } from '@angular/core';
@@ -7,6 +8,7 @@ import { Subscription } from 'rxjs';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS13010Service } from '../../../service/API/tls/tls13010.service';
 import { ContractFlowService, WorkflowStep } from '../../../service/API/tls/tls13010contract-flow/contract-flow.service';
+import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 
 // 介面定義
 interface CategoryItem {
@@ -59,11 +61,38 @@ interface FareItem {
 }
 
 interface ContractInfo {
-  id: string;
-  talent_id: string;
-  apply_no: string;
-  tlt_name: string;
-  VEN_Name: string;
+  // 基本識別
+  id: string | number;
+
+  // 合約基本資訊（從 CRU 頁面 Step 1）
+  talent_id: string;              // 專櫃編號
+  apply_no: string;               // 專櫃招募編號
+  tlt_name: string;               // 櫃位名稱
+  VEN_Name: string;               // 廠商名稱
+  contract_subno?: string;        // 版本編號
+
+  // 扣款項目資訊（從 Next1 頁面 Step 2）
+  cap_name?: string;              // 費項(專項)名稱
+  cap_item?: string;              // 款項代碼
+  org_id?: string;                // 攤別
+  tpy_type?: string;              // 繳別
+
+  // 日期資訊
+  tlt_contract_bdate?: string;    // 合約起始日
+  tlt_contract_edate?: string;    // 合約終止日
+  tlt_bdate?: string;             // 營運起始日
+  tlt_edate?: string;             // 營運終止日
+
+  // 金額資訊（可選）
+  tpy_amount?: number;            // 扣款金額
+  tpy_unitamt?: number;           // 單價
+  tpy_qty?: number;               // 數量
+
+  ven_uniform?: any;
+  comm_comp_type?: any;
+
+  // 原始資料保留（用於後續處理）
+  originalFareData?: any;         // 原始扣款資料
 }
 
 @Component({
@@ -85,14 +114,86 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   currentContractData: any = null;
   contractInfoData: ContractInfo[] = [];
 
-
-
-  // 合約資訊表格欄位定義
   contractInfoColumns: ColumnDef[] = [
-    { field: 'talent_id', header: '合約編號', type: 'text', editable: false, style: 'min-width: 150px' },
-    { field: 'apply_no', header: '招募編號', type: 'text', editable: false, style: 'min-width: 150px' },
-    { field: 'tlt_name', header: '櫃位名稱', type: 'text', editable: false, style: 'min-width: 200px' },
-    { field: 'VEN_Name', header: '廠商名稱', type: 'text', editable: false, style: 'min-width: 200px' }
+    {
+      field: 'apply_no',
+      header: '專櫃招募編號',
+      type: 'text',
+      editable: false,
+      autoWidth: true
+    },
+    {
+      field: 'talent_id',
+      header: '專櫃編號',
+      type: 'text',
+      editable: false,
+      autoWidth: true
+    },
+    {
+      field: 'tlt_name',
+      header: '品牌(專櫃)名稱',
+      type: 'text',
+      editable: false,
+      autoWidth: true
+    },
+    {
+      field: 'ven_uniform',
+      header: '廠商統編',
+      type: 'text',
+      editable: false,
+      autoWidth: true
+    },
+    {
+      field: 'VEN_Name',
+      header: '廠商名稱',
+      type: 'text',
+      editable: false,
+      autoWidth: true
+    },
+    {
+      field: 'contract_subno',
+      header: '版本編號',
+      type: 'text',
+      editable: false,
+      autoWidth: true
+    },
+    {
+      field: 'comm_comp_type',
+      header: '抽成別',
+      type: 'dropdown',
+      editable: false,
+      options: TLS13010_DROPDOWN_OPTIONS.commissionCompType,
+      autoWidth: true
+    },
+    {
+      field: 'tlt_bdate',
+      header: '合約起始日',
+      type: 'date',
+      editable: false,
+      autoWidth: true
+    },
+    {
+      field: 'tlt_edate',
+      header: '合約終止日',
+      type: 'date',
+      editable: false,
+      autoWidth: true
+    },
+    {
+      field: 'tlt_contract_bdate',
+      header: '營運起始日',
+      type: 'date',
+      editable: false,
+      autoWidth: true
+    },
+    {
+      field: 'tlt_contract_edate',
+      header: '營運終止日',
+      type: 'date',
+      editable: false,
+      autoWidth: true
+    },
+
   ];
 
   // A 類型（一次扣款
@@ -217,14 +318,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '單位',
       type: 'dropdown',
       editable: true,
-      options: [
-        { label: '坪數', value: '01' },
-        { label: '收銀機台數', value: '02' },
-        { label: '人數', value: '03' },
-        { label: '度數', value: '04' },
-        { label: '每坪每天', value: '05' },
-        { label: '線數', value: '06' },
-      ],
+      options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
       autoWidth: true,
     },
     {
@@ -570,46 +664,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
-
-  // 載入工作流程資料 - 準備合約資訊
-  // private loadWorkflowData(): void {
-  //   const workflowData = this.contractFlowService.getCurrentData();
-  //   console.log('載入工作流程資料:', workflowData);
-
-  //   if (workflowData.queryRowData?.talent_id) {
-  //     this.currentTalentId = workflowData.queryRowData.talent_id;
-  //     this.currentContractData = workflowData.queryRowData;
-
-  //     // 準備合約資訊資料給表格使用
-  //     this.contractInfoData = [{
-  //       id: '1',
-  //       talent_id: this.currentContractData.talent_id || '-',
-  //       apply_no: this.currentContractData.apply_no || '-',
-  //       tlt_name: this.currentContractData.tlt_name || '-',
-  //       VEN_Name: this.currentContractData.VEN_Name || '-'
-  //     }];
-
-  //     // 🔧 確保資料結構正確初始化
-  //     this.initializeDataStructure();
-
-  //     // 載入已暫存的扣款資料
-  //     const savedFareData = this.contractFlowService.getStepData(WorkflowStep.DEDUCTION);
-  //     if (savedFareData && Object.keys(savedFareData).length > 0) {
-  //       console.log('載入已暫存的扣款資料:', savedFareData);
-
-  //       // 🔧 驗證並修正暫存資料格式
-  //       this.originalFareData = this.validateAndFixData(savedFareData);
-  //       this.filterData();
-  //     } else {
-  //       // 沒有暫存資料，從 API 載入（預設只載入常用）
-  //       this.loadFareDataFromAPI(false);
-  //     }
-  //   } else {
-  //     console.warn('沒有 talent_id，重導向到前一步');
-  //     this.router.navigate(['/TLS/TLS13010CRU']);
-  //   }
-  // }
-
   // 修正 loadWorkflowData，加入更詳細的載入記錄
   private loadWorkflowData(): void {
     console.log('🚀 開始載入工作流程資料...');
@@ -622,15 +676,25 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this.currentContractData = workflowData.queryRowData;
 
       console.log('✅ 取得合約ID:', this.currentTalentId);
-
+      // 🔧 修正：完整準備合約資訊資料
+      const step1Data = this.contractFlowService.getStep1Data();
       // 準備合約資訊資料給表格使用
       this.contractInfoData = [{
         id: '1',
-        talent_id: this.currentContractData.talent_id || '-',
-        apply_no: this.currentContractData.apply_no || '-',
-        tlt_name: this.currentContractData.tlt_name || '-',
-        VEN_Name: this.currentContractData.VEN_Name || '-'
+        talent_id: this.currentContractData.talent_id || step1Data?.talent_id || '-',
+        apply_no: this.currentContractData.apply_no || step1Data?.apply_no || '-',
+        tlt_name: this.currentContractData.tlt_name || step1Data?.tlt_name || '-',
+        VEN_Name: this.currentContractData.VEN_Name || step1Data?.VEN_Name || '-',
+        // 🔧 新增缺少的欄位
+        ven_uniform: this.currentContractData.ven_uniform || step1Data?.ven_uniform || '-',
+        contract_subno: this.currentContractData.contract_subno || step1Data?.contract_subno || '-',
+        comm_comp_type: this.currentContractData.comm_comp_type || step1Data?.comm_comp_type || '-',
+        tlt_bdate: this.currentContractData.tlt_bdate || step1Data?.tlt_bdate || '',
+        tlt_edate: this.currentContractData.tlt_edate || step1Data?.tlt_edate || '',
+        tlt_contract_bdate: this.currentContractData.tlt_contract_bdate || step1Data?.tlt_contract_bdate || '',
+        tlt_contract_edate: this.currentContractData.tlt_contract_edate || step1Data?.tlt_contract_edate || ''
       }];
+
 
       // 確保資料結構正確初始化
       this.initializeDataStructure();
@@ -787,40 +851,78 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     });
   }
 
-  // private validateAndFixData(data: any): { [key: string]: FareItem[] } {
-  //   console.log('驗證暫存資料格式:', data);
+  // 準備專櫃契約書資訊資料
+  private prepareContractInfoData(): void {
+    console.log('🔄 開始準備專櫃契約書資訊...');
 
-  //   const validatedData: { [key: string]: FareItem[] } = {
-  //     'A': [],
-  //     'B': [],
-  //     'C': [],
-  //     'D': [],
-  //     'E': []
-  //   };
+    // 取得已選取的扣款項目
+    const selectedItems: FareItem[] = [];
+    Object.keys(this.originalFareData).forEach(capType => {
+      const typeItems = this.originalFareData[capType].filter(item => item.is_selected);
+      selectedItems.push(...typeItems);
+    });
 
-  //   // 🔍 檢查並修正每個類型的資料
-  //   Object.keys(validatedData).forEach(capType => {
-  //     if (data[capType] && Array.isArray(data[capType])) {
-  //       validatedData[capType] = data[capType].map((item: any) => ({
-  //         ...item,
-  //         // 🔧 確保必要欄位存在
-  //         id: item.id || `${capType}_${Date.now()}_${Math.random()}`,
-  //         cap_type: item.cap_type || capType,
-  //         data_source: item.data_source || 'APS_COMMON',
-  //         is_selected: Boolean(item.is_selected),
-  //         is_new_item: Boolean(item.is_new_item),
-  //         _status: item._status || 'original'
-  //       }));
-  //     } else {
-  //       console.warn(`暫存資料中 ${capType} 類型格式不正確，使用空陣列`);
-  //       validatedData[capType] = [];
-  //     }
-  //   });
+    // 取得合約基本資料（從 CRU 頁面）
+    const step1Data = this.contractFlowService.getStep1Data();
 
-  //   console.log('修正後的資料:', validatedData);
-  //   return validatedData;
-  // }
+    console.log('Step1 資料:', step1Data);
+    console.log('已選取扣款項目:', selectedItems.length, '筆');
 
+    if (selectedItems.length > 0) {
+      // 將已選取的扣款項目轉換為合約資訊格式
+      this.contractInfoData = selectedItems.map((item, index): ContractInfo => ({
+        id: (index + 1).toString(),
+
+        // 合約基本資訊（從 Step 1 或當前合約資料）
+        talent_id: (item.talent_id || step1Data?.talent_id || this.currentTalentId || '').toString(),
+        apply_no: step1Data?.apply_no || this.currentContractData?.apply_no || '',
+        tlt_name: step1Data?.tlt_name || this.currentContractData?.tlt_name || '',
+        VEN_Name: step1Data?.VEN_Name || this.currentContractData?.VEN_Name || '',
+        contract_subno: step1Data?.contract_subno || '',
+
+        // 扣款項目資訊（從 Step 2）
+        cap_name: item.cap_name || '',
+        cap_item: item.cap_item || '',
+        org_id: item.org_id || step1Data?.org_id || '',
+        tpy_type: item.tpy_type || '',
+
+        // 日期資訊（優先使用扣款項目日期，沒有則用合約日期）
+        tlt_contract_bdate: item.tpy_bdate || step1Data?.tlt_contract_bdate || '',
+        tlt_contract_edate: item.tpy_edate || step1Data?.tlt_contract_edate || '',
+        tlt_bdate: step1Data?.tlt_bdate || '',
+        tlt_edate: step1Data?.tlt_edate || '',
+
+        // 金額資訊
+        tpy_amount: item.tpy_amount || 0,
+        tpy_unitamt: item.tpy_unitamt || 0,
+        tpy_qty: item.tpy_qty || 0,
+
+        // 保留原始資料
+        originalFareData: item
+      }));
+    } else {
+      // 沒有選取項目時，顯示基本合約資訊
+      this.contractInfoData = [{
+        id: '1',
+        talent_id: step1Data?.talent_id || this.currentTalentId || '',
+        apply_no: step1Data?.apply_no || this.currentContractData?.apply_no || '',
+        tlt_name: step1Data?.tlt_name || this.currentContractData?.tlt_name || '',
+        VEN_Name: step1Data?.VEN_Name || this.currentContractData?.VEN_Name || '',
+        contract_subno: step1Data?.contract_subno || '',
+        cap_name: '未選取扣款項目',
+        cap_item: '',
+        org_id: step1Data?.org_id || '',
+        tpy_type: '',
+        tlt_contract_bdate: step1Data?.tlt_contract_bdate || '',
+        tlt_contract_edate: step1Data?.tlt_contract_edate || '',
+        tlt_bdate: step1Data?.tlt_bdate || '',
+        tlt_edate: step1Data?.tlt_edate || ''
+      }];
+    }
+
+    console.log('✅ 專櫃契約書資訊已更新:', this.contractInfoData.length, '筆');
+    console.log('詳細資料:', this.contractInfoData);
+  }
   private validateAndFixData(data: any): { [key: string]: FareItem[] } {
     console.log('驗證暫存資料格式:', data);
 
@@ -976,54 +1078,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.filterData();
     this.saveFareDataToWorkflow();
   }
-
-
-  // 轉換 API 資料格式
-  // private transformApiData(apiData: any): { [key: string]: FareItem[] } {
-  //   const transformed: { [key: string]: FareItem[] } = {
-  //     'A': [],
-  //     'B': [],
-  //     'C': [],
-  //     'D': [],
-  //     'E': []
-  //   };
-
-  //   Object.keys(apiData).forEach(capType => {
-  //     if (transformed[capType] && Array.isArray(apiData[capType])) {
-  //       transformed[capType] = apiData[capType].map((item: any, index: number) => ({
-  //         id: item.id || `${capType}_${index}_${Date.now()}`,
-  //         serialNumber: index + 1,
-  //         isNew: false, // 從 API 載入的都是既有資料
-  //         cap_item: item.cap_item || '',
-  //         cap_name: item.cap_name || '',
-  //         tpy_bdate: item.tpy_bdate || '',
-  //         tpy_edate: item.tpy_edate || '',
-  //         tpy_type: item.tpy_type || '',
-  //         tpy_qty: item.tpy_qty || 0,
-  //         tpy_unitamt: item.tpy_unitamt || 0,
-  //         tpy_amount: item.tpy_amount || 0,
-  //         tpy_totalamt: item.tpy_totalamt || 0,
-  //         day_account: item.day_account || 'N',
-  //         interval: item.interval || 1,
-  //         down_payment: item.down_payment || 0,
-  //         period_nos: item.period_nos || 0,
-  //         tpy_1stamt: item.tpy_1stamt || 0,
-  //         cap_saletype: item.cap_saletype || '',
-  //         edc_bank: item.edc_bank || '',
-  //         instms_type: item.instms_type || '',
-  //         pay_no: item.pay_no || '',
-  //         gui_flag: item.gui_flag || 'Y',
-  //         tpy_rate: item.tpy_rate || 0,
-  //         org_id: item.org_id || '102220',
-  //         is_commonly_used: item.is_commonly_used || 'N',
-  //         _status: 'original'
-  //       }));
-  //     }
-  //   });
-
-  //   console.log('轉換後的資料:', transformed);
-  //   return transformed;
-  // }
 
   // 更新篩選邏輯，配合新的欄位名稱
   filterData(): void {
