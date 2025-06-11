@@ -30,6 +30,21 @@ export interface ColumnDef {
   hidden?: boolean;
   style?: string;
   options?: any[];  // 新增：下拉選單選項
+
+  // 🔧 可選：新增更明確的寬度控制參數
+  width?: string;      // 固定寬度 ex: '120px', '10rem'
+  minWidth?: string;   // 最小寬度 ex: '100px'
+  maxWidth?: string;   // 最大寬度 ex: '300px'
+  flex?: number;       // 彈性比例 ex: 1, 2, 3
+  // 🔧 新增：響應式寬度控制
+  responsiveWidth?: {       // 響應式寬度設定
+    desktop?: string;       // 桌面版寬度
+    tablet?: string;        // 平板版寬度
+    mobile?: string;        // 手機版寬度
+  };
+
+  // 🔧 新增：針對特定類型的預設寬度
+  autoWidth?: boolean;      // 是否使用類型預設寬度
 }
 
 @Component({
@@ -792,14 +807,15 @@ export class ExpandableEditTableComponent {
     }
 
     // 然後檢查欄位定義中的選項
-    const column = this.mainColumns.find(col => col.field === field);
+    const column = this.mainColumns.find(col => col.field === field) ||
+      this.detailColumns.find(col => col.field === field);
+
     if (column && column.options) {
       return column.options;
     }
 
     return [];
   }
-
   // 處理下拉選單變更
   onDropdownChange(rowData: any, field: string, newValue: any): void {
     const oldValue = rowData[field];
@@ -813,4 +829,170 @@ export class ExpandableEditTableComponent {
       oldValue
     });
   }
+
+  // 🔧 新增：獲取下拉選單顯示文字的方法
+  getDropdownDisplayText(rowData: any, col: ColumnDef): string {
+    const value = rowData[col.field];
+
+    if (!value && value !== 0) {
+      return '';
+    }
+
+    // 獲取選項陣列
+    const options = this.getFieldOptions(rowData, col.field);
+
+    if (!options || options.length === 0) {
+      return value;
+    }
+
+    // 尋找對應的 label
+    const foundOption = options.find(option => {
+      // 處理不同的選項格式
+      if (typeof option === 'object' && option !== null) {
+        return option.value === value || option.value === String(value);
+      }
+      return option === value;
+    });
+
+    if (foundOption) {
+      // 如果找到對應的選項，返回 label
+      return typeof foundOption === 'object' ? foundOption.label : foundOption;
+    }
+
+    // 如果找不到對應的選項，返回原始值
+    return value;
+  }
+
+
+  // 🔧 新增：獲取欄位樣式的方法
+  getColumnStyle(col: ColumnDef): any {
+    const styles: any = {};
+    const screenWidth = window.innerWidth;
+
+    // 1. 優先使用響應式寬度設定
+    if (col.responsiveWidth) {
+      if (screenWidth < 768 && col.responsiveWidth.mobile) {
+        styles.width = col.responsiveWidth.mobile;
+        styles.minWidth = col.responsiveWidth.mobile;
+      } else if (screenWidth < 1024 && col.responsiveWidth.tablet) {
+        styles.width = col.responsiveWidth.tablet;
+        styles.minWidth = col.responsiveWidth.tablet;
+      } else if (col.responsiveWidth.desktop) {
+        styles.width = col.responsiveWidth.desktop;
+        styles.minWidth = col.responsiveWidth.desktop;
+      }
+    }
+    // 2. 然後使用固定寬度設定
+    else if (col.width) {
+      styles.width = col.width;
+      styles.minWidth = col.width;
+    }
+    // 3. 使用類型預設寬度
+    else if (col.autoWidth) {
+      const defaultWidth = this.getTypeDefaultWidth(col.type, screenWidth);
+      styles.width = defaultWidth;
+      styles.minWidth = defaultWidth;
+    }
+    // 4. 使用彈性寬度
+    else if (col.flex) {
+      styles.flex = col.flex;
+      if (col.minWidth) {
+        styles.minWidth = col.minWidth;
+      }
+    }
+
+    // 處理最大寬度
+    if (col.maxWidth) {
+      styles.maxWidth = col.maxWidth;
+    }
+
+    // 處理原有的 style 字串
+    if (col.style) {
+      if (typeof col.style === 'string') {
+        const styleArray = col.style.split(';');
+        styleArray.forEach(style => {
+          if (style.trim()) {
+            const [property, value] = style.split(':').map(s => s.trim());
+            if (property && value) {
+              styles[this.camelCase(property)] = value;
+            }
+          }
+        });
+      }
+    }
+
+    return styles;
+  }
+  // 🔧 新增：根據類型和螢幕大小獲取預設寬度
+  private getTypeDefaultWidth(type: string = 'text', screenWidth: number): string {
+    const widthMap: { [key: string]: { desktop: string, tablet: string, mobile: string } } = {
+      'checkbox': { desktop: '60px', tablet: '50px', mobile: '45px' },
+      'date': { desktop: '150px', tablet: '130px', mobile: '120px' },     // 🎯 日期欄位預設寬度
+      'number': { desktop: '110px', tablet: '100px', mobile: '90px' },
+      'dropdown': { desktop: '130px', tablet: '120px', mobile: '110px' },
+      'text': { desktop: '120px', tablet: '110px', mobile: '100px' }
+    };
+
+    const typeWidth = widthMap[type] || widthMap['text'];
+
+    if (screenWidth < 768) {
+      return typeWidth.mobile;
+    } else if (screenWidth < 1024) {
+      return typeWidth.tablet;
+    } else {
+      return typeWidth.desktop;
+    }
+  }
+
+  // 🔧 新增：根據螢幕大小動態調整欄位寬度
+  getResponsiveColumnStyle(col: ColumnDef): any {
+    const baseStyle = this.getColumnStyle(col);
+    const screenWidth = window.innerWidth;
+
+    // 🔧 根據螢幕大小調整寬度
+    if (screenWidth < 768) {
+      // 手機版：使用更緊湊的寬度
+      if (baseStyle.width && typeof baseStyle.width === 'string' && baseStyle.width.includes('px')) {
+        const widthValue = parseInt(baseStyle.width);
+        baseStyle.width = Math.max(60, widthValue * 0.8) + 'px'; // 縮小 20%，最小 60px
+      }
+    } else if (screenWidth < 1024) {
+      // 平板版：稍微縮小
+      if (baseStyle.width && typeof baseStyle.width === 'string' && baseStyle.width.includes('px')) {
+        const widthValue = parseInt(baseStyle.width);
+        baseStyle.width = Math.max(80, widthValue * 0.9) + 'px'; // 縮小 10%，最小 80px
+      }
+    }
+
+    return baseStyle;
+  }
+
+  // 🔧 輔助方法：將 CSS 屬性轉換為 camelCase
+  private camelCase(str: string): string {
+    return str.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
+  }
+
+  // 🔧 新增：獲取預設寬度的方法（根據類型）
+  getDefaultColumnWidth(col: ColumnDef): string {
+    if (col.width || col.minWidth) {
+      return ''; // 如果已經指定寬度，不使用預設值
+    }
+
+    switch (col.type) {
+      case 'checkbox':
+        return '80px';
+      case 'date':
+        return '140px';
+      case 'number':
+        return '110px';
+      case 'dropdown':
+        return '120px';
+      case 'text':
+        return col.field.includes('name') || col.field.includes('title') ? '200px' : '120px';
+      default:
+        return '120px';
+    }
+  }
 }
+
+

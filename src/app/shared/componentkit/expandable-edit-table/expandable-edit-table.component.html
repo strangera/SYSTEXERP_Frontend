@@ -84,6 +84,7 @@
         <th
           *ngFor="let col of mainColumns"
           [hidden]="col.hidden"
+          [ngStyle]="getColumnStyle(col)"
           style="text-align: center"
         >
           {{ col.header }}
@@ -126,7 +127,7 @@
         <td
           *ngFor="let col of mainColumns"
           [hidden]="col.hidden"
-          [ngClass]="col.style"
+          [ngStyle]="getColumnStyle(col)"
           style="text-align: center"
         >
           <!-- 可編輯欄位 -->
@@ -215,6 +216,10 @@
                   {{ rowData[col.field] | number }}
                 </span>
 
+                <span *ngSwitchCase="'dropdown'">
+                  {{ getDropdownDisplayText(rowData, col) }}
+                </span>
+
                 <!-- 新增: Checkbox 顯示 -->
                 <span *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
                   <div class="p-checkbox p-component p-disabled">
@@ -258,6 +263,10 @@
                     'pi-square': !rowData[col.field],
                   }"
                 ></i>
+              </span>
+
+              <span *ngSwitchCase="'dropdown'">
+                {{ getDropdownDisplayText(rowData, col) }}
               </span>
 
               <!-- 預設顯示 -->
@@ -418,7 +427,7 @@
                   <td
                     *ngFor="let col of getDetailColumnsForTab(rowData)"
                     [hidden]="col.hidden"
-                    [ngClass]="col.style"
+                    [ngStyle]="getColumnStyle(col)"
                     style="text-align: center"
                   >
                     <!-- 可編輯欄位 -->
@@ -518,6 +527,9 @@
                           ></p-checkbox>
                         </div>
 
+                        <span *ngSwitchCase="'dropdown'">
+                          {{ getDropdownDisplayText(rowData, col) }}
+                        </span>
                         <!-- 預設文字輸入 -->
                         <input
                           *ngSwitchDefault

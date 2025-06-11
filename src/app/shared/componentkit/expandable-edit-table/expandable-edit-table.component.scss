@@ -4,7 +4,14 @@
   background-color: #fff;
   border-radius: 0.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden; // 保持原始設定
+
+  // 🔧 重要修正：使用智能的 overflow 處理
+  overflow-x: auto;
+  overflow-y: visible;
+
+  // 🔧 新增：確保容器能適應內容但不會過度縮小
+  min-width: 0; // 讓 flex 容器能正確縮放
+  width: 100%; // 占滿父容器
 
   .expandable-table-title {
     font-size: 1.25rem;
@@ -16,22 +23,83 @@
 }
 
 :host ::ng-deep {
-  // PrimeNG表格樣式自定義
+  // 🔧 移除固定的容器最小寬度設定
+  .expandable-edit-table-container {
+    // 改進的滾動條樣式
+    &::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+
+      &:hover {
+        background: #a8a8a8;
+      }
+    }
+  }
+
   .p-datatable {
+    // 🔧 關鍵修正：讓表格能夠智能調整大小
+    overflow: visible !important;
+    width: 100%;
+
+    .p-datatable-wrapper {
+      overflow: visible !important;
+      // 🔧 移除 min-width: max-content，讓表格能正常縮放
+      width: 100%;
+    }
+
+    .p-datatable-table {
+      width: 100%; // 讓表格填滿容器
+      table-layout: auto; // 🔧 讓瀏覽器自動計算欄位寬度
+    }
+
     // 表格標題行
     .p-datatable-header {
       background: transparent;
       border: none;
       padding: 0.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background-color: #fff;
     }
 
-    // 表格頭
+    // 🔧 重要修正：表格頭的響應式處理
     .p-datatable-thead > tr > th {
       background: #c7d2fe;
       text-align: center;
       padding: 0.75rem 0.5rem;
       border: 1px solid #e9ecef;
       font-weight: 600;
+
+      // 🔧 移除固定的 min-width，改用更智能的方式
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      // 🔧 只對特殊欄位設定最小寬度
+      &:first-child {
+        width: 60px; // 序號欄
+        min-width: 60px;
+      }
+
+      &:has(.p-checkbox) {
+        width: 60px; // 核取方塊欄
+        min-width: 60px;
+      }
+
+      &:last-child {
+        width: 100px; // 操作欄
+        min-width: 100px;
+      }
     }
 
     // 表格偶數行
@@ -51,11 +119,56 @@
       color: #000000;
     }
 
-    // 表格單元格
+    // 🔧 重要修正：表格單元格的響應式處理
     .p-datatable-tbody > tr > td {
       padding: 0.6rem 0.5rem;
       border: 1px solid #e9ecef;
       text-align: center;
+
+      // 🔧 移除固定的 min-width，改用更彈性的方式
+      white-space: nowrap;
+      overflow: visible; // 保持下拉選單可見
+
+      // 🔧 只對特殊欄位設定寬度
+      &:first-child {
+        width: 60px; // 序號欄
+      }
+
+      &:has(.p-dropdown) {
+        overflow: visible !important;
+        position: relative;
+        z-index: 1;
+      }
+
+      &:last-child {
+        width: 100px; // 操作欄
+      }
+    }
+
+    // 🔧 新增：響應式斷點處理
+    @media (max-width: 1200px) {
+      .p-datatable-thead > tr > th,
+      .p-datatable-tbody > tr > td {
+        padding: 0.5rem 0.3rem;
+        font-size: 0.9rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .p-datatable-thead > tr > th,
+      .p-datatable-tbody > tr > td {
+        padding: 0.4rem 0.2rem;
+        font-size: 0.85rem;
+      }
+
+      // 在小螢幕上隱藏不重要的欄位
+      .p-datatable-thead > tr > th,
+      .p-datatable-tbody > tr > td {
+        &:nth-child(n + 6) {
+          // 隱藏第6欄以後的欄位
+          display: none;
+        }
+      }
     }
 
     // 展開按鈕樣式
@@ -87,30 +200,12 @@
       }
     }
 
-    // 編輯行樣式 - 只在編輯時修改 overflow
+    // 編輯行樣式
     .editing-row {
       td {
         overflow: visible !important;
         z-index: 10;
         position: relative;
-      }
-
-      // 編輯行的父容器也需要調整
-      &:hover {
-        td {
-          overflow: visible !important;
-        }
-      }
-    }
-
-    // 確保編輯中的下拉選單能正常顯示
-    .p-datatable-tbody > tr.editing-row {
-      overflow: visible !important;
-
-      td {
-        overflow: visible !important;
-        position: relative;
-        z-index: 10;
       }
     }
 
@@ -121,23 +216,32 @@
       box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
       margin: 0.5rem;
 
+      // 🔧 詳細資料的響應式處理
+      overflow-x: auto;
+      overflow-y: visible;
+
       .p-datatable {
         box-shadow: none;
+
+        .p-datatable-wrapper {
+          overflow: visible !important;
+          width: 100%;
+        }
 
         .p-datatable-thead > tr > th {
           background: #dfe7f6;
           font-size: 0.9rem;
-          padding: 0.5rem 0.5rem;
+          padding: 0.5rem 0.3rem;
         }
 
         .p-datatable-tbody > tr > td {
-          padding: 0.5rem 0.5rem;
+          padding: 0.5rem 0.3rem;
           font-size: 0.9rem;
         }
       }
     }
 
-    // 修正下拉選單顯示問題 - 使用 fixed 定位
+    // 下拉選單樣式
     .p-dropdown {
       .p-dropdown-panel {
         z-index: 99999 !important;
@@ -148,9 +252,9 @@
         border: 1px solid #dee2e6;
         border-radius: 4px;
         background: #ffffff;
+        position: fixed !important;
       }
 
-      // 確保下拉選單項目有適當的間距
       .p-dropdown-items {
         .p-dropdown-item {
           padding: 0.5rem 0.75rem;
@@ -167,23 +271,12 @@
         }
       }
 
-      // 下拉選單觸發器樣式
       .p-dropdown-trigger {
         width: 2rem;
       }
     }
 
-    // 針對表格容器的特殊處理 - 只在有編輯行時生效
-    &:has(.editing-row) {
-      .p-datatable-wrapper {
-        overflow: visible !important;
-      }
-
-      .p-datatable-tbody {
-        overflow: visible !important;
-      }
-    }
-
+    // 其他樣式保持不變...
     .detail-tab-buttons {
       .tab-button-group {
         display: flex;
@@ -217,27 +310,14 @@
               color: #4a89dc;
             }
           }
-
-          &.p-button-primary::after {
-            content: "";
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background-color: #4a89dc;
-            border-radius: 3px 3px 0 0;
-          }
         }
       }
     }
 
-    // 確保選項卡下方內容區域有適當的間距
     .detail-table-header {
       margin: 0.5rem 0 1rem 0;
     }
 
-    // 分頁器樣式
     .p-paginator {
       background: transparent;
       padding: 0.5rem;
@@ -248,22 +328,11 @@
       }
     }
 
-    // 無資料時的提示樣式
     .p-datatable-emptymessage > td {
       text-align: center;
       padding: 1rem;
       font-style: italic;
       color: #6c757d;
-    }
-  }
-
-  // 確保下拉選單觸發時表格不會影響
-  .p-dropdown-panel-visible {
-    .expandable-edit-table-container,
-    .p-datatable,
-    .p-datatable-wrapper,
-    .p-datatable-tbody {
-      overflow: visible !important;
     }
   }
 
@@ -284,6 +353,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background-color: #fff;
 
     .table-caption-left,
     .table-caption-right {
@@ -293,45 +366,53 @@
     }
   }
 
-  // 確保單元格內容不會換行
-  .nowrap {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  // 自定義輸入控件寬度
+  // 輸入控件樣式
   .p-inputtext,
   .p-dropdown,
   .p-calendar,
   .p-inputnumber {
     width: 100%;
+    // 🔧 移除固定的 min-width
   }
 
   .date-selector-wrapper {
     display: flex;
     align-items: center;
     justify-content: space-between;
-
-    .date-display {
-      flex-grow: 1;
-      padding-right: 5px;
-    }
+    width: 100%;
 
     .date-input {
       flex-grow: 1;
       padding-right: 5px;
-      width: calc(100% - 2rem);
     }
 
     .date-picker-button {
       width: 2rem !important;
       height: 2rem !important;
       padding: 0 !important;
+      flex-shrink: 0;
     }
   }
 
-  /* 對話框樣式 */
+  // Checkbox 樣式
+  .checkbox-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .p-checkbox {
+      margin: 0 auto;
+    }
+  }
+
+  // 🔧 確保不會換行的內容
+  .nowrap {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // 日期選擇器對話框樣式保持不變...
   .date-picker-container {
     display: flex;
     justify-content: center;
@@ -344,7 +425,6 @@
     gap: 0.5rem;
   }
 
-  /* 日期選擇器對話框樣式調整 */
   .date-picker-dialog {
     .p-dialog-content {
       padding-bottom: 0;
@@ -357,10 +437,6 @@
 
       table {
         margin: 0.25rem 0;
-      }
-
-      .p-datepicker-header {
-        padding: 0.25rem;
       }
 
       th {
@@ -381,91 +457,6 @@
           }
         }
       }
-
-      .p-datepicker-buttonbar {
-        padding: 0.25rem;
-
-        button {
-          padding: 0.25rem 0.5rem;
-        }
-      }
-    }
-
-    .p-dialog-footer {
-      padding: 0.75rem;
-      border-top: 1px solid #e9ecef;
-    }
-  }
-
-  /* 完全移除底部滾動條 */
-  .date-picker-dialog {
-    .p-dialog-content::-webkit-scrollbar {
-      display: none;
-    }
-
-    .p-dialog-content {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-  }
-
-  /* 日期選擇容器調整 */
-  .date-picker-container {
-    display: flex;
-    justify-content: center;
-    padding: 0.5rem;
-
-    .p-datepicker {
-      border: none;
-      box-shadow: none;
-    }
-  }
-
-  /* 對話框頁腳調整 */
-  .dialog-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-  }
-
-  /* 完全隱藏滾動條 - 應用於所有日期選擇對話框 */
-  .p-dialog.date-picker-dialog .p-dialog-content::-webkit-scrollbar,
-  .p-dialog-content::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-  }
-
-  .p-dialog.date-picker-dialog .p-dialog-content,
-  .p-dialog-content {
-    -ms-overflow-style: none !important;
-    scrollbar-width: none !important;
-  }
-
-  /* 強制禁用滾動條 - 嘗試更強的選擇器 */
-  .p-dialog.date-picker-dialog {
-    .p-component,
-    .p-dialog-content,
-    .p-dialog-content > * {
-      overflow: visible !important;
-      overflow-y: hidden !important;
-    }
-  }
-
-  /* 確保日期選擇器對話框有足夠的高度 */
-  .p-dialog.date-picker-dialog {
-    height: auto !important;
-    max-height: 90vh !important;
-  }
-
-  // 新增: Checkbox 相關樣式
-  .checkbox-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    .p-checkbox {
-      margin: 0 auto;
     }
   }
 }

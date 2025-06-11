@@ -173,20 +173,15 @@ export class ContractFlowService {
    */
   saveStep2Data(data: any): void {
     if (this.contractData.contractId) {
-      // 支援多種資料格式
-      if (Array.isArray(data)) {
-        this.contractData.step2 = data;
-      } else if (data && typeof data === 'object') {
-        // 如果是物件，可能包含不同類型的扣款
-        this.contractData.step2 = [data];
-      }
+      // 🔧 修正：直接儲存物件格式，不要包成陣列
+      this.contractData.step2 = data;  // 直接儲存，保持原格式
 
       this.contractData.metadata.lastModified = new Date();
       this.contractData.metadata.version += 1;
       this.updateWorkflowStatus(WorkflowStep.DEDUCTION);
       this.saveToStorage();
 
-      console.log('儲存第2步資料:', data);
+      console.log('儲存第2步資料 (修正版):', data);
     }
   }
 

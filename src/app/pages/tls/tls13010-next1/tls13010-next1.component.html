@@ -39,22 +39,6 @@
           [outlined]="!showOnlySelected"
         ></app-button>
       </div>
-
-      <div class="ml-auto flex align-items-center gap-2">
-        <app-button
-          label="儲存所有變更"
-          icon="pi pi-save"
-          (click)="saveAllChanges()"
-          [disabled]="!hasUnsavedChanges()"
-        ></app-button>
-
-        <app-button
-          label="重新載入"
-          icon="pi pi-refresh"
-          (click)="reloadData()"
-          [outlined]="true"
-        ></app-button>
-      </div>
     </div>
 
     <!-- Scroll Container Wrapper -->
