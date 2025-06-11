@@ -1,4 +1,4 @@
-import { Sys0210Service } from './../../../service/API/sys/sys0210.service';
+import { Sys0210Service } from './../../../service/api/sys/sys0210.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 // Permissions

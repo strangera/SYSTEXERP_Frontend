@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { Sys0210Service } from '../../../service/API/sys/sys0210.service';
+import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { tblRole } from '../../../shared/models/sys/sysb000.module';

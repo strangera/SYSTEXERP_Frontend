@@ -86,6 +86,9 @@ export class LocationOptionsService {
           tlt_floor: x.tlt_floor,         // 自動帶入用 - 樓層
           area_no: x.area_no,             // 自動帶入用 - 區域
           tlt_space: x.tlt_space || 0,    // 自動帶入用 - 營業面積
+          building_desc: x.building_desc || '', // 新增館別描述
+          floor_desc: x.floor_desc || '',   // 新增樓層描述
+          area_desc: x.area_desc || ''      // 新增區域描述
         })) ?? [])
       );
   }

@@ -1,6 +1,6 @@
-// TLS13010 下拉選單選項 - 整理後版本
+// TLS13010 下拉選單選項 - 整理後版本（含洽談者）
 import { Injectable } from '@angular/core';
-import { forkJoin, Observable } from 'rxjs';
+import { forkJoin, Observable, map } from 'rxjs';
 import {
   DECO_TYPE_OPTIONS,
   MONEY_TYPE_OPTIONS,
@@ -16,10 +16,12 @@ import {
   OVERALL_STATUS_OPTIONS,
   TLT_CTYPE_MTOTAL_OPTIONS
 } from './tls13010.constants';
-import { Sysb800DropdownService } from '../../../service/API/sys/sysb800-dropdown.service';
+import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
-import { Sysb900DropdownService } from '../../../service/API/sys/sysb900-dropdown.service';
+import { Sysb900DropdownService } from '../../../service/api/sys/sysb900-dropdown.service';
 import { BussclassDropdownService } from '../../../service/API/dropdownservice/tltbussclass-options.service';
+import { VendorCategoryOptionsService } from './../../../service/API/dropdownservice/vendor-category-options.service';
+import { NegotiatorOptionsService } from '../../../service/API/dropdownservice/negotiator-options.service';
 
 // ========== 介面定義 ==========
 export interface DropdownOption {
@@ -76,6 +78,8 @@ export class TLS13010DropdownService {
   public orgOptions: DropdownOption[] = [];
   public locationOptions: DropdownOption[] = [];
   public paperTypeOptions: DropdownOption[] = [];
+  public pos2013Options: DropdownOption[] = [];
+  public negotiatorOptions: DropdownOption[] = [];
 
   // 載入狀態
   private loadingStates = {
@@ -83,13 +87,17 @@ export class TLS13010DropdownService {
     busclass: false,
     bussclass: false,
     location: false,
+    pos2013: false,
+    negotiator: false
   };
 
   constructor(
     private sysb800Service: Sysb800DropdownService,
     private sysb900Service: Sysb900DropdownService,
     private bussclassService: BussclassDropdownService,
-    private locationService: LocationOptionsService
+    private locationService: LocationOptionsService,
+    private vendorCategoryService: VendorCategoryOptionsService,
+    private negotiatorService: NegotiatorOptionsService
   ) {
     this.initAllOptions();
   }
@@ -100,6 +108,8 @@ export class TLS13010DropdownService {
   private initAllOptions(): void {
     this.initBustypeOptions();
     this.initLocationOptions();
+    this.initPOS2013Options();
+    this.initNegotiatorOptions();
   }
 
   /**
@@ -257,10 +267,78 @@ export class TLS13010DropdownService {
   }
 
   /**
+   * 載入 POS2013 選項 (固定傳入 VEN_Flag = "1")
+   */
+  private initPOS2013Options(): void {
+    if (this.loadingStates.pos2013) return;
+
+    this.vendorCategoryService.getVendorCategoryOptions("1").subscribe({
+      next: (response: any[]) => {
+        this.pos2013Options = response;
+        this.loadingStates.pos2013 = true;
+        console.log('POS2013選項載入完成:', this.pos2013Options.length);
+      },
+      error: (error) => {
+        console.error('載入POS2013選項失敗:', error);
+        this.pos2013Options = [];
+        this.loadingStates.pos2013 = true;
+      }
+    });
+  }
+
+  /**
+   * 載入洽談者選項
+   */
+  private initNegotiatorOptions(): void {
+    if (this.loadingStates.negotiator) return;
+
+    this.negotiatorService.getNegotiatorOptions().subscribe({
+      next: (response: any[]) => {
+        this.negotiatorOptions = response;
+        this.loadingStates.negotiator = true;
+        console.log('洽談者選項載入完成:', this.negotiatorOptions.length);
+      },
+      error: (error) => {
+        console.error('載入洽談者選項失敗:', error);
+        this.negotiatorOptions = [];
+        this.loadingStates.negotiator = true;
+      }
+    });
+  }
+
+  /**
+   * 取得洽談者選項的公開方法
+   */
+  public getNegotiatorOptionsData(): DropdownOption[] {
+    return this.negotiatorOptions;
+  }
+
+  /**
+   * 搜尋洽談者（用於 AutoComplete）
+   */
+  searchNegotiatorOptions(): Observable<any[]> {
+    return this.negotiatorService.getNegotiatorOptions();
+  }
+
+  /**
+   * 取得 POS2013 選項（固定 VEN_Flag = "1"）
+   */
+  getPOS2013Options(): DropdownOption[] {
+    return this.pos2013Options;
+  }
+
+  /**
    * 重新載入所有選項
    */
   reloadAllOptions(): void {
-    this.loadingStates = { bustype: false, busclass: false, bussclass: false, location: false };
+    this.loadingStates = {
+      bustype: false,
+      busclass: false,
+      bussclass: false,
+      location: false,
+      pos2013: false,
+      negotiator: false
+    };
     this.initAllOptions();
   }
 
@@ -269,5 +347,13 @@ export class TLS13010DropdownService {
    */
   isAllLoaded(): boolean {
     return Object.values(this.loadingStates).every(loaded => loaded);
+  }
+
+  getPOS2013OptionsCount(): number {
+    return this.pos2013Options.length;
+  }
+
+  getNegotiatorOptionsCount(): number {
+    return this.negotiatorOptions.length;
   }
 }

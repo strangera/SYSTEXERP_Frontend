@@ -10,6 +10,8 @@
           [control]="dataForm.controls.user_No" [submitted]="submitted" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="使用者名稱" controlName="user_Name"
           [control]="dataForm.controls.user_Name" [submitted]="submitted" />
+        <p-progressSpinner *ngIf="!FIN00000Data" class="col-12 flex justify-content-center" styleClass="w-4rem h-4rem"
+          strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s" />
         <p-tabView class="col-12" [(activeIndex)]="activeIndex">
           <p-tabPanel *ngIf="FIN00000Data">
             <ng-template pTemplate="header">
@@ -272,7 +274,7 @@
         </p-tabView>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="submit" />
+        <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>
   </p-panel>

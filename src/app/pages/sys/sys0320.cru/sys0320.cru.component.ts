@@ -4,8 +4,8 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { ApiResponse } from '../../../service/system/auth.service';
 import { UserData } from '../../../shared/models/sys/user.model';
-import { Sys0110Service } from '../../../service/API/sys/sys0110.service';
-import { Sys0230Service } from '../../../service/API/sys/sys0230.service';
+import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
+import { Sys0230Service } from '../../../service/api/sys/sys0230.service';
 
 interface PrivilegeOutput {
   prog_no: string;
@@ -349,12 +349,11 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
     processModuleData(this.SYS0000Data);
     processModuleData(this.CPM0000Data);
 
-    console.log('Generated Privilege List:', privilegeList);
-
     const body = {
       user_no: this.dataForm.value.user_No,
       data: privilegeList
     };
+    this.loading = true;
 
     this.sys0230Service.updateUserPrivileges(body).subscribe({
       next: (response: ApiResponse<any>) => {

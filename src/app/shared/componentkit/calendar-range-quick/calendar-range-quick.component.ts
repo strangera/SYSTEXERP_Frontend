@@ -8,7 +8,6 @@ import { SelectButtonChangeEvent } from 'primeng/selectbutton';
 @Component({
   selector: 'app-calendar-range-quick',
   templateUrl: './calendar-range-quick.component.html',
-  styleUrl: './calendar-range-quick.component.scss'
 })
 export class CalendarRangeQuickComponent extends BasicKitComponent implements OnInit {
   // 表單基本設置
@@ -36,6 +35,7 @@ export class CalendarRangeQuickComponent extends BasicKitComponent implements On
   }
   ngOnInit() {
     if (!this.startControl.disabled && !this.endControl.disabled) {
+      this.placeholder = '請選擇日期';
       this.updateControlState(this.startControl, this.endControl);
     }
     if (this.startControl.value && typeof this.startControl.value === 'string') {
