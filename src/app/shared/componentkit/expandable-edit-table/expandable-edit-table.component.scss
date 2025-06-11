@@ -2,7 +2,6 @@
   // 整體容器樣式 - 🔧 移除預設 margin，讓使用者自行控制間距
   margin: 0;
   background-color: #fff;
-  border-radius: 0.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
   // 🔧 重要修正：使用智能的 overflow 處理
@@ -49,11 +48,6 @@
 }
 
 :host ::ng-deep {
-  // 🔧 全域強制移除所有圓角
-  * {
-    border-radius: 0 !important;
-  }
-
   // 🔧 統一滾動條樣式 - 參考 table.component.scss
   &::-webkit-scrollbar {
     width: 8px;
@@ -101,11 +95,6 @@
     overflow: visible !important;
     width: 100%;
 
-    // 🔧 強制所有按鈕變成方形
-    .p-button {
-      border-radius: 0 !important;
-    }
-
     // 🔧 統一 datatable-sm 樣式
     &.p-datatable-sm .p-datatable-footer {
       padding: 0;
@@ -116,10 +105,18 @@
       border: 1px solid red;
     }
 
-    // 🔧 統一選擇按鈕樣式
+    // 🔧 統一選擇按鈕樣式 - 參考 table.component.scss
     .p-selectbutton .p-button {
       width: auto !important;
       padding: 5px 10px !important;
+      &:first-child {
+        border-top-left-radius: 18px;
+        border-bottom-left-radius: 18px;
+      }
+      &:last-child {
+        border-top-right-radius: 18px;
+        border-bottom-right-radius: 18px;
+      }
     }
 
     // 🔧 統一下拉選單樣式
@@ -159,7 +156,7 @@
       z-index: 2;
       background-color: #fff;
 
-      // 🔧 統一 multiselect 樣式
+      // 🔧 統一 multiselect 樣式 - 參考 table.component.scss
       p-multiselect {
         width: 35px;
         height: 35px;
@@ -172,6 +169,7 @@
           color: #ffffff;
         }
         .p-multiselect {
+          border-radius: 50%; // 圓形
           border: 1px solid #989898;
           width: 100%;
           height: 100%;
@@ -231,14 +229,14 @@
       background: #eef2ff;
     }
 
-    // 行懸停效果 - 統一樣式
+    // 行懸停效果 - 統一樣式，參考 table.component.scss
     .p-datatable-tbody > tr:not(.p-highlight):hover,
     .p-selectable-row:not(.p-disabled-row):hover {
       background-color: #e3f2fd !important;
       cursor: pointer;
     }
 
-    // 選中行樣式 - 統一顏色
+    // 選中行樣式 - 統一顏色，參考 table.component.scss
     .p-datatable-tbody > tr.p-highlight {
       background-color: #c5e4fc;
       color: #000000;
@@ -344,13 +342,14 @@
       }
     }
 
-    // 編輯按鈕樣式 - 統一 icon-button 樣式
+    // 🔧 關鍵修正：內層編輯按鈕樣式 - 參考 table.component.scss 的 .icon-button
     .edit-buttons,
     .detail-edit-buttons {
       .p-button {
         width: 2rem;
         height: 2rem;
         background-color: rgba(239, 246, 255);
+        border-radius: 5px; // 方形按鈕
         border: 1px solid rgb(212 212 212);
 
         &:hover {
@@ -445,7 +444,7 @@
       }
     }
 
-    // 其他樣式保持不變...
+    // 詳細選項卡按鈕樣式
     .detail-tab-buttons {
       .tab-button-group {
         display: flex;
@@ -459,6 +458,7 @@
           padding: 0.5rem 1rem;
           transition: all 0.2s ease;
           border-width: 1px;
+          border-radius: 5px; // 方形按鈕
 
           &.p-button-primary {
             background-color: #4a89dc;
@@ -532,7 +532,7 @@
     border-width: 0 1px 1px 1px;
   }
 
-  // 自定義表格頭部控制欄
+  // 🔧 關鍵修正：自定義表格頭部控制欄 - 外層按鈕使用圓形
   .table-caption {
     padding: 0.5rem;
     display: flex;
@@ -548,6 +548,11 @@
       display: flex;
       gap: 0.5rem;
       align-items: center;
+    }
+
+    // 🔧 外層按鈕（新增、刪除、展開收合）保持圓形 - 參考 table.component.scss
+    .p-button {
+      border-radius: 50% !important; // 強制圓形按鈕
     }
 
     // 🔧 當兩側都沒有可見元素時隱藏整個 caption
@@ -594,6 +599,7 @@
       height: 2rem !important;
       padding: 0 !important;
       flex-shrink: 0;
+      border-radius: 5px !important; // 方形按鈕
     }
   }
 
@@ -645,9 +651,10 @@
     text-overflow: ellipsis;
   }
 
-  // 🔧 統一 icon-button 樣式
+  // 🔧 統一 icon-button 樣式 - 參考 table.component.scss
   .icon-button button {
     background-color: rgba(239, 246, 255);
+    border-radius: 5px; // 方形按鈕
     border: 1px solid rgb(212 212 212);
     &:hover {
       background-color: rgba(0, 123, 255, 0.2);
