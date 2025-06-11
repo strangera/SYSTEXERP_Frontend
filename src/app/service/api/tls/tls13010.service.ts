@@ -4,6 +4,11 @@ import { catchError, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../shared/service/error-handler.service';
 
+interface TLS13010FareRequest {
+  talentId: string;
+  showAll: boolean;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -28,14 +33,12 @@ export class TLS13010Service {
   }
 
   /** 查詢契約書維護地點資料 */
-  queryTLS13010Fare(talentId: string) {
-    const payload = { TalentId: talentId };
-    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010Fare`, payload).pipe(
-      tap((res) => console.log('查詢地點資料結果:', res)),
+  // Service 方法
+  queryTLS13010Fare(request: TLS13010FareRequest) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010Fare`, request).pipe(
+      tap((res) => console.log('查詢扣款資料結果:', res)),
     );
   }
-
-
   /** 刪除扣款項目資料 */
   deleteTLS11020(idList: number[]) {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/deleteTLS11020`, { idList }).pipe(

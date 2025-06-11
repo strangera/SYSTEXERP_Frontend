@@ -22,10 +22,11 @@ interface CategoryItem {
 interface FareItem {
   id?: string | number;
   serialNumber?: number;
-  isNew: boolean;
+  talent_id: number;
+  cap_type: string;
   cap_item: string;           // 扣款代碼
   cap_name: string;           // 扣款名稱
-  tpy_bdate: string;          // 扣款起始年月
+  tpy_bdate?: string;         // 扣款起始年月
   tpy_edate?: string;         // 扣款結束年月
   tpy_type?: string;          // 費用計算方式
   tpy_qty?: number;           // 數量
@@ -41,11 +42,28 @@ interface FareItem {
   edc_bank?: string;          // 收單行
   instms_type?: string;       // 分期期數
   pay_no?: string;            // 扣款別編號
-  gui_flag: string;           // 是否開立發票
+  gui_flag?: string;          // 是否開立發票
   tpy_rate?: number;          // 費用計算比率
-  org_id: string;             // 組織代碼
+  org_id?: string;            // 組織代碼
   is_commonly_used?: string;  // 是否為常用
+  cap_tax_type?: string;      // 課稅別
+  acc_no?: string;            // 會計科目
+
+  // 新增的 API 標記欄位
+  data_source: string;        // CONTRACT_EXISTING, APS_COMMON, APS_ALL
+  is_selected: boolean;       // 是否已選取
+  is_new_item: boolean;       // 是否為新項目
+
+  // 保留原有的狀態欄位
   _status?: 'new' | 'modified' | 'deleted' | 'original';
+}
+
+interface ContractInfo {
+  id: string;
+  talent_id: string;
+  apply_no: string;
+  tlt_name: string;
+  VEN_Name: string;
 }
 
 @Component({
@@ -60,16 +78,30 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   // 顯示模式控制
   showOnlyCommonlyUsed = true; // 預設顯示常用項目
   showOnlySelected = false; // 是否只顯示已勾選項目
+  isShowingAll = false; // 追蹤目前是否載入全部資料
 
   // 當前合約資料
   currentTalentId: string = '';
   currentContractData: any = null;
+  contractInfoData: ContractInfo[] = [];
+
+
+
+  // 合約資訊表格欄位定義
+  contractInfoColumns: ColumnDef[] = [
+    { field: 'talent_id', header: '合約編號', type: 'text', editable: false, style: 'min-width: 150px' },
+    { field: 'apply_no', header: '招募編號', type: 'text', editable: false, style: 'min-width: 150px' },
+    { field: 'tlt_name', header: '櫃位名稱', type: 'text', editable: false, style: 'min-width: 200px' },
+    { field: 'VEN_Name', header: '廠商名稱', type: 'text', editable: false, style: 'min-width: 200px' }
+  ];
+
 
   // 表格欄位定義 - A 類型（一次扣款）
   deductionAColumns: ColumnDef[] = [
-    { field: 'isNew', header: '是否新增', type: 'checkbox', editable: true, style: 'min-width: 100px' },
+    { field: 'is_selected', header: '是否選取', type: 'checkbox', editable: true, style: 'min-width: 100px' },
     { field: 'cap_item', header: '扣款代號', type: 'text', editable: false, style: 'min-width: 120px' },
     { field: 'cap_name', header: '扣款名稱', type: 'text', editable: false, style: 'min-width: 150px' },
+    { field: 'data_source', header: '來源', type: 'text', editable: false, style: 'min-width: 100px' },
     { field: 'tpy_bdate', header: '扣款起始年月', type: 'date', editable: true, style: 'min-width: 150px' },
     { field: 'tpy_type', header: '單位', type: 'text', editable: true, style: 'min-width: 100px' },
     { field: 'tpy_unitamt', header: '單價', type: 'number', editable: true, style: 'min-width: 120px' },
@@ -88,10 +120,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       ]
     }
   ];
-
   // 表格欄位定義 - B 類型（每月扣款）
   deductionBColumns: ColumnDef[] = [
-    { field: 'isNew', header: '是否新增', type: 'checkbox', editable: true, style: 'min-width: 100px' },
+    { field: 'is_selected', header: '是否新增', type: 'checkbox', editable: true, style: 'min-width: 100px' },
     { field: 'cap_item', header: '扣款代號', type: 'text', editable: false, style: 'min-width: 120px' },
     { field: 'cap_name', header: '扣款名稱', type: 'text', editable: false, style: 'min-width: 150px' },
     { field: 'tpy_bdate', header: '扣款起始年月', type: 'date', editable: true, style: 'min-width: 150px' },
@@ -127,7 +158,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 表格欄位定義 - C 類型（平均分攤）
   deductionCColumns: ColumnDef[] = [
-    { field: 'isNew', header: '是否新增', type: 'checkbox', editable: true, style: 'min-width: 100px' },
+    { field: 'is_selected', header: '是否新增', type: 'checkbox', editable: true, style: 'min-width: 100px' },
     { field: 'cap_item', header: '扣款代號', type: 'text', editable: false, style: 'min-width: 120px' },
     { field: 'cap_name', header: '扣款名稱', type: 'text', editable: false, style: 'min-width: 150px' },
     { field: 'tpy_bdate', header: '扣款起始年月', type: 'date', editable: true, style: 'min-width: 150px' },
@@ -153,7 +184,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 表格欄位定義 - D 類型（比率分攤）
   deductionDColumns: ColumnDef[] = [
-    { field: 'isNew', header: '是否新增', type: 'checkbox', editable: true, style: 'min-width: 100px' },
+    { field: 'is_selected', header: '是否新增', type: 'checkbox', editable: true, style: 'min-width: 100px' },
     { field: 'cap_item', header: '扣款代號', type: 'text', editable: false, style: 'min-width: 120px' },
     { field: 'cap_name', header: '扣款名稱', type: 'text', editable: false, style: 'min-width: 150px' },
     { field: 'tpy_bdate', header: '扣款起始年月', type: 'date', editable: true, style: 'min-width: 150px' },
@@ -187,7 +218,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 表格欄位定義 - E 類型（活動扣款）- 與 D 類型相同
   deductionEColumns: ColumnDef[] = [
-    { field: 'isNew', header: '是否新增', type: 'checkbox', editable: true, style: 'min-width: 100px' },
+    { field: 'is_selected', header: '是否新增', type: 'checkbox', editable: true, style: 'min-width: 100px' },
     { field: 'cap_item', header: '扣款代號', type: 'text', editable: false, style: 'min-width: 120px' },
     { field: 'cap_name', header: '扣款名稱', type: 'text', editable: false, style: 'min-width: 150px' },
     { field: 'tpy_bdate', header: '扣款起始年月', type: 'date', editable: true, style: 'min-width: 150px' },
@@ -256,7 +287,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  // 載入工作流程資料
+  // 載入工作流程資料 - 準備合約資訊
   private loadWorkflowData(): void {
     const workflowData = this.contractFlowService.getCurrentData();
     console.log('載入工作流程資料:', workflowData);
@@ -265,6 +296,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this.currentTalentId = workflowData.queryRowData.talent_id;
       this.currentContractData = workflowData.queryRowData;
 
+      // 準備合約資訊資料給表格使用
+      this.contractInfoData = [{
+        id: '1',
+        talent_id: this.currentContractData.talent_id || '-',
+        apply_no: this.currentContractData.apply_no || '-',
+        tlt_name: this.currentContractData.tlt_name || '-',
+        VEN_Name: this.currentContractData.VEN_Name || '-'
+      }];
+
       // 載入已暫存的扣款資料
       const savedFareData = this.contractFlowService.getStepData(WorkflowStep.DEDUCTION);
       if (savedFareData && Object.keys(savedFareData).length > 0) {
@@ -272,8 +312,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         this.originalFareData = savedFareData;
         this.filterData();
       } else {
-        // 沒有暫存資料，從 API 載入
-        this.loadFareDataFromAPI();
+        // 沒有暫存資料，從 API 載入（預設只載入常用）
+        this.loadFareDataFromAPI(false);
       }
     } else {
       console.warn('沒有 talent_id，重導向到前一步');
@@ -281,8 +321,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
+
   // 從 API 載入扣款資料
-  private loadFareDataFromAPI(): void {
+  private loadFareDataFromAPI(showAll: boolean = false): void {
     if (!this.currentTalentId) {
       console.warn('沒有 talent_id，無法載入扣款資料');
       return;
@@ -291,26 +332,26 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.loading = true;
     this.messageService.blockUi();
 
-    const subscription = this.tls13010Service.queryTLS13010Fare(this.currentTalentId).subscribe({
+    // 直接傳遞參數
+    const subscription = this.tls13010Service.queryTLS13010Fare({
+      talentId: this.currentTalentId,
+      showAll: showAll
+    }).subscribe({
       next: (response) => {
         console.log('API 回傳的扣款資料:', response);
 
         if (response && response.Data && response.Data.FaresByType) {
-          // 轉換 API 資料格式
-          this.originalFareData = this.transformApiData(response.Data.FaresByType);
+          // 直接使用 API 回傳的資料，不需要額外轉換
+          this.originalFareData = response.Data.FaresByType;
+          this.isShowingAll = showAll; // 記錄目前狀態
           this.filterData();
           this.saveFareDataToWorkflow();
           this.messageService.successBubble('扣款資料載入成功');
         } else {
           console.log('API 沒有回傳扣款資料');
           this.messageService.infoBubble('沒有找到既有的扣款資料');
-          // 這裡不載入假資料，保持空白狀態
           this.originalFareData = {
-            'A': [],
-            'B': [],
-            'C': [],
-            'D': [],
-            'E': []
+            'A': [], 'B': [], 'C': [], 'D': [], 'E': []
           };
           this.filterData();
         }
@@ -324,13 +365,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         this.loading = false;
         this.messageService.unblockUi();
 
-        // 發生錯誤時也保持空白狀態
         this.originalFareData = {
-          'A': [],
-          'B': [],
-          'C': [],
-          'D': [],
-          'E': []
+          'A': [], 'B': [], 'C': [], 'D': [], 'E': []
         };
         this.filterData();
       }
@@ -339,70 +375,73 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.subscriptions.push(subscription);
   }
 
+
   // 轉換 API 資料格式
-  private transformApiData(apiData: any): { [key: string]: FareItem[] } {
-    const transformed: { [key: string]: FareItem[] } = {
-      'A': [],
-      'B': [],
-      'C': [],
-      'D': [],
-      'E': []
-    };
+  // private transformApiData(apiData: any): { [key: string]: FareItem[] } {
+  //   const transformed: { [key: string]: FareItem[] } = {
+  //     'A': [],
+  //     'B': [],
+  //     'C': [],
+  //     'D': [],
+  //     'E': []
+  //   };
 
-    Object.keys(apiData).forEach(capType => {
-      if (transformed[capType] && Array.isArray(apiData[capType])) {
-        transformed[capType] = apiData[capType].map((item: any, index: number) => ({
-          id: item.id || `${capType}_${index}_${Date.now()}`,
-          serialNumber: index + 1,
-          isNew: false, // 從 API 載入的都是既有資料
-          cap_item: item.cap_item || '',
-          cap_name: item.cap_name || '',
-          tpy_bdate: item.tpy_bdate || '',
-          tpy_edate: item.tpy_edate || '',
-          tpy_type: item.tpy_type || '',
-          tpy_qty: item.tpy_qty || 0,
-          tpy_unitamt: item.tpy_unitamt || 0,
-          tpy_amount: item.tpy_amount || 0,
-          tpy_totalamt: item.tpy_totalamt || 0,
-          day_account: item.day_account || 'N',
-          interval: item.interval || 1,
-          down_payment: item.down_payment || 0,
-          period_nos: item.period_nos || 0,
-          tpy_1stamt: item.tpy_1stamt || 0,
-          cap_saletype: item.cap_saletype || '',
-          edc_bank: item.edc_bank || '',
-          instms_type: item.instms_type || '',
-          pay_no: item.pay_no || '',
-          gui_flag: item.gui_flag || 'Y',
-          tpy_rate: item.tpy_rate || 0,
-          org_id: item.org_id || '102220',
-          is_commonly_used: item.is_commonly_used || 'N',
-          _status: 'original'
-        }));
-      }
-    });
+  //   Object.keys(apiData).forEach(capType => {
+  //     if (transformed[capType] && Array.isArray(apiData[capType])) {
+  //       transformed[capType] = apiData[capType].map((item: any, index: number) => ({
+  //         id: item.id || `${capType}_${index}_${Date.now()}`,
+  //         serialNumber: index + 1,
+  //         isNew: false, // 從 API 載入的都是既有資料
+  //         cap_item: item.cap_item || '',
+  //         cap_name: item.cap_name || '',
+  //         tpy_bdate: item.tpy_bdate || '',
+  //         tpy_edate: item.tpy_edate || '',
+  //         tpy_type: item.tpy_type || '',
+  //         tpy_qty: item.tpy_qty || 0,
+  //         tpy_unitamt: item.tpy_unitamt || 0,
+  //         tpy_amount: item.tpy_amount || 0,
+  //         tpy_totalamt: item.tpy_totalamt || 0,
+  //         day_account: item.day_account || 'N',
+  //         interval: item.interval || 1,
+  //         down_payment: item.down_payment || 0,
+  //         period_nos: item.period_nos || 0,
+  //         tpy_1stamt: item.tpy_1stamt || 0,
+  //         cap_saletype: item.cap_saletype || '',
+  //         edc_bank: item.edc_bank || '',
+  //         instms_type: item.instms_type || '',
+  //         pay_no: item.pay_no || '',
+  //         gui_flag: item.gui_flag || 'Y',
+  //         tpy_rate: item.tpy_rate || 0,
+  //         org_id: item.org_id || '102220',
+  //         is_commonly_used: item.is_commonly_used || 'N',
+  //         _status: 'original'
+  //       }));
+  //     }
+  //   });
 
-    console.log('轉換後的資料:', transformed);
-    return transformed;
-  }
+  //   console.log('轉換後的資料:', transformed);
+  //   return transformed;
+  // }
 
-  // 篩選資料的方法
+  // 更新篩選邏輯，配合新的欄位名稱
   filterData(): void {
     Object.keys(this.originalFareData).forEach(capType => {
       if (this.showOnlySelected) {
-        // 只顯示已勾選的項目
-        this.fareData[capType] = this.originalFareData[capType].filter(item => item.isNew);
+        // 只顯示已勾選的項目 - 使用 is_selected
+        this.fareData[capType] = this.originalFareData[capType].filter(item => item.is_selected);
       } else if (this.showOnlyCommonlyUsed) {
-        // 只顯示常用項目
-        this.fareData[capType] = this.originalFareData[capType].filter(item => item.is_commonly_used === 'Y');
+        // 顯示常用項目 + 契約已有項目
+        this.fareData[capType] = this.originalFareData[capType].filter(item =>
+          item.data_source === 'CONTRACT_EXISTING' || item.data_source === 'APS_COMMON'
+        );
       } else {
         // 顯示所有項目
         this.fareData[capType] = [...this.originalFareData[capType]];
       }
     });
-
     console.log('篩選後的資料:', this.fareData);
   }
+
 
   // 暫存扣款資料到工作流程
   private saveFareDataToWorkflow(): void {
@@ -412,8 +451,19 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 切換顯示模式的方法
   toggleCommonlyUsed(): void {
-    this.showOnlyCommonlyUsed = !this.showOnlyCommonlyUsed;
-    this.showOnlySelected = false;
+    if (this.showOnlyCommonlyUsed) {
+      // 目前是常用模式，切換到全部模式
+      if (!this.isShowingAll) {
+        // 如果還沒載入全部資料，重新載入
+        this.loadFareDataFromAPI(true);
+      }
+      this.showOnlyCommonlyUsed = false;
+      this.showOnlySelected = false;
+    } else {
+      // 切換到常用模式
+      this.showOnlyCommonlyUsed = true;
+      this.showOnlySelected = false;
+    }
     this.filterData();
   }
 
@@ -424,6 +474,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   showAllItems(): void {
+    if (!this.isShowingAll) {
+      // 如果還沒載入全部資料，重新載入
+      this.loadFareDataFromAPI(true);
+    }
     this.showOnlyCommonlyUsed = false;
     this.showOnlySelected = false;
     this.filterData();
@@ -438,15 +492,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     return this.showOnlySelected ? '顯示全部項目' : '僅顯示已勾選項目';
   }
 
-  // 各類型的全選與取消選擇方法
+  // 更新選擇相關方法，使用 is_selected
   selectAllByType(capType: string): void {
-    this.fareData[capType].forEach(item => item.isNew = true);
+    this.fareData[capType].forEach(item => item.is_selected = true);
     this.updateOriginalData(capType);
     this.saveFareDataToWorkflow();
   }
 
   deselectAllByType(capType: string): void {
-    this.fareData[capType].forEach(item => item.isNew = false);
+    this.fareData[capType].forEach(item => item.is_selected = false);
     this.updateOriginalData(capType);
     this.saveFareDataToWorkflow();
   }
@@ -456,7 +510,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.fareData[capType].forEach(displayItem => {
       const originalItem = this.originalFareData[capType].find(item => item.id === displayItem.id);
       if (originalItem) {
-        originalItem.isNew = displayItem.isNew;
+        originalItem.is_selected = displayItem.is_selected;
       }
     });
   }
@@ -497,7 +551,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 獲取已選擇項目數量
   getSelectedCount(capType: string): number {
-    return this.fareData[capType].filter(item => item.isNew).length;
+    return this.fareData[capType].filter(item => item.is_selected).length;
   }
 
   // 獲取總項目數量
@@ -536,7 +590,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     // 檢查是否有勾選的項目
     const hasSelectedItems = Object.keys(this.originalFareData).some(capType =>
-      this.originalFareData[capType].some(item => item.isNew)
+      this.originalFareData[capType].some(item => item.is_selected)
     );
 
     if (!hasSelectedItems) {
@@ -595,7 +649,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   // 重新載入資料
   reloadData(): void {
     if (confirm('確定要重新載入資料嗎？未儲存的變更將會遺失。')) {
-      this.loadFareDataFromAPI();
+      this.loadFareDataFromAPI(this.isShowingAll);
       this.messageService.infoBubble('已重新載入資料');
     }
   }
