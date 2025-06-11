@@ -276,6 +276,8 @@
     [showDelete]="false"
     [expansionDataKey]="'details'"
     [expansionColumns]="expansionColumns"
+      [showSubtotal]="true"
+  [subtotalFields]="['TXN_TotPayAmt', 'TXN_TotDisc']"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
   ></app-table>
 </div>

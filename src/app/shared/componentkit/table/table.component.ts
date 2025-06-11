@@ -96,6 +96,12 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() showReportMode = true;                // 是否顯示報表模式切換按鈕
   @Input() showDelete = true;                    // 是否顯示刪除按鈕
   // 權限
+
+
+  @Input() showSubtotal: boolean = false; // 是否顯示小計
+@Input() subtotalFields: string[] = []; // 要計算小計的欄位名稱
+ // 小計
+ 
   private ngUnsubscribe = new Subject<void>();
   public funInfo: FunsrightInfo | undefined;
 
@@ -243,4 +249,20 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   canPerformAction(action: string): boolean {
     return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
+  get subtotals(): Record<string, number> {
+  const result: Record<string, number> = {};
+  if (!this.data || this.data.length === 0) return result;
+
+  this.subtotalFields.forEach(field => {
+    result[field] = this.data.reduce((sum, row) => {
+      const val = parseFloat(row[field]) || 0;
+      return sum + val;
+    }, 0);
+  });
+
+  return result;
+}
+moneyFormat(value: number): string {
+  return value != null ? value.toLocaleString('en-US') : '0';
+}
 }
