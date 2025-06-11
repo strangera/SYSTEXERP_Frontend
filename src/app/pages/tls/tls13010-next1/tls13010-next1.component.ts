@@ -279,6 +279,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   ngOnInit(): void {
+    console.log('TLS13010Next1Component 初始化開始');
+
+    // 🏗️ 先初始化資料結構
+    this.initializeDataStructure();
+
     this.initializePage('TLS13010', this.dataForm);
     this.loadWorkflowData();
   }
@@ -305,11 +310,16 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         VEN_Name: this.currentContractData.VEN_Name || '-'
       }];
 
+      // 🔧 確保資料結構正確初始化
+      this.initializeDataStructure();
+
       // 載入已暫存的扣款資料
       const savedFareData = this.contractFlowService.getStepData(WorkflowStep.DEDUCTION);
       if (savedFareData && Object.keys(savedFareData).length > 0) {
         console.log('載入已暫存的扣款資料:', savedFareData);
-        this.originalFareData = savedFareData;
+
+        // 🔧 驗證並修正暫存資料格式
+        this.originalFareData = this.validateAndFixData(savedFareData);
         this.filterData();
       } else {
         // 沒有暫存資料，從 API 載入（預設只載入常用）
@@ -320,6 +330,55 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this.router.navigate(['/TLS/TLS13010CRU']);
     }
   }
+
+  private initializeDataStructure(): void {
+    // 🏗️ 確保資料結構正確初始化
+    const capTypes = ['A', 'B', 'C', 'D', 'E'];
+
+    capTypes.forEach(capType => {
+      if (!this.originalFareData[capType]) {
+        this.originalFareData[capType] = [];
+      }
+      if (!this.fareData[capType]) {
+        this.fareData[capType] = [];
+      }
+    });
+  }
+
+  private validateAndFixData(data: any): { [key: string]: FareItem[] } {
+    console.log('驗證暫存資料格式:', data);
+
+    const validatedData: { [key: string]: FareItem[] } = {
+      'A': [],
+      'B': [],
+      'C': [],
+      'D': [],
+      'E': []
+    };
+
+    // 🔍 檢查並修正每個類型的資料
+    Object.keys(validatedData).forEach(capType => {
+      if (data[capType] && Array.isArray(data[capType])) {
+        validatedData[capType] = data[capType].map((item: any) => ({
+          ...item,
+          // 🔧 確保必要欄位存在
+          id: item.id || `${capType}_${Date.now()}_${Math.random()}`,
+          cap_type: item.cap_type || capType,
+          data_source: item.data_source || 'APS_COMMON',
+          is_selected: Boolean(item.is_selected),
+          is_new_item: Boolean(item.is_new_item),
+          _status: item._status || 'original'
+        }));
+      } else {
+        console.warn(`暫存資料中 ${capType} 類型格式不正確，使用空陣列`);
+        validatedData[capType] = [];
+      }
+    });
+
+    console.log('修正後的資料:', validatedData);
+    return validatedData;
+  }
+
 
 
   // 從 API 載入扣款資料
@@ -425,20 +484,34 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 更新篩選邏輯，配合新的欄位名稱
   filterData(): void {
+    console.log('開始篩選資料，原始資料:', this.originalFareData);
+
+    // 🔧 確保資料結構存在
+    this.initializeDataStructure();
+
     Object.keys(this.originalFareData).forEach(capType => {
+      // 🔒 安全檢查：確保原始資料是陣列
+      if (!Array.isArray(this.originalFareData[capType])) {
+        console.warn(`originalFareData[${capType}] 不是陣列，重置為空陣列`);
+        this.originalFareData[capType] = [];
+      }
+
       if (this.showOnlySelected) {
-        // 只顯示已勾選的項目 - 使用 is_selected
-        this.fareData[capType] = this.originalFareData[capType].filter(item => item.is_selected);
+        // 只顯示已勾選的項目
+        this.fareData[capType] = this.originalFareData[capType].filter(item =>
+          item && item.is_selected
+        );
       } else if (this.showOnlyCommonlyUsed) {
         // 顯示常用項目 + 契約已有項目
         this.fareData[capType] = this.originalFareData[capType].filter(item =>
-          item.data_source === 'CONTRACT_EXISTING' || item.data_source === 'APS_COMMON'
+          item && (item.data_source === 'CONTRACT_EXISTING' || item.data_source === 'APS_COMMON')
         );
       } else {
         // 顯示所有項目
         this.fareData[capType] = [...this.originalFareData[capType]];
       }
     });
+
     console.log('篩選後的資料:', this.fareData);
   }
 
@@ -551,11 +624,19 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 獲取已選擇項目數量
   getSelectedCount(capType: string): number {
-    return this.fareData[capType].filter(item => item.is_selected).length;
+    // 🔒 安全檢查：確保 fareData[capType] 存在且是陣列
+    if (!this.fareData[capType] || !Array.isArray(this.fareData[capType])) {
+      return 0;
+    }
+    return this.fareData[capType].filter(item => item && item.is_selected).length;
   }
 
   // 獲取總項目數量
   getTotalCount(capType: string): number {
+    // 🔒 安全檢查
+    if (!this.fareData[capType] || !Array.isArray(this.fareData[capType])) {
+      return 0;
+    }
     return this.fareData[capType].length;
   }
 
@@ -683,7 +764,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 檢查特定類型是否有資料
   hasDataForType(capType: string): boolean {
-    return this.fareData[capType] && this.fareData[capType].length > 0;
+    // 🔒 安全檢查
+    return this.fareData[capType] && Array.isArray(this.fareData[capType]) && this.fareData[capType].length > 0;
   }
 
   // 獲取目前顯示模式描述
