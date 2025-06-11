@@ -108,22 +108,11 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     });
 
     //建立組織下拉清單(SYS3100) 查詢全部
-    const query_org = {
-      level_id: '',
-      org_id: '',
-      org_name: '',
-
-      //分頁查詢
-      pageSize: 1000,
-      pageIndex: 0,
-      SortBy: [{ field: 'org_id', order: 1 }],
-    };
-
-    this.sysb400Service.querySYSB400(query_org).subscribe((response) => {
-      this.SYS3100_Options = response.Data.map((item: Sysb400m) => ({
-        No: item.org_id,
-        Name: item.org_name,
-        Label: item.org_id + '-' + item.org_name,
+    this.sysb400Service.querySYS3100_DropDownList({}).subscribe((response) => {
+      this.SYS3100_Options = response.Data.map((item: any) => ({
+        No: item.No,
+        Name: item.Name,
+        Label: item.No + '-' + item.Name,
       }));
     });
 
