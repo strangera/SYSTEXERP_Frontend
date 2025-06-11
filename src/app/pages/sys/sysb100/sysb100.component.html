@@ -22,13 +22,11 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="公司編號/店號"
-              controlName="SYS_StoreNo"
-              [control]="queryForm.controls.SYS_StoreNo"
+              label="公司代號(統一編號)"
+              controlName="STR_Uniform"
+              [control]="queryForm.controls.STR_Uniform"
               [submitted]="submitted"
-            >
-              >
-            </app-input-text>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-12 lg:col-4">
             <app-input-text
@@ -50,13 +48,11 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="統一編號"
-              controlName="STR_Uniform"
-              [control]="queryForm.controls.STR_Uniform"
+              label="稅籍編號"
+              controlName="STO_TaxNo"
+              [control]="queryForm.controls.STO_TaxNo"
               [submitted]="submitted"
-            >
-              >
-            </app-input-text>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
@@ -64,9 +60,7 @@
               controlName="STO_TaxNo"
               [control]="queryForm.controls.STO_TaxNo"
               [submitted]="submitted"
-            >
-              >
-            </app-input-text>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text

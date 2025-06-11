@@ -19,7 +19,7 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     user_No: ['', Validators.maxLength(10)], // 使用者編號
     user_Name: ['', Validators.maxLength(20)], // 使用者名稱
     // user_Password: ['', Validators.maxLength(32)], // 使用者密碼-加密
-    // title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000 (就是職位)
+    // title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000 (就是職位)-->T103
     org_ID: [[], Validators.maxLength(20)], // 組織編號 (SYSB400_SYS3100)
     str_dateStart: [null], // 帳號有效開始日期
     str_dateEnd: [null], // 帳號有效結束日期
@@ -99,12 +99,14 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
   loadOptions() {
     // *職稱代碼-SYS1000
     this.sys0110Service.queryAllSystemCode({}).subscribe((response) => {
-      console.log('回應', response);
-      this.titleOptions = response.Data.map((item: SYS1000) => ({
-        No: item.SYS_Code,
-        Name: item.SYS_Name,
-        Label: item.SYS_Type + '-' + item.SYS_Code + '-' + item.SYS_Name,
-      }));
+      this.titleOptions = response.Data
+        .filter((item: SYS1000) => item.SYS_Type === 'T103')
+        .map((item: SYS1000) => ({
+          No: item.SYS_Code,
+          Name: item.SYS_Name,
+          Label: item.SYS_Type + '-' + item.SYS_Code + '-' + item.SYS_Name,
+        }));
+      console.log('回應', this.titleOptions);
     });
 
     //建立組織下拉清單(SYS3100) 查詢全部

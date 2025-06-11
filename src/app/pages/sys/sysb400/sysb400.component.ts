@@ -176,9 +176,9 @@ export class SYSB400Component
   }
 
   loadOptions() {
-    //階層作業
+    // 所有組織階層
     this.sysb300Service.querySYSB300_DropDownList({}).subscribe((response) => {
-      this.upgroup_Options = response.Data.map((item: apiOption) => ({
+      this.upgroup_Options = response.Data.map((item: any) => ({
         No: item.No,
         Name: item.Name,
         Label: item.No + '-' + item.Name,
@@ -191,22 +191,11 @@ export class SYSB400Component
     ];
 
     // 所有組織代碼
-    const query_org = {
-      level_id: '',
-      org_id: '',
-      org_name: '',
-
-      //分頁查詢
-      pageSize: 1000,
-      pageIndex: 0,
-      SortBy: [{ field: 'org_id', order: 1 }],
-    };
-
-    this.sysb400Service.querySYSB400(query_org).subscribe((response) => {
-      this.org_Option = response.Data.map((item: Sysb400m) => ({
-        No: item.org_id,
-        Name: item.org_name,
-        Label: item.org_id + '-' + item.org_name,
+    this.sysb400Service.querySYS3100_DropDownList({}).subscribe((response) => {
+      this.org_Option = response.Data.map((item: any) => ({
+        No: item.No,
+        Name: item.Name,
+        Label: item.No + '-' + item.Name,
       }));
       console.log('組織代碼 查詢結果', this.org_Option);
     });
