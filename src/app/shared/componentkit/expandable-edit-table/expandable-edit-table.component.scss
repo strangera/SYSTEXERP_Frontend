@@ -1,6 +1,6 @@
 .expandable-edit-table-container {
-  // 整體容器樣式
-  margin: 1rem;
+  // 整體容器樣式 - 🔧 移除預設 margin，讓使用者自行控制間距
+  margin: 0;
   background-color: #fff;
   border-radius: 0.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -17,12 +17,63 @@
     font-size: 1.25rem;
     font-weight: 600;
     color: #495057;
-    margin-bottom: 0.5rem;
-    padding: 0.5rem 1rem;
+    margin: 0; // 🔧 移除預設 margin
+    padding: 1rem 1rem 0.5rem 1rem; // 🔧 只在需要時給上 padding
+
+    // 🔧 當有 title 時才顯示
+    &:empty {
+      display: none;
+      padding: 0;
+    }
+  }
+
+  // 🔧 確保 p-table 緊貼容器
+  .p-datatable {
+    margin: 0;
+
+    .p-datatable-wrapper {
+      border-radius: 0; // 移除內部邊框圓角，讓外層容器控制
+    }
+  }
+
+  // 🔧 當沒有 title 時，讓表格直接貼頂
+  &:not(:has(.expandable-table-title:not(:empty))) {
+    .p-datatable {
+      .p-datatable-header,
+      .table-caption {
+        border-top-left-radius: 0.5rem;
+        border-top-right-radius: 0.5rem;
+      }
+    }
   }
 }
 
 :host ::ng-deep {
+  // 🔧 全域強制移除所有圓角
+  * {
+    border-radius: 0 !important;
+  }
+
+  // 🔧 統一滾動條樣式 - 參考 table.component.scss
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #ffffff;
+    border: 5px solid #ffffff;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #9f9f9f;
+    border: 2px solid #eaeaea;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #cccccc;
+  }
+
   // 🔧 移除固定的容器最小寬度設定
   .expandable-edit-table-container {
     // 改進的滾動條樣式
@@ -31,16 +82,16 @@
     }
 
     &::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 4px;
+      background: #ffffff;
+      border: 5px solid #ffffff;
     }
 
     &::-webkit-scrollbar-thumb {
-      background: #c1c1c1;
-      border-radius: 4px;
+      background: #9f9f9f;
+      border: 2px solid #eaeaea;
 
       &:hover {
-        background: #a8a8a8;
+        background: #cccccc;
       }
     }
   }
@@ -50,10 +101,47 @@
     overflow: visible !important;
     width: 100%;
 
+    // 🔧 強制所有按鈕變成方形
+    .p-button {
+      border-radius: 0 !important;
+    }
+
+    // 🔧 統一 datatable-sm 樣式
+    &.p-datatable-sm .p-datatable-footer {
+      padding: 0;
+    }
+
+    // 🔧 統一錯誤邊框樣式
+    .error-border {
+      border: 1px solid red;
+    }
+
+    // 🔧 統一選擇按鈕樣式
+    .p-selectbutton .p-button {
+      width: auto !important;
+      padding: 5px 10px !important;
+    }
+
+    // 🔧 統一下拉選單樣式
+    .table-dropdown {
+      pointer-events: none;
+      .p-dropdown-trigger {
+        display: none;
+      }
+      .p-dropdown {
+        background: transparent;
+        border: none;
+      }
+      span {
+        padding: 0;
+      }
+    }
+
     .p-datatable-wrapper {
       overflow: visible !important;
       // 🔧 移除 min-width: max-content，讓表格能正常縮放
       width: 100%;
+      border: 1px solid #e9ecef;
     }
 
     .p-datatable-table {
@@ -61,20 +149,56 @@
       table-layout: auto; // 🔧 讓瀏覽器自動計算欄位寬度
     }
 
-    // 表格標題行
+    // 表格標題行 - 統一樣式
     .p-datatable-header {
       background: transparent;
       border: none;
-      padding: 0.5rem;
+      padding: 0;
       position: sticky;
       top: 0;
       z-index: 2;
       background-color: #fff;
+
+      // 🔧 統一 multiselect 樣式
+      p-multiselect {
+        width: 35px;
+        height: 35px;
+
+        .p-multiselect-label {
+          display: none;
+        }
+        .p-multiselect-trigger-icon {
+          font-size: 1.4em;
+          color: #ffffff;
+        }
+        .p-multiselect {
+          border: 1px solid #989898;
+          width: 100%;
+          height: 100%;
+          background-color: #989898;
+        }
+        .ng-trigger-overlayContentAnimation {
+          width: 200px;
+        }
+      }
+
+      .button-group {
+        .p-button {
+          width: 35px !important;
+          height: 35px !important;
+        }
+      }
+      .p-button-icon {
+        font-size: 1.5em;
+      }
     }
 
-    // 🔧 重要修正：表格頭的響應式處理
+    // 🔧 重要修正：表格頭的響應式處理 - 統一使用 var(--table-header-bg)
     .p-datatable-thead > tr > th {
-      background: #c7d2fe;
+      background: var(
+        --table-header-bg,
+        #c7d2fe
+      ); // 使用 CSS 變數，預設值為原色
       text-align: center;
       padding: 0.75rem 0.5rem;
       border: 1px solid #e9ecef;
@@ -102,21 +226,62 @@
       }
     }
 
-    // 表格偶數行
+    // 表格偶數行 - 統一顏色
     .p-datatable-tbody > tr:nth-child(even) {
       background: #eef2ff;
     }
 
-    // 行懸停效果
-    .p-datatable-tbody > tr:not(.p-highlight):hover {
-      background-color: #e3f2fd;
+    // 行懸停效果 - 統一樣式
+    .p-datatable-tbody > tr:not(.p-highlight):hover,
+    .p-selectable-row:not(.p-disabled-row):hover {
+      background-color: #e3f2fd !important;
       cursor: pointer;
     }
 
-    // 選中行樣式
+    // 選中行樣式 - 統一顏色
     .p-datatable-tbody > tr.p-highlight {
       background-color: #c5e4fc;
       color: #000000;
+    }
+
+    // 🔧 統一禁用行樣式
+    .p-disabled-row {
+      background-color: #ffffffc4 !important;
+      color: #495057 !important;
+
+      &.p-highlight {
+        background-color: #ffffffc4 !important;
+      }
+      // 禁用的 checkbox 樣式
+      .p-checkbox {
+        opacity: 0.5;
+        cursor: not-allowed !important;
+        position: relative; // 為叉叉定位
+
+        .p-checkbox-box {
+          background-color: #e9ecef !important;
+          border-color: #ced4da !important;
+        }
+        // 叉叉效果
+        &::before,
+        &::after {
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 100%; // 叉叉的宽度覆盖整个框
+          height: 2px; // 叉叉的厚度
+          background-color: #dc3545; // 红色
+          transform-origin: center;
+          z-index: 2;
+        }
+        &::before {
+          transform: translate(-50%, -50%) rotate(45deg);
+        }
+        &::after {
+          transform: translate(-50%, -50%) rotate(-45deg);
+        }
+      }
     }
 
     // 🔧 重要修正：表格單元格的響應式處理
@@ -179,15 +344,17 @@
       }
     }
 
-    // 編輯按鈕樣式
+    // 編輯按鈕樣式 - 統一 icon-button 樣式
     .edit-buttons,
     .detail-edit-buttons {
       .p-button {
         width: 2rem;
         height: 2rem;
+        background-color: rgba(239, 246, 255);
+        border: 1px solid rgb(212 212 212);
 
         &:hover {
-          background-color: rgba(0, 123, 255, 0.1);
+          background-color: rgba(0, 123, 255, 0.2);
         }
 
         &.p-button-success:hover {
@@ -196,6 +363,10 @@
 
         &.p-button-danger:hover {
           background-color: rgba(220, 53, 69, 0.1);
+        }
+
+        span.p-button-icon.pi {
+          color: #007bff;
         }
       }
     }
@@ -212,7 +383,6 @@
     // 展開詳細資料樣式
     .expanded-detail {
       background-color: #f8f9fa;
-      border-radius: 4px;
       box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
       margin: 0.5rem;
 
@@ -250,7 +420,6 @@
         overflow-y: auto;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         border: 1px solid #dee2e6;
-        border-radius: 4px;
         background: #ffffff;
         position: fixed !important;
       }
@@ -288,7 +457,6 @@
           font-size: 1rem;
           font-weight: 500;
           padding: 0.5rem 1rem;
-          border-radius: 4px;
           transition: all 0.2s ease;
           border-width: 1px;
 
@@ -318,9 +486,10 @@
       margin: 0.5rem 0 1rem 0;
     }
 
+    // 🔧 統一分頁器樣式
     .p-paginator {
       background: transparent;
-      padding: 0.5rem;
+      padding: 0.2rem 0.2rem;
 
       .p-paginator-pages .p-paginator-page.p-highlight {
         background: #007ad9;
@@ -334,9 +503,18 @@
       font-style: italic;
       color: #6c757d;
     }
+
+    // 🔧 統一滾動器樣式
+    .p-scroller .p-scroller-inline {
+      background: #cacaca;
+    }
+
+    .p-component-overlay {
+      background-color: rgb(217 217 217 / 40%) !important;
+    }
   }
 
-  // 表格禁用樣式
+  // 表格禁用樣式 - 統一
   .table-disabled {
     opacity: 0.7;
     pointer-events: none;
@@ -345,6 +523,13 @@
     .p-datatable-thead > tr > th {
       background: #e0e0e0;
     }
+  }
+
+  // 🔧 統一表格頁腳樣式
+  .table-footer {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-width: 0 1px 1px 1px;
   }
 
   // 自定義表格頭部控制欄
@@ -363,6 +548,24 @@
       display: flex;
       gap: 0.5rem;
       align-items: center;
+    }
+
+    // 🔧 當兩側都沒有可見元素時隱藏整個 caption
+    &:has(.table-caption-left:empty + .table-caption-right:empty) {
+      display: none;
+      padding: 0;
+      height: 0;
+    }
+
+    // 🔧 備用方案：檢查是否沒有按鈕或其他元素
+    &:not(:has(button):has(.p-button):has(ng-content:not(:empty))) {
+      &:has(.table-caption-left:not(:has(*))) {
+        &:has(.table-caption-right:not(:has(*))) {
+          display: none;
+          padding: 0;
+          height: 0;
+        }
+      }
     }
   }
 
@@ -405,11 +608,53 @@
     }
   }
 
+  // 🔧 統一文字樣式
+  .whitespace-pre-wrap {
+    white-space: pre-wrap; // 保留換行
+    overflow: hidden; // 隱藏溢出內容
+    text-overflow: ellipsis; // 使用省略號
+    display: -webkit-box; // 兼容Webkit內核瀏覽器
+    -webkit-line-clamp: 1; // 顯示的行數
+    line-clamp: 1;
+    -webkit-box-orient: vertical; // 垂直排列子元素
+    max-width: 100%; // 確保容器寬度固定
+    * {
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  .empty-message {
+    position: absolute;
+    left: 50%;
+    top: 67%;
+    transform: translate(-50%, -50%);
+  }
+
+  .no-wrap {
+    white-space: nowrap;
+    div {
+      display: inline;
+    }
+  }
+
   // 🔧 確保不會換行的內容
   .nowrap {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  // 🔧 統一 icon-button 樣式
+  .icon-button button {
+    background-color: rgba(239, 246, 255);
+    border: 1px solid rgb(212 212 212);
+    &:hover {
+      background-color: rgba(0, 123, 255, 0.2);
+    }
+    span.p-button-icon.pi {
+      color: #007bff;
+    }
   }
 
   // 日期選擇器對話框樣式保持不變...
@@ -449,7 +694,6 @@
         > span {
           width: 2rem;
           height: 2rem;
-          border-radius: 50%;
 
           &.p-highlight {
             background: #3b82f6;

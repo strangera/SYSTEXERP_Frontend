@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ViewChild, ChangeDetectorRef, TemplateRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild, ChangeDetectorRef, TemplateRef, ContentChild, ElementRef } from '@angular/core';
 import { Table } from 'primeng/table';
 import { FormBuilder, FormGroup } from '@angular/forms';
 
@@ -992,6 +992,29 @@ export class ExpandableEditTableComponent {
       default:
         return '120px';
     }
+  }
+
+  hasCaptionContent(): boolean {
+    return (
+      (!this.readonly && this.showAddButton) ||
+      (!this.readonly && this.showBatchDelete) ||
+      !!this.detailKey ||
+      // 檢查是否有投影內容 - 這部分可能需要使用 @ContentChild 來檢測
+      this.hasCaptionLeftContent() ||
+      this.hasCaptionRightContent()
+    );
+  }
+
+  // 如果你需要檢測投影內容，可以使用 @ContentChild
+  @ContentChild('[caption-left]', { read: ElementRef }) captionLeft?: ElementRef;
+  @ContentChild('[caption-right]', { read: ElementRef }) captionRight?: ElementRef;
+
+  hasCaptionLeftContent(): boolean {
+    return this.captionLeft?.nativeElement?.children.length > 0;
+  }
+
+  hasCaptionRightContent(): boolean {
+    return this.captionRight?.nativeElement?.children.length > 0;
   }
 }
 

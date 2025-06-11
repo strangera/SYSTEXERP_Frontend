@@ -21,7 +21,9 @@
   >
     <!-- 表格頂部工具欄 -->
     <ng-template pTemplate="caption">
+      <!-- 🔧 只有在有實際內容時才顯示 caption -->
       <div
+        *ngIf="hasCaptionContent()"
         class="table-caption flex justify-content-between align-items-center"
       >
         <div class="table-caption-left flex gap-2">
