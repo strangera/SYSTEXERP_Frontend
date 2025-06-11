@@ -393,6 +393,8 @@ import { TLS57160Component } from './tls57160/tls57160.component';
 import { TLS57170Component } from './tls57170/tls57170.component';
 import { NotfoundComponent } from '../base/notfound/notfound.component';
 import { Tls13010Next3Component } from './tls13010-next3/tls13010-next3.component';
+import { TLS26080Component } from './tls26080/tls26080.component';
+import { TLS26080CRUComponent } from './tls26080-cru/tls26080-cru.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '404', pathMatch: 'full' },
@@ -472,6 +474,7 @@ const routes: Routes = [
   { path: 'TLS26020', component: TLS26020Component }, // 預售總表
   { path: 'TLS26030', component: TLS26030Component }, // 預售明細表
   { path: 'TLS26040', component: TLS26040Component }, // 預售管理作業
+  { path: 'TLS26080', component: TLS26080Component }, // 專櫃活動設定作業
   { path: 'TLS27010', component: TLS27010Component }, // 保全現金資料轉入作業
   { path: 'TLS27020', component: TLS27020Component }, // 保全實收現金調整作業
   { path: 'TLS27030', component: TLS27030Component }, // 信用卡資料轉入作業
@@ -558,6 +561,7 @@ const routes: Routes = [
   { path: 'TLS26020CRU', component: TLS26020CRUComponent }, // 預售總表 CRU
   { path: 'TLS26030CRU', component: TLS26030CRUComponent }, // 預售明細表 CRU
   { path: 'TLS26040CRU', component: TLS26040CRUComponent }, // 預售管理作業 CRU
+  { path: 'TLS26080CRU', component: TLS26080CRUComponent }, // 專櫃活動作業 CRU
   { path: 'TLS27010CRU', component: TLS27010CRUComponent }, // 保全現金資料轉入作業 CRU
   { path: 'TLS27020CRU', component: TLS27020CRUComponent }, // 保全實收現金調整作業 CRU
   { path: 'TLS27030CRU', component: TLS27030CRUComponent }, // 信用卡資料轉入作業 CRU
