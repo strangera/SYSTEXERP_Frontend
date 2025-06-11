@@ -22,7 +22,6 @@ interface CategoryItem {
 @Component({
   selector: 'app-tls51010',
   templateUrl: './tls51010.component.html',
-  styleUrl: './tls51010.component.scss',
 })
 export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
   // 查詢表單：包含大分類代碼和名稱

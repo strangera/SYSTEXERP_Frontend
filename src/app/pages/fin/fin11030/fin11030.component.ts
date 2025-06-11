@@ -4,20 +4,13 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { SortMeta } from 'primeng/api';
 
-
-interface ItemCol {
-  col1: string; // 品項編號
-  col2: string; // 品項名稱
-  col3: number; // 使用別
-}
-
 @Component({
   selector: 'app-fin11030',
   templateUrl: './fin11030.component.html',
   styleUrl: './fin11030.component.scss'
 })
 //1.1.1.3 銷項品項資料設定
-export class FIN11030Component extends BasicQueryPageComponent<ItemCol> implements OnInit {
+export class FIN11030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     itemSerialnumber: ['', [Validators.maxLength(3), Validators.required]], // 品項編號
     itemName: ['', [Validators.maxLength(10)]], // 品項名稱
@@ -27,7 +20,7 @@ export class FIN11030Component extends BasicQueryPageComponent<ItemCol> implemen
     SortBy: [[{ field: 'itemSerialnumber', order: 1 }] as SortMeta[]],
   });
   // 表格
-  data: ItemCol[] = [];
+  data: any[] = [];
   columns: Column[] = [
     { field: 'col1', header: '品項編號', visible: true },
     { field: 'col2', header: '品項名稱', visible: true },
