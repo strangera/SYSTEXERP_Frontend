@@ -279,8 +279,13 @@ export class SYSB400Component
         Name: item.Name,
         Label: item.No + '-' + item.Name,
       }));
-      console.log('組織代碼 查詢結果', this.org_Option);
+      console.log('組織代碼drop 查詢結果', this.org_Option);
     });
+  }
+
+  gotoGraph() {
+    //導引到sysb400.os
+    this.router.navigate(['/SYS/SYSB400OS']);
   }
 
   isRowSelectable(rowData: Sysb400m): boolean {

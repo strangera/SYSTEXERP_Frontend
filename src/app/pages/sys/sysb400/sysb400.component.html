@@ -3,6 +3,11 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button
       btnType="create"
+      (click)="gotoGraph()"
+      label="組織階層圖列表"
+    ></app-button>
+    <app-button
+      btnType="create"
       (click)="onCreate()"
       label="{{ 'create' | translate }}"
     ></app-button>
@@ -70,18 +75,6 @@
       </form>
     </p-accordionTab>
   </p-accordion>
-</div>
-
-<div class="card">
-  <p-tree
-    [value]="treeNodes"
-    selectionMode="single"
-    [(selection)]="selectedNode"
-  >
-    <ng-template let-node pTemplate="default">
-      {{ node.label }}
-    </ng-template>
-  </p-tree>
 </div>
 
 <div class="card">
