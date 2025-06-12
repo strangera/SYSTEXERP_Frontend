@@ -24,7 +24,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
     LOGO_EN_NAME: ['', [Validators.maxLength(100)]], // 品牌英文名稱
     LOGO_Remark: ['', [Validators.maxLength(100)]], // 備註說明
     // PLU_OrderPrcRate: [, [Validators.maxLength(100)]], // 標準進貨折數 預設100
-    HOS_No: [[], [Validators.maxLength(10)]], // 倉別代碼(建議倉別) POS2034倉庫設定檔(O)
+    HOS_No: ['', [Validators.maxLength(10)]], // 倉別代碼(建議倉別) POS2034倉庫設定檔(O)
     // VEN_No: ['', [Validators.maxLength(16)]], // 廠商編號 保留目前不使用
 
     //分頁查詢
@@ -57,7 +57,6 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
   selectedItems: Sysb300m[] = [];// 多選項目
 
   // ----------------------------------------------------------------
-
   constructor(private tls51060Service: Tls51060Service) {
     super();
   }
@@ -93,8 +92,14 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
     });
   }
 
+  //---刪除檢查---
+  /* LOGODISC 品牌進貨折數設定檔*/
+  /* LOGOBUDGET 品牌每月進貨限額設定檔*/
+  /* POS2004 商品基本資料檔 */
+  // 沒有該資料才可以刪除
+  //-------------
   // 刪除項目
-  onDelete(data: Sysb300m | Sysb300m[]): void {
+  onDelete(data: PluLogo | PluLogo[]): void {
     console.log('Delete data:', JSON.stringify(data, null, 2));
 
     const items = Array.isArray(data) ? data : [data];
@@ -116,13 +121,13 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
     }
 
     //確認是否全部都可以刪除
-    const canDelete = items.every((item) => item.CanDel);
+    // const canDelete = items.every((item) => item.CanDel);
 
-    if (!canDelete) {
-      console.error('Some items cannot be deleted');
-      this.messageService.errorBubble('無法刪除：組織階層互相關連');
-      return;
-    }
+    // if (!canDelete) {
+    //   console.error('Some items cannot be deleted');
+    //   this.messageService.errorBubble('無法刪除：組織階層互相關連');
+    //   return;
+    // }
 
     const deleteBody = {
       idList: idList, // 符合 API 的 idList 格式
