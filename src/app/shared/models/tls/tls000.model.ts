@@ -26,6 +26,24 @@ export interface Tls46010m {
   'UPD_USR_Name': string;
 }
 
+// PLUUNIT  商品單位設定檔
+export interface PluUnit {
+  'id': string;
+  'UNIT_No': string;
+  'UNIT_NAME': string;
+  'UNIT_Attribute': string;
+  'CHILD_UNIT': string; // 子項單位代號 --沒有使用
+  'CHILD_QTY': number; // 子項單位數量 --沒有使用
+  'UNIT_Remark': string;
+
+  'CRT_Date': Date;
+  'CRT_USR_No': string;
+  'CRT_USR_Name': string;
+  'UPD_Date': Date;
+  'UPD_USR_No': string;
+  'UPD_USR_Name': string;
+}
+
 // PLULOGO  商品品牌設定檔
 export interface PluLogo {
   'id': string;

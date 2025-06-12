@@ -8,12 +8,6 @@ import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 import { apiOption } from '../../../shared/models/tls/tls000.model';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-interface TreeNode {
-  key: string;
-  label: string;
-  data: Sysb400m;
-  children?: TreeNode[];
-}
 
 // 組織碼設定作業
 @Component({
@@ -26,7 +20,7 @@ export class SYSB400Component
   implements OnInit {
 
   queryForm = this.formBuilder.group({
-    // SYS3100 + SYS3000
+    // SYS3100 組織碼設定作業
     org_id: ['', Validators.maxLength(6)], // 組織代碼
     org_name: ['', Validators.maxLength(40)], // 組織名稱
     level_id: ['', Validators.maxLength(2)], // 組織階層代碼
