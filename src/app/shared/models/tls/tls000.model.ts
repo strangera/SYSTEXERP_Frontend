@@ -26,6 +26,45 @@ export interface Tls46010m {
   'UPD_USR_Name': string;
 }
 
+// PLUUNIT  商品單位設定檔
+export interface PluUnit {
+  'id': string;
+  'UNIT_No': string;
+  'UNIT_NAME': string;
+  'UNIT_Attribute': string;
+  'CHILD_UNIT': string; // 子項單位代號 --沒有使用
+  'CHILD_QTY': number; // 子項單位數量 --沒有使用
+  'UNIT_Remark': string;
+
+  'CRT_Date': Date;
+  'CRT_USR_No': string;
+  'CRT_USR_Name': string;
+  'UPD_Date': Date;
+  'UPD_USR_No': string;
+  'UPD_USR_Name': string;
+}
+
+// PLULOGO  商品品牌設定檔
+export interface PluLogo {
+  'id': string;
+  'LOGO_No': string;
+  'LOGO_CH_NAME': string;
+  'LOGO_EN_NAME': string;
+  'LOGO_Remark': string;
+  'PLU_OrderPrcRate': number; // 標準進貨折數 預設100
+  'HOS_No': string;
+  'VEN_No': string;
+
+  'CRT_Date': Date;
+  'CRT_USR_No': string;
+  'CRT_USR_Name': string;
+  'UPD_Date': Date;
+  'UPD_USR_No': string;
+  'UPD_USR_Name': string;
+
+  'CanDel': boolean;  //能否刪除(僅顯示)
+}
+
 // option項目
 export interface Option {
   value: string;
