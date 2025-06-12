@@ -132,7 +132,7 @@ export const formatYYYYMM = (dateStr: string): string => {
 };
 
 // 000,000,000
-export const formatNumber = (number: number | string): string => {
+export const formatAmount = (number: number | string): string => {
   if (!number) return '0';
   return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };

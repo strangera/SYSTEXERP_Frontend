@@ -1,122 +1,95 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-//
-import { TranslateService } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-//
-import { ValidationService } from '../../../shared/service/validation.service';
-
+import { FormGroup, Validators } from '@angular/forms';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { INV_UsageTypeOptions, TDS1008Data } from '../fin11040/fin11040.model';
+import { Fin11040Service } from '../../../service/api/fin/fin11040.service';
+import { finalize } from 'rxjs';
 //1.1.1.4 發票格式代號維護 CRU
 @Component({
   selector: 'app-fin11040-cru',
   templateUrl: './fin11040-cru.component.html',
-  styleUrl: './fin11040-cru.component.scss'
 })
-export class FIN11040CRUComponent extends BasicCrupageComponent implements OnInit {
-  // ----------------------------------------------------------------
+export class FIN11040CRUComponent extends BasicCruPageComponent<TDS1008Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    formatSerialnumber: [, [Validators.required, Validators.maxLength(2)]], // 格式代號
-    formatName: ['', [Validators.required, Validators.maxLength(100)]], // 格式名稱
+    ID: [{ value: 0, disabled: true }],
+    INV_ItemNo: ['', [Validators.required, Validators.maxLength(2)]], // 品項代號
+    INV_ItemName: ['', [Validators.required, Validators.maxLength(30)]], // 品項名稱
+    INV_UsageType: [null, [Validators.required]], // 使用別
+    CRT_Date: [{ value: null, disabled: true }],       // 建立日期
+    CRT_USR_No: [{ value: '', disabled: true }],       // 建立人員
+    CRT_USR_Name: [{ value: '', disabled: true }],     // 建立人員姓名
+    UPD_Date: [{ value: null, disabled: true }],       // 變更日期
+    UPD_USR_No: [{ value: '', disabled: true }],       // 變更人員
+    UPD_USR_Name: [{ value: '', disabled: true }],     // 變更人員姓名
   });
-  //
-  // ----------------------------------------------------------------
+  INV_UsageTypeOptions = INV_UsageTypeOptions;
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    //
-    private validationService: ValidationService,
+    private fin11040Service: Fin11040Service
   ) {
     super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '110004';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    // ----------------------------------------------------------------
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
+    this.initializePage('FIN11040', this.dataForm);
+    if (!this.isFormCreateable) {
+      this.dataForm.get('INV_ItemNo')?.disable();
     }
   }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+    this.handleSubmit(frm, () => {
+      this.loading = true;
+      if (this.isFormCreateable) {
+        const payload = this.buildInsertBody(frm);
+        this.fin11040Service.insertFIN11040(payload)
+          .pipe(finalize(() => this.loading = false))
+          .subscribe({
+            next: (res) => {
+              this.dataForm.reset();
+              console.log(res);
+            }
+          });
+      } else if (this.isFormEditable) {
+        const payload = this.buildUpdateBody(frm);
+        this.fin11040Service.updateFIN11040(payload)
+          .pipe(finalize(() => this.loading = false))
+          .subscribe({
+            next: (res) => {
+              this.onCancel();
+              console.log(res);
+            }
+          });
+      }
+    });
   }
 
-  submitForm(frm: FormGroup) {
-    this.onSubmit(frm);
+  buildInsertBody(frm: FormGroup): {
+    insertFIN11040Detail: {
+      INV_ItemNo: string;
+      INV_ItemName: string;
+      INV_UsageType: string;
+    }[]
+  } {
+    return {
+      insertFIN11040Detail: [
+        {
+          INV_ItemNo: frm.get('INV_ItemNo')?.value,
+          INV_ItemName: frm.get('INV_ItemName')?.value,
+          INV_UsageType: frm.get('INV_UsageType')?.value,
+        }
+      ]
+    };
   }
-
-  onCancel() {
-    this.router.navigate(['/FIN1000/FIN11040']);
+  buildUpdateBody(frm: FormGroup): {
+    ID: number;
+    INV_ItemNo: string;
+    INV_ItemName: string;
+    INV_UsageType: string;
+  } {
+    return {
+      ID: frm.get('ID')?.value,
+      INV_ItemNo: frm.get('INV_ItemNo')?.value,
+      INV_ItemName: frm.get('INV_ItemName')?.value,
+      INV_UsageType: frm.get('INV_UsageType')?.value,
+    };
   }
 }

@@ -34,7 +34,7 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
     UPD_Date: [{ value: null, disabled: true }],       // 變更日期
     UPD_USR_No: [{ value: '', disabled: true }],       // 變更人員
     UPD_USR_Name: [{ value: '', disabled: true }],     // 變更人員姓名
-  }, { validators: [this.validationService.guiNumberRangeValidator()] });
+  }, { validators: this.validationService.guiNumberRangeValidator('GUI_BegNo', 'GUI_EndNo') });
   guiTypeOptions = guiTypeOptions     // 發票類別選項
   guiStatusOptions = guiStatusOptions;// 發票狀態選項
   constructor(

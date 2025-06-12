@@ -4,7 +4,6 @@ import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 import { Sysb400m } from '../../../shared/models/sys/sysb000.module';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
-
 @Component({
   selector: 'app-sysb400.os',
   templateUrl: './sysb400.os.component.html',
