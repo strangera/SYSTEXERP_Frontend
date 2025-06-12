@@ -36,10 +36,6 @@ export class SYSB400Component
     ...createPaginationConfig([{ field: 'org_id', order: 1 }]), // 分頁和排序參數
   });
 
-  //樹狀圖資料
-  treeNodes: TreeNode[] = [];
-  selectedNode: TreeNode[] = [];
-
   upgroup_Options: apiOption[] = [];
   whetherOptions: option[] = [];
   org_Option: apiOption[] = [];
@@ -141,48 +137,6 @@ export class SYSB400Component
     });
   }
 
-  // 階層圖
-  buildTree(data: Sysb400m[]): TreeNode[] {
-    const childrenMap = new Map<string | null, Sysb400m[]>();
-
-    data.forEach(item => {
-      // 特別處理 org_id === p_org_id 當作根節點
-      const parentId =
-        !item.p_org_id || item.p_org_id.trim() === '' || item.p_org_id === item.org_id
-          ? null
-          : item.p_org_id;
-
-      if (!childrenMap.has(parentId)) {
-        childrenMap.set(parentId, []);
-      }
-      childrenMap.get(parentId)!.push(item);
-    });
-
-    const buildChildren = (parentId: string | null): TreeNode[] => {
-      return (childrenMap.get(parentId) || []).map(item => ({
-        key: item.org_id,
-        label: `${item.org_id} - ${item.org_name}`,
-        data: item,
-        children: buildChildren(item.org_id),
-      }));
-    };
-
-    return buildChildren(null);
-  }
-
-  //長度檢查
-  countAllNodes(nodes: TreeNode[]): number {
-    let count = 0;
-    for (const node of nodes) {
-      count += 1; // 計算當前節點
-      if (node.children && node.children.length > 0) {
-        count += this.countAllNodes(node.children); // 加上子節點數
-      }
-    }
-    return count;
-  }
-
-
   // 刪除項目
   onDelete(data: Sysb400m | Sysb400m[]): void {
     console.log('Delete data:', JSON.stringify(data, null, 2));
@@ -230,34 +184,6 @@ export class SYSB400Component
   }
 
   loadOptions() {
-    //階層圖
-    const query = {
-      "level_id": "",
-      "org_id": "",
-      "org_name": "",
-      "stop_flag": "",
-
-      //分頁查詢
-      pageSize: 1000,
-      pageIndex: 0,
-      SortBy: [{ field: 'org_id', order: 1 }],
-    }
-    this.sysb400Service.querySYSB400(query).subscribe({
-      next: (response) => {
-        // console.log('引入:', response);
-        if (response.Status === '0000') {
-          this.treeNodes = this.buildTree(response.Data);
-          const treeLength = this.countAllNodes(this.treeNodes)
-          console.log('treeLength', treeLength);
-        } else {
-          console.error('API error:', response.Status, response.Message);
-        }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-      },
-    });
-
     // 所有組織階層
     this.sysb300Service.querySYSB300_DropDownList({}).subscribe((response) => {
       this.upgroup_Options = response.Data.map((item: any) => ({

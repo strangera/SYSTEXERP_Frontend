@@ -16,13 +16,12 @@ export class Sysb400OsComponent extends BasicCruPageComponent<Sysb400m> implemen
   nodes: TreeNode[] = [];
   override formTitle = '組織架構列表';
   // tree dropDown==================================
-  // orgData sample removed to avoid duplicate declaration; orgData will be defined as Sysb400m[] below.
   orgData: Sysb400m[] = [];
   orgColumn = [
     { value: 'org10Label', label: '全公司' },
-    { value: 'org20Label', label: '部' },
+    { value: 'org20Label', label: '室/部' },
     { value: 'org30Label', label: 'Team' },
-    { value: 'org40Label', label: '組' },
+    { value: 'org40Label', label: '樓/組' },
   ];
   LeaveLabel = 'org_name'; // 子節點顯示名稱
   listTitle = '組織架構列表'; // 節層圖名稱

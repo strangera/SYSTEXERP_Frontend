@@ -1,15 +1,12 @@
-import { BigCategoryCodeService } from './../../../service/basic/big-category-code.service';
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
+import { Sysb300m, apiOption } from '../../../shared/models/sys/sysb000.module';
+import { PluLogo } from '../../../shared/models/tls/tls000.model';
+import { Tls51060Service } from '../../../service/API/tls/tls51060.service';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { ValidationService } from '../../../shared/service/validation.service';
 
 // 2.5.1.6  品牌設定作業
 @Component({
@@ -17,131 +14,158 @@ import { ValidationService } from '../../../shared/service/validation.service';
   templateUrl: './tls51060.component.html',
   styleUrl: './tls51060.component.scss'
 })
-export class TLS51060Component {
-  ProgNo: string = '250006';
-  // 權限
-  funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
+  implements OnInit {
   // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
   queryForm = this.formBuilder.group({
-    brandCode: [, [Validators.maxLength(4), this.validationService.numberValidator]], // Input serial number
-    brandCName: ['', [Validators.maxLength(40)]], // Input Text
-    brandEName: ['', [Validators.maxLength(100)]], // Input Text
-    storage: [], // DropDown
-    editortext: [,], // editor text
+    // PLULOGO  商品品牌設定檔
+    LOGO_No: ['', [Validators.maxLength(4)]], // 品牌代碼
+    LOGO_CH_NAME: ['', [Validators.maxLength(50)]], // 品牌中文名稱
+    LOGO_EN_NAME: ['', [Validators.maxLength(100)]], // 品牌英文名稱
+    LOGO_Remark: ['', [Validators.maxLength(100)]], // 備註說明
+    // PLU_OrderPrcRate: [, [Validators.maxLength(100)]], // 標準進貨折數 預設100
+    HOS_No: [[], [Validators.maxLength(10)]], // 倉別代碼(建議倉別) POS2034倉庫設定檔(O)
+    // VEN_No: ['', [Validators.maxLength(16)]], // 廠商編號 保留目前不使用
+
+    //分頁查詢
+    ...createPaginationConfig([{ field: 'LOGO_No', order: 1 }]), // 分頁和排序參數
   });
   // 表格
   // ----------------------------------------------------------------
-  data: any[] = [
-    //{ contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    //{ contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    //{ contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'contactPerson', header: '品牌編號', visible: true },
-    { field: 'contactDate', header: '品牌中文名稱', visible: true },
-    { field: 'UID', header: '品牌英文名稱', visible: true },
-    { field: 'industryType', header: '建議倉別', visible: true },
-    { field: 'category', header: '備註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  storageOptions: any[] = []
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
 
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private bigCategoryCodeService: BigCategoryCodeService,
-  ) {
+  storageOptions: apiOption[] = [];
+
+  data: Sysb300m[] = [];
+  columns: Column[] = [
+    { field: 'LOGO_No', header: '品牌代碼', visible: true },
+    { field: 'LOGO_CH_NAME', header: '品牌中文名稱', visible: true },
+    { field: 'LOGO_EN_NAME', header: '品牌英文名稱', visible: true },
+    { field: 'PLU_OrderPrcRate', header: '標準進貨折數', visible: false },
+    {
+      field: 'HOS_No',
+      header: '建議倉別',
+      visible: true,
+      format: (value: string) =>
+        this.storageOptions.find((option) => option.No === value)?.Label ||
+        value,
+    },
+    { field: 'VEN_No', header: '廠商編號', visible: false },
+    { field: 'LOGO_Remark', header: '備註說明', visible: true }
+  ];
+
+  selectedItems: Sysb300m[] = [];// 多選項目
+
+  // ----------------------------------------------------------------
+
+  constructor(private tls51060Service: Tls51060Service) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    // ----------------------------------------------------------------
-    this.bigCategoryCodeService.getSystemTypes().subscribe(data => {
-      this.storageOptions = data;
+    this.initializePage('TLS51060', 'TLS/TLS51060CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
+  }
+
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      console.log('query condition', frm.value);
+      this.tls51060Service.queryTLS51060(frm.value).subscribe({
+        next: (response) => {
+          // console.log('回傳階層:', response.Data);
+          if (response.Status === '0000') {
+            this.data = response.Data || [];
+            console.log('Result', this.data);
+            this.totalRecords = response.TotalCount || response.Data.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
     });
   }
 
-  // 權限
-  // ----------------------------------------------------------------
-  canQuery(): boolean {
-    return true;
-  }
-  canAdd(): boolean {
-    return true;
-  }
-  canEdit(): boolean {
-    return true;
-  }
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+  // 刪除項目
+  onDelete(data: Sysb300m | Sysb300m[]): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) {
+      console.error('No items to delete');
+      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+      return;
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
+    // 收集所有有效的 ID
+    const idList = items
+      .filter((item) => item && item.id != null && item.id !== undefined)
+      .map((item) => item.id);
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
     }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
+    //確認是否全部都可以刪除
+    const canDelete = items.every((item) => item.CanDel);
+
+    if (!canDelete) {
+      console.error('Some items cannot be deleted');
+      this.messageService.errorBubble('無法刪除：組織階層互相關連');
+      return;
     }
-  }
 
-  onDetail(data: any) {
-    console.log(data);
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
-
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
-      },
+    const deleteBody = {
+      idList: idList, // 符合 API 的 idList 格式
     };
+    this.tls51060Service.deleteTLS51060(deleteBody).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('選中項目刪除成功');
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        }
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗');
+      },
+      complete: () => {
+        this.onSubmit(this.queryForm);
+      },
+    });
 
-    console.log(crudstatus);
+    this.selectedItems = [];
+  }
 
-    this.router.navigate(['/TLS5000/TLS51060CRU'], extras);
+  loadOptions() {
+    {
+      //倉別 下拉選單
+      this.tls51060Service
+        .queryPOS2034_DropDownList({})
+        .subscribe((response) => {
+          this.storageOptions = response.Data.map((item: apiOption) => ({
+            No: item.No,
+            Name: item.Name,
+            Label: item.No + '-' + item.Name,
+          }));
+
+          console.log('storageOptions:', this.storageOptions);
+        });
+    }
+  }
+
+  isRowSelectable(rowData: Sysb300m): boolean {
+    return rowData.CanDel
   }
 }
