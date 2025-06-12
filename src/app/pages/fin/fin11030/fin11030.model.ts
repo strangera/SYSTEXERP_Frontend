@@ -1,4 +1,4 @@
-import { Column, formatDateTime, formatYYYYMM } from "../../../shared/componentkit/table/table.model";
+import { Column, formatAmount, formatDateTime, formatYN, formatYYYYMM } from "../../../shared/componentkit/table/table.model";
 
 export interface APS2001Data {
   id: number;
@@ -38,16 +38,31 @@ export const SAL_GUIPaperOptions = [
 export const columns: Column[] = [
   { field: 'id', header: '序號', visible: true },
   { field: 'SAL_GUIYYYYMM', header: '發票年月', visible: true, format: formatYYYYMM },
+  { field: 'SAL_GUIBegMM', header: '起始月份', visible: false },
+  { field: 'SAL_GUIEndMM', header: '終止月份', visible: false },
   { field: 'SAL_GUITrack', header: '字軌', visible: true },
   { field: 'SAL_GUIBegNo', header: '發票號碼(起)', visible: true },
   { field: 'SAL_GUIEndNo', header: '發票號碼(迄)', visible: true },
+  { field: 'SAL_GUIPaper', header: '發票聯式', visible: false },
+  { field: 'SAL_LastUsedGUINo', header: '已使用的發票號', visible: false },
+  { field: 'SAL_VoidGUICnt', header: '作廢發票張數', visible: false },
+  { field: 'SAL_BlankCnt', header: '發票張數', visible: false },
+  { field: 'SAL_SAmt', header: '應稅金額', visible: false, format: formatAmount },
+  { field: 'SAL_TaxAmt', header: '稅額', visible: false, format: formatAmount },
+  { field: 'SAL_NoTaxAmt', header: '免稅金額', visible: false, format: formatAmount },
+  { field: 'SAL_ZeroTaxAmt', header: '零稅金額', visible: false, format: formatAmount },
+  { field: 'STR_Uniform', header: '統一編號', visible: false },
+  { field: 'STO_No', header: '分店編號', visible: false },
   {
     field: 'SAL_Type', header: '發票類別', visible: true,
     format: (value: string) => SAL_GUIPaperOptions.find(x => x.value === value)?.label || value
   },
-  { field: 'GUI_DingType', header: '是否為丁種發票', visible: true, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime },
-  { field: 'CRT_USR_Name', header: '建立人員', visible: true },
-  { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDateTime },
-  { field: 'UPD_USR_Name', header: '變更人員', visible: true },
+  { field: 'GUI_DingType', header: '是否為丁種發票', visible: true, format: formatYN },
+  { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
+  { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
+  { field: 'CRT_USR_Name', header: '建立人員', visible: false },
+  { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime },
+  { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
+  { field: 'UPD_USR_Name', header: '變更人員', visible: false }
 ];
+

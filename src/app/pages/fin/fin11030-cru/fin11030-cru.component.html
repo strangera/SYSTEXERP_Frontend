@@ -5,48 +5,20 @@
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-      <!-- <ng-container formArrayName="items">
-        <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i"> -->
-      <!-- <div class="grid align-items-center">
-        <div class="col" style="flex: 1;">
-          <h5>銷項品項 {{i+1}}</h5>
-        </div>
-        <div>
-          <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
-            class="col"></app-button-dynamicallydelete>
-        </div>
-      </div> -->
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <!-- <app-input-text label="品項編號" controlName="itemSerialnumber"
-          [control]="getFormControl(i, 'itemSerialnumber')" [submitted]="submitted">
-          </app-input-text> -->
-          <app-input-text label="品項編號" controlName="itemSerialnumber" [control]="dataForm.controls.col1"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="品項名稱" controlName="itemName" [control]="dataForm.controls.col2"
-            [submitted]="submitted">
-          </app-input-text>
-          <!-- <app-input-text label="品項名稱" controlName="itemName" [control]="getFormControl(i, 'itemName')"
-            [submitted]="submitted">
-          </app-input-text> -->
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <!-- <app-dropdown label="使用別" controlName="usageType" [options]="usageTypeOptions" optionLabel="label"
-            optionValue="value" [control]="getFormControl(i, 'usageType')" [submitted]="submitted">
-          </app-dropdown> -->
-          <app-dropdown label="使用別" controlName="usageType" [options]="usageTypeOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.col3" [submitted]="submitted">
-          </app-dropdown>
-        </div>
+        <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateMonthRange" label="發票年月"
+          [startControl]="dataForm.controls.SAL_GUIYYYYMM_start" [endControl]="dataForm.controls.SAL_GUIYYYYMM_end"
+          [submitted]="submitted" />
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="字軌" controlName="track"
+          [control]="dataForm.controls.SAL_GUITrack" [submitted]="submitted" />
+        <app-input-text-range class="col-12 md:col-6 lg:col-4" startLabel="發票起始號碼" endLabel="發票結束號碼"
+          [startControl]="dataForm.controls.SAL_GUIBegNo" [endControl]="dataForm.controls.SAL_GUIEndNo"
+          [submitted]="submitted" [errorForGroup]="true" />
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="發票類別" controlName="GUI_Type" optionLabel="label"
+          optionValue="value" [control]="dataForm.controls.SAL_GUIPaper" [options]="SAL_GUIPaperOptions" />
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="券數(1券=50張)" controlName="GUI_Qty"
+          [control]="dataForm.controls.GUI_Qty" [max]="99999999" [useGrouping]="false" [submitted]="submitted" />
       </div>
-      <!-- </ng-container>
-      </ng-container> -->
-      <!-- <div class="pt-1">
-        <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
-      </div> -->
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" (click)="onCancel()"></app-button>
         <app-button btnType="submit"></app-button>

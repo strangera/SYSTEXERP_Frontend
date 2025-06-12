@@ -1,6 +1,6 @@
 
 import { Injectable } from '@angular/core';
-import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn } from '@angular/forms';
 // taiwan-id-validator
 // https://github.com/enylin/taiwan-id-validator
 @Injectable({
@@ -168,10 +168,30 @@ export class ValidationService {
     }
     return null;
   }
-  guiNumberRangeValidator(): ValidatorFn {
+  guiNumberRangeValidator(
+    begNoControlName: string,
+    endNoControlName: string
+  ): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
-      const begNo = control.get('GUI_BegNo')?.value;
-      const endNo = control.get('GUI_EndNo')?.value;
+      // 確保 control 是一個 FormGroup，因為我們需要訪問其子控制項
+      if (!(control instanceof FormGroup)) {
+        return null;
+      }
+      const begNoControl = control.get(begNoControlName);
+      const endNoControl = control.get(endNoControlName);
+      // 檢查子控制項是否存在
+      if (!begNoControl || !endNoControl) {
+        console.warn(`驗證器錯誤：找不到控制項 ${begNoControlName} 或 ${endNoControlName}。`);
+        return null;
+      }
+      const begNo = begNoControl.value;
+      const endNo = endNoControl.value;
+      if (endNoControl.hasError('invalidGuiNumberRange')) {
+        endNoControl.setErrors(null);
+      }
+      if (begNoControl.hasError('invalidGuiNumberRange')) {
+        begNoControl.setErrors(null);
+      }
 
       if (begNo && endNo) {
         const beg = Number(begNo);
@@ -179,11 +199,17 @@ export class ValidationService {
 
         if (!isNaN(beg) && !isNaN(end)) {
           if (beg > end) {
-            // 起號大於迄號，回傳錯誤
+            // 如果起始號大於迄號，將錯誤設置在『結束號』的控制項上
+            // 這樣錯誤訊息會顯示在 GUI_EndNo 的欄位上
+            endNoControl.setErrors({ invalidGuiNumberRange: true });
+
+            // 同時在 FormGroup 上返回錯誤，以便整體表單狀態反映錯誤
             return { invalidGuiNumberRange: true };
           }
         }
       }
+
+      // 如果沒有錯誤，返回 null
       return null;
     };
   }
