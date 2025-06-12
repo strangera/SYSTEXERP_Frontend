@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { TreeNode } from 'primeng/api';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
-import { Sysb400m } from '../../../shared/models/sys/sysb000.module';
+import { option, Sysb400m } from '../../../shared/models/sys/sysb000.module';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
 @Component({
@@ -12,8 +11,13 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 
 // 組織架構列表
 export class Sysb400OsComponent extends BasicCruPageComponent<Sysb400m> implements OnInit {
-  nodes: TreeNode[] = [];
   override formTitle = '組織架構列表';
+
+  // dataForm==================================
+  dataForm = this.formBuilder.nonNullable.group({
+    stop_flag: [''], // 是否停用
+  });
+
   // tree dropDown==================================
   orgData: Sysb400m[] = [];
   orgColumn = [
@@ -37,30 +41,43 @@ export class Sysb400OsComponent extends BasicCruPageComponent<Sysb400m> implemen
     super();
   }
 
+  whetherOptions: option[] = [
+    { value: 'Y', label: '是' },
+    { value: 'N', label: '否' },
+  ];
+
   ngOnInit(): void {
     this.initializePage('SYSB400');
-    // ----------------------------------------------------------------
+
+    // ---- 初始載入一次------------------------------------------------------------
     this.loadOptions();
+
+    // 當表單值變更時，重新載入 options
+    this.dataForm.valueChanges.subscribe(() => {
+      this.loadOptions();
+    });
   }
 
   loadOptions() {
-    // 樹狀下拉(測試)
-    this.sysb400Service.querySYS3100_tree_DropDownList({}).subscribe({
+    this.loading = true;
+    this.orgData = []; // 清空舊資料，避免閃爍殘留
+
+    this.sysb400Service.querySYS3100_tree_DropDownList(this.dataForm.value).subscribe({
       next: (response) => {
-        // console.log('引入:', response);
         if (response.Status === '0000') {
-          this.orgData = response.Data;
-          console.log('orgData', this.orgData);
-          // 原始資料進行過濾 去除中間節點
-          this.orgData = this.filterByDeepestUnique(this.orgData);
-          console.log('原始資料進行過濾', this.orgData);
+          const filtered = this.filterByDeepestUnique(response.Data || []);
+          this.orgData = filtered;
         } else {
+          this.orgData = [];
           console.error('API error:', response.Status, response.Message);
         }
+        this.loading = false;
       },
-      error: (err: string) => {
+      error: (err) => {
+        this.orgData = [];
         console.error('API error:', err);
-      },
+        this.loading = false;
+      }
     });
   }
 

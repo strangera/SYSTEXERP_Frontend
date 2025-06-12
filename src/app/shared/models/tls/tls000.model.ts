@@ -61,6 +61,8 @@ export interface PluLogo {
   'UPD_Date': Date;
   'UPD_USR_No': string;
   'UPD_USR_Name': string;
+
+  'CanDel': boolean;  //能否刪除(僅顯示)
 }
 
 // option項目
