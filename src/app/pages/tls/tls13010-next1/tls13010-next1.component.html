@@ -86,19 +86,7 @@
       <!-- 動態生成各類型扣款表格 -->
       <div *ngFor="let capType of capTypes" [hidden]="!hasDataForType(capType)">
         <p-accordion>
-          <p-accordionTab
-            [header]="getCapTypeName(capType)"
-            [selected]="true"
-            class="line-height-3 m-0"
-          >
-            <ng-template pTemplate="header">
-              <div
-                class="flex justify-content-between align-items-center w-full"
-              >
-                <!-- <span>{{ getCapTypeName(capType) }}</span> -->
-              </div>
-            </ng-template>
-
+          <p-accordionTab [header]="getCapTypeName(capType)" [selected]="true">
             <!-- 特殊說明（針對特定類型） -->
             <div
               *ngIf="capType === 'D' || capType === 'E'"
