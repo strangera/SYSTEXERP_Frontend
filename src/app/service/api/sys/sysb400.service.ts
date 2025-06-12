@@ -33,8 +33,13 @@ export class Sysb400Service {
     return this.http.post<any>(`${this.apiUrl}/deleteSYSB400`, body);
   }
 
-  // 查詢 組織代碼下拉 SYS3100
+  // 查詢 組織代碼下拉 SYS3100 下拉式
   querySYS3100_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/querySYS3100_DropDownList`, body);
+  }
+
+  // 查詢 組織代碼下拉 SYS3100 樹狀下拉式
+  querySYS3100_tree_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/querySYS3100_tree_DropDownList`, body);
   }
 }

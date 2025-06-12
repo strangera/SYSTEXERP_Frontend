@@ -40,10 +40,11 @@ export class TreeDropdownComponent implements OnInit {
   treeData: any[] = []; // member資料先轉換成數狀
 
   ngOnInit() {
-    this.treeData = this.groupByDepartment();
+    // this.treeData = this.groupByDepartment();
+    this.treeData = this.buildTreeFromFlatData();
   }
 
-  // 將扁平化資料轉成樹狀
+  // 將扁平化資料轉成樹狀(3層)
   groupByDepartment(): any[] {
     if (this.Columns.length < 3) {
       console.error('Columns 至少需要三個欄位（兩層父節點 + 一層葉節點）');
@@ -107,6 +108,48 @@ export class TreeDropdownComponent implements OnInit {
     });
 
     return result;
+  }
+  // 將扁平化資料轉成樹狀(4層或以上)
+  buildTreeFromFlatData(): TreeNode[] {
+    const buildRecursive = (data: any[], depth: number): TreeNode[] => {
+      const currentKey = this.Columns[depth]?.value;
+      if (!currentKey) return [];
+
+      // 顯式定義 grouped 的型別，避免 group 推斷為 unknown
+      const grouped: Record<string, any[]> = data.reduce((acc, item) => {
+        const key = item[currentKey];
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(item);
+        return acc;
+      }, {} as Record<string, any[]>);
+
+      return Object.entries(grouped).map(([key, group], index) => {
+        const node: TreeNode = {
+          key: `${depth}-${index}-${key}`,
+          label: key,
+          children: []
+        };
+
+        if (depth === this.Columns.length - 1) {
+          // 已達最後一層，視為葉節點
+          const dataItem = group[0]; // 預設用第一筆資料當作代表，可自訂合併邏輯
+          const label = dataItem?.[this.LeaveColumnLabel] || key;
+
+          node.label = label;
+          node.data = dataItem;
+          node.icon = 'pi pi-user';
+          node.leaf = true;
+          delete node.children; // 移除 children 屬性避免干擾 PrimeNG 樹結構
+        } else {
+          node.children = buildRecursive(group, depth + 1);
+          node.icon = 'pi pi-folder';
+        }
+
+        return node;
+      });
+    };
+
+    return buildRecursive(this.members, 0);
   }
 
 
