@@ -84,12 +84,15 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser> implemen
       })))
     );
 
+    //讀取T103項目
     const systemCodeOptions$ = this.sys0110Service.queryAllSystemCode({}).pipe(
-      map((response) => response.Data.map((item: SYS1000) => ({
-        No: item.SYS_Code,
-        Name: item.SYS_Name,
-        Label: item.SYS_Type + '-' + item.SYS_Code + '-' + item.SYS_Name,
-      })))
+      map((response) => response.Data
+        .filter((item: SYS1000) => item.SYS_Type === 'T103')
+        .map((item: SYS1000) => ({
+          No: item.SYS_Code,
+          Name: item.SYS_Name,
+          Label: item.SYS_Type + '-' + item.SYS_Code + '-' + item.SYS_Name,
+        })))
     );
 
     const tltTalentOptions$ = this.sys0110Service.queryTLTTALENT_DropDownList({}).pipe(

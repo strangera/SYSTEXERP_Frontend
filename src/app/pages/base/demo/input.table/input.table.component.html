@@ -115,7 +115,6 @@
             (confirmSelected)="onMembersSelected($event)"
             [onlySendLeaf]="true"
           ></app-tree-dropdown>
-          <<<<<<< HEAD =======
           <!-- --- -->
         </div>
         <p-divider align="left" type="solid">
@@ -312,19 +311,18 @@
             [submitted]="submitted"
           />
         </div>
-                <p-divider align="left" type="solid">
+        <p-divider align="left" type="solid">
           <b class="text-primary">年月查詢</b>
         </p-divider>
-                  <div class="col-12 md:col-6 lg:col-4">
-   <app-query-year-month
-  [label]="'查詢年月'"
-  [yearControl]="queryForm.controls.Year"
-  [monthControl]="queryForm.controls.Month"
-  [submitted]="submitted"
-  [onlyOddMonths]="true"
- >
-</app-query-year-month>
-          </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-query-year-month
+            [label]="'查詢年月'"
+            [yearControl]="queryForm.controls.Year"
+            [monthControl]="queryForm.controls.Month"
+            [submitted]="submitted"
+            [onlyOddMonths]="true"
+          ></app-query-year-month>
+        </div>
         <p-divider align="left" type="solid">
           <b class="text-primary">其他</b>
         </p-divider>
