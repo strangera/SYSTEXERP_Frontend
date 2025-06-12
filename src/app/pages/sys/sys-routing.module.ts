@@ -103,6 +103,7 @@ const routes: Routes = [
   { path: 'SYSB200CRU', component: SYSB200CRUComponent }, // 廠商基本資料維護作業 CRU
   { path: 'SYSB300CRU', component: SYSB300CRUComponent }, // 組織階層設定作業 CRU
   { path: 'SYSB400CRU', component: SYSB400CRUComponent }, // 組織碼設定作業 CRU
+  { path: 'SYSB400OS', component: Sysb400OsComponent }, // 組織碼設定作業 OS
   { path: 'SYSB500CRU', component: SYSB500CRUComponent }, // 區域基本資料維護作業 CRU
   { path: 'SYSB600CRU', component: SYSB600CRUComponent }, // 樓層基本資料維護作業 CRU
   { path: 'SYSB800CRU', component: SYSB800CRUComponent }, // 大分類基本資料維護作業 CRU

@@ -18,15 +18,17 @@ export class SYSB100Component
   // 查詢
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
-    SYS_StoreNo: ['', [Validators.maxLength(10)]], // 公司編號/店號
+    // SYS_StoreNo: ['', [Validators.maxLength(10)]], // 公司編號/店號 **
     STR_Uniform: ['', [Validators.maxLength(8)]], // 統一編號
     SYS_StoreName: ['', [Validators.maxLength(60)]], // 公司名稱(中文)
     SYS_StoreNameENG: ['', [Validators.maxLength(60)]], // 公司名稱(英文)
     STO_TaxNo: ['', [Validators.maxLength(10)]], // 稅籍編號
+    // 商場名稱 拿掉
     STO_ManagerName: ['', [Validators.maxLength(12)]], // 負責人
     STO_ContactName: ['', [Validators.maxLength(12)]], // 聯絡人
     STO_ContactTel: ['', [Validators.maxLength(15)]], // 聯絡人電話
     STO_ContactFax: ['', [Validators.maxLength(15)]], // 聯絡人傳真
+
     STO_Addr: ['', [Validators.maxLength(100)]], // 公司(營業處)地址(中文)
     STO_AddrENG: ['', [Validators.maxLength(100)]], // 公司(營業處)地址(英文)
     STO_RegAddr: ['', [Validators.maxLength(100)]], // 公司登記地址(中文)
@@ -86,7 +88,9 @@ export class SYSB100Component
   selectedItems: Sysb100m[] = []; // 多選項目
 
   // ----------------------------------------------------------------
-  constructor(private sysb100Service: Sysb100Service) {
+  constructor(
+    private sysb100Service: Sysb100Service,
+  ) {
     super();
   }
 

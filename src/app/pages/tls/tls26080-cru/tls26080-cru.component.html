@@ -1,0 +1,154 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1" />
+    <app-button btnType="back" (click)="onCancel()" />
+  </div>
+
+  <!-- 活動基本資料 -->
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0 mb-3">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <!-- 活動類型 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="活動類型"
+            controlName="activityType"
+            [options]="activityTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.activityType"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <!-- 部門 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="部門"
+            controlName="department"
+            [options]="departmentOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.department"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <!-- 活動群組 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="活動群組"
+            controlName="activityGroup"
+            [options]="activityGroupOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.activityGroup"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <!-- 活動名稱 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="活動名稱"
+            controlName="activityName"
+            [options]="activityNameOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.activityName"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <!-- 活動起始日 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="活動起始日"
+            [control]="dataForm.controls.activityStartDate"
+            controlName="activityStartDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+
+        <!-- 活動結束日 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="活動結束日"
+            [control]="dataForm.controls.activityEndDate"
+            controlName="activityEndDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+
+        <!-- 活動正檔日 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="活動正檔日"
+            [control]="dataForm.controls.activityOfficialDate"
+            controlName="activityOfficialDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+      </div>
+    </form>
+  </p-panel>
+
+  <!-- 專櫃資料表格 -->
+  <p-panel header="專櫃資料" class="line-height-3 m-0 mb-3">
+    <app-table
+      [data]="counterData"
+      [columns]="counterColumns"
+      [showCheckBox]="false"
+      dataKey="id"
+      (delete)="onDeleteCounter($event)"
+    ></app-table>
+
+    <!-- 選中專櫃提示 -->
+    <div *ngIf="selectedCounter" class="mt-2 p-2 bg-blue-50 border-round">
+      <small class="text-blue-600">
+        <i class="pi pi-info-circle mr-1"></i>
+        已選擇專櫃：{{ selectedCounter.counterCode }} -
+        {{ selectedCounter.commissionTypeName }}
+      </small>
+    </div>
+  </p-panel>
+
+  <!-- 扣款項目表格 -->
+  <p-panel header="扣款項目明細" class="line-height-3 m-0 mb-3">
+    <div class="flex justify-content-between align-items-center mb-2">
+      <div *ngIf="selectedCounter" class="text-blue-600">
+        <i class="pi pi-tag mr-1"></i>
+        專櫃編號：{{ selectedCounter.counterCode }}
+      </div>
+    </div>
+
+    <app-table
+      [data]="deductionData"
+      [columns]="deductionColumns"
+      [showCheckBox]="false"
+      dataKey="id"
+      (delete)="onDeleteDeductionItem($event)"
+    ></app-table>
+
+    <!-- 無資料提示 -->
+    <div
+      *ngIf="selectedCounter && deductionData.length === 0"
+      class="text-center py-4 text-gray-500"
+    >
+      <i class="pi pi-inbox text-4xl mb-2 block"></i>
+      <p class="m-0">目前沒有扣款項目，請點擊「新增扣款項目」開始新增</p>
+    </div>
+  </p-panel>
+
+  <!-- 操作按鈕 -->
+  <div
+    *ngIf="!isFormReadable"
+    class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+  >
+    <app-button btnType="clear" (click)="clearForm()"></app-button>
+    <app-button btnType="submit" (click)="onSubmit(dataForm)"></app-button>
+  </div>
+</div>
