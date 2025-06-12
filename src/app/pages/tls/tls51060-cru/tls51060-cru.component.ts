@@ -1,13 +1,11 @@
-import { Component, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { NavigationExtras, Router } from '@angular/router';
+import { Component, OnInit, } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { apiOption, Sysb300m } from '../../../shared/models/sys/sysb000.module';
+import { PluLogo } from '../../../shared/models/tls/tls000.model';
+import { Tls51060Service } from '../../../service/API/tls/tls51060.service';
 //
-import { BigCategoryCodeService } from './../../../service/basic/big-category-code.service';
 
 // 2.5.1.6 品牌設定作業  CRU
 @Component({
@@ -15,93 +13,34 @@ import { BigCategoryCodeService } from './../../../service/basic/big-category-co
   templateUrl: './tls51060-cru.component.html',
   styleUrl: './tls51060-cru.component.scss'
 })
-export class TLS51060CRUComponent {
-  ProgNo: string = '250006';
-  // 權限
-  // ----------------------------------------------------------------
-  funInfo?: FunsrightInfo;
-  addPermission = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  editPermission = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
+  implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    brandCode: [, [Validators.required, Validators.maxLength(4), this.validationService.numberValidator]], // Input serial number
-    brandCName: ['', [Validators.required, Validators.maxLength(40)]], // Input Text
-    brandEName: ['', [Validators.maxLength(100)]], // Input Text
-    brandRestock: [100, [Validators.required, Validators.maxLength(4), this.validationService.numberValidator]], // Input serial number
-    storage: [], // DropDown
-    editortext: [,], // editor text
+    // PLULOGO  商品品牌設定檔
+    id: [],
+    LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌代碼
+    LOGO_CH_NAME: ['', [Validators.required, Validators.maxLength(50)]], // 品牌中文名稱
+    LOGO_EN_NAME: ['', [Validators.maxLength(100)]], // 品牌英文名稱
+    LOGO_Remark: ['', [Validators.maxLength(100)]], // 備註說明
+    PLU_OrderPrcRate: [100, [Validators.required, Validators.maxLength(10)]], // 標準進貨折數 預設100
+    HOS_No: ['', [Validators.maxLength(10)]], // 倉別代碼(建議倉別) POS2034倉庫設定檔(O)
+    // VEN_No: ['', [Validators.maxLength(16)]], // 廠商編號 保留目前不使用
   });
-  // ----------------------------------------------------------------
-  crudstatus: CRUDStatus = CRUDStatus.Read;
-  formTitle: string = '';
-  showConfirm: boolean = false;
-  submitted = false;
+  //
+  storageOptions: apiOption[] = [];
+  allquery: Sysb300m[] = [];
 
   // ----------------------------------------------------------------
-  storageOptions: any[] = [];
-
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private bigCategoryCodeService: BigCategoryCodeService,
-  ) {
+  constructor(private tls51060Service: Tls51060Service) {
+    super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.bigCategoryCodeService.getSystemTypes().subscribe(data => {
-      this.storageOptions = data;
-    });
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
+    this.initializePage('TLS51060', this.dataForm);
+    this.loadOptions();
 
-    switch (state.crudstatus) {
-      case CRUDStatus.Create:
-        this.formTitle = '新增資料';
-        this.showConfirm = this.canAdd();
-        break;
-      case CRUDStatus.Edit:
-        console.log(state.rowdata);
-        this.formTitle = '編輯資料';
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      case CRUDStatus.Read:
-        this.formTitle = '顯示資料';
-        this.Read(state.rowdata);
-        break;
-    }
-  }
-  // ----------------------------------------------------------------
-  get isFormEditable(): boolean {
-    return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
+    // console.log('dataform', this.dataForm.value);
   }
 
   onSubmit(frm: FormGroup) {
@@ -113,17 +52,30 @@ export class TLS51060CRUComponent {
       return;
     }
 
+    //--檢查--
+    // 品牌編號：為唯一值。
+    // 品牌標準進貨折數：文字型態，長度１０，可輸入數字及小數點。例如91.25折時，輸入91.25
+    //                                    預設１００，若為７７折時，輸入７７。
+    //                                    可輸入到小數點以下2位。
+    //--------
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble('新增成功');
+          console.log('insert', frm.value);
+          this.tls51060Service.insertTLS51060(frm.value).subscribe(() => {
+            this.messageService.successBubble('新增成功');
+            // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+            this.dataForm.reset(); // 重置表單
+          });
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble('更新成功');
+          console.log('update', frm.value);
+          this.tls51060Service.updateTLS51060(frm.value).subscribe(() => {
+            // this.messageService.successBubble('更新成功');
+            this.onCancel(); // 儲存後，會返回列表
+          });
         }
         break;
     }
@@ -133,15 +85,25 @@ export class TLS51060CRUComponent {
   }
 
   submitForm(frm: FormGroup) {
-    // 查詢邏輯
     this.onSubmit(frm);
   }
 
   onClearForm() {
-    this.dataForm.reset();  // 重置表單
+    this.dataForm.reset(); // 重置表單
   }
 
-  onCancel() {
-    this.router.navigate(['/TLS5000/TLS51060']);
+  // 讀取dopropdown選項
+  loadOptions() {
+    {
+      this.tls51060Service
+        .queryPOS2034_DropDownList({})
+        .subscribe((response) => {
+          this.storageOptions = response.Data.map((item: apiOption) => ({
+            No: item.No,
+            Name: item.Name,
+            Label: item.No + '-' + item.Name,
+          }));
+        });
+    }
   }
 }

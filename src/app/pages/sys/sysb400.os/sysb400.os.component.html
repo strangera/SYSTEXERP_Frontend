@@ -20,32 +20,16 @@
         <p-divider align="left" type="solid">
           <b class="text-primary">組織架構列表</b>
         </p-divider>
-        <div class="grid p-fluid">
-          <!-- add treeDropDown component   -->
+        <div class="grid p-fluid" *ngIf="orgData.length > 0">
           <app-tree-dropdown
-            [members]="orgFlatTreeData"
+            [members]="orgData"
             [Columns]="orgColumn"
             [LeaveColumnLabel]="LeaveLabel"
             (confirmSelected)="onLevelSelected($event)"
             [onlySendLeaf]="true"
+            [SelectbleCheckBox]="false"
+            [listTitle]="listTitle"
           ></app-tree-dropdown>
-          <!-- --- -->
-        </div>
-      </div>
-      <div>
-        <p-divider align="left" type="solid">
-          <b class="text-primary">樹狀下拉</b>
-        </p-divider>
-        <div class="grid p-fluid">
-          <!-- add treeDropDown component   -->
-          <app-tree-dropdown
-            [members]="flatTreeData"
-            [Columns]="treeNodes"
-            [LeaveColumnLabel]="LeaveColumnLabel"
-            (confirmSelected)="onMembersSelected($event)"
-            [onlySendLeaf]="true"
-          ></app-tree-dropdown>
-          <!-- --- -->
         </div>
       </div>
     </p-panel>

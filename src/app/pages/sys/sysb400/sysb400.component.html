@@ -91,7 +91,11 @@
       [showCheckBox]="true"
       [isRowSelectable]="isRowSelectable"
       dataKey="id"
-      [multiSortMeta]="[{ field: 'org_id', order: 1 }]"
+      [multiSortMeta]="[
+        { field: 'stop_flag', order: 1 },
+        { field: 'level_id', order: 2 },
+        { field: 'org_id', order: 3 },
+      ]"
       [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       [lazy]="true"
