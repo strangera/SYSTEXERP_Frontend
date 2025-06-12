@@ -646,7 +646,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  // 🎯 核心：載入工作流程資料（簡化版）
   private loadWorkflowData(): void {
     console.log('🚀 開始載入工作流程資料...');
 
@@ -659,22 +658,36 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
       console.log('✅ 取得合約ID:', this.currentTalentId);
 
-      // 準備合約資訊
+      // 🎯 關鍵修正：優先使用 CRU 頁面編輯後的資料
       const step1Data = this.contractFlowService.getStep1Data();
+      console.log('📝 Step1 編輯資料:', step1Data);
+
+      // 準備合約資訊 - 優先使用編輯後的資料，沒有才用原始查詢資料
+      const contractInfo = {
+        // 基本資訊 - 優先使用編輯資料
+        talent_id: step1Data?.talent_id || this.currentContractData.talent_id || '-',
+        apply_no: step1Data?.apply_no || this.currentContractData.apply_no || '-',
+        tlt_name: step1Data?.tlt_name || this.currentContractData.tlt_name || '-',
+        VEN_Name: step1Data?.VEN_Name || this.currentContractData.VEN_Name || '-',
+        ven_uniform: step1Data?.ven_uniform || this.currentContractData.ven_uniform || '-',
+        contract_subno: step1Data?.contract_subno || this.currentContractData.contract_subno || '-',
+
+        // 商務條件 - 優先使用編輯資料
+        comm_comp_type: step1Data?.comm_comp_type || this.currentContractData.comm_comp_type || '-',
+
+        // 日期資訊 - 優先使用編輯資料
+        tlt_bdate: step1Data?.tlt_bdate || this.currentContractData.tlt_bdate || '',
+        tlt_edate: step1Data?.tlt_edate || this.currentContractData.tlt_edate || '',
+        tlt_contract_bdate: step1Data?.tlt_contract_bdate || this.currentContractData.tlt_contract_bdate || '',
+        tlt_contract_edate: step1Data?.tlt_contract_edate || this.currentContractData.tlt_contract_edate || ''
+      };
+
       this.contractInfoData = [{
         id: '1',
-        talent_id: this.currentContractData.talent_id || step1Data?.talent_id || '-',
-        apply_no: this.currentContractData.apply_no || step1Data?.apply_no || '-',
-        tlt_name: this.currentContractData.tlt_name || step1Data?.tlt_name || '-',
-        VEN_Name: this.currentContractData.VEN_Name || step1Data?.VEN_Name || '-',
-        ven_uniform: this.currentContractData.ven_uniform || step1Data?.ven_uniform || '-',
-        contract_subno: this.currentContractData.contract_subno || step1Data?.contract_subno || '-',
-        comm_comp_type: this.currentContractData.comm_comp_type || step1Data?.comm_comp_type || '-',
-        tlt_bdate: this.currentContractData.tlt_bdate || step1Data?.tlt_bdate || '',
-        tlt_edate: this.currentContractData.tlt_edate || step1Data?.tlt_edate || '',
-        tlt_contract_bdate: this.currentContractData.tlt_contract_bdate || step1Data?.tlt_contract_bdate || '',
-        tlt_contract_edate: this.currentContractData.tlt_contract_edate || step1Data?.tlt_contract_edate || ''
+        ...contractInfo
       }];
+
+      console.log('📊 準備顯示的合約資訊:', this.contractInfoData);
 
       this.initializeDataStructure();
 
@@ -685,7 +698,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       if (savedFareData && Object.keys(savedFareData).length > 0) {
         console.log('📦 發現暫存的扣款資料，直接使用');
         try {
-          // 🎯 簡化：直接使用暫存資料，讓共通組件處理日期
           this.originalFareData = this.validateAndFixData(savedFareData);
           this.filterData();
           console.log('✅ 暫存資料載入完成');
@@ -702,7 +714,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this.router.navigate(['/TLS/TLS13010CRU']);
     }
   }
-
   // 🎯 簡化：資料驗證和修正（移除日期處理）
   private validateAndFixData(data: any): { [key: string]: FareItem[] } {
     console.log('驗證暫存資料格式:', data);
