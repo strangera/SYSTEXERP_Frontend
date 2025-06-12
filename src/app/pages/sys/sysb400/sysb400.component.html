@@ -3,6 +3,11 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button
       btnType="create"
+      (click)="gotoGraph()"
+      label="組織階層圖列表"
+    ></app-button>
+    <app-button
+      btnType="create"
       (click)="onCreate()"
       label="{{ 'create' | translate }}"
     ></app-button>
@@ -71,6 +76,7 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
   <div class="col-13">
     <app-table

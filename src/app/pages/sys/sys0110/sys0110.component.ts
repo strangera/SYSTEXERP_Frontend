@@ -4,7 +4,7 @@ import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { apiOption, option, SYS1000, Sysb400m, tblUser } from '../../../shared/models/sys/sysb000.module';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 
 // 4-2-1-1 使用者基本資料維護
@@ -19,7 +19,7 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     user_No: ['', Validators.maxLength(10)], // 使用者編號
     user_Name: ['', Validators.maxLength(20)], // 使用者名稱
     // user_Password: ['', Validators.maxLength(32)], // 使用者密碼-加密
-    // title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000 (就是職位)
+    // title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000 (就是職位)-->T103
     org_ID: [[], Validators.maxLength(20)], // 組織編號 (SYSB400_SYS3100)
     str_dateStart: [null], // 帳號有效開始日期
     str_dateEnd: [null], // 帳號有效結束日期
@@ -43,19 +43,18 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     { field: 'user_No', header: '使用者編號', visible: true },
     { field: 'user_Name', header: '使用者名稱', visible: true },
     {
-      field: 'title', header: '職稱代碼', visible: false, format: (value: string) =>
+      field: 'title', header: '職稱代碼', visible: true, format: (value: string) =>
         this.titleOptions.find((option) => option.No === value)?.Label || value
     },
     {
       field: 'org_ID', header: '組織編號', visible: true, format: (value: string) =>
-        this.SYS3100_Options.find((option) => option.No === value)?.Label ||
-        value
+        this.SYS3100_Options.find((option) => option.No === value)?.Label || value
     },
-    { field: 'str_dateStart', header: '帳號有效開始日期', visible: true },
-    { field: 'str_dateEnd', header: '帳號有效結束日期', visible: true },
-    { field: 'lastLogin', header: '上次登入時間', visible: true },  // 還沒串資料
+    { field: 'str_date', header: '帳號有效開始日期', visible: true, format: formatDate },
+    { field: 'end_date', header: '帳號有效結束日期', visible: true, format: formatDate },
+    { field: 'last_Login', header: '上次登入時間', visible: true, format: formatDateTime },  // 還沒串資料
     {
-      field: 'status', header: '使用者狀態', visible: true, format: (value: string) =>
+      field: 'status', header: '狀態', visible: true, format: (value: string) =>
         this.userStatusOptions.find((option) => option.value === value)?.label ||
         value
     },
@@ -64,13 +63,17 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
         this.userTypeOptions.find((option) => option.value === value)?.label ||
         value
     },
-    { field: 'user_email', header: '使用者等級', visible: true },
-    { field: 'user_priority', header: '使用者等級', visible: true },
-    { field: 'user_email', header: '使用者email帳號', visible: false },
-    { field: 'TLT_No', header: '所屬專櫃編號', visible: false },
+    { field: 'user_email', header: 'Email', visible: true },
+    { field: 'TLT_No', header: '所屬專櫃編號', visible: true },
     { field: 'remarks', header: '備註', visible: true },
-    { field: 'user_priority', header: '使用者等級', visible: false },
-
+    { field: 'user_priority', header: '使用者等級', visible: true },
+    { field: 'USER_PwdExpireDate', header: '密碼到期日', visible: true, format: formatDate },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime },
+    { field: 'CRT_USR_No', header: '建立人員編號', visible: true },
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
+    { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDateTime },
+    { field: 'UPD_USR_No', header: '變更人員編號', visible: true },
+    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
   ];
   selectedItems: tblUser[] = [];// 多選項目
 
@@ -96,31 +99,22 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
   loadOptions() {
     // *職稱代碼-SYS1000
     this.sys0110Service.queryAllSystemCode({}).subscribe((response) => {
-      console.log('回應', response);
-      this.titleOptions = response.Data.map((item: SYS1000) => ({
-        No: item.SYS_Code,
-        Name: item.SYS_Name,
-        Label: item.SYS_Type + '-' + item.SYS_Code + '-' + item.SYS_Name,
-      }));
+      this.titleOptions = response.Data
+        .filter((item: SYS1000) => item.SYS_Type === 'T103')
+        .map((item: SYS1000) => ({
+          No: item.SYS_Code,
+          Name: item.SYS_Name,
+          Label: item.SYS_Type + '-' + item.SYS_Code + '-' + item.SYS_Name,
+        }));
+      console.log('回應', this.titleOptions);
     });
 
     //建立組織下拉清單(SYS3100) 查詢全部
-    const query_org = {
-      level_id: '',
-      org_id: '',
-      org_name: '',
-
-      //分頁查詢
-      pageSize: 1000,
-      pageIndex: 0,
-      SortBy: [{ field: 'org_id', order: 1 }],
-    };
-
-    this.sysb400Service.querySYSB400(query_org).subscribe((response) => {
-      this.SYS3100_Options = response.Data.map((item: Sysb400m) => ({
-        No: item.org_id,
-        Name: item.org_name,
-        Label: item.org_id + '-' + item.org_name,
+    this.sysb400Service.querySYS3100_DropDownList({}).subscribe((response) => {
+      this.SYS3100_Options = response.Data.map((item: any) => ({
+        No: item.No,
+        Name: item.Name,
+        Label: item.No + '-' + item.Name,
       }));
     });
 

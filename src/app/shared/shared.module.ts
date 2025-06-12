@@ -72,6 +72,7 @@ import { MultiLocationFilterComponent } from './componentkit/multi-location-filt
 import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autocomplete.component';
 import { QueryYearMonthComponent } from './componentkit/query-year-month/query-year-month.component';
 import { InputGroupComponent } from './componentkit/input-group/input-group.component';
+import { InputTextRangeComponent } from './componentkit/input-text-range/input-text-range.component';
 
 @NgModule({
   declarations: [
@@ -81,6 +82,7 @@ import { InputGroupComponent } from './componentkit/input-group/input-group.comp
     DropdownComponent,
     InputTextComponent,
     InputNumberComponent,
+    InputTextRangeComponent,
     MultiSelectComponent,
     CalendarComponent,
     CalendarRangeComponent,
@@ -156,6 +158,7 @@ import { InputGroupComponent } from './componentkit/input-group/input-group.comp
     ReactiveFormsModule,
     TranslateModule,
     // PrimeNG
+    FileUploadModule,
     OrganizationChartModule,
     ProgressSpinnerModule,
     PanelModule,
@@ -198,6 +201,7 @@ import { InputGroupComponent } from './componentkit/input-group/input-group.comp
     TreeDropdownNestComponent,
     InputTextareaComponent,
     InputNumberComponent,
+    InputTextRangeComponent,
     InputNumberRangeComponent,
     FileUploadComponent,
     InputGroupComponent,

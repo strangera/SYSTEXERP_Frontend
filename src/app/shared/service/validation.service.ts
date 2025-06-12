@@ -31,6 +31,12 @@ export class ValidationService {
       invalidNumberRange: '起始數字不可大於結束數字',
       passwordsMismatch: '兩次輸入的密碼不一致，請重新輸入。',
       invalidPasswordStrength: '密碼強度不足，至少包含一個大小寫字母、一個數字和一個特殊符號。',
+      invalidGuiTrack: '僅能輸入大寫英文字母',
+      invalidGuiBegNo: '起號結尾只能為 00 或 50',
+      invalidGuiEndNo: '迄號結尾只能為 49 或 99',
+      invalidGuiNumberRange: '結束號碼不可小於起始號碼',
+      invalidOddMonth: '只能選擇單數月',
+      invalidMinMonthDate: '不能小於本期'
     };
     return config[validatorName];
   }
@@ -125,4 +131,87 @@ export class ValidationService {
       return passwordsMatch ? null : { passwordsMismatch: true };
     };
   }
+  // GUI Track - 僅允許大寫英文
+  guiTrackValidator(control: { value: string | null }) {
+    const value = control.value;
+    if (value !== null && value !== '') {
+      if (!/^[A-Z]+$/.test(value)) {
+        return { invalidGuiTrack: true };
+      }
+    }
+    return null;
+  }
+  // GUI_BegNo 驗證：純數字，結尾只能是 00 或 50
+  guiBegNoValidator(control: { value: string | null }) {
+    const value = control.value;
+    if (value !== null && value !== '') {
+      if (!/^\d+$/.test(value)) {
+        return { invalidNumber: true };
+      }
+      if (!/(00|50)$/.test(value)) {
+        return { invalidGuiBegNo: true };
+      }
+    }
+    return null;
+  }
+
+  // GUI_EndNo 驗證：純數字，結尾只能是 49 或 99
+  guiEndNoValidator(control: { value: string | null }) {
+    const value = control.value;
+    if (value !== null && value !== '') {
+      if (!/^\d+$/.test(value)) {
+        return { invalidNumber: true };
+      }
+      if (!/(49|99)$/.test(value)) {
+        return { invalidGuiEndNo: true };
+      }
+    }
+    return null;
+  }
+  guiNumberRangeValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const begNo = control.get('GUI_BegNo')?.value;
+      const endNo = control.get('GUI_EndNo')?.value;
+
+      if (begNo && endNo) {
+        const beg = Number(begNo);
+        const end = Number(endNo);
+
+        if (!isNaN(beg) && !isNaN(end)) {
+          if (beg > end) {
+            // 起號大於迄號，回傳錯誤
+            return { invalidGuiNumberRange: true };
+          }
+        }
+      }
+      return null;
+    };
+  }
+  // GUI_YYMM 驗證：只能為單數月，且只能是當月的前一個月
+  oddMonthValidator(control: { value: Date | null }) {
+    const value = control.value;
+
+    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
+      const month = value.getMonth() + 1; // JS 月份是 0-based，要+1
+      // 檢查是否為單數月
+      if (month % 2 === 0) {
+        return { invalidOddMonth: true };
+      }
+
+      const now = new Date();
+      const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1); // 當前月的前一個月 1 號
+      const inputDate = new Date(value.getFullYear(), value.getMonth(), 1);
+
+      // 輸入日期不能小於前一個月
+      if (inputDate < prevMonth) {
+        return { invalidMinMonthDate: true };
+      }
+    } else {
+      // 如果不是有效的 Date 物件
+      return { invalidDate2: true };
+    }
+
+    return null;
+  }
+
 }

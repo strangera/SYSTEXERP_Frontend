@@ -1,10 +1,13 @@
-import { Sysb400Service } from './../../../service/api/sys/sysb400.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, } from '@angular/forms';
-import { apiOption, option, SYS1000, Sysb400m, tblUser } from '../../../shared/models/sys/sysb000.module';
+import { apiOption, option, SYS1000, tblUser } from '../../../shared/models/sys/sysb000.module';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { EncryptionService } from '../../../shared/service/encryption.service';
+import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
+import { Column } from '../../../shared/componentkit/table/table.model';
+import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
+import { forkJoin, map } from 'rxjs';
 // 4-2-1-1使用者基本資料維護
 @Component({
   selector: 'app-sys0110-cru',
@@ -12,98 +15,203 @@ import { EncryptionService } from '../../../shared/service/encryption.service';
 })
 export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
+    id: [null], // 序號
     user_No: ['', [Validators.required, Validators.maxLength(10)]], // 使用者編號
     user_Name: ['', [Validators.required, Validators.maxLength(20)]], // 使用者名稱
-    user_Password: [''], // 使用者密碼-加密
+    user_Password: ['', [Validators.required]], // 使用者密碼-加密
     title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000 (就是職位)
     org_ID: ['', Validators.maxLength(20)], // 組織編號 (SYSB400_SYS3100)
-    str_dateStart: [null], // 帳號有效開始日期
-    str_dateEnd: [null], // 帳號有效結束日期
+    str_date: [null], // 帳號有效開始日期
+    end_date: [null], // 帳號有效結束日期
     status: ['', [Validators.required, Validators.maxLength(1)]], // 使用者狀態 1=有效 2=停用
     user_type: ['', [Validators.required, Validators.maxLength(1)]], // 使用者型態 1=公司內部人員(default) 2=專櫃人員 3=其他
     user_email: ['', [Validators.email, Validators.maxLength(100)]], // 使用者email帳號
     TLT_No: ['', Validators.maxLength(12)], // 所屬專櫃編號
     remarks: ['', Validators.maxLength(100)], // 備註
     user_priority: ['', Validators.maxLength(1)], // 使用者等級
-    // USER_PwdExpireDate: [null], // 密碼到期日 YYYY/MM/DD HH:NN:SS，若使用者登入系統的時間大於此日期，則需強制使用者變更密碼
-    // last_Login: [null], // 最近一次登入
+    USER_PwdExpireDate: [{ value: null, disabled: true }], // 密碼到期日 YYYY/MM/DD HH:NN:SS，若使用者登入系統的時間大於此日期，則需強制使用者變更密碼
+    last_Login: [null], // 上次登入時間
+    CRT_Date: [{ value: null, disabled: true }], // 建立日期
+    CRT_USR_No: [{ value: '', disabled: true }], // 建立人員編號
+    CRT_USR_Name: [{ value: '', disabled: true }], // 建立人員名稱
+    UPD_Date: [{ value: null, disabled: true }], // 更新日期
+    UPD_USR_No: [{ value: '', disabled: true }], // 更新人員編號
+    UPD_USR_Name: [{ value: '', disabled: true }], // 更新人員名稱
   });
   // 下拉選單選項
+  SYS3100_Options: { value: string; label: string }[] = [];
   titleOptions: apiOption[] = [];
-  SYS3100_Options: apiOption[] = [];
   userStatusOptions: option[] = [];
   userTypeOptions: option[] = [];
   tltNo_Options: option[] = [];
+  SYS3700_Options: { value: string; label: string }[] = [];
+  SYS3800_Options: { value: string; label: string }[] = [];
+  SYS3A00_Options: { value: string; label: string }[] = [];
+  TLT_Kind_Options: { value: string; label: string }[] = [
+    { value: '1', label: '正櫃' },
+    { value: '2', label: '臨時櫃' },
+    { value: '3', label: '特賣會' },
+    { value: '4', label: '虛擬櫃' },
+  ]
+  BUS_TypeOptions: { value: string; label: string }[] = []
+
+  data: any = [];
+  selectedRows: any[] = [];
+  columns: Column[] = [];
+
   constructor(
+    private locationOptionsService: LocationOptionsService,
     private sys0110Service: Sys0110Service,
-    private sysb400Service: Sysb400Service,
     private encrypt: EncryptionService,
+    private sysb800DropdownService: Sysb800DropdownService,
   ) {
     super();
   }
   ngOnInit(): void {
     this.initializePage('SYS0110', this.dataForm);
-    this.loadOptions();
+    if (this.isFormEditable) {
+      this.dataForm.get('user_No')?.disable();
+      this.dataForm.get('user_Password')?.disable();
+    }
+    this.loadAndSetupColumns(); // 呼叫新的方法來處理異步載入和 columns 設定
   }
   // 加載下拉選項
-  loadOptions() {
-    // *職稱代碼-SYS1000
-    this.sys0110Service.queryAllSystemCode({}).subscribe((response) => {
-      this.titleOptions = response.Data.map((item: SYS1000) => ({
-        No: item.SYS_Code,
-        Name: item.SYS_Name,
-        Label: item.SYS_Type + '-' + item.SYS_Code + '-' + item.SYS_Name,
-      }));
-    });
-    //建立組織下拉清單(SYS3100) 查詢全部
-    const query_org = {
-      level_id: '',
-      org_id: '',
-      org_name: '',
-      pageSize: 1000,
-      pageIndex: 0,
-      SortBy: [{ field: 'org_id', order: 1 }],
-    };
+  loadAndSetupColumns() {
+    const orgOptions$ = this.locationOptionsService.getOrgOptions().pipe(
+      map((options: any) => options.map((item: { value: string; label: string }) => ({
+        ...item,
+        label: item.value + ' - ' + item.label,
+      })))
+    );
 
-    // 組織編號
-    this.sysb400Service.querySYSB400(query_org).subscribe((response) => {
-      this.SYS3100_Options = response.Data.map((item: Sysb400m) => ({
-        No: item.org_id,
-        Name: item.org_name,
-        Label: item.org_id + '-' + item.org_name,
-      }));
-    });
-    // 查專櫃主檔
-    this.sys0110Service.queryTLTTALENT_DropDownList({}).subscribe((response) => {
-      this.tltNo_Options = response.Data.map((item: any) => ({
+    //讀取T103項目
+    const systemCodeOptions$ = this.sys0110Service.queryAllSystemCode({}).pipe(
+      map((response) => response.Data
+        .filter((item: SYS1000) => item.SYS_Type === 'T103')
+        .map((item: SYS1000) => ({
+          No: item.SYS_Code,
+          Name: item.SYS_Name,
+          Label: item.SYS_Type + '-' + item.SYS_Code + '-' + item.SYS_Name,
+        })))
+    );
+
+    const tltTalentOptions$ = this.sys0110Service.queryTLTTALENT_DropDownList({}).pipe(
+      map((response) => response.Data.map((item: any) => ({
         No: item.No,
         Name: item.Name,
         Label: item.No + '-' + item.Name,
-      }));
-    });
-    this.userTypeOptions = [
-      { value: '1', label: '公司內部人員' },
-      { value: '2', label: '專櫃人員' },
-      { value: '3', label: '其他' },
-    ];
-    if (this.isFormCreateable) {
-      this.userStatusOptions = [
-        { value: '1', label: '有效' },
-      ];
-    }
-    if (this.isFormEditable) {
+      })))
+    );
+
+    const buildingOptions$ = this.locationOptionsService.getBuildingOptions()
+    const floorOptions$ = this.locationOptionsService.getFloorOptions()
+    const regionOptions$ = this.locationOptionsService.getRegionOptions()
+    const busTypeOptions$ = this.sysb800DropdownService.getSystemTypes();
+
+    // 使用 forkJoin 等待所有異步請求完成
+    forkJoin([
+      orgOptions$,
+      systemCodeOptions$,
+      tltTalentOptions$,
+      buildingOptions$,
+      floorOptions$,
+      regionOptions$,
+      busTypeOptions$
+    ]).subscribe(([
+      orgOptions,
+      systemCodeOptions,
+      tltTalentOptions,
+      buildingOptions,
+      floorOptions,
+      regionOptions,
+      busTypeOptions
+    ]) => {
+      // 在這裡，所有的選項都已經載入完畢
+      this.SYS3100_Options = orgOptions;
+      this.titleOptions = systemCodeOptions;
+      this.tltNo_Options = tltTalentOptions;
+      this.SYS3700_Options = buildingOptions;
+      this.SYS3800_Options = floorOptions;
+      this.SYS3A00_Options = regionOptions;
+      this.BUS_TypeOptions = busTypeOptions;
+
+      // 設定靜態選項 (如果它們是靜態的)
       this.userStatusOptions = [
         { value: '1', label: '有效' },
         { value: '2', label: '停用' },
       ];
+      this.userTypeOptions = [
+        { value: '1', label: '公司內部人員' },
+        { value: '2', label: '專櫃人員' },
+        { value: '3', label: '其他' },
+      ];
+
+      // 現在所有選項都已準備好，可以安全地設定 columns
+      this.columns = [
+        // { field: 'User_No', header: '使用者編號' },
+        // { field: 'SEQ_No', header: '序號' },
+        // { field: 'id', header: 'ID' },
+        { field: 'Org_ID', header: '組織代碼', type: 'dropdown', options: this.SYS3100_Options, optionLabel: 'label', optionValue: 'value' },
+        { field: 'Building_No', header: '館別代碼', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value' },
+        { field: 'Floor_No', header: '樓層代碼', type: 'dropdown', options: this.SYS3800_Options, optionLabel: 'label', optionValue: 'value' },
+        { field: 'Area_No', header: '區域代碼', type: 'dropdown', options: this.SYS3A00_Options, optionLabel: 'label', optionValue: 'value' },
+        { field: 'TLT_No', header: '專櫃編號', type: 'input' },
+        { field: 'TLT_Kind', header: '專櫃類型', type: 'dropdown', options: this.TLT_Kind_Options, optionLabel: 'label', optionValue: 'value' }, // 假設這是靜態的
+        { field: 'BUS_Type', header: '大分類代碼', type: 'dropdown', options: this.BUS_TypeOptions, optionLabel: 'label', optionValue: 'value' },
+      ];
+    });
+  }
+  showDialog = false;
+  dialogForm = this.formBuilder.nonNullable.group({
+    id: [null], // 序號
+    Org_ID: [null], // 組織編號
+    Building_No: [null], // 館別代碼
+    Floor_No: [null], // 樓層代碼
+    Area_No: [null], // 區域代碼
+    TLT_No: ['', Validators.maxLength(12)], // 專櫃編號
+    TLT_Kind: [null], // 專櫃類型
+    BUS_Type: [null], // 大分類代碼
+  });
+  get errorMessages() {
+    return this.dialogForm.value.Org_ID
+      || this.dialogForm.value.Building_No
+      || this.dialogForm.value.Floor_No
+      || this.dialogForm.value.Area_No
+      || this.dialogForm.value.TLT_No;
+  }
+  onDialogSubmit(frm: FormGroup) {
+    if (!this.errorMessages) {
+      return;
     }
+    this.showDialog = false;
+    const newId = this.data.length > 0 ? Math.max(...this.data.map((item: any) => item.id || 0)) + 1 : 1;
+    this.data = [...this.data, { ...frm.value, id: newId }];
+    this.dialogForm.reset();
+  }
+  // 刪除資料的方法
+  onDelete(rows: any[]) { // 將參數從單一 'row' 改為 'rows' 陣列
+    const idsToDelete = new Set(rows.map(item => item.id)); // 取得所有要刪除的 ID
+    this.data = this.data.filter((item: any) => !idsToDelete.has(item.id));
+    this.selectedRows = [];
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       frm.value.user_Password = this.encrypt.getPassword(frm.value.user_No, frm.value.user_Password);
+      const today = new Date();
+      const expireDate = new Date(today);
+      expireDate.setDate(today.getDate() + 90);
+      const body = {
+        ...frm.value,
+        user_No: frm.get('user_No')?.value,
+        USER_PwdExpireDate: expireDate.toISOString(),
+        sys3700: this.data.map((item: any) => ({
+          ...item,
+          User_No: frm.get('user_No')?.value,
+        })),
+      };
       const serviceCall = this.isFormCreateable
-        ? this.sys0110Service.createUser(frm.value)
-        : this.sys0110Service.updateUser(frm.value);
+        ? this.sys0110Service.createUser(body)
+        : this.sys0110Service.updateUser(body);
       serviceCall.subscribe(() => {
         if (this.isFormCreateable) {
           this.messageService.successBubble('新增成功');

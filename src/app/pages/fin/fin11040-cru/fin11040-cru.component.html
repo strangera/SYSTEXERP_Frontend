@@ -1,29 +1,38 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1;">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="格式代號" controlName="formatSerialnumber"
-                        [control]="dataForm.controls.formatSerialnumber" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="格式名稱" controlName="formatName" [control]="dataForm.controls.formatName"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-            </div>
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
-            </div>
-        </div>
-    </p-panel>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1" />
+    <app-button btnType="back" (click)="onCancel()" />
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="品項代號" controlName="INV_ItemNo"
+          [control]="dataForm.controls.INV_ItemNo" [submitted]="submitted"></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="品項名稱" controlName="INV_ItemName"
+          [control]="dataForm.controls.INV_ItemName" [submitted]="submitted"></app-input-text>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用別" controlName="INV_UsageType"
+          [control]="dataForm.controls.INV_UsageType" [options]="INV_UsageTypeOptions" optionLabel="label"
+          optionValue="value" [submitted]="submitted"></app-dropdown>
+      </div>
+      <hr *ngIf="!isFormCreateable">
+      <div *ngIf="!isFormCreateable" class="grid p-fluid">
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateTimeOne" label="建立日期"
+          [control]="dataForm.controls.CRT_Date" />
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="建立人員" controlName="CRT_USR_No"
+          [control]="dataForm.controls.CRT_USR_No" />
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="建立人員姓名" controlName="CRT_USR_Name"
+          [control]="dataForm.controls.CRT_USR_Name" />
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateTimeOne" label="變更日期"
+          [control]="dataForm.controls.UPD_Date" />
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="變更人員" controlName="UPD_USR_No"
+          [control]="dataForm.controls.UPD_USR_No" />
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="變更人員姓名" controlName="UPD_USR_Name"
+          [control]="dataForm.controls.UPD_USR_Name" />
+      </div>
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading" />
+      </div>
+    </form>
+  </p-panel>
 </div>

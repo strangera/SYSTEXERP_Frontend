@@ -119,8 +119,7 @@ export class AuthService {
   }
   // 獲取使用者權限
   getFunRightsInfo(): Observable<any> {
-    return this.http.get<any>(`assets/service/User/FunRightsInfo.json`).pipe(
-      // return this.http.post<any>(`${this.apiUrl}/User/GetUserDashboard`, {}).pipe(
+    return this.http.post<any>(`${this.apiUrl}/User/GetUserDashboard`, {}).pipe(
       map((response: any) => {
         sessionStorage.setItem('FunRightsInfo', JSON.stringify(response.Data.funright_info));
         this._menuUpdated.next(response.Data.funright_info);

@@ -120,6 +120,17 @@ export const formatDateTime = (dateStr: string) => {
   return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
 };
 
+// formatYYYYMM 輸出為 YYYY/MM
+export const formatYYYYMM = (dateStr: string): string => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}/${month}`;
+};
+
 // 000,000,000
 export const formatNumber = (number: number | string): string => {
   if (!number) return '0';

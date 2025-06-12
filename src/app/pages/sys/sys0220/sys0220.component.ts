@@ -6,7 +6,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
-import { tblUser, apiOption, option, SYS1000, Sysb400m } from '../../../shared/models/sys/sysb000.module';
+import { tblUser, apiOption, option, SYS1000 } from '../../../shared/models/sys/sysb000.module';
 
 // 4-2-2-4使用者之角色設定維護
 @Component({
@@ -31,7 +31,7 @@ export class SYS0220Component extends BasicQueryPageComponent<tblUser> implement
     // user_email: ['', Validators.maxLength(100)], // 使用者email帳號
     // TLT_No: ['', Validators.maxLength(12)], // 所屬專櫃編號
     // remarks: ['', Validators.maxLength(100)], // 備註
-    user_priority: [[], Validators.maxLength(1)], // 使用者等級
+    user_priority: [[], Validators.maxLength(1)], // 使用者等級 (user fillin)
     // USER_PwdExpireDate: [''], // 密碼到期日 YYYY/MM/DD HH:NN:SS，若使用者登入系統的時間大於此日期，則需強制使用者變更密碼
 
     ...createPaginationConfig([{ field: 'user_No', order: 1 }]), // 分頁和排序參數
@@ -98,23 +98,13 @@ export class SYS0220Component extends BasicQueryPageComponent<tblUser> implement
     });
 
     //建立組織下拉清單(SYS3100) 查詢全部
-    const query_org = {
-      level_id: '',
-      org_id: '',
-      org_name: '',
-
-      //分頁查詢
-      pageSize: 1000,
-      pageIndex: 0,
-      SortBy: [{ field: 'org_id', order: 1 }],
-    };
-
-    this.sysb400Service.querySYSB400(query_org).subscribe((response) => {
-      this.SYS3100_Options = response.Data.map((item: Sysb400m) => ({
-        No: item.org_id,
-        Name: item.org_name,
-        Label: item.org_id + '-' + item.org_name,
+    this.sysb400Service.querySYS3100_DropDownList({}).subscribe((response) => {
+      this.SYS3100_Options = response.Data.map((item: any) => ({
+        No: item.No,
+        Name: item.Name,
+        Label: item.No + '-' + item.Name,
       }));
+      // console.log('SYS3100_Options', this.SYS3100_Options);
     });
 
     this.userTypeOptions = [
