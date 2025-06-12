@@ -92,6 +92,15 @@ export const TLT_CTYPE_MTOTAL_OPTIONS = {
   '3': '期間包',
 } as const;
 
+export const TPY_TYPE_OPTIONS = {
+  '01': '坪數',
+  '02': '收銀機台數',
+  '03': '人數',
+  '04': '度數',
+  '05': '每坪每天',
+  '06': '線數',
+} as const;
+
 // ========== 格式化函數 ==========
 
 // 通用的多選格式化函數
