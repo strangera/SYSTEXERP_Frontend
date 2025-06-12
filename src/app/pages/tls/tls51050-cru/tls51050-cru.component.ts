@@ -49,7 +49,7 @@ export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS51060', this.dataForm);
+    this.initializePage('TLS51050', this.dataForm);
     this.loadOptions();
 
     // console.log('dataform', this.dataForm.value);
@@ -65,10 +65,8 @@ export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
     }
 
     //--檢查--
-    // 品牌編號：為唯一值。
-    // 品牌標準進貨折數：文字型態，長度１０，可輸入數字及小數點。例如91.25折時，輸入91.25
-    //                                    預設１００，若為７７折時，輸入７７。
-    //                                    可輸入到小數點以下2位。
+    //新增時
+    // 單位屬性：預設1 基本單位，目前只有基本單位沒有包裝單位
     //--------
     switch (this.crudstatus) {
       case CRUDStatus.Create:
