@@ -56,6 +56,14 @@ export class NotificationService {
     this.sendBubbleMessage('error', title, message || '發生不明錯誤');
   }
   private sendBubbleMessage(severity: Message['severity'], summary: string, detail: string) {
-    this.bubbleMsgSource.next({ severity, summary, detail });
+    const formattedDetail = detail ? detail
+      .replace(/\/r\/n/g, '<br>')
+      .replace(/\/r/g, '<br>')
+      .replace(/\/n/g, '<br>')
+      .replace(/\\r\\n/g, '<br>')
+      .replace(/\\r/g, '<br>')
+      .replace(/\\n/g, '<br>') : '';
+    this.bubbleMsgSource.next({ severity, summary, detail: formattedDetail });
   }
+
 }

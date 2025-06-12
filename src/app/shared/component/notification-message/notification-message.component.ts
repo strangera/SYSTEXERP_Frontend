@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NotificationService } from './notification.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
@@ -7,15 +7,15 @@ import { ConfirmationService, MessageService } from 'primeng/api';
   templateUrl: './notification-message.component.html',
   styleUrl: './notification-message.component.scss'
 })
-export class NotificationMessageComponent {
-  msgBoxHeader: string = '';
-  msgBoxMessage: string = '';
-  msgBoxDisplay: boolean = false;
-  blockedDocument: boolean = false;
-  inputBoxDisplay: boolean = false;
-  inputBoxHeader: string = '';
-  inputBoxMessage: string = '';
-  inputBoxInputText: string = '';
+export class NotificationMessageComponent implements OnInit {
+  msgBoxHeader = '';
+  msgBoxMessage = '';
+  msgBoxDisplay = false;
+  blockedDocument = false;
+  inputBoxDisplay = false;
+  inputBoxHeader = '';
+  inputBoxMessage = '';
+  inputBoxInputText = '';
   inputBoxOK?: (value: string) => void;
   inputBoxCancel?: () => void;
   // ----------------------------------------------------------------
@@ -103,5 +103,20 @@ export class NotificationMessageComponent {
     this.inputBoxInputText = '';
     this.inputBoxOK = undefined;
     this.inputBoxCancel = undefined;
+  }
+
+  getIcon(severity: string): string {
+    switch (severity) {
+      case 'success':
+        return 'pi-check-circle';
+      case 'info':
+        return 'pi-info-circle';
+      case 'warn':
+        return 'pi-exclamation-triangle';
+      case 'error':
+        return 'pi-times-circle';
+      default:
+        return 'pi-bell';
+    }
   }
 }
