@@ -6,20 +6,18 @@ import { AuthService } from '../../../service/system/auth.service';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 import { Sysb400m } from '../../../shared/models/sys/sysb000.module';
 
-@Component({
-  selector: 'app-sysb400.os',
-  templateUrl: './sysb400.os.component.html',
-  styleUrl: './sysb400.os.component.scss'
-})
-
 interface OrgTreeNode {
   label: string;
   key: string;
   data: string; // 可以存放 level_id
   children?: OrgTreeNode[];
 }
-
 // 組織架構列表
+@Component({
+  selector: 'app-sysb400.os',
+  templateUrl: './sysb400.os.component.html',
+  styleUrl: './sysb400.os.component.scss'
+})
 export class Sysb400OsComponent extends BasicQpageComponent implements OnInit {
   nodes: TreeNode[] = [];
   formTitle = '組織架構列表';
