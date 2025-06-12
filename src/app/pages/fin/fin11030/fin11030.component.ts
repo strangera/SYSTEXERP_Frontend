@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { APS2001Data, SAL_GUIPaperOptions } from './fin11030.model';
+import { APS2001Data, columns, SAL_GUIPaperOptions } from './fin11030.model';
 import { Fin11030Service } from '../../../service/api/fin/fin11030.service';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-fin11030',
@@ -24,26 +25,10 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
   SAL_GUIPaperOptions = SAL_GUIPaperOptions;     // 發票類別選項
   data: APS2001Data[] = [];
   selectedRows: APS2001Data[] = [];
-  columns: Column[] = [
-    { field: 'index', header: '序號', visible: true },
-    { field: 'SAL_GUIYYYYMM', header: '發票年月', visible: true },
-    { field: 'SAL_GUITrack', header: '字軌', visible: true },
-    { field: 'SAL_GUIBegNo', header: '發票號碼(起)', visible: true },
-    { field: 'SAL_GUIEndNo', header: '發票號碼(迄)', visible: true },
-    { field: 'SAL_Type', header: '發票類別', visible: true },
-    { field: 'GUI_DingType', header: '是否為丁種發票', visible: true },
-    { field: 'CRT_Date', header: '建立日期', visible: true },
-    { field: 'CRT_USR_Name', header: '建立人員', visible: true },
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
-    { field: 'UPD_Date', header: '變更日期', visible: true },
-    { field: 'UPD_USR_Name', header: '變更人員', visible: true },
-    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
-  ];
-
+  columns: Column[] = columns;
   constructor(private fin11030Service: Fin11030Service) {
     super();
   }
-
   ngOnInit(): void {
     this.initializePage('FIN11030', '/FIN/FIN11030CRU', this.queryForm, (form) => this.onSubmit(form));
   }
@@ -61,17 +46,14 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
-      this.fin11030Service.queryFIN11030(frm.value).subscribe((response) => {
+      this.fin11030Service.queryFIN11030(frm.value).pipe(finalize(() => this.loading = false)).subscribe((response) => {
         this.data = response.Data.map((item: APS2001Data) => ({
           ...item,
           SAL_GUIYYYYMM: this.convertYYYYMMToDate(item.SAL_GUIYYYYMM)
         }));
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
-        this.loading = false;
       });
-
-      this.loading = false;
     });
   }
   // 將 "YYYYMM" 轉為 Date 物件
