@@ -25,6 +25,7 @@ export class Sysb400OsComponent extends BasicCruPageComponent<Sysb400m> implemen
     { value: 'org40Label', label: '組' },
   ];
   LeaveLabel = 'org_name'; // 子節點顯示名稱
+  listTitle = '組織架構列表'; // 節層圖名稱
 
   onLevelSelected(selected: any[]) {
     console.log('從子元件選到的:', selected);

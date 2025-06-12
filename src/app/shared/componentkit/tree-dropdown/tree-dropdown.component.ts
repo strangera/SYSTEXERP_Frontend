@@ -32,6 +32,9 @@ export class TreeDropdownComponent implements OnInit {
   @Input() Columns: Column[] = []; //Columns前兩欄是父節點，最後一個是末端葉節點
   @Input() LeaveColumnLabel = ''; // 子節點顯示名稱
   @Input() onlySendLeaf? = true; // 是否只送葉節點資料，預設為 true
+  @Input() SelectbleCheckBox = true; // 能否選擇checkbox
+  // @Input() buttonTitle = '查看階層圖'; // 按鍵名稱
+  @Input() listTitle = '階層圖'; // 階層圖名稱
 
   @Output() confirmSelected = new EventEmitter<any[]>(); // 確定送出所選成員
 
@@ -140,7 +143,11 @@ export class TreeDropdownComponent implements OnInit {
           node.icon = 'pi pi-user';
           node.leaf = true;
           delete node.children; // 移除 children 屬性避免干擾 PrimeNG 樹結構
+
+          // 是否可選，依 SelectbleCheckBox 決定
+          node.selectable = this.SelectbleCheckBox;
         } else {
+          node.selectable = false; // 這是關鍵
           node.children = buildRecursive(group, depth + 1);
           node.icon = 'pi pi-folder';
         }
