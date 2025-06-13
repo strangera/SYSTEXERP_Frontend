@@ -41,13 +41,23 @@ export class Tls51070Service {
     return this.http.post<any>(`${environment.ApiUrl}/queryPOS2003_DropDownList`, body);
   }
 
-  // 查詢 中分類(商品類別)設定檔
+  // 查詢 中分類(商品類別) 設定檔
   queryCAT_MNo_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryPOS20031_DropDownList`, body);
   }
 
-  // 查詢 小分類(POS20032)設定檔
+  // 查詢 小分類(POS20032) 設定檔
   queryCAT_SNo_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryPOS20032_DropDownList`, body);
+  }
+
+  // 查詢 商品單位(PLUUNIT) 設定檔
+  queryPLUUNIT_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryPLUUNIT_DropDownList`, body);
+  }
+
+  // 查詢 品牌代碼(PLULOGO) 設定檔
+  queryPLULOGO_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryPLULOGO_DropDownList`, body);
   }
 }

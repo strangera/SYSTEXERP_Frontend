@@ -57,12 +57,15 @@
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <app-dropdown
               label="品牌代碼"
               controlName="LOGO_No"
+              [options]="brandOption"
+              optionLabel="Label"
+              optionValue="No"
               [control]="queryForm.controls.LOGO_No"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -117,22 +120,22 @@
               label="商品單位"
               controlName="PLU_Unit"
               [options]="unitOptions"
-              optionLabel="label"
-              optionValue="value"
+              optionLabel="Label"
+              optionValue="No"
               [control]="queryForm.controls.PLU_Unit"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="商品狀態"
-              controlName="PLU_Status"
+            <app-dropdown
+              label="EC商品狀態"
+              controlName="PLU_ECStatus"
               [options]="statusOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.PLU_Status"
+              [control]="queryForm.controls.PLU_ECStatus"
               [submitted]="submitted"
-            ></app-multi-select>
+            ></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">

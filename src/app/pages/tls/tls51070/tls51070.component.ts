@@ -26,7 +26,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     CAT_SNo: ['', [Validators.maxLength(6)]], // 小分類代碼 POS20032
     PLU_Attribute: ['1', [Validators.maxLength(16)]], // 商品型態 1一般、2進口、3買斷、4試銷、5寄賣*/ --南紡 商品型態 1一般、2進口、3買斷、4試銷、5寄賣
     PLU_Unit: ['', [Validators.maxLength(2)]], // 單位代碼 --讀PLUUNIT  商品單位設定檔
-    PLU_Status: ['0', [Validators.maxLength(1)]], // 商品狀態:0一般*/ --與南紡目前的商品狀態分開，南紡的商品狀態給EC用，所以下方有再開一個欄位PLU_ECStatus
+    PLU_ECStatus: ['0', [Validators.maxLength(1)]], // EC商品狀態: 1.正常2.停用3.停進4,下架 For EC (備註: 原來的 商品狀態(PLU_Status) 改為 EC商品狀態(PLU_ECStatus))
     PLU_Reserve1: ['', [Validators.maxLength(400)]], // 說明
     PLU_Reserve3: ['', [Validators.maxLength(400)]], // 系列
 
@@ -41,6 +41,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   largeOption: apiOption[] = [];
   middleOption: apiOption[] = [];
   smallOption: apiOption[] = [];
+  brandOption: apiOption[] = [];  // 品牌代碼
   attributeOptions: option[] = [ // 商品型態
     { value: '1', label: '一般' },
     { value: '2', label: '進口' },
@@ -49,7 +50,12 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     { value: '5', label: '寄賣' },
   ];
   unitOptions: apiOption[] = [];  //商品單位
-  statusOptions: apiOption[] = [];  //商品狀態
+  statusOptions: option[] = [  //商品狀態
+    { value: '1', label: '正常' },
+    { value: '2', label: '停用' },
+    { value: '3', label: '停進' },
+    { value: '4', label: '下架' },
+  ];
 
   data: POS2004[] = [];
   columns: Column[] = [
@@ -57,7 +63,12 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     { field: 'PLU_Name', header: '商品名稱', visible: true },
     { field: 'PLU_No', header: '國際條碼', visible: true },
     { field: 'PLU_OrgPLUNo', header: '廠商貨號', visible: true },
-    { field: 'LOGO_No', header: '品牌代碼', visible: true },
+    {
+      field: 'LOGO_No', header: '品牌代碼', visible: true,
+      format: (value: string) =>
+        this.brandOption.find((option) => option.No === value)?.Label ||
+        value
+    },
     {
       field: 'CAT_LNo', header: '大分類代碼', visible: true,
       format: (value: string) =>
@@ -82,13 +93,28 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
         this.attributeOptions.find((option) => option.value === value)?.label ||
         value,
     },
-    { field: 'PLU_Unit', header: '單位代碼', visible: true },
-    { field: 'PLU_Status', header: '商品狀態', visible: true },
+    {
+      field: 'PLU_Unit', header: '單位代碼', visible: true,
+      format: (value: string) =>
+        this.unitOptions.find((option) => option.No === value)?.Label ||
+        value,
+    },
+    {
+      field: 'PLU_ECStatus', header: 'EC商品狀態', visible: true,
+      format: (value: string) =>
+        this.statusOptions.find((option) => option.value === value)?.label ||
+        value,
+    },
     { field: 'PLU_Reserve1', header: '說明', visible: true },
     { field: 'PLU_Reserve3', header: '系列', visible: true },
   ];
 
   selectedItems: POS2004[] = [];// 多選項目
+
+  //---CRU注意---
+  // 新增的時候 PLU_Staus 固定給 0
+  // 編輯不顯示 PLU_Staus
+  //-------------
 
   // ----------------------------------------------------------------
   constructor(
@@ -99,16 +125,18 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
 
   ngOnInit(): void {
     this.initializePage('TLS51070', 'TLS/TLS51070CRU', this.queryForm, (form) => this.onSubmit(form));
-
-    //初始導入整張表單
+    //導入下拉清單
     this.loadOptions();
+
+    //初始導入所有大分類、中分類、小分類表單
+    this.loadCATOptions();
 
     // 監聽 大分類 是否為''
     this.queryForm.get('CAT_LNo')!.valueChanges.subscribe((newValue) => {
-      console.log('大分類變更為:', newValue);
+      // console.log('大分類變更為:', newValue);
       if (!newValue) {
         // 讀取整份 大分類、中分類、小分類 dropDown
-        this.loadOptions();
+        this.loadCATOptions();
       } else {
         // 若大分類為空 禁用中分類、小分類
         this.queryForm.get('CAT_MNo')?.enable();
@@ -248,8 +276,36 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   }
 
   loadOptions() {
+    //查詢 商品單位
+    this.tls51070Service
+      .queryPLUUNIT_DropDownList({})
+      .subscribe((response) => {
+        this.unitOptions = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
+
+        console.log('商品單位:', this.unitOptions);
+      });
+
+    // 查詢 品牌代碼
+    this.tls51070Service
+      .queryPLULOGO_DropDownList({})
+      .subscribe((response) => {
+        this.brandOption = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
+
+        console.log('品牌代碼:', this.brandOption);
+      });
+  }
+
+  //讀取大、中、小 分類整份表單 (該情況禁止 中小下拉選擇)
+  loadCATOptions() {
     {
-      //讀取大、中、小 分類整份表單 (該情況禁止 中小下拉選擇)
       //查詢 大分類
       this.tls51070Service
         .queryCAT_LNo_DropDownList({})
@@ -272,7 +328,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
             Label: item.No + '-' + item.Name,
           }));
 
-          console.log('大分類:', this.largeOption);
+          console.log('中分類:', this.largeOption);
         });
       //查詢 小分類
       this.tls51070Service
@@ -284,7 +340,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
             Label: item.No + '-' + item.Name,
           }));
 
-          console.log('大分類:', this.largeOption);
+          console.log('小分類:', this.largeOption);
         });
 
       // 禁用中分類、小分類

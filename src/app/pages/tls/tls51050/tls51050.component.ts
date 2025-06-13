@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
-import { option, Sysb300m } from '../../../shared/models/sys/sysb000.module';
+import { option } from '../../../shared/models/sys/sysb000.module';
 import { PluUnit } from '../../../shared/models/tls/tls000.model';
 import { Tls51050Service } from '../../../service/API/tls/tls51050.service';
 
@@ -60,7 +60,7 @@ export class TLS51050Component extends BasicQueryPageComponent<PluUnit>
 
   ngOnInit(): void {
     this.initializePage('TLS51050', 'TLS/TLS51050CRU', this.queryForm, (form) => this.onSubmit(form));
-    this.loadOptions();
+    // this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
