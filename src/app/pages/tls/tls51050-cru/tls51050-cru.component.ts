@@ -23,7 +23,7 @@ export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
     id: [],
     UNIT_No: ['', [Validators.maxLength(2)]], // 單位代碼
     UNIT_NAME: ['', [Validators.maxLength(40)]], // 單位名稱
-    UNIT_Attribute: ['', [Validators.maxLength(1)]], // 單位屬性 1基本單位 2包裝單位
+    UNIT_Attribute: ["1", [Validators.maxLength(1)]], // 單位屬性 1基本單位 2包裝單位 (預設1，目前只有基本單位沒有包裝單位)
     // CHILD_UNIT: ['', [Validators.maxLength(2)]], // 子項單位代號 --沒有使用
     // CHILD_QTY: [, [this.validationService.numberValidator]], // 子項單位數量 --沒有使用
 
@@ -51,8 +51,6 @@ export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
   ngOnInit(): void {
     this.initializePage('TLS51050', this.dataForm);
     this.loadOptions();
-
-    // console.log('dataform', this.dataForm.value);
   }
 
   onSubmit(frm: FormGroup) {
@@ -65,7 +63,7 @@ export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
     }
 
     //--檢查--
-    //新增時
+    // 新增時
     // 單位屬性：預設1 基本單位，目前只有基本單位沒有包裝單位
     //--------
     switch (this.crudstatus) {

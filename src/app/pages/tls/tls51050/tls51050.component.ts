@@ -50,7 +50,7 @@ export class TLS51050Component extends BasicQueryPageComponent<PluUnit>
     { field: 'UNIT_Remark', header: '備註說明', visible: true },
   ];
 
-  selectedItems: Sysb300m[] = [];// 多選項目
+  selectedItems: PluUnit[] = [];// 多選項目
 
   // ----------------------------------------------------------------
   constructor(
@@ -163,7 +163,7 @@ export class TLS51050Component extends BasicQueryPageComponent<PluUnit>
     }
   }
 
-  isRowSelectable(rowData: Sysb300m): boolean {
+  isRowSelectable(rowData: PluUnit): boolean {
     return rowData.CanDel
   }
 }

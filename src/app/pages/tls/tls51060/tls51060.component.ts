@@ -36,7 +36,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
 
   storageOptions: apiOption[] = [];
 
-  data: Sysb300m[] = [];
+  data: PluLogo[] = [];
   columns: Column[] = [
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌中文名稱', visible: true },
@@ -54,7 +54,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
     { field: 'LOGO_Remark', header: '備註說明', visible: true }
   ];
 
-  selectedItems: Sysb300m[] = [];// 多選項目
+  selectedItems: PluLogo[] = [];// 多選項目
 
   // ----------------------------------------------------------------
   constructor(private tls51060Service: Tls51060Service) {
@@ -170,7 +170,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
     }
   }
 
-  isRowSelectable(rowData: Sysb300m): boolean {
+  isRowSelectable(rowData: PluLogo): boolean {
     return rowData.CanDel
   }
 }
