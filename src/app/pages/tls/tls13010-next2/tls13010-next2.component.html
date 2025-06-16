@@ -78,6 +78,7 @@
               [mainColumns]="commissionColumns"
               [detailKey]="'detailItems'"
               [dataKey]="'id'"
+              [showPaginator]="false"
               [showCheckBox]="true"
               [readonly]="false"
               [showDetailTabs]="true"
@@ -115,11 +116,11 @@
       class="flex justify-content-between align-items-center mt-3 pt-3 border-top-1 border-gray-200"
     >
       <div class="flex align-items-center gap-2">
-        <span class="text-sm text-gray-600">
+        <!-- <span class="text-sm text-gray-600">
           目前共有
           <span class="font-semibold">{{ getCommissionItemCount() }}</span>
           個抽成項目
-        </span>
+        </span> -->
         <!-- 🎯 新增：資料載入狀態指示 -->
         <span *ngIf="!dataLoaded" class="text-xs text-orange-500">
           (載入中...)
@@ -130,16 +131,6 @@
         >
           (載入失敗)
         </span>
-      </div>
-
-      <!-- 🎯 可選：恢復操作按鈕區 -->
-      <div class="flex gap-2" *ngIf="dataLoaded">
-        <app-button
-          label="重新載入"
-          icon="pi pi-refresh"
-          [outlined]="true"
-          (click)="reloadData()"
-        ></app-button>
       </div>
     </div>
   </div>

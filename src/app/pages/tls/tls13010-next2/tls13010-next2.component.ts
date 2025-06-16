@@ -64,7 +64,7 @@ interface CommissionItem {
 
 interface DiscountSettingItem {
   selected: boolean;
-  discountType: string;
+  cag_barcode: string;
   startDate: Date;
   endDate: Date;
   rate: number;
@@ -80,7 +80,7 @@ interface AnnualPerformanceItem {
 
 interface DiscountLevelItem {
   selected: boolean;
-  discountType: string;
+  cag_barcode: string;
   startAmount: number;
   endAmount: number;
   rate: number;
@@ -201,15 +201,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   // 各類型的列定義
   discountColumns: ColumnDef[] = [
-    { field: 'selected', header: '選擇', type: 'checkbox', editable: true, },
-    { field: 'discountType', header: '折扣別', type: 'dropdown', editable: true, },
+    { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: true, options: [] },
     { field: 'startDate', header: '合約起始日', type: 'date', editable: true, },
     { field: 'endDate', header: '合約終止日', type: 'date', editable: true, },
     { field: 'rate', header: '抽成率 (%)', type: 'number', editable: true, }
   ];
 
   annualColumns: ColumnDef[] = [
-    { field: 'selected', header: '選擇', type: 'checkbox', editable: true },
     { field: 'startDate', header: '帳務起', type: 'date', editable: true },
     { field: 'endDate', header: '帳務迄', type: 'date', editable: true },
     { field: 'discountAmount', header: '業績超過金額含', type: 'number', editable: true },
@@ -217,8 +215,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
   ];
 
   levelColumns: ColumnDef[] = [
-    { field: 'selected', header: '選擇', type: 'checkbox', editable: true },
-    { field: 'discountType', header: '折扣別', type: 'dropdown', editable: true },
+    { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: true, options: [] },
     { field: 'startAmount', header: '業績計算金額(起)', type: 'number', editable: true },
     { field: 'endAmount', header: '業績計算金額(迄)', type: 'number', editable: true },
     { field: 'rate', header: '抽成率', type: 'number', editable: true }
@@ -271,7 +268,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
     { value: 11, label: '50折' },
     { value: 12, label: '特價' }
   ];
-
   private discountOptions: any[] = [];
 
   constructor(
@@ -297,6 +293,57 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  // 🎯 修改：載入折數選項，返回 Promise
+  private loadDiscountOptions(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      console.log('🔽 開始載入折數選項...');
+
+      this.paperTypeService.getPaperTypeOptions('T102').subscribe({
+        next: (options: any[]) => {
+          // ✅ 確保轉換成正確的格式
+          this.discountOptions = options.map(option => ({
+            value: option.SYS_Code,
+            label: option.SYS_Name
+          }));
+
+          // ✅ 立即更新 discounts 屬性
+          this.discounts = [...this.discountOptions];
+
+          console.log('✅ 載入折數選項成功:', this.discountOptions);
+          console.log('✅ 更新 discounts 成功:', this.discounts);
+
+          this.updateDiscountColumnOptions();
+          resolve();
+        },
+        error: (error: any) => {
+          console.error('❌ 載入折數選項失敗:', error);
+          this.discountOptions = [];
+          this.discounts = [];
+          this.updateDiscountColumnOptions();
+          resolve();
+        }
+      });
+    });
+  }
+
+  // 🎯 修改：更新表格欄位的折數選項
+  private updateDiscountColumnOptions(): void {
+    // ✅ 強制重新建立陣列以觸發變更檢測
+    this.discountColumns = this.discountColumns.map(col => {
+      if (col.field === 'cag_barcode') {  // ✅ 修正為 cag_barcode
+        return { ...col, options: [...this.discountOptions] };
+      }
+      return col;
+    });
+
+    this.levelColumns = this.levelColumns.map(col => {
+      if (col.field === 'cag_barcode') {  // ✅ 修正為 cag_barcode
+        return { ...col, options: [...this.discountOptions] };
+      }
+      return col;
+    });
   }
 
   // 🎯 修改：載入工作流程資料
@@ -405,52 +452,16 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
     });
   }
 
-  // 🎯 修改：載入折數選項，返回 Promise
-  private loadDiscountOptions(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      console.log('🔽 開始載入折數選項...');
-
-      this.paperTypeService.getPaperTypeOptions('T102').subscribe({
-        next: (options: any[]) => {
-          this.discountOptions = options;
-          console.log('✅ 載入折數選項成功:', this.discountOptions);
-          this.updateDiscountColumnOptions();
-          resolve();
-        },
-        error: (error: any) => {
-          console.error('❌ 載入折數選項失敗:', error);
-          this.notificationService.errorBubble('載入折數選項失敗');
-          this.discountOptions = [];
-          this.updateDiscountColumnOptions();
-          reject(error);
-        }
-      });
-    });
-  }
-
-  // 更新表格欄位的折數選項
-  private updateDiscountColumnOptions(): void {
-    const discountTypeColumn = this.discountColumns.find(col => col.field === 'discountType');
-    if (discountTypeColumn) {
-      discountTypeColumn.options = this.discountOptions;
-    }
-
-    const levelDiscountColumn = this.levelColumns.find(col => col.field === 'discountType');
-    if (levelDiscountColumn) {
-      levelDiscountColumn.options = this.discountOptions;
-    }
-
-    this.discounts = this.discountOptions;
-  }
-
   // 根據 barcode 取得折扣類型
   private getDiscountTypeByBarcode(barcode: string): string {
     return barcode || '000';
   }
 
-  // 根據折數選項取得顯示名稱
+  // 🎯 修改：根據折數選項取得顯示名稱
   private getDiscountLabelByValue(value: string): string {
+    console.log(`🔍 尋找 value: ${value}, 可用選項:`, this.discountOptions);
     const option = this.discountOptions.find(opt => opt.value === value);
+    console.log(`🔍 找到選項:`, option);
     return option ? option.label : value;
   }
 
@@ -488,6 +499,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
     console.log('🏷️ 生成的摘要:', summary);
     return summary;
   }
+
   private convertAPIDataToCommissionItems(apiData: any): void {
     console.log('🔄 開始轉換 API 資料...');
     console.log('🔍 輸入的 apiData:', apiData);
@@ -537,19 +549,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private convertChargeDetails(chargeDetails: any[]): DiscountSettingItem[] {
-    console.log('🔄 轉換 ChargeDetails:', chargeDetails);
-
-    if (!Array.isArray(chargeDetails)) {
-      console.warn('⚠️ chargeDetails 不是陣列:', chargeDetails);
-      return [];
-    }
-
     return chargeDetails.map(detail => {
-      console.log('🔄 轉換單個 ChargeDetail:', detail);
-
       return {
         selected: true,
-        discountType: this.getDiscountTypeByBarcode(detail.cag_barcode),
+        cag_barcode: detail.cag_barcode || '000',
         startDate: detail.tlt_bdate ? new Date(detail.tlt_bdate) : new Date(),
         endDate: detail.tlt_edate ? new Date(detail.tlt_edate) : new Date(),
         rate: detail.cag_charge_rate || 0
@@ -579,19 +582,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private convertLevelChargeDetails(levelDetails: any[]): DiscountLevelItem[] {
-    console.log('🔄 轉換 LevelChargeDetails:', levelDetails);
-
-    if (!Array.isArray(levelDetails)) {
-      console.warn('⚠️ levelDetails 不是陣列:', levelDetails);
-      return [];
-    }
-
     return levelDetails.map(detail => {
-      console.log('🔄 轉換單個 LevelChargeDetail:', detail);
-
       return {
         selected: true,
-        discountType: this.getDiscountTypeByBarcode(detail.cag_barcode),
+        cag_barcode: detail.cag_barcode,
         startAmount: detail.level_bmount || 0,
         endAmount: detail.level_eamount || 0,
         rate: detail.level_charge_rate || 0
@@ -630,26 +624,16 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-
   // 🎯 修改：檢查是否有抽成資料的方法
   hasCommissionData(): boolean {
     const hasData = this.dataLoaded && this.commissionItems && this.commissionItems.length > 0;
-    console.log('🔍 檢查是否有抽成資料:', {
-      dataLoaded: this.dataLoaded,
-      commissionDataLoaded: this.commissionDataLoaded,
-      commissionItemsLength: this.commissionItems?.length || 0,
-      commissionItemsExist: !!this.commissionItems,
-      hasData: hasData
-    });
     return hasData;
   }
-
-  // ... 其他方法保持不變 ...
 
   // 儲存抽成設定到工作流程
   private saveCommissionDataToWorkflow(): void {
     console.log('💾 ⚠️  儲存抽成設定資料被調用！');
-    console.trace('📍 誰調用了儲存？完整調用堆疊:'); // 這會顯示誰調用的
+    console.trace('📍 誰調用了儲存？完整調用堆疊:');
     console.log('💾 當前 commissionItems 長度:', this.commissionItems.length);
 
     try {
@@ -671,18 +655,22 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
   // 更新詳情列定義
   updateDetailColumns(): void {
     console.log('更新詳情列定義', this.selectedSettingTab);
+
+    // 🎯 先更新選項
+    this.updateDiscountColumnOptions();
+
     switch (this.selectedSettingTab) {
       case 'discount':
-        this.detailColumns = this.discountColumns;
+        this.detailColumns = [...this.discountColumns];  // 🎯 用展開運算子強制更新
         break;
       case 'annual':
         this.detailColumns = this.annualColumns;
         break;
       case 'level':
-        this.detailColumns = this.levelColumns;
+        this.detailColumns = [...this.levelColumns];  // 🎯 用展開運算子強制更新
         break;
       default:
-        this.detailColumns = this.discountColumns;
+        this.detailColumns = [...this.discountColumns];
     }
   }
 
@@ -810,7 +798,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     return {
       selected: false,
-      discountType: '000',
+      cag_barcode: '',  // ✅ 修正為 cag_barcode
       startDate: startDate,
       endDate: endDate,
       rate: 0
@@ -832,7 +820,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
   createDiscountLevelItem(): DiscountLevelItem {
     return {
       selected: false,
-      discountType: '000',
+      cag_barcode: '',  // ✅ 修正為 cag_barcode
       startAmount: 0,
       endAmount: 0,
       rate: 0
@@ -989,11 +977,12 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
   onDetailSave(item: CommissionItem, settingType: string): void {
     let formattedItems = '';
     this.syncDetailItemsToSource(item);
+
     switch (settingType) {
       case 'discount':
         const selectedDiscounts = item.discountSettingItems.filter(i => i.selected);
         const formattedDiscounts = selectedDiscounts.map((discountItem, idx) => {
-          const discountLabel = this.discounts.find(d => d.value == discountItem.discountType)?.label || '';
+          const discountLabel = this.getDiscountLabelByValue(discountItem.cag_barcode);  // ✅ 修正為 cag_barcode
           const startDate = discountItem.startDate ? this.formatDate(discountItem.startDate) : '';
           const endDate = discountItem.endDate ? this.formatDate(discountItem.endDate) : '';
           return `折扣設定 ${idx + 1}: ${discountLabel}, ${startDate}, ${endDate}, ${discountItem.rate}%`;
@@ -1014,7 +1003,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
       case 'level':
         const selectedLevels = item.discountLevelItems.filter(i => i.selected);
         const formattedLevels = selectedLevels.map((levelItem, idx) => {
-          const discountLabel = this.discounts.find(d => d.value == levelItem.discountType)?.label || '';
+          const discountLabel = this.getDiscountLabelByValue(levelItem.cag_barcode);  // ✅ 修正為 cag_barcode
           return `折扣層級 ${idx + 1}: ${discountLabel}, ${levelItem.startAmount}-${levelItem.endAmount}, ${levelItem.rate}%`;
         }).join('; ');
         formattedItems = formattedLevels;
@@ -1041,7 +1030,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
       case 'discount':
         item.discountSettingItems.forEach(i => {
           i.selected = false;
-          i.discountType = '000';
+          i.cag_barcode = '';  // ✅ 修正為 cag_barcode
           i.rate = 0;
           i.startDate = this.contractInfoData[0]?.tlt_bdate
             ? new Date(this.contractInfoData[0].tlt_bdate)
@@ -1063,7 +1052,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
       case 'level':
         item.discountLevelItems.forEach(i => {
           i.selected = false;
-          i.discountType = '000';
+          i.cag_barcode = '';  // ✅ 修正為 cag_barcode
           i.startAmount = 0;
           i.endAmount = 0;
           i.rate = 0;

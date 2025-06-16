@@ -101,6 +101,11 @@ export const TPY_TYPE_OPTIONS = {
   '06': '線數',
 } as const;
 
+export const CAG_TAXTYPE_OPTIONS = {
+  '0': '免稅',
+  '1': '應稅',
+} as const;
+
 // ========== 格式化函數 ==========
 
 // 通用的多選格式化函數
