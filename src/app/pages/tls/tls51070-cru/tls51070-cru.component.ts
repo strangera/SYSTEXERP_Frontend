@@ -141,7 +141,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     { field: 'PLU_TransDay', header: '送貨天數', editable: true, type: 'number' },
     { field: 'PLU_Purchase', header: '採購狀態', editable: true, type: 'text' },
     { field: 'PLU_OrderPrc', header: '目前進價', editable: true, type: 'number' }, //顯示 最後進價，是這個嗎?
-    { field: 'VDP_LastStockDate', header: '最後進貨日期', editable: true, type: 'Date' },
+    { field: 'VDP_LastStockDate', header: '最後進貨日期', editable: true, type: 'date' },
     { field: 'Remark', header: '單向備註', editable: true, type: 'text' },
 
   ];
