@@ -16,8 +16,8 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
     SAL_GUIYYYYMM_start: [null, [Validators.required]],
     SAL_GUIYYYYMM_end: [null, [Validators.required]],
     SAL_GUITrack: ['', [Validators.maxLength(2)]],
-    SAL_GUIBegNo: ['', [Validators.maxLength(8), Validators.max(99999999)]],
-    SAL_GUIEndNo: ['', [Validators.maxLength(8), Validators.max(99999999)]],
+    SAL_GUINo_start: ['', [Validators.maxLength(8), Validators.max(99999999)]],
+    SAL_GUINo_end: ['', [Validators.maxLength(8), Validators.max(99999999)]],
     SAL_GUIPaper: [null],
     ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
   });

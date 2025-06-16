@@ -15,9 +15,9 @@
             [submitted]="submitted" />
           <app-input-text class="col-12 md:col-6 lg:col-4" label="字軌" controlName="track"
             [control]="queryForm.controls.GUI_Track" [submitted]="submitted" />
-          <app-input-number-range class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="發票號碼"
+          <app-input-text-range class="col-12 md:col-6 lg:col-4" startLabel="發票起始號碼" endLabel="發票結束號碼"
             [startControl]="queryForm.controls.GUI_No_start" [endControl]="queryForm.controls.GUI_No_end"
-            [submitted]="submitted" [maxBoundary]="99999999" />
+            [submitted]="submitted" [errorForGroup]="true" />
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
