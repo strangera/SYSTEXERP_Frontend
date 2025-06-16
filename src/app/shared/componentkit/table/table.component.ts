@@ -74,6 +74,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() showDetail = true;                // 是否顯示 管理欄位(明細按鈕)
   @Output() detail = new EventEmitter<any>();// 明細事件
   @Input() showEdit = true;                  // 是否顯示 管理欄位(編輯按鈕)
+  @Input() editDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
   @Output() edit = new EventEmitter<any>();  // 編輯事件
   @Input() addButton: AddButton[] = [];      // 自定義 管理按鈕
   @Input() showRowEdit = false;              // 是否顯示 Row編輯按鈕

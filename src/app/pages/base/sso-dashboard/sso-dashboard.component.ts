@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, Renderer2 } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { LayoutService } from '../../../layout/layout.service';
 import { ApiResponse, AuthService } from '../../../service/system/auth.service';
 import { UserInfo } from '../../../shared/models/system/userInfo';
@@ -60,8 +60,6 @@ export class SsoDashboardComponent implements OnInit {
     private encryptionService: EncryptionService,
     private messageService: NotificationService,
     private userCodeService: UserCodeService,
-    private renderer: Renderer2,
-    private el: ElementRef,
     private validationService: ValidationService
   ) {
     this.subscriptions.push(
