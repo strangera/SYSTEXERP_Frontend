@@ -20,16 +20,20 @@
 
 <p-toast position="bottom-right" preventOpenDuplicates="true"
   [breakpoints]="{ '960px': { width: '100%', right: '0', left: '0' } }">
-  <ng-template let-message pTemplate="headless">
-    <div class="p-3 flex gap-3">
+  <ng-template let-message pTemplate="headless" let-closeFn="closeFn">
+    <div class="p-3 flex gap-3 relative">
       <i class="pi {{ getIcon(message.severity) }} text-2xl"></i>
-      <div class="flex flex-column">
+      <div class="flex flex-column flex-1">
         <div class="font-bold text-lg">{{ message.summary }}</div>
         <div class="p-toast-detail" [innerHTML]="message.detail"></div>
       </div>
+      <p-button [text]="true" [rounded]="true" [severity]="getSeverity(message.severity)" (onClick)="closeFn($event)">
+        <i class="pi pi-times text-sm" (onClick)="closeFn($event)"></i>
+      </p-button>
     </div>
   </ng-template>
 </p-toast>
+
 
 
 <p-dialog [header]="msgBoxHeader" [(visible)]="msgBoxDisplay" [modal]="true" [closeOnEscape]="true"

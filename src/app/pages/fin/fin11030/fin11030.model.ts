@@ -28,11 +28,16 @@ export interface APS2001Data {
   UPD_USR_Name?: string; // 變更人員姓名 (可為空)
 }
 
-// SAL_GUIPaper 的選項
+// SAL_GUIPaper 的選項 - 查詢
 export const SAL_GUIPaperOptions = [
   { label: '二聯式手開發票', value: '32' },
   { label: '三聯式手開發票', value: '31' },
   { label: '電子發票', value: '35' },
+];
+// SAL_GUIPaper 的選項 - 新增修改
+export const SAL_GUIPaperOptions2 = [
+  { label: '二聯式手開發票', value: '32' },
+  { label: '三聯式手開發票', value: '31' },
 ];
 
 export const columns: Column[] = [

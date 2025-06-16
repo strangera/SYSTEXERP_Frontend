@@ -2,8 +2,9 @@ import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Fin11030Service } from '../../../service/api/fin/fin11030.service';
-import { APS2001Data, SAL_GUIPaperOptions } from '../fin11030/fin11030.model';
+import { APS2001Data, SAL_GUIPaperOptions2 } from '../fin11030/fin11030.model';
 import { ValidationService } from '../../../shared/service/validation.service';
+import { finalize } from 'rxjs';
 // 1.1.3 銷項品項資料設定 CRU
 @Component({
   selector: 'app-fin11030-cru',
@@ -19,7 +20,7 @@ export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> imp
     GUI_Qty: [0, [Validators.required, Validators.maxLength(8), Validators.max(99999999)]], // 券數
   }, { validators: this.validationService.guiNumberRangeValidator('SAL_GUIBegNo', 'SAL_GUIEndNo') });
 
-  SAL_GUIPaperOptions = SAL_GUIPaperOptions
+  SAL_GUIPaperOptions = SAL_GUIPaperOptions2
 
   constructor(
     private fin11030Service: Fin11030Service,
@@ -83,14 +84,18 @@ export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> imp
       const serviceCall = this.isFormCreateable
         ? this.fin11030Service.insertFIN11030(this.buildInsertBody(frm))
         : this.fin11030Service.updateFIN11030(this.buildUpdateBody(frm));
-      serviceCall.subscribe({
-        next: () => {
-          this.loading = false;
-        },
-        error: () => {
-          this.loading = false;
-        },
-      });
+      serviceCall
+        .pipe(finalize(() => this.loading = false))
+        .subscribe({
+          next: () => {
+            if (this.isFormCreateable) {
+              this.dataForm.reset();
+            } else {
+              this.onCancel();
+            }
+          },
+          error: (error) => { console.error(error) }
+        });
     });
   }
 

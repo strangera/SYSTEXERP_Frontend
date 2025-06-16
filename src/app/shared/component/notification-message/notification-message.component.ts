@@ -21,7 +21,7 @@ export class NotificationMessageComponent implements OnInit {
   // ----------------------------------------------------------------
   constructor(
     private notificationService: NotificationService,
-    private messageService: MessageService,
+    public messageService: MessageService,
     private confirmationService: ConfirmationService,
   ) { }
 
@@ -117,6 +117,21 @@ export class NotificationMessageComponent implements OnInit {
         return 'pi-times-circle';
       default:
         return 'pi-bell';
+    }
+  }
+
+  getSeverity(severity: string): "success" | "info" | "warning" | "danger" | "help" | "primary" | "secondary" | "contrast" | null | undefined {
+    switch (severity) {
+      case 'success':
+        return 'success';
+      case 'info':
+        return 'info';
+      case 'warn':
+        return 'warning';
+      case 'error':
+        return 'danger';
+      default:
+        return 'info';
     }
   }
 }

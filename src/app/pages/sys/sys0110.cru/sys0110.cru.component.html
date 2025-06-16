@@ -32,10 +32,11 @@
           optionLabel="Label" optionValue="No" [control]="dataForm.controls.TLT_No" [submitted]="submitted" />
         <app-calendar *ngIf="!isFormCreateable" class="col-12 md:col-6 lg:col-4" label="密碼到期日"
           controlName="USER_PwdExpireDate" [control]="dataForm.controls.USER_PwdExpireDate" [submitted]="submitted" />
-        <app-table #table class="col-12" dataKey="id" [columns]="columns" [data]="data" [showEdit]="false"
-          [showDetail]="false" [showCheckBox]="true" [showInsert]="true" (insert)="showDialog = true"
-          [showRowEdit]="true" (delete)="onDelete($event)" (selectionChange)="selectedRows = $event"
-          [selectedItems]="selectedRows"></app-table>
+        <app-table #table class="col-12" dataKey="ID" [columns]="columns" [data]="data" [showEdit]="false"
+          [showDetail]="false" [showCheckBox]="true" [showInsert]="true" [showRowEdit]="true"
+          (delete)="onDelete($event)" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
+          [showCaption]="!isFormReadable" [showManage]="!isFormReadable" [showCheckBox]="!isFormReadable"
+          [showReportMode]="false" [insertRowData]="true" (dataChange)="data = $event"></app-table>
       </div>
       <!-- sys3700 -->
       <div class="grid p-fluid border-top-1 surface-border mt-2" *ngIf="!isFormCreateable">
@@ -53,38 +54,9 @@
           [control]="dataForm.controls.UPD_USR_Name" [submitted]="submitted" />
       </div>
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
-        <app-button btnType="cancel"></app-button>
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>
     </form>
   </p-panel>
 </div>
-
-
-<p-dialog [(visible)]="showDialog" [modal]="true" [style]="{ width: '50vw' }" [baseZIndex]="10000" [closable]="false"
-  [dismissableMask]="true" header="新增權限">
-  <form [formGroup]="dialogForm" (ngSubmit)="onDialogSubmit(dialogForm)">
-    <div class="grid p-fluid">
-      <app-dropdown class="col-12 md:col-6 lg:col-3" label="組織代碼" controlName="Org_ID"
-        [control]="dialogForm.controls.Org_ID" [options]="SYS3100_Options" optionLabel="label" optionValue="value" />
-      <app-dropdown class="col-12 md:col-6 lg:col-3" label="館別代碼" controlName="Building_No"
-        [control]="dialogForm.controls.Building_No" [options]="SYS3700_Options" optionLabel="label"
-        optionValue="value" />
-      <app-dropdown class="col-12 md:col-6 lg:col-3" label="樓層代碼" controlName="Floor_No"
-        [control]="dialogForm.controls.Floor_No" [options]="SYS3800_Options" optionLabel="label" optionValue="value" />
-      <app-dropdown class="col-12 md:col-6 lg:col-3" label="區域代碼" controlName="Area_No"
-        [control]="dialogForm.controls.Area_No" [options]="SYS3A00_Options" optionLabel="label" optionValue="value" />
-      <app-input-text class="col-12 md:col-6 lg:col-3" label="專櫃編號" controlName="TLT_No"
-        [control]="dialogForm.controls.TLT_No" />
-      <app-dropdown class="col-12 md:col-6 lg:col-3" label="專櫃類型" controlName="TLT_Kind"
-        [control]="dialogForm.controls.TLT_Kind" [options]="TLT_Kind_Options" optionLabel="label" optionValue="value" />
-      <app-dropdown class="col-12 md:col-6 lg:col-3" label="大分類代碼" controlName="BUS_Type"
-        [control]="dialogForm.controls.BUS_Type" [options]="BUS_TypeOptions" optionLabel="label" optionValue="value" />
-    </div>
-    <span *ngIf="!errorMessages" class="p-error">請至少輸入組織代碼、館別代碼、樓層代碼、區域代碼、或專櫃編號其中一項。</span>
-    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-      <app-button btnType="cancel" label="取消" (click)="showDialog = false; dialogForm.reset();"></app-button>
-      <app-button btnType="submit"></app-button>
-    </div>
-  </form>
-</p-dialog>
