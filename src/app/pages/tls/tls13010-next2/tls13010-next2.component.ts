@@ -10,7 +10,9 @@ import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/ex
 import { ContractFlowService, WorkflowStep } from '../../../service/API/tls/tls13010contract-flow/contract-flow.service';
 import { TLS13010Service } from '../../../service/API/tls/tls13010.service';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
+import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
 
+// ... 介面定義保持不變 ...
 interface CategoryItem {
   id: number;
   CAT_LNo: string;
@@ -20,7 +22,6 @@ interface CategoryItem {
   CRT_USR_Name: string | "";
 }
 
-// 合約基本資料介面
 interface ContractInfo {
   id: string | number;
   talent_id: string;
@@ -44,7 +45,6 @@ interface ContractInfo {
   originalFareData?: any;
 }
 
-// 佣金項目接口
 interface CommissionItem {
   id: number;
   commissionType: string;
@@ -62,16 +62,14 @@ interface CommissionItem {
   detailItems: any[];
 }
 
-// 折扣設置項目接口
 interface DiscountSettingItem {
   selected: boolean;
-  discountType: number;
+  discountType: string;
   startDate: Date;
   endDate: Date;
   rate: number;
 }
 
-// 年度業績項目接口
 interface AnnualPerformanceItem {
   selected: boolean;
   startDate: Date;
@@ -80,10 +78,9 @@ interface AnnualPerformanceItem {
   rate: number;
 }
 
-// 折扣等級項目接口
 interface DiscountLevelItem {
   selected: boolean;
-  discountType: number;
+  discountType: string;
   startAmount: number;
   endAmount: number;
   rate: number;
@@ -101,6 +98,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   dataForm: FormGroup;
 
+  // 🎯 新增：資料載入狀態控制
+  dataLoaded: boolean = false;
+  commissionDataLoaded: boolean = false;
+
   // 當前合約資料
   currentTalentId: string = '';
   currentContractData: any = null;
@@ -112,7 +113,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
   // 展開區域表格的動態列定義
   detailColumns: ColumnDef[] = [];
 
-  // 🎯 合約資訊欄位定義 - 與 Next1 完全一致
+  // 合約資訊欄位定義
   contractInfoColumns: ColumnDef[] = [
     {
       field: 'apply_no',
@@ -247,7 +248,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
     { field: 'thousandDiscount', header: '滿仟送佰', editable: true, type: 'checkbox' },
   ];
 
-  // 數據 - 移除假資料，初始化為空
+  // 數據
   commissionItems: CommissionItem[] = [];
 
   // 下拉選項
@@ -271,10 +272,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
     { value: 12, label: '特價' }
   ];
 
+  private discountOptions: any[] = [];
+
   constructor(
     private notificationService: NotificationService,
     private contractFlowService: ContractFlowService,
-    private tls13010Service: TLS13010Service
+    private tls13010Service: TLS13010Service,
+    private paperTypeService: LocationOptionsService,
   ) {
     super();
     this.dataForm = this.formBuilder.group({});
@@ -284,14 +288,18 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
   ngOnInit(): void {
     console.log('TLS13010Next2Component 初始化開始');
     this.initializePage('TLS13010', this.dataForm);
-    this.loadWorkflowData();
+
+    // 🎯 修改：確保載入順序
+    this.loadDiscountOptions().then(() => {
+      this.loadWorkflowData();
+    });
   }
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  // 🎯 載入工作流程資料 - 與 Next1 一致
+  // 🎯 修改：載入工作流程資料
   private loadWorkflowData(): void {
     console.log('🚀 開始載入工作流程資料...');
 
@@ -304,24 +312,18 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
       console.log('✅ 取得合約ID:', this.currentTalentId);
 
-      // 🎯 關鍵修正：優先使用 CRU 頁面編輯後的資料
       const step1Data = this.contractFlowService.getStep1Data();
       console.log('📝 Step1 編輯資料:', step1Data);
 
-      // 準備合約資訊 - 優先使用編輯後的資料，沒有才用原始查詢資料
+      // 準備合約資訊
       const contractInfo = {
-        // 基本資訊 - 優先使用編輯資料
         talent_id: step1Data?.talent_id || this.currentContractData.talent_id || '-',
         apply_no: step1Data?.apply_no || this.currentContractData.apply_no || '-',
         tlt_name: step1Data?.tlt_name || this.currentContractData.tlt_name || '-',
         VEN_Name: step1Data?.VEN_Name || this.currentContractData.VEN_Name || '-',
         ven_uniform: step1Data?.ven_uniform || this.currentContractData.ven_uniform || '-',
         contract_subno: step1Data?.contract_subno || this.currentContractData.contract_subno || '-',
-
-        // 商務條件 - 優先使用編輯資料
         comm_comp_type: step1Data?.comm_comp_type || this.currentContractData.comm_comp_type || '-',
-
-        // 日期資訊 - 優先使用編輯資料
         tlt_bdate: step1Data?.tlt_bdate || this.currentContractData.tlt_bdate || '',
         tlt_edate: step1Data?.tlt_edate || this.currentContractData.tlt_edate || '',
         tlt_contract_bdate: step1Data?.tlt_contract_bdate || this.currentContractData.tlt_contract_bdate || '',
@@ -335,7 +337,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
       console.log('📊 準備顯示的合約資訊:', this.contractInfoData);
 
-      // 檢查暫存的抽成設定資料
+      // 🎯 關鍵修改：載入抽成設定資料
       this.loadCommissionData();
     } else {
       console.warn('❌ 沒有 talent_id，重導向到前一步');
@@ -343,33 +345,314 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  // 載入抽成設定資料 (待實作 API)
+  // 🎯 修改：載入抽成設定資料
   private loadCommissionData(): void {
-    console.log('🔍 檢查是否有暫存的抽成設定資料...');
+    console.log('🔍 開始載入抽成設定資料...');
 
-    const savedCommissionData = this.contractFlowService.getStepData(WorkflowStep.COMMISSION);
+    // 🎯 使用現有方法清除 step3 資料
+    console.log('🗑️ 清除 step3 暫存資料');
+    this.contractFlowService.saveStep3Data([]); // 儲存空陣列來清除
 
-    if (savedCommissionData && Array.isArray(savedCommissionData)) {
-      console.log('📦 發現暫存的抽成設定資料，直接使用');
-      this.commissionItems = savedCommissionData;
-      this.updateDetailItemsForDisplay();
-    } else {
-      console.log('📭 沒有暫存資料，初始化空的抽成設定');
+    this.loading = true;
+    this.commissionDataLoaded = false;
+    this.loadCommissionDataFromAPI();
+    return;
+  }
+
+  private loadCommissionDataFromAPI(): void {
+    if (!this.currentTalentId) {
+      console.warn('❌ 沒有 talentId，無法載入抽成設定');
       this.initializeEmptyCommissionData();
+      return;
+    }
+
+    this.loading = true;
+    this.dataLoaded = false; // 🎯 重要：重置狀態
+    this.commissionDataLoaded = false;
+
+    console.log('📞 開始調用 API，talentId:', this.currentTalentId);
+
+    this.tls13010Service.queryTLS13010Charge(this.currentTalentId).subscribe({
+      next: (response) => {
+        console.log('🎯 API 完整回應:', response);
+        console.log('🔍 response.Data:', response.Data);
+        console.log('🔍 response.Data.ChargeSettings:', response.Data?.ChargeSettings);
+
+        // 🔧 修正：根據實際 API 結構調整
+        if (response?.Data?.ChargeSettings && Array.isArray(response.Data.ChargeSettings)) {
+          console.log('✅ 成功載入抽成設定資料，共', response.Data.ChargeSettings.length, '筆');
+          this.convertAPIDataToCommissionItems(response.Data);
+          this.commissionDataLoaded = true;
+        } else if (response?.Data && Array.isArray(response.Data)) {
+          // 如果 Data 本身就是陣列
+          console.log('✅ 使用 Data 陣列作為抽成設定資料');
+          this.convertAPIDataToCommissionItems({ ChargeSettings: response.Data });
+          this.commissionDataLoaded = true;
+        } else {
+          console.log('📭 API 回傳空資料或格式不正確');
+          this.initializeEmptyCommissionData();
+        }
+
+        this.dataLoaded = true; // 🎯 重要：設定載入完成
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('❌ 載入抽成設定資料失敗:', error);
+        this.notificationService.errorBubble('載入抽成設定資料失敗');
+        this.initializeEmptyCommissionData();
+        this.loading = false;
+      }
+    });
+  }
+
+  // 🎯 修改：載入折數選項，返回 Promise
+  private loadDiscountOptions(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      console.log('🔽 開始載入折數選項...');
+
+      this.paperTypeService.getPaperTypeOptions('T102').subscribe({
+        next: (options: any[]) => {
+          this.discountOptions = options;
+          console.log('✅ 載入折數選項成功:', this.discountOptions);
+          this.updateDiscountColumnOptions();
+          resolve();
+        },
+        error: (error: any) => {
+          console.error('❌ 載入折數選項失敗:', error);
+          this.notificationService.errorBubble('載入折數選項失敗');
+          this.discountOptions = [];
+          this.updateDiscountColumnOptions();
+          reject(error);
+        }
+      });
+    });
+  }
+
+  // 更新表格欄位的折數選項
+  private updateDiscountColumnOptions(): void {
+    const discountTypeColumn = this.discountColumns.find(col => col.field === 'discountType');
+    if (discountTypeColumn) {
+      discountTypeColumn.options = this.discountOptions;
+    }
+
+    const levelDiscountColumn = this.levelColumns.find(col => col.field === 'discountType');
+    if (levelDiscountColumn) {
+      levelDiscountColumn.options = this.discountOptions;
+    }
+
+    this.discounts = this.discountOptions;
+  }
+
+  // 根據 barcode 取得折扣類型
+  private getDiscountTypeByBarcode(barcode: string): string {
+    return barcode || '000';
+  }
+
+  // 根據折數選項取得顯示名稱
+  private getDiscountLabelByValue(value: string): string {
+    const option = this.discountOptions.find(opt => opt.value === value);
+    return option ? option.label : value;
+  }
+
+  // 生成折扣摘要
+  private generateDiscountSummary(chargeSetting: any): string {
+    console.log('🏷️ 生成折扣摘要，輸入:', chargeSetting);
+
+    const summaryParts: string[] = [];
+
+    // 🔧 修正：使用大寫的欄位名稱
+    if (chargeSetting.ChargeDetails && chargeSetting.ChargeDetails.length > 0) {
+      const discountSummary = chargeSetting.ChargeDetails.map((detail: any) => {
+        const discountLabel = this.getDiscountLabelByValue(detail.cag_barcode);
+        return `${discountLabel}(${detail.cag_charge_rate}%)`;
+      }).join(', ');
+      summaryParts.push(`折扣設定: ${discountSummary}`);
+    }
+
+    if (chargeSetting.YearChargeDetails && chargeSetting.YearChargeDetails.length > 0) {
+      const yearSummary = chargeSetting.YearChargeDetails.map((detail: any) => {
+        return `${detail.year_amount}以上(+${detail.extra_rate}%)`;
+      }).join(', ');
+      summaryParts.push(`年度業績: ${yearSummary}`);
+    }
+
+    if (chargeSetting.LevelChargeDetails && chargeSetting.LevelChargeDetails.length > 0) {
+      const levelSummary = chargeSetting.LevelChargeDetails.map((detail: any) => {
+        const discountLabel = this.getDiscountLabelByValue(detail.cag_barcode);
+        return `${discountLabel}(${detail.level_charge_rate}%)`;
+      }).join(', ');
+      summaryParts.push(`層級抽成: ${levelSummary}`);
+    }
+
+    const summary = summaryParts.join('; ') || '尚未設定';
+    console.log('🏷️ 生成的摘要:', summary);
+    return summary;
+  }
+  private convertAPIDataToCommissionItems(apiData: any): void {
+    console.log('🔄 開始轉換 API 資料...');
+    console.log('🔍 輸入的 apiData:', apiData);
+
+    this.commissionItems = [];
+
+    // 🔧 修正：使用正確的欄位名稱（大寫）
+    if (apiData.ChargeSettings && Array.isArray(apiData.ChargeSettings)) {
+      console.log('📊 處理', apiData.ChargeSettings.length, '個抽成設定項目');
+
+      apiData.ChargeSettings.forEach((chargeSetting: any, index: number) => {
+        console.log(`🔄 處理第 ${index + 1} 個項目:`, chargeSetting);
+
+        const commissionItem: CommissionItem = {
+          id: index + 1,
+          commissionType: chargeSetting.tlt_id || '',
+          commissionTypeName: chargeSetting.tlt_id_desc || '抽成類別' + (index + 1),
+          taxType: chargeSetting.cag_taxtype === '1' ? 1 : 0,
+          discountSummary: this.generateDiscountSummary(chargeSetting),
+          transactionAmount: chargeSetting.sst_amount || 0,
+          specialCommission: chargeSetting.sst_rate || 0,
+          fullPointActivity: chargeSetting.cap_saletype2 === 'Y',
+          thousandDiscount: chargeSetting.cap_saletype1 === 'Y',
+          selectedSettingOption: 'discount',
+
+          // 🔧 修正：使用正確的欄位名稱（大寫）
+          discountSettingItems: this.convertChargeDetails(chargeSetting.ChargeDetails || []),
+          annualPerformanceItems: this.convertYearChargeDetails(chargeSetting.YearChargeDetails || []),
+          discountLevelItems: this.convertLevelChargeDetails(chargeSetting.LevelChargeDetails || []),
+          detailItems: []
+        };
+
+        // 初始化 detailItems
+        this.updateCommissionItemDetails(commissionItem);
+        this.commissionItems.push(commissionItem);
+
+        console.log(`✅ 完成第 ${index + 1} 個項目轉換:`, commissionItem);
+      });
+    } else {
+      console.warn('⚠️ ChargeSettings 不存在或不是陣列');
+    }
+
+    // 更新顯示
+    this.updateDetailItemsForDisplay();
+    console.log('✅ 轉換完成，共', this.commissionItems.length, '個抽成項目');
+    console.log('🎯 最終的 commissionItems:', this.commissionItems);
+  }
+
+  private convertChargeDetails(chargeDetails: any[]): DiscountSettingItem[] {
+    console.log('🔄 轉換 ChargeDetails:', chargeDetails);
+
+    if (!Array.isArray(chargeDetails)) {
+      console.warn('⚠️ chargeDetails 不是陣列:', chargeDetails);
+      return [];
+    }
+
+    return chargeDetails.map(detail => {
+      console.log('🔄 轉換單個 ChargeDetail:', detail);
+
+      return {
+        selected: true,
+        discountType: this.getDiscountTypeByBarcode(detail.cag_barcode),
+        startDate: detail.tlt_bdate ? new Date(detail.tlt_bdate) : new Date(),
+        endDate: detail.tlt_edate ? new Date(detail.tlt_edate) : new Date(),
+        rate: detail.cag_charge_rate || 0
+      };
+    });
+  }
+
+  private convertYearChargeDetails(yearDetails: any[]): AnnualPerformanceItem[] {
+    console.log('🔄 轉換 YearChargeDetails:', yearDetails);
+
+    if (!Array.isArray(yearDetails)) {
+      console.warn('⚠️ yearDetails 不是陣列:', yearDetails);
+      return [];
+    }
+
+    return yearDetails.map(detail => {
+      console.log('🔄 轉換單個 YearChargeDetail:', detail);
+
+      return {
+        selected: true,
+        startDate: detail.tlt_bdate ? new Date(detail.tlt_bdate) : new Date(),
+        endDate: detail.tlt_edate ? new Date(detail.tlt_edate) : new Date(),
+        discountAmount: detail.year_amount || 0,
+        rate: detail.extra_rate || 0
+      };
+    });
+  }
+
+  private convertLevelChargeDetails(levelDetails: any[]): DiscountLevelItem[] {
+    console.log('🔄 轉換 LevelChargeDetails:', levelDetails);
+
+    if (!Array.isArray(levelDetails)) {
+      console.warn('⚠️ levelDetails 不是陣列:', levelDetails);
+      return [];
+    }
+
+    return levelDetails.map(detail => {
+      console.log('🔄 轉換單個 LevelChargeDetail:', detail);
+
+      return {
+        selected: true,
+        discountType: this.getDiscountTypeByBarcode(detail.cag_barcode),
+        startAmount: detail.level_bmount || 0,
+        endAmount: detail.level_eamount || 0,
+        rate: detail.level_charge_rate || 0
+      };
+    });
+  }
+
+  // 🎯 修改：初始化空的抽成設定資料
+  private initializeEmptyCommissionData(): void {
+    console.log('📝 初始化空的抽成設定資料');
+    this.commissionItems = [];
+    this.commissionDataLoaded = true;
+    this.dataLoaded = true; // 🎯 重要：確保狀態正確
+  }
+
+  private updateCommissionItemDetails(commissionItem: CommissionItem): void {
+    console.log('🔄 更新委員會項目詳情，當前標籤:', this.selectedSettingTab);
+    console.log('🔍 項目資料:', commissionItem);
+
+    switch (this.selectedSettingTab) {
+      case 'discount':
+        commissionItem.detailItems = [...commissionItem.discountSettingItems];
+        console.log('📊 設定折扣詳情項目數量:', commissionItem.detailItems.length);
+        break;
+      case 'annual':
+        commissionItem.detailItems = [...commissionItem.annualPerformanceItems];
+        console.log('📊 設定年度詳情項目數量:', commissionItem.detailItems.length);
+        break;
+      case 'level':
+        commissionItem.detailItems = [...commissionItem.discountLevelItems];
+        console.log('📊 設定層級詳情項目數量:', commissionItem.detailItems.length);
+        break;
+      default:
+        commissionItem.detailItems = [...commissionItem.discountSettingItems];
+        console.log('📊 設定預設詳情項目數量:', commissionItem.detailItems.length);
     }
   }
 
-  // 初始化空的抽成設定資料
-  private initializeEmptyCommissionData(): void {
-    this.commissionItems = [];
-    // 可以添加一個初始的空項目
-    this.addInitialCommissionItem();
+
+  // 🎯 修改：檢查是否有抽成資料的方法
+  hasCommissionData(): boolean {
+    const hasData = this.dataLoaded && this.commissionItems && this.commissionItems.length > 0;
+    console.log('🔍 檢查是否有抽成資料:', {
+      dataLoaded: this.dataLoaded,
+      commissionDataLoaded: this.commissionDataLoaded,
+      commissionItemsLength: this.commissionItems?.length || 0,
+      commissionItemsExist: !!this.commissionItems,
+      hasData: hasData
+    });
+    return hasData;
   }
+
+  // ... 其他方法保持不變 ...
 
   // 儲存抽成設定到工作流程
   private saveCommissionDataToWorkflow(): void {
+    console.log('💾 ⚠️  儲存抽成設定資料被調用！');
+    console.trace('📍 誰調用了儲存？完整調用堆疊:'); // 這會顯示誰調用的
+    console.log('💾 當前 commissionItems 長度:', this.commissionItems.length);
+
     try {
-      console.log('💾 準備儲存抽成設定資料...');
       this.contractFlowService.saveStep3Data(this.commissionItems);
       console.log('✅ 已成功暫存抽成設定資料到工作流程');
     } catch (error) {
@@ -467,9 +750,12 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   updateDetailItemsForDisplay(): void {
-    console.log('更新詳細項目顯示, 選項卡:', this.selectedSettingTab);
+    console.log('🔄 更新詳細項目顯示, 選項卡:', this.selectedSettingTab);
+    console.log('🔍 當前 commissionItems 數量:', this.commissionItems.length);
 
-    this.commissionItems.forEach(item => {
+    this.commissionItems.forEach((item, index) => {
+      console.log(`🔄 處理第 ${index + 1} 個項目:`, item.id);
+
       // 清空當前 detailItems
       item.detailItems = [];
 
@@ -480,6 +766,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
             item.discountSettingItems.forEach(discountItem => {
               item.detailItems.push({ ...discountItem });
             });
+            console.log(`📊 項目 ${item.id} 折扣設定項目數量:`, item.detailItems.length);
+          } else {
+            console.log(`📭 項目 ${item.id} 沒有折扣設定項目`);
           }
           break;
         case 'annual':
@@ -487,6 +776,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
             item.annualPerformanceItems.forEach(annualItem => {
               item.detailItems.push({ ...annualItem });
             });
+            console.log(`📊 項目 ${item.id} 年度業績項目數量:`, item.detailItems.length);
+          } else {
+            console.log(`📭 項目 ${item.id} 沒有年度業績項目`);
           }
           break;
         case 'level':
@@ -494,12 +786,17 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
             item.discountLevelItems.forEach(levelItem => {
               item.detailItems.push({ ...levelItem });
             });
+            console.log(`📊 項目 ${item.id} 層級抽成項目數量:`, item.detailItems.length);
+          } else {
+            console.log(`📭 項目 ${item.id} 沒有層級抽成項目`);
           }
           break;
       }
 
-      console.log(`項目 ${item.id} 詳細項目數量:`, item.detailItems.length);
+      console.log(`✅ 項目 ${item.id} 最終詳細項目數量:`, item.detailItems.length);
     });
+
+    console.log('✅ 所有項目詳細顯示更新完成');
   }
 
   // 創建折扣設置項目
@@ -513,7 +810,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     return {
       selected: false,
-      discountType: 0,
+      discountType: '000',
       startDate: startDate,
       endDate: endDate,
       rate: 0
@@ -535,18 +832,11 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
   createDiscountLevelItem(): DiscountLevelItem {
     return {
       selected: false,
-      discountType: 0,
+      discountType: '000',
       startAmount: 0,
       endAmount: 0,
       rate: 0
     };
-  }
-
-  // 添加初始佣金項目
-  addInitialCommissionItem(): void {
-    const newId = this.commissionItems.length + 1;
-    this.commissionItems.push(this.createCommissionItem(newId));
-    this.saveCommissionDataToWorkflow();
   }
 
   // 創建佣金項目
@@ -556,13 +846,11 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
       discountSettingItems.push(this.createDiscountSettingItem());
     }
 
-    // 創建5個空的年度業績項目
     const annualPerformanceItems: AnnualPerformanceItem[] = [];
     for (let i = 0; i < 5; i++) {
       annualPerformanceItems.push(this.createAnnualPerformanceItem());
     }
 
-    // 創建5個空的折扣等級項目
     const discountLevelItems: DiscountLevelItem[] = [];
     for (let i = 0; i < 5; i++) {
       discountLevelItems.push(this.createDiscountLevelItem());
@@ -578,14 +866,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
       specialCommission: 0,
       fullPointActivity: false,
       thousandDiscount: false,
-      selectedSettingOption: 'discount', // 默認選擇折扣設定
+      selectedSettingOption: 'discount',
       discountSettingItems: discountSettingItems,
       annualPerformanceItems: annualPerformanceItems,
       discountLevelItems: discountLevelItems,
-      detailItems: [] // 初始化為空陣列
+      detailItems: []
     };
 
-    // 根據當前選擇的選項卡類型初始化 detailItems
     switch (this.selectedSettingTab) {
       case 'discount':
         item.detailItems = [...discountSettingItems];
@@ -605,6 +892,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   // 添加新的佣金項目
   onAddCommissionItem(): void {
+    console.log('🚨 onAddCommissionItem 被調用！');
+    console.trace('📍 誰調用了 onAddCommissionItem？');
+
     const newId = this.commissionItems.length + 1;
     this.commissionItems.push(this.createCommissionItem(newId));
     this.updateDetailItemsForDisplay();
@@ -697,12 +987,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   // 詳細內容保存
   onDetailSave(item: CommissionItem, settingType: string): void {
-    // 根據設置類型生成摘要內容
     let formattedItems = '';
     this.syncDetailItemsToSource(item);
     switch (settingType) {
       case 'discount':
-        // 處理折扣設置項目
         const selectedDiscounts = item.discountSettingItems.filter(i => i.selected);
         const formattedDiscounts = selectedDiscounts.map((discountItem, idx) => {
           const discountLabel = this.discounts.find(d => d.value == discountItem.discountType)?.label || '';
@@ -714,7 +1002,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
         break;
 
       case 'annual':
-        // 處理年度業績項目
         const selectedAnnuals = item.annualPerformanceItems.filter(i => i.selected);
         const formattedAnnuals = selectedAnnuals.map((annualItem, idx) => {
           const startDate = annualItem.startDate ? this.formatDate(annualItem.startDate) : '';
@@ -725,7 +1012,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
         break;
 
       case 'level':
-        // 處理折扣等級項目
         const selectedLevels = item.discountLevelItems.filter(i => i.selected);
         const formattedLevels = selectedLevels.map((levelItem, idx) => {
           const discountLabel = this.discounts.find(d => d.value == levelItem.discountType)?.label || '';
@@ -735,10 +1021,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
         break;
     }
 
-    // 更新摘要
     if (formattedItems) {
       item.discountSummary = formattedItems;
-      // 更新選定的設置選項
       item.selectedSettingOption = settingType;
     }
 
@@ -753,14 +1037,12 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   // 詳細內容清除
   onDetailClear(item: CommissionItem, settingType: string): void {
-    // 按類型清除不同的內容
     switch (settingType) {
       case 'discount':
         item.discountSettingItems.forEach(i => {
           i.selected = false;
-          i.discountType = 0;
+          i.discountType = '000';
           i.rate = 0;
-          // 保留起止日期
           i.startDate = this.contractInfoData[0]?.tlt_bdate
             ? new Date(this.contractInfoData[0].tlt_bdate)
             : new Date();
@@ -774,7 +1056,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
           i.selected = false;
           i.discountAmount = 0;
           i.rate = 0;
-          // 重置日期
           i.startDate = new Date();
           i.endDate = new Date();
         });
@@ -782,7 +1063,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
       case 'level':
         item.discountLevelItems.forEach(i => {
           i.selected = false;
-          i.discountType = 0;
+          i.discountType = '000';
           i.startAmount = 0;
           i.endAmount = 0;
           i.rate = 0;
@@ -826,7 +1107,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
     const { rowData, tabId } = event;
     console.log('詳細選項卡切換:', tabId);
 
-    // 更新詳細內容顯示
     this.selectedSettingTab = tabId;
     this.updateDetailColumns();
     this.updateDetailItemsForDisplay();
@@ -946,10 +1226,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   // 輔助方法
-  hasCommissionData(): boolean {
-    return this.commissionItems.length > 0;
-  }
-
   getCommissionItemCount(): number {
     return this.commissionItems.length;
   }
