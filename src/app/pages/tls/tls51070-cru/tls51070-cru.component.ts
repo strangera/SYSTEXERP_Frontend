@@ -6,6 +6,52 @@ import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { POS2004 } from '../../../shared/models/tls/tls000.model';
 import { Tls51070Service } from '../../../service/API/tls/tls51070.service';
 
+export interface POS2005Detail {
+  "id": number,
+  "PLU_MagNo": string,
+  "PLU_No": string
+  "CRT_Date": Date,
+  "CRT_USR_No": string,
+  "CRT_USR_Name": string,
+  "UPD_Date": Date,
+  "UPD_USR_No": string,
+  "UPD_USR_Name": string,
+}
+
+export interface POS2020Detail {
+  "id": number,
+  "PLU_MagNo": string,
+  "VEN_No": string,
+  "STO_No": string,
+  "PLU_OrderPrc": number,
+  "PLU_Purchase": string,
+  "PLU_TransType": string,
+  "PLU_TransDay": number,
+  "Remark": string,
+  "VDP_LastStockDate": Date
+  "CRT_Date": Date,
+  "CRT_USR_No": string,
+  "CRT_USR_Name": string,
+  "UPD_Date": Date,
+  "UPD_USR_No": string,
+  "UPD_USR_Name": string,
+}
+
+export interface IMG1001Detail {
+  "id": number,
+  "IMG_Type": string,
+  "IMG_SeqNo": string,
+  "IMG_Path": string,
+  "IMG_File": string,
+  "IMG_Remark": string
+  "CRT_Date": Date,
+  "CRT_USR_No": string,
+  "CRT_USR_Name": string,
+  "UPD_Date": Date,
+  "UPD_USR_No": string,
+  "UPD_USR_Name": string,
+}
+
 // 2.5.1.7  商品基本資料 CRU
 @Component({
   selector: 'app-tls51070-cru',
@@ -13,21 +59,31 @@ import { Tls51070Service } from '../../../service/API/tls/tls51070.service';
   styleUrl: './tls51070-cru.component.scss'
 })
 export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> implements OnInit {
+  //目前標籤列
+  buttonID = 1; //預設在 基本資料標籤
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // POS2004 商品主檔
-    PLU_MagNo: ['', [Validators.maxLength(20)]], // 商品管理編號
-    PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
-    PLU_No: ['', [Validators.maxLength(20)]], // 國際條碼
+    // 基本資料顯示畫面
+    PLU_MagNo: ['', [Validators.required, Validators.maxLength(20)]], // 商品管理編號
+    PLU_Name: ['', [Validators.required, Validators.maxLength(60)]], // 商品中文名稱
+    PLU_EngName: ['', [Validators.maxLength(100)]], // 商品英文名稱
     PLU_OrgPLUNo: ['', [Validators.maxLength(30)]], // 廠商貨號 --廠商自編碼 廠商貨號
+    PLU_No: ['', [Validators.required, Validators.maxLength(20)]], // 國際條碼
+    PLU_MinOrder: [1, [Validators.maxLength(8)]], // 最小訂購量 ---預設1，採購時，輸入的採購量必需為最小訂購量的倍數。
+    PLU_Lable: ['', [Validators.maxLength(50)]], // 標籤名稱
+
+    CAT_LNo: ['', [Validators.required, Validators.maxLength(6)]], // 大分類代碼 --POS2003
+    CAT_MNo: ['', [Validators.required, Validators.maxLength(6)]], // 中分類代碼 POS20031
+    CAT_SNo: ['', [Validators.required, Validators.maxLength(6)]], // 小分類代碼 POS20032
+    PLU_Reserve1: ['', [Validators.maxLength(400)]], // 說明
+
     LOGO_No: ['', [Validators.maxLength(4)]], // 品牌代碼
-    CAT_LNo: ['', [Validators.maxLength(6)]], // 大分類代碼 --POS2003
-    CAT_MNo: ['', [Validators.maxLength(6)]], // 中分類代碼 POS20031
-    CAT_SNo: ['', [Validators.maxLength(6)]], // 小分類代碼 POS20032
+
+
     PLU_Attribute: ['1', [Validators.maxLength(16)]], // 商品型態 1一般、2進口、3買斷、4試銷、5寄賣*/ --南紡 商品型態 1一般、2進口、3買斷、4試銷、5寄賣
     PLU_Unit: ['', [Validators.maxLength(2)]], // 單位代碼 --讀PLUUNIT  商品單位設定檔
     PLU_ECStatus: ['0', [Validators.maxLength(1)]], // EC商品狀態: 1.正常2.停用3.停進4,下架 For EC (備註: 原來的 商品狀態(PLU_Status) 改為 EC商品狀態(PLU_ECStatus))
-    PLU_Reserve1: ['', [Validators.maxLength(400)]], // 說明
     PLU_Reserve3: ['', [Validators.maxLength(400)]], // 系列
   });
   //
@@ -49,11 +105,15 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     { value: '3', label: '停進' },
     { value: '4', label: '下架' },
   ];
+  counterOptions: apiOption[] = []; //專櫃編號：資料讀 TLTTALENT 
 
+  pos2005Detail: POS2005Detail[] = [];
+  pos2020Detail: POS2020Detail[] = [];
+  img1001Detail: IMG1001Detail[] = [];
 
   // ----------------------------------------------------------------
   constructor(
-    private tls51070Service: Tls51070Service) {
+    private tls51070Service: Tls51070Service,) {
     super(); // 呼叫父類建構子
   }
 
@@ -64,6 +124,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     //初始導入所有大分類、中分類、小分類表單
     this.loadCATOptions();
+
+    //查詢明細檔案
+    this.loadDetail(this.dataForm.get('PLU_MagNo')?.value || '');
 
     // 監聽 大分類 是否為''
     this.dataForm.get('CAT_LNo')!.valueChanges.subscribe((newValue) => {
@@ -132,10 +195,12 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     }
 
     //--檢查--
-    // 品牌編號：為唯一值。
-    // 品牌標準進貨折數：文字型態，長度１０，可輸入數字及小數點。例如91.25折時，輸入91.25
-    //                                    預設１００，若為７７折時，輸入７７。
-    //                                    可輸入到小數點以下2位。
+    // 商品管理編號：鍵值，自動編號，大分類編號(2碼)+10碼流水號+1碼檢查碼，檢查碼為EAN 檢查碼計算規則，流水號給號讀SER1001商品管理編號序號檔
+    // 國際條碼：必填，沒有輸入國際條碼時，國際條碼=商品管理編號。
+    //                    輸入國際條碼時，發現該條碼在資料庫中已有存在時，系統會提示【該國際條碼已存在，貨號為ｘｘｘ】
+    //                    系統會不允許輸入。此時，使用者透過貨號ｘｘｘ將該商品的國際條碼改為商品管理編號或清為空白後，即可新增該國際條碼。
+    // 標籤名稱：在輸入商品中文名稱後會自動帶入標籤名稱欄位。
+    // 多筆國際條碼：寫入POS2005，商品管理編號、國際條碼兩個欄位皆要寫入，國際條碼PLU_NO是鍵值。
     //--------
     switch (this.crudstatus) {
       case CRUDStatus.Create:
@@ -240,5 +305,27 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           console.log('小分類:', this.largeOption);
         });
     }
+  }
+
+  //讀取明細檔案
+  loadDetail(pLU_MagNo: string) {
+    if (pLU_MagNo == '') {
+      this.messageService.errorBubble('錯誤: 讀取明細為空');
+    } else {
+      this.tls51070Service.queryTLS51070_Detail({ 'PLU_MagNo': pLU_MagNo }).subscribe((response) => {
+        this.img1001Detail = response.Data[0].IMG1001Detail;
+        this.pos2005Detail = response.Data[0].POS2005Detail;
+        this.pos2020Detail = response.Data[0].POS2020Detail;
+
+        console.log('pos2005Detail', this.pos2005Detail);
+        console.log('pos2020Detail', this.pos2020Detail);
+        console.log('img1001Detail', this.img1001Detail);
+      });
+    }
+  }
+
+  //切換顯示Button
+  switchButton(buttonNum: number) {
+    this.buttonID = buttonNum;
   }
 }

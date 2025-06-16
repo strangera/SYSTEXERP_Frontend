@@ -60,4 +60,9 @@ export class Tls51070Service {
   queryPLULOGO_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryPLULOGO_DropDownList`, body);
   }
+
+  // 查詢 專櫃主檔(TLTTALENT) 設定檔
+  queryTLTTALENT_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_DropDownList`, body);
+  }
 }
