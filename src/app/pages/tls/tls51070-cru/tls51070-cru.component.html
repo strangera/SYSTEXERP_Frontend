@@ -118,6 +118,25 @@
             ></app-input-text>
           </div>
         </div>
+
+        <!-- 商品採購廠商 POS2020 -->
+        <app-expandable-edit-table
+          title="商品採購廠商"
+          [mainColumns]="POS2020DataColumn"
+          [data]="POS2020Data"
+          [loading]="expandLoading"
+          detailKey=""
+          dataKey="PLU_MagNo"
+          [showCheckBox]="true"
+          [showPaginator]="false"
+          [showAddButton]="true"
+          [showDetailTabs]="false"
+          [showDetailAddButton]="false"
+          [defaultNewItem]="defaultNew2020"
+          (save)="onRowSave($event)"
+          (cancel)="onRowCancel($event)"
+          (addMainItem)="onAddPerson()"
+        ></app-expandable-edit-table>
       </ng-container>
       <!-- 商品規格 顯示畫面 -->
       <ng-container *ngIf="buttonID === 2">

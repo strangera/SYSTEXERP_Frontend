@@ -1,10 +1,11 @@
-import { Component, OnInit, } from '@angular/core';
+import { Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { POS2004 } from '../../../shared/models/tls/tls000.model';
 import { Tls51070Service } from '../../../service/API/tls/tls51070.service';
+import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 
 export interface POS2005Detail {
   "id": number,
@@ -28,13 +29,13 @@ export interface POS2020Detail {
   "PLU_TransType": string,
   "PLU_TransDay": number,
   "Remark": string,
-  "VDP_LastStockDate": Date
-  "CRT_Date": Date,
-  "CRT_USR_No": string,
-  "CRT_USR_Name": string,
-  "UPD_Date": Date,
-  "UPD_USR_No": string,
-  "UPD_USR_Name": string,
+  "VDP_LastStockDate": Date,
+  "CRT_Date"?: Date,
+  "CRT_USR_No"?: string,
+  "CRT_USR_Name"?: string,
+  "UPD_Date"?: Date,
+  "UPD_USR_No"?: string,
+  "UPD_USR_Name"?: string,
 }
 
 export interface IMG1001Detail {
@@ -59,6 +60,9 @@ export interface IMG1001Detail {
   styleUrl: './tls51070-cru.component.scss'
 })
 export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> implements OnInit {
+  // 在父組件中聲明
+  @ViewChild(ExpandableEditTableComponent) expandableTable!: ExpandableEditTableComponent;
+
   //目前標籤列
   buttonID = 1; //預設在 基本資料標籤
   // ----------------------------------------------------------------
@@ -68,8 +72,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_MagNo: ['', [Validators.required, Validators.maxLength(20)]], // 商品管理編號
     PLU_Name: ['', [Validators.required, Validators.maxLength(60)]], // 商品中文名稱
     PLU_EngName: ['', [Validators.maxLength(100)]], // 商品英文名稱
-    PLU_OrgPLUNo: ['', [Validators.maxLength(30)]], // 廠商貨號 --廠商自編碼 廠商貨號
-    PLU_No: ['', [Validators.required, Validators.maxLength(20)]], // 國際條碼
+    PLU_OrgPLUNo: ['', [Validators.maxLength(30)]], // 廠商貨號 --廠商自編碼 廠商貨號 
+    PLU_No: ['', [Validators.required, Validators.maxLength(20)]], // 國際條碼 ''不甜帶入提示訊息PLU_MagNo
     PLU_MinOrder: [1, [Validators.maxLength(8)]], // 最小訂購量 ---預設1，採購時，輸入的採購量必需為最小訂購量的倍數。
     PLU_Lable: ['', [Validators.maxLength(50)]], // 標籤名稱
 
@@ -110,8 +114,62 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   pos2005Detail: POS2005Detail[] = [];
   pos2020Detail: POS2020Detail[] = [];
   img1001Detail: IMG1001Detail[] = [];
+  // ---------採購廠商 (POS2020) 編輯表格 至少要一筆-------------------------------------------------------
+  // 廠商編號	下拉
+  POS2020Data: POS2020Detail[] = [];
+  // 預設新項目模板
+  defaultNew2020 = {
+    PLU_MagNo: this.dataForm.get('PLU_MagNo')?.value || '',
+    VEN_No: '',
+    STO_No: '',
+    PLU_OrderPrc: 0,
 
+    PLU_Purchase: '',
+    PLU_TransType: '',
+    PLU_TransDay: 0,
+    Remark: '',
+    VDP_LastStockDate: new Date(),
+  };
+
+  // 展開式表格的欄位定義
+  POS2020DataColumn: ColumnDef[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號', editable: false, type: 'text' },  //key
+    { field: 'VEN_No', header: '廠商編號', editable: true, type: 'text' }, //key
+    // { field: 'STO_No', header: '分店編號', editable: true, type: 'text' },
+
+    { field: 'PLU_TransType', header: '運輸方式', editable: true, type: 'text' },
+    { field: 'PLU_TransDay', header: '送貨天數', editable: true, type: 'number' },
+    { field: 'PLU_Purchase', header: '採購狀態', editable: true, type: 'text' },
+    { field: 'PLU_OrderPrc', header: '目前進價', editable: true, type: 'number' }, //顯示 最後進價，是這個嗎?
+    { field: 'VDP_LastStockDate', header: '最後進貨日期', editable: true, type: 'Date' },
+    { field: 'Remark', header: '單向備註', editable: true, type: 'text' },
+
+  ];
+
+  // 展開式表格的載入狀態
+  expandLoading = false;
+
+  // 預設 POS2020 新項目模板
+  createDefaultNew2020(pLU_MagNo: string) {
+    this.defaultNew2020 = {
+      PLU_MagNo: pLU_MagNo,
+      VEN_No: '',
+      STO_No: '',
+      PLU_OrderPrc: 0,
+
+      PLU_Purchase: '',
+      PLU_TransType: '',
+      PLU_TransDay: 0,
+      Remark: '',
+      VDP_LastStockDate: new Date(),
+    };
+  }
+
+  // isRowSelectable(rowData: POS2020Detail): boolean {
+  //   // return rowData.isdelete;
+  // }
   // ----------------------------------------------------------------
+
   constructor(
     private tls51070Service: Tls51070Service,) {
     super(); // 呼叫父類建構子
@@ -317,6 +375,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         this.pos2005Detail = response.Data[0].POS2005Detail;
         this.pos2020Detail = response.Data[0].POS2020Detail;
 
+        //建立項目模板
+        this.createDefaultNew2020(pLU_MagNo);
+
         console.log('pos2005Detail', this.pos2005Detail);
         console.log('pos2020Detail', this.pos2020Detail);
         console.log('img1001Detail', this.img1001Detail);
@@ -328,4 +389,49 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   switchButton(buttonNum: number) {
     this.buttonID = buttonNum;
   }
+
+  //---新增表格編輯事件---
+  // 展開式表格的事件處理方法 - 修正為正確的參數類型
+  // 注意：這些方法需要明確接收正確的事件類型
+  onRowSave(event: any) {
+    // 確認事件對象有預期的屬性
+    if (event && 'oldData' in event && 'newData' in event) {
+      console.log('儲存主表格行:', event);
+      // 這裡可以加入實際的API儲存邏輯
+    } else {
+      console.warn('收到未預期的事件格式:', event);
+    }
+  }
+
+  onRowCancel(event: any) {
+    console.log('取消主表格編輯:', event);
+  }
+
+  // 新增人員事件 (新增)
+  onAddPerson() {
+    const newPerson = {
+      ...this.defaultNew2020,
+      id: this.generatePersonId(),
+    };
+
+    console.log('新項目', newPerson);
+
+    this.POS2020Data.push(newPerson);
+
+    // 自動進入編輯模式
+    setTimeout(() => {
+      const index = this.POS2020Data.indexOf(newPerson);
+      if (index >= 0) {
+        this.expandableTable.onRowEditInit(newPerson, index);
+      }
+    }, 0);
+  }
+
+  // 生成新人員ID (新增)
+  generatePersonId(): number {
+    const maxId = Math.max(...this.POS2020Data.map(p => p.id), 0);
+    return maxId + 1;
+  }
+
+  //--表格事件--
 }
