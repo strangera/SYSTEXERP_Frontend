@@ -1,138 +1,157 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1;">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button label="基本資料"></app-button>
+    <app-button label="商品規格"></app-button>
+    <app-button label="商品規格(二)"></app-button>
+    <app-button label="商品資訊"></app-button>
+    <app-button label="商品圖檔"></app-button>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="商品管理編號"
+            controlName="PLU_MagNo"
+            [control]="dataForm.controls.PLU_MagNo"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
-        <div class="grid p-fluid">
-            <p-button label="基本資料"></p-button>
-            <p-button label="商品規格"></p-button>
-            <p-button label="商品規格(二)"></p-button>
-            <p-button label="商品資訊"></p-button>
-            <p-button label="商品圖檔"></p-button>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="商品名稱"
+            controlName="PLU_Name"
+            [control]="dataForm.controls.PLU_Name"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="商品管理編號" controlName="merchantID"
-                        [control]="dataForm.controls.merchantID" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="商品中文名稱" controlName="merchantCName"
-                        [control]="dataForm.controls.merchantCName" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="商品英文名稱" controlName="merchantEName"
-                        [control]="dataForm.controls.merchantEName" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="廠商貨號" controlName="venderCode"
-                        [control]="dataForm.controls.venderCode" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="國際條碼" controlName="internationalCode"
-                        [control]="dataForm.controls.internationalCode" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="大分類代碼" controlName="lCategory" [options]="storageOptions" optionLabel="label"
-                        optionValue="value" [control]="dataForm.controls.lCategory" [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="中分類代碼" controlName="mCategory" [options]="storageOptions" optionLabel="label"
-                        optionValue="value" [control]="dataForm.controls.mCategory" [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="小分類代碼" controlName="sCategory" [options]="storageOptions" optionLabel="label"
-                        optionValue="value" [control]="dataForm.controls.sCategory" [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-            </div>
-            <hr>
-            <app-editor-text label="說明" controlName="illustrate" [control]="dataForm.controls.illustrate"
-                [style]="{ height: '100px' }" [submitted]="submitted">
-            </app-editor-text>
-            <!---->
-            <hr>
-            <ng-container formArrayName="items">
-                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                    <div class="grid align-items-center">
-                        <div class="col" style="flex: 1;">
-                            <h5>商品 {{i+1}}</h5>
-                        </div>
-                        <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
-                                class="col"></app-button-dynamicallydelete>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-6 md:col-4 lg:col-4">
-                            <app-dropdown label="廠商編號/名稱" controlName="venderID" [options]="venderIDOptions"
-                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'venderID')"
-                                [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                        <div class="col-6 md:col-4 lg:col-4">
-                            <app-dropdown label="運輸方式" controlName="transportation" [options]="transportationOptions"
-                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'transportation')"
-                                [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="送貨天數" controlName="deliveryDays"
-                                [control]="getFormControl(i, 'deliveryDays')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-6 md:col-4 lg:col-4">
-                            <app-dropdown label="採購狀態" controlName="purchaseStatus" [options]="purchaseStatusOptions"
-                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'purchaseStatus')"
-                                [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="最後進價" controlName="restockingPrice"
-                                [control]="getFormControl(i, 'restockingPrice')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-calendar calendarType="dateOne" label="最後進貨日"
-                                [control]="getFormControl(i, 'restockingDate')" [submitted]="submitted">
-                            </app-calendar>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="單項備註" controlName="remark" [control]="getFormControl(i, 'remark')"
-                                [submitted]="submitted">
-                            </app-input-text>
-                        </div>
-                    </div>
-                </ng-container>
-            </ng-container>
-            <div class="pt-1">
-                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
-            </div>
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
-            </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="國際條碼"
+            controlName="PLU_No"
+            [control]="dataForm.controls.PLU_No"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
-    </p-panel>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="廠商貨號"
+            controlName="PLU_OrgPLUNo"
+            [control]="dataForm.controls.PLU_OrgPLUNo"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="品牌代碼"
+            controlName="LOGO_No"
+            [options]="brandOption"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.LOGO_No"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="大分類代碼"
+            controlName="CAT_LNo"
+            [options]="largeOption"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.CAT_LNo"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="中分類代碼"
+            controlName="CAT_MNo"
+            [options]="middleOption"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.CAT_MNo"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="小分類代碼"
+            controlName="CAT_SNo"
+            [options]="smallOption"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.CAT_SNo"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="商品型態"
+            controlName="PLU_Attribute"
+            [options]="attributeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.PLU_Attribute"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="商品單位"
+            controlName="PLU_Unit"
+            [options]="unitOptions"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.PLU_Unit"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="EC商品狀態"
+            controlName="PLU_ECStatus"
+            [options]="statusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.PLU_ECStatus"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="說明"
+            controlName="PLU_Reserve1"
+            [control]="dataForm.controls.PLU_Reserve1"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="系列"
+            controlName="PLU_Reserve3"
+            [control]="dataForm.controls.PLU_Reserve3"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable"
+      >
+        <app-button btnType="cancel"></app-button>
+        <app-button btnType="submit"></app-button>
+      </div>
+    </form>
+  </p-panel>
 </div>
