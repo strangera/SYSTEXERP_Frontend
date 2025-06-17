@@ -73,11 +73,11 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_Name: ['', [Validators.required, Validators.maxLength(60)]], // 商品中文名稱
     PLU_EngName: ['', [Validators.maxLength(100)]], // 商品英文名稱
     PLU_OrgPLUNo: ['', [Validators.maxLength(30)]], // 廠商貨號 --廠商自編碼 廠商貨號 
-    PLU_No: ['', [Validators.required, Validators.maxLength(20)]], // 國際條碼 可選擇帶入PLU_MagNo
+    PLU_No: ['', [Validators.maxLength(20)]], // 國際條碼 可選擇帶入PLU_MagNo，新增模式以外加上 必填
     PLU_MinOrder: [1, [Validators.maxLength(8)]], // 最小訂購量 ---預設1，採購時，輸入的採購量必需為最小訂購量的倍數。
     PLU_Lable: ['', [Validators.maxLength(50)]], // 標籤名稱
 
-    CAT_LNo: ['', [Validators.required, Validators.maxLength(6)]], // 大分類代碼 --POS2003
+    CAT_LNo: ['', [Validators.required, Validators.maxLength(6)]], // 大分類代碼 POS2003
     CAT_MNo: ['', [Validators.required, Validators.maxLength(6)]], // 中分類代碼 POS20031
     CAT_SNo: ['', [Validators.required, Validators.maxLength(6)]], // 小分類代碼 POS20032
     PLU_Reserve1: ['', [Validators.maxLength(400)]], // 說明
@@ -177,6 +177,14 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   ngOnInit(): void {
     this.initializePage('TLS51070', this.dataForm);
+
+    //國際條碼 新增可空白、其他狀況必填
+    if (this.crudstatus !== CRUDStatus.Create) {
+      this.dataForm.get('PLU_No')?.setValidators(Validators.required);
+    } else {
+      console.log('新增模式，國條可非必填')
+    }
+
     //導入下拉清單
     this.loadOptions();
 
@@ -245,6 +253,14 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     });
   }
 
+  //根據新增/編輯 環境建立表單
+  initializeForm(crudstatus: CRUDStatus) {
+    if (crudstatus != CRUDStatus.Create) {
+      this.dataForm.get('PLU_No')?.setValidators(Validators.required);
+    }
+  }
+
+
   onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
@@ -297,6 +313,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   }
 
   //設定國際條碼(pluNo)為商品管理編號(pluMagno)
+  //新增時可選擇pluNo與pluMagno相同，此情況pluNo可為
   setNoToMagNo() {
     const pluMagNo = this.dataForm.get('PLU_MagNo')?.value || '';
     if (pluMagNo !== '') {
