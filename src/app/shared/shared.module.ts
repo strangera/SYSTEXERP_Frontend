@@ -72,6 +72,7 @@ import { MultiLocationFilterComponent } from './componentkit/multi-location-filt
 import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autocomplete.component';
 import { QueryYearMonthComponent } from './componentkit/query-year-month/query-year-month.component';
 import { InputGroupComponent } from './componentkit/input-group/input-group.component';
+import { ProgressBarModule } from 'primeng/progressbar';
 
 @NgModule({
   declarations: [
@@ -149,6 +150,7 @@ import { InputGroupComponent } from './componentkit/input-group/input-group.comp
     TreeModule,
     FileUploadModule,
     ExpandableEditTableModule,
+    ProgressBarModule
   ],
   exports: [
     // Angular
@@ -213,7 +215,8 @@ import { InputGroupComponent } from './componentkit/input-group/input-group.comp
     SelectButtonModule,
     MultiLocationFilterComponent,
     AutoCompleteComponent,
-    QueryYearMonthComponent
+    QueryYearMonthComponent,
+    ProgressBarModule
   ],
 })
 export class SharedModule { }

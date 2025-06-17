@@ -1,0 +1,26 @@
+<div class="mb-3">
+  <button
+    pButton
+    type="button"
+    icon="pi pi-arrow-left"
+    label="回上頁"
+    (click)="goBack()"
+  ></button>
+</div>
+<div class="card">
+  <app-table
+    *ngIf="!loading"
+    [data]="data"
+    [columns]="columns"
+    dataKey="TXN_No"
+    [showPaginator]="false"
+    [showSubtotal]="true"
+    [subtotalFields]="['TXN_TotPayAmt', 'TXN_TotDisc']"
+  ></app-table>
+  <p-progressBar
+    *ngIf="loading"
+    [value]="progressValue"
+    [showValue]="true"
+    [unit]="'%'"
+  ></p-progressBar>
+</div>
