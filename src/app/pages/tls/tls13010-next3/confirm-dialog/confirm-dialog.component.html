@@ -1,0 +1,440 @@
+<!-- confirm-dialog.component.html -->
+<p-dialog
+  header="確認送出契約資料"
+  [(visible)]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [style]="{ width: '80vw', maxWidth: '1200px', height: '80vh' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="false"
+>
+  <div
+    class="confirmation-content"
+    style="height: calc(80vh - 120px); overflow-y: auto"
+  >
+    <!-- 🎯 整體摘要卡片 -->
+    <div
+      class="summary-card p-3 mb-4 bg-blue-50 border-round border-1 border-blue-200"
+    >
+      <div class="flex align-items-center mb-2">
+        <i class="pi pi-info-circle text-blue-600 text-xl mr-2"></i>
+        <h4 class="text-blue-800 m-0">契約資料送出摘要</h4>
+      </div>
+      <p class="text-blue-700 m-0" *ngIf="dataSummary">
+        {{ getChangesSummaryText() }}
+      </p>
+      <p class="text-gray-500 text-sm mt-2 mb-0">
+        請仔細確認以下資料無誤後，點擊「確認送出」完成契約建立程序。
+      </p>
+    </div>
+
+    <div *ngIf="dataSummary">
+      <!-- 🎯 1. 契約基本資訊 -->
+      <p-accordion>
+        <p-accordionTab
+          header="1. 契約基本資訊"
+          [selected]="true"
+          [headerStyle]="{ 'background-color': '#f8f9fa' }"
+        >
+          <div class="grid">
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label class="font-semibold text-sm text-gray-600">
+                  專櫃編號
+                </label>
+                <div class="text-lg">
+                  {{ dataSummary.contractInfo.talent_id }}
+                </div>
+              </div>
+            </div>
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label class="font-semibold text-sm text-gray-600">
+                  招募編號
+                </label>
+                <div class="text-lg">
+                  {{ dataSummary.contractInfo.apply_no }}
+                </div>
+              </div>
+            </div>
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label class="font-semibold text-sm text-gray-600">
+                  櫃位名稱
+                </label>
+                <div class="text-lg">
+                  {{ dataSummary.contractInfo.tlt_name }}
+                </div>
+              </div>
+            </div>
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label class="font-semibold text-sm text-gray-600">
+                  廠商名稱
+                </label>
+                <div class="text-lg">
+                  {{ dataSummary.contractInfo.VEN_Name }}
+                </div>
+              </div>
+            </div>
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label class="font-semibold text-sm text-gray-600">
+                  抽成類型
+                </label>
+                <div class="text-lg">
+                  <span class="p-tag p-tag-info">
+                    {{ dataSummary.contractInfo.comm_comp_type_name }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label class="font-semibold text-sm text-gray-600">
+                  位置資訊
+                </label>
+                <div class="text-lg">
+                  {{ dataSummary.contractInfo.locationCount }} 個位置， 共
+                  {{ dataSummary.contractInfo.totalSpace }} 坪
+                </div>
+              </div>
+            </div>
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label class="font-semibold text-sm text-gray-600">
+                  合約期間
+                </label>
+                <div class="text-sm">
+                  {{ dataSummary.contractInfo.contractPeriod }}
+                </div>
+              </div>
+            </div>
+            <div class="col-12 md:col-6">
+              <div class="field">
+                <label class="font-semibold text-sm text-gray-600">
+                  營運期間
+                </label>
+                <div class="text-sm">
+                  {{ dataSummary.contractInfo.operationPeriod }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 🎯 顯示變更項目 -->
+          <div
+            *ngIf="dataSummary.contractInfo.hasChanges"
+            class="mt-3 p-3 bg-yellow-50 border-round border-1 border-yellow-200"
+          >
+            <div class="flex align-items-center mb-2">
+              <i class="pi pi-exclamation-triangle text-yellow-600 mr-2"></i>
+              <span class="font-semibold text-yellow-800">
+                檢測到以下資料變更：
+              </span>
+            </div>
+            <ul class="text-yellow-700 text-sm m-0 pl-3">
+              <li *ngFor="let change of dataSummary.contractInfo.keyChanges">
+                {{ change }}
+              </li>
+            </ul>
+          </div>
+        </p-accordionTab>
+      </p-accordion>
+
+      <!-- 🎯 2. 扣款設定資訊 -->
+      <p-accordion class="mt-2">
+        <p-accordionTab
+          header="2. 扣款設定資訊"
+          [selected]="dataSummary.deductionInfo.hasData"
+          [headerStyle]="{ 'background-color': '#f8f9fa' }"
+        >
+          <div
+            *ngIf="!dataSummary.deductionInfo.hasData"
+            class="text-center p-4 text-gray-500"
+          >
+            <i class="pi pi-info-circle text-2xl mb-2"></i>
+            <p class="m-0">未設定任何扣款項目</p>
+          </div>
+
+          <div *ngIf="dataSummary.deductionInfo.hasData">
+            <!-- 🎯 扣款類型統計 -->
+            <div class="grid mb-3">
+              <div class="col-12">
+                <div class="flex align-items-center gap-3 flex-wrap">
+                  <span class="font-semibold">已選擇扣款項目：</span>
+                  <span class="p-tag p-tag-success">
+                    總計 {{ dataSummary.deductionInfo.selectedItems }} /
+                    {{ dataSummary.deductionInfo.totalItems }} 項
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 🎯 各類型統計 -->
+            <div class="grid mb-3">
+              <div class="col-12">
+                <div class="flex align-items-center gap-2 flex-wrap">
+                  <ng-container *ngFor="let type of ['A', 'B', 'C', 'D', 'E']">
+                    <span
+                      *ngIf="
+                        dataSummary.deductionInfo.typeBreakdown[type]?.total > 0
+                      "
+                      class="p-tag"
+                      [ngClass]="{
+                        'p-tag-info':
+                          dataSummary.deductionInfo.typeBreakdown[type]
+                            ?.selected > 0,
+                        'p-tag-secondary':
+                          dataSummary.deductionInfo.typeBreakdown[type]
+                            ?.selected === 0,
+                      }"
+                    >
+                      {{
+                        dataSummary.deductionInfo.typeBreakdown[type]?.name
+                      }}：
+                      {{
+                        dataSummary.deductionInfo.typeBreakdown[type]?.selected
+                      }}
+                      /
+                      {{ dataSummary.deductionInfo.typeBreakdown[type]?.total }}
+                    </span>
+                  </ng-container>
+                </div>
+              </div>
+            </div>
+
+            <!-- 🎯 已選擇項目明細 -->
+            <div *ngIf="dataSummary.deductionInfo.selectedItemsList.length > 0">
+              <h6 class="font-semibold mb-2">已選擇的扣款項目明細：</h6>
+              <div class="overflow-auto" style="max-height: 200px">
+                <div
+                  *ngFor="
+                    let item of dataSummary.deductionInfo.selectedItemsList;
+                    let i = index
+                  "
+                  class="flex justify-content-between align-items-center p-2 border-bottom-1 border-gray-200"
+                  [class.bg-gray-50]="i % 2 === 0"
+                >
+                  <div class="flex-1">
+                    <div class="font-semibold">{{ item.name }}</div>
+                    <div class="text-sm text-gray-600">
+                      {{ item.typeName }} | 代號：{{ item.item }}
+                      <span *ngIf="item.period">| 期間：{{ item.period }}</span>
+                    </div>
+                  </div>
+                  <div class="text-right" *ngIf="item.amount">
+                    <div class="font-semibold text-green-600">
+                      $ {{ item.amount | number }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </p-accordionTab>
+      </p-accordion>
+
+      <!-- 🎯 3. 抽成設定資訊 -->
+      <p-accordion class="mt-2">
+        <p-accordionTab
+          header="3. 抽成設定資訊"
+          [selected]="dataSummary.commissionInfo.hasData"
+          [headerStyle]="{ 'background-color': '#f8f9fa' }"
+        >
+          <div
+            *ngIf="!dataSummary.commissionInfo.hasData"
+            class="text-center p-4 text-gray-500"
+          >
+            <i class="pi pi-info-circle text-2xl mb-2"></i>
+            <p class="m-0">未設定任何抽成項目</p>
+          </div>
+
+          <div *ngIf="dataSummary.commissionInfo.hasData">
+            <div class="mb-3">
+              <span class="font-semibold">抽成項目總數：</span>
+              <span class="p-tag p-tag-info">
+                {{ dataSummary.commissionInfo.totalItems }} 項
+              </span>
+            </div>
+
+            <!-- 🎯 抽成項目明細 -->
+            <div class="overflow-auto" style="max-height: 300px">
+              <div
+                *ngFor="
+                  let item of dataSummary.commissionInfo.itemsList;
+                  let i = index
+                "
+                class="p-3 border-1 border-gray-200 border-round mb-2"
+                [class.bg-gray-50]="i % 2 === 0"
+              >
+                <div
+                  class="flex justify-content-between align-items-start mb-2"
+                >
+                  <h6 class="m-0">{{ item.commissionTypeName }}</h6>
+                  <span class="p-tag p-tag-warning">
+                    {{ item.taxTypeName }}
+                  </span>
+                </div>
+
+                <div class="grid text-sm">
+                  <div class="col-12 md:col-6">
+                    <span class="text-gray-600">單筆交易金額：</span>
+                    <span class="font-semibold">
+                      $ {{ item.transactionAmount | number }}
+                    </span>
+                  </div>
+                  <div class="col-12 md:col-6">
+                    <span class="text-gray-600">特價抽成：</span>
+                    <span class="font-semibold">
+                      {{ item.specialCommission }}%
+                    </span>
+                  </div>
+                </div>
+
+                <div class="mt-2">
+                  <span class="text-gray-600 text-sm">設定摘要：</span>
+                  <div class="text-sm mt-1">{{ item.discountSummary }}</div>
+                </div>
+
+                <div class="mt-2 flex gap-2">
+                  <span
+                    class="p-tag p-tag-secondary"
+                    *ngIf="item.settingsCount.discount > 0"
+                  >
+                    折扣設定 {{ item.settingsCount.discount }} 項
+                  </span>
+                  <span
+                    class="p-tag p-tag-secondary"
+                    *ngIf="item.settingsCount.annual > 0"
+                  >
+                    年度業績 {{ item.settingsCount.annual }} 項
+                  </span>
+                  <span
+                    class="p-tag p-tag-secondary"
+                    *ngIf="item.settingsCount.level > 0"
+                  >
+                    層級抽成 {{ item.settingsCount.level }} 項
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </p-accordionTab>
+      </p-accordion>
+
+      <!-- 🎯 4. 條件設定資訊 -->
+      <p-accordion class="mt-2">
+        <p-accordionTab
+          header="4. 條件設定資訊"
+          [selected]="dataSummary.conditionInfo.hasData"
+          [headerStyle]="{ 'background-color': '#f8f9fa' }"
+        >
+          <div
+            *ngIf="!dataSummary.conditionInfo.hasData"
+            class="text-center p-4 text-gray-500"
+          >
+            <i class="pi pi-info-circle text-2xl mb-2"></i>
+            <p class="m-0">
+              {{
+                dataSummary.conditionInfo.commissionTypeName
+              }}
+              無需額外條件設定
+            </p>
+          </div>
+
+          <div *ngIf="dataSummary.conditionInfo.hasData">
+            <div class="mb-3">
+              <div class="flex align-items-center gap-2 mb-2">
+                <span class="font-semibold">抽成類型：</span>
+                <span class="p-tag p-tag-info">
+                  {{ dataSummary.conditionInfo.commissionTypeName }}
+                </span>
+              </div>
+              <div class="flex align-items-center gap-2">
+                <span class="font-semibold">條件設定總數：</span>
+                <span class="p-tag p-tag-success">
+                  {{ dataSummary.conditionInfo.conditionCount }} 項
+                </span>
+              </div>
+            </div>
+
+            <!-- 🎯 條件設定明細 -->
+            <div *ngIf="dataSummary.conditionInfo.conditionDetails.length > 0">
+              <h6 class="font-semibold mb-2">條件設定明細：</h6>
+              <ul class="text-sm m-0 pl-3">
+                <li
+                  *ngFor="
+                    let detail of dataSummary.conditionInfo.conditionDetails
+                  "
+                  class="mb-1"
+                >
+                  {{ detail }}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </p-accordionTab>
+      </p-accordion>
+
+      <!-- 🎯 警告與提示 -->
+      <div
+        *ngIf="!hasAnyData()"
+        class="mt-4 p-3 bg-orange-50 border-round border-1 border-orange-200"
+      >
+        <div class="flex align-items-center">
+          <i
+            class="pi pi-exclamation-triangle text-orange-600 text-xl mr-2"
+          ></i>
+          <div>
+            <div class="font-semibold text-orange-800">注意</div>
+            <div class="text-orange-700 text-sm">
+              目前沒有設定任何扣款、抽成或條件項目。契約將僅包含基本資訊。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🎯 彈跳視窗底部按鈕 -->
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-between align-items-center w-full">
+      <div class="flex align-items-center gap-2">
+        <i class="pi pi-info-circle text-blue-500"></i>
+        <span class="text-sm text-gray-600">
+          送出後將無法再修改，請確認資料無誤
+        </span>
+      </div>
+      <div class="flex gap-2">
+        <app-button
+          label="取消"
+          btnType="cancel"
+          (click)="onCancel()"
+          icon="pi pi-times"
+        ></app-button>
+        <app-button
+          label="確認送出"
+          btnType="create"
+          (click)="onConfirm()"
+          icon="pi pi-check"
+          [loading]="loading"
+        ></app-button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- 🎯 送出處理中的遮罩 -->
+<div
+  *ngIf="loading && visible"
+  class="fixed top-0 left-0 w-full h-full flex align-items-center justify-content-center"
+  style="background: rgba(0, 0, 0, 0.5); z-index: 9999"
+>
+  <div class="bg-white p-4 border-round shadow-3 text-center">
+    <p-progressSpinner></p-progressSpinner>
+    <div class="mt-2 font-semibold">正在送出契約資料...</div>
+    <div class="text-sm text-gray-600 mt-1">請稍候，請勿關閉頁面</div>
+  </div>
+</div>

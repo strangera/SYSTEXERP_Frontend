@@ -1,3 +1,4 @@
+// tls13010-next3.component.ts (簡化版 - 整合確認對話框)
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -46,7 +47,6 @@ interface ContractInfo {
   originalFareData?: any;
 }
 
-// 🎯 你現有的介面，保持不變
 interface GraduatedItems {
   ischeck: boolean;
   A: string;
@@ -80,7 +80,6 @@ interface BaseCommissionItems {
   G: string;
 }
 
-// 🎯 固定租金和底租抽成取高者使用相同的介面
 interface FixedRentItems {
   ischeck: boolean;
   A: string;
@@ -92,7 +91,6 @@ interface FixedRentItems {
   G: string;
 }
 
-// 底租抽成取高者使用相同的介面
 type BaseRentHigherItems = FixedRentItems;
 
 @Component({
@@ -105,19 +103,22 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
   private subscriptions: Subscription[] = [];
   dataForm: FormGroup;
 
+  // 🎯 新增：確認對話框控制
+  showConfirmDialog = false;
+
   // 當前合約資料
   currentTalentId: string = '';
   currentContractData: any = null;
   contractInfoData: ContractInfo[] = [];
 
-  // 🎯 你現有的資料結構，保持不變
+  // 條件設定資料結構
   graduatedItems: GraduatedItems[] = [];
   baseTierItems: BaseTierItems[] = [];
   baseCommissionItems: BaseCommissionItems[] = [];
   fixedRentItems: FixedRentItems[] = [];
-  baseRentHigherItems: BaseRentHigherItems[] = []; // 🎯 新增：底租抽成取高者
+  baseRentHigherItems: BaseRentHigherItems[] = [];
 
-  // 🎯 你現有的欄位定義，保持不變
+  // 契約資訊欄位定義
   contractInfoColumns: ColumnDef[] = [
     {
       field: 'apply_no',
@@ -203,7 +204,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
     }
   ];
 
-  // 🎯 你現有的欄位定義，保持不變
+  // 各類型條件設定的欄位定義
   graduatedColumns: ColumnDef[] = [
     { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
     { field: 'A', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
@@ -234,7 +235,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
     { field: 'E', header: '抽成率', type: 'number', editable: true, autoWidth: true },
   ];
 
-  // 🎯 固定租金和底租抽成取高者使用相同欄位定義
   fixedRentColumns: ColumnDef[] = [
     { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
     { field: 'A', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
@@ -244,7 +244,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
     { field: 'E', header: '抽成率', type: 'number', editable: true, autoWidth: true },
   ];
 
-  // 🎯 底租抽成取高者使用相同的欄位定義
   baseRentHigherColumns: ColumnDef[] = [
     { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
     { field: 'A', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
@@ -286,11 +285,9 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
 
       console.log('✅ 取得合約ID:', this.currentTalentId);
 
-      // 🎯 從暫存取得 Step1 資料
       const step1Data = this.contractFlowService.getStep1Data();
       console.log('📝 Step1 編輯資料:', step1Data);
 
-      // 🎯 準備合約資訊顯示 - 優先使用 Step1 暫存資料
       const contractInfo = {
         talent_id: step1Data?.talent_id || this.currentContractData.talent_id || '-',
         apply_no: step1Data?.apply_no || this.currentContractData.apply_no || '-',
@@ -313,7 +310,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
       console.log('📊 準備顯示的合約資訊:', this.contractInfoData);
       console.log('🏷️ 抽成別:', contractInfo.comm_comp_type);
 
-      // 🎯 載入條件設定資料
       this.loadConditionData();
     } else {
       console.warn('❌ 沒有 talent_id，重導向到前一步');
@@ -325,15 +321,14 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
   private loadConditionData(): void {
     console.log('🔍 開始載入條件設定資料...');
 
-    // 檢查是否有暫存資料
     const savedConditionData = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
 
     if (savedConditionData && Object.keys(savedConditionData).length > 0) {
       console.log('📦 發現暫存的條件資料，直接使用');
       this.loadConditionDataFromCache(savedConditionData);
     } else {
-      console.log('📭 沒有暫存資料，從 API 載入');
-      this.loadConditionDataFromAPI();
+      console.log('📭 沒有暫存資料，初始化空資料');
+      this.initializeEmptyConditionData();
     }
   }
 
@@ -346,42 +341,13 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
       this.baseTierItems = savedData.baseTierItems || [];
       this.baseCommissionItems = savedData.baseCommissionItems || [];
       this.fixedRentItems = savedData.fixedRentItems || [];
-      this.baseRentHigherItems = savedData.baseRentHigherItems || []; // 🎯 新增
+      this.baseRentHigherItems = savedData.baseRentHigherItems || [];
 
       console.log('✅ 暫存條件資料載入完成');
     } catch (error) {
       console.error('❌ 暫存條件資料載入失敗:', error);
-      this.loadConditionDataFromAPI();
-    }
-  }
-
-  // 🎯 從 API 載入條件資料（未來實作）
-  private loadConditionDataFromAPI(): void {
-    if (!this.currentTalentId) {
-      console.warn('❌ 沒有 talent_id，無法載入條件設定');
       this.initializeEmptyConditionData();
-      return;
     }
-
-    this.loading = true;
-
-    // 🚨 TODO: 未來這裡會呼叫真正的 API
-    // this.tls13010Service.queryTLS13010Condition(this.currentTalentId).subscribe({
-    //   next: (response) => {
-    //     this.convertAPIDataToConditionItems(response.Data);
-    //   },
-    //   error: (error) => {
-    //     console.error('❌ 載入條件設定資料失敗:', error);
-    //     this.initializeEmptyConditionData();
-    //   }
-    // });
-
-    // 🎯 暫時用假資料模擬
-    console.log('📝 模擬 API 載入，使用假資料');
-    setTimeout(() => {
-      this.initializeEmptyConditionData();
-      this.loading = false;
-    }, 500);
   }
 
   // 🎯 初始化空的條件資料
@@ -392,7 +358,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
     this.baseTierItems = [];
     this.baseCommissionItems = [];
     this.fixedRentItems = [];
-    this.baseRentHigherItems = []; // 🎯 新增
+    this.baseRentHigherItems = [];
   }
 
   // 🎯 儲存條件設定到工作流程
@@ -404,7 +370,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
       baseTierItems: this.baseTierItems,
       baseCommissionItems: this.baseCommissionItems,
       fixedRentItems: this.fixedRentItems,
-      baseRentHigherItems: this.baseRentHigherItems // 🎯 新增
+      baseRentHigherItems: this.baseRentHigherItems
     };
 
     try {
@@ -415,9 +381,8 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  // 🎯 你現有的方法，但改用數字判斷
+  // 🎯 判斷是否顯示特定抽成類型的條件設定
   shouldShowCommissionType(commissionTypeCode: string): boolean {
-    // 🎯 從契約資訊取得抽成別（應該是數字）
     const currentCommissionType = this.contractInfoData[0]?.comm_comp_type;
     console.log('檢查抽成類型:', {
       check: commissionTypeCode,
@@ -427,19 +392,29 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
     return currentCommissionType === commissionTypeCode;
   }
 
-  // 🎯 你現有的方法，保持不變
   get existingCommissionTypes(): string[] {
     const commissionType = this.contractInfoData[0]?.comm_comp_type;
     return commissionType ? [commissionType] : [];
   }
 
-  // 🎯 導航方法
+  // 🎯 修改：顯示確認對話框而非直接跳轉
   onSubmitNext(): void {
+    console.log('🎯 準備顯示確認對話框');
     this.saveConditionDataToWorkflow();
-    // 🚨 TODO: 決定下一步要去哪裡
-    // this.router.navigate(['TLS/TLS13010NEXT4']); // 如果還有下一步
-    // this.router.navigate(['TLS/TLS13010FINAL']); // 如果是最終確認
-    this.notificationService.infoBubble('條件設定已儲存，準備進入下一步');
+    this.showConfirmDialog = true;
+  }
+
+  // 🎯 新增：處理確認對話框結果
+  onConfirmDialogResult(confirmed: boolean): void {
+    console.log('🔔 確認對話框結果:', confirmed);
+    this.showConfirmDialog = false;
+
+    if (confirmed) {
+      console.log('✅ 使用者確認送出，流程已完成');
+      // 確認對話框組件已經處理了送出邏輯
+    } else {
+      console.log('❌ 使用者取消送出');
+    }
   }
 
   override onCancel(): void {
@@ -457,10 +432,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  // 🎯 表格事件處理（未來需要時可以加上）
+  // 🎯 表格事件處理
   onTableSave(event: any, type: string): void {
     console.log(`${type} 表格儲存:`, event);
     this.saveConditionDataToWorkflow();
+    this.notificationService.successBubble('條件設定已儲存');
   }
 
   onTableEdit(event: any, type: string): void {
