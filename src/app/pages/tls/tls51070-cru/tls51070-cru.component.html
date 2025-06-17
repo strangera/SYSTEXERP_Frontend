@@ -54,7 +54,18 @@
               controlName="PLU_No"
               [control]="dataForm.controls.PLU_No"
               [submitted]="submitted"
-            ></app-input-text>
+            >
+              <header>
+                <p-button
+                  label="同商品管理編號"
+                  [raised]="true"
+                  size="small"
+                  styleClass="p-0"
+                  (click)="setNoToMagNo()"
+                  [style]="{ width: '8rem', height: '1.3rem' }"
+                />
+              </header>
+            </app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">

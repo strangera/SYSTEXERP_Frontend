@@ -73,7 +73,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_Name: ['', [Validators.required, Validators.maxLength(60)]], // 商品中文名稱
     PLU_EngName: ['', [Validators.maxLength(100)]], // 商品英文名稱
     PLU_OrgPLUNo: ['', [Validators.maxLength(30)]], // 廠商貨號 --廠商自編碼 廠商貨號 
-    PLU_No: ['', [Validators.required, Validators.maxLength(20)]], // 國際條碼 ''不甜帶入提示訊息PLU_MagNo
+    PLU_No: ['', [Validators.required, Validators.maxLength(20)]], // 國際條碼 可選擇帶入PLU_MagNo
     PLU_MinOrder: [1, [Validators.maxLength(8)]], // 最小訂購量 ---預設1，採購時，輸入的採購量必需為最小訂購量的倍數。
     PLU_Lable: ['', [Validators.maxLength(50)]], // 標籤名稱
 
@@ -83,7 +83,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_Reserve1: ['', [Validators.maxLength(400)]], // 說明
 
     LOGO_No: ['', [Validators.maxLength(4)]], // 品牌代碼
-
 
     PLU_Attribute: ['1', [Validators.maxLength(16)]], // 商品型態 1一般、2進口、3買斷、4試銷、5寄賣*/ --南紡 商品型態 1一般、2進口、3買斷、4試銷、5寄賣
     PLU_Unit: ['', [Validators.maxLength(2)]], // 單位代碼 --讀PLUUNIT  商品單位設定檔
@@ -110,6 +109,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     { value: '4', label: '下架' },
   ];
   counterOptions: apiOption[] = []; //專櫃編號：資料讀 TLTTALENT 
+  vendorOptions: apiOption[] = [];  //廠商編號: 資料讀 POS2013 
 
   pos2005Detail: POS2005Detail[] = [];
   pos2020Detail: POS2020Detail[] = [];
@@ -133,8 +133,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   // 展開式表格的欄位定義
   POS2020DataColumn: ColumnDef[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號', editable: false, type: 'text' },  //key
-    { field: 'VEN_No', header: '廠商編號', editable: true, type: 'text' }, //key
+    { field: 'PLU_MagNo', header: '商品管理編號', editable: false, type: 'text' },  //key1
+    { field: 'VEN_No', header: '廠商編號', editable: true, type: 'dropdown' }, //key2
     // { field: 'STO_No', header: '分店編號', editable: true, type: 'text' },
 
     { field: 'PLU_TransType', header: '運輸方式', editable: true, type: 'text' },
@@ -171,7 +171,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // ----------------------------------------------------------------
 
   constructor(
-    private tls51070Service: Tls51070Service,) {
+    private tls51070Service: Tls51070Service) {
     super(); // 呼叫父類建構子
   }
 
@@ -183,8 +183,10 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     //初始導入所有大分類、中分類、小分類表單
     this.loadCATOptions();
 
-    //查詢明細檔案
-    this.loadDetail(this.dataForm.get('PLU_MagNo')?.value || '');
+    if (this.crudstatus == CRUDStatus.Edit) {
+      //查詢明細檔案 (編輯模式)
+      this.loadDetail(this.dataForm.get('PLU_MagNo')?.value || '');
+    }
 
     // 監聽 大分類 是否為''
     this.dataForm.get('CAT_LNo')!.valueChanges.subscribe((newValue) => {
@@ -254,9 +256,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     //--檢查--
     // 商品管理編號：鍵值，自動編號，大分類編號(2碼)+10碼流水號+1碼檢查碼，檢查碼為EAN 檢查碼計算規則，流水號給號讀SER1001商品管理編號序號檔
-    // 國際條碼：必填，沒有輸入國際條碼時，國際條碼=商品管理編號。
-    //                    輸入國際條碼時，發現該條碼在資料庫中已有存在時，系統會提示【該國際條碼已存在，貨號為ｘｘｘ】
-    //                    系統會不允許輸入。此時，使用者透過貨號ｘｘｘ將該商品的國際條碼改為商品管理編號或清為空白後，即可新增該國際條碼。
+    // 國際條碼：必填，沒有輸入國際條碼時，國際條碼=商品管理編號 (bubble跳出提示)。
+    //                輸入國際條碼時，發現該條碼在資料庫中已有存在時，系統會提示【該國際條碼已存在，貨號為ｘｘｘ】
+    //                系統會不允許輸入。此時，使用者透過貨號ｘｘｘ將該商品的國際條碼改為商品管理編號或清為空白後，即可新增該國際條碼。
     // 標籤名稱：在輸入商品中文名稱後會自動帶入標籤名稱欄位。
     // 多筆國際條碼：寫入POS2005，商品管理編號、國際條碼兩個欄位皆要寫入，國際條碼PLU_NO是鍵值。
     //--------
@@ -294,6 +296,15 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     this.dataForm.reset(); // 重置表單
   }
 
+  //設定國際條碼(pluNo)為商品管理編號(pluMagno)
+  setNoToMagNo() {
+    const pluMagNo = this.dataForm.get('PLU_MagNo')?.value || '';
+    if (pluMagNo !== '') {
+      this.dataForm.get('PLU_No')?.setValue(pluMagNo);
+      console.log('國際條碼已複製', pluMagNo);
+    }
+  }
+
   // 讀取dopropdown選項
   loadOptions() {
     //查詢 商品單位
@@ -321,6 +332,19 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
         console.log('品牌代碼:', this.brandOption);
       });
+
+    // 查詢 廠商代碼 (不確定怎麼帶 VEN_Flag)
+    // this.tls51070Service
+    //   .queryPOS2013_DropDownList({ "VEN_Flag": '' })
+    //   .subscribe((response) => {
+    //     this.vendorOptions = response.Data.map((item: apiOption) => ({
+    //       No: item.No,
+    //       Name: item.Name,
+    //       Label: item.No + '-' + item.Name,
+    //     }));
+
+    //     console.log('廠商代碼:', this.brandOption);
+    //   });
   }
 
   //讀取大、中、小 分類整份表單 (該情況禁止 中小下拉選擇)
