@@ -26,6 +26,7 @@ interface CounterData {
   presaleStartCalculation: string;
   contractStartDate: string;
   contractEndDate: string;
+  operationStartDate: string;
   operationEndDate: string;
   deductionItems: string;
   selected?: boolean;
@@ -89,8 +90,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
     { field: 'presaleStartCalculation', header: '預售起日計算', visible: true },
     { field: 'contractStartDate', header: '合約起始', visible: true },
     { field: 'contractEndDate', header: '合約截止日', visible: true },
+    { field: 'operationStartDate', header: '營運開始', visible: true },
     { field: 'operationEndDate', header: '營運結束', visible: true },
-    { field: 'deductionItems', header: '扣款項目', visible: true }
+    // { field: 'deductionItems', header: '扣款項目', visible: true }
   ];
   selectedCounter: CounterData | null = null;
 
@@ -116,8 +118,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
       presaleStartCalculation: 'Y',
       contractStartDate: '2021/02/01',
       contractEndDate: '2023/01/31',
-      operationEndDate: '2023/02/01',
-      deductionItems: '現金折扣'
+      operationEndDate: '2023/03/01',
+      operationStartDate: '2023/01/01',
+      deductionItems: ''
     },
     {
       id: 2,
@@ -127,8 +130,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
       presaleStartCalculation: 'N',
       contractStartDate: '2021/03/01',
       contractEndDate: '2023/02/28',
+      operationStartDate: '2023/01/01',
       operationEndDate: '2023/03/01',
-      deductionItems: '折價券'
+      deductionItems: ''
     },
     {
       id: 3,
@@ -139,7 +143,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
       contractStartDate: '2021/04/01',
       contractEndDate: '2023/03/31',
       operationEndDate: '2023/04/01',
-      deductionItems: '滿額贈'
+      operationStartDate: '2023/03/31',
+      deductionItems: ''
     }
   ];
 
@@ -196,7 +201,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
       contractStartDate: '',
       contractEndDate: '',
       operationEndDate: '',
-      deductionItems: ''
+      deductionItems: '',
+      operationStartDate: ''
     };
     this.counterData = [...this.counterData, newCounter];
   }
