@@ -1,8 +1,8 @@
-<label for="input-number-range">{{ label }}
-  <span *ngIf="isRequired" class="required">*</span>
-</label>
 <div class="grid p-fluid">
   <div class="col pb-0">
+    <label for="input-number-range">{{ startLabel ? startLabel : label }}
+      <span *ngIf="isRequired" class="required">*</span>
+    </label>
     <p-inputGroup id="input-number-start">
       <p-inputNumber id="input-number-range" [formControl]="startControl" [placeholder]="placeholder"
         [showButtons]="showButtons" [min]="minBoundary" [max]="maxBoundary" [step]="step" [useGrouping]="useGrouping"
@@ -13,8 +13,11 @@
       <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
     </p-inputGroup>
   </div>
-  <span>~</span>
+  <span class="align-self-center text-center">~</span>
   <div class="col pb-0">
+    <label for="input-number-range">{{ endLabel ? endLabel : label }}
+      <span *ngIf="isRequired" class="required">*</span>
+    </label>
     <p-inputGroup id="input-number-end">
       <p-inputNumber id="input-number-range" [formControl]="endControl" [placeholder]="placeholder"
         [showButtons]="showButtons" [min]="minBoundary" [max]="maxBoundary" [step]="step" [useGrouping]="useGrouping"

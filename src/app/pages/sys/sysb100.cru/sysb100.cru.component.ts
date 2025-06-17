@@ -42,7 +42,8 @@ export class SYSB100CRUComponent
     STO_URL: ['', [Validators.maxLength(100)]], // 公司網址
   });
 
-  constructor(private sysb100Service: Sysb100Service) {
+  constructor(
+    private sysb100Service: Sysb100Service) {
     super();
   }
 

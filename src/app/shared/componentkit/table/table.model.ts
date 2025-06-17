@@ -41,7 +41,7 @@ export interface LazyLoadEvent {
 
 export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
   return {
-    pageSize: [10],
+    pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [defaultSortBy],
   };
@@ -81,7 +81,20 @@ export interface FieldChangeEvent {
 }
 
 // 新增一個方法來驗證行數據
-export function validateRowData(rowData: any, columns: Column[], data: any, messageService: NotificationService): boolean {
+export function validateRowData(rowData: any, columns: Column[], data: any, messageService: NotificationService, dataKey: string): boolean {
+  // 新增的預設判斷：檢查除了 dataKey 以外的所有欄位是否都為 null/undefined/空字串
+  const otherColumns = columns.filter(col => col.field !== dataKey);
+  const allOtherFieldsAreEmpty = otherColumns.every(col => {
+    const value = rowData[col.field];
+    return value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
+  });
+
+  if (allOtherFieldsAreEmpty) {
+    messageService.errorBubble('請輸入至少一個欄位的值', '未輸入任何值');
+    return false; // 驗證失敗
+  }
+
+  // 原始的驗證邏輯
   return columns.every(col =>
     !(col.validate?.some(validateFn => {
       const { isValid, errorMessage } = validateFn(rowData[col.field], rowData, data, col.field);
@@ -120,8 +133,19 @@ export const formatDateTime = (dateStr: string) => {
   return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
 };
 
+// formatYYYYMM 輸出為 YYYY/MM
+export const formatYYYYMM = (dateStr: string): string => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}/${month}`;
+};
+
 // 000,000,000
-export const formatNumber = (number: number | string): string => {
+export const formatAmount = (number: number | string): string => {
   if (!number) return '0';
   return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };

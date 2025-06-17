@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { apiOption, option, SYS1000, Sysb400m, tblUser } from '../../../shared/models/sys/sysb000.module';
+import { apiOption, option, SYS1000, tblUser } from '../../../shared/models/sys/sysb000.module';
 import { Column, createPaginationConfig, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 
@@ -18,20 +18,14 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
   queryForm = this.formBuilder.group({
     user_No: ['', Validators.maxLength(10)], // 使用者編號
     user_Name: ['', Validators.maxLength(20)], // 使用者名稱
-    // user_Password: ['', Validators.maxLength(32)], // 使用者密碼-加密
-    // title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000 (就是職位)
+    user_priority: [[], Validators.maxLength(1)], // 使用者等級 > 規格?不知道內容
     org_ID: [[], Validators.maxLength(20)], // 組織編號 (SYSB400_SYS3100)
     str_dateStart: [null], // 帳號有效開始日期
     str_dateEnd: [null], // 帳號有效結束日期
+    last_loginStart: [null], // 帳號有效開始日期
+    last_loginEnd: [null], // 帳號有效結束日期
     status: [[], Validators.maxLength(2)], // 使用者狀態 1=有效 2=停用
     user_type: [[]], // 使用者型態 1=公司內部人員(default) 2=專櫃人員 3=其他
-
-    // user_email: ['', Validators.maxLength(100)], // 使用者email帳號
-    // TLT_No: ['', Validators.maxLength(12)], // 所屬專櫃編號
-    // remarks: ['', Validators.maxLength(100)], // 備註
-    user_priority: [[], Validators.maxLength(1)], // 使用者等級 > 規格?不知道內容
-    // USER_PwdExpireDate: [''], // 密碼到期日 YYYY/MM/DD HH:NN:SS，若使用者登入系統的時間大於此日期，則需強制使用者變更密碼
-
     ...createPaginationConfig([{ field: 'user_No', order: 1 }]), // 分頁和排序參數
   });
 
@@ -99,31 +93,22 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
   loadOptions() {
     // *職稱代碼-SYS1000
     this.sys0110Service.queryAllSystemCode({}).subscribe((response) => {
-      console.log('回應', response);
-      this.titleOptions = response.Data.map((item: SYS1000) => ({
-        No: item.SYS_Code,
-        Name: item.SYS_Name,
-        Label: item.SYS_Type + '-' + item.SYS_Code + '-' + item.SYS_Name,
-      }));
+      this.titleOptions = response.Data
+        .filter((item: SYS1000) => item.SYS_Type === 'T103')
+        .map((item: SYS1000) => ({
+          No: item.SYS_Code,
+          Name: item.SYS_Name,
+          Label: item.SYS_Type + '-' + item.SYS_Code + '-' + item.SYS_Name,
+        }));
+      console.log('回應', this.titleOptions);
     });
 
     //建立組織下拉清單(SYS3100) 查詢全部
-    const query_org = {
-      level_id: '',
-      org_id: '',
-      org_name: '',
-
-      //分頁查詢
-      pageSize: 1000,
-      pageIndex: 0,
-      SortBy: [{ field: 'org_id', order: 1 }],
-    };
-
-    this.sysb400Service.querySYSB400(query_org).subscribe((response) => {
-      this.SYS3100_Options = response.Data.map((item: Sysb400m) => ({
-        No: item.org_id,
-        Name: item.org_name,
-        Label: item.org_id + '-' + item.org_name,
+    this.sysb400Service.querySYS3100_DropDownList({}).subscribe((response) => {
+      this.SYS3100_Options = response.Data.map((item: any) => ({
+        No: item.No,
+        Name: item.Name,
+        Label: item.No + '-' + item.Name,
       }));
     });
 
@@ -181,21 +166,9 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     console.log('Delete body:', JSON.stringify(requestBody, null, 2));
     // 調用 API
     this.sys0110Service.deleteUser(requestBody).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-        }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm);
-      },
+      next: (res) => { console.log(res); },
+      error: (err: string) => { console.error('API error:', err); },
+      complete: () => { this.onSubmit(this.queryForm); },
     });
     this.selectedItems = [];
   }

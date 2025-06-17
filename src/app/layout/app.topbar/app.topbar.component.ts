@@ -143,7 +143,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     for (const f of this.funRightsInfo) {
       if (f.prog_ispage === 'Y') {
         const matchProgNo = f.prog_No && f.prog_No.toLowerCase().includes(query);
-        const matchProgID = f.prog_id && f.prog_id.toLowerCase().includes(query);
+        const matchProgID = f.prog_id !== null && f.prog_id !== undefined && String(f.prog_id).toLowerCase().includes(query);
         const matchProgName = f.prog_name && f.prog_name.toLowerCase().includes(query);
         if (f.label && (matchProgNo || matchProgID || matchProgName)) {
           filtered.push({ label: f.label, value: f });

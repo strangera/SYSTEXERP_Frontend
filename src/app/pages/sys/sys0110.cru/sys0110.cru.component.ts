@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, } from '@angular/forms';
-import { apiOption, option, SYS1000, tblUser } from '../../../shared/models/sys/sysb000.module';
+import { apiOption, option, SYS1000 } from '../../../shared/models/sys/sysb000.module';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { EncryptionService } from '../../../shared/service/encryption.service';
@@ -8,12 +8,13 @@ import { LocationOptionsService } from '../../../service/API/dropdownservice/loc
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { forkJoin, map } from 'rxjs';
+import { UserInfo, UserSys3700Detail } from '../sys0110/sys0110.model';
 // 4-2-1-1使用者基本資料維護
 @Component({
   selector: 'app-sys0110-cru',
   templateUrl: './sys0110.cru.component.html',
 })
-export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser> implements OnInit {
+export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     id: [null], // 序號
     user_No: ['', [Validators.required, Validators.maxLength(10)]], // 使用者編號
@@ -55,8 +56,8 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser> implemen
   ]
   BUS_TypeOptions: { value: string; label: string }[] = []
 
-  data: any = [];
-  selectedRows: any[] = [];
+  data: UserSys3700Detail[] = [];
+  selectedRows: UserSys3700Detail[] = [];
   columns: Column[] = [];
 
   constructor(
@@ -73,6 +74,12 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser> implemen
       this.dataForm.get('user_No')?.disable();
       this.dataForm.get('user_Password')?.disable();
     }
+    if (!this.isFormCreateable) {
+      this.rowdata?.sys3700?.forEach((item: UserSys3700Detail) => {
+        this.data.push(item);
+      })
+
+    }
     this.loadAndSetupColumns(); // 呼叫新的方法來處理異步載入和 columns 設定
   }
   // 加載下拉選項
@@ -84,12 +91,15 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser> implemen
       })))
     );
 
+    //讀取T103項目
     const systemCodeOptions$ = this.sys0110Service.queryAllSystemCode({}).pipe(
-      map((response) => response.Data.map((item: SYS1000) => ({
-        No: item.SYS_Code,
-        Name: item.SYS_Name,
-        Label: item.SYS_Type + '-' + item.SYS_Code + '-' + item.SYS_Name,
-      })))
+      map((response) => response.Data
+        .filter((item: SYS1000) => item.SYS_Type === 'T103')
+        .map((item: SYS1000) => ({
+          No: item.SYS_Code,
+          Name: item.SYS_Name,
+          Label: item.SYS_Type + '-' + item.SYS_Code + '-' + item.SYS_Name,
+        })))
     );
 
     const tltTalentOptions$ = this.sys0110Service.queryTLTTALENT_DropDownList({}).pipe(
@@ -158,37 +168,10 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser> implemen
       ];
     });
   }
-  showDialog = false;
-  dialogForm = this.formBuilder.nonNullable.group({
-    id: [null], // 序號
-    Org_ID: [null], // 組織編號
-    Building_No: [null], // 館別代碼
-    Floor_No: [null], // 樓層代碼
-    Area_No: [null], // 區域代碼
-    TLT_No: ['', Validators.maxLength(12)], // 專櫃編號
-    TLT_Kind: [null], // 專櫃類型
-    BUS_Type: [null], // 大分類代碼
-  });
-  get errorMessages() {
-    return this.dialogForm.value.Org_ID
-      || this.dialogForm.value.Building_No
-      || this.dialogForm.value.Floor_No
-      || this.dialogForm.value.Area_No
-      || this.dialogForm.value.TLT_No;
-  }
-  onDialogSubmit(frm: FormGroup) {
-    if (!this.errorMessages) {
-      return;
-    }
-    this.showDialog = false;
-    const newId = this.data.length > 0 ? Math.max(...this.data.map((item: any) => item.id || 0)) + 1 : 1;
-    this.data = [...this.data, { ...frm.value, id: newId }];
-    this.dialogForm.reset();
-  }
   // 刪除資料的方法
   onDelete(rows: any[]) { // 將參數從單一 'row' 改為 'rows' 陣列
-    const idsToDelete = new Set(rows.map(item => item.id)); // 取得所有要刪除的 ID
-    this.data = this.data.filter((item: any) => !idsToDelete.has(item.id));
+    const idsToDelete = new Set(rows.map(item => item.ID)); // 取得所有要刪除的 ID
+    this.data = this.data.filter((item: any) => !idsToDelete.has(item.ID));
     this.selectedRows = [];
   }
   onSubmit(frm: FormGroup) {
@@ -197,6 +180,8 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<tblUser> implemen
       const today = new Date();
       const expireDate = new Date(today);
       expireDate.setDate(today.getDate() + 90);
+      console.log(this.data);
+
       const body = {
         ...frm.value,
         user_No: frm.get('user_No')?.value,

@@ -1,565 +1,105 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { TreeNode } from 'primeng/api';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { AuthService } from '../../../service/system/auth.service';
+import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
+import { option, Sysb400m } from '../../../shared/models/sys/sysb000.module';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
 @Component({
   selector: 'app-sysb400.os',
   templateUrl: './sysb400.os.component.html',
   styleUrl: './sysb400.os.component.scss'
 })
+
 // 組織架構列表
-export class Sysb400OsComponent extends BasicQpageComponent implements OnInit {
-  nodes: TreeNode[] = [
-        {
-          label: '[100000] 全公司',
-          key: '100000',
-          data: '0',
-          expandedIcon: 'pi pi-building',
-          collapsedIcon: 'pi pi-building',
-          styleClass: 'custom-icon-color',
-          children: [
-            {
-              label: '[101000] 經營企劃部(停用)',
-              key: '101000',
-              data: '1',
-              expandedIcon: 'pi pi-cog',
-              collapsedIcon: 'pi pi-cog',
-              children: [
-                {
-                  label: '[101100] 行政Team(停用)',
-                  key: '101100',
-                  data: '2',
-                  expandedIcon: 'pi pi-briefcase',
-                  collapsedIcon: 'pi pi-briefcase',
+export class Sysb400OsComponent extends BasicCruPageComponent<Sysb400m> implements OnInit {
+  override formTitle = '組織架構列表';
 
+  // dataForm==================================
+  dataForm = this.formBuilder.nonNullable.group({
+    stop_flag: [''], // 是否停用
+  });
 
-                },
-                {
-                  label: '[101200] 公關Team(停用)',
-                  key: '101200',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-
-                },
-                {
-                  label: '[101300] 營企Team(停用)',
-                  key: '101300',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                },
-                {
-                  label: '[101400] 電子商務team(停用)',
-                  key: '101400',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                },
-                {
-                  label: '[101500] 外商Team(停用)',
-                  key: '101500',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                },
-                {
-                  label: '[101700] 品牌代理小組(停用)',
-                  key: '101700',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                }
-              ]
-            },
-            {
-              label: '[102000] 營運部',
-              key: '102000',
-              data: '1',
-              expandedIcon: 'fa-regular fa-folder-open',
-              collapsedIcon: 'fa fa-folder',
-              children: [
-                {
-                  label: '[102100] 時尚Team',
-                  key: '102100',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-                  children: [
-                    {
-                      label: '[102110] 1F',
-                      key: '102110',
-                      data: '3',
-                      expandedIcon: 'pi pi-user',
-                      collapsedIcon: 'pi pi-user',
-                    },
-                    {
-                      label: '[102130] 化妝品',
-                      key: '102130',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-                    }
-                  ]
-                },
-                {
-                  label: '[102200] 休閒Team',
-                  key: '102200',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-                  children: [
-                    {
-                      label: '[102210] 3F',
-                      key: '102210',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-                    },
-                    {
-                      label: '[102220] 居家生活組(停用)',
-                      key: '102220',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-                    },
-                    {
-                      label: '[102230] 親子娛樂組(停用)',
-                      key: '102230',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-                    }
-                  ]
-                },
-                {
-                  label: '[102300] 餐飲Team',
-                  key: '102300',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-                  children: [
-                    {
-                      label: '[102310] 餐廳/輕食組',
-                      key: '102310',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-                    },
-                    {
-                      label: '[102320] 美食街/食品料組',
-                      key: '102320',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-
-                    },
-                    {
-                      label: '[102330] 品牌經營組',
-                      key: '102330',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-                    }
-                  ]
-                },
-                {
-                  label: '[102400] 流行Team',
-                  key: '102400',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-                  children: [
-                    {
-                      label: '[102120] 2F',
-                      key: '102120',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-                    }
-                  ]
-                },
-                {
-                  label: '[102500] 特販Team',
-                  key: '102500',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-                },
-                {
-                  label: '[102600] 生活Team',
-                  key: '102600',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-                  children: [
-                    {
-                      label: '[102610] 居家生活組',
-                      key: '102610',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-                    },
-                    {
-                      label: '[102620] 親子娛樂組',
-                      key: '102620',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-                    }
-                  ]
-                },
-                {
-                  label: '[102700] 營運支援Team',
-                  key: '102700',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                }
-
-              ]
-            },
-            {
-              label: '[103000] 行銷部',
-              key: '103000',
-              data: '1',
-              expandedIcon: 'fa-regular fa-folder-open',
-              collapsedIcon: 'fa fa-folder',
-              children: [
-                {
-                  label: '[103100] 會員Team',
-                  key: '103100',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-                  children: [
-                    {
-                      label: '[103110] 檔期企劃組(停用)',
-                      key: '103110',
-                      data: '2',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-
-                    },
-                    {
-                      label: '[103120] 會員經營組(停用)',
-                      key: '103120',
-                      data: '2',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-
-                    }
-                  ]
-                },
-                {
-                  label: '[103200] 顧客關係Team(停用)',
-                  key: '103200',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-                  children: [
-                    {
-                      label: '[103210] 廣宣陳列組(停用)',
-                      key: '103210',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-
-                    },
-                    {
-                      label: '[103220] 活動企劃組(停用)',
-                      key: '103220',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-
-                    }
-                  ]
-                },
-                {
-                  label: '[103300] 活動Team',
-                  key: '103300',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                },
-                {
-                  label: '[103400] 廣宣Team',
-                  key: '103400',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                },
-                {
-                  label: '[103500] 企劃Team',
-                  key: '103500',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                }
-              ]
-            },
-            {
-              label: '[104000] 財務部',
-              key: '104000',
-              data: '1',
-              expandedIcon: 'fa-regular fa-folder-open',
-              collapsedIcon: 'fa fa-folder',
-              children: [
-                {
-                  label: '[104100] 會計Team',
-                  key: '104100',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-                  children: [
-                    {
-                      label: '[104110] 總帳/稅務組(停用)',
-                      key: '104110',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-
-                    },
-                    {
-                      label: '[104120] 專櫃/自營組(停用)',
-                      key: '104120',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-
-                    },
-                    {
-                      label: '[104130] 成本結轉/匯整分析組(停用)',
-                      key: '104130',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-
-                    }
-                  ]
-                },
-                {
-                  label: '[104200] 財務Team',
-                  key: '104200',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-                  children: [
-                    {
-                      label: '[104210] 授信/資金組(停用)',
-                      key: '104210',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-
-                    },
-                    {
-                      label: '[104220] 有價券/營收組(停用)',
-                      key: '104220',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-
-                    },
-                    {
-                      label: '[104230] 出納/銀行組(停用)',
-                      key: '104230',
-                      data: '3',
-                      expandedIcon: 'fa-regular fa-folder-open',
-                      collapsedIcon: 'fa fa-folder',
-
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              label: '[105000] 技術服務部',
-              key: '105000',
-              data: '1',
-              expandedIcon: 'fa-regular fa-folder-open',
-              collapsedIcon: 'fa fa-folder',
-              children: [
-                {
-                  label: '[105100] 物管Team(停用)',
-                  key: '105100',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                },
-                {
-                  label: '[105200] 總務Team(停用)',
-                  key: '105200',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                },
-                {
-                  label: '[105300] 資訊整合Team',
-                  key: '105300',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                },
-                {
-                  label: '[105400] 機電Team',
-                  key: '105400',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                },
-                {
-                  label: '[105500] 裝修管理Team',
-                  key: '105500',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                }
-              ]
-            },
-            {
-              label: '[106000] 總經理室',
-              key: '106000',
-              data: '1',
-              expandedIcon: 'fa-regular fa-folder-open',
-              collapsedIcon: 'fa fa-folder',
-              children: [
-                {
-                  label: '[101600] 個資小組',
-                  key: '101600',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-                },
-                {
-                  label: '[106100] 電子商務事業組(停用)',
-                  key: '106100',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-                },
-                {
-                  label: '[106200] 品牌經營事業組(停用)',
-                  key: '106200',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                },
-                {
-                  label: '[106300] 公關組',
-                  key: '106300',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                },
-                {
-                  label: '[106400] 秘書室(停用)',
-                  key: '106400',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                },
-                {
-                  label: '[106500] 採購組(停用)',
-                  key: '106500',
-                  data: '2',
-                  expandedIcon: 'fa-regular fa-folder-open',
-                  collapsedIcon: 'fa fa-folder',
-
-                }
-              ]
-            }
-          ]
-        },
-
+  // tree dropDown==================================
+  orgData: Sysb400m[] = [];
+  orgColumn = [
+    { value: 'org10Label', label: '全公司' },
+    { value: 'org20Label', label: '室/部' },
+    { value: 'org30Label', label: 'Team' },
+    { value: 'org40Label', label: '樓/組' },
   ];
-  formTitle: string = '組織架構列表';
+  LeaveLabel = 'org_name'; // 子節點顯示名稱
+  listTitle = '組織架構列表'; // 節層圖名稱
 
+  onLevelSelected(selected: any[]) {
+    console.log('從子元件選到的:', selected);
+  }
+
+  // dropdownTable==================================
+  //----------------
   constructor(
-    private router: Router,
-    private authService: AuthService,
+    private sysb400Service: Sysb400Service,
   ) {
     super();
   }
 
+  whetherOptions: option[] = [
+    { value: 'Y', label: '是' },
+    { value: 'N', label: '否' },
+  ];
+
   ngOnInit(): void {
-    this.ProgNo = '410004';
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
-    /* this.upperLevelOrganizationService.getSystemTypes().subscribe(data => {
-      this.upperLevelOrgOptions = data;
-    }); */
+    this.initializePage('SYSB400');
+
+    // ---- 初始載入一次------------------------------------------------------------
+    this.loadOptions();
+
+    // 當表單值變更時，重新載入 options
+    this.dataForm.valueChanges.subscribe(() => {
+      this.loadOptions();
+    });
   }
 
-  expandAll() {
-    this.expandRecursive(this.nodes, true);
-  }
+  loadOptions() {
+    this.loading = true;
+    this.orgData = []; // 清空舊資料，避免閃爍殘留
 
-  collapseAll() {
-    this.expandRecursive(this.nodes, false);
-  }
-
-  expandRecursive(nodes: TreeNode[], isExpand: boolean) {
-    nodes.forEach(node => {
-      node.expanded = isExpand;
-      if (node.children) {
-        this.expandRecursive(node.children, isExpand);
+    this.sysb400Service.querySYS3100_tree_DropDownList(this.dataForm.value).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          const filtered = this.filterByDeepestUnique(response.Data || []);
+          this.orgData = filtered;
+        } else {
+          this.orgData = [];
+          console.error('API error:', response.Status, response.Message);
+        }
+        this.loading = false;
+      },
+      error: (err) => {
+        this.orgData = [];
+        console.error('API error:', err);
+        this.loading = false;
       }
     });
   }
 
-  expandSpecificNodes1() {
-    this.expandRecursive(this.nodes, false);
-    // 這裡傳入的條件可以根據需要更改，例如根據 label 或其他屬性來展開節點
-    this.expandNodesWithCondition(this.nodes, node => node.data === '0');
-  }
+  // 原始資料進行過濾 去除中間節點
+  filterByDeepestUnique(data: any[]): any[] {
+    return data.filter(item => {
+      const orgKey = `${item.org_id}${item.org_name}`.trim();
 
-  expandSpecificNodes2() {
-    this.expandRecursive(this.nodes, false);
-    // 這裡傳入的條件可以根據需要更改，例如根據 label 或其他屬性來展開節點
-    this.expandNodesWithCondition(this.nodes, node => node.data === '0' || node.data === '1');
-  }
+      const parentLabels = [
+        item.org10Label,
+        item.org20Label,
+        item.org30Label
+      ];
 
-  expandSpecificNodes3() {
-    this.expandRecursive(this.nodes, false);
-    // 這裡傳入的條件可以根據需要更改，例如根據 label 或其他屬性來展開節點
-    this.expandNodesWithCondition(this.nodes, node => node.data === '0' || node.data === '1' || node.data === '2');
-  }
+      // 若任一上層的 label 和自己 orgKey 相同，表示重複，過濾掉
+      const isDuplicate = parentLabels.some(label => label && orgKey.includes(label.trim()));
 
-  expandNodesWithCondition(nodes: TreeNode[], condition: (node: TreeNode) => boolean) {
-    nodes.forEach(node => {
-      // 根據條件展開節點
-      if (condition(node)) {
-        node.expanded = true;
-      }
-      if (node.children) {
-        this.expandNodesWithCondition(node.children, condition);
-      }
+      return !isDuplicate;
     });
   }
 
   onBack() {
-    this.router.navigate(['/SYSB000/SYSB400']);
+    this.router.navigate(['/SYS/SYSB400']);
   }
 }

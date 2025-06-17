@@ -8,6 +8,7 @@ import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 import { apiOption } from '../../../shared/models/tls/tls000.model';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
+
 // 組織碼設定作業
 @Component({
   selector: 'app-sysb400',
@@ -19,7 +20,7 @@ export class SYSB400Component
   implements OnInit {
 
   queryForm = this.formBuilder.group({
-    // SYS3100 + SYS3000
+    // SYS3100 組織碼設定作業
     org_id: ['', Validators.maxLength(6)], // 組織代碼
     org_name: ['', Validators.maxLength(40)], // 組織名稱
     level_id: ['', Validators.maxLength(2)], // 組織階層代碼
@@ -35,6 +36,7 @@ export class SYSB400Component
 
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: Sysb400m[] = [];
+
   columns: Column[] = [
     { field: 'org_id', header: '組織代碼', visible: true },
     { field: 'org_name', header: '組織名稱', visible: true },
@@ -176,9 +178,9 @@ export class SYSB400Component
   }
 
   loadOptions() {
-    //階層作業
+    // 所有組織階層
     this.sysb300Service.querySYSB300_DropDownList({}).subscribe((response) => {
-      this.upgroup_Options = response.Data.map((item: apiOption) => ({
+      this.upgroup_Options = response.Data.map((item: any) => ({
         No: item.No,
         Name: item.Name,
         Label: item.No + '-' + item.Name,
@@ -191,25 +193,19 @@ export class SYSB400Component
     ];
 
     // 所有組織代碼
-    const query_org = {
-      level_id: '',
-      org_id: '',
-      org_name: '',
-
-      //分頁查詢
-      pageSize: 1000,
-      pageIndex: 0,
-      SortBy: [{ field: 'org_id', order: 1 }],
-    };
-
-    this.sysb400Service.querySYSB400(query_org).subscribe((response) => {
-      this.org_Option = response.Data.map((item: Sysb400m) => ({
-        No: item.org_id,
-        Name: item.org_name,
-        Label: item.org_id + '-' + item.org_name,
+    this.sysb400Service.querySYS3100_DropDownList({}).subscribe((response) => {
+      this.org_Option = response.Data.map((item: any) => ({
+        No: item.No,
+        Name: item.Name,
+        Label: item.No + '-' + item.Name,
       }));
-      console.log('組織代碼 查詢結果', this.org_Option);
+      console.log('組織代碼drop 查詢結果', this.org_Option);
     });
+  }
+
+  gotoGraph() {
+    //導引到sysb400.os
+    this.router.navigate(['/SYS/SYSB400OS']);
   }
 
   isRowSelectable(rowData: Sysb400m): boolean {

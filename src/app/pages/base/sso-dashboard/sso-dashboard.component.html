@@ -15,8 +15,10 @@
         <div class="text-center ml-1 block" [ngStyle]="{'color': 'rgb(146, 60, 60)'}">
           <button type="button" class="layout-topbar-button p-link min-w-max" pTooltip="個人資料"
             (click)="menu.toggle($event)">
-            <span class="text-sm block" style="color: var(--text-color-secondary);">{{ data?.user_No }}</span>
-            <span class="text-lg font-bold block" style="color: var(--text-color);">{{ data?.user_Name }}</span>
+            <span class="text-sm block" style="color: var(--text-color-secondary);">{{ (authService.user |
+              async)?.user_No }}</span>
+            <span class="text-lg font-bold block" style="color: var(--text-color);">{{ (authService.user |
+              async)?.user_Name }}</span>
             <i class="pi pi-angle-down" style="color: var(--text-color);"></i>
           </button>
           <p-menu #menu [model]="items" [popup]="true" class="static" styleClass="border-round-xl p-2"
@@ -126,8 +128,8 @@
         <small *ngIf="form.errors?.['passwordsMismatch']" class="p-error block">密碼與確認密碼不符。</small>
       </div>
     </div>
-    <div class="flex justify-content-end gap-2" *ngIf="!noClose">
-      <p-button label="取消" severity="secondary" (onClick)="visible = false" />
+    <div class="flex justify-content-end gap-2">
+      <p-button label="取消" severity="secondary" (onClick)="visible = false" *ngIf="!noClose" />
       <p-button label="確定" [loading]="formButtonLoading" type="submit" />
     </div>
   </form>

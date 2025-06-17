@@ -1,6 +1,6 @@
 
 import { Injectable } from '@angular/core';
-import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn } from '@angular/forms';
 // taiwan-id-validator
 // https://github.com/enylin/taiwan-id-validator
 @Injectable({
@@ -31,6 +31,12 @@ export class ValidationService {
       invalidNumberRange: '起始數字不可大於結束數字',
       passwordsMismatch: '兩次輸入的密碼不一致，請重新輸入。',
       invalidPasswordStrength: '密碼強度不足，至少包含一個大小寫字母、一個數字和一個特殊符號。',
+      invalidGuiTrack: '僅能輸入大寫英文字母',
+      invalidGuiBegNo: '起號結尾只能為 00 或 50',
+      invalidGuiEndNo: '迄號結尾只能為 49 或 99',
+      invalidGuiNumberRange: '結束號碼不可小於起始號碼',
+      invalidOddMonth: '只能選擇單數月',
+      invalidMinMonthDate: '不能小於本期'
     };
     return config[validatorName];
   }
@@ -125,4 +131,113 @@ export class ValidationService {
       return passwordsMatch ? null : { passwordsMismatch: true };
     };
   }
+  // GUI Track - 僅允許大寫英文
+  guiTrackValidator(control: { value: string | null }) {
+    const value = control.value;
+    if (value !== null && value !== '') {
+      if (!/^[A-Z]+$/.test(value)) {
+        return { invalidGuiTrack: true };
+      }
+    }
+    return null;
+  }
+  // GUI_BegNo 驗證：純數字，結尾只能是 00 或 50
+  guiBegNoValidator(control: { value: string | null }) {
+    const value = control.value;
+    if (value !== null && value !== '') {
+      if (!/^\d+$/.test(value)) {
+        return { invalidNumber: true };
+      }
+      if (!/(00|50)$/.test(value)) {
+        return { invalidGuiBegNo: true };
+      }
+    }
+    return null;
+  }
+
+  // GUI_EndNo 驗證：純數字，結尾只能是 49 或 99
+  guiEndNoValidator(control: { value: string | null }) {
+    const value = control.value;
+    if (value !== null && value !== '') {
+      if (!/^\d+$/.test(value)) {
+        return { invalidNumber: true };
+      }
+      if (!/(49|99)$/.test(value)) {
+        return { invalidGuiEndNo: true };
+      }
+    }
+    return null;
+  }
+  guiNumberRangeValidator(
+    begNoControlName: string,
+    endNoControlName: string
+  ): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      // 確保 control 是一個 FormGroup，因為我們需要訪問其子控制項
+      if (!(control instanceof FormGroup)) {
+        return null;
+      }
+      const begNoControl = control.get(begNoControlName);
+      const endNoControl = control.get(endNoControlName);
+      // 檢查子控制項是否存在
+      if (!begNoControl || !endNoControl) {
+        console.warn(`驗證器錯誤：找不到控制項 ${begNoControlName} 或 ${endNoControlName}。`);
+        return null;
+      }
+      const begNo = begNoControl.value;
+      const endNo = endNoControl.value;
+      if (endNoControl.hasError('invalidGuiNumberRange')) {
+        endNoControl.setErrors(null);
+      }
+      if (begNoControl.hasError('invalidGuiNumberRange')) {
+        begNoControl.setErrors(null);
+      }
+
+      if (begNo && endNo) {
+        const beg = Number(begNo);
+        const end = Number(endNo);
+
+        if (!isNaN(beg) && !isNaN(end)) {
+          if (beg > end) {
+            // 如果起始號大於迄號，將錯誤設置在『結束號』的控制項上
+            // 這樣錯誤訊息會顯示在 GUI_EndNo 的欄位上
+            endNoControl.setErrors({ invalidGuiNumberRange: true });
+
+            // 同時在 FormGroup 上返回錯誤，以便整體表單狀態反映錯誤
+            return { invalidGuiNumberRange: true };
+          }
+        }
+      }
+
+      // 如果沒有錯誤，返回 null
+      return null;
+    };
+  }
+  // GUI_YYMM 驗證：只能為單數月，且只能是當月的前一個月
+  oddMonthValidator(control: { value: Date | null }) {
+    const value = control.value;
+
+    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
+      const month = value.getMonth() + 1; // JS 月份是 0-based，要+1
+      // 檢查是否為單數月
+      if (month % 2 === 0) {
+        return { invalidOddMonth: true };
+      }
+
+      const now = new Date();
+      const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1); // 當前月的前一個月 1 號
+      const inputDate = new Date(value.getFullYear(), value.getMonth(), 1);
+
+      // 輸入日期不能小於前一個月
+      if (inputDate < prevMonth) {
+        return { invalidMinMonthDate: true };
+      }
+    } else {
+      // 如果不是有效的 Date 物件
+      return { invalidDate2: true };
+    }
+
+    return null;
+  }
+
 }

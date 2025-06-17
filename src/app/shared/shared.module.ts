@@ -72,6 +72,7 @@ import { MultiLocationFilterComponent } from './componentkit/multi-location-filt
 import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autocomplete.component';
 import { QueryYearMonthComponent } from './componentkit/query-year-month/query-year-month.component';
 import { InputGroupComponent } from './componentkit/input-group/input-group.component';
+import { InputTextRangeComponent } from './componentkit/input-text-range/input-text-range.component';
 import { ProgressBarModule } from 'primeng/progressbar';
 
 @NgModule({
@@ -82,6 +83,7 @@ import { ProgressBarModule } from 'primeng/progressbar';
     DropdownComponent,
     InputTextComponent,
     InputNumberComponent,
+    InputTextRangeComponent,
     MultiSelectComponent,
     CalendarComponent,
     CalendarRangeComponent,
@@ -158,6 +160,7 @@ import { ProgressBarModule } from 'primeng/progressbar';
     ReactiveFormsModule,
     TranslateModule,
     // PrimeNG
+    FileUploadModule,
     OrganizationChartModule,
     ProgressSpinnerModule,
     PanelModule,
@@ -200,6 +203,7 @@ import { ProgressBarModule } from 'primeng/progressbar';
     TreeDropdownNestComponent,
     InputTextareaComponent,
     InputNumberComponent,
+    InputTextRangeComponent,
     InputNumberRangeComponent,
     FileUploadComponent,
     InputGroupComponent,

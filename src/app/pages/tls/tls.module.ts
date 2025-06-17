@@ -395,6 +395,8 @@ import { TLS57150Component } from './tls57150/tls57150.component';
 import { TLS57160Component } from './tls57160/tls57160.component';
 import { TLS57170Component } from './tls57170/tls57170.component';
 import { Tls13010Next3Component } from './tls13010-next3/tls13010-next3.component';
+import { TLS26080Component } from './tls26080/tls26080.component';
+import { TLS26080CRUComponent } from './tls26080-cru/tls26080-cru.component';
 import { TLS23010CRUComponent } from './tls23010-cru/tls23010-cru.component';
 
 @NgModule({
@@ -474,6 +476,7 @@ import { TLS23010CRUComponent } from './tls23010-cru/tls23010-cru.component';
     TLS26020Component,
     TLS26030Component,
     TLS26040Component,
+    TLS26080Component,
     TLS27010Component,
     TLS27020Component,
     TLS27030Component,
@@ -561,6 +564,7 @@ import { TLS23010CRUComponent } from './tls23010-cru/tls23010-cru.component';
     TLS26020CRUComponent,
     TLS26030CRUComponent,
     TLS26040CRUComponent,
+    TLS26080CRUComponent,
     TLS27010CRUComponent,
     TLS27020CRUComponent,
     TLS27030CRUComponent,

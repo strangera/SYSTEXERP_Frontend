@@ -26,6 +26,7 @@ export class SYSB400CRUComponent
   implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
+    // SYS3100 組織碼設定作業
     id: [], // ID
     org_id: ['', [Validators.required, Validators.maxLength(6)]], // 組織代碼
     org_name: ['', [Validators.required, Validators.maxLength(40)]], // 組織名稱
@@ -72,12 +73,6 @@ export class SYSB400CRUComponent
       }
     });
 
-    // 初始讀取頁面就確認p_level_id的選項
-    if (this.dataForm.controls.level_id.value == '' || this.dataForm.controls.level_id.value == null) {
-      this.dataForm.controls.p_level_id.disable();
-      this.dataForm.controls.p_level_id.setValue('');
-    }
-
     // 監聽組織階層代碼的變化 (決定p_level_id代碼的選項)
     this.dataForm.controls.level_id.valueChanges.subscribe((levelId) => {
       this.handleLevelIdChange(levelId);
@@ -98,10 +93,17 @@ export class SYSB400CRUComponent
   handleLevelIdChange(levelId: string) {
     console.log('上層階層代碼', levelId);
     if (!levelId) {
-      this.filtered_p_level_Options = [];
-      this.dataForm.controls.p_level_id.disable();
-      this.dataForm.controls.p_level_id.setValue('');
       return;
+    }
+
+    // 假設只要在變更時自動帶入上一層代碼
+    if (levelId === "10") {
+      this.dataForm.controls.p_level_id.setValue("");
+    } else {
+      const parentLevelNo = (parseInt(levelId, 10) - 10).toString();
+      this.dataForm.controls.p_level_id.setValue(parentLevelNo);
+
+      console.log('自動帶入 p_level_id:', parentLevelNo);
     }
 
     // 假設上層階層的編碼比下層小，例如：10 是最上層，20 是中層，30 是底層
@@ -118,14 +120,7 @@ export class SYSB400CRUComponent
       item.Level && filteredNos.includes(item.Level)
     );
 
-    if (this.filtered_p_level_Options.length > 0) {
-      this.dataForm.controls.p_level_id.enable();
-    } else {
-      this.dataForm.controls.p_level_id.disable();
-      this.dataForm.controls.p_level_id.setValue('');
-    }
-
-    console.log('filtered_p_level_Options', this.filtered_p_level_Options);
+    // console.log('org_Option', this.org_Option); // 檢查[上層階層] 預帶的 [上層組織代碼/名稱] 是否正確
   }
 
   loadOptions(): Promise<void> {

@@ -2,6 +2,7 @@ import { Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output } fro
 import { AuthService } from '../../../service/system/auth.service';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { Subject, takeUntil } from 'rxjs';
+import { FormGroup } from '@angular/forms';
 interface ButtonConfig {
   label: string;
   icon?: string;
@@ -19,7 +20,7 @@ interface ButtonConfig {
   styleUrl: './button.component.scss'
 })
 export class ButtonComponent implements OnInit, OnDestroy {
-  @Input() btnType: 'default' | 'create' | 'edit' | 'delete' | 'query' | 'cancel' | 'clear' | 'submit' | 'next' | 'previous' | 'smartclear' |  'report' |'back' = 'default';
+  @Input() btnType: 'default' | 'create' | 'edit' | 'delete' | 'query' | 'cancel' | 'clear' | 'submit' | 'next' | 'previous' | 'smartclear' |  'report' |'back' | 'CSV' = 'default';
   @Input() loading = false;
   @Output() clickEvent = new EventEmitter<void>();
   // --- 以下為按鈕配置 ---
@@ -31,6 +32,7 @@ export class ButtonComponent implements OnInit, OnDestroy {
   @Input() type: 'button' | 'submit' | 'reset' = 'button'; // 原始html的type
   @Input() text: boolean | undefined; // 是否為文字按鈕
   @Input() outlined: boolean | undefined; // 是否為輪廓按鈕
+  @Input() form: FormGroup | undefined;
 
   private authService: AuthService = inject(AuthService);
   private currentPageService: CurrentPageService = inject(CurrentPageService);
@@ -40,7 +42,7 @@ export class ButtonComponent implements OnInit, OnDestroy {
     default: { label: '標籤', icon: 'pi pi-check', class: '', disabled: false, type: 'button', severity: 'info' },           // 預設
     create: { label: '新增', icon: 'pi pi-plus', class: '', disabled: false, type: 'button', severity: 'info', permissionCode: '20' },   // 新增
     clear: { label: '清除', icon: undefined, class: 'button-clear', text: true, disabled: false, type: 'reset', severity: 'info' },                   // 清除
-    cancel: { label: '清除', icon: 'pi pi-times', class: 'button-cancel', outlined: true, disabled: false, type: 'reset', severity: 'secondary' },       // 取消
+    cancel: { label: '清除', icon: 'pi pi-times', class: 'button-cancel', outlined: true, disabled: false, type: 'button', severity: 'secondary' },       // 取消
     delete: { label: '刪除', icon: 'pi pi-trash', class: 'p-button-danger', disabled: false, type: 'button', severity: 'danger', permissionCode: '40' },// 刪除
     edit: { label: '編輯', icon: 'pi pi-pencil', class: '', disabled: false, type: 'button', severity: 'info', permissionCode: '30' },     // 編輯
     query: { label: '查詢', icon: 'pi pi-search', class: '', disabled: false, type: 'submit', severity: 'info', permissionCode: '10' },   // 查詢
@@ -80,7 +82,16 @@ export class ButtonComponent implements OnInit, OnDestroy {
   }
 
   handleClick() {
-    if (!this.disabled) {
+    if (this.disabled) return;
+
+    if (this.btnType === 'cancel' && this.form) {
+      Object.keys(this.form.controls).forEach(key => {
+        const control = this.form?.get(key);
+        if (control && !control.disabled) {
+          control.reset();
+        }
+      });
+    } else {
       this.clickEvent.emit();
     }
   }

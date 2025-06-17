@@ -26,6 +26,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() columns!: Column[];                                                  // table 欄位配置 (必填)
   selectedColumns!: Column[];                                                   // table 預設顯示欄位
   @Input() data: any[] = [];                                                    // table 資料 (必填)
+  @Output() dataChange = new EventEmitter<any[]>();                             // table 資料改變 (事件)
   @Input() loading = false;                                                     // 是否顯示 loading
   // select 選擇Row相關
   @Input() showCheckBox = false;                                                // 是否顯示 checkbox
@@ -36,6 +37,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Output() unSelect = new EventEmitter<TableRowUnSelectEvent>();               // 資料取消勾選(事件)
   @Output() selectionChange = new EventEmitter<any>();                          // 資料勾選(事件)
   // Sort 相關
+  @Input() showSort = true;                                                     // 是否顯示排序
   @Input() multiSortMeta: SortMeta[] = [{ field: this.dataKey, order: 1 }];     // table 排序依據 (多重排序 {field欄位、order排序方向} )
   // rowEdit 相關
   @Input() rowEditing = false;                                                  // 是否正在編輯Row
@@ -47,11 +49,13 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   // Header 相關
   @Input() showCaption = true;                                                  // 是否顯示 Caption
   // Header(左) 相關
-  @Input() showHeader = true;                                          // 是否顯示 Header
-  @Input() showInsert = false;                                         // 是否顯示 Insert新增按鈕
-  @Output() insert = new EventEmitter<any>();                          // 新增事件
-  @Input() insertDisabled = false;                                     // 新增按鈕是否禁用
-  @Output() delete = new EventEmitter<any>();                          // 刪除事件
+  @Input() showHeader = true;                 // 是否顯示 Header
+  @Input() showInsert = false;                // 是否顯示 Insert新增按鈕
+  @Input() insertRowData = false;             // 預設新增模式 (關聯：需要加入dataKey, dataChange)
+  @Input() defaultInsertData: any = {};       // 預設新增資料 (可選，預設為所有資料為null)
+  @Output() insert = new EventEmitter<any>(); // 新增事件
+  @Input() insertDisabled = false;            // 新增按鈕是否禁用
+  @Output() delete = new EventEmitter<any>(); // 刪除事件
   // expansion 收合展開
   @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
   @Input() expansionDataKey = '';            // 收合展開 資料key(expansion必需配置)
@@ -70,6 +74,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() showDetail = true;                // 是否顯示 管理欄位(明細按鈕)
   @Output() detail = new EventEmitter<any>();// 明細事件
   @Input() showEdit = true;                  // 是否顯示 管理欄位(編輯按鈕)
+  @Input() editDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
   @Output() edit = new EventEmitter<any>();  // 編輯事件
   @Input() addButton: AddButton[] = [];      // 自定義 管理按鈕
   @Input() showRowEdit = false;              // 是否顯示 Row編輯按鈕
@@ -84,7 +89,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() showPaginator = true;                    // 是否顯示 分頁器
   @Input() totalRecords = 0;                        // 記錄總數
   totalPages = 0;                                   // 共幾頁數
-  rows = 10;                                        // 每頁顯示的行數
+  rows = 30;                                        // 每頁顯示的行數
   first = 0;                                        // 當前表格的起始索引
   pages: { label: string, value: number }[] = [];   // (右上)下拉選單 頁數選項
   selectedPage: number | null = 1;                  // (右上)下拉選單 當前選擇的頁數
@@ -96,12 +101,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() showReportMode = true;                // 是否顯示報表模式切換按鈕
   @Input() showDelete = true;                    // 是否顯示刪除按鈕
   // 權限
+  @Input() showSubtotal = false; // 是否顯示小計
+  @Input() subtotalFields: string[] = []; // 要計算小計的欄位名稱
+  // 小計
 
-
-  @Input() showSubtotal: boolean = false; // 是否顯示小計
-@Input() subtotalFields: string[] = []; // 要計算小計的欄位名稱
- // 小計
- 
   private ngUnsubscribe = new Subject<void>();
   public funInfo: FunsrightInfo | undefined;
 
@@ -170,7 +173,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   loadDataLazy(event: TableLazyLoadEvent) {
     setTimeout(() => {
       if (this.totalRecords === 0) { return; }
-      const pageSize = event.rows && event.rows > 0 ? event.rows : 10;
+      const pageSize = event.rows && event.rows > 0 ? event.rows : 30;
       const pageIndex = (event.first ?? 0) / pageSize + 1;
       const SortBy = event.multiSortMeta ?? [{ field: this.dataKey, order: 1 }];
       this.lazyLoadData.emit({ pageIndex, pageSize, SortBy });
@@ -208,7 +211,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   }
   // 行編輯保存
   onRowEditSave(rowData: any, ri: number, htmlTableRowElement: HTMLTableRowElement) {
-    if (!validateRowData(rowData, this.columns, this.data, this.messageService)) return; // 如果驗證不通過，返回
+    if (!validateRowData(rowData, this.columns, this.data, this.messageService, this.dataKey)) return; // 如果驗證不通過，返回
     const oldData = this.clonedProducts[rowData[this.dataKey]]; // 儲存原始數據
     delete this.clonedProducts[rowData[this.dataKey]]; // 刪除原始數據
     this.rowEditing = false; // 關閉編輯模式
@@ -217,12 +220,28 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   }
   // 行編輯取消
   onRowEditCancel(rowData: any, ri: number) {
-    this.data[ri] = this.clonedProducts[rowData[this.dataKey]];
-    this.data = [...this.data];
-    delete this.clonedProducts[rowData[this.dataKey]]; // 刪除原始數據
-    this.rowEditing = false; // 關閉编辑模式
-    this.dt.cancelRowEdit(rowData); // 手動取消编辑狀態
+    const originalRowData = this.clonedProducts[rowData[this.dataKey]];
+
+    // 檢查除了 dataKey 以外的所有欄位是否都為 null/undefined/空字串
+    const otherColumns = this.columns.filter(col => col.field !== this.dataKey);
+    const allOtherFieldsAreEmptyInOriginal = originalRowData && otherColumns.every(col => {
+      const value = originalRowData[col.field];
+      return value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
+    });
+    if (allOtherFieldsAreEmptyInOriginal) {
+      // 如果原始資料除了 dataKey 以外都是空的，則直接從數據中刪除該行
+      this.data = this.data.filter(item => item[this.dataKey] !== rowData[this.dataKey]);
+    } else {
+      // 否則，恢復到原始資料
+      this.data[ri] = originalRowData;
+      this.data = [...this.data]; // 觸發 Angular 變更檢測
+    }
+    this.dataChange.emit(this.data);
+    delete this.clonedProducts[rowData[this.dataKey]]; // 刪除儲存的原始數據
+    this.rowEditing = false; // 關閉編輯模式
+    this.dt.cancelRowEdit(rowData); // 手動取消編輯狀態 (PrimeNG Table 內部狀態)
     this.rowEditCancel.emit({ data: this.data, rowData, ri }); // 發射事件
+    this.cdr.detectChanges(); // 強制檢測變更，確保 UI 更新
   }
   // 資料勾選
   onSelectionChange(event: any) {
@@ -238,7 +257,24 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   editRow(rowData: any) { this.edit.emit(rowData); }                // Edit 按鈕 事件
   detailRow(rowData: any) { this.detail.emit(rowData); }            // Detail 或 雙擊行 事件
   onSelectButton(rowData: any) { this.selectButton.emit(rowData); } // 欄位Button 選擇 事件
-  insertRow() { this.insert.emit(); }                               // Insert 按鈕
+  // Insert 按鈕
+  insertRow() {
+    if (this.insertRowData) {
+      this.rowEditing = true;
+      this.multiSortMeta = [{ field: this.dataKey, order: 0 }];
+      const newRowData: Record<string, any> = {};
+      this.columns.forEach(col => {
+        newRowData[col.field] = this.defaultInsertData[col.field] !== undefined
+          ? this.defaultInsertData[col.field] : null;
+      });
+      newRowData[this.dataKey] = new Date().getTime();
+      this.data = [newRowData, ...this.data];
+      this.dataChange.emit(this.data);
+      this.onRowEditInit(newRowData);
+    } else {
+      this.insert.emit();
+    }
+  }
   deleteRow(selectedItems: any) { this.delete.emit(selectedItems); }// Delete 按鈕
   onExportExcel() { this.exportExcel.emit(); }                      // 匯出Excel範本 事件
   onImportExcel(event: FileSelectEvent) {                           // 匯入Excel
@@ -250,19 +286,19 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
   get subtotals(): Record<string, number> {
-  const result: Record<string, number> = {};
-  if (!this.data || this.data.length === 0) return result;
+    const result: Record<string, number> = {};
+    if (!this.data || this.data.length === 0) return result;
 
-  this.subtotalFields.forEach(field => {
-    result[field] = this.data.reduce((sum, row) => {
-      const val = parseFloat(row[field]) || 0;
-      return sum + val;
-    }, 0);
-  });
+    this.subtotalFields.forEach(field => {
+      result[field] = this.data.reduce((sum, row) => {
+        const val = parseFloat(row[field]) || 0;
+        return sum + val;
+      }, 0);
+    });
 
-  return result;
-}
-moneyFormat(value: number): string {
-  return value != null ? value.toLocaleString('en-US') : '0';
-}
+    return result;
+  }
+  moneyFormat(value: number): string {
+    return value != null ? value.toLocaleString('en-US') : '0';
+  }
 }

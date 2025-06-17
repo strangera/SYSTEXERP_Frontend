@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { NotificationService } from './notification.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
@@ -7,21 +7,21 @@ import { ConfirmationService, MessageService } from 'primeng/api';
   templateUrl: './notification-message.component.html',
   styleUrl: './notification-message.component.scss'
 })
-export class NotificationMessageComponent {
-  msgBoxHeader: string = '';
-  msgBoxMessage: string = '';
-  msgBoxDisplay: boolean = false;
-  blockedDocument: boolean = false;
-  inputBoxDisplay: boolean = false;
-  inputBoxHeader: string = '';
-  inputBoxMessage: string = '';
-  inputBoxInputText: string = '';
+export class NotificationMessageComponent implements OnInit {
+  msgBoxHeader = '';
+  msgBoxMessage = '';
+  msgBoxDisplay = false;
+  blockedDocument = false;
+  inputBoxDisplay = false;
+  inputBoxHeader = '';
+  inputBoxMessage = '';
+  inputBoxInputText = '';
   inputBoxOK?: (value: string) => void;
   inputBoxCancel?: () => void;
   // ----------------------------------------------------------------
   constructor(
     private notificationService: NotificationService,
-    private messageService: MessageService,
+    public messageService: MessageService,
     private confirmationService: ConfirmationService,
   ) { }
 
@@ -103,5 +103,35 @@ export class NotificationMessageComponent {
     this.inputBoxInputText = '';
     this.inputBoxOK = undefined;
     this.inputBoxCancel = undefined;
+  }
+
+  getIcon(severity: string): string {
+    switch (severity) {
+      case 'success':
+        return 'pi-check-circle';
+      case 'info':
+        return 'pi-info-circle';
+      case 'warn':
+        return 'pi-exclamation-triangle';
+      case 'error':
+        return 'pi-times-circle';
+      default:
+        return 'pi-bell';
+    }
+  }
+
+  getSeverity(severity: string): "success" | "info" | "warning" | "danger" | "help" | "primary" | "secondary" | "contrast" | null | undefined {
+    switch (severity) {
+      case 'success':
+        return 'success';
+      case 'info':
+        return 'info';
+      case 'warn':
+        return 'warning';
+      case 'error':
+        return 'danger';
+      default:
+        return 'info';
+    }
   }
 }

@@ -1,107 +1,96 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-//
-import { WhetherService } from './../../../service/basic/whether.service';
-import { AllInvoiceCategoryService } from './../../../service/basic/all-invoice-category.service';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { columns, MainInvoiceData, subColumns } from './fin11020.model';
+import { Fin11020Service } from '../../../service/api/fin/fin11020.service';
+import { FileSelectEvent } from 'primeng/fileupload';
 
 //1.1.1.2 發票基本資料維護
 @Component({
   selector: 'app-fin11020',
   templateUrl: './fin11020.component.html',
-  styleUrl: './fin11020.component.scss'
+  styleUrls: ['./fin11020.component.scss']
 })
-export class FIN11020Component extends BasicQueryPageComponent<any> implements OnInit {
-  //
+export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> implements OnInit {
   queryForm = this.formBuilder.group({
-    onedatemm: [, [Validators.required]], // 發票年月
-    track: ['', [Validators.maxLength(2)]], // 字軌
-    startserialticket: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 發票號碼(起)
-    endserialticket: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 發票號碼(迄)
-    invoiceCategory: [], // 發票類別
-    viceTicket: [], // 有無副聯
+    GUI_YYMM_start: [null, [Validators.required]], // 發票年月
+    GUI_YYMM_end: [null, [Validators.required]], // 發票年月
+    GUI_Track: ['', [Validators.maxLength(2)]], // 字軌
+    GUI_No_start: [null, [Validators.maxLength(8), Validators.max(99999999)]], // 發票號碼(起)
+    GUI_No_end: [null, [Validators.maxLength(8), Validators.max(99999999)]], // 發票號碼(迄)
+    ...createPaginationConfig([{ field: 'ID', order: 1 }]), // 分頁和排序參數
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '發票年月', visible: true },
-    { field: 'col2', header: '字軌', visible: true },
-    { field: 'col3', header: '發票號碼(起)', visible: true },
-    { field: 'col4', header: '發票號碼(迄)', visible: true },
-    { field: 'col5', header: '發票類別', visible: true },
-    { field: 'col6', header: '有無副聯', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  invoiceCategoryOptions: any[] = [];
-  whetherOptions: any[] = [];
-
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
+  data: MainInvoiceData[] = [];
+  selectedRows: MainInvoiceData[] = [];
+  columns: Column[] = columns;
+  subColumns: Column[] = subColumns;
   constructor(
-    private validationService: ValidationService,
-    //
-    private allInvoiceCategoryService: AllInvoiceCategoryService,
-    private whetherService: WhetherService,
+    private fin11020Service: Fin11020Service
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN11020', '/FIN1000/FIN11020CRU');
-    this.allInvoiceCategoryService.getAllInvoiceCategorys().subscribe(data => {
-      this.invoiceCategoryOptions = data;
-    });
-    //
-    this.whetherService.getWhetherOptions().subscribe(data => {
-      this.whetherOptions = data;
-    });
-    // ----------------------------------------------------------------
-
-    // ----------------------------------------------------------------
+    this.initializePage('FIN11020', '/FIN/FIN11020CRU', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    // if (frm.valid && this.canQuery()) {
-    //   // 提交邏輯
-    //   // Service
-    //   // this.xxxService.queryMachine(frm.value as xxxInterface)
-    //   //  .subscribe((response: any) => {
-    //   //    this.rows = response.xxx;
-    //   // });
-    // }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.handleSubmit(frm, () => {
+      this.fin11020Service.queryFIN11020(frm.value).subscribe({
+        next: (response) => {
+          this.data = response.Data.map((item: MainInvoiceData) => ({
+            ...item,
+            GUI_YYMM: this.convertYYYYMMToDate(item.GUI_YYMM)
+          }));
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          this.loading = false;
+        },
+        error: () => { this.loading = false; },
+      });
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
+  // 將 "YYYYMM" 轉為 Date 物件
+  private convertYYYYMMToDate(yyyymm: string): Date | null {
+    if (!/^\d{6}$/.test(yyyymm)) return null;
+    const year = Number(yyyymm.substring(0, 4));
+    const month = Number(yyyymm.substring(4, 6)) - 1; // JS 月份從 0 開始
+    return new Date(year, month, 1);
   }
 
+  onDelete(selectedRows: MainInvoiceData[]) {
+    const ids = selectedRows.map(row => row.ID);
+    this.fin11020Service.deleteFIN11020(ids).subscribe({
+      next: () => {
+        this.onSubmit(this.queryForm);
+        this.selectedRows = [];
+      },
+      error: () => { this.loading = false; },
+    });
+  }
+
+  onFileUpload(event: FileSelectEvent) {
+    const file = event.files[0];
+    this.fin11020Service.uploadFIN11020(file).subscribe({
+      next: (res) => {
+        if (res.Data) {
+          this.onSubmit(this.queryForm);
+        }
+      },
+      error: (err) => {
+        console.error(err);
+      },
+    });
+  }
+
+  isRowSelectable(row: MainInvoiceData) {
+    return row.GUI_AssignQty === 0;
+  }
+
+  editDisabled(rowdata: MainInvoiceData) {
+    return rowdata.GUI_AssignQty > 0;
+  }
 }

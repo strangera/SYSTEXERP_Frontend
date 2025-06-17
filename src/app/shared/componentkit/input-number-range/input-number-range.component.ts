@@ -10,6 +10,8 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
 })
 export class InputNumberRangeComponent extends BasicKitComponent implements OnInit {
   @Input() label = '';
+  @Input() startLabel!: string;
+  @Input() endLabel!: string;
   @Input() suffix: string | undefined | null = null;
   @Input() startControl: FormControl = new FormControl(); // 開始值的 FormControl
   @Input() endControl: FormControl = new FormControl(); // 結束值的 FormControl

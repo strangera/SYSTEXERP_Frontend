@@ -1,14 +1,10 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
+import { option } from '../../../shared/models/sys/sysb000.module';
+import { PluUnit } from '../../../shared/models/tls/tls000.model';
+import { Tls51050Service } from '../../../service/API/tls/tls51050.service';
 
 // 2.5.1.5  商品單位設定
 @Component({
@@ -16,123 +12,158 @@ import { ValidationService } from '../../../shared/service/validation.service';
   templateUrl: './tls51050.component.html',
   styleUrl: './tls51050.component.scss'
 })
-export class TLS51050Component {
-  ProgNo: string = '250005';
-  // 權限
-  funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+export class TLS51050Component extends BasicQueryPageComponent<PluUnit>
+  implements OnInit {
   // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
   queryForm = this.formBuilder.group({
-    unitCode: [, [Validators.maxLength(3), this.validationService.numberValidator]], // 單位編號
-    unitName: ['', [Validators.maxLength(32)]], // 單位名稱
-    editortext: [,], // 備註
+    // PLUUNIT  商品單位設定檔
+    UNIT_No: ['', [Validators.maxLength(2)]], // 單位代碼
+    UNIT_NAME: ['', [Validators.maxLength(40)]], // 單位名稱
+    UNIT_Attribute: ['', [Validators.maxLength(1)]], // 單位屬性 1基本單位 2包裝單位
+    // CHILD_UNIT: ['', [Validators.maxLength(2)]], // 子項單位代號 --沒有使用
+    // CHILD_QTY: [,[this.validationService.numberValidator]], // 子項單位數量 --沒有使用
+
+    UNIT_Remark: ['', [Validators.maxLength(100)]], // 備註說明
+
+    //分頁查詢
+    ...createPaginationConfig([{ field: 'UNIT_No', order: 1 }]), // 分頁和排序參數
   });
   // 表格
   // ----------------------------------------------------------------
-  data: any[] = [
-    //{ contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    //{ contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    //{ contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'contactPerson', header: '單位代號', visible: true },
-    { field: 'contactDate', header: '單位名稱', visible: true },
-    { field: 'UID', header: '單位屬性', visible: true },
-    { field: 'industryType', header: '子項單位代號 / 名稱', visible: true },
-    { field: 'category', header: '子項單位數量', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
 
+  attributeOptions: option[] = [
+    { 'value': "1", 'label': '基本單位' },
+    { 'value': "2", 'label': '包裝單位' }
+  ];
+
+  data: PluUnit[] = [];
+  columns: Column[] = [
+    { field: 'UNIT_No', header: '單位代碼', visible: true },
+    { field: 'UNIT_NAME', header: '單位名稱', visible: true },
+    {
+      field: 'UNIT_Attribute', header: '單位屬性', visible: true,
+      format: (value: string) =>
+        this.attributeOptions.find((option) => option.value === value)?.label ||
+        value,
+    },
+    { field: 'UNIT_Remark', header: '備註說明', visible: true },
+  ];
+
+  selectedItems: PluUnit[] = [];// 多選項目
+
+  // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-  ) {
+    private tls51050Service: Tls51050Service) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
+    this.initializePage('TLS51050', 'TLS/TLS51050CRU', this.queryForm, (form) => this.onSubmit(form));
+    // this.loadOptions();
   }
 
-  // 權限
-  // ----------------------------------------------------------------
-  canQuery(): boolean {
-    return true;
-  }
-  canAdd(): boolean {
-    return true;
-  }
-  canEdit(): boolean {
-    return true;
-  }
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
+      console.log('query condition', frm.value);
+      this.tls51050Service.queryTLS51050(frm.value).subscribe({
+        next: (response) => {
+          // console.log('回傳階層:', response.Data);
+          if (response.Status === '0000') {
+            this.data = response.Data || [];
+            console.log('Result', this.data);
+            this.totalRecords = response.TotalCount || response.Data.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
+    });
+  }
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+  //---刪除檢查---
+  //-------------
+  // 刪除項目
+  onDelete(data: PluUnit | PluUnit[]): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
+
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) {
+      console.error('No items to delete');
+      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+      return;
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
+    // 收集所有有效的 ID
+    const idList = items
+      .filter((item) => item && item.id != null && item.id !== undefined)
+      .map((item) => item.id);
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
     }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
-    }
-  }
+    //確認是否全部都可以刪除
+    // const canDelete = items.every((item) => item.CanDel);
 
-  onDetail(data: any) {
-    console.log(data);
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
+    // if (!canDelete) {
+    //   console.error('Some items cannot be deleted');
+    //   this.messageService.errorBubble('無法刪除：組織階層互相關連');
+    //   return;
+    // }
 
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
-      },
+    const deleteBody = {
+      idList: idList, // 符合 API 的 idList 格式
     };
+    this.tls51050Service.deleteTLS51050(deleteBody).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('選中項目刪除成功');
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        }
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗');
+      },
+      complete: () => {
+        this.onSubmit(this.queryForm);
+      },
+    });
 
-    console.log(crudstatus);
+    this.selectedItems = [];
+  }
 
-    this.router.navigate(['/TLS5000/TLS51050CRU'], extras);
+  loadOptions() {
+    {
+      //倉別 下拉選單
+      // this.tls51060Service
+      //   .queryPOS2034_DropDownList({})
+      //   .subscribe((response) => {
+      //     this.storageOptions = response.Data.map((item: apiOption) => ({
+      //       No: item.No,
+      //       Name: item.Name,
+      //       Label: item.No + '-' + item.Name,
+      //     }));
+
+      //     console.log('storageOptions:', this.storageOptions);
+      //   });
+    }
+  }
+
+  isRowSelectable(rowData: PluUnit): boolean {
+    return rowData.CanDel
   }
 }

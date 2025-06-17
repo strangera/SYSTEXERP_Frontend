@@ -1,11 +1,12 @@
-import { Component, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { NavigationExtras, Router } from '@angular/router';
+import { Component, OnInit, } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
+import { PluUnit } from '../../../shared/models/tls/tls000.model';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { option } from '../../../shared/models/sys/sysb000.module';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { ValidationService } from '../../../shared/service/validation.service';
+import { Tls51050Service } from '../../../service/API/tls/tls51050.service';
 //
 
 // 2.5.1.5 商品單位設定  CRU
@@ -14,88 +15,42 @@ import { ValidationService } from '../../../shared/service/validation.service';
   templateUrl: './tls51050-cru.component.html',
   styleUrl: './tls51050-cru.component.scss'
 })
-export class TLS51050CRUComponent {
-  ProgNo: string = '250005';
-  // 權限
-  // ----------------------------------------------------------------
-  funInfo?: FunsrightInfo;
-  addPermission = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  editPermission = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
+  implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    unitProperty: [1, []], // 條件篩選, radioButton
-    editortext: [,], // editor text
+    // PLUUNIT  商品單位設定檔
+    id: [],
+    UNIT_No: ['', [Validators.maxLength(2)]], // 單位代碼
+    UNIT_NAME: ['', [Validators.maxLength(40)]], // 單位名稱
+    UNIT_Attribute: ["1", [Validators.maxLength(1)]], // 單位屬性 1基本單位 2包裝單位 (預設1，目前只有基本單位沒有包裝單位)
+    // CHILD_UNIT: ['', [Validators.maxLength(2)]], // 子項單位代號 --沒有使用
+    // CHILD_QTY: [, [this.validationService.numberValidator]], // 子項單位數量 --沒有使用
+
+    UNIT_Remark: ['', [Validators.maxLength(100)]], // 備註說明
+
+    //分頁查詢
+    ...createPaginationConfig([{ field: 'UNIT_No', order: 1 }]), // 分頁和排序參數
   });
-  // ----------------------------------------------------------------
-  crudstatus: CRUDStatus = CRUDStatus.Read;
-  formTitle: string = '';
-  showConfirm: boolean = false;
-  submitted = false;
 
-  // ----------------------------------------------------------------
-  unitPropertyOptions: any[] = [
-    { value: 1, label: '基本單位' },
-    { value: 2, label: '包裝單位' },
+  //
+  attributeOptions: option[] = [
+    { 'value': "1", 'label': '基本單位' },
+    { 'value': "2", 'label': '包裝單位' }
   ];
+  allquery: PluUnit[] = [];
 
+  // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
+    private tls51050Service: Tls51050Service,
+    private validationService: ValidationService
   ) {
+    super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      case CRUDStatus.Create:
-        this.formTitle = '新增資料';
-        this.showConfirm = this.canAdd();
-        break;
-      case CRUDStatus.Edit:
-        console.log(state.rowdata);
-        this.formTitle = '編輯資料';
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      case CRUDStatus.Read:
-        this.formTitle = '顯示資料';
-        this.Read(state.rowdata);
-        break;
-    }
-  }
-  // ----------------------------------------------------------------
-  get isFormEditable(): boolean {
-    return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
+    this.initializePage('TLS51050', this.dataForm);
+    this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
@@ -107,17 +62,28 @@ export class TLS51050CRUComponent {
       return;
     }
 
+    //--檢查--
+    // 新增時
+    // 單位屬性：預設1 基本單位，目前只有基本單位沒有包裝單位
+    //--------
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble('新增成功');
+          console.log('insert', frm.value);
+          this.tls51050Service.insertTLS51050(frm.value).subscribe(() => {
+            this.messageService.successBubble('新增成功');
+            // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+            this.dataForm.reset(); // 重置表單
+          });
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble('更新成功');
+          console.log('update', frm.value);
+          this.tls51050Service.updateTLS51050(frm.value).subscribe(() => {
+            // this.messageService.successBubble('更新成功');
+            this.onCancel(); // 儲存後，會返回列表
+          });
         }
         break;
     }
@@ -127,15 +93,25 @@ export class TLS51050CRUComponent {
   }
 
   submitForm(frm: FormGroup) {
-    // 查詢邏輯
     this.onSubmit(frm);
   }
 
   onClearForm() {
-    this.dataForm.reset();  // 重置表單
+    this.dataForm.reset(); // 重置表單
   }
 
-  onCancel() {
-    this.router.navigate(['/TLS5000/TLS51050']);
+  // 讀取dopropdown選項
+  loadOptions() {
+    // {
+    //   this.tls51060Service
+    //     .queryPOS2034_DropDownList({})
+    //     .subscribe((response) => {
+    //       this.storageOptions = response.Data.map((item: apiOption) => ({
+    //         No: item.No,
+    //         Name: item.Name,
+    //         Label: item.No + '-' + item.Name,
+    //       }));
+    //     });
+    // }
   }
 }
