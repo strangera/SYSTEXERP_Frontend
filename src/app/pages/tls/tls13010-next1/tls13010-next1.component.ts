@@ -217,7 +217,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'date',
       editable: true,
       autoWidth: true,
-      dateFormat: 'year-month' // 🎯 共通組件會自動處理
+      dateFormat: 'year-month'
     },
     {
       field: 'tpy_type',
@@ -297,7 +297,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'full-date' // 🎯 這裡就是你想要的功能！
+      dateFormat: 'full-date'
     },
     {
       field: 'tpy_edate',
@@ -658,7 +658,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
       console.log('✅ 取得合約ID:', this.currentTalentId);
 
-      // 🎯 關鍵修正：優先使用 CRU 頁面編輯後的資料
+      // 優先使用 CRU 頁面編輯後的資料
       const step1Data = this.contractFlowService.getStep1Data();
       console.log('📝 Step1 編輯資料:', step1Data);
 

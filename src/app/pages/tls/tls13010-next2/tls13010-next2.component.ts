@@ -237,7 +237,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
   commissionColumns: ColumnDef[] = [
     { field: 'commissionType', header: '抽成類別', editable: true },
     { field: 'commissionTypeName', header: '抽成類別名稱', editable: true },
-    { field: 'taxType', header: '稅別', editable: true },
+    { field: 'taxType', header: '稅別', editable: true, type: 'dropdown', options: TLS13010_DROPDOWN_OPTIONS.cagTaxTypeOption },
     { field: 'discountSummary', header: '設定摘要', editable: true },
     { field: 'transactionAmount', header: '單筆交易金額(含)以上', editable: true, type: 'number' },
     { field: 'specialCommission', header: '特價抽成(%)', editable: true, type: 'number' },
