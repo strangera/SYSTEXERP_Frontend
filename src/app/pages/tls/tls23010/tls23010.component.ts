@@ -36,6 +36,8 @@ const now = new Date();
 export class TLS23010Component extends BasicQueryPageComponent<any> {
 
   progressValue = 0;
+  showPageSizeDialog = false;
+customPageSize = 1000;  
 
   queryForm = this.formBuilder.group({
     TXN_DateStart: [new Date('2020-01-01'), [Validators.required]],
@@ -452,34 +454,38 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
-  goToReportMode() {
-    if (this.queryForm.invalid) {
-      this.messageService.warnBubble('請先完成查詢條件');
-      this.queryForm.markAllAsTouched();
-      return;
-    }
-
-    // ✅ 使用 Record<string, any> 解決 TS7053
-    const rawFormValue: Record<string, any> = { ...this.queryForm.value };
-
-    for (const key in rawFormValue) {
-      if (rawFormValue[key] === '') {
-        rawFormValue[key] = null;
-      }
-    }
-
-    const queryFormValue = {
-      ...rawFormValue,
-      pageSize: 1000
-    };
-
-    this.router.navigate(['/TLS/TLS23010CRU'], {
-      state: {
-        queryFormValue,
-        pageSize: 1000
-      }
-    });
+ 
+goToReportMode(): void {
+  if (this.queryForm.invalid) {
+    this.messageService.warnBubble('請先完成查詢條件');
+    this.queryForm.markAllAsTouched();
+    return;
   }
+
+  this.customPageSize = 1000;
+  this.showPageSizeDialog = true; // 👈 顯示彈窗
+}
+
+confirmPageSizeAndNavigate(): void {
+  const rawFormValue: Record<string, any> = { ...this.queryForm.value };
+  for (const key in rawFormValue) {
+    if (rawFormValue[key] === '') rawFormValue[key] = null;
+  }
+
+  const queryFormValue = {
+    ...rawFormValue,
+    pageSize: this.customPageSize
+  };
+
+  this.router.navigate(['/TLS/TLS23010CRU'], {
+    state: {
+      queryFormValue,
+      pageSize: this.customPageSize
+    }
+  });
+
+  this.showPageSizeDialog = false;
+}
 
 
 
