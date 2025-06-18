@@ -322,6 +322,9 @@ import { FIN73020Component } from './fin73020/fin73020.component';
 import { FIN73030Component } from './fin73030/fin73030.component';
 import { FIN73040Component } from './fin73040/fin73040.component';
 import { SharedModule } from '../../shared/shared.module';
+import { FIN11200Component } from './fin11200/fin11200.component';
+import { FIN11200CRUComponent } from './fin11200-cru/fin11200-cru.component';
+import { TooltipModule } from 'primeng/tooltip';
 
 @NgModule({
   declarations: [
@@ -340,6 +343,8 @@ import { SharedModule } from '../../shared/shared.module';
     FIN11080Component,
     FIN11090CRUComponent,
     FIN11090Component,
+    FIN11200Component,
+    FIN11200CRUComponent,
     FIN12010CRUComponent,
     FIN12010Component,
     FIN12020CRUComponent,
@@ -651,6 +656,7 @@ import { SharedModule } from '../../shared/shared.module';
     CommonModule,
     FinRoutingModule,
     SharedModule,
+    TooltipModule
   ]
 })
 export class FinModule { }

@@ -323,6 +323,8 @@ import { FIN73020CRUComponent } from './fin73020-cru/fin73020-cru.component';
 import { FIN73020Component } from './fin73020/fin73020.component';
 import { FIN73030Component } from './fin73030/fin73030.component';
 import { FIN73040Component } from './fin73040/fin73040.component';
+import { FIN11200Component } from './fin11200/fin11200.component';
+import { FIN11200CRUComponent } from './fin11200-cru/fin11200-cru.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '404', pathMatch: 'full' },
@@ -341,6 +343,8 @@ const routes: Routes = [
   { path: 'FIN11080CRU', component: FIN11080CRUComponent },
   { path: 'FIN11090', component: FIN11090Component },  // 非業主收銀機二聯式電子發票配號作業
   { path: 'FIN11090CRU', component: FIN11090CRUComponent },
+  { path: 'FIN11200', component: FIN11200Component },  // 電子發票配號作業
+  { path: 'FIN11200CRU', component: FIN11200CRUComponent },  // 電子發票配號作業
   { path: 'FIN12010', component: FIN12010Component },  // 電子式發票各系統配號維護
   { path: 'FIN12010CRU', component: FIN12010CRUComponent },
   { path: 'FIN12020', component: FIN12020Component },  // 使用完/空白發票繳回作業

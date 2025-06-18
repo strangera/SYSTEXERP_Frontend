@@ -73,6 +73,7 @@ import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autoc
 import { QueryYearMonthComponent } from './componentkit/query-year-month/query-year-month.component';
 import { InputGroupComponent } from './componentkit/input-group/input-group.component';
 import { InputTextRangeComponent } from './componentkit/input-text-range/input-text-range.component';
+import { CustomFileUploadComponent } from './componentkit/img-upload/img-upload.component';
 
 @NgModule({
   declarations: [
@@ -105,7 +106,8 @@ import { InputTextRangeComponent } from './componentkit/input-text-range/input-t
     HasPermissionDirective,
     MultiLocationFilterComponent,
     AutoCompleteComponent,
-    QueryYearMonthComponent
+    QueryYearMonthComponent,
+    CustomFileUploadComponent
   ],
   imports: [
     ReactiveFormsModule,
@@ -217,7 +219,8 @@ import { InputTextRangeComponent } from './componentkit/input-text-range/input-t
     SelectButtonModule,
     MultiLocationFilterComponent,
     AutoCompleteComponent,
-    QueryYearMonthComponent
+    QueryYearMonthComponent,
+    CustomFileUploadComponent
   ],
 })
 export class SharedModule { }

@@ -1,0 +1,20 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-4" label="發票年月"
+          [control]="dataForm.controls.GUI_YYMM" [submitted]="submitted" [minDate]="minDate" />
+        <app-table class="col-12" [data]="data" [columns]="columns" [showReportMode]="false" [showManage]="false"
+          [showCheckBox]="true"></app-table>
+      </div>
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit"></app-button>
+      </div>
+    </form>
+  </p-panel>
+</div>
