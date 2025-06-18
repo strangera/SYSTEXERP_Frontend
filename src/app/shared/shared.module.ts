@@ -74,6 +74,7 @@ import { QueryYearMonthComponent } from './componentkit/query-year-month/query-y
 import { InputGroupComponent } from './componentkit/input-group/input-group.component';
 import { InputTextRangeComponent } from './componentkit/input-text-range/input-text-range.component';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { ReportTableGroupComponent } from './componentkit/report-table-group/report-table-group.component';
 
 @NgModule({
   declarations: [
@@ -106,7 +107,8 @@ import { ProgressBarModule } from 'primeng/progressbar';
     HasPermissionDirective,
     MultiLocationFilterComponent,
     AutoCompleteComponent,
-    QueryYearMonthComponent
+    QueryYearMonthComponent,
+    ReportTableGroupComponent
   ],
   imports: [
     ReactiveFormsModule,
@@ -220,7 +222,8 @@ import { ProgressBarModule } from 'primeng/progressbar';
     MultiLocationFilterComponent,
     AutoCompleteComponent,
     QueryYearMonthComponent,
-    ProgressBarModule
+    ProgressBarModule,
+    ReportTableGroupComponent
   ],
 })
 export class SharedModule { }

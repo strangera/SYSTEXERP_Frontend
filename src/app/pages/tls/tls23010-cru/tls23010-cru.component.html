@@ -4,23 +4,40 @@
     type="button"
     icon="pi pi-arrow-left"
     label="回上頁"
+    class="p-button-secondary"
     (click)="goBack()"
   ></button>
 </div>
+
 <div class="card">
-  <app-table
-    *ngIf="!loading"
+  <!-- 進度條 -->
+  <div *ngIf="loading" class="p-text-center mb-3">
+    <p class="mb-2" style="font-weight: bold">資料載入中，請稍候...</p>
+    <p-progressBar
+      [value]="progressValue"
+      [showValue]="true"
+      [unit]="'%'"
+      styleClass="custom-progress-bar"
+    ></p-progressBar>
+  </div>
+
+  <!-- 資料表 -->
+
+  <app-report-table-group
     [data]="data"
     [columns]="columns"
-    dataKey="TXN_No"
-    [showPaginator]="false"
-    [showSubtotal]="true"
-    [subtotalFields]="['TXN_TotPayAmt', 'TXN_TotDisc']"
-  ></app-table>
-  <p-progressBar
-    *ngIf="loading"
-    [value]="progressValue"
-    [showValue]="true"
-    [unit]="'%'"
-  ></p-progressBar>
+    [subtotalFields]="[
+      'TXN_TotSaleAmt',
+      'TXN_TotOver',
+      'TXN_TotPayAmt',
+      'TXN_TaxFreeCertNo',
+    ]"
+     [reportTitle]="'銷售統計報表'"
+    [totalCount]="data.length"
+    [currentPage]="1"
+    [dateStart]="dateStart"
+    [dateEnd]="dateEnd"
+    [printedAt]="printedAt"
+    [showTotalOnly]="true"
+  ></app-report-table-group>
 </div>
