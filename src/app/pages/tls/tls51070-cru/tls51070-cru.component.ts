@@ -107,8 +107,23 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     stock: [0, [Validators.maxLength(10)]], // 庫存量 讀POS2099 新增固定0 ---未確認---
     PLU_OrderPrc: [0, [Validators.required, Validators.maxLength(10)]], // 標準進價 商品售價＊進貨折數/1.05 ，計算到小數點以下2位，必填 (不可編輯 新增遵循此規則)
     PLU_SafeQty: [0, [Validators.maxLength(10)]], // 安全存量
+
+    //---
+    // 系統日期-建檔日期 > 365天, 去年整年度銷售量/12個月*2個月 🡪取整數
+
+    //                    系統日期-建檔日期 < 365天，自建檔日起至今的銷售量/計算月數*2個月
+    //                    計算月數=(系統日期-建檔日期) / 30天 🡪不取整數，依小數計算
+    //                    例:建檔日起至今的銷售量 10個，(系統日期-建檔日期) 15天/30天=0.5(計算月數)
+    //                    安全庫存量= 10(銷售量) / 0.5(計算月數) * 2個月= 40
+
+    //---
     PLU_OrderPrcRate: [0, [Validators.required, Validators.maxLength(10)]], // 進價折數 預設0 (依照品牌 PLULOGO)
     PLU_ECStatus: ['0', [Validators.maxLength(1)]], // EC商品狀態: 1.正常2.停用3.停進4,下架 For EC (備註: 原來的 商品狀態(PLU_Status) 改為 EC商品狀態(PLU_ECStatus))
+    PLU_Status: [0, [Validators.required, Validators.maxLength(1)]], // 商品狀態:0一般 不顯示
+
+    // 
+
+
 
   });
   // 基本資料dropdown
@@ -139,9 +154,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     { value: '1', label: '應稅' },
   ];
 
-  // ---商品規格---
-
-
   // ---POS2020 dropdown區---
   transTypeOption: option[] = [  //運輸方式
     { value: '1', label: '自行送貨' },
@@ -158,6 +170,16 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   pos2005Detail: POS2005Detail[] = [];
   pos2020Detail: POS2020Detail[] = [];
   img1001Detail: IMG1001Detail[] = [];
+  // ---------國際條碼 (POS2005) 編輯表格 至少要一筆-------------------------------------------------------
+  // 國際條碼編號	下拉
+  POS2005Data: POS2005Detail[] = [];
+  // POS2005 展開式表格的欄位定義
+  POS2005DataColumn: ColumnDef[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號', editable: false, type: 'text' },  //key1
+    { field: 'PLU_No', header: '國際條碼', editable: false, type: 'dropdown' }, //key2
+  ];
+  // 展開式表格的載入狀態
+  expand2005Loading = false;
   // ---------採購廠商 (POS2020) 編輯表格 至少要一筆-------------------------------------------------------
   // 廠商編號	下拉
   POS2020Data: POS2020Detail[] = [];
@@ -175,7 +197,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     VDP_LastStockDate: '',
   };
 
-  // 展開式表格的欄位定義
+  // POS2020 展開式表格的欄位定義
   POS2020DataColumn: ColumnDef[] = [
     { field: 'PLU_MagNo', header: '商品管理編號', editable: false, type: 'text' },  //key1
     { field: 'VEN_No', header: '廠商編號', editable: false, type: 'dropdown' }, //key2
@@ -189,11 +211,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     { field: 'VDP_LastStockDate', header: '最後進貨日期', editable: false, type: 'date' }, //  readonly，商品新增時，不給值，進貨作業驗收更新
     { field: 'Remark', header: '單向備註', editable: true, type: 'text' },
-
   ];
-
   // 展開式表格的載入狀態
-  expandLoading = false;
+  expand2020Loading = false;
 
   // 預設 POS2020 新項目模板
   createDefaultNew2020(pLU_MagNo: string) {
@@ -328,7 +348,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           const PLU_SalePrc = this.dataForm.get('PLU_SalePrc')?.value;
           const PLU_OrderPrcRate = this.dataForm.get('PLU_OrderPrcRate')?.value;
           if (PLU_SalePrc && PLU_OrderPrcRate) {
-            this.dataForm.get('PLU_OrderPrc')?.setValue(PLU_SalePrc * PLU_OrderPrcRate * 0.01 * 1.05);
+            this.dataForm.get('PLU_OrderPrc')?.setValue(PLU_SalePrc * PLU_OrderPrcRate * 0.01 / 1.05);
           }
         }
       } else {
@@ -424,13 +444,13 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     // 查詢 所有 品牌代碼
     const pluLogoQuery = {
       "PageSize": 1000,
-      "PageIndex": 0,
+      "PageIndex": 1,
       "Offset": 0,
       "LOGO_No": "",
       "LOGO_CH_NAME": "",
       "LOGO_EN_NAME": "",
       "LOGO_Remark": "",
-      "HOS_No": [""]
+      "HOS_No": [""],
     }
     this.tls51060Service.queryTLS51060(pluLogoQuery)
       .subscribe((response) => {
@@ -509,14 +529,14 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         this.pos2020Detail = response.Data[0].POS2020Detail;
 
         this.POS2020Data = this.pos2020Detail;
-        // this.POS2005Data = this.pos2005Detail;
+        this.POS2005Data = this.pos2005Detail;
         // this.img1001Data = this.img1001Detail;
 
         //建立項目模板
         this.createDefaultNew2020(pLU_MagNo);
 
-        console.log('pos2005Detail', this.pos2005Detail);
-        console.log('pos2020Detail', this.pos2020Detail);
+        console.log('POS2005Data', this.POS2005Data);
+        console.log('POS2020Data', this.POS2020Data);
         console.log('img1001Detail', this.img1001Detail);
       });
     }
