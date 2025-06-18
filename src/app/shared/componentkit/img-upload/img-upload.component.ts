@@ -20,7 +20,7 @@ import { trigger, transition, style, animate } from '@angular/animations';
     ])
   ]
 })
-export class CustomFileUploadComponent implements AfterViewInit, OnInit {
+export class ImgUploadComponent implements AfterViewInit, OnInit {
   @ViewChild('fileUpload') fileUpload!: FileUpload;
   @Input() multiple = true;
   @Input() accept = 'image/*';
@@ -30,7 +30,7 @@ export class CustomFileUploadComponent implements AfterViewInit, OnInit {
   @Input() files: any[] = [];
   @Input() images: any[] = [];
   @Input() disabled = false;
-  @Input() showEdit = false;
+  @Input() showEdit = true;
   @Output() uploadFiles = new EventEmitter<File[]>();
   @Output() selectedFiles = new EventEmitter<File[]>();
   @Output() imagesChange = new EventEmitter<any>();

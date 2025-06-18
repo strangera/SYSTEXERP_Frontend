@@ -41,12 +41,33 @@ interface DetailSaveEvent {
   parentData: any;
 }
 
+export interface IMG1001 {
+  ID: number;             // 圖檔ID
+  IMG_Type: string;       // 圖檔類別 - 'POS2004'
+  IMG_SeqNo: string;      // 圖檔序號 - POS2004.PLU_MagNo
+  IMG_Path: string;       // 圖檔路徑
+  IMG_File: string;       // 圖檔檔名 - YYMMDDHHNNSSZZZ_檔案名稱
+  IMG_Remark?: string;    // 備註
+  base64String?: string; // 圖檔base64
+  CRT_Date?: string;      // 建立日期
+  CRT_USR_No?: string;    // 建立人員
+  CRT_USR_Name?: string;  // 建立人員姓名
+  UPD_Date?: string;      // 變更日期
+  UPD_USR_No?: string;    // 變更人員
+  UPD_USR_Name?: string;  // 變更人員姓名
+}
+
 @Component({
   selector: 'app-input.table',
   templateUrl: './input.table.component.html',
   styleUrl: './input.table.component.scss'
 })
 export class InputTableComponent extends BasicQueryPageComponent<any> implements OnInit {
+
+  files: File[] = [];        // 上傳的檔案
+  images: IMG1001[] = []; // 圖片List editable, readable
+  confirmDeleteImages: string[] = []; // 確定刪除的圖片
+
   // 在父組件中聲明
   @ViewChild(ExpandableEditTableComponent) expandableTable!: ExpandableEditTableComponent;
 
@@ -117,7 +138,7 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     dateYearRange2: [null, [Validators.required]], // Dropdown
     radiolist: [null, [Validators.required]], // Dropdown
     editortext: [null, [Validators.required]], // Dropdown
-    Year  : [null, [Validators.required]], // Dropdown
+    Year: [null, [Validators.required]], // Dropdown
     Month: [null, [Validators.required]], // Dropdown
 
   });

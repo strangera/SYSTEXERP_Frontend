@@ -1,3 +1,5 @@
+import { ImageModule } from 'primeng/image';
+import { CarouselModule } from 'primeng/carousel';
 import { SkeletonModule } from 'primeng/skeleton';
 import { OrganizationChartModule } from 'primeng/organizationchart';
 import { NgModule } from '@angular/core';
@@ -51,7 +53,6 @@ import { InputNumberComponent } from './componentkit/input-number/input-number.c
 import { InputNumberRangeComponent } from './componentkit/input-number-range/input-number-range.component';
 import { RadiobuttonComponent } from './componentkit/radiobutton/radiobutton.component';
 import { EditorTextComponent } from './componentkit/editor-text/editor-text.component';
-import { FileUploadComponent } from './componentkit/file-upload/file-upload.component';
 import { ButtonDynamicallyaddComponent } from './componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 import { ButtonDynamicallydeleteComponent } from './componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
 import { ButtonComponent } from './componentkit/button/button.component';
@@ -73,7 +74,8 @@ import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autoc
 import { QueryYearMonthComponent } from './componentkit/query-year-month/query-year-month.component';
 import { InputGroupComponent } from './componentkit/input-group/input-group.component';
 import { InputTextRangeComponent } from './componentkit/input-text-range/input-text-range.component';
-import { CustomFileUploadComponent } from './componentkit/img-upload/img-upload.component';
+import { ImgUploadComponent } from './componentkit/img-upload/img-upload.component';
+import { FileUploadComponent } from './componentkit/file-upload/file-upload.component';
 
 @NgModule({
   declarations: [
@@ -107,7 +109,7 @@ import { CustomFileUploadComponent } from './componentkit/img-upload/img-upload.
     MultiLocationFilterComponent,
     AutoCompleteComponent,
     QueryYearMonthComponent,
-    CustomFileUploadComponent
+    ImgUploadComponent
   ],
   imports: [
     ReactiveFormsModule,
@@ -153,6 +155,8 @@ import { CustomFileUploadComponent } from './componentkit/img-upload/img-upload.
     TreeModule,
     FileUploadModule,
     ExpandableEditTableModule,
+    CarouselModule,
+    ImageModule
   ],
   exports: [
     // Angular
@@ -220,7 +224,7 @@ import { CustomFileUploadComponent } from './componentkit/img-upload/img-upload.
     MultiLocationFilterComponent,
     AutoCompleteComponent,
     QueryYearMonthComponent,
-    CustomFileUploadComponent
+    ImgUploadComponent
   ],
 })
 export class SharedModule { }
