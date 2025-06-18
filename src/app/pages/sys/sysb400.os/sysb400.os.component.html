@@ -1,53 +1,62 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div>
-      <app-button
-        btnType="create"
-        label="上一頁"
-        icon="pi pi-arrow-left"
-        (click)="onBack()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onBack()"></app-button>
   </div>
+  <p-panel [header]="formTitle" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-12 lg:col-4">
+          <app-dropdown
+            label="是否停用"
+            controlName="stop_flag"
+            [options]="whetherOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.stop_flag"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <!-- 載入中 -->
+        <ng-container *ngIf="loading; else treeLoaded">
+          <div class="col-12 text-center py-5">
+            <p-progressSpinner></p-progressSpinner>
+          </div>
+        </ng-container>
 
-  <div>
-    <p-panel [header]="formTitle" class="line-height-3 m-0">
-      <div>
-        <p-divider align="left" type="solid">
-          <b class="text-primary">組織架構列表</b>
-        </p-divider>
-        <div class="grid p-fluid">
-          <!-- add treeDropDown component   -->
-          <app-tree-dropdown
-            [members]="orgFlatTreeData"
-            [Columns]="orgColumn"
-            [LeaveColumnLabel]="LeaveLabel"
-            (confirmSelected)="onLevelSelected($event)"
-            [onlySendLeaf]="true"
-          ></app-tree-dropdown>
-          <!-- --- -->
-        </div>
+        <!-- 資料已載入且有值才顯示元件 -->
+        <ng-template #treeLoaded>
+          <div class="col-12 md:col-12 lg:col-4">
+            <app-tree-dropdown
+              *ngIf="orgData.length > 0"
+              [members]="orgData"
+              [Columns]="orgColumn"
+              [LeaveColumnLabel]="LeaveLabel"
+              (confirmSelected)="onLevelSelected($event)"
+              [onlySendLeaf]="true"
+              [SelectbleCheckBox]="false"
+              [listTitle]="listTitle"
+            ></app-tree-dropdown>
+          </div>
+
+          <!-- 若載入完成但無資料，可顯示提示文字 -->
+          <div
+            *ngIf="orgData.length === 0"
+            class="col-12 text-center text-secondary py-5"
+          >
+            查無資料，請重新選擇條件。
+          </div>
+        </ng-template>
       </div>
-      <div>
-        <p-divider align="left" type="solid">
-          <b class="text-primary">樹狀下拉</b>
-        </p-divider>
-        <div class="grid p-fluid">
-          <!-- add treeDropDown component   -->
-          <app-tree-dropdown
-            [members]="flatTreeData"
-            [Columns]="treeNodes"
-            [LeaveColumnLabel]="LeaveColumnLabel"
-            (confirmSelected)="onMembersSelected($event)"
-            [onlySendLeaf]="true"
-          ></app-tree-dropdown>
-          <!-- --- -->
-        </div>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable"
+      >
+        <app-button btnType="cancel"></app-button>
+        <app-button btnType="submit"></app-button>
       </div>
-    </p-panel>
-  </div>
+    </form>
+  </p-panel>
 </div>

@@ -28,11 +28,16 @@ export interface APS2001Data {
   UPD_USR_Name?: string; // 變更人員姓名 (可為空)
 }
 
-// SAL_GUIPaper 的選項
+// SAL_GUIPaper 的選項 - 查詢
 export const SAL_GUIPaperOptions = [
   { label: '二聯式手開發票', value: '32' },
   { label: '三聯式手開發票', value: '31' },
   { label: '電子發票', value: '35' },
+];
+// SAL_GUIPaper 的選項 - 新增修改
+export const SAL_GUIPaperOptions2 = [
+  { label: '二聯式手開發票', value: '32' },
+  { label: '三聯式手開發票', value: '31' },
 ];
 
 export const columns: Column[] = [
@@ -43,7 +48,10 @@ export const columns: Column[] = [
   { field: 'SAL_GUITrack', header: '字軌', visible: true },
   { field: 'SAL_GUIBegNo', header: '發票號碼(起)', visible: true },
   { field: 'SAL_GUIEndNo', header: '發票號碼(迄)', visible: true },
-  { field: 'SAL_GUIPaper', header: '發票聯式', visible: false },
+  {
+    field: 'SAL_GUIPaper', header: '發票聯式', visible: true,
+    format: (value: string) => SAL_GUIPaperOptions.find(x => x.value === value)?.label || value
+  },
   { field: 'SAL_LastUsedGUINo', header: '已使用的發票號', visible: false },
   { field: 'SAL_VoidGUICnt', header: '作廢發票張數', visible: false },
   { field: 'SAL_BlankCnt', header: '發票張數', visible: false },
@@ -53,10 +61,7 @@ export const columns: Column[] = [
   { field: 'SAL_ZeroTaxAmt', header: '零稅金額', visible: false, format: formatAmount },
   { field: 'STR_Uniform', header: '統一編號', visible: false },
   { field: 'STO_No', header: '分店編號', visible: false },
-  {
-    field: 'SAL_Type', header: '發票類別', visible: true,
-    format: (value: string) => SAL_GUIPaperOptions.find(x => x.value === value)?.label || value
-  },
+  { field: 'SAL_Type', header: '發票類別', visible: false },
   { field: 'GUI_DingType', header: '是否為丁種發票', visible: true, format: formatYN },
   { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
   { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },

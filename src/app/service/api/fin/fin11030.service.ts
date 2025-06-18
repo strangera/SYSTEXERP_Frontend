@@ -12,39 +12,53 @@ export class Fin11030Service {
   constructor(private http: HttpClient) { }
 
   /**
-   * 查詢 POS1017 資料表
+   * 查詢 APS2001 資料表
    */
-  queryFIN11030(params: {}): Observable<any> {
+  queryFIN11030(params: {
+    PageSize?: number;
+    PageIndex?: number;
+    OrderBy?: string;
+    Offset?: number;
+    SortBy?: { field: string; order: number }[];
+    SAL_GUIYYYYMM_start?: string;
+    SAL_GUIYYYYMM_end?: string;
+    SAL_GUITrack?: string;
+    SAL_GUINo_start?: string;
+    SAL_GUINo_end?: string;
+    SAL_GUIPaper?: string;
+  }): Observable<any> {
     return this.http.post(`${this.apiUrl}/queryFIN11030`, params);
   }
 
   /**
-   * 新增 POS1017 資料
+   * 新增 APS2001 資料
    */
   insertFIN11030(data: {
-    GUI_YYMM: string;
-    GUI_Track: string;
-    GUI_BegNo: string;
-    GUI_EndNo: string;
+    SAL_GUIYYYYMM: string;
+    SAL_GUITrack: string;
+    SAL_GUIBegNo: string;
+    SAL_GUIEndNo: string;
+    SAL_GUIPaper: string;
   }): Observable<any> {
     return this.http.post(`${this.apiUrl}/insertFIN11030`, data);
   }
 
   /**
-   * 更新 POS1017 資料
+   * 更新 APS2001 資料
    */
   updateFIN11030(data: {
-    ID: number;
-    GUI_YYMM: string;
-    GUI_Track: string;
-    GUI_BegNo: string;
-    GUI_EndNo: string;
+    id: number;
+    SAL_GUIYYYYMM: string;
+    SAL_GUITrack: string;
+    SAL_GUIBegNo: string;
+    SAL_GUIEndNo: string;
+    SAL_GUIPaper: string;
   }): Observable<any> {
     return this.http.post(`${this.apiUrl}/updateFIN11030`, data);
   }
 
   /**
-   * 刪除 POS1017 資料
+   * 刪除 APS2001 資料
    */
   deleteFIN11030(idList: number[]): Observable<any> {
     return this.http.post(`${this.apiUrl}/deleteFIN11030`, { idList });

@@ -1,0 +1,48 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+  <!-- <div class="mb-3">
+    <button
+      pButton
+      type="button"
+      icon="pi pi-arrow-left"
+      label="回上頁"
+      class="p-button-secondary"
+      (click)="goBack()"
+    ></button>
+  </div> -->
+
+  <div class="card">
+    <!-- 進度條 -->
+    <div *ngIf="loading" class="p-text-center mb-3">
+      <p class="mb-2" style="font-weight: bold">資料載入中，請稍候...</p>
+      <p-progressBar
+        [value]="progressValue"
+        [showValue]="true"
+        [unit]="'%'"
+        styleClass="custom-progress-bar"
+      ></p-progressBar>
+    </div>
+
+    <!-- 資料表 -->
+
+    <app-report-table-group
+      [data]="data"
+      [columns]="columns"
+      [subtotalFields]="[
+        'TXN_TotSaleAmt',
+        'TXN_TotOver',
+        'TXN_TotPayAmt',
+        'TXN_TaxFreeCertNo',
+      ]"
+      [reportTitle]="'銷售統計報表'"
+      [totalCount]="data.length"
+      [currentPage]="1"
+      [dateStart]="dateStart"
+      [dateEnd]="dateEnd"
+      [printedAt]="printedAt"
+      [showTotalOnly]="true"
+    ></app-report-table-group>
+  </div>
+</div>

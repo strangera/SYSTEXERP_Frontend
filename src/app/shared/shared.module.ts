@@ -1,3 +1,5 @@
+import { ImageModule } from 'primeng/image';
+import { CarouselModule } from 'primeng/carousel';
 import { SkeletonModule } from 'primeng/skeleton';
 import { OrganizationChartModule } from 'primeng/organizationchart';
 import { NgModule } from '@angular/core';
@@ -51,7 +53,6 @@ import { InputNumberComponent } from './componentkit/input-number/input-number.c
 import { InputNumberRangeComponent } from './componentkit/input-number-range/input-number-range.component';
 import { RadiobuttonComponent } from './componentkit/radiobutton/radiobutton.component';
 import { EditorTextComponent } from './componentkit/editor-text/editor-text.component';
-import { FileUploadComponent } from './componentkit/file-upload/file-upload.component';
 import { ButtonDynamicallyaddComponent } from './componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 import { ButtonDynamicallydeleteComponent } from './componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
 import { ButtonComponent } from './componentkit/button/button.component';
@@ -73,6 +74,11 @@ import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autoc
 import { QueryYearMonthComponent } from './componentkit/query-year-month/query-year-month.component';
 import { InputGroupComponent } from './componentkit/input-group/input-group.component';
 import { InputTextRangeComponent } from './componentkit/input-text-range/input-text-range.component';
+import { ImgUploadComponent } from './componentkit/img-upload/img-upload.component';
+import { FileUploadComponent } from './componentkit/file-upload/file-upload.component';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { ReportTableGroupComponent } from './componentkit/report-table-group/report-table-group.component';
+import { DialogComponent } from './componentkit/dialog/dialog.component';
 
 @NgModule({
   declarations: [
@@ -105,7 +111,10 @@ import { InputTextRangeComponent } from './componentkit/input-text-range/input-t
     HasPermissionDirective,
     MultiLocationFilterComponent,
     AutoCompleteComponent,
-    QueryYearMonthComponent
+    QueryYearMonthComponent,
+    ImgUploadComponent,
+    ReportTableGroupComponent,
+    DialogComponent
   ],
   imports: [
     ReactiveFormsModule,
@@ -151,6 +160,9 @@ import { InputTextRangeComponent } from './componentkit/input-text-range/input-t
     TreeModule,
     FileUploadModule,
     ExpandableEditTableModule,
+    CarouselModule,
+    ImageModule,
+    ProgressBarModule
   ],
   exports: [
     // Angular
@@ -217,7 +229,11 @@ import { InputTextRangeComponent } from './componentkit/input-text-range/input-t
     SelectButtonModule,
     MultiLocationFilterComponent,
     AutoCompleteComponent,
-    QueryYearMonthComponent
+    QueryYearMonthComponent,
+    ImgUploadComponent,
+    ProgressBarModule,
+    ReportTableGroupComponent,
+    DialogComponent
   ],
 })
 export class SharedModule { }

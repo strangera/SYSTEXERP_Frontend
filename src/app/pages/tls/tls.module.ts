@@ -397,6 +397,7 @@ import { TLS57170Component } from './tls57170/tls57170.component';
 import { Tls13010Next3Component } from './tls13010-next3/tls13010-next3.component';
 import { TLS26080Component } from './tls26080/tls26080.component';
 import { TLS26080CRUComponent } from './tls26080-cru/tls26080-cru.component';
+import { TLS23010CRUComponent } from './tls23010-cru/tls23010-cru.component';
 
 @NgModule({
   declarations: [
@@ -547,6 +548,7 @@ import { TLS26080CRUComponent } from './tls26080-cru/tls26080-cru.component';
     TLS21050CRUComponent,
     TLS22010CRUComponent,
     TLS22020CRUComponent,
+    TLS23010CRUComponent,
     TLS24010CRUComponent,
     TLS24020CRUComponent,
     TLS24030CRUComponent,

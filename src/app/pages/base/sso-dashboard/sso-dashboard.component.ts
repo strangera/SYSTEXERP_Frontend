@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, Renderer2 } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { LayoutService } from '../../../layout/layout.service';
 import { ApiResponse, AuthService } from '../../../service/system/auth.service';
 import { UserInfo } from '../../../shared/models/system/userInfo';
@@ -60,8 +60,6 @@ export class SsoDashboardComponent implements OnInit {
     private encryptionService: EncryptionService,
     private messageService: NotificationService,
     private userCodeService: UserCodeService,
-    private renderer: Renderer2,
-    private el: ElementRef,
     private validationService: ValidationService
   ) {
     this.subscriptions.push(
@@ -123,13 +121,15 @@ export class SsoDashboardComponent implements OnInit {
         next: (innerResponse: ApiResponse<any>) => {
           if (innerResponse.Status === '0000') {
             console.log("Inner API 成功:", innerResponse);
-
+            this.loading = true;
             // 使用 concatMap 串聯兩個權限相關的 API 呼叫
             // concatMap 會等待前一個 Observable 完成後再訂閱下一個
             this.authService.getFunRightsInfo().pipe(
               concatMap(() => this.authService.queryAllSystemCode()) // getFunRightsInfo 成功後，接著呼叫 queryAllSystemCode
+              , finalize(() => this.loading = true)
             ).subscribe({
               next: () => {
+                this.loading = true;
                 console.log('所有權限資料載入成功。');
                 this.router.navigate([item.System_Url]); // 兩個 API 都成功後才導航
               },

@@ -85,4 +85,12 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
       },
     });
   }
+
+  isRowSelectable(row: MainInvoiceData) {
+    return row.GUI_AssignQty === 0;
+  }
+
+  editDisabled(rowdata: MainInvoiceData) {
+    return rowdata.GUI_AssignQty > 0;
+  }
 }

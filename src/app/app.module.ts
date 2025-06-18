@@ -16,6 +16,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
 import { SuccessInterceptor } from './interceptors/successinterceptor.service';
+import { DateToISOStringInterceptor } from './interceptors/dateToISOStringInterceptor.interceptor';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -54,6 +55,11 @@ export function HttpLoaderFactory(http: HttpClient) {
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthinterceptorService,         // 再處理認證
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: DateToISOStringInterceptor,
       multi: true
     },
     {

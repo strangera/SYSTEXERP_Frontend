@@ -109,8 +109,7 @@
             ></app-dropdown>
           </div>
 
-
-                    <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="收銀員號碼"
               controlName="USR_No"
@@ -251,6 +250,11 @@
         >
           <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
+          <app-button
+            btnType="report"
+            label="報表模式"
+            (clickEvent)="goToReportMode()"
+          ></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -276,8 +280,45 @@
     [showDelete]="false"
     [expansionDataKey]="'details'"
     [expansionColumns]="expansionColumns"
-      [showSubtotal]="true"
-  [subtotalFields]="['TXN_TotPayAmt', 'TXN_TotDisc']"
+    [showSubtotal]="true"
+    [subtotalFields]="['TXN_TotPayAmt', 'TXN_TotDisc']"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
   ></app-table>
 </div>
+<p-dialog
+  header="設定每頁筆數"
+  [(visible)]="showPageSizeDialog"
+  [modal]="true"
+  [closable]="false"
+  [style]="{ width: '300px' }"
+>
+  <div class="p-fluid">
+    <div class="field">
+      <label for="pageSize">每頁筆數</label>
+      <input
+        id="pageSize"
+        type="number"
+        pInputText
+        [(ngModel)]="customPageSize"
+        min="1"
+        style="width: 100%;"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      type="button"
+      pButton
+      label="取消"
+      class="p-button-text"
+      (click)="showPageSizeDialog = false"
+    ></button>
+    <button
+      type="button"
+      pButton
+      label="確定"
+      (click)="confirmPageSizeAndNavigate()"
+    ></button>
+  </ng-template>
+</p-dialog>

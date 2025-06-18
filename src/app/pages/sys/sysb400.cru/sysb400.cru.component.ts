@@ -26,6 +26,7 @@ export class SYSB400CRUComponent
   implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
+    // SYS3100 組織碼設定作業
     id: [], // ID
     org_id: ['', [Validators.required, Validators.maxLength(6)]], // 組織代碼
     org_name: ['', [Validators.required, Validators.maxLength(40)]], // 組織名稱

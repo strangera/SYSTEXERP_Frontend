@@ -156,3 +156,31 @@ input[disabled],
 .p-dropdown {
   background-color: transparent;
 }
+@media print {
+  @page {
+    size: auto; /* 預設 auto 可讓使用者自行選擇 portrait/landscape */
+    margin: 10mm;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #print-section,
+  #print-section * {
+    visibility: visible;
+  }
+
+  #print-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  .p-button,
+  label[for="rowsPerTable"],
+  #rowsPerTable {
+    display: none !important;
+  }
+}

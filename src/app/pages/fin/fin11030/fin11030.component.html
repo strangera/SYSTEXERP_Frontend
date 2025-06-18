@@ -4,7 +4,7 @@
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true">
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateMonthRange" label="發票年月"
@@ -12,9 +12,9 @@
             [submitted]="submitted" />
           <app-input-text class="col-12 md:col-6 lg:col-4" label="字軌" controlName="track"
             [control]="queryForm.controls.SAL_GUITrack" [submitted]="submitted" />
-          <app-input-number-range class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="發票號碼"
-            [startControl]="queryForm.controls.SAL_GUIBegNo" [endControl]="queryForm.controls.SAL_GUIEndNo"
-            [submitted]="submitted" [maxBoundary]="99999999" />
+          <app-input-text-range class="col-12 md:col-6 lg:col-4" startLabel="發票起始號碼" endLabel="發票結束號碼"
+            [startControl]="queryForm.controls.SAL_GUINo_start" [endControl]="queryForm.controls.SAL_GUINo_end"
+            [submitted]="submitted" [errorForGroup]="true" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="發票類別" controlName="GUI_Type" optionLabel="label"
             optionValue="value" [control]="queryForm.controls.SAL_GUIPaper" [options]="SAL_GUIPaperOptions" />
         </div>

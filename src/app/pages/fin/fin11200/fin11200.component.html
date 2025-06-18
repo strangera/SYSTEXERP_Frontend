@@ -1,0 +1,43 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" label="配號" (click)="onCreate()"></app-button>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <app-calendar calendarType="dateYearOne" class="col-12 md:col-6 lg:col-4" label="發票年"
+            [control]="queryForm.controls.GUI_YY" [submitted]="submitted" />
+          <app-dropdown class=" col-12 md:col-6 lg:col-4" label="發票月" controlName="registerID" [options]="monthOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.GUI_MM" [submitted]="submitted" />
+          <app-multi-select class=" col-12 md:col-6 lg:col-4" label="收銀機編號" controlName="registerID"
+            [options]="POS_NOSOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_No"
+            [submitted]="submitted" />
+        </div>
+        <ul>
+          <li>說明：</li>
+          <li>1.　限配號當期與下一期發票券數設定。</li>
+          <li>2.　每期最後十天，可配號下一期發票券數設定。</li>
+        </ul>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table tableKey="fin11200" dataKey="id" [data]="data" [columns]="columns" [showEdit]="false" [showDetail]="false"
+    [showCheckBox]="true" [showDelete]="false" [multiSortMeta]="[{ field: 'id', order: 1 }]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading" [addButton]="addButton" (selectionChange)="selectedRows = $event"
+    [selectedItems]="selectedRows">
+    <header>
+      <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }" pTooltip="下傳"
+        tooltipPosition="top" pButton icon="pi pi-upload" severity="success" class="p-button-rounded p-button-text"
+        [disabled]="selectedRows.length === 0" (click)="onUpload()" />
+    </header>
+  </app-table>
+</div>
