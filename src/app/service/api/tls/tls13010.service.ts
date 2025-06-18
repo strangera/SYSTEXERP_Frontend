@@ -71,4 +71,11 @@ export class TLS13010Service {
       catchError(this.errorHandler.handleError)
     );
   }
+
+  queryTLS13010Commission(request: { TalentId: string; CurrentTltTermType: string }) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010Commission`, request).pipe(
+      tap((res) => console.log('處理抽成設定資料結果:', res)),
+      catchError(this.errorHandler.handleError)
+    );
+  }
 }
