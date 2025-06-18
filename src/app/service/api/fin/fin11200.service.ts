@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -18,8 +18,51 @@ export class Fin11200Service {
     PageSize?: number;
     PageIndex?: number;
     SortBy?: { field: string; order: number }[];
-
+    GUI_YYMM?: string;
+    ECR_No?: string;
   }): Observable<any> {
     return this.http.post(`${this.apiUrl}/queryFIN11200`, params);
+  }
+
+  /**
+   * 電子發票配號作業 - 配號
+   */
+  execProcNumber(params: {
+    NumberDetails: {
+      GUI_YYMM: string;
+      ECR_No: string;
+    }[];
+  }): Observable<any> {
+    console.log(params);
+
+    return this.http.post(`${this.apiUrl}/ExecProc_Number`, params);
+  }
+
+  /**
+   * 電子發票配號作業 - 下傳
+   */
+  execProcExport(params: {
+    ExportDetails: {
+      ID: number;
+      STO_No: string;
+      GUI_YYMM: string;
+      SER_NOS: string;
+    }[];
+  }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/ExecProc_Export`, params);
+  }
+
+  /**
+   * 電子發票配號作業 - 停用
+   */
+  execProcClosed(params: {
+    ClosedDetail: {
+      ID: number;
+      STO_No: string;
+      GUI_YYMM: string;
+      SER_NOS: string;
+    };
+  }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/ExecProc_Closed`, params);
   }
 }
