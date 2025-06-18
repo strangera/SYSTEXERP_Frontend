@@ -69,9 +69,10 @@
       type="button"
       label="匯出 PDF"
       icon="pi pi-file-pdf"
-      (click)="showPdfDialog = true"
+      (click)="exportPDF('l')"
       class="p-button-sm p-button-danger"
     ></button>
+
     <button
       pButton
       type="button"
@@ -88,6 +89,14 @@
       (click)="printPage()"
       class="p-button-sm p-button-secondary"
     ></button>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-arrow-left"
+      label="回上頁"
+      class="p-button-sm p-button-secondary"
+      (click)="goBack()"
+    ></button>
   </div>
 </div>
 
@@ -96,6 +105,7 @@
     *ngFor="let group of groupedData; let i = index"
     class="report-table-wrapper mb-5"
   >
+
     <div class="text-sm text-gray-600 mb-2 flex flex-wrap items-center gap-4">
       <div>共 {{ totalCount }} 筆</div>
       <div>第 {{ i + 1 }} 頁 / 共 {{ groupedData.length }} 頁</div>

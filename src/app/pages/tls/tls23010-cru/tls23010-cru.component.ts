@@ -6,6 +6,7 @@ import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
 import { CarrierTypeService } from '../../../service/basic/carrier-type.service';
 import { finalize } from 'rxjs/operators';
 import { Location } from '@angular/common';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
 
 @Component({
@@ -13,8 +14,8 @@ import { Location } from '@angular/common';
   templateUrl: './tls23010-cru.component.html',
   styleUrls: ['./tls23010-cru.component.scss']
 })
-export class TLS23010CRUComponent {
-  loading = true;
+export class TLS23010CRUComponent extends BasicCruPageComponent<any>{
+  override loading = true;
   printedAt: string = '';
   dateStart: string = '';
   dateEnd: string = '';
@@ -167,13 +168,16 @@ export class TLS23010CRUComponent {
     private location: Location,
     private carrierTypeService: CarrierTypeService
   ) {
+    super();
     this.statusFlagService.getStatusFlags().subscribe(res => this.statusFlagOptions = res);
     this.whetherService.getWhetherOptions().subscribe(res => this.whetherOptions = res);
     this.txnSubtypeService.getTXNSubtype().subscribe(res => this.transactionSubTypeOptions = res);
     this.carrierTypeService.getCarrierType().subscribe(res => this.carrierTypeOptions = res);
   }
+   dataForm = this.formBuilder.nonNullable.group({});
 
   async ngOnInit(): Promise<void> {
+    this.initializePage('TLS23010', this.dataForm);
     const state = history.state;
     const queryFormValue = state?.queryFormValue;
 
