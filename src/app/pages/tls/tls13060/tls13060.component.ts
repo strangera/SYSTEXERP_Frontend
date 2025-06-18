@@ -1,49 +1,22 @@
 import { FloorService } from './../../../service/basic/floor.service';
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup } from '@angular/forms';
 import { LocationCodeService } from '../../../service/basic/locationcode.service';
 import { OperationStatusService } from '../../../service/basic/operation-status.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { VendorService } from '../../../service/basic/vendor.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
 import { CommissionTypeService } from '../../../service/basic/commission-type.service';
 import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls13060',
   templateUrl: './tls13060.component.html',
   styleUrls: ['./tls13060.component.scss'],
 })
-export class TLS13060Component {
-  ProgNo: string = '210015';
-  // 权限
-  funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
-  // 查询表单
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS13060Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     counterRecruitmentCode: [], // 專櫃招募編號
     vendorCode: [], // 廠商統一編號
@@ -63,12 +36,8 @@ export class TLS13060Component {
     ownerCashCollection: [], // 是否為業主收現
     whetherOptions: [], // 通用選項
   });
-  // 表格数据
-  data: any[] = [
-
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
+  data: any[] = [];
+  columns: Column[] = [
     { field: 'updateTime', header: '更新時間', visible: true },
     { field: 'locationNumber', header: '位置編號', visible: true },
     { field: 'vendorName', header: '廠商名稱', visible: true },
@@ -104,10 +73,6 @@ export class TLS13060Component {
   paymentOptions: any[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private LocationCodeService: LocationCodeService,
     private operationStatusService: OperationStatusService,
     private businessTypeCodeService: BusinessTypeCodeService,
@@ -116,10 +81,12 @@ export class TLS13060Component {
     private floorService: FloorService,
     private commissionTypeService: CommissionTypeService,
     private paymentMethodService: PaymentMethod2Service
-  ) { }
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS13060', '/TLS/TLS13060CRU', this.queryForm, (form) => this.onSubmit(form));
     this.LocationCodeService.getSystemTypes().subscribe((data) => {
       this.LocationCodeOptions = data;
     });
@@ -146,77 +113,7 @@ export class TLS13060Component {
     });
   }
 
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // 提交逻辑
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
   }
 }
