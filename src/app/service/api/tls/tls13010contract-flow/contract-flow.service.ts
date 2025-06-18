@@ -532,4 +532,32 @@ export class ContractFlowService {
     const totalSteps = Object.keys(WorkflowStep).length / 2 - 1; // 扣除 QUERY
     return Math.round((currentStatus.completedSteps.length / totalSteps) * 100);
   }
+
+  /**
+   * 取得第2步資料（代扣款）
+   */
+  getStep2Data(): any {
+    return this.contractData.step2;
+  }
+
+  /**
+   * 取得第3步資料（抽成設定）
+   */
+  getStep3Data(): any {
+    return this.contractData.step3;
+  }
+
+  /**
+   * 取得第4步資料（條件設定） - 新增別名方法
+   */
+  getStep4Data(): any {
+    return this.contractData.step4;
+  }
+
+  /**
+   * 清空所有資料 - 新增別名方法給組件使用
+   */
+  clearAllData(): void {
+    this.clearTempData();
+  }
 }

@@ -238,3 +238,47 @@
     </div>
   </div>
 </div>
+
+<!-- 🎯 確認對話框 -->
+<p-dialog
+  [(visible)]="showConfirmDialog"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="p-fluid"
+  header="最終確認"
+  [style]="{ width: '450px' }"
+>
+  <div class="flex align-items-center justify-content-center mb-4">
+    <i class="pi pi-exclamation-triangle text-4xl text-orange-500 mr-3"></i>
+    <span class="text-lg">確定要提交契約資料嗎？</span>
+  </div>
+
+  <div class="text-sm text-gray-600 mb-4">
+    <p class="mb-2">提交後將會：</p>
+    <ul class="list-disc pl-4">
+      <li>儲存所有契約設定資料</li>
+      <li>完成契約建立流程</li>
+      <li>無法再次修改此版本資料</li>
+    </ul>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end gap-2">
+      <p-button
+        label="取消"
+        icon="pi pi-times"
+        [text]="true"
+        severity="secondary"
+        (click)="onConfirmDialogResult(false)"
+      ></p-button>
+      <p-button
+        label="確定提交"
+        icon="pi pi-check"
+        severity="success"
+        (click)="onConfirmDialogResult(true)"
+      ></p-button>
+    </div>
+  </ng-template>
+</p-dialog>
