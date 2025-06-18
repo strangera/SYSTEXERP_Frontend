@@ -36,7 +36,11 @@ export class ReportTableGroupComponent implements OnInit {
 
   ngOnInit(): void {
     this.splitData();
-    this.selectedColumns = [...this.columns]; // 預設全選
+
+    this.selectedColumns = [
+      { header: '序號', field: '__index' },  // 虛擬欄位
+      ...this.columns,
+    ];
   }
 
   updateGroupedData(): void {
@@ -77,10 +81,15 @@ export class ReportTableGroupComponent implements OnInit {
   showColumnDialog = false;
 
   exportPDF(orientation: 'p' | 'l' = 'p'): void {
+    const columnCount = this.selectedColumns.length;
+    const columnWidth = 100; // 每欄預留寬度（可調整）
+    const tableWidth = columnCount * columnWidth;
+    const pageHeight = 842; // 預設 A4 高度為 842pt（11.7 吋）
+
     const doc = new jsPDF({
       orientation,
       unit: 'pt',
-      format: 'a4'
+      format: [tableWidth + 80, pageHeight], // ✅ 寬度根據欄位動態設定
     });
 
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -89,14 +98,12 @@ export class ReportTableGroupComponent implements OnInit {
 
     const safeText = (text: any) => String(text ?? '');
 
-    // 標題
-    doc.setFont('NotoSansTC'); // ✅ 使用正確字型註冊名
+    doc.setFont('NotoSansTC');
     doc.setFontSize(14);
     doc.text(safeText(this.reportTitle), pageWidth / 2, currentY, { align: 'center' });
 
     currentY += 20;
 
-    // 日期資訊
     doc.setFontSize(10);
     doc.text(`資料區間: ${this.dateStart} ~ ${this.dateEnd}`, marginLeft, currentY);
     doc.text(`列印時間: ${this.printedAt}`, pageWidth - marginLeft, currentY, { align: 'right' });
@@ -105,9 +112,12 @@ export class ReportTableGroupComponent implements OnInit {
 
     for (let i = 0; i < this.groupedData.length; i++) {
       const dataTable = this.groupedData[i];
-      const body = dataTable.map(row =>
+      const body = dataTable.map((row, rowIndex) =>
         this.selectedColumns.map(col => {
           try {
+            if (col.field === '__index') {
+              return String(this.getRowIndex(i, rowIndex));  // 實際編號
+            }
             const value = col.format ? col.format(row[col.field]) : row[col.field];
             return String(value ?? '');
           } catch {
@@ -117,31 +127,79 @@ export class ReportTableGroupComponent implements OnInit {
       );
 
       const headers = this.selectedColumns.map(col => col.header);
-
+      // 計算總計列（只給最後一頁 foot 用）
+      let foot: string[][] = [];
+      if (i === this.groupedData.length - 1) {
+        const totalRow = this.selectedColumns.map(col => {
+          if (col.field === '__index') {
+            return '總計'; // ✅ 只放在序號欄那格
+          } else if (this.subtotalFields.includes(col.field)) {
+            const sum = this._data.reduce((acc, row) => acc + (parseFloat(row[col.field]) || 0), 0);
+            return sum.toLocaleString();
+          } else {
+            return '';
+          }
+        });
+        foot = [totalRow];
+      }
+      const totalRow = this.selectedColumns.map(col => {
+        if (col.field === '__index') {
+          return '總計'; // 固定塞入
+        } else if (this.subtotalFields.includes(col.field)) {
+          const sum = this._data.reduce((acc, row) => acc + (parseFloat(row[col.field]) || 0), 0);
+          return sum.toLocaleString();
+        } else {
+          return '';
+        }
+      });
+      const columnStyles: { [key: string]: any } = {};
+      this.selectedColumns.forEach((col, index) => {
+        if (col.style === 'text-right') {
+          columnStyles[index] = { halign: 'right' };
+        } else if (col.style === 'text-center') {
+          columnStyles[index] = { halign: 'center' };
+        } else {
+          columnStyles[index] = { halign: 'left' }; // 預設靠左
+        }
+      });
       autoTable(doc, {
         startY: currentY,
         head: [headers],
         body,
+        foot, // ✅ 總計列放進 foot（只有最後一頁有）
         margin: { left: marginLeft, right: marginLeft },
         styles: {
           font: 'NotoSansTC',
-          fontStyle: 'normal', // ✅ 建議加
+          fontStyle: 'normal',
           fontSize: 9,
+          lineWidth: 0.1,     // ✅ 加框線
+          lineColor: [0, 0, 0] // ✅ 黑色線條 
         },
+        columnStyles, // ✅ 套用你的動態對齊設定
         headStyles: {
           font: 'NotoSansTC',
-          fontStyle: 'normal', // ✅ 補這一行才能讓表頭套字型
+          fontStyle: 'normal',
           fontSize: 10,
-          fillColor: [220, 220, 220],
+          fillColor: [212, 222, 254],
+          textColor: [0, 0, 0],
         },
+        footStyles: {
+          font: 'NotoSansTC',
+          fontStyle: 'normal',
+          fontSize: 10,
+          fillColor: [250, 250, 210],
+          textColor: [0, 0, 0],
+          halign: 'right', // ✅ 總計列所有儲存格靠右
+        },
+
       });
 
-
       if (i < this.groupedData.length - 1) {
-        doc.addPage();
+        doc.addPage([tableWidth + 80, pageHeight]);
         currentY = 40;
       }
     }
+
 
     doc.save(`報表_${new Date().toISOString()}.pdf`);
     this.showPdfDialog = false;
