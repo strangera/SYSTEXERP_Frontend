@@ -103,7 +103,7 @@ interface LevelDetail {
 // 🔧 前端資料模型
 interface ConditionDataItem {
   id?: number | string;
-  ischeck: boolean;
+  // ischeck: boolean;
   A: string;
   B: string;
   C: string;
@@ -247,7 +247,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
   // 各類型條件設定的欄位定義
   graduatedColumns: ColumnDef[] = [
-    { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
+    // { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
     { field: 'A', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
     { field: 'B', header: '帳務起', type: 'date', editable: true, autoWidth: true },
     { field: 'C', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
@@ -257,7 +257,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   ];
 
   baseTierColumns: ColumnDef[] = [
-    { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
+    // { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
     { field: 'A', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
     { field: 'B', header: '帳務起', type: 'date', editable: true, autoWidth: true },
     { field: 'C', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
@@ -268,7 +268,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   ];
 
   baseCommissionColumns: ColumnDef[] = [
-    { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
+    // { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
     { field: 'A', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
     { field: 'B', header: '帳務起', type: 'date', editable: true, autoWidth: true },
     { field: 'C', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
@@ -277,7 +277,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   ];
 
   fixedRentColumns: ColumnDef[] = [
-    { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
+    // { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
     { field: 'A', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
     { field: 'B', header: '帳務起', type: 'date', editable: true, autoWidth: true },
     { field: 'C', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
@@ -285,7 +285,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   ];
 
   baseRentHigherColumns: ColumnDef[] = [
-    { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
+    // { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
     { field: 'A', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
     { field: 'B', header: '帳務起', type: 'date', editable: true, autoWidth: true },
     { field: 'C', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
@@ -669,7 +669,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   private createEmptyItem(): ConditionDataItem {
     return {
       id: Date.now() + Math.random(),
-      ischeck: false,
+      // ischeck: false,
       A: '', B: '', C: '', D: '', E: '', F: '', G: ''
     };
   }
@@ -711,7 +711,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     if (data.RentDetails && data.RentDetails.length > 0) {
       this.fixedRentItems = data.RentDetails.map((item, index) => ({
         id: item.id,
-        ischeck: true,
+        // ischeck: true,
         A: item.tlt_id || '',
         B: item.cag_bdate || '',
         C: item.cag_edate || '',
@@ -732,7 +732,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
         const chargedItem = data.ChargedDetails?.[index] || {} as ChargedDetail;
         return {
           id: rentItem.id,
-          ischeck: true,
+          // ischeck: true,
           A: rentItem.tlt_id || chargedItem.tlt_id || '',
           B: rentItem.cag_bdate || chargedItem.tlt_bdate || '',
           C: rentItem.cag_edate || chargedItem.tlt_edate || '',
@@ -758,7 +758,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     if (data.LimitDetails && data.LimitDetails.length > 0) {
       this.baseCommissionItems = data.LimitDetails.map((item, index) => ({
         id: item.id,
-        ischeck: true,
+        // ischeck: true,
         A: item.tlt_id || '',
         B: item.cag_bdate || '',
         C: item.cag_edate || '',
@@ -777,7 +777,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     if (data.LevelDetails && data.LevelDetails.length > 0) {
       this.graduatedItems = data.LevelDetails.map((item, index) => ({
         id: item.id,
-        ischeck: true,
+        // ischeck: true,
         A: item.seq_no?.toString() || '',
         B: item.cag_bdate || '',
         C: item.cag_edate || '',
@@ -798,7 +798,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       // 結合包底和階梯資料
       this.baseTierItems = data.LevelDetails.map((levelItem, index) => ({
         id: levelItem.id,
-        ischeck: true,
+        // ischeck: true,
         A: levelItem.seq_no?.toString() || '',
         B: levelItem.cag_bdate || '',
         C: levelItem.cag_edate || '',

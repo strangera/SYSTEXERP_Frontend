@@ -394,6 +394,7 @@
               [dataKey]="dataKey"
               selectionMode="multiple"
               (selectionChange)="onDetailSelectionChange(rowData, $event)"
+              styleClass="detail-table"
             >
               <ng-template pTemplate="header">
                 <tr>
@@ -411,6 +412,28 @@
                   <th *ngIf="!readonly" style="width: 8rem; text-align: center">
                     操作
                   </th>
+                </tr>
+              </ng-template>
+
+              <!-- 空資料訊息模板 -->
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td
+                    [attr.colspan]="getDetailColumnsForTab(rowData).length + 3"
+                    class="empty-message-cell"
+                  >
+                    <div class="empty-message-content">
+                      <i
+                        class="pi pi-info-circle"
+                        style="
+                          font-size: 1.5rem;
+                          color: #b0b0b0;
+                          margin-right: 0.5rem;
+                        "
+                      ></i>
+                      查無詳細資料
+                    </div>
+                  </td>
                 </tr>
               </ng-template>
 
@@ -604,18 +627,6 @@
                         "
                       ></button>
                     </div>
-                  </td>
-                </tr>
-              </ng-template>
-
-              <!-- 無詳細資料時顯示 -->
-              <ng-template pTemplate="emptymessage">
-                <tr>
-                  <td
-                    [attr.colspan]="detailColumns.length + 3"
-                    style="text-align: center"
-                  >
-                    查無詳細資料
                   </td>
                 </tr>
               </ng-template>
