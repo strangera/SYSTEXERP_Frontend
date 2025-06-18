@@ -1,5 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Column } from '../table/table.model';
+import { Location } from '@angular/common';
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -23,6 +24,7 @@ export class ReportTableGroupComponent implements OnInit {
   @Input() rowsPerTable = 25;
   @Input() reportTitle: string = '報表';
 
+
   private _data: any[] = [];
   @Input() set data(value: any[]) {
     this._data = value;
@@ -33,7 +35,7 @@ export class ReportTableGroupComponent implements OnInit {
   }
 
   groupedData: any[][] = [];
-
+  constructor(private location: Location) { }
   ngOnInit(): void {
     this.splitData();
 
@@ -70,7 +72,10 @@ export class ReportTableGroupComponent implements OnInit {
   }
 
   printPage(): void {
+    const originalTitle = document.title;
+    document.title = this.reportTitle || '報表';
     window.print();
+    document.title = originalTitle;
   }
   selectedColumns: Column[] = [];
 
@@ -230,6 +235,8 @@ export class ReportTableGroupComponent implements OnInit {
       xlsx.writeFile(wb, `報表_${new Date().toISOString()}.xlsx`);
     });
   }
-
+  goBack() {
+    this.location.back();
+  }
 
 }
