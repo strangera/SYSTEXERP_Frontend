@@ -1,0 +1,46 @@
+:host ::ng-deep {
+  .p-datatable-tbody > tr.p-highlight {
+    background-color: #c5e4fc;
+    color: #000000;
+  }
+  .p-selectable-row:not(.p-disabled-row):hover {
+    background-color: #d5edff !important;
+    cursor: pointer;
+  }
+  .p-datatable .p-datatable-thead > tr > th {
+    background: var(--table-header-bg);
+  }
+  .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+    background: #eef2ff;
+  }
+  .p-datatable-wrapper {
+    border: 1px solid #e9ecef;
+  }
+  .report-table-wrapper {
+    page-break-after: always;
+  }
+}
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  #print-section,
+  #print-section * {
+    visibility: visible !important;
+  }
+
+  #print-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  /* 隱藏按鈕區 */
+  .p-button,
+  label[for="rowsPerTable"],
+  #rowsPerTable {
+    display: none !important;
+  }
+}

@@ -76,6 +76,8 @@ import { InputGroupComponent } from './componentkit/input-group/input-group.comp
 import { InputTextRangeComponent } from './componentkit/input-text-range/input-text-range.component';
 import { ImgUploadComponent } from './componentkit/img-upload/img-upload.component';
 import { FileUploadComponent } from './componentkit/file-upload/file-upload.component';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { ReportTableGroupComponent } from './componentkit/report-table-group/report-table-group.component';
 
 @NgModule({
   declarations: [
@@ -109,7 +111,8 @@ import { FileUploadComponent } from './componentkit/file-upload/file-upload.comp
     MultiLocationFilterComponent,
     AutoCompleteComponent,
     QueryYearMonthComponent,
-    ImgUploadComponent
+    ImgUploadComponent,
+    ReportTableGroupComponent
   ],
   imports: [
     ReactiveFormsModule,
@@ -156,7 +159,8 @@ import { FileUploadComponent } from './componentkit/file-upload/file-upload.comp
     FileUploadModule,
     ExpandableEditTableModule,
     CarouselModule,
-    ImageModule
+    ImageModule,
+    ProgressBarModule
   ],
   exports: [
     // Angular
@@ -224,7 +228,9 @@ import { FileUploadComponent } from './componentkit/file-upload/file-upload.comp
     MultiLocationFilterComponent,
     AutoCompleteComponent,
     QueryYearMonthComponent,
-    ImgUploadComponent
+    ImgUploadComponent,
+    ProgressBarModule,
+    ReportTableGroupComponent
   ],
 })
 export class SharedModule { }

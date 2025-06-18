@@ -395,6 +395,7 @@ import { NotfoundComponent } from '../base/notfound/notfound.component';
 import { Tls13010Next3Component } from './tls13010-next3/tls13010-next3.component';
 import { TLS26080Component } from './tls26080/tls26080.component';
 import { TLS26080CRUComponent } from './tls26080-cru/tls26080-cru.component';
+import { TLS23010CRUComponent } from './tls23010-cru/tls23010-cru.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '404', pathMatch: 'full' },
@@ -546,6 +547,9 @@ const routes: Routes = [
   { path: 'TLS21050CRU', component: TLS21050CRUComponent }, // 專櫃營運前參數設定作業 CRU
   { path: 'TLS22010CRU', component: TLS22010CRUComponent }, // 收銀機對帳查詢作業 CRU
   { path: 'TLS22020CRU', component: TLS22020CRUComponent }, // 系統監控報表 CRU
+  { path: 'TLS23010CRU', component: TLS23010CRUComponent }, // 型態別報表 CRU
+
+
   { path: 'TLS24010CRU', component: TLS24010CRUComponent }, // 交易補登作業 CRU
   { path: 'TLS24020CRU', component: TLS24020CRUComponent }, // 專櫃編號修正作業 CRU
   { path: 'TLS24030CRU', component: TLS24030CRUComponent }, // 折扣別資料修正作業 CRU

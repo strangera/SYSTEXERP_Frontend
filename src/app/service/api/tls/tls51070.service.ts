@@ -65,4 +65,10 @@ export class Tls51070Service {
   queryTLTTALENT_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_DropDownList`, body);
   }
+
+  // 查詢 廠商(POS2013) 設定檔
+  queryPOS2013_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryPOS2013_DropDownList`, body);
+  }
+
 }

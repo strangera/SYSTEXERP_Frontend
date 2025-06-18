@@ -1,0 +1,168 @@
+<p-dialog header="選擇匯出方向" [(visible)]="showPdfDialog" [modal]="true">
+  <p>請選擇匯出 PDF 的方向：</p>
+  <div class="mt-3 flex justify-end gap-2">
+    <button
+      pButton
+      label="直印 (Portrait)"
+      (click)="exportPDF('p')"
+      class="p-button-sm"
+    ></button>
+    <button
+      pButton
+      label="橫印 (Landscape)"
+      (click)="exportPDF('l')"
+      class="p-button-sm p-button-secondary"
+    ></button>
+  </div>
+</p-dialog>
+
+<p-dialog
+  header="選擇顯示欄位"
+  [(visible)]="showColumnDialog"
+  [modal]="true"
+  [style]="{ width: '40rem', height: '60vh' }"
+  [contentStyle]="{ height: '100%', overflow: 'auto' }"
+>
+  <p-multiSelect
+    [options]="columns"
+    [(ngModel)]="selectedColumns"
+    optionLabel="header"
+    display="chip"
+    class="w-full"
+    placeholder="選擇要顯示的欄位"
+  ></p-multiSelect>
+  <div class="mt-3 text-right">
+    <button
+      pButton
+      type="button"
+      label="確定"
+      (click)="showColumnDialog = false"
+      class="p-button-sm"
+    ></button>
+  </div>
+</p-dialog>
+
+<div class="flex flex-wrap justify-between items-center gap-3 mb-3">
+  <div class="flex items-center gap-2">
+    <label for="rowsPerTable">每個表格列數：</label>
+    <input
+      type="number"
+      id="rowsPerTable"
+      [(ngModel)]="rowsPerTable"
+      (ngModelChange)="updateGroupedData()"
+      min="1"
+      class="p-inputtext w-6rem"
+    />
+  </div>
+
+  <div class="space-x-2">
+    <button
+      pButton
+      type="button"
+      label="顯示欄位"
+      icon="pi pi-eye"
+      (click)="showColumnDialog = true"
+      class="p-button-sm p-button-info"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="匯出 PDF"
+      icon="pi pi-file-pdf"
+      (click)="showPdfDialog = true"
+      class="p-button-sm p-button-danger"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="匯出 Excel"
+      icon="pi pi-file-excel"
+      (click)="exportExcel()"
+      class="p-button-sm p-button-success"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="列印"
+      icon="pi pi-print"
+      (click)="printPage()"
+      class="p-button-sm p-button-secondary"
+    ></button>
+  </div>
+</div>
+
+<div id="print-section">
+  <div
+    *ngFor="let group of groupedData; let i = index"
+    class="report-table-wrapper mb-5"
+  >
+    <div class="text-sm text-gray-600 mb-2 flex flex-wrap items-center gap-4">
+      <div>共 {{ totalCount }} 筆</div>
+      <div>第 {{ i + 1 }} 頁 / 共 {{ groupedData.length }} 頁</div>
+      <div>銷售日期：{{ dateStart }} 至 {{ dateEnd }}</div>
+      <div>列印日期：{{ printedAt }}</div>
+    </div>
+
+    <p-table
+      [value]="group"
+      [columns]="selectedColumns"
+      [resizableColumns]="true"
+      [paginator]="false"
+      [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'"
+    >
+      <ng-template pTemplate="header" let-columns>
+        <tr>
+          <th class="text-center">序號</th>
+          <th *ngFor="let col of selectedColumns" class="text-center">
+            {{ col.header }}
+          </th>
+        </tr>
+      </ng-template>
+
+      <ng-template
+        pTemplate="body"
+        let-rowData
+        let-columns="columns"
+        let-rowIndex="rowIndex"
+      >
+        <tr>
+          <td class="text-center">{{ getRowIndex(i, rowIndex) }}</td>
+          <td
+            *ngFor="let col of selectedColumns"
+            class="text-center"
+            [ngClass]="col.style"
+          >
+            <ng-container *ngIf="col.format; else raw">
+              {{ col.format(rowData[col.field]) }}
+            </ng-container>
+            <ng-template #raw>
+              {{ rowData[col.field] }}
+            </ng-template>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="footer" let-columns>
+        <tr
+          *ngIf="!showTotalOnly || i === groupedData.length - 1"
+          class="bg-gray-100 font-semibold"
+        >
+          <td class="text-center">{{ showTotalOnly ? "總計" : "小計" }}</td>
+          <td
+            *ngFor="let col of selectedColumns"
+            class="text-center"
+            [ngClass]="col.style"
+          >
+            <ng-container *ngIf="subtotalFields.includes(col.field)">
+              {{
+                showTotalOnly
+                  ? getGrandTotal(col.field)
+                  : getSubtotal(group, col.field)
+              }}
+            </ng-container>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

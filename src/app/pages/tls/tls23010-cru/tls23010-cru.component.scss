@@ -1,0 +1,9 @@
+::ng-deep .custom-progress-bar .p-progressbar-value {
+  transition: width 0.3s ease-in-out;
+  height: 20px;
+}
+::ng-deep .custom-progress-bar {
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  height: 20px;
+}

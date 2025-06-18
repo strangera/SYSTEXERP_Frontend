@@ -34,33 +34,42 @@ const now = new Date();
   styleUrls: ['./tls23010.component.scss'],
 })
 export class TLS23010Component extends BasicQueryPageComponent<any> {
+
+  progressValue = 0;
+
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [null, [Validators.required]],
-    TXN_DateEnd: [null, [Validators.required]],   // 銷售日期迄
-    ECR_No: [''],                 // 收銀機代號
-    TXN_No_Start: [null],        // 交易序號(起)
-    TXN_No_End: [null],          // 交易序號(迄)
-    TLT_No: [''],                // 專櫃編號
-    TXN_GUIBegNo: [''],          // 發票起始號碼
-    TXN_GUIEndNo: [''],          // 發票結束號碼
-    TXN_Status: [''],            // 狀態旗標
-    USR_No: [''],                // 收銀員編號
-    TXN_PreOrderNo: [''],        // 預售/訂金編號
-    TXN_PkngUID: [''],           // 停車卡號
-    TXN_MemCard: [''],           // 會員卡號
-    TXN_Uniform: [''],           // 統一編號
-    TXN_GUILoveCode: [''],       // 愛心碼
-    TXN_GUI_CarrType: [''],      // 載具種類
-    TXN_GUI_CarrId: [''],        // 載具號碼
-    rece_yn: [''],               // 是否開立業主發票 (s=是/否)
-    cash_yn: [''],               // 是否為業主收現 (s=是/否)
-    tlt_building: [''],          // 館別
-    tlt_floor: [''],             // 樓層
-    org_id: [''],                // 組織代碼
-    TXN_FlagStatus: [''],       // 狀態旗標
-    TXN_Subtype: [''],           // 交易附屬型態
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }])
+    TXN_DateStart: [new Date('2020-01-01'), [Validators.required]],
+    TXN_DateEnd: [new Date(), [Validators.required]],
+
+    ECR_No: [[]],               // ✅ 收銀機代號 → 陣列
+    TXN_No_Start: [null],       // 交易序號(起)
+    TXN_No_End: [null],         // 交易序號(迄)
+    TLT_No: [[]],               // ✅ 專櫃編號 → 陣列
+    TXN_GUIBegNo: [''],         // 發票起始號碼
+    TXN_GUIEndNo: [''],         // 發票結束號碼
+    TXN_Status: [[]],           // ✅ 狀態 → 陣列
+    TXN_FlagStatus: [[]],       // ✅ 狀態旗標 → 陣列
+
+    USR_No: [''],               // 收銀員編號
+    TXN_PreOrderNo: [''],       // 預售/訂金編號
+    TXN_PkngUID: [''],          // 停車卡號
+    TXN_MemCard: [''],          // 會員卡號
+    TXN_Uniform: [''],          // 統一編號
+    TXN_GUILoveCode: [''],      // 愛心碼
+    TXN_GUI_CarrType: [[]],     // ✅ 載具種類 → 陣列
+    TXN_GUI_CarrId: [''],       // 載具號碼
+
+    rece_yn: [''],              // 是否開立業主發票 (s/空)
+    cash_yn: [''],              // 是否為業主收現 (s/空)
+    tlt_building: [''],         // 館別
+    tlt_floor: [[]],            // ✅ 樓層 → 陣列
+    org_id: [[]],               // ✅ 組織代碼 → 陣列
+
+    TXN_Subtype: [''],          // 交易附屬型態
+
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]) // 包含 PageSize, PageIndex, Offset, OrderBy, SortBy
   });
+
 
   data: any[] = [];
   totalRecords = 0;
@@ -163,7 +172,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
       format: (val: number) => val?.toLocaleString('en-US') || '0'
     },
     { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
-    { field: ' TXN_TIME', header: '起始時間', visible: true }, { field: ' TXN_TIME', header: '結束時間', visible: true },
+    { field: 'TXN_Time', header: '起始時間', visible: true }, { field: 'TXN_Time', header: '結束時間', visible: true },
 
     { field: 'USR_No', header: '收銀員', visible: true, style: 'text-left' },
     { field: 'TXN_PreOrderNo', header: '預售/訂金單號', visible: true },
@@ -173,17 +182,24 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_PkngUID', header: '停車車牌', visible: true },
     { field: 'TXN_MemID', header: '會員卡號', visible: true },
     {
-      field: 'TXN_TotDisc', header: '折扣總額', visible: true,
+      field: 'TXN_TotDisc', header: '折扣/讓金額', visible: true,
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0'
     },
+    {
+      field: 'TXN_YN',
+      header: '銷貨清單列印狀態',
+      visible: true,
+      format: () => '是'
+    },
+
     {
       field: 'TXN_DonateType',
       header: '捐贈狀態',
       visible: true,
       format: (val: any) => this.getLabelFromOptions(val, this.whetherOptions)
     },
-    { field: 'TXN_GUILoveCode', header: '愛心碼', visible: true },
+    { field: 'TXN_GUILoveCode', header: '捐贈社福團體代碼', visible: true },
     { field: 'TXN_GUIRemark', header: '防偽隨機碼', visible: true },
     {
       field: 'TXN_GUI_CarrType',
@@ -255,6 +271,11 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS23010', '', this.queryForm, (f) => this.onSubmit(f));
+    const savedQuery = localStorage.getItem('TLS23010_queryForm');
+    if (savedQuery) {
+      const parsedQuery = JSON.parse(savedQuery);
+      this.queryForm.patchValue(parsedQuery);
+    }
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
 
     this.statusFlagService.getStatusFlags().subscribe(data => this.statusFlagOptions = data);
@@ -294,6 +315,12 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
   }
   onSubmit(form: FormGroup): void {
     if (this.loading) return;
+    // ⛔️ 必填欄位未填時跳出提示
+    if (form.invalid) {
+      this.messageService.warnBubble('請完整填寫所有必填欄位');
+      form.markAllAsTouched();  // 標記所有欄位為 touched，讓驗證樣式出現
+      return;
+    }
 
     this.handleSubmit(form, () => {
       const formValue = { ...form.value };
@@ -337,7 +364,9 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
           this.messageService.unblockUi();
         }
       });
+      localStorage.setItem('TLS23010_queryForm', JSON.stringify(this.queryForm.value)); // 儲存條件
     });
+
   }
 
 
@@ -423,5 +452,37 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
+  goToReportMode() {
+    if (this.queryForm.invalid) {
+      this.messageService.warnBubble('請先完成查詢條件');
+      this.queryForm.markAllAsTouched();
+      return;
+    }
+
+    // ✅ 使用 Record<string, any> 解決 TS7053
+    const rawFormValue: Record<string, any> = { ...this.queryForm.value };
+
+    for (const key in rawFormValue) {
+      if (rawFormValue[key] === '') {
+        rawFormValue[key] = null;
+      }
+    }
+
+    const queryFormValue = {
+      ...rawFormValue,
+      pageSize: 1000
+    };
+
+    this.router.navigate(['/TLS/TLS23010CRU'], {
+      state: {
+        queryFormValue,
+        pageSize: 1000
+      }
+    });
+  }
+
+
+
+
 
 }
