@@ -21,6 +21,7 @@ interface ActivityData {
 interface CounterData {
   id: number;
   counterCode: string;
+  counterName: string; // 確保包含 counterName
   commissionTypeCode: string;
   commissionTypeName: string;
   presaleStartCalculation: string;
@@ -36,6 +37,7 @@ interface CounterData {
 interface DeductionItem {
   id: number;
   counterCode: string;
+  counterName: string;
   itemCode: string;
   itemName: string;
   amountOrRate: number;
@@ -85,6 +87,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
   counterData: CounterData[] = [];
   counterColumns: Column[] = [
     { field: 'counterCode', header: '專櫃編號', visible: true },
+    { field: 'counterName', header: '專櫃名稱', visible: true },
     { field: 'commissionTypeCode', header: '抽成類別代碼', visible: true },
     { field: 'commissionTypeName', header: '抽成類別名稱', visible: true },
     { field: 'presaleStartCalculation', header: '預售起日計算', visible: true },
@@ -108,11 +111,12 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
     }
   ];
 
-  // 假資料
+  // 假資料 - 修復 mockCounterData 加入 counterName
   mockCounterData: CounterData[] = [
     {
       id: 1,
       counterCode: '00231',
+      counterName: '女裝專櫃A', // 新增 counterName
       commissionTypeCode: '1',
       commissionTypeName: '女裝專櫃',
       presaleStartCalculation: 'Y',
@@ -125,6 +129,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
     {
       id: 2,
       counterCode: '00232',
+      counterName: '男裝專櫃B', // 新增 counterName
       commissionTypeCode: '1',
       commissionTypeName: '男裝專櫃',
       presaleStartCalculation: 'N',
@@ -137,6 +142,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
     {
       id: 3,
       counterCode: '00233',
+      counterName: '化妝品專櫃C', // 新增 counterName
       commissionTypeCode: '3',
       commissionTypeName: '化妝品專櫃',
       presaleStartCalculation: 'Y',
@@ -148,17 +154,27 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
     }
   ];
 
-  // 所有扣款項目的平面資料
+  // 所有扣款項目的平面資料 - 修復 counterName
   allDeductionItems: DeductionItem[] = [
-    { id: 1, counterCode: '00031', itemCode: 'D16', itemName: '滿千送百(銷售)', amountOrRate: 0.5, isRate: true, displayAmount: '0.5%' },
-    { id: 2, counterCode: '00031', itemCode: 'D17', itemName: '滿千送百兌回', amountOrRate: 0.3, isRate: true, displayAmount: '0.3%' },
+    { id: 1, counterCode: '00031', counterName: '測試專櫃', itemCode: 'D16', itemName: '滿千送百(銷售)', amountOrRate: 0.5, isRate: true, displayAmount: '0.5%' },
+    { id: 2, counterCode: '00031', counterName: '測試專櫃', itemCode: 'D17', itemName: '滿千送百兌回', amountOrRate: 0.3, isRate: true, displayAmount: '0.3%' },
   ];
 
+  // 修復 mockDeductionData 加入 counterName
   mockDeductionData: { [counterCode: string]: DeductionItem[] } = {
     '00031': [
-      { id: 1, counterCode: '00031', itemCode: 'D16', itemName: '滿千送百(銷售)', amountOrRate: 0.5, isRate: true, displayAmount: '0.5%' },
-      { id: 2, counterCode: '00031', itemCode: 'D17', itemName: '滿千送百兌回', amountOrRate: 0.3, isRate: true, displayAmount: '0.3%' }
+      { id: 1, counterCode: '00031', counterName: '測試專櫃', itemCode: 'D16', itemName: '滿千送百(銷售)', amountOrRate: 0.5, isRate: true, displayAmount: '0.5%' },
+      { id: 2, counterCode: '00031', counterName: '測試專櫃', itemCode: 'D17', itemName: '滿千送百兌回', amountOrRate: 0.3, isRate: true, displayAmount: '0.3%' }
     ],
+    '00231': [
+      { id: 3, counterCode: '00231', counterName: '女裝專櫃A', itemCode: 'D18', itemName: '女裝活動扣款', amountOrRate: 1000, isRate: false, displayAmount: '1000元' }
+    ],
+    '00232': [
+      { id: 4, counterCode: '00232', counterName: '男裝專櫃B', itemCode: 'D19', itemName: '男裝活動扣款', amountOrRate: 0.8, isRate: true, displayAmount: '0.8%' }
+    ],
+    '00233': [
+      { id: 5, counterCode: '00233', counterName: '化妝品專櫃C', itemCode: 'D20', itemName: '化妝品活動扣款', amountOrRate: 1500, isRate: false, displayAmount: '1500元' }
+    ]
   };
 
   constructor(
@@ -190,19 +206,20 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
     this.deductionData = this.mockDeductionData[counterCode] || [];
   }
 
-  // 新增專櫃
+  // 新增專櫃 - 修復加入 counterName
   onAddCounter(): void {
     const newCounter: CounterData = {
       id: this.counterData.length + 1,
       counterCode: '',
+      counterName: '', // 新增 counterName 初始值
       commissionTypeCode: '',
       commissionTypeName: '',
       presaleStartCalculation: '',
       contractStartDate: '',
       contractEndDate: '',
+      operationStartDate: '',
       operationEndDate: '',
-      deductionItems: '',
-      operationStartDate: ''
+      deductionItems: ''
     };
     this.counterData = [...this.counterData, newCounter];
   }
@@ -216,7 +233,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
     }
   }
 
-  // 新增扣款項目
+  // 新增扣款項目 - 修復加入 counterName
   onAddDeductionItem(): void {
     if (!this.selectedCounter) {
       this.messageService.warnBubble('請先選擇專櫃');
@@ -226,6 +243,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
     const newItem: DeductionItem = {
       id: Date.now(), // 使用時間戳作為暫時 ID
       counterCode: this.selectedCounter.counterCode,
+      counterName: this.selectedCounter.counterName, // 加入 counterName
       itemCode: '',
       itemName: '',
       amountOrRate: 0,
