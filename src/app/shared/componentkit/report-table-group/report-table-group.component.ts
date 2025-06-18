@@ -76,50 +76,83 @@ export class ReportTableGroupComponent implements OnInit {
   showPdfDialog = false;
   showColumnDialog = false;
 
- exportPDF(orientation: 'p' | 'l' = 'p'): void {
-  const doc = new jsPDF(orientation, 'pt', 'a4');
-  doc.setFont('NotoSansTC');
-  doc.setFontSize(12);
-  doc.text(this.reportTitle || '報表', 40, 40);
+  exportPDF(orientation: 'p' | 'l' = 'p'): void {
+    const doc = new jsPDF({
+      orientation,
+      unit: 'pt',
+      format: 'a4'
+    });
 
-  const headers = this.selectedColumns.map(col => col.header);
-  const body = this._data.map(row =>
-    this.selectedColumns.map(col =>
-      col.format ? col.format(row[col.field]) : row[col.field])
-  );
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const marginLeft = 40;
+    let currentY = 40;
 
-  // 建立加總列
-  const totalRow = this.selectedColumns.map((col, index) => {
-    if (index === 0) return '總計';
-    if (this.subtotalFields.includes(col.field)) {
-      const sum = this._data.reduce((acc, row) => acc + (parseFloat(row[col.field]) || 0), 0);
-      return sum.toLocaleString();
+    const safeText = (text: any) => String(text ?? '');
+
+    // 標題
+    doc.setFont('NotoSansTC'); // ✅ 使用正確字型註冊名
+    doc.setFontSize(14);
+    doc.text(safeText(this.reportTitle), pageWidth / 2, currentY, { align: 'center' });
+
+    currentY += 20;
+
+    // 日期資訊
+    doc.setFontSize(10);
+    doc.text(`資料區間: ${this.dateStart} ~ ${this.dateEnd}`, marginLeft, currentY);
+    doc.text(`列印時間: ${this.printedAt}`, pageWidth - marginLeft, currentY, { align: 'right' });
+
+    currentY += 10;
+
+    for (let i = 0; i < this.groupedData.length; i++) {
+      const dataTable = this.groupedData[i];
+      const body = dataTable.map(row =>
+        this.selectedColumns.map(col => {
+          try {
+            const value = col.format ? col.format(row[col.field]) : row[col.field];
+            return String(value ?? '');
+          } catch {
+            return '';
+          }
+        })
+      );
+
+      const headers = this.selectedColumns.map(col => col.header);
+
+      autoTable(doc, {
+        startY: currentY,
+        head: [headers],
+        body,
+        margin: { left: marginLeft, right: marginLeft },
+        styles: {
+          font: 'NotoSansTC',
+          fontStyle: 'normal', // ✅ 建議加
+          fontSize: 9,
+        },
+        headStyles: {
+          font: 'NotoSansTC',
+          fontStyle: 'normal', // ✅ 補這一行才能讓表頭套字型
+          fontSize: 10,
+          fillColor: [220, 220, 220],
+        },
+      });
+
+
+      if (i < this.groupedData.length - 1) {
+        doc.addPage();
+        currentY = 40;
+      }
     }
-    return '';
-  });
 
-  // 將加總列加到最後一筆資料後
-  body.push(totalRow);
+    doc.save(`報表_${new Date().toISOString()}.pdf`);
+    this.showPdfDialog = false;
+  }
 
-  autoTable(doc, {
-    head: [headers],
-    body,
-    startY: 60,
-    styles: {
-      font: 'NotoSansTC',
-      fontSize: 10
-    },
-    headStyles: {
-      font: 'NotoSansTC',
-      fontStyle: 'normal',
-      fillColor: [220, 220, 220],
-      textColor: [0, 0, 0]
-    }
-  });
 
-  doc.save(`報表_${new Date().toISOString()}.pdf`);
-  this.showPdfDialog = false;
-}
+
+
+
+
+
 
 
 

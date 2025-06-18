@@ -199,9 +199,11 @@ export class TLS23010CRUComponent {
         if (this.progressValue < 90) this.progressValue += 10;
       }, 200);
 
+      const pageSize = state?.pageSize ?? 1000;
+
       this.tls23010Service.queryTLS23010({
         ...queryFormValue,
-        pageSize: 1000
+        pageSize
       }).pipe(
         finalize(() => {
           clearInterval(progressTimer);
