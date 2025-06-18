@@ -121,13 +121,15 @@ export class SsoDashboardComponent implements OnInit {
         next: (innerResponse: ApiResponse<any>) => {
           if (innerResponse.Status === '0000') {
             console.log("Inner API 成功:", innerResponse);
-
+            this.loading = true;
             // 使用 concatMap 串聯兩個權限相關的 API 呼叫
             // concatMap 會等待前一個 Observable 完成後再訂閱下一個
             this.authService.getFunRightsInfo().pipe(
               concatMap(() => this.authService.queryAllSystemCode()) // getFunRightsInfo 成功後，接著呼叫 queryAllSystemCode
+              , finalize(() => this.loading = true)
             ).subscribe({
               next: () => {
+                this.loading = true;
                 console.log('所有權限資料載入成功。');
                 this.router.navigate([item.System_Url]); // 兩個 API 都成功後才導航
               },

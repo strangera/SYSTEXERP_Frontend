@@ -1,93 +1,54 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button>
+    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-    >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true">
       <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <p-divider align="left" type="solid">
           <b class="text-red-500 text-2xl">最新完成(可測試使用)</b>
         </p-divider>
         <p-divider align="left" type="solid">
+          <b class="text-primary">上傳圖片(新)</b>
+        </p-divider>
+        <div class="grid p-fluid">
+          <app-img-upload class="col-12" (uploadFiles)="files = $event" [images]="images"
+            [fileLimit]="10 - images.length" (imagesChange)="images = $event"
+            (imagesDeleteChange)="confirmDeleteImages = $event" [disabled]="images.length < 10">
+          </app-img-upload>
+        </div>
+        <p-divider align="left" type="solid">
           <b class="text-primary">日期範圍選擇器(新)</b>
         </p-divider>
         <div class="grid p-fluid">
-          <app-calendar-range-quick
-            class="col-12 md:col-6 lg:col-5"
-            label="年月日(快速碼)"
-            [startControl]="queryForm.controls.dateRangeQuick1"
-            [endControl]="queryForm.controls.dateRangeQuick2"
-            [submitted]="submitted"
-          />
-          <app-calendar-range
-            calendarType="dateTimeRange"
-            class="col-12 md:col-6 lg:col-5"
-            label="年月日時分秒"
-            [startControl]="queryForm.controls.dateTimeRange1"
-            [endControl]="queryForm.controls.dateTimeRange2"
-            [submitted]="submitted"
-          />
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-5" label="年月日(快速碼)"
+            [startControl]="queryForm.controls.dateRangeQuick1" [endControl]="queryForm.controls.dateRangeQuick2"
+            [submitted]="submitted" />
+          <app-calendar-range calendarType="dateTimeRange" class="col-12 md:col-6 lg:col-5" label="年月日時分秒"
+            [startControl]="queryForm.controls.dateTimeRange1" [endControl]="queryForm.controls.dateTimeRange2"
+            [submitted]="submitted" />
         </div>
         <p-divider align="left" type="solid">
           <b class="text-primary">Table單選下拉</b>
         </p-divider>
         <div class="grid p-fluid">
-          <app-dropdown-table
-            class="col-12"
-            [control]="queryForm.controls.dropdownTable"
-            [submitted]="submitted"
-            optionLabel="LOCATION_No"
-            optionValue="LOCATION_No"
-            [suggestions]="suggestions"
-            [fieldsConfig]="fieldsConfig"
-            (inputValueChanged)="onAutoCompleteInputChange($event)"
-            (formValueChanged)="onformValueChanged($event)"
-            [formGroup]="dialogForm"
-            [dialogData]="dialogData"
-            [dialogColumns]="dialogColumns"
-            [loading]="dialogloading"
-          >
-            <app-input-text
-              class="col-12 md:col-6 lg:col-3"
-              label="位置編號"
-              controlName="LOCATION_No"
-              [control]="dialogForm.controls.LOCATION_No"
-            />
-            <app-multi-select
-              class="col-12 md:col-6 lg:col-3"
-              label="館別"
-              controlName="BUILDING_NO"
-              [options]="BUILDING_NO_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dialogForm.controls.BUILDING_NO"
-            />
-            <app-multi-select
-              class="col-12 md:col-6 lg:col-3"
-              label="樓層"
-              controlName="FLOOR_NO"
-              [options]="floorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dialogForm.controls.FLOOR_NO"
-            />
-            <app-multi-select
-              class="col-12 md:col-6 lg:col-3"
-              label="區域"
-              controlName="AREA_NO"
-              [options]="RegionCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dialogForm.controls.AREA_NO"
-            />
+          <app-dropdown-table class="col-12" [control]="queryForm.controls.dropdownTable" [submitted]="submitted"
+            optionLabel="LOCATION_No" optionValue="LOCATION_No" [suggestions]="suggestions"
+            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
+            (formValueChanged)="onformValueChanged($event)" [formGroup]="dialogForm" [dialogData]="dialogData"
+            [dialogColumns]="dialogColumns" [loading]="dialogloading">
+            <app-input-text class="col-12 md:col-6 lg:col-3" label="位置編號" controlName="LOCATION_No"
+              [control]="dialogForm.controls.LOCATION_No" />
+            <app-multi-select class="col-12 md:col-6 lg:col-3" label="館別" controlName="BUILDING_NO"
+              [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
+              [control]="dialogForm.controls.BUILDING_NO" />
+            <app-multi-select class="col-12 md:col-6 lg:col-3" label="樓層" controlName="FLOOR_NO"
+              [options]="floorOptions" optionLabel="label" optionValue="value"
+              [control]="dialogForm.controls.FLOOR_NO" />
+            <app-multi-select class="col-12 md:col-6 lg:col-3" label="區域" controlName="AREA_NO"
+              [options]="RegionCodeOptions" optionLabel="label" optionValue="value"
+              [control]="dialogForm.controls.AREA_NO" />
           </app-dropdown-table>
         </div>
         <!-- <p-divider align="left" type="solid">
@@ -108,13 +69,8 @@
         </p-divider>
         <div class="grid p-fluid">
           <!-- add treeDropDown component   -->
-          <app-tree-dropdown
-            [members]="flatTreeData"
-            [Columns]="treeNodes"
-            [LeaveColumnLabel]="LeaveColumnLabel"
-            (confirmSelected)="onMembersSelected($event)"
-            [onlySendLeaf]="true"
-          ></app-tree-dropdown>
+          <app-tree-dropdown [members]="flatTreeData" [Columns]="treeNodes" [LeaveColumnLabel]="LeaveColumnLabel"
+            (confirmSelected)="onMembersSelected($event)" [onlySendLeaf]="true"></app-tree-dropdown>
           <!-- --- -->
         </div>
         <p-divider align="left" type="solid">
@@ -122,13 +78,8 @@
         </p-divider>
         <div class="grid p-fluid">
           <!-- add treeDropDown component   -->
-          <app-tree-dropdown-nest
-            [members]="flatTreeData"
-            [Columns]="treeNodes"
-            [LeaveColumnLabel]="LeaveColumnLabel"
-            [onlySendLeaf]="true"
-            (confirmSelected)="onMembersSelected($event)"
-          ></app-tree-dropdown-nest>
+          <app-tree-dropdown-nest [members]="flatTreeData" [Columns]="treeNodes" [LeaveColumnLabel]="LeaveColumnLabel"
+            [onlySendLeaf]="true" (confirmSelected)="onMembersSelected($event)"></app-tree-dropdown-nest>
           >>>>>>> main
           <!-- --- -->
         </div>
@@ -145,207 +96,105 @@
           <b class="text-primary">文字</b>
         </p-divider>
         <div class="grid p-fluid">
-          <app-input-text
-            class="col-12 md:col-6 lg:col-5"
-            label="文字輸入"
-            controlName="text"
-            [control]="queryForm.controls.text"
-            [submitted]="submitted"
-          />
-          <app-input-textarea
-            class="col-12 md:col-6 lg:col-5"
-            label="長文字輸入"
-            controlName="textarea"
-            [control]="queryForm.controls.textarea"
-            [submitted]="submitted"
-          />
+          <app-input-text class="col-12 md:col-6 lg:col-5" label="文字輸入" controlName="text"
+            [control]="queryForm.controls.text" [submitted]="submitted" />
+          <app-input-textarea class="col-12 md:col-6 lg:col-5" label="長文字輸入" controlName="textarea"
+            [control]="queryForm.controls.textarea" [submitted]="submitted" />
         </div>
         <p-divider align="left" type="solid">
           <b class="text-primary">數字</b>
         </p-divider>
         <div class="grid p-fluid">
-          <app-input-number
-            class="col-12 md:col-6 lg:col-5"
-            label="數字輸入"
-            controlName="number"
-            [control]="queryForm.controls.number"
-            [submitted]="submitted"
-          />
-          <app-input-number-range
-            class="col-12 md:col-6 lg:col-5"
-            label="數字輸入(範圍)"
-            [startControl]="queryForm.controls.number1"
-            [endControl]="queryForm.controls.number2"
-            [submitted]="submitted"
-          />
+          <app-input-number class="col-12 md:col-6 lg:col-5" label="數字輸入" controlName="number"
+            [control]="queryForm.controls.number" [submitted]="submitted" />
+          <app-input-number-range class="col-12 md:col-6 lg:col-5" label="數字輸入(範圍)"
+            [startControl]="queryForm.controls.number1" [endControl]="queryForm.controls.number2"
+            [submitted]="submitted" />
         </div>
         <p-divider align="left" type="solid">
           <b class="text-primary">下拉式</b>
         </p-divider>
         <div class="grid p-fluid">
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-5"
-            label="單選下拉"
-            controlName="dropdown"
-            [options]="systemTypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.dropdown"
-            [submitted]="submitted"
-          />
-          <app-multi-select
-            class="col-12 md:col-6 lg:col-5"
-            label="多選下拉"
-            controlName="multiSelect"
-            [options]="systemTypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.multiSelect"
-            [submitted]="submitted"
-          />
+          <app-dropdown class="col-12 md:col-6 lg:col-5" label="單選下拉" controlName="dropdown"
+            [options]="systemTypeOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.dropdown" [submitted]="submitted" />
+          <app-multi-select class="col-12 md:col-6 lg:col-5" label="多選下拉" controlName="multiSelect"
+            [options]="systemTypeOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.multiSelect" [submitted]="submitted" />
         </div>
         <p-divider align="left" type="solid">
           <b class="text-primary">時間選擇</b>
         </p-divider>
         <div class="grid p-fluid">
-          <app-calendar
-            calendarType="timeOne"
-            class="col-12 md:col-6 lg:col-5"
-            label="時分"
-            [control]="queryForm.controls.timeOne"
-            controlName="timeOne"
-            [submitted]="submitted"
-          />
-          <app-calendar-range
-            calendarType="timeRange"
-            class="col-12 md:col-6 lg:col-5"
-            label="時分"
-            [startControl]="queryForm.controls.timeRange1"
-            [endControl]="queryForm.controls.timeRange2"
-            [submitted]="submitted"
-          />
+          <app-calendar calendarType="timeOne" class="col-12 md:col-6 lg:col-5" label="時分"
+            [control]="queryForm.controls.timeOne" controlName="timeOne" [submitted]="submitted" />
+          <app-calendar-range calendarType="timeRange" class="col-12 md:col-6 lg:col-5" label="時分"
+            [startControl]="queryForm.controls.timeRange1" [endControl]="queryForm.controls.timeRange2"
+            [submitted]="submitted" />
         </div>
         <p-divider align="left" type="solid">
           <b class="text-primary">年月日選擇</b>
         </p-divider>
         <div class="grid p-fluid">
-          <app-calendar
-            calendarType="dateOne"
-            class="col-12 md:col-6 lg:col-5"
-            label="年月日"
-            [control]="queryForm.controls.dateOne"
-            controlName="dateOne"
-            [submitted]="submitted"
-          />
+          <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="年月日"
+            [control]="queryForm.controls.dateOne" controlName="dateOne" [submitted]="submitted" />
         </div>
         <p-divider align="left" type="solid">
           <b class="text-gray-500">年月日選擇(已改用年月日(快速碼))</b>
         </p-divider>
         <div class="grid p-fluid">
-          <app-calendar-range
-            calendarType="dateRange"
-            class="col-12 md:col-6 lg:col-5"
-            label="年月日"
-            [startControl]="queryForm.controls.dateRange1"
-            [endControl]="queryForm.controls.dateRange2"
-            [submitted]="submitted"
-          />
+          <app-calendar-range calendarType="dateRange" class="col-12 md:col-6 lg:col-5" label="年月日"
+            [startControl]="queryForm.controls.dateRange1" [endControl]="queryForm.controls.dateRange2"
+            [submitted]="submitted" />
         </div>
         <p-divider align="left" type="solid">
           <b class="text-primary">年月日時分秒選擇</b>
         </p-divider>
         <div class="grid p-fluid">
-          <app-calendar
-            calendarType="dateTimeOne"
-            class="col-12 md:col-6 lg:col-5"
-            label="年月日時分秒"
-            [control]="queryForm.controls.dateTimeOne"
-            [submitted]="submitted"
-          />
-          <app-calendar-range
-            calendarType="dateTimeRange"
-            class="col-12 md:col-6 lg:col-5"
-            label="年月日時分秒"
-            [startControl]="queryForm.controls.dateTimeRange1"
-            [endControl]="queryForm.controls.dateTimeRange2"
-            [submitted]="submitted"
-          />
+          <app-calendar calendarType="dateTimeOne" class="col-12 md:col-6 lg:col-5" label="年月日時分秒"
+            [control]="queryForm.controls.dateTimeOne" [submitted]="submitted" />
+          <app-calendar-range calendarType="dateTimeRange" class="col-12 md:col-6 lg:col-5" label="年月日時分秒"
+            [startControl]="queryForm.controls.dateTimeRange1" [endControl]="queryForm.controls.dateTimeRange2"
+            [submitted]="submitted" />
         </div>
         <p-divider align="left" type="solid">
           <b class="text-primary">月份</b>
         </p-divider>
         <div class="grid p-fluid">
-          <app-calendar
-            calendarType="dateMonthOne"
-            class="col-12 md:col-6 lg:col-5"
-            label="月"
-            [control]="queryForm.controls.dateMonthOne"
-            [submitted]="submitted"
-          />
-          <app-calendar-range
-            calendarType="dateMonthRange"
-            class="col-12 md:col-6 lg:col-5"
-            label="月"
-            [startControl]="queryForm.controls.dateMonthRange1"
-            [endControl]="queryForm.controls.dateMonthRange2"
-            [submitted]="submitted"
-          />
+          <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-5" label="月"
+            [control]="queryForm.controls.dateMonthOne" [submitted]="submitted" />
+          <app-calendar-range calendarType="dateMonthRange" class="col-12 md:col-6 lg:col-5" label="月"
+            [startControl]="queryForm.controls.dateMonthRange1" [endControl]="queryForm.controls.dateMonthRange2"
+            [submitted]="submitted" />
         </div>
         <p-divider align="left" type="solid">
           <b class="text-primary">年份</b>
         </p-divider>
         <div class="grid p-fluid">
-          <app-calendar
-            calendarType="dateYearOne"
-            class="col-12 md:col-6 lg:col-5"
-            label="年"
-            [control]="queryForm.controls.dateYearOne"
-            [submitted]="submitted"
-          />
-          <app-calendar-range
-            calendarType="dateYearRange"
-            class="col-12 md:col-6 lg:col-5"
-            label="年"
-            [startControl]="queryForm.controls.dateYearRange1"
-            [endControl]="queryForm.controls.dateYearRange2"
-            [submitted]="submitted"
-          />
+          <app-calendar calendarType="dateYearOne" class="col-12 md:col-6 lg:col-5" label="年"
+            [control]="queryForm.controls.dateYearOne" [submitted]="submitted" />
+          <app-calendar-range calendarType="dateYearRange" class="col-12 md:col-6 lg:col-5" label="年"
+            [startControl]="queryForm.controls.dateYearRange1" [endControl]="queryForm.controls.dateYearRange2"
+            [submitted]="submitted" />
         </div>
         <p-divider align="left" type="solid">
           <b class="text-primary">年月查詢</b>
         </p-divider>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-query-year-month
-            [label]="'查詢年月'"
-            [yearControl]="queryForm.controls.Year"
-            [monthControl]="queryForm.controls.Month"
-            [submitted]="submitted"
-            [onlyOddMonths]="true"
-          ></app-query-year-month>
+          <app-query-year-month [label]="'查詢年月'" [yearControl]="queryForm.controls.Year"
+            [monthControl]="queryForm.controls.Month" [submitted]="submitted"
+            [onlyOddMonths]="true"></app-query-year-month>
         </div>
         <p-divider align="left" type="solid">
           <b class="text-primary">其他</b>
         </p-divider>
         <div class="grid p-fluid">
-          <app-radiobutton
-            class="col-12"
-            label="radio多選"
-            groupname="radiolist"
-            [control]="queryForm.controls.radiolist"
-            [options]="systemTypeOptions"
-            [submitted]="submitted"
-          />
-          <app-editor-text
-            class="col-12"
-            label="編輯器"
-            controlName="editortext"
-            [control]="queryForm.controls.editortext"
-            [submitted]="submitted"
-          />
+          <app-radiobutton class="col-12" label="radio多選" groupname="radiolist" [control]="queryForm.controls.radiolist"
+            [options]="systemTypeOptions" [submitted]="submitted" />
+          <app-editor-text class="col-12" label="編輯器" controlName="editortext" [control]="queryForm.controls.editortext"
+            [submitted]="submitted" />
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -359,14 +208,8 @@
   <p-divider align="left" type="solid">
     <b class="text-red-500 text-2xl">Table 完成</b>
   </p-divider>
-  <app-table
-    [data]="data"
-    [columns]="columns"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [isRowSelectable]="isRowSelectable"
-    [showCheckBox]="true"
-  ></app-table>
+  <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [isRowSelectable]="isRowSelectable" [showCheckBox]="true"></app-table>
 </div>
 
 <!-- 加入展開式可編輯表格範例 -->
@@ -375,27 +218,12 @@
     <b class="text-blue-500 text-2xl">展開式可編輯表格 (新)</b>
   </p-divider>
 
-  <app-expandable-edit-table
-    title="人員資料表"
-    [mainColumns]="mainColumns"
-    [detailColumns]="detailColumns"
-    [data]="data"
-    [loading]="expandLoading"
-    detailKey="details"
-    dataKey="id"
-    [showCheckBox]="true"
-    [showPaginator]="true"
-    [showAddButton]="true"
-    [showDetailAddButton]="true"
-    [defaultNewItem]="defaultNewPerson"
-    [defaultNewDetailItem]="defaultNewDetail"
-    (save)="onRowSave($event)"
-    (cancel)="onRowCancel($event)"
-    (detailSave)="onDetailSave($event)"
-    (detailCancel)="onDetailCancel($event)"
-    (addMainItem)="onAddPerson()"
-    (addDetailItem)="onAddDetail($event)"
-  >
+  <app-expandable-edit-table title="人員資料表" [mainColumns]="mainColumns" [detailColumns]="detailColumns" [data]="data"
+    [loading]="expandLoading" detailKey="details" dataKey="id" [showCheckBox]="true" [showPaginator]="true"
+    [showAddButton]="true" [showDetailAddButton]="true" [defaultNewItem]="defaultNewPerson"
+    [defaultNewDetailItem]="defaultNewDetail" (save)="onRowSave($event)" (cancel)="onRowCancel($event)"
+    (detailSave)="onDetailSave($event)" (detailCancel)="onDetailCancel($event)" (addMainItem)="onAddPerson()"
+    (addDetailItem)="onAddDetail($event)">
     <!-- 自訂左側標題區域內容 (可選) -->
     <!-- <div caption-left>
       <button pButton pRipple type="button" icon="pi pi-file-excel" label="匯出" class="p-button-outlined"></button>
@@ -418,24 +246,14 @@
   <p-divider align="left" type="solid">
     <b class="text-gray-500 text-2xl">Table 將移除</b>
   </p-divider>
-  <app-table
-    [showCheckBox]="true"
-    [data]="data"
-    [columns]="columns"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-  ></app-table>
+  <app-table [showCheckBox]="true" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)"></app-table>
 </div>
 <div class="card">
   <p-divider align="left" type="solid">
     <b class="text-gray-500 text-2xl">Table 將移除</b>
   </p-divider>
-  <app-table
-    [data]="data"
-    [columns]="columns"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-  ></app-table>
+  <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"></app-table>
 </div>
 
 <!-- 銀行選擇 AutoComplete 測試區域 -->
@@ -448,20 +266,10 @@
     <div class="grid p-fluid">
       <!-- 使用新的 AutoComplete 組件 -->
       <div class="col-12 md:col-8 lg:col-6">
-        <app-autocomplete
-          label="廠商匯款銀行代號"
-          controlName="bank_id"
-          [control]="bankTestForm.controls.bank_id"
-          [submitted]="bankTestSubmitted"
-          [options]="bankOptions"
-          placeholder="輸入銀行代號、銀行名稱或分行名稱搜尋..."
-          [dropdown]="true"
-          [forceSelection]="false"
-          [maxResults]="10"
-          (selectEvent)="onBankSelect($event)"
-          (unselectEvent)="onBankUnselect()"
-          (changeEvent)="onBankChange($event)"
-        ></app-autocomplete>
+        <app-autocomplete label="廠商匯款銀行代號" controlName="bank_id" [control]="bankTestForm.controls.bank_id"
+          [submitted]="bankTestSubmitted" [options]="bankOptions" placeholder="輸入銀行代號、銀行名稱或分行名稱搜尋..." [dropdown]="true"
+          [forceSelection]="false" [maxResults]="10" (selectEvent)="onBankSelect($event)"
+          (unselectEvent)="onBankUnselect()" (changeEvent)="onBankChange($event)"></app-autocomplete>
       </div>
 
       <!-- 顯示選擇結果的額外資訊 -->

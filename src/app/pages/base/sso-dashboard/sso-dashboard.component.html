@@ -40,8 +40,9 @@
     </div>
   </div>
   <div class="relative flex align-items-center justify-content-center flex-wrap gap-3 px-1 mt-5 pt-7">
-    <div *ngIf="loading" class="col-12 flex align-items-center justify-content-center">
+    <div *ngIf="loading" class="col-12 flex flex-column align-items-center justify-content-center">
       <p-progressSpinner></p-progressSpinner>
+      <span>載入中......</span>
     </div>
     <div *ngIf="errorMessage" class="col-12 text-red-500 text-center">
       {{ errorMessage }}

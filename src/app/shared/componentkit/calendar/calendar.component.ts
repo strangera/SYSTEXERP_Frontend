@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { CalendarMonthChangeEvent, CalendarYearChangeEvent } from 'primeng/calendar';
 
 @Component({
   selector: 'app-calendar',
@@ -25,7 +26,10 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
   @Input() minDate: Date | undefined | null;
   @Input() maxDate: Date | undefined | null;
   @Input() disabled = false;
+  @Input() disabledDates: Date[] = [];
   @Output() calendarEvent = new EventEmitter<Event>();
+  @Output() monthChangeEvent = new EventEmitter<CalendarMonthChangeEvent>();
+  @Output() yearChangeEvent = new EventEmitter<CalendarYearChangeEvent>();
 
   // 元件類型對應
   private readonly calendarConfig = {
@@ -61,5 +65,13 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
 
   onClose() {
     this.calendarEvent.emit(event);
+  }
+
+  onCalendarMonthChange(event: CalendarMonthChangeEvent): void {
+    this.monthChangeEvent.emit(event);
+  }
+
+  onCalendarYearChange(event: CalendarYearChangeEvent): void {
+    this.yearChangeEvent.emit(event);
   }
 }
