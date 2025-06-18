@@ -329,78 +329,21 @@
           </div>
         </div>
       </ng-container>
-      <!-- 商品資訊 顯示畫面 -->
-      <ng-container *ngIf="buttonID === 4">
+      <!-- 商品圖檔 顯示畫面 -->
+      <ng-container *ngIf="buttonID === 5">
+        <p-divider align="left" type="solid">
+          <b class="text-primary">上傳圖片(新)</b>
+        </p-divider>
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="品牌編號"
-              controlName="LOGO_No"
-              [options]="pluLogoOption"
-              optionLabel="Label"
-              optionValue="LOGO_No"
-              [control]="dataForm.controls.LOGO_No"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="商品售價"
-              controlName="PLU_SalePrc"
-              [control]="dataForm.controls.PLU_SalePrc"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="庫存量"
-              controlName="stock"
-              [control]="dataForm.controls.stock"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="標準進價"
-              controlName="PLU_OrderPrc"
-              [control]="dataForm.controls.PLU_OrderPrc"
-              [submitted]="submitted"
-              [maxFractionDigits]="2"
-            ></app-input-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="安全存量"
-              controlName="PLU_SafeQty"
-              [control]="dataForm.controls.PLU_SafeQty"
-              [submitted]="submitted"
-              [maxFractionDigits]="4"
-            ></app-input-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="進價折數"
-              controlName="PLU_OrderPrcRate"
-              [control]="dataForm.controls.PLU_OrderPrcRate"
-              [maxFractionDigits]="2"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="EC商品狀態"
-              controlName="PLU_ECStatus"
-              [options]="statusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="dataForm.controls.PLU_ECStatus"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
+          <app-img-upload
+            class="col-12"
+            (uploadFiles)="files = $event"
+            [images]="img1001Data"
+            [fileLimit]="10 - img1001Data.length"
+            (imagesChange)="img1001Data = $event"
+            (imagesDeleteChange)="confirmDeleteImages = $event"
+            [disabled]="img1001Data.length < 10"
+          ></app-img-upload>
         </div>
       </ng-container>
 
