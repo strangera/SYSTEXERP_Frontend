@@ -15,7 +15,8 @@ import {
   METER_TYPE_OPTIONS,
   OVERALL_STATUS_OPTIONS,
   TLT_CTYPE_MTOTAL_OPTIONS,
-  TPY_TYPE_OPTIONS
+  TPY_TYPE_OPTIONS,
+  CAG_TAXTYPE_OPTIONS
 } from './tls13010.constants';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
@@ -52,6 +53,7 @@ export const TLS13010_DROPDOWN_OPTIONS = {
   overallStatus: convertToDropdownOptions(OVERALL_STATUS_OPTIONS),
   tltCtypeMtotal: convertToDropdownOptions(TLT_CTYPE_MTOTAL_OPTIONS),
   tpyTypeOption: convertToDropdownOptions(TPY_TYPE_OPTIONS),
+  cagTaxTypeOption: convertToDropdownOptions(CAG_TAXTYPE_OPTIONS),
   yesNo: [{ value: 'Y', label: '是' }, { value: 'N', label: '否' }],
   depositPayment: [
     { value: 1, label: '現金' },
@@ -80,6 +82,7 @@ export class TLS13010DropdownService {
   public orgOptions: DropdownOption[] = [];
   public locationOptions: DropdownOption[] = [];
   public paperTypeOptions: DropdownOption[] = [];
+  public discountTypeOptions: DropdownOption[] = [];
   public pos2013Options: DropdownOption[] = [];
   public negotiatorOptions: DropdownOption[] = [];
 
@@ -89,6 +92,7 @@ export class TLS13010DropdownService {
     busclass: false,
     bussclass: false,
     location: false,
+    discount: false,
     pos2013: false,
     negotiator: false
   };
@@ -110,6 +114,7 @@ export class TLS13010DropdownService {
   private initAllOptions(): void {
     this.initBustypeOptions();
     this.initLocationOptions();
+    this.initDiscountOptions();
     this.initPOS2013Options();
     this.initNegotiatorOptions();
   }
@@ -231,7 +236,7 @@ export class TLS13010DropdownService {
   }
 
   /**
-   * 載入所有 Location 相關選項
+   * 載入所有 Location 相關選項（T101）
    */
   private initLocationOptions(): void {
     if (this.loadingStates.location) return;
@@ -264,6 +269,26 @@ export class TLS13010DropdownService {
       },
       error: (error) => {
         console.error('載入 Location 選項失敗:', error);
+      }
+    });
+  }
+
+  /**
+   * 載入折扣別選項（T102）
+   */
+  private initDiscountOptions(): void {
+    if (this.loadingStates.discount) return;
+
+    this.locationService.getPaperTypeOptions('T102').subscribe({
+      next: (response: any[]) => {
+        this.discountTypeOptions = response;
+        this.loadingStates.discount = true;
+        console.log('折扣別選項載入完成:', this.discountTypeOptions.length);
+      },
+      error: (error) => {
+        console.error('載入折扣別選項失敗:', error);
+        this.discountTypeOptions = [];
+        this.loadingStates.discount = true;
       }
     });
   }
@@ -316,6 +341,13 @@ export class TLS13010DropdownService {
   }
 
   /**
+   * 取得折扣別選項的公開方法
+   */
+  public getDiscountTypeOptionsData(): DropdownOption[] {
+    return this.discountTypeOptions;
+  }
+
+  /**
    * 搜尋洽談者（用於 AutoComplete）
    */
   searchNegotiatorOptions(): Observable<any[]> {
@@ -338,6 +370,7 @@ export class TLS13010DropdownService {
       busclass: false,
       bussclass: false,
       location: false,
+      discount: false,
       pos2013: false,
       negotiator: false
     };
@@ -357,5 +390,9 @@ export class TLS13010DropdownService {
 
   getNegotiatorOptionsCount(): number {
     return this.negotiatorOptions.length;
+  }
+
+  getDiscountTypeOptionsCount(): number {
+    return this.discountTypeOptions.length;
   }
 }

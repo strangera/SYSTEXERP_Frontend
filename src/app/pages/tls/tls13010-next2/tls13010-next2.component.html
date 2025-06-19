@@ -4,75 +4,134 @@
     <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
     <app-button
       btnType="create"
-      label="下一步(XX設定)"
+      label="下一步(租金設定)"
       (click)="onSubmitNext()"
+      [disabled]="!hasCommissionData()"
     ></app-button>
     <app-button btnType="cancel" (click)="onCancel()"></app-button>
   </div>
 
-  <p-accordion>
-    <p-accordionTab
-      header="專櫃契約書資訊"
-      [selected]="true"
-      class="line-height-3 m-0"
-    >
-      <div class="col-12 custom-table-red">
-        <app-table
-          tableKey="stocks"
-          [lazy]="true"
-          [loading]="loading"
-          [showEdit]="false"
-          [showDetail]="false"
-          [showRowEdit]="false"
-          [data]="inventoryItems"
-          [columns]="stocksColumns"
-          [showManage]="false"
-          [showCaption]="false"
-          [showPaginator]="false"
-        ></app-table>
-      </div>
-    </p-accordionTab>
-  </p-accordion>
+  <!-- 載入中指示器 -->
+  <div
+    *ngIf="loading"
+    class="flex justify-content-center align-items-center p-4"
+  >
+    <p-progressSpinner></p-progressSpinner>
+    <span class="ml-2">載入抽成設定資料中...</span>
+  </div>
 
-  <div class="setting-content mt-2">
-    <!-- 共用的抽成設定區塊 -->
-    <p-accordion>
+  <!-- 主要內容 -->
+  <div *ngIf="!loading">
+    <!-- 🎯 專櫃契約書資訊 -->
+    <p-accordion *ngIf="currentContractData">
       <p-accordionTab
-        header="抽成設定"
+        header="專櫃契約書資訊"
         [selected]="true"
         class="line-height-3 m-0"
       >
-        <app-expandable-edit-table
-          [data]="commissionItems"
-          [mainColumns]="commissionColumns"
-          [detailKey]="'detailItems'"
-          [dataKey]="'id'"
-          [showCheckBox]="true"
-          [readonly]="false"
-          [showDetailTabs]="true"
-          [detailTabOptions]="settingTabs"
-          [defaultDetailTab]="'discount'"
-          [detailColumnsMap]="{
-            discount: discountColumns,
-            annual: annualColumns,
-            level: levelColumns,
-          }"
-          (detailTabChange)="onDetailTabChange($event)"
-          (edit)="onItemEdit($event)"
-          (save)="onItemSave($event)"
-          (cancel)="onItemCancel($event)"
-          (detailEdit)="onDetailEdit($event)"
-          (detailCancel)="onDetailCancel($event)"
-          (batchDelete)="onBatchDelete($event)"
-          (detailBatchDelete)="onDetailBatchDelete($event)"
-          (addMainItem)="onAddCommissionItem()"
-          (addDetailItem)="onAddDetailItem($event)"
-        ></app-expandable-edit-table>
+        <div class="col-12">
+          <app-expandable-edit-table
+            class="custom-table-red"
+            [data]="contractInfoData"
+            [mainColumns]="contractInfoColumns"
+            [showCheckBox]="false"
+            [showPaginator]="false"
+            [showAddButton]="false"
+            [showBatchDelete]="false"
+            [loading]="loading"
+            [dataKey]="'id'"
+            [readonly]="true"
+            [detailKey]="''"
+            [emptyMessage]="'沒有合約資訊'"
+          ></app-expandable-edit-table>
+        </div>
       </p-accordionTab>
     </p-accordion>
-  </div>
 
-  <!-- <div class="pt-3">
-    <app-button-dynamicallyadd (click)="onAddCommissionItem()"></app-button-dynamicallyadd>
-  </div> -->
+    <!-- 抽成設定區塊 -->
+    <div class="setting-content mt-2">
+      <p-accordion>
+        <p-accordionTab
+          header="抽成設定"
+          [selected]="true"
+          class="line-height-3 m-0"
+        >
+          <!-- 🎯 修改：無資料顯示條件 -->
+          <div
+            *ngIf="dataLoaded && !hasCommissionData()"
+            class="text-center p-5"
+          >
+            <i class="pi pi-info-circle text-4xl text-gray-400 mb-3"></i>
+            <h5 class="text-gray-600 mb-2">尚未設定抽成項目</h5>
+            <p class="text-gray-500 mb-3">請點擊下方按鈕新增抽成設定項目</p>
+            <app-button
+              label="新增抽成項目"
+              icon="pi pi-plus"
+              (click)="onAddCommissionItem()"
+            ></app-button>
+          </div>
+
+          <!-- 🎯 修改：抽成設定表格顯示條件 -->
+          <div *ngIf="dataLoaded && hasCommissionData()">
+            <app-expandable-edit-table
+              [data]="commissionItems"
+              [mainColumns]="commissionColumns"
+              [detailKey]="'detailItems'"
+              [dataKey]="'id'"
+              [showPaginator]="false"
+              [showCheckBox]="true"
+              [readonly]="false"
+              [showDetailTabs]="true"
+              [detailTabOptions]="settingTabs"
+              [defaultDetailTab]="'discount'"
+              [detailColumnsMap]="{
+                discount: discountColumns,
+                annual: annualColumns,
+                level: levelColumns,
+              }"
+              (detailTabChange)="onDetailTabChange($event)"
+              (edit)="onItemEdit($event)"
+              (save)="onItemSave($event)"
+              (cancel)="onItemCancel($event)"
+              (detailEdit)="onDetailEdit($event)"
+              (detailCancel)="onDetailCancel($event)"
+              (batchDelete)="onBatchDelete($event)"
+              (detailBatchDelete)="onDetailBatchDelete($event)"
+              (addMainItem)="onAddCommissionItem()"
+              (addDetailItem)="onAddDetailItem($event)"
+            ></app-expandable-edit-table>
+          </div>
+
+          <!-- 🎯 新增：資料載入中的提示 -->
+          <div *ngIf="!dataLoaded" class="text-center p-5">
+            <p-progressSpinner></p-progressSpinner>
+            <p class="mt-2 text-gray-600">正在載入抽成設定資料...</p>
+          </div>
+        </p-accordionTab>
+      </p-accordion>
+    </div>
+
+    <!-- 操作按鈕區 -->
+    <div
+      class="flex justify-content-between align-items-center mt-3 pt-3 border-top-1 border-gray-200"
+    >
+      <div class="flex align-items-center gap-2">
+        <!-- <span class="text-sm text-gray-600">
+          目前共有
+          <span class="font-semibold">{{ getCommissionItemCount() }}</span>
+          個抽成項目
+        </span> -->
+        <!-- 🎯 新增：資料載入狀態指示 -->
+        <span *ngIf="!dataLoaded" class="text-xs text-orange-500">
+          (載入中...)
+        </span>
+        <span
+          *ngIf="dataLoaded && !commissionDataLoaded"
+          class="text-xs text-red-500"
+        >
+          (載入失敗)
+        </span>
+      </div>
+    </div>
+  </div>
 </div>
