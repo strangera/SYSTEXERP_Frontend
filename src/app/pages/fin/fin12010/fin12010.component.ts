@@ -1,18 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { UsageTypeService } from './../../../service/basic/usage-type.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { monthOptions } from '../fin11200/fin11200.model';
 import { SystemOptionsService } from '../../../service/system/sys1000.service';
 import { SystemOption } from '../../../shared/models/sys/sys1000.model';
+import { IAPS2001 } from './fin12010.model';
 
 @Component({
   selector: 'app-fin12010',
   templateUrl: './fin12010.component.html',
 })
 //1.1.2.1 電子式發票各系統配號維護
-export class FIN12010Component extends BasicQueryPageComponent<any> implements OnInit {
+export class FIN12010Component extends BasicQueryPageComponent<IAPS2001> implements OnInit {
   queryForm = this.formBuilder.group({
     GUI_YY: [null], // 發票年月
     GUI_MM: [null], // 發票年月
@@ -24,8 +24,8 @@ export class FIN12010Component extends BasicQueryPageComponent<any> implements O
   });
   totalRecords = 0;
   monthOptions = monthOptions;
-  data: any[] = [];
-  columns: any[] = [
+  data: IAPS2001[] = [];
+  columns: Column[] = [
     { field: 'col1', header: '發票年月', visible: true },
     { field: 'col2', header: '字軌', visible: true },
     { field: 'col3', header: '發票號碼(起)', visible: true },

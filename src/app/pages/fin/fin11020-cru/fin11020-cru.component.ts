@@ -53,20 +53,12 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
     this.dataForm.get('GUI_EndNo')?.valueChanges.subscribe(endNoValue => {
       const begNoValue = this.dataForm.get('GUI_BegNo')?.value;
 
-      // 確保 begNoValue 與 endNoValue 都有值且為有效數字
       if (begNoValue !== null && begNoValue !== '' && endNoValue !== null && endNoValue !== '') {
         const beg = Number(begNoValue);
         const end = Number(endNoValue);
-
         if (!isNaN(beg) && !isNaN(end)) {
-          // 起號與迄號需為有效範圍，結束號碼需大於等於起始號碼
-          if (
-            end >= beg &&
-            (beg % 100 === 0 || beg % 100 === 50) &&
-            (end % 100 === 49 || end % 100 === 99)
-          ) {
+          if (end >= beg && (beg % 100 === 0 || beg % 100 === 50) && (end % 100 === 49 || end % 100 === 99)) {
             const totalQty = end - beg + 1;
-
             if (totalQty % 50 === 0) {
               const qty = totalQty / 50;
               this.dataForm.get('GUI_Qty')?.setValue(qty, { emitEvent: false });
@@ -80,16 +72,12 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
         }
       }
     });
-
-
-
     // 監聽「券數」變更，自動計算 GUI_TotQty
     this.dataForm.get('GUI_Qty')?.valueChanges.subscribe(value => {
       const qty = Number(value);
       if (!isNaN(qty)) {
         const totalQty = qty * 50;
         this.dataForm.get('GUI_TotQty')?.setValue(totalQty, { emitEvent: false });
-
         // 如果 GUI_BegNo 有填值才推算 GUI_EndNo
         const begValue = this.dataForm.get('GUI_BegNo')?.value;
         if (begValue != null && begValue !== '' && !isNaN(Number(begValue))) {
@@ -97,14 +85,12 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
           const end = beg + totalQty - 1;
           this.dataForm.get('GUI_EndNo')?.setValue(end.toString().padStart(8, '0'), { emitEvent: false });
         }
-
       } else {
         this.dataForm.get('GUI_TotQty')?.setValue(null, { emitEvent: false });
         this.dataForm.get('GUI_EndNo')?.setValue(null, { emitEvent: false });  // 也可以考慮清除 GUI_EndNo
       }
     });
   }
-
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
