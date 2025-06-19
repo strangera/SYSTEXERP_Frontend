@@ -351,7 +351,7 @@
       <ng-container *ngIf="dataForm && dataForm.get('PLU_MagNo')?.value !== ''">
         <!-- 國際條碼 POS2005 -->
         <app-expandable-edit-table
-          title="國際條碼"
+          title="多筆國際條碼"
           [mainColumns]="POS2005DataColumn"
           [data]="POS2005Data"
           [loading]="expand2005Loading"

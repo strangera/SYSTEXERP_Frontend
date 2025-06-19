@@ -264,7 +264,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   confirmDeleteImages: string[] = []; // 確定刪除的圖片
   // ----------------------------------------------------------------
 
-  // isRowSelectable(rowData: POS2020Detail): boolean {
+  // isRowSelectable(rowData: POS2004): boolean {
   //   // return rowData.isdelete;
   // }
   // ----------------------------------------------------------------
@@ -308,7 +308,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     if (this.crudstatus == CRUDStatus.Edit) {
       //查詢明細檔案 (編輯模式)
-      this.loadDetail(this.dataForm.get('PLU_MagNo')?.value || '');
+      console.log('編輯模式，讀取表單', this.dataForm.value);
     }
 
     // 監聽 大分類 是否為''
@@ -397,7 +397,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     }
   }
 
-
   onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
@@ -415,7 +414,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     // ---怪---
     // 目前後端更新邏輯 國條 是2004抓2005的第一筆
-    // 然後複製2004複製管理馬給國條 > 要怎麼改動2005 (改動後就不是第一筆了)
+    // 然後複製2004複製管理碼給國條 > 要怎麼改動2005 (改動後就不是第一筆了)
 
     // --------
     // 標籤名稱：在輸入商品中文名稱後會自動帶入標籤名稱欄位。
@@ -440,18 +439,20 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
+          console.log('讀取表單', frm.value.PLU_MagNo);
           const requestBody = {
             ...frm.value,
+            PLU_No: [this.POS2005Data[0].PLU_No], // 覆寫 frm.value 中的 PLU_No
             "IMG1001_INFO": this.img1001Data,
             // "POS2005_INFO": [this.POS2005Data],
             "POS2020_INFO": this.POS2020Data,
           }
           console.log('update', requestBody);
 
-          this.tls51070Service.updateTLS51070(requestBody).subscribe(() => {
-            this.messageService.successBubble('更新成功');
-            this.onCancel(); // 儲存後，會返回列表
-          });
+          // this.tls51070Service.updateTLS51070(requestBody).subscribe(() => {
+          //   this.messageService.successBubble('更新成功');
+          //   this.onCancel(); // 儲存後，會返回列表
+          // });
         }
         break;
     }
