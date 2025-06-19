@@ -39,7 +39,7 @@ export class LoginComponent implements OnInit {
     // 檢查使用者是否已經登入
     if (this.authService.currentUserValue) {
       // 如果已經登入，則導向到主頁面（例如 dashboard）
-      this.router.navigate(['/SSO/dashboard']);
+      this.authService.logout();
       return; // 終止 ngOnInit 的執行，避免不必要的 IP 請求
     }
     this.commService.getIPAddress().subscribe((result: any) => {
