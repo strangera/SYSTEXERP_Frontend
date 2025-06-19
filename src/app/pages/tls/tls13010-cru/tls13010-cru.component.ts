@@ -8,7 +8,7 @@ import { map, Observable, Subscription } from 'rxjs';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
 // 工作流程服務
-import { ContractFlowService } from '../../../service/API/tls/tls13010contract-flow/contract-flow.service';
+import { ContractFlowService } from '../tls13010/services/contract-flow.service';
 
 // 下拉選單服務和選項
 import { TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from '../tls13010/tls13010.dropdown';

@@ -227,6 +227,7 @@ export interface CommissionItem {
   annualPerformanceItems: AnnualPerformanceItem[];
   discountLevelItems: DiscountLevelItem[];
   detailItems: any[];
+  _status?: 'original' | 'modified' | 'new' | 'deleted';
 }
 export interface DiscountSettingItem {
   selected: boolean;
@@ -234,6 +235,7 @@ export interface DiscountSettingItem {
   startDate: Date;
   endDate: Date;
   rate: number;
+  _status?: 'original' | 'modified' | 'new' | 'deleted';
 }
 export interface AnnualPerformanceItem {
   selected: boolean;
@@ -241,6 +243,7 @@ export interface AnnualPerformanceItem {
   endDate: Date;
   discountAmount: number;
   rate: number;
+  _status?: 'original' | 'modified' | 'new' | 'deleted';
 }
 export interface DiscountLevelItem {
   selected: boolean;
@@ -248,6 +251,7 @@ export interface DiscountLevelItem {
   startAmount: number;
   endAmount: number;
   rate: number;
+  _status?: 'original' | 'modified' | 'new' | 'deleted';
 }
 
 // next3 - 條件設定

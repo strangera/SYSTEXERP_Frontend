@@ -7,7 +7,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { SelectItem } from 'primeng/api';
 import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { ContractFlowService, WorkflowStep } from '../../../service/API/tls/tls13010contract-flow/contract-flow.service';
+import { ContractFlowService, WorkflowStep } from '../tls13010/services/contract-flow.service';
 import { TLS13010Service } from '../../../service/API/tls/tls13010.service';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
@@ -573,13 +573,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   getCurrentItems(rowData: CommissionItem): any[] {
     switch (this.selectedSettingTab) {
       case 'discount':
-        return rowData.discountSettingItems;
+        return rowData.discountSettingItems.filter(i => i._status !== 'deleted');
       case 'annual':
-        return rowData.annualPerformanceItems;
+        return rowData.annualPerformanceItems.filter(i => i._status !== 'deleted');
       case 'level':
-        return rowData.discountLevelItems;
+        return rowData.discountLevelItems.filter(i => i._status !== 'deleted');
       default:
-        return rowData.discountSettingItems;
+        return rowData.discountSettingItems.filter(i => i._status !== 'deleted');
     }
   }
 
@@ -747,27 +747,42 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   // 添加折扣設置項目
   addDiscountSettingItem(item: CommissionItem): void {
-    // 用 createDiscountSettingItem() 產生新物件
-    item.discountSettingItems.push(this.createDiscountSettingItem());
+    const newItem = this.createDiscountSettingItem();
+    newItem._status = 'new';
+    item.discountSettingItems.push(newItem);
     this.updateDetailItemsForDisplay();
+    this.saveCommissionDataToWorkflow();
   }
 
   // 添加年度業績項目
   addAnnualPerformanceItem(item: CommissionItem): void {
-    item.annualPerformanceItems.push(this.createAnnualPerformanceItem());
+    const newItem = this.createAnnualPerformanceItem();
+    newItem._status = 'new';
+    item.annualPerformanceItems.push(newItem);
     this.updateDetailItemsForDisplay();
+    this.saveCommissionDataToWorkflow();
   }
 
-  // 添加折扣等級項目
   addDiscountLevelItem(item: CommissionItem): void {
-    item.discountLevelItems.push(this.createDiscountLevelItem());
+    const newItem = this.createDiscountLevelItem();
+    newItem._status = 'new';
+    item.discountLevelItems.push(newItem);
     this.updateDetailItemsForDisplay();
+    this.saveCommissionDataToWorkflow();
   }
 
   // 刪除折扣設置項目
   removeDiscountSettingItem(item: CommissionItem, index: number): void {
-    item.discountSettingItems.splice(index, 1);
+    const target = item.discountSettingItems[index];
+    if (target._status === 'new') {
+      // 新增的直接移除
+      item.discountSettingItems.splice(index, 1);
+    } else {
+      // 既有的標記為 deleted
+      target._status = 'deleted';
+    }
     this.updateDetailItemsForDisplay();
+    this.saveCommissionDataToWorkflow();
   }
 
   // 刪除年度業績項目
@@ -788,6 +803,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   // 表格項目保存事件
   onItemSave(event: { oldData: any, newData: any }): void {
+    if (event.oldData._status === 'original') {
+      event.newData._status = 'modified';
+    }
     this.syncDetailItemsToSource(event.newData);
     this.updateDetailItemsForDisplay();
     this.saveCommissionDataToWorkflow();
