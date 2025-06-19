@@ -478,9 +478,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       this.expandedRows = {};
     } else {
       this.data.forEach(item => {
-        if (item[this.detailKey]?.length > 0) {
-          this.expandedRows[item[this.dataKey]] = true;
-        }
+        this.expandedRows[item[this.dataKey]] = true;
       });
     }
     this.isAllExpanded = !this.isAllExpanded;
@@ -658,18 +656,22 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   getFieldOptions(rowData: any, field: string): any[] {
-    if (rowData[field + 'Options']) {
-      return rowData[field + 'Options'];
+    // 先檢查 mainColumns
+    let column = this.mainColumns.find(col => col.field === field);
+
+    // 如果沒找到，檢查 detailColumns
+    if (!column) {
+      column = this.detailColumns.find(col => col.field === field);
     }
 
-    const column = this.mainColumns.find(col => col.field === field) ||
-      this.detailColumns.find(col => col.field === field);
-
-    if (column && column.options) {
-      return column.options;
+    // 如果還是沒找到，檢查當前選中的 tab 的 columns
+    if (!column && this.showDetailTabs) {
+      const currentTab = this.getDetailSelectedTab(rowData);
+      const tabColumns = this.detailColumnsMap[currentTab] || [];
+      column = tabColumns.find(col => col.field === field);
     }
 
-    return [];
+    return column?.options || [];
   }
 
   onDropdownChange(rowData: any, field: string, newValue: any): void {

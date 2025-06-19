@@ -70,5 +70,4 @@ export class Tls51070Service {
   queryPOS2013_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryPOS2013_DropDownList`, body);
   }
-
 }

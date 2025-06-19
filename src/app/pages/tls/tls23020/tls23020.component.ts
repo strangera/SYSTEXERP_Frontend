@@ -29,24 +29,24 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],            // 交易日期起
     TXN_DateEnd: [now, [Validators.required]],              // 交易日期訖
-    ECR_No: [''],                                           // 收銀機機號
+    ECR_No: [[]],                                           // 收銀機機號
     TXN_No_Start: [null, [this.validationService.numberValidator]],  // 交易序號起
     TXN_No_End: [null, [this.validationService.numberValidator]],    // 交易序號訖
-    TLT_No: [''],                                           // 專櫃編號
+   TLT_No: [[]],    
     TXN_GUINo: [''],                                        // 發票號碼
     PLU_SalePrc_Start: [null],                              // 售價起
     PLU_SalePrc_End: [null],                                // 售價訖
     TXN_TaxType: [''],                                      // 稅別
-    ORG_TXN_DiscCode: [''],                                 // 原始折扣代碼
-    tlt_id: [''],                                           // 分類抽成類別
+    TXN_DiscCode: [[]],                                 // 原始折扣代碼
+    tlt_id: [[]],                                           // 分類抽成類別
     PLU_MagNo: [''],                                        // 商品管理編號
-    TXN_DiscCode: [''],                                     // 專櫃折數代碼
-    IsNoPLU_No: [null],                                     // 是否無條碼商品
+    ACT_DiscCode: [[]],                                     // 專櫃折數代碼
+    IsNoPLU_No: [true],                                     // 是否無條碼商品
     rece_yn: [''],                                          // 是否代收(顯示方式)
     cash_yn: [''],                                          // 是否代售(顯示方式)
     tlt_building: [''],                                     // 所屬大樓
-    tlt_floor: [''],                                        // 所屬樓層
-    org_id: [''],                                           // 組織代碼
+    tlt_floor: [[]],                                        // 所屬樓層
+    org_id: [[]],                                           // 組織代碼
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }])
   });
 

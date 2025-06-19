@@ -3,6 +3,8 @@ export const environment = {
   production: false,
   // AWSApiUrl: 'http://10.60.8.66/TSRD_WEBAPI',
   // AWSBaseUrl: 'http://10.60.8.66/TSRD_WEBAPI',
+  // BaseUrl: 'https://localhost:7271',
+  // ApiUrl: 'https://localhost:7271',
   BaseUrl: 'http://43.207.4.99/TSRD_WEBAPI',
   ApiUrl: 'http://43.207.4.99/TSRD_WEBAPI',
   // BaseUrl: 'https://localhost:7271',

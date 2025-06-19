@@ -78,6 +78,7 @@ import { ImgUploadComponent } from './componentkit/img-upload/img-upload.compone
 import { FileUploadComponent } from './componentkit/file-upload/file-upload.component';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ReportTableGroupComponent } from './componentkit/report-table-group/report-table-group.component';
+import { DialogComponent } from './componentkit/dialog/dialog.component';
 
 @NgModule({
   declarations: [
@@ -112,7 +113,8 @@ import { ReportTableGroupComponent } from './componentkit/report-table-group/rep
     AutoCompleteComponent,
     QueryYearMonthComponent,
     ImgUploadComponent,
-    ReportTableGroupComponent
+    ReportTableGroupComponent,
+    DialogComponent
   ],
   imports: [
     ReactiveFormsModule,
@@ -230,7 +232,8 @@ import { ReportTableGroupComponent } from './componentkit/report-table-group/rep
     QueryYearMonthComponent,
     ImgUploadComponent,
     ProgressBarModule,
-    ReportTableGroupComponent
+    ReportTableGroupComponent,
+    DialogComponent
   ],
 })
 export class SharedModule { }

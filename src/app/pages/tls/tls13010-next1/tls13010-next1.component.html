@@ -26,18 +26,22 @@
     <div class="flex gap-2 mb-3 p-3 bg-blue-50 border-round">
       <div class="flex align-items-center gap-2">
         <app-button
-          [label]="getToggleCommonlyUsedText()"
+          [label]="getCommonModeText()"
           icon="pi pi-filter"
-          (click)="toggleCommonlyUsed()"
-          [outlined]="!showOnlyCommonlyUsed"
+          (click)="toggleCommonMode()"
+          [outlined]="showMode !== 'common'"
         ></app-button>
 
         <app-button
-          [label]="getToggleSelectedText()"
+          [label]="getSelectedModeText()"
           icon="pi pi-check-square"
-          (click)="toggleSelectedOnly()"
+          (click)="toggleSelectedMode()"
           [outlined]="!showOnlySelected"
         ></app-button>
+
+        <span class="text-sm text-gray-600 ml-2">
+          目前模式: {{ getCurrentDisplayMode() }}
+        </span>
       </div>
     </div>
 
@@ -108,8 +112,13 @@
               <i class="pi pi-inbox text-3xl text-gray-400 mb-2"></i>
               <p class="text-gray-500 m-0">
                 目前沒有 {{ getCapTypeName(capType) }} 項目
-                <span *ngIf="showOnlyCommonlyUsed">（僅顯示常用項目）</span>
-                <span *ngIf="showOnlySelected">（僅顯示已選項目）</span>
+                <span *ngIf="showMode === 'common' && !showOnlySelected">
+                  （僅顯示契約項目 + 常用項目）
+                </span>
+                <span *ngIf="showMode === 'all' && !showOnlySelected">
+                  （顯示全部項目）
+                </span>
+                <span *ngIf="showOnlySelected">（僅顯示已勾選項目）</span>
               </p>
             </div>
 

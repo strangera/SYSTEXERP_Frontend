@@ -10,9 +10,10 @@
           <app-calendar calendarType="dateYearOne" class="col-12 md:col-6 lg:col-4" label="發票年"
             [control]="queryForm.controls.GUI_YY" [submitted]="submitted" />
           <app-dropdown class=" col-12 md:col-6 lg:col-4" label="發票月" controlName="registerID" [options]="monthOptions"
-            optionLabel="label" optionValue="value" [control]="queryForm.controls.GUI_MM" />
-          <app-dropdown class=" col-12 md:col-6 lg:col-4" label="收銀機編號" controlName="registerID"
-            [options]="POS_NOSOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.POS_NOS" />
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.GUI_MM" [submitted]="submitted" />
+          <app-multi-select class=" col-12 md:col-6 lg:col-4" label="收銀機編號" controlName="registerID"
+            [options]="POS_NOSOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_No"
+            [submitted]="submitted" />
         </div>
         <ul>
           <li>說明：</li>

@@ -3,8 +3,9 @@ import { Column, formatDate } from './../../../shared/componentkit/table/table.m
 import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS13010Service } from '../../../service/API/tls/tls13010.service';
 import { ContractFlowService, WorkflowStep } from '../../../service/API/tls/tls13010contract-flow/contract-flow.service';
@@ -91,10 +92,10 @@ interface ContractInfo {
 export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = [];
+  private routerSubscription: any;
 
   // 顯示模式控制
-  showOnlyCommonlyUsed = true;
-  showOnlySelected = false;
+  showOnlySelected = false;  // 控制是否只顯示已勾選項目
   isShowingAll = false;
 
   // 當前合約資料
@@ -217,7 +218,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'date',
       editable: true,
       autoWidth: true,
-      dateFormat: 'year-month' // 🎯 共通組件會自動處理
+      dateFormat: 'year-month'
     },
     {
       field: 'tpy_type',
@@ -297,7 +298,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'full-date' // 🎯 這裡就是你想要的功能！
+      dateFormat: 'full-date'
     },
     {
       field: 'tpy_edate',
@@ -628,9 +629,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   dataForm = this.formBuilder.group({});
 
+  // 顯示模式狀態，僅有 common 與 all
+  showMode: 'common' | 'all' = 'common';
+
   constructor(
     private tls13010Service: TLS13010Service,
-    private contractFlowService: ContractFlowService
+    private contractFlowService: ContractFlowService,
+    public override router: Router
   ) {
     super();
   }
@@ -640,9 +645,17 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.initializeDataStructure();
     this.initializePage('TLS13010', this.dataForm);
     this.loadWorkflowData();
+    this.routerSubscription = this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.loadWorkflowData();
+      });
   }
 
   ngOnDestroy(): void {
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
+    }
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
@@ -658,7 +671,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
       console.log('✅ 取得合約ID:', this.currentTalentId);
 
-      // 🎯 關鍵修正：優先使用 CRU 頁面編輯後的資料
+      // 優先使用 CRU 頁面編輯後的資料
       const step1Data = this.contractFlowService.getStep1Data();
       console.log('📝 Step1 編輯資料:', step1Data);
 
@@ -703,17 +716,18 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
           console.log('✅ 暫存資料載入完成');
         } catch (error) {
           console.error('❌ 暫存資料處理失敗，重新載入:', error);
-          this.loadFareDataFromAPI(false);
+          this.loadFareDataFromAPI();
         }
       } else {
         console.log('📭 沒有暫存資料，從 API 載入');
-        this.loadFareDataFromAPI(false);
+        this.loadFareDataFromAPI();
       }
     } else {
       console.warn('❌ 沒有 talent_id，重導向到前一步');
       this.router.navigate(['/TLS/TLS13010CRU']);
     }
   }
+
   // 🎯 簡化：資料驗證和修正（移除日期處理）
   private validateAndFixData(data: any): { [key: string]: FareItem[] } {
     console.log('驗證暫存資料格式:', data);
@@ -797,7 +811,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   // 從 API 載入扣款資料（簡化版）
-  private loadFareDataFromAPI(showAll: boolean = false): void {
+  private loadFareDataFromAPI(): void {
     if (!this.currentTalentId) {
       console.warn('沒有 talent_id，無法載入扣款資料');
       return;
@@ -808,7 +822,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     const subscription = this.tls13010Service.queryTLS13010Fare({
       talentId: this.currentTalentId,
-      showAll: showAll
+      showAll: true  // 固定載入全部資料
     }).subscribe({
       next: (response) => {
         console.log('API 回傳的扣款資料:', response);
@@ -816,7 +830,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         if (response && response.Data && response.Data.FaresByType) {
           // 🎯 簡化：直接使用 API 資料，讓共通組件處理日期
           this.originalFareData = response.Data.FaresByType;
-          this.isShowingAll = showAll;
+          this.isShowingAll = true;  // 標記為已載入全部資料
           this.filterData();
           this.saveFareDataToWorkflow();
           this.messageService.successBubble('扣款資料載入成功');
@@ -862,29 +876,33 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   filterData(): void {
-    console.log('開始篩選資料，原始資料:', this.originalFareData);
+    console.log('【DEBUG】originalFareData:', this.originalFareData);
     this.initializeDataStructure();
 
     Object.keys(this.originalFareData).forEach(capType => {
       if (!Array.isArray(this.originalFareData[capType])) {
-        console.warn(`originalFareData[${capType}] 不是陣列，重置為空陣列`);
         this.originalFareData[capType] = [];
       }
 
-      if (this.showOnlySelected) {
-        this.fareData[capType] = this.originalFareData[capType].filter(item =>
-          item && item.is_selected
-        );
-      } else if (this.showOnlyCommonlyUsed) {
-        this.fareData[capType] = this.originalFareData[capType].filter(item =>
-          item && (item.data_source === 'CONTRACT_EXISTING' || item.data_source === 'APS_COMMON')
-        );
-      } else {
-        this.fareData[capType] = [...this.originalFareData[capType]];
-      }
-    });
+      let filteredData = [...this.originalFareData[capType]];
 
-    console.log('篩選後的資料:', this.fareData);
+      // 根據常用/全部模式過濾
+      if (this.showMode === 'common') {
+        // 常用模式：顯示契約已有的項目 + 常用項目
+        filteredData = filteredData.filter(item =>
+          item.data_source === 'CONTRACT_EXISTING' || item.is_commonly_used === 'Y'
+        );
+      }
+      // 全部模式：顯示所有項目（契約已有的 + 常用 + 不常用）
+
+      // 根據已勾選模式過濾
+      if (this.showOnlySelected) {
+        // 只顯示已勾選的項目
+        filteredData = filteredData.filter(item => item.is_selected);
+      }
+
+      this.fareData[capType] = filteredData;
+    });
   }
 
   private saveFareDataToWorkflow(): void {
@@ -909,44 +927,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     } catch (error) {
       console.error('❌ 儲存暫存資料時發生錯誤:', error);
     }
-  }
-
-  // 顯示模式切換
-  toggleCommonlyUsed(): void {
-    if (this.showOnlyCommonlyUsed) {
-      if (!this.isShowingAll) {
-        this.loadFareDataFromAPI(true);
-      }
-      this.showOnlyCommonlyUsed = false;
-      this.showOnlySelected = false;
-    } else {
-      this.showOnlyCommonlyUsed = true;
-      this.showOnlySelected = false;
-    }
-    this.filterData();
-  }
-
-  toggleSelectedOnly(): void {
-    this.showOnlySelected = !this.showOnlySelected;
-    this.showOnlyCommonlyUsed = false;
-    this.filterData();
-  }
-
-  showAllItems(): void {
-    if (!this.isShowingAll) {
-      this.loadFareDataFromAPI(true);
-    }
-    this.showOnlyCommonlyUsed = false;
-    this.showOnlySelected = false;
-    this.filterData();
-  }
-
-  getToggleCommonlyUsedText(): string {
-    return this.showOnlyCommonlyUsed ? '顯示全部項目' : '僅顯示常用項目';
-  }
-
-  getToggleSelectedText(): string {
-    return this.showOnlySelected ? '顯示全部項目' : '僅顯示已勾選項目';
   }
 
   selectAllByType(capType: string): void {
@@ -1127,7 +1107,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   reloadData(): void {
     if (confirm('確定要重新載入資料嗎？未儲存的變更將會遺失。')) {
-      this.loadFareDataFromAPI(this.isShowingAll);
+      this.loadFareDataFromAPI();
       this.messageService.infoBubble('已重新載入資料');
     }
   }
@@ -1160,12 +1140,48 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   getCurrentDisplayMode(): string {
-    if (this.showOnlyCommonlyUsed) {
-      return '僅常用項目';
-    } else if (this.showOnlySelected) {
-      return '僅已勾選項目';
+    let mode = '';
+
+    // 常用/全部模式
+    if (this.showMode === 'common') {
+      mode += '契約項目 + 常用項目';
     } else {
-      return '全部項目';
+      mode += '全部項目';
     }
+
+    // 已勾選模式
+    if (this.showOnlySelected) {
+      mode += '（已勾選）';
+    }
+
+    return mode;
+  }
+
+  // 切換常用/全部模式
+  toggleCommonMode(): void {
+    if (this.showMode === 'common') {
+      // 從常用模式切換到全部模式
+      this.showMode = 'all';
+    } else {
+      // 從全部模式切換到常用模式
+      this.showMode = 'common';
+    }
+    this.filterData();
+  }
+
+  // 切換已勾選模式
+  toggleSelectedMode(): void {
+    this.showOnlySelected = !this.showOnlySelected;
+    this.filterData();
+  }
+
+  // 取得常用模式按鈕文字
+  getCommonModeText(): string {
+    return this.showMode === 'common' ? '顯示全部項目' : '只顯示常用';
+  }
+
+  // 取得已勾選模式按鈕文字
+  getSelectedModeText(): string {
+    return this.showOnlySelected ? '顯示全部項目' : '只顯示已勾選';
   }
 }
