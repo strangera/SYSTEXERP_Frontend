@@ -96,7 +96,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 顯示模式控制
   showOnlyCommonlyUsed = true;
-  showOnlySelected = false;
+  showOnlySelected = false;  // 新增：控制是否只顯示已勾選項目
   isShowingAll = false;
 
   // 當前合約資料
@@ -882,11 +882,25 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       if (!Array.isArray(this.originalFareData[capType])) {
         this.originalFareData[capType] = [];
       }
+
+      let filteredData = [...this.originalFareData[capType]];
+
+      // 先根據常用/全部模式過濾
       if (this.showMode === 'common') {
-        this.fareData[capType] = this.originalFareData[capType].filter(item => item.is_commonly_used === 'Y');
-      } else {
-        this.fareData[capType] = [...this.originalFareData[capType]];
+        // 常用模式：顯示契約已有的項目 + 常用項目
+        filteredData = filteredData.filter(item =>
+          item.data_source === 'CONTRACT_EXISTING' || item.is_commonly_used === 'Y'
+        );
       }
+      // 全部模式：顯示所有項目（契約已有的 + 常用 + 不常用）
+
+      // 再根據已勾選模式過濾
+      if (this.showOnlySelected) {
+        // 只顯示已勾選的項目
+        filteredData = filteredData.filter(item => item.is_selected);
+      }
+
+      this.fareData[capType] = filteredData;
     });
   }
 
@@ -921,17 +935,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         this.loadFareDataFromAPI(true);
       }
       this.showOnlyCommonlyUsed = false;
-      this.showOnlySelected = false;
     } else {
       this.showOnlyCommonlyUsed = true;
-      this.showOnlySelected = false;
     }
-    this.filterData();
-  }
-
-  toggleSelectedOnly(): void {
-    this.showOnlySelected = !this.showOnlySelected;
-    this.showOnlyCommonlyUsed = false;
     this.filterData();
   }
 
@@ -940,16 +946,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this.loadFareDataFromAPI(true);
     }
     this.showOnlyCommonlyUsed = false;
-    this.showOnlySelected = false;
     this.filterData();
   }
 
   getToggleCommonlyUsedText(): string {
     return this.showOnlyCommonlyUsed ? '顯示全部項目' : '僅顯示常用項目';
-  }
-
-  getToggleSelectedText(): string {
-    return this.showOnlySelected ? '顯示全部項目' : '僅顯示已勾選項目';
   }
 
   selectAllByType(capType: string): void {
@@ -1163,18 +1164,51 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   getCurrentDisplayMode(): string {
-    if (this.showOnlyCommonlyUsed) {
-      return '僅常用項目';
-    } else if (this.showOnlySelected) {
-      return '僅已勾選項目';
+    let mode = '';
+
+    // 常用/全部模式
+    if (this.showMode === 'common') {
+      mode += '契約項目 + 常用項目';
     } else {
-      return '全部項目';
+      mode += '全部項目';
     }
+
+    // 已勾選模式
+    if (this.showOnlySelected) {
+      mode += '（已勾選）';
+    }
+
+    return mode;
   }
 
-  // 新增：切換顯示模式
-  setShowMode(mode: 'common' | 'all') {
-    this.showMode = mode;
+  // 新增：切換常用/全部模式
+  toggleCommonMode(): void {
+    if (this.showMode === 'common') {
+      // 從常用模式切換到全部模式
+      if (!this.isShowingAll) {
+        this.loadFareDataFromAPI(true);
+      }
+      this.showMode = 'all';
+    } else {
+      // 從全部模式切換到常用模式
+      this.showMode = 'common';
+    }
     this.filterData();
+  }
+
+  // 新增：切換已勾選模式
+  toggleSelectedMode(): void {
+    this.showOnlySelected = !this.showOnlySelected;
+    this.filterData();
+  }
+
+  // 新增：取得常用模式按鈕文字
+  getCommonModeText(): string {
+    return this.showMode === 'common' ? '顯示全部項目' : '只顯示常用';
+  }
+
+  // 新增：取得已勾選模式按鈕文字
+  getSelectedModeText(): string {
+    return this.showOnlySelected ? '顯示全部項目' : '只顯示已勾選';
   }
 }
