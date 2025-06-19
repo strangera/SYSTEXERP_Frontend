@@ -5,7 +5,6 @@ import { Location } from '@angular/common';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
-// 此行會自動觸發 addFont
 
 @Component({
   selector: 'app-report-table-group',
@@ -23,7 +22,11 @@ export class ReportTableGroupComponent implements OnInit {
   @Input() printedAt: string = '';
   @Input() rowsPerTable = 25;
   @Input() reportTitle: string = '報表';
+  @Input() continuousRowNumber = true;
+  @Input() dateRangeLabel: string = '資料區間';
 
+  showRowsPerTableDialog = false;
+tempRowsPerTable = this.rowsPerTable;
 
   private _data: any[] = [];
   @Input() set data(value: any[]) {
@@ -36,17 +39,35 @@ export class ReportTableGroupComponent implements OnInit {
 
   groupedData: any[][] = [];
   constructor(private location: Location) { }
+
   ngOnInit(): void {
     this.splitData();
+    this.buildSelectedColumns();
+  }
+  openRowsPerTableDialog() {
+  this.tempRowsPerTable = this.rowsPerTable;
+  this.showRowsPerTableDialog = true;
+}
+applyRowsPerTableChange() {
+  if (this.tempRowsPerTable > 0) {
+    this.rowsPerTable = this.tempRowsPerTable;
+    this.updateGroupedData();
+    this.showRowsPerTableDialog = false;
+  }
+}
 
-    this.selectedColumns = [
-      { header: '序號', field: '__index' },  // 虛擬欄位
-      ...this.columns,
-    ];
+  buildSelectedColumns(): void {
+    const withIndex = [{ header: '序號', field: '__index' }];
+    const processed = this.columns.map(col => {
+      return col; // 不自動指定 text-center，改由呼叫端決定 style
+    });
+
+    this.selectedColumns = withIndex.concat(processed);
   }
 
   updateGroupedData(): void {
     this.splitData();
+    this.buildSelectedColumns();
   }
 
   private splitData(): void {
@@ -68,7 +89,9 @@ export class ReportTableGroupComponent implements OnInit {
   }
 
   getRowIndex(groupIndex: number, rowIndex: number): number {
-    return groupIndex * this.rowsPerTable + rowIndex + 1;
+    return this.continuousRowNumber
+      ? groupIndex * this.rowsPerTable + rowIndex + 1
+      : rowIndex + 1;
   }
 
   printPage(): void {
@@ -77,24 +100,21 @@ export class ReportTableGroupComponent implements OnInit {
     window.print();
     document.title = originalTitle;
   }
+
   selectedColumns: Column[] = [];
-
-
-
-
   showPdfDialog = false;
   showColumnDialog = false;
 
   exportPDF(orientation: 'p' | 'l' = 'p'): void {
     const columnCount = this.selectedColumns.length;
-    const columnWidth = 100; // 每欄預留寬度（可調整）
+    const columnWidth = 100;
     const tableWidth = columnCount * columnWidth;
-    const pageHeight = 842; // 預設 A4 高度為 842pt（11.7 吋）
+    const pageHeight = 842;
 
     const doc = new jsPDF({
       orientation,
       unit: 'pt',
-      format: [tableWidth + 80, pageHeight], // ✅ 寬度根據欄位動態設定
+      format: [tableWidth + 80, pageHeight],
     });
 
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -108,20 +128,30 @@ export class ReportTableGroupComponent implements OnInit {
     doc.text(safeText(this.reportTitle), pageWidth / 2, currentY, { align: 'center' });
 
     currentY += 20;
-
     doc.setFontSize(10);
     doc.text(`資料區間: ${this.dateStart} ~ ${this.dateEnd}`, marginLeft, currentY);
     doc.text(`列印時間: ${this.printedAt}`, pageWidth - marginLeft, currentY, { align: 'right' });
-
     currentY += 10;
 
     for (let i = 0; i < this.groupedData.length; i++) {
       const dataTable = this.groupedData[i];
+
+      // 每頁表頭資訊（放這裡才會每頁都有）
+      currentY = 40;
+      doc.setFont('NotoSansTC');
+      doc.setFontSize(14);
+      doc.text(safeText(this.reportTitle), pageWidth / 2, currentY, { align: 'center' });
+
+      currentY += 20;
+      doc.setFontSize(10);
+      doc.text(`${this.dateRangeLabel}：${this.dateStart} ~ ${this.dateEnd}`, marginLeft, currentY);
+      doc.text(`列印時間：${this.printedAt}`, pageWidth - marginLeft, currentY, { align: 'right' });
+      currentY += 10;
       const body = dataTable.map((row, rowIndex) =>
         this.selectedColumns.map(col => {
           try {
             if (col.field === '__index') {
-              return String(this.getRowIndex(i, rowIndex));  // 實際編號
+              return String(this.getRowIndex(i, rowIndex));
             }
             const value = col.format ? col.format(row[col.field]) : row[col.field];
             return String(value ?? '');
@@ -132,12 +162,11 @@ export class ReportTableGroupComponent implements OnInit {
       );
 
       const headers = this.selectedColumns.map(col => col.header);
-      // 計算總計列（只給最後一頁 foot 用）
       let foot: string[][] = [];
       if (i === this.groupedData.length - 1) {
         const totalRow = this.selectedColumns.map(col => {
           if (col.field === '__index') {
-            return '總計'; // ✅ 只放在序號欄那格
+            return '總計';
           } else if (this.subtotalFields.includes(col.field)) {
             const sum = this._data.reduce((acc, row) => acc + (parseFloat(row[col.field]) || 0), 0);
             return sum.toLocaleString();
@@ -147,46 +176,42 @@ export class ReportTableGroupComponent implements OnInit {
         });
         foot = [totalRow];
       }
-      const totalRow = this.selectedColumns.map(col => {
-        if (col.field === '__index') {
-          return '總計'; // 固定塞入
-        } else if (this.subtotalFields.includes(col.field)) {
-          const sum = this._data.reduce((acc, row) => acc + (parseFloat(row[col.field]) || 0), 0);
-          return sum.toLocaleString();
-        } else {
-          return '';
-        }
-      });
+
       const columnStyles: { [key: string]: any } = {};
       this.selectedColumns.forEach((col, index) => {
-        if (col.style === 'text-right') {
-          columnStyles[index] = { halign: 'right' };
+        let halign: 'left' | 'right' | 'center' = 'center';
+        if (col.style === 'text-left') {
+          halign = 'left';
+        } else if (col.style === 'text-right') {
+          halign = 'right';
         } else if (col.style === 'text-center') {
-          columnStyles[index] = { halign: 'center' };
-        } else {
-          columnStyles[index] = { halign: 'left' }; // 預設靠左
+          halign = 'center';
         }
+
+        columnStyles[index] = { halign };
       });
+
       autoTable(doc, {
         startY: currentY,
         head: [headers],
         body,
-        foot, // ✅ 總計列放進 foot（只有最後一頁有）
+        foot,
         margin: { left: marginLeft, right: marginLeft },
         styles: {
           font: 'NotoSansTC',
           fontStyle: 'normal',
           fontSize: 9,
-          lineWidth: 0.1,     // ✅ 加框線
-          lineColor: [0, 0, 0] // ✅ 黑色線條 
+          lineWidth: 0.1,
+          lineColor: [0, 0, 0],
         },
-        columnStyles, // ✅ 套用你的動態對齊設定
+        columnStyles,
         headStyles: {
           font: 'NotoSansTC',
           fontStyle: 'normal',
           fontSize: 10,
           fillColor: [212, 222, 254],
           textColor: [0, 0, 0],
+          halign: 'center',
         },
         footStyles: {
           font: 'NotoSansTC',
@@ -194,9 +219,8 @@ export class ReportTableGroupComponent implements OnInit {
           fontSize: 10,
           fillColor: [250, 250, 210],
           textColor: [0, 0, 0],
-          halign: 'right', // ✅ 總計列所有儲存格靠右
+          halign: 'right',
         },
-
       });
 
       if (i < this.groupedData.length - 1) {
@@ -205,21 +229,9 @@ export class ReportTableGroupComponent implements OnInit {
       }
     }
 
-
     doc.save(`報表_${new Date().toISOString()}.pdf`);
     this.showPdfDialog = false;
   }
-
-
-
-
-
-
-
-
-
-
-
 
   exportExcel(): void {
     import('xlsx').then(xlsx => {
@@ -235,8 +247,8 @@ export class ReportTableGroupComponent implements OnInit {
       xlsx.writeFile(wb, `報表_${new Date().toISOString()}.xlsx`);
     });
   }
+
   goBack() {
     this.location.back();
   }
-
 }
