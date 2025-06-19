@@ -337,6 +337,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   // 🎯 修改：更新表格欄位的折數選項
   private updateDiscountColumnOptions(): void {
+    console.log('🟢 options:', this.discountOptions);
     // ✅ 強制重新建立陣列以觸發變更檢測
     this.discountColumns = this.discountColumns.map(col => {
       if (col.field === 'cag_barcode') {  // ✅ 修正為 cag_barcode
@@ -351,6 +352,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
       }
       return col;
     });
+
+    // 🎯 新增：同時更新 detailColumns 以確保顯示正確
+    this.updateDetailColumns();
   }
 
   // 🎯 修改：載入工作流程資料
@@ -391,10 +395,23 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   // 🎯 修改：載入抽成設定資料
   private loadCommissionData(): void {
-    this.contractFlowService.saveStep3Data([]);
     this.loading = true;
     this.commissionDataLoaded = false;
-    this.loadCommissionDataFromAPI();
+
+    // 先檢查暫存資料
+    const savedCommissionData = this.contractFlowService.getStepData(WorkflowStep.COMMISSION);
+
+    if (savedCommissionData && Array.isArray(savedCommissionData) && savedCommissionData.length > 0) {
+      console.log('📦 找到暫存抽成資料，使用暫存資料', JSON.stringify(savedCommissionData, null, 2));
+      this.commissionItems = savedCommissionData;
+      this.commissionDataLoaded = true;
+      this.dataLoaded = true;
+      this.loading = false;
+      this.updateDetailItemsForDisplay();
+    } else {
+      console.log('📭 沒有暫存抽成資料，從 API 載入');
+      this.loadCommissionDataFromAPI();
+    }
   }
 
   private loadCommissionDataFromAPI(): void {
@@ -421,6 +438,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
         this.dataLoaded = true;
         this.loading = false;
+
+        // 儲存到暫存
+        this.saveCommissionDataToWorkflow();
       },
       error: (error) => {
         console.error('❌ 載入抽成設定資料失敗:', error);
@@ -438,22 +458,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   // 🎯 修改：根據折數選項取得顯示名稱
   private getDiscountLabelByValue(value: string): string {
-    console.log(`🔍 尋找折扣別 value: ${value}, 可用選項:`, this.discountOptions);
-
-    if (!value) {
-      console.log('⚠️ 折扣別值為空，返回預設值');
-      return '未設定';
-    }
-
-    // 直接比對 value
-    const option = this.discountOptions.find(opt => opt.value === value);
-    if (option) {
-      console.log(`✅ 找到對應的折扣別:`, option.label);
-      return option.label;
-    }
-
-    console.log(`⚠️ 找不到對應的折扣別，使用原始值:`, value);
-    return value;
+    const option = this.discountOptions.find(opt => String(opt.value) === String(value));
+    if (option) return option.label;
+    return value || '未設定';
   }
 
   // 生成折扣摘要
@@ -882,6 +889,14 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   // 表格項目取消事件
   onItemCancel(item: any): void {
+  }
+
+  // 🎯 新增：處理下拉選單變更事件
+  onDropdownChange(event: { rowData: any, field: string, newValue: any, oldValue: any }): void {
+    console.log('🔄 下拉選單變更:', event);
+
+    // 更新資料後立即儲存到暫存
+    this.saveCommissionDataToWorkflow();
   }
 
   // 詳細內容保存
