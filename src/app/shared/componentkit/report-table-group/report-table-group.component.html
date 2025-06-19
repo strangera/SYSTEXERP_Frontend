@@ -20,9 +20,12 @@
   header="選擇顯示欄位"
   [(visible)]="showColumnDialog"
   [modal]="true"
-  [style]="{ width: '40rem', height: '60vh' }"
+  [style]="{ width: '30rem', height: '60vh' }"
   [contentStyle]="{ height: '100%', overflow: 'auto' }"
 >
+  <div class="grid p-fluid">
+    <div class="col-12 md:col-6 lg:col-10">
+  
   <p-multiSelect
     [options]="columns"
     [(ngModel)]="selectedColumns"
@@ -31,7 +34,8 @@
     class="w-full"
     placeholder="選擇要顯示的欄位"
   ></p-multiSelect>
-  <div class="mt-3 text-right">
+  </div>
+   <div class="col-12 md:col-6 lg:col-2">
     <button
       pButton
       type="button"
@@ -40,20 +44,64 @@
       class="p-button-sm"
     ></button>
   </div>
+  </div>
 </p-dialog>
 
 <div class="flex flex-wrap justify-between items-center gap-3 mb-3">
   <div class="flex items-center gap-2">
-    <label for="rowsPerTable">每個表格列數：</label>
-    <input
-      type="number"
-      id="rowsPerTable"
-      [(ngModel)]="rowsPerTable"
-      (ngModelChange)="updateGroupedData()"
-      min="1"
-      class="p-inputtext w-6rem"
-    />
+    
+    <button
+      pButton
+      type="button"
+      [label]="'每表格列數：'+ rowsPerTable + ' 列'"
+      icon="pi pi-sliders-h"
+      (click)="openRowsPerTableDialog()"
+      class="p-button-sm p-button-info"
+    ></button>
   </div>
+  <p-dialog
+    header="設定每個表格的列數"
+    [(visible)]="showRowsPerTableDialog"
+    [modal]="true"
+    [style]="{ width: '30rem', height: '20rem' }"
+    [contentStyle]="{ 'padding-bottom': '0' }"
+  >
+    <div class="flex flex-col gap-4">
+      <!-- 輸入框 -->
+      <div>
+        <label for="rowsInput" class="block mb-2 text-sm text-gray-700">
+          每表格列數：
+        </label>
+        <input
+          id="rowsInput"
+          type="number"
+          [(ngModel)]="tempRowsPerTable"
+          min="1"
+          class="p-inputtext w-full"
+        />
+      </div>
+
+      <!-- 按鈕區塊 -->
+      <div class="flex justify-end gap-2 mt-4">
+        <button
+          pButton
+          type="button"
+          label="取消"
+          icon="pi pi-times"
+          class="p-button-sm p-button-secondary"
+          (click)="showRowsPerTableDialog = false"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="確定"
+          icon="pi pi-check"
+          class="p-button-sm p-button-primary"
+          (click)="applyRowsPerTableChange()"
+        ></button>
+      </div>
+    </div>
+  </p-dialog>
 
   <div class="space-x-2">
     <button
@@ -105,7 +153,6 @@
     *ngFor="let group of groupedData; let i = index"
     class="report-table-wrapper mb-5"
   >
-
     <div class="text-sm text-gray-600 mb-2 flex flex-wrap items-center gap-4">
       <div>共 {{ totalCount }} 筆</div>
       <div>第 {{ i + 1 }} 頁 / 共 {{ groupedData.length }} 頁</div>
@@ -122,32 +169,30 @@
     >
       <ng-template pTemplate="header" let-columns>
         <tr>
-          <th class="text-center">序號</th>
           <th *ngFor="let col of selectedColumns" class="text-center">
             {{ col.header }}
           </th>
         </tr>
       </ng-template>
 
-      <ng-template
-        pTemplate="body"
-        let-rowData
-        let-columns="columns"
-        let-rowIndex="rowIndex"
-      >
+      <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
         <tr>
-          <td class="text-center">{{ getRowIndex(i, rowIndex) }}</td>
           <td
             *ngFor="let col of selectedColumns"
-            class="text-center"
             [ngClass]="col.style"
+            class="text-center"
           >
-            <ng-container *ngIf="col.format; else raw">
-              {{ col.format(rowData[col.field]) }}
+            <ng-container *ngIf="col.field === '__index'">
+              {{ getRowIndex(i, rowIndex) }}
             </ng-container>
-            <ng-template #raw>
-              {{ rowData[col.field] }}
-            </ng-template>
+            <ng-container *ngIf="col.field !== '__index'">
+              <ng-container *ngIf="col.format; else raw">
+                {{ col.format(rowData[col.field]) }}
+              </ng-container>
+              <ng-template #raw>
+                {{ rowData[col.field] }}
+              </ng-template>
+            </ng-container>
           </td>
         </tr>
       </ng-template>
@@ -157,18 +202,24 @@
           *ngIf="!showTotalOnly || i === groupedData.length - 1"
           class="bg-gray-100 font-semibold"
         >
-          <td class="text-center">{{ showTotalOnly ? "總計" : "小計" }}</td>
           <td
             *ngFor="let col of selectedColumns"
             class="text-center"
             [ngClass]="col.style"
           >
-            <ng-container *ngIf="subtotalFields.includes(col.field)">
-              {{
-                showTotalOnly
-                  ? getGrandTotal(col.field)
-                  : getSubtotal(group, col.field)
-              }}
+            <ng-container [ngSwitch]="col.field">
+              <ng-container *ngSwitchCase="'__index'">
+                {{ showTotalOnly ? "總計" : "小計" }}
+              </ng-container>
+              <ng-container *ngSwitchDefault>
+                <ng-container *ngIf="subtotalFields.includes(col.field)">
+                  {{
+                    showTotalOnly
+                      ? getGrandTotal(col.field)
+                      : getSubtotal(group, col.field)
+                  }}
+                </ng-container>
+              </ng-container>
             </ng-container>
           </td>
         </tr>

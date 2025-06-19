@@ -95,8 +95,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   private routerSubscription: any;
 
   // 顯示模式控制
-  showOnlyCommonlyUsed = true;
-  showOnlySelected = false;  // 新增：控制是否只顯示已勾選項目
+  showOnlySelected = false;  // 控制是否只顯示已勾選項目
   isShowingAll = false;
 
   // 當前合約資料
@@ -630,7 +629,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   dataForm = this.formBuilder.group({});
 
-  // 新增：顯示模式狀態，僅有 common 與 all
+  // 顯示模式狀態，僅有 common 與 all
   showMode: 'common' | 'all' = 'common';
 
   constructor(
@@ -728,6 +727,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this.router.navigate(['/TLS/TLS13010CRU']);
     }
   }
+
   // 🎯 簡化：資料驗證和修正（移除日期處理）
   private validateAndFixData(data: any): { [key: string]: FareItem[] } {
     console.log('驗證暫存資料格式:', data);
@@ -878,6 +878,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   filterData(): void {
     console.log('【DEBUG】originalFareData:', this.originalFareData);
     this.initializeDataStructure();
+
     Object.keys(this.originalFareData).forEach(capType => {
       if (!Array.isArray(this.originalFareData[capType])) {
         this.originalFareData[capType] = [];
@@ -885,7 +886,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
       let filteredData = [...this.originalFareData[capType]];
 
-      // 先根據常用/全部模式過濾
+      // 根據常用/全部模式過濾
       if (this.showMode === 'common') {
         // 常用模式：顯示契約已有的項目 + 常用項目
         filteredData = filteredData.filter(item =>
@@ -894,7 +895,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       }
       // 全部模式：顯示所有項目（契約已有的 + 常用 + 不常用）
 
-      // 再根據已勾選模式過濾
+      // 根據已勾選模式過濾
       if (this.showOnlySelected) {
         // 只顯示已勾選的項目
         filteredData = filteredData.filter(item => item.is_selected);
@@ -1156,7 +1157,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     return mode;
   }
 
-  // 新增：切換常用/全部模式
+  // 切換常用/全部模式
   toggleCommonMode(): void {
     if (this.showMode === 'common') {
       // 從常用模式切換到全部模式
@@ -1168,18 +1169,18 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.filterData();
   }
 
-  // 新增：切換已勾選模式
+  // 切換已勾選模式
   toggleSelectedMode(): void {
     this.showOnlySelected = !this.showOnlySelected;
     this.filterData();
   }
 
-  // 新增：取得常用模式按鈕文字
+  // 取得常用模式按鈕文字
   getCommonModeText(): string {
     return this.showMode === 'common' ? '顯示全部項目' : '只顯示常用';
   }
 
-  // 新增：取得已勾選模式按鈕文字
+  // 取得已勾選模式按鈕文字
   getSelectedModeText(): string {
     return this.showOnlySelected ? '顯示全部項目' : '只顯示已勾選';
   }
