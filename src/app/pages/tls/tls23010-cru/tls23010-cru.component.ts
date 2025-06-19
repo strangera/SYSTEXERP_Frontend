@@ -14,7 +14,8 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
   templateUrl: './tls23010-cru.component.html',
   styleUrls: ['./tls23010-cru.component.scss']
 })
-export class TLS23010CRUComponent extends BasicCruPageComponent<any>{
+export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
+  pdfSummary: string[] = [];
   override loading = true;
   printedAt: string = '';
   dateStart: string = '';
@@ -174,7 +175,7 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any>{
     this.txnSubtypeService.getTXNSubtype().subscribe(res => this.transactionSubTypeOptions = res);
     this.carrierTypeService.getCarrierType().subscribe(res => this.carrierTypeOptions = res);
   }
-   dataForm = this.formBuilder.nonNullable.group({});
+  dataForm = this.formBuilder.nonNullable.group({});
 
   async ngOnInit(): Promise<void> {
     this.initializePage('TLS23010', this.dataForm);
@@ -216,6 +217,36 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any>{
         })
       ).subscribe((res) => {
         this.data = (res.Status === '0000' && Array.isArray(res.Data)) ? res.Data : [];
+
+        // ✅ 正確放置位置：資料查詢完成後，計算 summary
+        const getSum = (field: string): number =>
+          this.data.reduce((sum, row) => sum + (parseFloat(row[field]) || 0), 0);
+
+        const A = getSum('TXN_TotSaleAmt');      // 發票金額
+        const B = getSum('TXN_TotPayAmt');       // 已開發票的支付工具
+        const C = getSum('TXN_TotOver');         // 已開發票的支付工具溢收
+        const D = getSum('TXN_TotPayAmt');       // 訂金（假設同欄位）
+        const E = getSum('TXN_TotSaleAmt');      // 訂金結帳金額（範例）
+        const F = getSum('TXN_TotPayAmt');       // 訂金結帳的訂金（範例）
+        const G = getSum('TXN_TotDisc');         // 預售（範例）
+        const H = getSum('TXN_TaxFreeCertNo');   // 預售結帳金額（範例）
+
+        const discountValue = A + B - C + E - G + H;
+        const paymentValue = A + B + D - F;
+
+        this.pdfSummary = [
+          `(A)發票金額 = ${A}`,
+          `(B)已開發票的支付工具 = ${B}`,
+          `(C)已開發票的支付工具溢收 = ${C}`,
+          `(D)訂金 = ${D}`,
+          `(E)訂金結帳金額 = ${E}`,
+          `(F)訂金結帳的訂金 = ${F}`,
+          `(G)預售 = ${G}`,
+          `(H)預售結帳金額 = ${H}`,
+          '=============================',
+          `折扣別(專櫃業績) = (A) + (B) - (C) + (E) - (G) + (H) = ${discountValue}`,
+          `付款別(支付工具) = (A) + (B) + (D) - (F) = ${paymentValue}`
+        ];
       }, () => {
         this.data = [];
       });
@@ -247,4 +278,8 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any>{
   printPage(): void {
     window.print();
   }
+  // 計算所有 A~H = TXN_PrintGUI 加總
+
+
+
 }

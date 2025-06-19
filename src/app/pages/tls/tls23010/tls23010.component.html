@@ -286,7 +286,7 @@
   ></app-table>
 </div>
 <p-dialog
-  header="設定每頁筆數"
+  header="限制筆數"
   [(visible)]="showPageSizeDialog"
   [modal]="true"
   [closable]="false"
@@ -301,7 +301,7 @@
         pInputText
         [(ngModel)]="customPageSize"
         min="1"
-        style="width: 100%;"
+        style="width: 100%"
       />
     </div>
   </div>

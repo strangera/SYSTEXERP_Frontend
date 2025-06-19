@@ -25,35 +25,33 @@
 >
   <div class="grid p-fluid">
     <div class="col-12 md:col-6 lg:col-10">
-  
-  <p-multiSelect
-    [options]="columns"
-    [(ngModel)]="selectedColumns"
-    optionLabel="header"
-    display="chip"
-    class="w-full"
-    placeholder="選擇要顯示的欄位"
-  ></p-multiSelect>
-  </div>
-   <div class="col-12 md:col-6 lg:col-2">
-    <button
-      pButton
-      type="button"
-      label="確定"
-      (click)="showColumnDialog = false"
-      class="p-button-sm"
-    ></button>
-  </div>
+      <p-multiSelect
+        [options]="columns"
+        [(ngModel)]="selectedColumns"
+        optionLabel="header"
+        display="chip"
+        class="w-full"
+        placeholder="選擇要顯示的欄位"
+      ></p-multiSelect>
+    </div>
+    <div class="col-12 md:col-6 lg:col-2">
+      <button
+        pButton
+        type="button"
+        label="確定"
+        (click)="showColumnDialog = false"
+        class="p-button-sm"
+      ></button>
+    </div>
   </div>
 </p-dialog>
 
 <div class="flex flex-wrap justify-between items-center gap-3 mb-3">
   <div class="flex items-center gap-2">
-    
     <button
       pButton
       type="button"
-      [label]="'每表格列數：'+ rowsPerTable + ' 列'"
+      [label]="'每表格列數：' + rowsPerTable + ' 列'"
       icon="pi pi-sliders-h"
       (click)="openRowsPerTableDialog()"
       class="p-button-sm p-button-info"
@@ -162,15 +160,24 @@
 
     <p-table
       [value]="group"
+      
+      (onSort)="onTableSort($event)"
       [columns]="selectedColumns"
       [resizableColumns]="true"
       [paginator]="false"
       [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'"
+      
     >
       <ng-template pTemplate="header" let-columns>
         <tr>
-          <th *ngFor="let col of selectedColumns" class="text-center">
+          <th
+            *ngFor="let col of selectedColumns"
+            class="text-center"
+            [ngClass]="col.style"
+            [pSortableColumn]="col.field !== '__index' ? col.field : undefined"
+          >
             {{ col.header }}
+            <p-sortIcon *ngIf="col.field !== '__index'" [field]="col.field" />
           </th>
         </tr>
       </ng-template>
