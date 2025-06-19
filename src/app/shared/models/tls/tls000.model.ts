@@ -1,30 +1,27 @@
-//POS10015 門市系統主機設定檔
-export interface Tls46010m {
-  'id': string;
-  'SYS_StoreNo': string;
-  'SYS_SrvNo': string;
-  'SYS_SrvIP': string;
-  'SYS_SrvPort': number; // 主機連接埠，預設值為20
-  'SYS_SrvStatus': string;
-  'SYS_SrvName': string;
-  'SYS_SrvUsrID': string;
-  'SYS_SrvUsrPwd': string;
-
-  'SYS_SRVDDir': string;
-  'SYS_SRVUDir': string;
-
-  'SYS_MyPOSDDir': string;
-  'SYS_MyPOSUDir': string;
-  'SYS_SRVDDirClt': string;
-  'SYS_SRVUDirClt': string;
-
-  'CRT_Date': Date;
-  'CRT_USR_No': string;
-  'CRT_USR_Name': string;
-  'UPD_Date': Date;
-  'UPD_USR_No': string;
-  'UPD_USR_Name': string;
+export interface Pos10015 {
+  ID: number;
+  SYS_StoreNo: string;
+  SYS_SrvNo: string;
+  SYS_SrvIP: string;
+  SYS_SrvPort: number;
+  SYS_SrvStatus: string;
+  SYS_SrvName?: string;
+  SYS_SrvUsrID?: string;
+  SYS_SrvUsrPwd?: string;
+  SYS_SRVDDir?: string;
+  SYS_SRVUDir?: string;
+  SYS_MyPOSDDir?: string;
+  SYS_MyPOSUDir?: string;
+  SYS_SRVDDirClt?: string;
+  SYS_SRVUDirClt?: string;
+  CRT_Date?: string;            // 可用 Date 型別也可以 string，看你從後端拿到的是什麼
+  CRT_USR_No?: string;
+  CRT_USR_Name?: string;
+  UPD_Date?: string;
+  UPD_USR_No?: string;
+  UPD_USR_Name?: string;
 }
+
 
 // PLUUNIT  商品單位設定檔
 export interface PluUnit {
