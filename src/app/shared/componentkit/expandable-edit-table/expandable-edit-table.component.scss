@@ -12,12 +12,15 @@
   min-width: 0; // 讓 flex 容器能正確縮放
   width: 100%; // 占滿父容器
 
+  font-size: 1.22rem;
+
   .expandable-table-title {
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-size: 2rem;
+    font-weight: bold;
     color: #495057;
     margin: 0; // 🔧 移除預設 margin
     padding: 1rem 1rem 0.5rem 1rem; // 🔧 只在需要時給上 padding
+    margin-bottom: 0.7rem;
 
     // 🔧 當有 title 時才顯示
     &:empty {
@@ -709,5 +712,59 @@
         }
       }
     }
+  }
+
+  // 內層表格樣式
+  .detail-table {
+    background: none;
+    border-radius: 0;
+    padding: 0.5rem 0.5rem 0 0.5rem;
+    font-size: 1.35rem;
+
+    .empty-message-cell {
+      padding: 0;
+      background: transparent;
+      border: none;
+    }
+    .empty-message-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 90px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      color: #6c757d;
+      font-size: 1.3rem;
+      font-weight: 500;
+    }
+    .p-datatable-thead > tr > th {
+      font-size: 1.1rem !important;
+      background: #4a69bd !important;
+      color: #fff !important;
+      font-weight: bold;
+      border-bottom: 2px solid #3b4a6b;
+      letter-spacing: 1px;
+    }
+  }
+
+  // 外層表格表頭樣式
+  .expandable-edit-table-container .p-datatable-thead > tr > th {
+    font-size: 1.25rem;
+    font-weight: bold;
+    background: #e3eafc;
+    color: #2d3a4b;
+    letter-spacing: 1px;
+  }
+
+  .expandable-edit-table-container .table-caption-left .p-button-label {
+    font-size: 1.3rem !important;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+
+  // 強化內層表格資料列字體大小，確保所有內容都變大
+  .detail-table .p-datatable-tbody > tr > td,
+  .detail-table .p-datatable-tbody > tr > td * {
+    font-size: 1rem !important;
   }
 }

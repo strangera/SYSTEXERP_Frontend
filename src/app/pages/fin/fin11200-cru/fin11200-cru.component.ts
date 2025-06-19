@@ -4,11 +4,13 @@ import { monthOptions, POS1002, Pos1018 } from '../fin11200/fin11200.model';
 import { FormGroup, Validators } from '@angular/forms';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { Column } from '../../../shared/componentkit/table/table.model';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-fin11200-cru',
   templateUrl: './fin11200-cru.component.html',
-  styleUrl: './fin11200-cru.component.scss'
 })
 export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> implements OnInit {
   dataForm = this.formBuilder.group({
@@ -16,15 +18,19 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
   });
   monthOptions = monthOptions;
   minDate?: Date;
+  dialogVisible = false;
 
   data: POS1002[] = [];
+  selectedData: POS1002[] = [];
   columns: Column[] = [
     { field: 'ECR_No', header: '收銀機編號', visible: true },
     { field: 'ECR_Name', header: '收銀機名稱', visible: true },
   ]
 
   constructor(
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private eCRNoService: ECRNoService,
+    private fin11200Service: Fin11200Service
   ) {
     super();
   }
@@ -32,6 +38,14 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
   ngOnInit(): void {
     this.initializePage('FIN11200', this.dataForm);
     this.setMinDate();
+    this.eCRNoService.getPOS1002BillDropDownList().subscribe(data => {
+      const mappedData = data.Data.map((item: { No: string; Name: string }) => ({
+        ECR_No: item.No,
+        ECR_Name: item.Name
+      }));
+      this.originalDialogData = mappedData;
+      this.dialogData = mappedData;
+    });
   }
   setMinDate(): void {
     const today = new Date();
@@ -43,6 +57,61 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      if (this.data.length === 0) {
+        return this.messageService.errorBubble('請選擇收銀機');
+      }
+      const guiYymmDate: Date = frm.value.GUI_YYMM;
+      const formattedGuiYymm = this.formatDateToYYYYMM(guiYymmDate);
+      if (!formattedGuiYymm) { return; }
+      this.loading = true;
+      const body = {
+        NumberDetails: this.data.map(item => ({
+          GUI_YYMM: formattedGuiYymm,
+          ECR_No: item.ECR_No
+        })),
+      };
+      this.fin11200Service.execProcNumber(body).pipe(finalize(() => this.loading = false)).subscribe((response) => {
+        console.log(response);
+      });
     });
+  }
+
+  private formatDateToYYYYMM(date: Date | null): string | null {
+    if (!date) {
+      return null;
+    }
+    const year = date.getFullYear().toString();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    return year + month;
+  }
+
+  dialogQueryForm = this.formBuilder.group({
+    ECR_No: [''], // 收銀機編號
+    ECR_Name: [''], // 收銀機名稱
+  });
+  dialogData: POS1002[] = [];
+  private originalDialogData: POS1002[] = [];
+  selectedItemsDialog: POS1002[] = [];
+
+  isRowSelectable(event: POS1002): boolean {
+    return !this.data || !this.data.some((item: POS1002) => item.ECR_No === event.ECR_No);
+  }
+  inputEnter() {
+    const filterECRNo = this.dialogQueryForm.controls.ECR_No.value?.trim().toLowerCase() || '';
+    const filterECRName = this.dialogQueryForm.controls.ECR_Name.value?.trim().toLowerCase() || '';
+    this.dialogData = this.originalDialogData.filter(item => {
+      const matchECRNo = item.ECR_No.toLowerCase().includes(filterECRNo);
+      const matchECRName = item.ECR_Name.toLowerCase().includes(filterECRName);
+      return matchECRNo && matchECRName;
+    });
+  }
+  saveDialog() {
+    this.dialogVisible = false;
+    this.data = [...this.data, ...this.selectedItemsDialog];
+    this.selectedItemsDialog = [];
+  }
+  onDelete(selectedRows: POS1002[]) {
+    this.data = this.data.filter(row => !selectedRows.includes(row));
+    this.selectedData = [];
   }
 }

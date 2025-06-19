@@ -26,17 +26,17 @@
     <div class="flex gap-2 mb-3 p-3 bg-blue-50 border-round">
       <div class="flex align-items-center gap-2">
         <app-button
-          [label]="getToggleCommonlyUsedText()"
+          label="只顯示常用"
           icon="pi pi-filter"
-          (click)="toggleCommonlyUsed()"
-          [outlined]="!showOnlyCommonlyUsed"
+          (click)="setShowMode('common')"
+          [outlined]="showMode !== 'common'"
         ></app-button>
 
         <app-button
-          [label]="getToggleSelectedText()"
-          icon="pi pi-check-square"
-          (click)="toggleSelectedOnly()"
-          [outlined]="!showOnlySelected"
+          label="顯示全部"
+          icon="pi pi-list"
+          (click)="setShowMode('all')"
+          [outlined]="showMode !== 'all'"
         ></app-button>
       </div>
     </div>
@@ -108,8 +108,8 @@
               <i class="pi pi-inbox text-3xl text-gray-400 mb-2"></i>
               <p class="text-gray-500 m-0">
                 目前沒有 {{ getCapTypeName(capType) }} 項目
-                <span *ngIf="showOnlyCommonlyUsed">（僅顯示常用項目）</span>
-                <span *ngIf="showOnlySelected">（僅顯示已選項目）</span>
+                <span *ngIf="showMode === 'common'">（僅顯示常用項目）</span>
+                <span *ngIf="showMode === 'all'">（僅顯示已選項目）</span>
               </p>
             </div>
 
@@ -142,7 +142,7 @@
                 <span class="text-sm text-gray-600">
                   目前顯示模式:
                   <span class="font-semibold">
-                    {{ getCurrentDisplayMode() }}
+                    {{ showMode === "common" ? "只顯示常用" : "顯示全部" }}
                   </span>
                 </span>
               </div>

@@ -1,26 +1,31 @@
 import { Column, formatDate, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
 
 export interface Pos1018 {
-  guiYymm: string;             // 發票年月 YYYYMM (西元年)
-  posNos: string;              // 收銀機號
-  serNos: string;              // 發票號碼序號
-  status?: string;             // 使用狀態 '00':未使用'01':使用中'02':己用完'03':停用
-  guiTrack?: string;           // 發票字軌
-  guiSnos?: string;            // 發票起始號
-  guiEnos?: string;            // 發票終止號
-  nextSnos?: string;           // 下一個發票號碼
-  usedNos?: number;            // 已用張數
-  totNos?: number;             // 全部張數
-  freeNos?: number;            // 未用張數
-  remark?: string;             // 備註
-  creDate?: Date;              // 建檔日期
-  updDate?: Date;              // 異動日期
-  updUser?: string;            // 異動者
-  guiOpenYn?: string;          // 跨月開立旗標
-  stoNo: string;               // 分店編號
-  guiOverBegDate?: Date;       // 跨月開立起始日期
-  guiOverEndDate?: Date;       // 跨月開立終止日期
-  einvFlag?: string;           // 電子發票註記
+  ID: number; // 唯一識別碼
+  STO_No: string; // 分店編號
+  GUI_YYMM: string; // 發票年月YYYYMM (西元年)
+  ECR_No: string; // 收銀機號
+  SER_NOS: string; // 發票號碼序號
+  GUI_Status: string; // 使用狀態 '00':未使用 '01':使用中 '02':己用完 '03':停用
+  GUI_TRACK: string; // 發票字軌
+  GUI_SNOS: string; // 發票起始號
+  GUI_ENOS: string; // 發票終止號
+  NEXT_SNOS: string; // 下一個發票號碼
+  USED_NOS: number; // 已用張數
+  TOT_NOS: number; // 全部張數
+  FREE_NOS: number; // 未用張數
+  REMARK: string; // 備註
+  STO_Uniform: string; // 分店統編
+  GUI_Type: string; // 發票類型
+  GUI_DownDate: string; // 發票下載日期 (ISO 8601 格式字串)
+  GUI_DownUsrNo: string; // 發票下載人員編號
+  GUI_Down_UsrName: string; // 發票下載人員名稱
+  CRT_Date: string; // 建檔日期 (ISO 8601 格式字串)
+  CRT_USR_No: string; // 建檔人員編號
+  CRT_USR_Name: string; // 建檔人員名稱
+  UPD_Date: string; // 異動日期 (ISO 8601 格式字串)
+  UPD_USR_No: string; // 異動人員編號
+  UPD_USR_Name: string; // 異動人員名稱
 }
 
 export const columns: Column[] = [

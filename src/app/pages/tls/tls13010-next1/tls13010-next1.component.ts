@@ -3,8 +3,9 @@ import { Column, formatDate } from './../../../shared/componentkit/table/table.m
 import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS13010Service } from '../../../service/API/tls/tls13010.service';
 import { ContractFlowService, WorkflowStep } from '../../../service/API/tls/tls13010contract-flow/contract-flow.service';
@@ -91,6 +92,7 @@ interface ContractInfo {
 export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = [];
+  private routerSubscription: any;
 
   // 顯示模式控制
   showOnlyCommonlyUsed = true;
@@ -217,7 +219,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'date',
       editable: true,
       autoWidth: true,
-      dateFormat: 'year-month' // 🎯 共通組件會自動處理
+      dateFormat: 'year-month'
     },
     {
       field: 'tpy_type',
@@ -297,7 +299,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'full-date' // 🎯 這裡就是你想要的功能！
+      dateFormat: 'full-date'
     },
     {
       field: 'tpy_edate',
@@ -628,9 +630,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   dataForm = this.formBuilder.group({});
 
+  // 新增：顯示模式狀態，僅有 common 與 all
+  showMode: 'common' | 'all' = 'common';
+
   constructor(
     private tls13010Service: TLS13010Service,
-    private contractFlowService: ContractFlowService
+    private contractFlowService: ContractFlowService,
+    public override router: Router
   ) {
     super();
   }
@@ -640,9 +646,17 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.initializeDataStructure();
     this.initializePage('TLS13010', this.dataForm);
     this.loadWorkflowData();
+    this.routerSubscription = this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.loadWorkflowData();
+      });
   }
 
   ngOnDestroy(): void {
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
+    }
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
@@ -658,7 +672,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
       console.log('✅ 取得合約ID:', this.currentTalentId);
 
-      // 🎯 關鍵修正：優先使用 CRU 頁面編輯後的資料
+      // 優先使用 CRU 頁面編輯後的資料
       const step1Data = this.contractFlowService.getStep1Data();
       console.log('📝 Step1 編輯資料:', step1Data);
 
@@ -862,29 +876,18 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   filterData(): void {
-    console.log('開始篩選資料，原始資料:', this.originalFareData);
+    console.log('【DEBUG】originalFareData:', this.originalFareData);
     this.initializeDataStructure();
-
     Object.keys(this.originalFareData).forEach(capType => {
       if (!Array.isArray(this.originalFareData[capType])) {
-        console.warn(`originalFareData[${capType}] 不是陣列，重置為空陣列`);
         this.originalFareData[capType] = [];
       }
-
-      if (this.showOnlySelected) {
-        this.fareData[capType] = this.originalFareData[capType].filter(item =>
-          item && item.is_selected
-        );
-      } else if (this.showOnlyCommonlyUsed) {
-        this.fareData[capType] = this.originalFareData[capType].filter(item =>
-          item && (item.data_source === 'CONTRACT_EXISTING' || item.data_source === 'APS_COMMON')
-        );
+      if (this.showMode === 'common') {
+        this.fareData[capType] = this.originalFareData[capType].filter(item => item.is_commonly_used === 'Y');
       } else {
         this.fareData[capType] = [...this.originalFareData[capType]];
       }
     });
-
-    console.log('篩選後的資料:', this.fareData);
   }
 
   private saveFareDataToWorkflow(): void {
@@ -1167,5 +1170,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     } else {
       return '全部項目';
     }
+  }
+
+  // 新增：切換顯示模式
+  setShowMode(mode: 'common' | 'all') {
+    this.showMode = mode;
+    this.filterData();
   }
 }

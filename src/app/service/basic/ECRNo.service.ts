@@ -14,7 +14,7 @@ export class ECRNoService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getECRNo(): Observable<any[]> {
     return this.http.post<any>(this.apiUrl, {}).pipe(
@@ -27,5 +27,11 @@ export class ECRNoService {
       ),
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
+  }
+  /**
+* 查詢電子發票配號作業下拉選單 (POS1002)
+*/
+  getPOS1002BillDropDownList(): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryPOS1002_Bill_DropDownList`, {})
   }
 }
