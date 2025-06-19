@@ -27,37 +27,8 @@ import { AutoCompleteOption } from '../../../shared/componentkit/app-autocomplet
 import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
 import { TLS13010Service } from '../../../service/API/tls/tls13010.service';
-
-interface CategoryItem {
-  id: number;
-  bus_type: string;
-  bus_type_name: string;
-  bus_class: string;
-  bus_class_name: string;
-  bus_sclass: string;
-  bus_sclass_name: string;
-  bus_sclass_desc: string;
-  CRT_Date: string;
-  CRT_USR_No: string;
-  CRT_USR_Name: string;
-  UPD_Date: string;
-  UPD_USR_No: string;
-  UPD_USR_Name: string;
-}
-
-// 地點資訊相關介面
-interface LocationItem {
-  id?: number | string;        // 資料庫ID
-  location_no: string;        // 位置編號
-  tlt_building: string;        // 館別
-  tlt_floor: string;          // 樓層
-  area_no: string;            // 區域
-  tlt_space: number;       // 營業坪數
-  building_desc: string; // 館別描述
-  floor_desc: string;    // 樓層描述
-  area_desc: string;     // 區域描述
-  _status?: 'new' | 'modified' | 'deleted' | 'original'; // 前端狀態管理
-}
+import { CategoryItem, ContractInfo, LocationItem } from '../tls13010/tls13010.model';
+import { DropdownOption } from '../tls13010/tls13010.dropdown';
 
 @Component({
   selector: 'app-tls13010-cru',
@@ -66,13 +37,13 @@ interface LocationItem {
 })
 export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
   // 位置選項資料
-  locationWithDetailsOptions: any[] = [];
+  locationWithDetailsOptions: DropdownOption[] = [];
 
   //廠商統一編號
-  pos2013Options: any[] = [];
+  pos2013Options: DropdownOption[] = [];
 
   // 洽談者選項
-  negotiatorOptions: any[] = [];
+  negotiatorOptions: DropdownOption[] = [];
 
   // 新的位置表格欄位定義
   locationColumns: ColumnDef[] = [
@@ -115,7 +86,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   ];
 
   // 新的位置資料陣列
-  locationData: any[] = [];
+  locationData: LocationItem[] = [];
 
   // ==========  主要表單定義 ==========
   dataForm = this.formBuilder.group({
@@ -225,14 +196,14 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   tltctypemtotalOption = [...TLS13010_DROPDOWN_OPTIONS.tltCtypeMtotal];
 
   // ==========  API 載入的下拉選單選項 ==========
-  vendorOptions: any[] = [];
-  contractStatusOptions: any[] = [];
-  settlementMethodOptions: any[] = [];
-  paymentMethodOptions: any[] = [];
-  cooperationMethodOptions: any[] = [];
-  counterCategoryOptions: any[] = [];
-  businessTypeCodeOptions: any[] = [];
-  organizationOptions: any[] = [];
+  vendorOptions: DropdownOption[] = [];
+  contractStatusOptions: DropdownOption[] = [];
+  settlementMethodOptions: DropdownOption[] = [];
+  paymentMethodOptions: DropdownOption[] = [];
+  cooperationMethodOptions: DropdownOption[] = [];
+  counterCategoryOptions: DropdownOption[] = [];
+  businessTypeCodeOptions: DropdownOption[] = [];
+  organizationOptions: DropdownOption[] = [];
 
   // 訂閱管理
   private subscriptions: Subscription[] = [];
@@ -406,7 +377,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       if (savedFormData && Object.keys(savedFormData).length > 0) {
         // 載入表單資料
         this.dataForm.patchValue(savedFormData);
-        this.loadBusinessClassifications(savedFormData.bus_type, savedFormData.bus_class);
+        this.loadBusinessClassifications(savedFormData.bus_type);
 
         // 載入暫存的位置資料
         if (savedFormData.locationInfo && savedFormData.locationInfo.length > 0) {
@@ -428,94 +399,94 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
 
-  private loadDataFromQueryResult(queryData: any): void {
+  private loadDataFromQueryResult(queryData: Record<string, unknown>): void {
     this.dataForm.patchValue({
       // 基本資訊
-      talent_id: queryData.talent_id,
-      apply_no: queryData.apply_no,
-      tlt_name: queryData.tlt_name,
-      tlt_no: queryData.tlt_no,
-      VEN_Name: queryData.VEN_Name,
-      ven_uniform: queryData.ven_uniform,
-      paper_type: queryData.paper_type,
-      bus_type: queryData.bus_type,
-      bus_class: queryData.bus_class,
-      bus_sclass: queryData.bus_sclass,
-      contract_subno: queryData.contract_subno,
+      talent_id: queryData['talent_id'] as string,
+      apply_no: queryData['apply_no'] as string,
+      tlt_name: queryData['tlt_name'] as string,
+      tlt_no: queryData['tlt_no'] as string,
+      VEN_Name: queryData['VEN_Name'] as string,
+      ven_uniform: queryData['ven_uniform'] as string,
+      paper_type: queryData['paper_type'] as string,
+      bus_type: queryData['bus_type'] as string,
+      bus_class: queryData['bus_class'] as string,
+      bus_sclass: queryData['bus_sclass'] as string,
+      contract_subno: queryData['contract_subno'] as string,
 
       // 合約資訊
-      feedback_date: queryData.feedback_date,
-      due_date: queryData.due_date,
-      tlt_bdate: queryData.tlt_bdate,
-      tlt_edate: queryData.tlt_edate,
-      contact_Date: queryData.contact_Date,
-      tlt_contract_bdate: queryData.tlt_contract_bdate,
-      tlt_contract_edate: queryData.tlt_contract_edate,
+      feedback_date: queryData['feedback_date'] as string,
+      due_date: queryData['due_date'] as string,
+      tlt_bdate: queryData['tlt_bdate'] as string,
+      tlt_edate: queryData['tlt_edate'] as string,
+      contact_Date: queryData['contact_Date'] as string,
+      tlt_contract_bdate: queryData['tlt_contract_bdate'] as string,
+      tlt_contract_edate: queryData['tlt_contract_edate'] as string,
 
       // 商務條件
-      deco_type: queryData.deco_type,
-      money_type: queryData.money_type,
-      check_type: queryData.check_type,
-      tlt_term_type: queryData.tlt_term_type,
-      comm_comp_type: queryData.comm_comp_type || '2',
-      store_way: queryData.store_way,
-      rece_yn: queryData.rece_yn,
-      pos_yn: queryData.pos_yn,
-      cash_yn: queryData.cash_yn,
-      org_id: queryData.org_id,
-      overall_status: queryData.overall_status,
-      paytype: queryData.paytype,
-      invoice_type: queryData.invoice_type,
+      deco_type: queryData['deco_type'] as string,
+      money_type: queryData['money_type'] as string,
+      check_type: queryData['check_type'] as string,
+      tlt_term_type: queryData['tlt_term_type'] as string,
+      comm_comp_type: queryData['comm_comp_type'] as string || '2',
+      store_way: queryData['store_way'] as string,
+      rece_yn: queryData['rece_yn'] as string,
+      pos_yn: queryData['pos_yn'] as string,
+      cash_yn: queryData['cash_yn'] as string,
+      org_id: queryData['org_id'] as string,
+      overall_status: queryData['overall_status'] as string,
+      paytype: queryData['paytype'] as string,
+      invoice_type: queryData['invoice_type'] as string,
 
       // 聯絡資訊
-      email: queryData.email,
-      invoice_email: queryData.invoice_email,
-      CHECK_TITLE: queryData.CHECK_TITLE,
-      store_tel: queryData.store_tel,
-      bank_id: queryData.bank_id,
-      vendor_acct_name: queryData.vendor_acct_name,
-      vendor_acct_no: queryData.vendor_acct_no,
-      contact_tel: queryData.contact_tel,
-      contact_fax: queryData.contact_fax,
-      contact_addr: queryData.contact_addr,
-      tlt_remark: queryData.tlt_remark,
+      email: queryData['email'] as string,
+      invoice_email: queryData['invoice_email'] as string,
+      CHECK_TITLE: queryData['CHECK_TITLE'] as string,
+      store_tel: queryData['store_tel'] as string,
+      bank_id: queryData['bank_id'] as string,
+      vendor_acct_name: queryData['vendor_acct_name'] as string,
+      vendor_acct_no: queryData['vendor_acct_no'] as string,
+      contact_tel: queryData['contact_tel'] as string,
+      contact_fax: queryData['contact_fax'] as string,
+      contact_addr: queryData['contact_addr'] as string,
+      tlt_remark: queryData['tlt_remark'] as string,
 
       // 其他欄位
-      comm_yn: queryData.comm_yn,
-      base_rent: queryData.base_rent,
-      tlt_kind: queryData.tlt_kind,
-      edc_yn: queryData.edc_yn,
-      tlt_ctype_mtotal: queryData.tlt_ctype_mtotal,
-      rent_ahead: queryData.rent_ahead,
-      rent_period: queryData.rent_period,
-      deposit: queryData.deposit,
-      vip_yn: queryData.vip_yn,
-      credit_card: queryData.credit_card,
-      total_amt: queryData.total_amt,
-      total_amt_vendor: queryData.total_amt_vendor,
-      construct_fees: queryData.construct_fees,
-      ticket_remarks: queryData.ticket_remarks,
-      cap_saletype1: queryData.cap_saletype1,
-      cap_saletype2: queryData.cap_saletype2,
-      contact_USR_No: queryData.contact_USR_No,
-      contact_USR_Name: queryData.contact_USR_Name,
+      comm_yn: queryData['comm_yn'] as string,
+      base_rent: queryData['base_rent'] as string,
+      tlt_kind: queryData['tlt_kind'] as string,
+      edc_yn: queryData['edc_yn'] as string,
+      tlt_ctype_mtotal: queryData['tlt_ctype_mtotal'] as string,
+      rent_ahead: queryData['rent_ahead'] as string,
+      rent_period: queryData['rent_period'] as string,
+      deposit: queryData['deposit'] as string,
+      vip_yn: queryData['vip_yn'] as string,
+      credit_card: queryData['credit_card'] as string,
+      total_amt: queryData['total_amt'] as string,
+      total_amt_vendor: queryData['total_amt_vendor'] as string,
+      construct_fees: queryData['construct_fees'] as string,
+      ticket_remarks: queryData['ticket_remarks'] as string,
+      cap_saletype1: queryData['cap_saletype1'] as string,
+      cap_saletype2: queryData['cap_saletype2'] as string,
+      contact_USR_No: queryData['contact_USR_No'] as string,
+      contact_USR_Name: queryData['contact_USR_Name'] as string,
     });
 
-    this.loadBusinessClassifications(queryData.bus_type, queryData.bus_class);
+    this.loadBusinessClassifications(queryData['bus_type'] as string);
   }
 
-  private loadBusinessClassifications(busType: string, busClass?: string): void {
+  private loadBusinessClassifications(busType: string | undefined): void {
     if (busType) {
       this.tls13010DropdownService.loadBusClassOptions(busType).subscribe({
-        next: (options) => {
-          if (busClass) {
-            this.tls13010DropdownService.loadBusSClassOptions(busType, busClass).subscribe({
-              next: (sClassOptions) => console.log('小分類載入完成:', sClassOptions.length),
-              error: (error) => console.warn('載入小分類失敗:', error)
-            });
+        next: (options: DropdownOption[]) => {
+          const currentBusClass = this.dataForm.get('bus_class')?.value;
+          const validBusClass = options.find(option => option.value === currentBusClass);
+          if (currentBusClass && !validBusClass) {
+            this.dataForm.get('bus_class')?.setValue('');
+            this.dataForm.get('bus_sclass')?.setValue('');
           }
         },
-        error: (error) => console.warn('載入中分類失敗:', error)
+        error: () => this.messageService.warnBubble('載入中分類選項失敗，請重新選擇大分類')
       });
     }
   }
@@ -533,7 +504,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     const busTypeSubscription = this.dataForm.get('bus_type')?.valueChanges.subscribe(busType => {
       if (busType) {
         this.tls13010DropdownService.loadBusClassOptions(busType).subscribe({
-          next: (options: any[]) => {
+          next: (options: DropdownOption[]) => {
             const currentBusClass = this.dataForm.get('bus_class')?.value;
             const validBusClass = options.find(option => option.value === currentBusClass);
             if (currentBusClass && !validBusClass) {
@@ -541,7 +512,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
               this.dataForm.get('bus_sclass')?.setValue('');
             }
           },
-          error: (error: any) => this.messageService.warnBubble('載入中分類選項失敗，請重新選擇大分類')
+          error: () => this.messageService.warnBubble('載入中分類選項失敗，請重新選擇大分類')
         });
       } else {
         this.tls13010DropdownService.clearBusClassOptions();
@@ -556,14 +527,14 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       const busType = this.dataForm.get('bus_type')?.value;
       if (busType && busClass) {
         this.tls13010DropdownService.loadBusSClassOptions(busType, busClass).subscribe({
-          next: (options: any[]) => {
+          next: (options: DropdownOption[]) => {
             const currentBusSClass = this.dataForm.get('bus_sclass')?.value;
             const validBusSClass = options.find(option => option.value === currentBusSClass);
             if (currentBusSClass && !validBusSClass) {
               this.dataForm.get('bus_sclass')?.setValue('');
             }
           },
-          error: (error: any) => this.messageService.warnBubble('載入小分類選項失敗，請重新選擇中分類')
+          error: () => this.messageService.warnBubble('載入小分類選項失敗，請重新選擇中分類')
         });
       } else {
         this.tls13010DropdownService.clearBusSClassOptions();
@@ -584,10 +555,22 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       const workflowData = {
         ...formData,
         locationInfo: this.locationData // 保持前端格式暫存
+        // 加入缺少的 id 欄位，避免型別錯誤
       };
 
-      this.contractFlowService.saveStep1Data(workflowData);
-      console.log('已暫存到工作流程:', workflowData);
+      // 假設 id 來自 formData 或其他來源，這裡以空字串為預設
+      const contractInfo = {
+        id: '',
+        ...workflowData
+      };
+
+      if (contractInfo.VEN_Name === null) contractInfo.VEN_Name = '';
+
+      // 修正型別：確保所有必為 string 的欄位都不是 null
+      // 若還有其他欄位未處理，請依需求補充
+
+      this.contractFlowService.saveStep1Data(contractInfo as ContractInfo);
+      console.log('已暫存到工作流程:', contractInfo);
     }
   }
 
@@ -614,10 +597,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
             const mappedItem = {
               ...item,
-              // ✅ 確保描述欄位有值
-              building_desc: item.building_desc || locationOption?.building_desc || '',
-              floor_desc: item.floor_desc || locationOption?.floor_desc || '',
-              area_desc: item.area_desc || locationOption?.area_desc || '',
+              building_desc: String(item.building_desc || (locationOption as unknown as Record<string, unknown>)?.['building_desc'] || ''),
+              floor_desc: String(item.floor_desc || (locationOption as unknown as Record<string, unknown>)?.['floor_desc'] || ''),
+              area_desc: String(item.area_desc || (locationOption as unknown as Record<string, unknown>)?.['area_desc'] || ''),
               _status: 'original'
             };
 
@@ -723,10 +705,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
 
   // 批次刪除位置項目
-  onBatchDeleteLocation(selectedItems: any[]): void {
+  onBatchDeleteLocation(selectedItems: LocationItem[]): void {
     if (confirm(`確定要刪除 ${selectedItems.length} 個位置項目嗎？`)) {
       selectedItems.forEach(item => {
-        const index = this.locationData.findIndex(d => d.id === item.id);
+        const index = this.locationData.findIndex((d: LocationItem) => d.id === item.id);
         if (index > -1) {
           // 如果是新增的資料，直接從陣列移除
           if (item._status === 'new') {
@@ -744,7 +726,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   // 位置表格儲存事件（只暫存）
-  onLocationTableSave(event: { oldData: any, newData: any }): void {
+  onLocationTableSave(event: { oldData: LocationItem; newData: LocationItem }): void {
     const { newData } = event;
 
     // 標記狀態
@@ -758,17 +740,17 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   // 位置表格編輯事件
-  onLocationTableEdit(rowData: any): void {
+  onLocationTableEdit(rowData: LocationItem): void {
     console.log('開始編輯位置資料:', rowData);
   }
 
   // 位置表格取消事件
-  onLocationTableCancel(rowData: any): void {
+  onLocationTableCancel(rowData: LocationItem): void {
     console.log('取消編輯位置資料:', rowData);
   }
 
   // 處理下拉選單變更（位置編號選擇時自動帶入）
-  onLocationDropdownChange(event: { rowData: any, field: string, newValue: any, oldValue: any }): void {
+  onLocationDropdownChange(event: { rowData: LocationItem; field: string; newValue: string; oldValue: string }): void {
     const { rowData, field, newValue, oldValue } = event;
 
     console.log('=== 下拉選單變更事件 ===');
@@ -790,23 +772,21 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
       if (selectedLocation) {
         // ✅ 找到陣列中對應的項目並直接修改
-        const targetIndex = this.locationData.findIndex(item => item.id === rowData.id);
+        const targetIndex = this.locationData.findIndex((item: LocationItem) => item.id === rowData.id);
 
         if (targetIndex > -1) {
           // 直接修改陣列中的項目
+          const selected: Record<string, unknown> = selectedLocation as unknown as Record<string, unknown>;
           this.locationData[targetIndex] = {
             ...this.locationData[targetIndex],
             location_no: newValue,
-            // 設定代碼（後端儲存用）
-            tlt_building: selectedLocation.tlt_building,
-            tlt_floor: selectedLocation.tlt_floor,
-            area_no: selectedLocation.area_no,
-            tlt_space: selectedLocation.tlt_space || 0,
-            // 設定描述（前端顯示用）
-            building_desc: selectedLocation.building_desc,
-            floor_desc: selectedLocation.floor_desc,
-            area_desc: selectedLocation.area_desc,
-            // 更新狀態
+            tlt_building: String(selected['tlt_building'] ?? ''),
+            tlt_floor: String(selected['tlt_floor'] ?? ''),
+            area_no: String(selected['area_no'] ?? ''),
+            tlt_space: Number(selected['tlt_space'] ?? 0),
+            building_desc: String(selected['building_desc'] ?? ''),
+            floor_desc: String(selected['floor_desc'] ?? ''),
+            area_desc: String(selected['area_desc'] ?? ''),
             _status: this.locationData[targetIndex]._status === 'original' ? 'modified' : 'new'
           };
 
@@ -851,18 +831,18 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   // 取得位置總營業坪數
   getTotaltlt_space(): number {
-    return this.locationData.reduce((total, item) => {
-      const area = parseFloat(item.tlt_space) || 0;
+    return this.locationData.reduce((total: number, item: LocationItem) => {
+      const area = parseFloat(item.tlt_space.toString()) || 0;
       return total + area;
     }, 0);
   }
 
   // 取得位置設定狀態
-  getLocationSetupStatus(): { text: string, class: string } {
+  getLocationSetupStatus(): { text: string; class: string } {
     if (this.locationData.length === 0) {
       return { text: '未設定', class: 'text-red-500' };
     } else {
-      const hasEmptyLocation = this.locationData.some(item => !item.location_no);
+      const hasEmptyLocation = this.locationData.some((item: LocationItem) => !item.location_no);
       if (hasEmptyLocation) {
         return { text: '設定不完整', class: 'text-orange-500' };
       } else {
@@ -886,7 +866,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   searchBankOptions(searchKeyword: string): Observable<string[]> {
     return this.bankService.getBankOptions(searchKeyword).pipe(
-      map((data: any[]) => data.map(item => `${item.value}${item.label}`))
+      map((data: DropdownOption[]) => data.map(item => `${item.value}${item.label}`))
     );
   }
 

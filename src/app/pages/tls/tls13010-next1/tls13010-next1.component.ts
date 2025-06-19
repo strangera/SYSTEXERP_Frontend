@@ -10,6 +10,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { TLS13010Service } from '../../../service/API/tls/tls13010.service';
 import { ContractFlowService, WorkflowStep } from '../../../service/API/tls/tls13010contract-flow/contract-flow.service';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
+import { FareItem, ContractInfo } from '../tls13010/tls13010.model';
 
 // 介面定義
 interface CategoryItem {
@@ -19,69 +20,6 @@ interface CategoryItem {
   CAT_LRemark: string | null;
   CRT_USR_No: string | "";
   CRT_USR_Name: string | "";
-}
-
-// 統一的扣款項目介面
-interface FareItem {
-  id?: string | number;
-  serialNumber?: number;
-  talent_id: number;
-  cap_type: string;
-  cap_item: string;
-  cap_name: string;
-  tpy_bdate?: string;
-  tpy_edate?: string;
-  tpy_type?: string;
-  tpy_qty?: number;
-  tpy_unitamt?: number;
-  tpy_amount?: number;
-  tpy_totalamt?: number;
-  day_account?: string;
-  interval?: number;
-  down_payment?: number;
-  period_nos?: number;
-  tpy_1stamt?: number;
-  cap_saletype?: string;
-  edc_bank?: string;
-  instms_type?: string;
-  pay_no?: string;
-  gui_flag?: string;
-  tpy_rate?: number;
-  org_id?: string;
-  is_commonly_used?: string;
-  cap_tax_type?: string;
-  acc_no?: string;
-
-  // API 標記欄位
-  data_source: string;
-  is_selected: boolean;
-  is_new_item: boolean;
-
-  // 狀態欄位
-  _status?: 'new' | 'modified' | 'deleted' | 'original';
-}
-
-interface ContractInfo {
-  id: string | number;
-  talent_id: string;
-  apply_no: string;
-  tlt_name: string;
-  VEN_Name: string;
-  contract_subno?: string;
-  cap_name?: string;
-  cap_item?: string;
-  org_id?: string;
-  tpy_type?: string;
-  tlt_contract_bdate?: string;
-  tlt_contract_edate?: string;
-  tlt_bdate?: string;
-  tlt_edate?: string;
-  tpy_amount?: number;
-  tpy_unitamt?: number;
-  tpy_qty?: number;
-  ven_uniform?: any;
-  comm_comp_type?: any;
-  originalFareData?: any;
 }
 
 @Component({
@@ -708,8 +646,14 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       console.log('🔍 檢查是否有暫存的扣款資料...');
       const savedFareData = this.contractFlowService.getStepData(WorkflowStep.DEDUCTION);
 
-      if (savedFareData && Object.keys(savedFareData).length > 0) {
-        console.log('📦 發現暫存的扣款資料，直接使用');
+      const isAllEmpty = !savedFareData ||
+        Object.values(savedFareData).every(arr => !Array.isArray(arr) || arr.length === 0);
+
+      if (isAllEmpty) {
+        // 沒有任何資料，打 API
+        this.loadFareDataFromAPI();
+      } else {
+        // 有暫存資料，直接用
         try {
           this.originalFareData = this.validateAndFixData(savedFareData);
           this.filterData();
@@ -718,9 +662,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
           console.error('❌ 暫存資料處理失敗，重新載入:', error);
           this.loadFareDataFromAPI();
         }
-      } else {
-        console.log('📭 沒有暫存資料，從 API 載入');
-        this.loadFareDataFromAPI();
       }
     } else {
       console.warn('❌ 沒有 talent_id，重導向到前一步');
@@ -728,85 +669,22 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  // 🎯 簡化：資料驗證和修正（移除日期處理）
-  private validateAndFixData(data: any): { [key: string]: FareItem[] } {
-    console.log('驗證暫存資料格式:', data);
-
-    const validatedData: { [key: string]: FareItem[] } = {
-      'A': [], 'B': [], 'C': [], 'D': [], 'E': []
-    };
+  private validateAndFixData(data: any): Record<string, FareItem[]> {
+    const capTypes = ['A', 'B', 'C', 'D', 'E'];
+    const validatedData: Record<string, FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
 
     if (!data || typeof data !== 'object') {
-      console.error('❌ 暫存資料不是物件，使用空資料');
       return validatedData;
     }
 
-    const hasCorrectStructure = Object.keys(validatedData).every(capType =>
-      data.hasOwnProperty(capType)
-    );
-
-    if (!hasCorrectStructure) {
-      console.error('❌ 暫存資料結構不正確，缺少必要的類型鍵值');
-      return validatedData;
-    }
-
-    // 🎯 簡化：只做基本資料驗證，不處理日期
-    Object.keys(validatedData).forEach(capType => {
-      if (data[capType] && Array.isArray(data[capType])) {
-        validatedData[capType] = data[capType].map((item: any) => {
-          if (!item || typeof item !== 'object') {
-            console.warn(`⚠️ ${capType} 中發現無效項目:`, item);
-            return null;
-          }
-
-          // 基本欄位確保存在，日期欄位保持原樣
-          const fixedItem: FareItem = {
-            id: item.id || `${capType}_${Date.now()}_${Math.random()}`,
-            talent_id: item.talent_id || parseInt(this.currentTalentId) || 0,
-            cap_type: item.cap_type || capType,
-            cap_item: item.cap_item || '',
-            cap_name: item.cap_name || '',
-
-            // 🎯 關鍵：保持日期欄位原樣，讓共通組件處理
-            tpy_bdate: item.tpy_bdate,
-            tpy_edate: item.tpy_edate,
-
-            tpy_type: item.tpy_type || null,
-            tpy_qty: item.tpy_qty || null,
-            tpy_unitamt: item.tpy_unitamt || null,
-            tpy_amount: item.tpy_amount || null,
-            tpy_totalamt: item.tpy_totalamt || null,
-            day_account: item.day_account || null,
-            interval: item.interval || null,
-            down_payment: item.down_payment || null,
-            period_nos: item.period_nos || null,
-            tpy_1stamt: item.tpy_1stamt || null,
-            cap_saletype: item.cap_saletype || null,
-            edc_bank: item.edc_bank || null,
-            instms_type: item.instms_type || null,
-            pay_no: item.pay_no || null,
-            gui_flag: item.gui_flag || null,
-            tpy_rate: item.tpy_rate || null,
-            org_id: item.org_id || null,
-            is_commonly_used: item.is_commonly_used || null,
-            cap_tax_type: item.cap_tax_type || null,
-            acc_no: item.acc_no || null,
-
-            data_source: item.data_source || 'APS_COMMON',
-            is_selected: Boolean(item.is_selected),
-            is_new_item: Boolean(item.is_new_item),
-            _status: item._status || 'original'
-          };
-
-          return fixedItem;
-        }).filter(item => item !== null);
+    capTypes.forEach(capType => {
+      if (Array.isArray(data[capType])) {
+        validatedData[capType] = data[capType];
       } else {
-        console.warn(`暫存資料中 ${capType} 類型格式不正確，使用空陣列`);
         validatedData[capType] = [];
       }
     });
 
-    console.log('修正後的資料:', validatedData);
     return validatedData;
   }
 
@@ -922,7 +800,14 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       });
 
       console.log(`💾 總共要儲存 ${totalItems} 筆資料`);
-      this.contractFlowService.saveStep2Data(dataToSave);
+      // 將所有 capType 的項目合併成一個陣列
+      const mergedFareItems: FareItem[] = [];
+      Object.keys(dataToSave).forEach(capType => {
+        if (Array.isArray(dataToSave[capType])) {
+          mergedFareItems.push(...dataToSave[capType]);
+        }
+      });
+      this.contractFlowService.saveStep2Data(mergedFareItems);
       console.log('✅ 已成功暫存扣款資料到工作流程');
     } catch (error) {
       console.error('❌ 儲存暫存資料時發生錯誤:', error);

@@ -33,78 +33,7 @@ import { CooperationMethodService } from '../../../service/basic/cooperation-met
 import { CounterCategoryService } from '../../../service/basic/counter-category.service';
 
 // 資料模型
-interface ContractItem {
-  talent_id: string;
-  apply_no: string;
-  tlt_no: string;
-  tlt_name: string;
-  ven_uniform: string;
-  ven_no: string;
-  VEN_Name: string;
-  paper_type: string;
-  contract_subno: string;
-  feedback_date: string;
-  due_date: string;
-  tlt_bdate: string;
-  tlt_edate: string;
-  contact_Date: string;
-  tlt_contract_bdate: string;
-  tlt_contract_edate: string;
-  bus_type: string;
-  bus_class: string;
-  bus_sclass: string;
-  deco_type: string;
-  money_type: string;
-  check_type: string;
-  tlt_term_type: string;
-  comm_comp_type: string;
-  comm_yn: string;
-  store_way: string;
-  rece_yn: string;
-  pos_yn: string;
-  cash_yn: string;
-  tlt_openflag: string;
-  org_id: string;
-  rent_ahead: string;
-  rent_period: string;
-  base_rent: string;
-  deposit: string;
-  total_amt: string;
-  total_amt_vendor: string;
-  open_deposit: string;
-  open_fees: string;
-  construct_deposit: string;
-  construct_fees: string;
-  expiration_deposit: string;
-  expiration_fees: string;
-  check_day: string;
-  tlt_kind: string;
-  edc_yn: string;
-  tlt_ctype_mtotal: string;
-  overall_status: string;
-  paytype: string;
-  vip_yn: string;
-  credit_card: string;
-  invoice_type: string;
-  water_flag: string;
-  electric_flag: string;
-  gas_flag: string;
-  email: string;
-  invoice_email: string;
-  CHECK_TITLE: string;
-  store_tel: string;
-  bank_id: string;
-  vendor_acct_name: string;
-  vendor_acct_no: string;
-  contact_tel: string;
-  contact_fax: string;
-  contact_addr: string;
-  tlt_remark: string;
-  ticket_remarks: string;
-  source_type: string;
-  rental_count: string;
-  contract_type: string;
-}
+import { ContractItem } from './tls13010.model';
 
 @Component({
   selector: 'app-tls13010',

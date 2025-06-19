@@ -2,6 +2,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { CommissionItem, ConditionDataItem, ContractInfo, FareItem, FinalData } from '../../../../pages/tls/tls13010/tls13010.model';
+
+
 
 // 工作流程步驟定義
 export enum WorkflowStep {
@@ -34,12 +37,12 @@ export class ContractFlowService {
   // 保留您原有的資料結構
   private contractData: {
     contractId: string | null,
-    queryRowData: any | null,
-    step1: any | null,
-    step2: any[],
-    step3: any[],
-    step4: any[],
-    step5: any | null,
+    queryRowData: ContractInfo | null,
+    step1: ContractInfo | null,
+    step2: FareItem[],
+    step3: CommissionItem[],
+    step4: ConditionDataItem[],
+    step5: FinalData | null,
     metadata: {
       createdAt: Date;
       lastModified: Date;
@@ -139,7 +142,7 @@ export class ContractFlowService {
   /**
    * 儲存第1步資料
    */
-  saveStep1Data(formData: any): void {
+  saveStep1Data(formData: ContractInfo): void {
     const contractId = formData.talent_id || formData.apply_no;
     this.contractData.contractId = contractId;
     this.contractData.step1 = formData;
@@ -156,7 +159,7 @@ export class ContractFlowService {
   /**
    * 取得第1步資料
    */
-  getStep1Data(queryData?: any): any {
+  getStep1Data(queryData?: any): ContractInfo | null {
     if (queryData) {
       const contractId = queryData.talent_id || queryData.apply_no;
       if (this.contractData.contractId === contractId) {
@@ -171,7 +174,7 @@ export class ContractFlowService {
   /**
    * 儲存第2步資料（代扣款）
    */
-  saveStep2Data(data: any): void {
+  saveStep2Data(data: FareItem[]): void {
     if (this.contractData.contractId) {
       // 🔧 修正：直接儲存物件格式，不要包成陣列
       this.contractData.step2 = data;  // 直接儲存，保持原格式
@@ -188,7 +191,7 @@ export class ContractFlowService {
   /**
    * 儲存第3步資料（抽成設定）
    */
-  saveStep3Data(data: any): void {
+  saveStep3Data(data: CommissionItem[]): void {
     if (this.contractData.contractId) {
       this.contractData.step3 = Array.isArray(data) ? data : [data];
       this.contractData.metadata.lastModified = new Date();
@@ -203,7 +206,7 @@ export class ContractFlowService {
   /**
    * 儲存第4步資料（條件設定）
    */
-  saveStep4Data(data: any): void {
+  saveStep4Data(data: ConditionDataItem[]): void {
     if (this.contractData.contractId) {
       this.contractData.step4 = Array.isArray(data) ? data : [data];
       this.contractData.metadata.lastModified = new Date();
@@ -341,7 +344,7 @@ export class ContractFlowService {
   /**
    * 取得某個欄位的值（給第5步用）
    */
-  getStep1Field(fieldName: string): any {
+  getStep1Field(fieldName: keyof ContractInfo): ContractInfo[keyof ContractInfo] | undefined {
     return this.contractData.step1?.[fieldName];
   }
 
@@ -536,21 +539,21 @@ export class ContractFlowService {
   /**
    * 取得第2步資料（代扣款）
    */
-  getStep2Data(): any {
+  getStep2Data(): FareItem[] {
     return this.contractData.step2;
   }
 
   /**
    * 取得第3步資料（抽成設定）
    */
-  getStep3Data(): any {
+  getStep3Data(): CommissionItem[] {
     return this.contractData.step3;
   }
 
   /**
    * 取得第4步資料（條件設定） - 新增別名方法
    */
-  getStep4Data(): any {
+  getStep4Data(): ConditionDataItem[] {
     return this.contractData.step4;
   }
 

@@ -11,87 +11,16 @@ import { ContractFlowService, WorkflowStep } from '../../../service/API/tls/tls1
 import { TLS13010Service } from '../../../service/API/tls/tls13010.service';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
+import { ContractInfo, CommissionItem, DiscountSettingItem, AnnualPerformanceItem, DiscountLevelItem } from '../tls13010/tls13010.model';
 
 // ... 介面定義保持不變 ...
-interface CategoryItem {
-  id: number;
-  CAT_LNo: string;
-  CAT_LName: string;
-  CAT_LRemark: string | null;
-  CRT_USR_No: string | "";
-  CRT_USR_Name: string | "";
-}
-
-interface ContractInfo {
-  id: string | number;
-  talent_id: string;
-  apply_no: string;
-  tlt_name: string;
-  VEN_Name: string;
-  contract_subno?: string;
-  cap_name?: string;
-  cap_item?: string;
-  org_id?: string;
-  tpy_type?: string;
-  tlt_contract_bdate?: string;
-  tlt_contract_edate?: string;
-  tlt_bdate?: string;
-  tlt_edate?: string;
-  tpy_amount?: number;
-  tpy_unitamt?: number;
-  tpy_qty?: number;
-  ven_uniform?: any;
-  comm_comp_type?: any;
-  originalFareData?: any;
-}
-
-interface CommissionItem {
-  id: number;
-  commissionType: string;
-  commissionTypeName: string;
-  taxType: number;
-  discountSummary: string;
-  transactionAmount: number;
-  specialCommission: number;
-  fullPointActivity: boolean;
-  thousandDiscount: boolean;
-  selectedSettingOption: string;
-  discountSettingItems: DiscountSettingItem[];
-  annualPerformanceItems: AnnualPerformanceItem[];
-  discountLevelItems: DiscountLevelItem[];
-  detailItems: any[];
-}
-
-interface DiscountSettingItem {
-  selected: boolean;
-  cag_barcode: string;
-  startDate: Date;
-  endDate: Date;
-  rate: number;
-}
-
-interface AnnualPerformanceItem {
-  selected: boolean;
-  startDate: Date;
-  endDate: Date;
-  discountAmount: number;
-  rate: number;
-}
-
-interface DiscountLevelItem {
-  selected: boolean;
-  cag_barcode: string;
-  startAmount: number;
-  endAmount: number;
-  rate: number;
-}
 
 @Component({
   selector: 'app-tls13010-next2',
   templateUrl: './tls13010-next2.component.html',
   styleUrls: ['./tls13010-next2.component.scss']
 })
-export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
+export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> implements OnInit, OnDestroy {
   @ViewChild('expandedContent') expandedContentTemplate!: TemplateRef<any>;
 
   private subscriptions: Subscription[] = [];
@@ -311,7 +240,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
   private loadDiscountOptions(): Promise<void> {
     return new Promise((resolve) => {
       console.log('🔽 開始載入折數選項...');
-
+      console.log('discountOptions:', this.discountOptions);
       this.paperTypeService.getPaperTypeOptions('T102').subscribe({
         next: (options: any[]) => {
           console.log('📥 API 回傳的折扣選項:', options);
@@ -818,6 +747,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   // 添加折扣設置項目
   addDiscountSettingItem(item: CommissionItem): void {
+    // 用 createDiscountSettingItem() 產生新物件
     item.discountSettingItems.push(this.createDiscountSettingItem());
     this.updateDetailItemsForDisplay();
   }

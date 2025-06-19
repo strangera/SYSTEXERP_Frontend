@@ -9,6 +9,7 @@ import { TLS13010Service } from '../../../service/API/tls/tls13010.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
+import { ConditionDataItem, ContractInfo } from '../tls13010/tls13010.model';
 
 // 🎯 後端 API Response 介面定義
 interface TLS13010CommissionResponse {
@@ -100,40 +101,6 @@ interface LevelDetail {
   charge_rate: number;
 }
 
-// 🔧 前端資料模型
-interface ConditionDataItem {
-  id?: number | string;
-  // ischeck: boolean;
-  A: string;
-  B: string;
-  C: string;
-  D: string;
-  E: string;
-  F: string;
-  G: string;
-}
-
-interface ContractInfo {
-  id: string | number;
-  talent_id: string;
-  apply_no: string;
-  tlt_name: string;
-  VEN_Name: string;
-  contract_subno?: string;
-  ven_uniform?: any;
-  comm_comp_type?: any;
-  tlt_bdate?: string;
-  tlt_edate?: string;
-  tlt_contract_bdate?: string;
-  tlt_contract_edate?: string;
-}
-
-interface GraduatedItems extends ConditionDataItem { }
-interface BaseTierItems extends ConditionDataItem { }
-interface BaseCommissionItems extends ConditionDataItem { }
-interface FixedRentItems extends ConditionDataItem { }
-type BaseRentHigherItems = FixedRentItems;
-
 @Component({
   selector: 'app-tls13010-next3',
   templateUrl: './tls13010-next3.component.html',
@@ -153,11 +120,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   contractInfoData: ContractInfo[] = [];
 
   // 條件設定資料結構
-  graduatedItems: GraduatedItems[] = [];
-  baseTierItems: BaseTierItems[] = [];
-  baseCommissionItems: BaseCommissionItems[] = [];
-  fixedRentItems: FixedRentItems[] = [];
-  baseRentHigherItems: BaseRentHigherItems[] = [];
+  graduatedItems: ConditionDataItem[] = [];
+  baseTierItems: ConditionDataItem[] = [];
+  baseCommissionItems: ConditionDataItem[] = [];
+  fixedRentItems: ConditionDataItem[] = [];
+  baseRentHigherItems: ConditionDataItem[] = [];
 
   // 契約資訊欄位定義
   contractInfoColumns: ColumnDef[] = [
@@ -417,7 +384,15 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     };
 
     try {
-      this.contractFlowService.saveStep4Data(conditionData);
+      // 修正：將 conditionData 轉為 ConditionDataItem[] 陣列再儲存
+      const mergedConditionData: ConditionDataItem[] = [
+        ...this.graduatedItems,
+        ...this.baseTierItems,
+        ...this.baseCommissionItems,
+        ...this.fixedRentItems,
+        ...this.baseRentHigherItems
+      ];
+      this.contractFlowService.saveStep4Data(mergedConditionData);
       console.log('✅ 已成功暫存條件設定資料到工作流程');
     } catch (error) {
       console.error('❌ 儲存條件設定資料時發生錯誤:', error);
@@ -592,7 +567,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
     } catch (error) {
       console.error('❌ 處理後端抽成設定資料時發生錯誤:', error);
-      this.initializeConditionDataByCommissionType(this.contractInfoData[0]?.comm_comp_type);
+      // this.initializeConditionDataByCommissionType(this.contractInfoData[0]?.comm_comp_type);
       this.notificationService.errorBubble('處理抽成設定資料時發生錯誤');
     }
   }
