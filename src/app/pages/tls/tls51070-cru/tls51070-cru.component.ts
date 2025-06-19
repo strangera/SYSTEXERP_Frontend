@@ -114,7 +114,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_Volume: [0, [Validators.maxLength(10)]], //容量(ml)
     PLU_Width: [0, [Validators.maxLength(10)]], //寬度(cm)
 
-
     // 商品規格(二) 顯示畫面
     PLU_Reserve2: ['', [Validators.maxLength(400)]], // 規格說明
     PLU_Reserve3: ['', [Validators.maxLength(400)]], // 系列
@@ -136,8 +135,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     //---
     PLU_OrderPrcRate: [0, [Validators.required, Validators.maxLength(10)]], // 進價折數 預設0 (依照品牌 PLULOGO)
-    PLU_ECStatus: ['0', [Validators.maxLength(1)]], // EC商品狀態: 1.正常2.停用3.停進4,下架 For EC (備註: 原來的 商品狀態(PLU_Status) 改為 EC商品狀態(PLU_ECStatus))
-    PLU_Status: [0, [Validators.required, Validators.maxLength(1)]], // 商品狀態:0一般 不顯示
+    PLU_ECStatus: ['1', [Validators.maxLength(1)]], // EC商品狀態: 1.正常2.停用3.停進4,下架 For EC (備註: 原來的 商品狀態(PLU_Status) 改為 EC商品狀態(PLU_ECStatus))
+    PLU_Status: ['0', [Validators.required, Validators.maxLength(1)]], // 商品狀態:0一般 不顯示
 
     //---必填未列入(都是預設不可編輯)---
     PLU_OpenPrc: ['Y', [Validators.required, Validators.maxLength(1)]], // 開放售價Y/N
@@ -309,6 +308,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     if (this.crudstatus == CRUDStatus.Edit) {
       //查詢明細檔案 (編輯模式)
       console.log('編輯模式，讀取表單', this.dataForm.value);
+
+      //讀取明細檔
+      this.loadDetail(this.dataForm.get('PLU_MagNo')?.value || '');
     }
 
     // 監聽 大分類 是否為''
@@ -423,25 +425,28 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
+          console.log('讀取表單', frm);
+          const formValue = frm.getRawValue();
           const requestBody = {
-            ...frm.value,
-            "IMG1001_INFO": this.img1001Data,
-            // "POS2005_INFO": [this.POS2005Data],
+            ...formValue,
+            PLU_No: [frm.get('PLU_No')?.value], //用[]包
             "POS2020_INFO": this.POS2020Data,
+            "IMG1001_INFO": this.img1001Data,
           }
           console.log('insert', requestBody);
+
           this.tls51070Service.insertTLS51070(requestBody).subscribe(() => {
             this.messageService.successBubble('新增成功');
-            // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-            this.dataForm.reset(); // 重置表單
+            this.onCancel(); // 儲存後，會返回列表
           });
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
-          console.log('讀取表單', frm.value.PLU_MagNo);
+          console.log('讀取表單', frm);
+          const formValue = frm.getRawValue();
           const requestBody = {
-            ...frm.value,
+            ...formValue,
             PLU_No: [this.POS2005Data[0].PLU_No], // 覆寫 frm.value 中的 PLU_No
             "IMG1001_INFO": this.img1001Data,
             // "POS2005_INFO": [this.POS2005Data],
@@ -449,10 +454,10 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           }
           console.log('update', requestBody);
 
-          // this.tls51070Service.updateTLS51070(requestBody).subscribe(() => {
-          //   this.messageService.successBubble('更新成功');
-          //   this.onCancel(); // 儲存後，會返回列表
-          // });
+          this.tls51070Service.updateTLS51070(requestBody).subscribe(() => {
+            this.messageService.successBubble('更新成功');
+            this.onCancel(); // 儲存後，會返回列表
+          });
         }
         break;
     }

@@ -25,10 +25,33 @@ export class ReportTableGroupComponent implements OnInit {
   @Input() continuousRowNumber = true;
   @Input() dateRangeLabel: string = '資料區間';
   @Input() pdfSummaryText: string[] = [];
+  @Input() groupByField: string | null = null;
 
   showRowsPerTableDialog = false;
   tempRowsPerTable = this.rowsPerTable;
   sortedData: any[] = [];
+  private groupAndSplitData(): void {
+    if (this.groupByField) {
+      const groupedMap = new Map<string, any[]>();
+
+      this._data.forEach(item => {
+        const key = item[this.groupByField!] ?? '未指定';
+        if (!groupedMap.has(key)) groupedMap.set(key, []);
+        groupedMap.get(key)!.push(item);
+      });
+
+      this.groupedData = Array.from(groupedMap.entries()).map(([key, items]) => {
+        items.forEach(row => row['__groupKey'] = key); // 給每筆資料標記群組
+        return items;
+      });
+    } else {
+      const total = this._data?.length || 0;
+      const groupCount = Math.ceil(total / this.rowsPerTable);
+      this.groupedData = Array.from({ length: groupCount }, (_, i) =>
+        this._data.slice(i * this.rowsPerTable, (i + 1) * this.rowsPerTable)
+      );
+    }
+  }
 
   private _data: any[] = [];
   @Input() set data(value: any[]) {
