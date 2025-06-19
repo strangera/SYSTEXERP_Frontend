@@ -31,7 +31,7 @@
 </div>
 <div class="card">
   <app-table [data]="data" [columns]="columns" [showCheckBox]="true" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    dataKey="id" [multiSortMeta]="[{ field: 'SYS_SrvNo', order: 1 }]" [totalRecords]="totalRecords"
+    dataKey="id" [multiSortMeta]="[{ field: 'id', order: 1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" (delete)="onDelete($event)"
     [loading]="loading"></app-table>
 </div>

@@ -18,7 +18,7 @@ export class TLS46010Component
     SYS_SrvNo: ['', [Validators.maxLength(8)]], // 主機編號
     SYS_SrvStatus: ['', [Validators.maxLength(2)]], // 主機狀態 A=啟用 C=停用 預設值為A
     SYS_SrvIP: ['', [Validators.maxLength(40)]], // 主機IP
-    ...createPaginationConfig([{ field: 'SYS_SrvNo', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
 
@@ -87,7 +87,26 @@ export class TLS46010Component
     });
   }
 
-  onDelete(rowData: Pos10015[]) {
-    console.log(rowData); //TODO：回家作業！！！寫一隻刪除API就好喔~加油
+  // 刪除項目
+  onDelete(rowData: Pos10015[]): void {
+    const idList = rowData
+      .map(item => item.id)
+      .filter(id => id !== undefined && id !== null);
+    console.log(idList);
+    if (idList.length === 0) {
+      this.messageService.warnBubble('無有效的 ID 可供刪除');
+      return;
+    }
+    this.tls46010Service.deleteTLS46010({ idList }).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('選中項目刪除成功');
+          this.onSubmit(this.queryForm); // 重新查詢以更新列表
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        }
+      }
+    });
   }
 }
