@@ -44,7 +44,6 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
   titleOptions: apiOption[] = [];
   userStatusOptions: option[] = [];
   userTypeOptions: option[] = [];
-  tltNo_Options: option[] = [];
   SYS3700_Options: { value: string; label: string }[] = [];
   SYS3800_Options: { value: string; label: string }[] = [];
   SYS3A00_Options: { value: string; label: string }[] = [];
@@ -102,14 +101,6 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
         })))
     );
 
-    const tltTalentOptions$ = this.sys0110Service.queryTLTTALENT_DropDownList({}).pipe(
-      map((response) => response.Data.map((item: any) => ({
-        No: item.No,
-        Name: item.Name,
-        Label: item.No + '-' + item.Name,
-      })))
-    );
-
     const buildingOptions$ = this.locationOptionsService.getBuildingOptions()
     const floorOptions$ = this.locationOptionsService.getFloorOptions()
     const regionOptions$ = this.locationOptionsService.getRegionOptions()
@@ -119,7 +110,6 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
     forkJoin([
       orgOptions$,
       systemCodeOptions$,
-      tltTalentOptions$,
       buildingOptions$,
       floorOptions$,
       regionOptions$,
@@ -127,7 +117,6 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
     ]).subscribe(([
       orgOptions,
       systemCodeOptions,
-      tltTalentOptions,
       buildingOptions,
       floorOptions,
       regionOptions,
@@ -136,7 +125,6 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
       // 在這裡，所有的選項都已經載入完畢
       this.SYS3100_Options = orgOptions;
       this.titleOptions = systemCodeOptions;
-      this.tltNo_Options = tltTalentOptions;
       this.SYS3700_Options = buildingOptions;
       this.SYS3800_Options = floorOptions;
       this.SYS3A00_Options = regionOptions;

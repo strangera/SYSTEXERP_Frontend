@@ -118,7 +118,8 @@
                 ? 'pi pi-chevron-down'
                 : 'pi pi-chevron-right'
               : 'pi pi-minus text-gray-500'
-          " [disabled]="rowData[expansionDataKey]?.length === 0" tooltipPosition="right" pButton />
+          " [disabled]="rowData[expansionDataKey]?.length === 0" tooltipPosition="right" pButton
+          [ngClass]="{ 'p-button-danger': rowData[expansionDataKey]?.length === 0 }" />
       </td>
       <td *ngFor="let col of columns" (click)="editing ? $event.stopPropagation() : null"
         class="max-w-{{ col.maxWidth }} text-center" style="text-overflow: ellipsis" [ngClass]="col.style"

@@ -28,10 +28,11 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="ID" [data]="data" [columns]="columns" [expansionColumns]="subColumns" expansionDataKey="details"
-    (edit)="onEdit($event)" (detail)="onDetail($event)" [showCheckBox]="true" (delete)="onDelete($event)"
-    (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [isRowSelectable]="isRowSelectable"
-    [multiSortMeta]="[{ field: 'ID', order: 1 }]" [totalRecords]="totalRecords" [editDisabled]="editDisabled"
+  <app-table dataKey="ID" [data]="data" [columns]="columns" [expansionColumns]="subColumns"
+    expansionDataKey="POS10171Details" (detail)="onDetail($event)" [showEdit]="false" [showCheckBox]="true"
+    (delete)="onDelete($event)" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
+    [isRowSelectable]="isRowSelectable" [multiSortMeta]="[{ field: 'GUI_YYMM', order: 1 }]"
+    [totalRecords]="totalRecords" [editDisabled]="editDisabled"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading">
   </app-table>
 </div>
