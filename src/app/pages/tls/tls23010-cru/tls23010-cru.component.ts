@@ -7,6 +7,9 @@ import { CarrierTypeService } from '../../../service/basic/carrier-type.service'
 import { finalize } from 'rxjs/operators';
 import { Location } from '@angular/common';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable'; // ✅ 正確寫法
+import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
 
 
 @Component({
@@ -247,9 +250,11 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
           `折扣別(專櫃業績) = (A) + (B) - (C) + (E) - (G) + (H) = ${discountValue}`,
           `付款別(支付工具) = (A) + (B) + (D) - (F) = ${paymentValue}`
         ];
+        this.generateSummaryTable();
       }, () => {
         this.data = [];
       });
+
     } else {
       this.loading = false;
     }
@@ -280,6 +285,131 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
   }
   // 計算所有 A~H = TXN_PrintGUI 加總
 
+  groupedSummaryData: any[] = [];
+  totalSum = 0;
+  invoiceSum = 0;
+  showSummaryMode = false;
+  summaryTableData: any[] = [];
+
+  generateSummaryTable(): void {
+    const summaryMap = new Map<string, any>();
+
+    this.totalSum = 0;
+    this.invoiceSum = 0;
+
+    this.data.forEach(row => {
+      const key = row.tlt_no;
+      if (!summaryMap.has(key)) {
+        summaryMap.set(key, {
+          dateStart: this.dateStart,
+          dateEnd: this.dateEnd,
+          tlt_no: row.tlt_no,
+          tlt_name: row.tlt_name,
+          sum: 0
+        });
+      }
+
+      const saleAmt = parseFloat(row.TXN_TotSaleAmt) || 0;
+      const payAmt = parseFloat(row.TXN_TotPayAmt) || 0;
+
+      summaryMap.get(key).sum += saleAmt;
+      this.totalSum += saleAmt;
+      this.invoiceSum += payAmt;
+    });
+
+    this.summaryTableData = Array.from(summaryMap.values());
+
+    console.log('summaryTableData ✅', this.summaryTableData);
+    this.groupedSummaryData = this.summaryTableData; // 保留舊用法相容性
+  }
 
 
+
+  exportSummaryPDF(): void {
+    const doc = new jsPDF('l', 'pt');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const marginLeft = 40;
+    let currentY = 40;
+
+    // 設定全域字體
+    doc.setFont('NotoSansTC', 'normal');
+
+    // 標題與時間
+    doc.setFontSize(14);
+    doc.text('銷售總額報表', pageWidth / 2, currentY, { align: 'center' });
+    currentY += 20;
+
+    doc.setFontSize(10);
+    doc.text(`資料區間：${this.dateStart} ~ ${this.dateEnd}`, marginLeft, currentY);
+    doc.text(`列印時間：${this.printedAt}`, pageWidth - marginLeft, currentY, { align: 'right' });
+    currentY += 20;
+
+    // 表頭與資料
+    const headers = ['銷售日期起', '銷售日期迄', '專櫃編號', '櫃位名稱', '發票總金額'];
+    const body = this.groupedSummaryData.map(row => [
+      row.dateStart,
+      row.dateEnd,
+      row.tlt_no,
+      row.tlt_name,
+      row.sum.toLocaleString()
+    ]);
+
+    // 合計列
+    const foot = [[
+      '', '', '', '發票總金額合計：', this.totalSum.toLocaleString()
+    ]];
+
+    autoTable(doc, {
+      startY: currentY,
+      head: [headers],
+      body,
+      foot,
+      margin: { left: marginLeft, right: marginLeft },
+      styles: {
+        font: 'NotoSansTC',
+        fontStyle: 'normal',
+        fontSize: 9,
+        lineWidth: 0.1,
+        lineColor: [0, 0, 0],
+      },
+      headStyles: {
+        font: 'NotoSansTC',
+        fontStyle: 'normal',
+        fontSize: 10,
+        fillColor: [212, 222, 254],
+        textColor: [0, 0, 0],
+        halign: 'center',
+      },
+      footStyles: {
+        font: 'NotoSansTC',
+        fontStyle: 'normal',
+        fontSize: 10,
+        fillColor: [250, 250, 210],
+        textColor: [0, 0, 0],
+        halign: 'right',
+      },
+    });
+
+    doc.save(`銷售總額_${new Date().toISOString().slice(0, 10)}.pdf`);
+  }
+  exportSummaryExcel(): void {
+    import('xlsx').then(xlsx => {
+      const ws = xlsx.utils.json_to_sheet(
+        this.groupedSummaryData.map(row => ({
+          銷售日期起: row.dateStart,
+          銷售日期迄: row.dateEnd,
+          專櫃編號: row.tlt_no,
+          櫃位名稱: row.tlt_name,
+          發票總金額: row.sum
+        }))
+      );
+      const wb = xlsx.utils.book_new();
+      xlsx.utils.book_append_sheet(wb, ws, '銷售總額');
+      xlsx.writeFile(wb, `銷售總額_${new Date().toISOString()}.xlsx`);
+    });
+  }
+
+goToQueryPage(): void {
+  this.router.navigate(['/TLS/TLS23010']);
+}
 }
