@@ -4,8 +4,7 @@ import { Column } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-app-dynamic-table',
-  standalone: true,
-  imports: [],
+
   templateUrl: './app-dynamic-table.component.html',
   styleUrl: './app-dynamic-table.component.scss'
 })
