@@ -24,9 +24,11 @@ export class ReportTableGroupComponent implements OnInit {
   @Input() reportTitle: string = '報表';
   @Input() continuousRowNumber = true;
   @Input() dateRangeLabel: string = '資料區間';
+  @Input() pdfSummaryText: string[] = [];
 
   showRowsPerTableDialog = false;
-tempRowsPerTable = this.rowsPerTable;
+  tempRowsPerTable = this.rowsPerTable;
+  sortedData: any[] = [];
 
   private _data: any[] = [];
   @Input() set data(value: any[]) {
@@ -45,16 +47,16 @@ tempRowsPerTable = this.rowsPerTable;
     this.buildSelectedColumns();
   }
   openRowsPerTableDialog() {
-  this.tempRowsPerTable = this.rowsPerTable;
-  this.showRowsPerTableDialog = true;
-}
-applyRowsPerTableChange() {
-  if (this.tempRowsPerTable > 0) {
-    this.rowsPerTable = this.tempRowsPerTable;
-    this.updateGroupedData();
-    this.showRowsPerTableDialog = false;
+    this.tempRowsPerTable = this.rowsPerTable;
+    this.showRowsPerTableDialog = true;
   }
-}
+  applyRowsPerTableChange() {
+    if (this.tempRowsPerTable > 0) {
+      this.rowsPerTable = this.tempRowsPerTable;
+      this.updateGroupedData();
+      this.showRowsPerTableDialog = false;
+    }
+  }
 
   buildSelectedColumns(): void {
     const withIndex = [{ header: '序號', field: '__index' }];
@@ -228,6 +230,19 @@ applyRowsPerTableChange() {
         currentY = 40;
       }
     }
+    if (this.pdfSummaryText?.length) {
+      doc.setFont('NotoSansTC');
+      doc.setTextColor(255, 0, 0); // 紅色
+      doc.setFontSize(10);
+
+      const autoTableDoc = doc as any;
+      let summaryY = autoTableDoc.lastAutoTable?.finalY + 20 || 100;
+
+      this.pdfSummaryText.forEach(line => {
+        doc.text(line, 40, summaryY);
+        summaryY += 14;
+      });
+    }
 
     doc.save(`報表_${new Date().toISOString()}.pdf`);
     this.showPdfDialog = false;
@@ -250,5 +265,26 @@ applyRowsPerTableChange() {
 
   goBack() {
     this.location.back();
+  }
+  onTableSort(event: any): void {
+    const sortField = event.field;
+    const sortOrder = event.order; // 1 升序, -1 降序
+
+    this.sortedData = [...this._data].sort((a, b) => {
+      const valA = a[sortField];
+      const valB = b[sortField];
+
+      if (valA == null) return 1;
+      if (valB == null) return -1;
+
+      if (typeof valA === 'string') {
+        return valA.localeCompare(valB) * sortOrder;
+      } else {
+        return (valA < valB ? -1 : valA > valB ? 1 : 0) * sortOrder;
+      }
+    });
+
+    this._data = this.sortedData;
+    this.splitData(); // 重新分組
   }
 }

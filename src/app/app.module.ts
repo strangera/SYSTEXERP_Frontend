@@ -67,11 +67,11 @@ export function HttpLoaderFactory(http: HttpClient) {
       useClass: ErrorinterceptorService,        // 最後處理錯誤
       multi: true
     },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: SuccessInterceptor,        // 最後處理錯誤
-      multi: true
-    },
+    // {
+    //   provide: HTTP_INTERCEPTORS,
+    //   useClass: SuccessInterceptor,        // 最後處理錯誤
+    //   multi: true
+    // },
   ],
   bootstrap: [AppComponent],
 })

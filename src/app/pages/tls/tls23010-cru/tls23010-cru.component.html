@@ -43,6 +43,12 @@
       [dateEnd]="dateEnd"
       [printedAt]="printedAt"
       [showTotalOnly]="true"
+      [pdfSummaryText]="pdfSummary"
     ></app-report-table-group>
   </div>
+</div>
+<div class="mt-4 text-sm text-red-600 leading-6 font-semibold whitespace-pre-line">
+  <ng-container *ngFor="let line of pdfSummary">
+    {{ line }}<br />
+  </ng-container>
 </div>
