@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
-import { Sysb300m, apiOption } from '../../../shared/models/sys/sysb000.module';
+import { apiOption } from '../../../shared/models/sys/sysb000.module';
 import { PluLogo } from '../../../shared/models/tls/tls000.model';
 import { Tls51060Service } from '../../../service/API/tls/tls51060.service';
 // Permissions
