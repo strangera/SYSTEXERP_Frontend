@@ -717,11 +717,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
           console.log('✅ 暫存資料載入完成');
         } catch (error) {
           console.error('❌ 暫存資料處理失敗，重新載入:', error);
-          this.loadFareDataFromAPI(false);
+          this.loadFareDataFromAPI();
         }
       } else {
         console.log('📭 沒有暫存資料，從 API 載入');
-        this.loadFareDataFromAPI(false);
+        this.loadFareDataFromAPI();
       }
     } else {
       console.warn('❌ 沒有 talent_id，重導向到前一步');
@@ -811,7 +811,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   // 從 API 載入扣款資料（簡化版）
-  private loadFareDataFromAPI(showAll: boolean = false): void {
+  private loadFareDataFromAPI(): void {
     if (!this.currentTalentId) {
       console.warn('沒有 talent_id，無法載入扣款資料');
       return;
@@ -822,7 +822,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     const subscription = this.tls13010Service.queryTLS13010Fare({
       talentId: this.currentTalentId,
-      showAll: showAll
+      showAll: true  // 固定載入全部資料
     }).subscribe({
       next: (response) => {
         console.log('API 回傳的扣款資料:', response);
@@ -830,7 +830,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         if (response && response.Data && response.Data.FaresByType) {
           // 🎯 簡化：直接使用 API 資料，讓共通組件處理日期
           this.originalFareData = response.Data.FaresByType;
-          this.isShowingAll = showAll;
+          this.isShowingAll = true;  // 標記為已載入全部資料
           this.filterData();
           this.saveFareDataToWorkflow();
           this.messageService.successBubble('扣款資料載入成功');
@@ -926,31 +926,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     } catch (error) {
       console.error('❌ 儲存暫存資料時發生錯誤:', error);
     }
-  }
-
-  // 顯示模式切換
-  toggleCommonlyUsed(): void {
-    if (this.showOnlyCommonlyUsed) {
-      if (!this.isShowingAll) {
-        this.loadFareDataFromAPI(true);
-      }
-      this.showOnlyCommonlyUsed = false;
-    } else {
-      this.showOnlyCommonlyUsed = true;
-    }
-    this.filterData();
-  }
-
-  showAllItems(): void {
-    if (!this.isShowingAll) {
-      this.loadFareDataFromAPI(true);
-    }
-    this.showOnlyCommonlyUsed = false;
-    this.filterData();
-  }
-
-  getToggleCommonlyUsedText(): string {
-    return this.showOnlyCommonlyUsed ? '顯示全部項目' : '僅顯示常用項目';
   }
 
   selectAllByType(capType: string): void {
@@ -1131,7 +1106,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   reloadData(): void {
     if (confirm('確定要重新載入資料嗎？未儲存的變更將會遺失。')) {
-      this.loadFareDataFromAPI(this.isShowingAll);
+      this.loadFareDataFromAPI();
       this.messageService.infoBubble('已重新載入資料');
     }
   }
@@ -1185,9 +1160,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   toggleCommonMode(): void {
     if (this.showMode === 'common') {
       // 從常用模式切換到全部模式
-      if (!this.isShowingAll) {
-        this.loadFareDataFromAPI(true);
-      }
       this.showMode = 'all';
     } else {
       // 從全部模式切換到常用模式
