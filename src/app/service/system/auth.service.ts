@@ -64,7 +64,7 @@ export class AuthService {
       map((response: ApiResponse<UserInfo>) => {
         if (response.Status === '0000') {
           this.userSubject.next(response.Data);
-          sessionStorage.setItem('UserInfo', JSON.stringify(response.Data));
+          localStorage.setItem('UserInfo', JSON.stringify(response.Data));
           this.router.navigate(['/SSO/dashboard']);
           return response;
         } else {
@@ -83,6 +83,7 @@ export class AuthService {
     const token = userInfoStr ? userInfoStr.AccessToken : null;
     if (!token) {
       sessionStorage.clear();
+      localStorage.clear();
       this.userSubject.next(null);
       this.router.navigate(['/login'], { replaceUrl: true });
       this.queryStateService.clearAllQueryStates();
@@ -97,6 +98,7 @@ export class AuthService {
     ).subscribe({
       next: () => {
         sessionStorage.clear();
+        localStorage.clear();
         this.userSubject.next(null);
         this.router.navigate(['/login'], { replaceUrl: true });
         this.notemessage.infoBubble('已成功登出');
@@ -156,7 +158,7 @@ export class AuthService {
   }
   // 獲取使用者資訊
   getUserInfo(): any {
-    const userInfo = sessionStorage.getItem('UserInfo');
+    const userInfo = localStorage.getItem('UserInfo');
     if (userInfo) {
       return JSON.parse(userInfo);
     } else {

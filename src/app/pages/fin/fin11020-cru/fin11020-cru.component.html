@@ -17,8 +17,6 @@
           [submitted]="submitted" [errorForGroup]="true" />
         <app-input-number class="col-12 md:col-6 lg:col-4" label="券數(1券=50張)" controlName="GUI_Qty"
           [control]="dataForm.controls.GUI_Qty" [max]="99999999" [useGrouping]="false" [submitted]="submitted" />
-        <app-input-number class="col-12 md:col-6 lg:col-4" label="發票張數" controlName="GUI_TotQty"
-          [control]="dataForm.controls.GUI_TotQty" [useGrouping]="false" />
         <app-input-number *ngIf="!isFormCreateable" class="col-12 md:col-6 lg:col-4" label="發票號碼已分配張數"
           controlName="GUI_AssignQty" [control]="dataForm.controls.GUI_AssignQty" [useGrouping]="false" />
         <app-dropdown *ngIf="!isFormCreateable" class="col-12 md:col-6 lg:col-4" label="發票狀態" controlName="GUI_Status"
@@ -29,7 +27,7 @@
         <app-input-text *ngIf="!isFormCreateable" class="col-12 md:col-6 lg:col-4" label="匯入檔案名稱" controlName="GUI_File"
           [control]="dataForm.controls.GUI_File" />
       </div>
-      <hr *ngIf="!isFormCreateable">
+      <!-- <hr *ngIf="!isFormCreateable">
       <div *ngIf="!isFormCreateable" class="grid p-fluid">
         <app-input-text class="col-12 md:col-6 lg:col-3" label="設定確認人員一" controlName="GUI_VERIFY1"
           [control]="dataForm.controls.GUI_VERIFY1" />
@@ -39,7 +37,7 @@
           [control]="dataForm.controls.GUI_VERIFY2" />
         <app-input-text class="col-12 md:col-6 lg:col-3" label="設定確認人員二姓名" controlName="GUI_VERIFY2_Name"
           [control]="dataForm.controls.GUI_VERIFY2_Name" />
-      </div>
+      </div> -->
       <hr *ngIf="!isFormCreateable">
       <div *ngIf="!isFormCreateable" class="grid p-fluid">
         <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateTimeOne" label="建立日期"
@@ -48,12 +46,12 @@
           [control]="dataForm.controls.CRT_USR_No" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="建立人員姓名" controlName="CRT_USR_Name"
           [control]="dataForm.controls.CRT_USR_Name" />
-        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateTimeOne" label="變更日期"
+        <!-- <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateTimeOne" label="變更日期"
           [control]="dataForm.controls.UPD_Date" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="變更人員" controlName="UPD_USR_No"
           [control]="dataForm.controls.UPD_USR_No" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="變更人員姓名" controlName="UPD_USR_Name"
-          [control]="dataForm.controls.UPD_USR_Name" />
+          [control]="dataForm.controls.UPD_USR_Name" /> -->
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>

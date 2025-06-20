@@ -19,7 +19,7 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
     GUI_Track: ['', [Validators.maxLength(2)]], // 字軌
     GUI_No_start: [null, [Validators.maxLength(8), Validators.max(99999999)]], // 發票號碼(起)
     GUI_No_end: [null, [Validators.maxLength(8), Validators.max(99999999)]], // 發票號碼(迄)
-    ...createPaginationConfig([{ field: 'ID', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'GUI_YYMM', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: MainInvoiceData[] = [];

@@ -68,7 +68,7 @@ export class SsoDashboardComponent implements OnInit {
   }
   ngOnInit() {
     this.fetchUrlList();
-    const time = JSON.parse(sessionStorage.getItem('UserInfo') || '{}').USER_PwdExpireDate;
+    const time = JSON.parse(localStorage.getItem('UserInfo') || '{}').USER_PwdExpireDate;
     if (new Date(time) <= new Date()) {
       this.messageService.warnBubble(
         '為維護帳號安全，您的密碼已超過 90 天未變更，為保障帳戶安全，請立即設定新密碼後再登入系統。',

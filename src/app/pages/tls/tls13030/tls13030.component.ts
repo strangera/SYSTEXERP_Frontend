@@ -52,8 +52,10 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
 
   columns: any[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true,
-      style: 'text-left' },
+    {
+      field: 'tlt_name', header: '櫃位名稱', visible: true,
+      style: 'text-left'
+    },
 
     {
       field: 'tlt_building',
@@ -62,8 +64,10 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
       format: (value: any) => this.getLabelFromOptions(value, this.BUILDING_NO_Options),
     },
     { field: 'floor_desc', header: '樓層', visible: true },
-    { field: 'area_desc', header: '區域', visible: true,
-      style: 'text-left' },
+    {
+      field: 'area_desc', header: '區域', visible: true,
+      style: 'text-left'
+    },
     // ✅ 新增兩個欄位來取代舊的「大分類」
     {
       field: 'bus_type',
@@ -91,8 +95,10 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     },
 
     { field: 'cap_type', header: '扣款類別', visible: true },
-    { field: 'CAP_Name', header: '扣款名稱', visible: true,
-      style: 'text-left' },
+    {
+      field: 'CAP_Name', header: '扣款名稱', visible: true,
+      style: 'text-left'
+    },
     {
       field: 'tpy_bdate',
       header: '扣款起日',
@@ -134,10 +140,14 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
       style: 'text-right'
     },
 
-    { field: 'defSalesAmt', header: '預設營業額', visible: true, format: (value: any) => value ?? 0,
-      style: 'text-right' },
-    { field: 'commRate', header: '抽成百分比%', visible: true, format: (value: any) => value ?? 0,
-      style: 'text-right' },
+    {
+      field: 'defSalesAmt', header: '預設營業額', visible: true, format: (value: any) => value ?? 0,
+      style: 'text-right'
+    },
+    {
+      field: 'commRate', header: '抽成百分比%', visible: true, format: (value: any) => value ?? 0,
+      style: 'text-right'
+    },
 
   ];
   moneyFormat(value: number): string {

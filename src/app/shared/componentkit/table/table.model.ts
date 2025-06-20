@@ -20,6 +20,7 @@ export interface Column {
   type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'checkbox' | 'date' | 'default'; // 欄位類型
   prefix?: string;
   fractionDigits?: number;
+  useGrouping?: boolean;
 
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
   optionLabel?: string; // 下拉選單 optionLabel

@@ -20,7 +20,7 @@ interface ButtonConfig {
   styleUrl: './button.component.scss'
 })
 export class ButtonComponent implements OnInit, OnDestroy {
-  @Input() btnType: 'default' | 'create' | 'edit' | 'delete' | 'query' | 'cancel' | 'clear' | 'submit' | 'next' | 'previous' | 'smartclear' |  'report' |'back' | 'CSV' = 'default';
+  @Input() btnType: 'default' | 'create' | 'edit' | 'delete' | 'query' | 'cancel' | 'clear' | 'submit' | 'next' | 'previous' | 'smartclear' | 'report' | 'back' | 'CSV' = 'default';
   @Input() loading = false;
   @Output() clickEvent = new EventEmitter<void>();
   // --- 以下為按鈕配置 ---
@@ -51,7 +51,7 @@ export class ButtonComponent implements OnInit, OnDestroy {
     previous: { label: '上一步', icon: 'pi pi-arrow-left', class: 'button-previous', outlined: true, disabled: false, type: 'button', severity: 'info' }, // 上一步
     back: { label: '離開', icon: 'pi pi-arrow-left', class: 'button-back', outlined: true, disabled: false, type: 'button', severity: 'secondary' },      // 離開
     smartclear: { label: '清除', icon: 'pi pi-times', class: 'button-smart-clear', outlined: true, disabled: false, type: 'button', severity: 'secondary' }, // 智慧清除
-    report: {  label: '報表模式',  icon: 'pi pi-file',  class: '',  disabled: false,  type: 'button',  severity: 'info' } // 報表模式
+    report: { label: '報表模式', icon: 'pi pi-file', class: '', disabled: false, type: 'button', severity: 'info' } // 報表模式
   };
 
   ngOnInit() {
@@ -91,6 +91,7 @@ export class ButtonComponent implements OnInit, OnDestroy {
           control.reset();
         }
       });
+      this.clickEvent.emit();
     } else {
       this.clickEvent.emit();
     }
