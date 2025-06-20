@@ -25,6 +25,7 @@ export class TLS46010Component
   // 表格
   // ----------------------------------------------------------------
   data: Pos10015[] = [];
+  selectedItems: Pos10015[] = [];
   columns: Column[] = [
     { field: 'SYS_StoreNo', header: '門市店號', visible: true },
     { field: 'SYS_SrvNo', header: '主機編號', visible: true },
@@ -55,7 +56,9 @@ export class TLS46010Component
     { no: 'C', name: '停用' },
   ];
 
-  constructor(private tls46010Service: Tls46010Service) {
+  constructor(
+    private tls46010Service: Tls46010Service,
+  ) {
     super();
   }
 
@@ -101,6 +104,7 @@ export class TLS46010Component
       next: (response) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('選中項目刪除成功');
+          this.selectedItems = []; // 清空選中項目
           this.onSubmit(this.queryForm); // 重新查詢以更新列表
         } else {
           console.error('API error:', response.Status, response.Message);
