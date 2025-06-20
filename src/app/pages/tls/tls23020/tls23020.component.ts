@@ -32,7 +32,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     ECR_No: [[]],                                           // 收銀機機號
     TXN_No_Start: [null, [this.validationService.numberValidator]],  // 交易序號起
     TXN_No_End: [null, [this.validationService.numberValidator]],    // 交易序號訖
-   TLT_No: [[]],    
+    TLT_No: [[]],
     TXN_GUINo: [''],                                        // 發票號碼
     PLU_SalePrc_Start: [null],                              // 售價起
     PLU_SalePrc_End: [null],                                // 售價訖
@@ -41,7 +41,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     tlt_id: [[]],                                           // 分類抽成類別
     PLU_MagNo: [''],                                        // 商品管理編號
     ACT_DiscCode: [[]],                                     // 專櫃折數代碼
-    IsNoPLU_No: [true],                                     // 是否無條碼商品
+    IsNoPLU_No: [false],                                     // 是否無條碼商品
     rece_yn: [''],                                          // 是否代收(顯示方式)
     cash_yn: [''],                                          // 是否代售(顯示方式)
     tlt_building: [''],                                     // 所屬大樓
@@ -68,8 +68,8 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' }, // 若無此欄位請移除
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
-    
-    
+
+
     {
       field: 'PLU_SalePrc', header: '單項售價', visible: true,
       style: 'text-right',
@@ -87,7 +87,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0'
     },
-        {
+    {
       field: 'TXN_Disc', header: '折扣金額', visible: true,
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0'
@@ -154,7 +154,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     private counterNameService: CounterNameService,
     private whetherService: WhetherService,
     private txnStatusService: TxnStatusService,
-    
+
     private validationService: ValidationService
   ) {
     super();
@@ -239,5 +239,38 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find(opt => String(opt.value) === String(value));
     return found ? found.label : value;
+  }
+
+  showPageSizeDialog = false;
+  customPageSize = 1000;
+  goToReportMode(): void {
+    if (this.queryForm.invalid) {
+      this.messageService.warnBubble('請先完成查詢條件');
+      this.queryForm.markAllAsTouched();
+      return;
+    }
+
+    this.customPageSize = 1000;
+    this.showPageSizeDialog = true; // 👈 顯示彈窗
+  }
+  confirmPageSizeAndNavigate(): void {
+    const rawFormValue: Record<string, any> = { ...this.queryForm.value };
+    for (const key in rawFormValue) {
+      if (rawFormValue[key] === '') rawFormValue[key] = null;
+    }
+
+    const queryFormValue = {
+      ...rawFormValue,
+      pageSize: this.customPageSize
+    };
+
+    this.router.navigate(['/TLS/TLS23020CRU'], {
+      state: {
+        queryFormValue,
+        pageSize: this.customPageSize
+      }
+    });
+
+    this.showPageSizeDialog = false;
   }
 }
