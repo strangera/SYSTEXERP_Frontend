@@ -147,8 +147,13 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // POS2005 展開式表格的欄位定義
   POS2005DataColumn: ColumnDef[] = [
     // { field: 'PLU_MagNo', header: '商品管理編號', editable: false, type: 'text' },  //key1
-    { field: 'PLU_No', header: '國際條碼', editable: false, type: 'dropdown' }, //key2
+    { field: 'PLU_No', header: '國際條碼', editable: true, type: 'text' }, //key2
   ];
+  // 預設新項目模板
+  defaultNew2005 = {
+    PLU_MagNo: this.dataForm.get('PLU_MagNo')?.value || '',
+    PLU_No: '', // 國際條碼
+  };
   // 展開式表格的載入狀態
   expand2005Loading = false;
   // ---------採購廠商 (POS2020) 編輯表格 至少要一筆-------------------------------------------------------
@@ -346,9 +351,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     //                輸入國際條碼時，發現該條碼在資料庫中已有存在時，系統會提示【該國際條碼已存在，貨號為ｘｘｘ】
     //                系統會不允許輸入。此時，使用者透過貨號ｘｘｘ將該商品的國際條碼改為商品管理編號或清為空白後，即可新增該國際條碼。
 
-    // ---怪---
-    // 目前後端更新邏輯 國條 是2004抓2005的第一筆
-    // 然後複製2004複製管理碼給國條 > 要怎麼改動2005 (改動後就不是第一筆了)
+    // ---0620規格更新---
+    // 送出國條是POS2005，不用管2004的國條
 
     // --------
     // 標籤名稱：在輸入商品中文名稱後會自動帶入標籤名稱欄位。
@@ -378,33 +382,26 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         if (this.canEdit()) {
           console.log('讀取表單', frm);
           const formValue = frm.getRawValue();
-          const isIncluded = this.POS2005Data.some(item => item.PLU_No === formValue.PLU_No);
 
-          let requestBody;
-          if (isIncluded) {
-            console.log('陣列中有包含這個 PLU_No');
-            requestBody = {
-              ...formValue,
-              PLU_No: [this.POS2005Data[0].PLU_No], // 覆寫 frm.value 中的 PLU_No
-              "IMG1001_INFO": this.img1001Data,
-              "POS2020_INFO": this.POS2020Data,
-            };
-          } else {
-            console.log('陣列中沒有包含這個 PLU_No');
-            requestBody = {
-              ...formValue,
-              PLU_No: [formValue.PLU_No, this.POS2005Data[0].PLU_No], // 未包含的國條放入第一個給pos2005並且更新
-              "IMG1001_INFO": this.img1001Data,
-              "POS2020_INFO": this.POS2020Data,
-            };
-          }
+          // POS2005Data 中所有的 PLU_No
+          const POS2005PLUs = this.POS2005Data.map(item => item.PLU_No);
+          console.log('現有的 PLU_No 陣列:', POS2005PLUs);
+
+          const requestBody = {
+            ...formValue,
+            PLU_No: POS2005PLUs,
+            "IMG1001_INFO": this.img1001Data,
+            "POS2020_INFO": this.POS2020Data,
+          };
 
           console.log('update', requestBody);
 
-          // this.tls51070Service.updateTLS51070(requestBody).subscribe(() => {
-          //   this.messageService.successBubble('更新成功');
-          //   this.onCancel(); // 儲存後，會返回列表
-          // });
+          this.tls51070Service.updateTLS51070(requestBody).subscribe({
+            next: () => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel(); // 儲存後，會返回列表
+            }
+          });
         }
         break;
     }
@@ -581,6 +578,32 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   onRowCancel(event: any) {
     console.log('取消主表格編輯:', event);
+  }
+
+  // 新增 POS2005 (新增)
+  onAddPOS2005() {
+    const newPerson = {
+      ...this.defaultNew2005,
+      id: this.generate2005Id(),
+    };
+
+    console.log('新2005項目', newPerson);
+
+    this.POS2005Data.push(newPerson);
+
+    // 自動進入編輯模式
+    setTimeout(() => {
+      const index = this.POS2005Data.indexOf(newPerson);
+      if (index >= 0) {
+        this.expandableTable.onRowEditInit(newPerson, index);
+      }
+    }, 0);
+  }
+
+  // 生成 POS2005 ID (新增)
+  generate2005Id(): number {
+    const maxId = Math.max(...this.POS2005Data.map(p => p.id), 0);
+    return maxId + 1;
   }
 
   // 新增 POS2020 (新增)

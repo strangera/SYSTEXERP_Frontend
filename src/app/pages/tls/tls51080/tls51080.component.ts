@@ -94,12 +94,9 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
   }
 
   //---刪除檢查---
-  /* LOGODISC 品牌進貨折數設定檔*/
-  /* LOGOBUDGET 品牌每月進貨限額設定檔*/
-  /* POS2004 商品基本資料檔 */
-  // 沒有該資料才可以刪除
+  // 到處都有倉別的資料，先不允許刪除
   //-------------
-  // 刪除項目
+  // 刪除項目(到處都有倉別的資料，先不允許刪除)
   onDelete(data: POS2034 | POS2034[]): void {
     console.log('Delete data:', JSON.stringify(data, null, 2));
 
