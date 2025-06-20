@@ -20,7 +20,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   // 基本設置
   @ViewChild('dt', { static: false }) dt!: Table;                               // table 元件
   @ViewChild('fileUpload') fileUpload!: FileUpload;                             // 檔案上傳 元件
-  @Input() dataKey = 'id';                                                      // table 資料key
+  @Input() dataKey = 'ID';                                                      // table 資料key
   @Input() tableKey: string | undefined = undefined;                            // table 唯一標識 (必填)
   @Input() title: string | undefined = undefined;                               // table 標題
   @Input() columns!: Column[];                                                  // table 欄位配置 (必填)

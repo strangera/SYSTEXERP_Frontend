@@ -134,12 +134,13 @@
               placeholder="請輸入{{ col.header }}" [ngModelOptions]="{ standalone: true }"
               [disabled]="col.disabled ? col.disabled(rowData) : false" mode="decimal"
               (ngModelChange)="onFieldChange(rowData, col.field, $event)" [prefix]="col.prefix"
-              [minFractionDigits]="col.fractionDigits" [maxFractionDigits]="col.fractionDigits" />
+              [minFractionDigits]="col.fractionDigits" [maxFractionDigits]="col.fractionDigits"
+              [useGrouping]="col.useGrouping" />
             <p-dropdown *ngIf="col.type === 'dropdown'" [(ngModel)]="rowData[col.field]"
               [ngModelOptions]="{ standalone: true }" styleClass="w-full" placeholder="請輸入{{ col.header }}"
               [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
               [showClear]="true" appendTo="body" [disabled]="col.disabled ? col.disabled(rowData) : false"
-              (onChange)="onFieldChange(rowData, col.field, $event.value)"></p-dropdown>
+              (onChange)="onFieldChange(rowData, col.field, $event.value)" [filter]="true"></p-dropdown>
             <p-calendar *ngIf="col.type === 'date'" [(ngModel)]="rowData[col.field]"
               [ngModelOptions]="{ standalone: true }" class="w-full" styleClass="min-w-max"
               placeholder="請選擇{{ col.header }}" [dateFormat]="col.dateFormat || 'yy-mm-dd'" [showIcon]="true"

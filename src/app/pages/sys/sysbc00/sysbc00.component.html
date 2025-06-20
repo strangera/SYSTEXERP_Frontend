@@ -1,268 +1,39 @@
-<div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div *appHasPermission="addPermission">
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+<div class="card fin11020">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="金資中心銀行代碼"
-              controlName="bankCode"
-              [control]="queryForm.controls.BNK_No"
-              [submitted]="submitted"
-            >
-              >
-            </app-input-text>
-          </div>
-          <div class="col-12 md:col-12 lg:col-4">
-            <app-input-text
-              label="銀行名稱"
-              controlName="bankName"
-              [control]="queryForm.controls.BNK_Name"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-12 lg:col-4">
-            <app-input-text
-              label="銀行簡稱"
-              controlName="bankSName"
-              [control]="queryForm.controls.BNK_ShortName"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="金資中心銀行代碼" controlName="bankCode"
+            [control]="queryForm.controls.BNK_No" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-12 lg:col-4" label="銀行名稱" controlName="bankName"
+            [control]="queryForm.controls.BNK_Name" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-12 lg:col-4" label="銀行簡稱" controlName="bankSName"
+            [control]="queryForm.controls.BNK_ShortName" [submitted]="submitted" />
+          <!-- <app-input-number-range class="col-12 md:col-12 lg:col-4" label="該行帳號最小長度"
+            [startControl]="queryForm.controls.Min_Length_From" [endControl]="queryForm.controls.Min_Length_To"
+            [submitted]="submitted" />
+          <app-input-number-range class="col-12 md:col-12 lg:col-4" label="該行帳號最大長度"
+            [startControl]="queryForm.controls.Max_Length_To" [endControl]="queryForm.controls.Max_Length_To"
+            [submitted]="submitted" /> -->
         </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-12 lg:col-4">
-            <app-input-number-range
-              label="該行帳號最小長度"
-              [startControl]="queryForm.controls.Min_Length_From"
-              [endControl]="queryForm.controls.Min_Length_To"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-          <div class="col-12 md:col-12 lg:col-4">
-            <app-input-number-range
-              label="該行帳號最大長度"
-              [startControl]="queryForm.controls.Max_Length_To"
-              [endControl]="queryForm.controls.Max_Length_To"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-        </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
-
 <div class="card">
-  <app-table
-    [data]="data"
-    [columns]="columns"
-    [expansionColumns]="subColumns"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-  ></app-table>
-</div>
-
-<div class="card">
-  <div class="col-13">
-    <div class="grid p-fluid">
-      <div class="col-12 md:col-6 lg:col-1">
-        <button
-          pButton
-          type="button"
-          icon="pi pi-pencil"
-          severity="success"
-          label="新增一行"
-          (click)="addNewRow()"
-        ></button>
-      </div>
-      <div class="col-12 md:col-6 lg:col-1">
-        <button
-          pButton
-          type="button"
-          icon="pi pi-trash"
-          severity="danger"
-          label="刪除該行"
-          (click)="deleteSelectedRows()"
-        ></button>
-      </div>
-    </div>
-  </div>
-  <hr />
-  <p-table
-    [value]="deductions"
-    class="no-wrap-header"
-    appendTo="body"
-    dataKey="serialNumber"
-    editMode="row"
-    [tableStyle]="{ 'min-width': '50rem' }"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th>
-          <p-checkbox
-            [binary]="true"
-            [(ngModel)]="allSelected"
-            (ngModelChange)="
-              allSelected ? selectAllDeductions() : deselectAllDeductions()
-            "
-            (click)="
-              !allSelected ? selectAllDeductions() : deselectAllDeductions()
-            "
-            label="全選"
-          ></p-checkbox>
-        </th>
-        <!-- <th>序號</th> -->
-        <th>銀行代碼</th>
-        <th>銀行名稱</th>
-        <th>銀行簡稱</th>
-        <th>分行代碼</th>
-        <th>分行名稱</th>
-        <th>最大長度</th>
-        <th>最小長度</th>
-        <th>操作</th>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="body" let-deduction let-ri="rowIndex">
-      <tr [pEditableRow]="deduction">
-        <td>
-          <p-checkbox
-            [binary]="true"
-            [ngModel]="isSelected(deduction)"
-            (onChange)="toggleSelection(deduction)"
-          ></p-checkbox>
-        </td>
-        <!-- 序號不顯示 -->
-        <!-- <td>
-            <input *ngIf="deduction.editing" type="text" pInputText [(ngModel)]="deduction.id" />
-            <span *ngIf="!deduction.editing">{{ deduction.id }}</span>
-          </td> -->
-        <td>
-          <input
-            *ngIf="deduction.editing"
-            type="text"
-            pInputText
-            [(ngModel)]="deduction.BNK_No"
-          />
-          <span *ngIf="!deduction.editing">{{ deduction.BNK_No }}</span>
-        </td>
-        <td>
-          <input
-            *ngIf="deduction.editing"
-            type="text"
-            pInputText
-            [(ngModel)]="deduction.Name"
-          />
-          <span *ngIf="!deduction.editing">{{ deduction.Name }}</span>
-        </td>
-        <td>
-          <input
-            *ngIf="deduction.editing"
-            type="text"
-            pInputText
-            [(ngModel)]="deduction.BNK_ShortName"
-          />
-          <span *ngIf="!deduction.editing">{{ deduction.BNK_ShortName }}</span>
-        </td>
-        <td>
-          <input
-            *ngIf="deduction.editing"
-            type="text"
-            pInputText
-            [(ngModel)]="deduction.sub_BNK_No"
-          />
-          <span *ngIf="!deduction.editing">{{ deduction.sub_BNK_No }}</span>
-        </td>
-        <td>
-          <p-dropdown
-            appendTo="body"
-            *ngIf="deduction.editing"
-            [options]="units"
-            [(ngModel)]="deduction.sub_Name"
-          ></p-dropdown>
-          <span *ngIf="!deduction.editing">{{ deduction.sub_Name }}</span>
-        </td>
-        <td>
-          <input
-            *ngIf="deduction.editing"
-            type="text"
-            pInputText
-            [(ngModel)]="deduction.Min_Length"
-          />
-          <span *ngIf="!deduction.editing">{{ deduction.Min_Length }}</span>
-        </td>
-        <td>
-          <input
-            *ngIf="deduction.editing"
-            type="text"
-            pInputText
-            [(ngModel)]="deduction.Max_Length"
-          />
-          <span *ngIf="!deduction.editing">{{ deduction.Max_Length }}</span>
-        </td>
-        <td>
-          <button
-            *ngIf="!deduction.editing"
-            pButton
-            icon="pi pi-pencil"
-            (click)="onRowEditInit(deduction)"
-            class="p-button-rounded p-button-text"
-          ></button>
-          <button
-            *ngIf="deduction.editing"
-            pButton
-            icon="pi pi-check"
-            (click)="onRowEditSave(deduction)"
-            class="p-button-rounded p-button-text p-button-success"
-          ></button>
-          <button
-            *ngIf="deduction.editing"
-            pButton
-            icon="pi pi-times"
-            (click)="onRowEditCancel(deduction, ri)"
-            class="p-button-rounded p-button-text p-button-danger"
-          ></button>
-          <button
-            *ngIf="!deduction.editing"
-            pButton
-            icon="pi pi-trash"
-            (click)="onRowDelete(deduction)"
-            class="p-button-rounded p-button-text p-button-danger"
-          ></button>
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
+  <app-table dataKey="BNK_No" [data]="data" [columns]="columns" [expansionColumns]="subColumns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [showCheckBox]="true" [multiSortMeta]="[{ field: 'BNK_No', order: 1 }]"
+    (delete)="onDelete($event)" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [expansionColumns]="subColumns"
+    expansionDataKey="details" [isRowSelectable]="isRowSelectable"></app-table>
 </div>
