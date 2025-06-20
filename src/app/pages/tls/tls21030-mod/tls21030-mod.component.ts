@@ -11,7 +11,7 @@ import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { VoucherTypeService } from '../../../service/basic/voucher-type.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
 import { AccountingPeriodService } from '../../../service/basic/accounting-period.service';
 import { WhetherService } from '../../../service/basic/whether.service';
@@ -26,18 +26,9 @@ export class Tls21030ModComponent {
   ProgNo: string = '220003';
   // 權限
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
+
+
+
   // 查詢表單
   loading: boolean = false;
   submitted: boolean = false;

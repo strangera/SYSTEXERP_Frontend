@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 import { PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
@@ -23,9 +23,7 @@ interface SalesRecord {
 })
 
 export class TLS2A020Component extends BasicQueryPageComponent<any> {
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+
   selectedItems: any[] = [];
 
 

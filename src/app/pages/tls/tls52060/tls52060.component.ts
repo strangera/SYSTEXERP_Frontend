@@ -9,7 +9,7 @@ import {
 // 共用服務
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 import { FileType } from '../../../shared/componentkit/file-upload/file-upload.component';
 @Component({
   selector: 'app-tls52060',
@@ -23,18 +23,9 @@ export class TLS52060Component {
   ProgNo: string = '250019';
   // 權限變數
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
+
+  
+  
 
   // 查詢表單
   loading: boolean = false;

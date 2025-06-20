@@ -28,7 +28,7 @@ import { BusinessTypeService } from '../../../service/basic/businesstype.service
 import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
 import { WhetherService } from './../../../service/basic/whether.service';
 import { FloorService } from './../../../service/basic/floor.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 
 @Component({
   selector: 'app-tls13070',
@@ -39,18 +39,9 @@ export class TLS13070Component {
   ProgNo: string = '210016';
   // 權限
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
+
+
+
   // 查詢
   loading: boolean = false;
   submitted: boolean = false;

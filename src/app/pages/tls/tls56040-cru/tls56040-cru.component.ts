@@ -9,7 +9,7 @@ import { IssuanceNoteStatusService } from '../../../service/basic/issuance-note-
 import { UserCodeService } from '../../../service/basic/user-code.service';
 // Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -24,10 +24,9 @@ import { OrganizationNumberService } from '../../../service/basic/organization-n
 export class TLS56040CRUComponent {
   ProgNo: string = '250035';
   funInfo?: FunsrightInfo;
-  // Permissions
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+
+
+
   loading: boolean = false;
   submitted: boolean = false;
   formTitle: string = '';   //CRU
