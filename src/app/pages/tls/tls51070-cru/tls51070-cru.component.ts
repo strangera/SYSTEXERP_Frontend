@@ -8,68 +8,7 @@ import { Tls51070Service } from '../../../service/API/tls/tls51070.service';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Tls51060Service } from '../../../service/API/tls/tls51060.service';
 import { environment } from '../../../../environments/environment';
-
-export interface POS2005Detail {
-  "id": number,
-  "PLU_MagNo": string,
-  "PLU_No": string
-  "CRT_Date": Date,
-  "CRT_USR_No": string,
-  "CRT_USR_Name": string,
-  "UPD_Date": Date,
-  "UPD_USR_No": string,
-  "UPD_USR_Name": string,
-}
-
-export interface POS2020Detail {
-  "id": number,
-  "PLU_MagNo": string,
-  "VEN_No": string,
-  "STO_No": string,
-  "PLU_OrderPrc": number,
-  "PLU_Purchase": string,
-  "PLU_TransType": string,
-  "PLU_TransDay": number,
-  "Remark": string,
-  "VDP_LastStockDate": string, //型別Date 先用 string 因為新增不能編輯
-  "CRT_Date"?: Date,
-  "CRT_USR_No"?: string,
-  "CRT_USR_Name"?: string,
-  "UPD_Date"?: Date,
-  "UPD_USR_No"?: string,
-  "UPD_USR_Name"?: string,
-}
-
-export interface IMG1001Detail {
-  "id": number,
-  "IMG_Type": string,
-  "IMG_SeqNo": string,
-  "IMG_Path": string,
-  "IMG_File": string,
-  "IMG_Remark": string
-  "CRT_Date": Date,
-  "CRT_USR_No": string,
-  "CRT_USR_Name": string,
-  "UPD_Date": Date,
-  "UPD_USR_No": string,
-  "UPD_USR_Name": string,
-}
-
-export interface IMG1001 {
-  ID: number;             // 圖檔ID
-  IMG_Type: string;       // 圖檔類別 - 'POS2004'
-  IMG_SeqNo: string;      // 圖檔序號 - POS2004.PLU_MagNo
-  IMG_Path: string;       // 圖檔路徑
-  IMG_File: string;       // 圖檔檔名 - YYMMDDHHNNSSZZZ_檔案名稱
-  IMG_Remark?: string;    // 備註
-  base64String?: string; // 圖檔base64
-  CRT_Date?: string;      // 建立日期
-  CRT_USR_No?: string;    // 建立人員
-  CRT_USR_Name?: string;  // 建立人員姓名
-  UPD_Date?: string;      // 變更日期
-  UPD_USR_No?: string;    // 變更人員
-  UPD_USR_Name?: string;  // 變更人員姓名
-}
+import { POS2005Detail, POS2020Detail, IMG1001Detail } from './tls51070-cru.module';
 
 // 2.5.1.7  商品基本資料 CRU
 @Component({
@@ -85,6 +24,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   buttonID = 1; //預設在 基本資料標籤
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
+    id: [{ value: 0, disabled: true }], // 主鍵ID;
     // POS2004 商品主檔
     // 基本資料 顯示畫面
     PLU_MagNo: ['', [Validators.required, Validators.maxLength(20)]], // 商品管理編號
@@ -142,24 +82,16 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_OpenPrc: ['Y', [Validators.required, Validators.maxLength(1)]], // 開放售價Y/N
     PLU_Type: ['1', [Validators.required, Validators.maxLength(1)]], // 商品類別 1一般商品,2生鮮商品,6組合商品,8專櫃,B禮券,F:折讓
 
-    // PLU_PrnName: ['', [Validators.maxLength(40)]], // 列印名稱
-    // VEN_No: ['', [Validators.maxLength(16)]], // 廠商編號
-    // PLU_Spec: ['', [Validators.maxLength(30)]], // 規格
-    // PLU_FixPrc: [null, [Validators.maxLength(10)]], // 定價
-    // PLU_MemPrc: [null, [Validators.maxLength(10)]], // 會員價
-    // PLU_BatPrc: [null, [Validators.maxLength(10)]], // 批發
-    // PLU_Cost: [null, [Validators.maxLength(12)]], // 成本
-    // PLU_LocNo: [null, [Validators.maxLength(4)]], // 棚割序號
-    // PLU_LastStockDate: [null], // 最後進貨日期
-    // PLU_Reserve4: ['', [Validators.maxLength(400)]], // 保留
-    // PLU_Reserve5: ['', [Validators.maxLength(400)]], // 保留
-    // PLU_StopSale: ['N', [Validators.maxLength(1)]], // 停止銷售註記(Y/N)
-    // PLU_CalcSaleStock: ['N', [Validators.maxLength(1)]], // 計算庫存方式(N:依數量 Y:依金額)
-    // PLU_Disc: ['Y', [Validators.maxLength(1)]], // 是否可折扣(Y/N)
-    // PLU_OpenOrderPrc: ['1', [Validators.maxLength(1)]], // 開放進價(Y/N)
-    // PLU_LastSaleDate: [null], // 最後銷售日期
-    // PLU_LastUpdSalePrc: [null], // 最後銷售日期
-    // PLU_LastUpdOrderPrc: [null], // 最後修改進價日期
+    PLU_AccountType: ['2', [Validators.maxLength(1)]], // 結帳別
+    PLU_IsStock: ['Y', [Validators.maxLength(1)]], // 是否計算庫存 Y:是 N:否
+    PLU_ReadyDay: [0, [Validators.maxLength(4)]], // 備貨天數 預設0
+    PLU_StockType: ['0', [Validators.maxLength(1)]], // 庫存類別 0:一般 1:標準用量 2:自動轉換(沒用到) 3:子母商品 4:手動轉換
+    PLU_TaxRate: [0.05, [Validators.maxLength(7)]], // 稅率 預設0
+
+    PLU_StopSale: ['N', [Validators.maxLength(1)]], // 停止銷售註記(Y/N)
+    PLU_CalcSaleStock: ['N', [Validators.maxLength(1)]], // 計算庫存方式(N:依數量 Y:依金額)
+    PLU_Disc: ['Y', [Validators.maxLength(1)]], // 是否可折扣(Y/N)
+    PLU_OpenOrderPrc: ['N', [Validators.maxLength(1)]], // 開放進價(Y/N)
     //------------
 
   });
@@ -215,8 +147,13 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // POS2005 展開式表格的欄位定義
   POS2005DataColumn: ColumnDef[] = [
     // { field: 'PLU_MagNo', header: '商品管理編號', editable: false, type: 'text' },  //key1
-    { field: 'PLU_No', header: '國際條碼', editable: false, type: 'dropdown' }, //key2
+    { field: 'PLU_No', header: '國際條碼', editable: true, type: 'text' }, //key2
   ];
+  // 預設新項目模板
+  defaultNew2005 = {
+    PLU_MagNo: this.dataForm.get('PLU_MagNo')?.value || '',
+    PLU_No: '', // 國際條碼
+  };
   // 展開式表格的載入狀態
   expand2005Loading = false;
   // ---------採購廠商 (POS2020) 編輯表格 至少要一筆-------------------------------------------------------
@@ -414,9 +351,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     //                輸入國際條碼時，發現該條碼在資料庫中已有存在時，系統會提示【該國際條碼已存在，貨號為ｘｘｘ】
     //                系統會不允許輸入。此時，使用者透過貨號ｘｘｘ將該商品的國際條碼改為商品管理編號或清為空白後，即可新增該國際條碼。
 
-    // ---怪---
-    // 目前後端更新邏輯 國條 是2004抓2005的第一筆
-    // 然後複製2004複製管理碼給國條 > 要怎麼改動2005 (改動後就不是第一筆了)
+    // ---0620規格更新---
+    // 送出國條是POS2005，不用管2004的國條
 
     // --------
     // 標籤名稱：在輸入商品中文名稱後會自動帶入標籤名稱欄位。
@@ -427,6 +363,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         if (this.canAdd()) {
           console.log('讀取表單', frm);
           const formValue = frm.getRawValue();
+
           const requestBody = {
             ...formValue,
             PLU_No: [frm.get('PLU_No')?.value], //用[]包
@@ -445,18 +382,25 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         if (this.canEdit()) {
           console.log('讀取表單', frm);
           const formValue = frm.getRawValue();
+
+          // POS2005Data 中所有的 PLU_No
+          const POS2005PLUs = this.POS2005Data.map(item => item.PLU_No);
+          console.log('現有的 PLU_No 陣列:', POS2005PLUs);
+
           const requestBody = {
             ...formValue,
-            PLU_No: [this.POS2005Data[0].PLU_No], // 覆寫 frm.value 中的 PLU_No
+            PLU_No: POS2005PLUs,
             "IMG1001_INFO": this.img1001Data,
-            // "POS2005_INFO": [this.POS2005Data],
             "POS2020_INFO": this.POS2020Data,
-          }
+          };
+
           console.log('update', requestBody);
 
-          this.tls51070Service.updateTLS51070(requestBody).subscribe(() => {
-            this.messageService.successBubble('更新成功');
-            this.onCancel(); // 儲存後，會返回列表
+          this.tls51070Service.updateTLS51070(requestBody).subscribe({
+            next: () => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel(); // 儲存後，會返回列表
+            }
           });
         }
         break;
@@ -540,11 +484,11 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           { field: 'PLU_TransType', header: '運輸方式', editable: true, type: 'dropdown', options: this.transTypeOption }, // １＝自行送貨２＝貨運  ３＝快遞  ４＝其它。
           { field: 'PLU_TransDay', header: '送貨天數', editable: true, type: 'number' },
           { field: 'PLU_Purchase', header: '採購狀態', editable: true, type: 'dropdown', options: this.purchaseTypeOption }, // １＝正常採購（預設） ２＝停止採購
-          { field: 'PLU_OrderPrc', header: '最後進價', editable: false, type: 'number' }, //目前進價 > 顯示 最後進價
+          { field: 'PLU_OrderPrc', header: '目前進價', editable: false, type: 'number' }, //目前進價 > 顯示 最後進價
           //readonly，商品新增時，最後進價=POS2004的標準進價PLU_OrderPrc，之後進價異動透過進價/售價變價作業(關帳作業、啟動變價時更新)
 
           { field: 'VDP_LastStockDate', header: '最後進貨日期', editable: false, type: 'date' }, //  readonly，商品新增時，不給值，進貨作業驗收更新
-          { field: 'Remark', header: '單項備註', editable: true, type: 'text' },
+          { field: 'Remark', header: '備註', editable: true, type: 'text' },
         ];
       });
   }
@@ -634,6 +578,32 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   onRowCancel(event: any) {
     console.log('取消主表格編輯:', event);
+  }
+
+  // 新增 POS2005 (新增)
+  onAddPOS2005() {
+    const newPerson = {
+      ...this.defaultNew2005,
+      id: this.generate2005Id(),
+    };
+
+    console.log('新2005項目', newPerson);
+
+    this.POS2005Data.push(newPerson);
+
+    // 自動進入編輯模式
+    setTimeout(() => {
+      const index = this.POS2005Data.indexOf(newPerson);
+      if (index >= 0) {
+        this.expandableTable.onRowEditInit(newPerson, index);
+      }
+    }, 0);
+  }
+
+  // 生成 POS2005 ID (新增)
+  generate2005Id(): number {
+    const maxId = Math.max(...this.POS2005Data.map(p => p.id), 0);
+    return maxId + 1;
   }
 
   // 新增 POS2020 (新增)
