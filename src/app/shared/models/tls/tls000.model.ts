@@ -1,5 +1,5 @@
 export interface Pos10015 {
-  ID: number;
+  id: number;
   SYS_StoreNo: string;
   SYS_SrvNo: string;
   SYS_SrvIP: string;

@@ -6,6 +6,8 @@ import { TranslateService } from '@ngx-translate/core';
 // import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
+import { Subscription } from 'rxjs';
+import { UserInfo } from '../../../shared/models/system/userInfo';
 export interface Pos10015 {
   id: number;
   SYS_StoreNo: string;
@@ -39,7 +41,6 @@ export interface Pos10015 {
 export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     id: [0],
-    SYS_StoreNo: ['10', [Validators.required, Validators.maxLength(10)]],
     SYS_SrvNo: ['', [Validators.required, Validators.maxLength(8)]],
     SYS_SrvStatus: ['A', [Validators.required]],
     SYS_SrvIP: ['', [Validators.required, Validators.maxLength(40)]],
@@ -65,7 +66,8 @@ export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implem
     { value: 'A', label: '啟用' },
     { value: 'C', label: '停用' }
   ];
-
+  private userSubscription: Subscription | undefined; // 使用者訂閱
+  userInfo: UserInfo | null = null;
   constructor(
     private validationService: ValidationService,
     private translate: TranslateService,
@@ -78,16 +80,23 @@ export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implem
     this.initializePage('TLS46010', this.dataForm);
     // 禁止編輯店號
     this.dataForm.get('SYS_StoreNo')?.disable();
+    this.userSubscription = this.authService.user.subscribe((userInfo: UserInfo | null) => {
+      this.userInfo = userInfo;
+      console.log(this.userInfo);
+    });
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const formValue = frm.getRawValue(); // ✅ 包含 disabled 欄位
-
+      const body = {
+        ...formValue,
+        SYS_StoreNo: this.userInfo?.SYS_StoreNo
+      }
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            this.apiService.insertTLS0000(formValue).subscribe(() => {
+            this.apiService.insertTLS0000(body).subscribe(() => {
               this.messageService.successBubble(this.translate.instant('success_message'));
               this.dataForm.reset();
             });
@@ -96,7 +105,7 @@ export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implem
 
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            this.apiService.updateTLS46010(formValue).subscribe(() => {
+            this.apiService.updateTLS46010(body).subscribe(() => {
               this.messageService.successBubble(this.translate.instant('updated-successfully'));
               this.onCancel();
             });
