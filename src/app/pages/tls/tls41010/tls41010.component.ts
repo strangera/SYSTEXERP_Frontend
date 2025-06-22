@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { TLS41010Service, QueryTLS41010Request, TLS41010Data } from '../../../service/api/tls/tls41010.service';
+import { TLS41010Service, TLS41010Data } from '../../../service/api/tls/tls41010.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { columns, guiTypeOptions, salTypeOptions, sernoTypeOptions, statusOptions, typeOptions } from './tls41010.model';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-tls41010',
@@ -18,7 +20,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     ECR_ActiveDateEnd: [null],
     ECR_CloseDateStart: [null],
     ECR_CloseDateEnd: [null],
-    ECR_Status: [[]],
+    ECR_Status: [null],
     ECR_AreaNo: ['', [Validators.maxLength(6)]],
     ECR_SubGroup: ['', [Validators.maxLength(20)]],
     ECR_LocNo: ['', [Validators.maxLength(10)]],
@@ -31,23 +33,18 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     ECR_IP: ['', [Validators.maxLength(20)]],
     ECR_SrvIP: ['', [Validators.maxLength(20)]],
     ECR_TmplNo: ['', [Validators.maxLength(8)]],
-    ...createPaginationConfig([{ field: '', order: 1 }]),
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
+  statusOptions = statusOptions;
+  typeOptions = typeOptions;
+  guiTypeOptions = guiTypeOptions;
+  salTypeOptions = salTypeOptions;
+  sernoTypeOptions = sernoTypeOptions;
 
   data: TLS41010Data[] = [];
   selectedItems: TLS41010Data[] = [];
   totalRecords = 0;
-  columns = [
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'ECR_Name', header: '收銀機名稱', visible: true },
-    { field: 'ECR_TLT_No', header: '所屬專櫃編號', visible: true },
-    { field: 'ECR_TLT_Name', header: '所屬專櫃名稱', visible: true },
-    { field: 'ECR_Status', header: '狀態', visible: true },
-    { field: 'ECR_ActiveDate', header: '啟用日期', visible: true },
-    { field: 'ECR_CloseDate', header: '停用日期', visible: true },
-    { field: 'ECR_IP', header: '網路IP', visible: true },
-    { field: 'ECR_SrvIP', header: '後台主機IP', visible: true },
-  ];
+  columns = columns;
 
   constructor(private tls41010Service: TLS41010Service) {
     super();
@@ -59,24 +56,24 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const value = frm.value;
-      const body: QueryTLS41010Request = {
-        ...value,
-        PageSize: value.PageSize ?? 10,
-        PageIndex: value.PageIndex ?? 1,
-        SortBy: value.SortBy ?? [],
-      };
-
       this.loading = true;
-      this.tls41010Service.queryTLS41010(body).subscribe((res) => {
+      this.tls41010Service.queryTLS41010(frm.value).pipe(finalize(() => this.loading = false)).subscribe((res) => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
-        this.loading = false;
       });
     });
   }
 
-  onDelete(data: TLS41010Data): void {
-    // 可實作批次刪除或單筆刪除功能
+
+  onDelete(data: TLS41010Data | TLS41010Data[]): void {
+    const deleteIds = Array.isArray(data) ? data.map((d) => d.id) : [data.id];
+    if (deleteIds.length === 0) return;
+    this.loading = true;
+    this.tls41010Service.deleteTLS41010(deleteIds).pipe(finalize(() => this.loading = false)).subscribe({
+      next: () => {
+        this.messageService.successBubble('刪除成功');
+        this.onSubmit(this.queryForm);
+      },
+    });
   }
 }
