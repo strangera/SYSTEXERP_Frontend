@@ -1,12 +1,10 @@
 import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
-import { PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-
-const now = new Date();
+import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { Router } from '@angular/router';
 
 interface SalesRecord {
   id: number;
@@ -14,27 +12,30 @@ interface SalesRecord {
   pendingApprovalPaymentTool: string;
   systemAmount: number;
   receiptAmount: number;
+  tlt_no?: string;
+  tlt_name?: string;
 }
+
+const now = new Date();
 
 @Component({
   selector: 'app-tls2a020',
   templateUrl: './tls2a020.component.html',
-  styleUrls: ['./tls2a020.component.scss']
 })
 
 export class TLS2A020Component extends BasicQueryPageComponent<any> {
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
-  selectedItems: any[] = [];
+  // 進度條、頁數設定
+  progressValue = 0;
+  showPageSizeDialog = false;
+  customPageSize = 1000;
 
-
-  // 查詢表單
+  // 表單
   queryForm = this.formBuilder.group({
-    salesDate: [now, [Validators.required]],
-    cashRegisterNumber: [''],
-    floor: [''],
+    salesDate: [new Date(), [Validators.required]],
+    tlt_floor: [[]],
     sort: [''],
+    ECR_No: [[]],
+    tlt_building: [''],
     ...createPaginationConfig([{ field: 'pendingApprovalRegisterCode', order: 1 }])
   });
 
@@ -46,26 +47,47 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> {
     { field: 'receiptAmount', header: '貨收金額', visible: true }
   ];
 
-  // 樓層選單（模擬）
-  floorOptions: any[] = [
-    { label: '1F', value: '1F' },
-    { label: '2F', value: '2F' },
-    { label: 'B1', value: 'B1' }
-  ];
+  // 選單資料
+  floorOptions: any[] = [];
+  ECRNoOptions: any[] = [];
+  BUILDING_NO_Options: any[] = [];
 
+  // 表格資料
+  selectedItems: any[] = [];
   totalRecords = 0;
   data: SalesRecord[] = [];
 
-
-  ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.initializePage('TLS2A020', '/TLS/TLS2A020CRU', this.queryForm, (form) => this.onSubmit(form));
+  constructor(
+    private locationOptionsService: LocationOptionsService,
+    private ecrNoService: ECRNoService,
+    private router: Router
+  ) {
+    super();
   }
 
-  // ✅ 查詢事件
+  ngOnInit(): void {
+    this.initializePage('TLS2A020', '/TLS/TLS2A020CRU', this.queryForm, (form) => this.onSubmit(form));
+
+    this.ecrNoService.getECRNo().subscribe({
+      next: (res) => this.ECRNoOptions = res,
+      error: () => this.messageService.errorBubble('載入收銀機代號失敗')
+    });
+
+    this.locationOptionsService.getBuildingOptions().subscribe({
+      next: (res) => this.BUILDING_NO_Options = res,
+      error: () => this.messageService.errorBubble('載入館別選單失敗')
+    });
+
+    this.locationOptionsService.getFloorOptions().subscribe({
+      next: (res) => this.floorOptions = res,
+      error: () => this.messageService.errorBubble('載入樓層選單失敗')
+    });
+  }
+
+  // 查詢功能
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
-      // 模擬查詢 API 回傳資料
+      // 模擬查詢結果
       this.data = [
         {
           id: 1,
@@ -83,21 +105,18 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> {
         }
       ];
       this.totalRecords = this.data.length;
-
       this.loading = false;
       this.messageService.unblockUi();
     });
   }
 
-
-  // ✅ 清除查詢表單
+  // 清除功能
   onClearForm(): void {
     this.queryForm.reset();
     this.queryForm.patchValue({ salesDate: now });
   }
 
-
-  // ✅ 刪除項目（模擬）
+  // 刪除功能（模擬）
   onDelete(data: SalesRecord | SalesRecord[]): void {
     const items = Array.isArray(data) ? data : [data];
     const idList = items.map(item => item.id).filter(id => id != null);
@@ -107,12 +126,45 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> {
       return;
     }
 
-    // TODO: 可串接 delete API，例如：this.apiService.deleteTLS2A020({ idList }).subscribe(...)
     this.messageService.successBubble('刪除成功（模擬）');
-    this.onSubmit(this.queryForm); // 查詢更新
+    this.onSubmit(this.queryForm);
   }
 
-  // ✅ 權限控制
+  // 報表模式
+  goToReportMode(): void {
+    if (this.queryForm.invalid) {
+      this.messageService.warnBubble('請先完成查詢條件');
+      this.queryForm.markAllAsTouched();
+      return;
+    }
+
+    this.customPageSize = 1000;
+    this.showPageSizeDialog = true;
+  }
+
+  confirmPageSizeAndNavigate(): void {
+    const rawFormValue: Record<string, any> = { ...this.queryForm.value };
+    for (const key in rawFormValue) {
+      if (rawFormValue[key] === '') rawFormValue[key] = null;
+    }
+
+    const queryFormValue = {
+      ...rawFormValue,
+      pageSize: this.customPageSize
+    };
+
+    this.router.navigate(['/TLS/TLS2A020CRU'], {
+      state: {
+        queryFormValue,
+        pageSize: this.customPageSize
+      }
+    });
+
+    this.showPageSizeDialog = false;
+  }
+
+
+  // 權限控制
   canQuery(): boolean {
     return true;
   }
