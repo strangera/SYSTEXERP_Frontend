@@ -311,11 +311,11 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     // 檢查是否有暫存資料來顯示不同訊息
     const hasExistingData = this.contractFlowService.getStep1Data(rowData);
 
-    if (hasExistingData) {
-      this.messageService.infoBubble('繼續編輯暫存資料（從契約資訊開始）');
-    } else {
-      this.messageService.infoBubble('開始新的編輯工作流程');
-    }
+    // if (hasExistingData) {
+    //   this.messageService.infoBubble('繼續編輯暫存資料（從契約資訊開始）');
+    // } else {
+    //   this.messageService.infoBubble('開始新的編輯工作流程');
+    // }
   }
 
   /**

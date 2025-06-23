@@ -213,52 +213,51 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     }
   ];
 
-  // 各類型條件設定的欄位定義
+  // 階梯式抽成欄位
   graduatedColumns: ColumnDef[] = [
-    // { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
-    { field: 'A', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
-    { field: 'B', header: '帳務起', type: 'date', editable: true, autoWidth: true },
-    { field: 'C', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
-    { field: 'D', header: '階梯金額(起值)', type: 'number', editable: true, autoWidth: true },
-    { field: 'E', header: '階梯金額(迄值)', type: 'number', editable: true, autoWidth: true },
-    { field: 'F', header: '抽成率', type: 'number', editable: true, autoWidth: true },
+    { field: 'seq_no', header: '序號', type: 'number', editable: true, autoWidth: true },
+    { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
+    { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
+    { field: 'start_number', header: '階梯金額(起值)', type: 'number', editable: true, autoWidth: true },
+    { field: 'end_number', header: '階梯金額(迄值)', type: 'number', editable: true, autoWidth: true },
+    { field: 'charge_rate', header: '抽成率(%)', type: 'number', editable: true, autoWidth: true }
   ];
 
+  //包底加階梯
   baseTierColumns: ColumnDef[] = [
-    // { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
-    { field: 'A', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
-    { field: 'B', header: '帳務起', type: 'date', editable: true, autoWidth: true },
-    { field: 'C', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
-    { field: 'D', header: '包底金額', type: 'number', editable: true, autoWidth: true },
-    { field: 'E', header: '階梯金額(起值)', type: 'number', editable: true, autoWidth: true },
-    { field: 'F', header: '階梯金額(迄值)', type: 'number', editable: true, autoWidth: true },
-    { field: 'G', header: '抽成率', type: 'number', editable: true, autoWidth: true },
+    { field: 'seq_no', header: '序號', type: 'number', editable: true, autoWidth: true },
+    { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
+    { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
+    { field: 'limit_amt', header: '包底金額', type: 'number', editable: true, autoWidth: true },
+    { field: 'start_number', header: '階梯金額(起值)', type: 'number', editable: true, autoWidth: true },
+    { field: 'end_number', header: '階梯金額(迄值)', type: 'number', editable: true, autoWidth: true },
+    { field: 'charge_rate', header: '抽成率(%)', type: 'number', editable: true, autoWidth: true }
   ];
 
+  // 包底抽成欄位
   baseCommissionColumns: ColumnDef[] = [
-    // { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
-    { field: 'A', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
-    { field: 'B', header: '帳務起', type: 'date', editable: true, autoWidth: true },
-    { field: 'C', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
-    { field: 'D', header: '包底金額', type: 'number', editable: true, autoWidth: true },
-    { field: 'E', header: '抽成率', type: 'number', editable: true, autoWidth: true },
+    { field: 'tlt_id', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
+    { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
+    { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
+    { field: 'limit_amt', header: '包底金額', type: 'number', editable: true, autoWidth: true },
+    { field: 'limit_charge_rate', header: '抽成率(%)', type: 'number', editable: true, autoWidth: true }
   ];
 
+  //固定租金欄位
   fixedRentColumns: ColumnDef[] = [
-    // { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
-    { field: 'A', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
-    { field: 'B', header: '帳務起', type: 'date', editable: true, autoWidth: true },
-    { field: 'C', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
-    { field: 'D', header: '租金金額', type: 'number', editable: true, autoWidth: true },
+    { field: 'tlt_id', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
+    { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
+    { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
+    { field: 'base_rent', header: '租金金額', type: 'number', editable: true, autoWidth: true }
   ];
 
+  //底租抽成取高者
   baseRentHigherColumns: ColumnDef[] = [
-    // { field: 'ischeck', header: '是否新增', type: 'checkbox', editable: true, autoWidth: true },
-    { field: 'A', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
-    { field: 'B', header: '帳務起', type: 'date', editable: true, autoWidth: true },
-    { field: 'C', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
-    { field: 'D', header: '租金金額', type: 'number', editable: true, autoWidth: true },
-    { field: 'E', header: '抽成率', type: 'number', editable: true, autoWidth: true },
+    { field: 'tlt_id', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
+    { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
+    { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
+    { field: 'base_rent', header: '租金金額', type: 'number', editable: true, autoWidth: true },
+    { field: 'cag_charge_rate', header: '抽成率(%)', type: 'number', editable: true, autoWidth: true }
   ];
 
   constructor(
@@ -304,6 +303,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
         ven_uniform: step1Data?.ven_uniform || this.currentContractData.ven_uniform || '-',
         contract_subno: step1Data?.contract_subno || this.currentContractData.contract_subno || '-',
         comm_comp_type: step1Data?.comm_comp_type || this.currentContractData.comm_comp_type || '-',
+        tlt_term_type: step1Data?.tlt_term_type || this.currentContractData.tlt_term_type || '-',
         tlt_bdate: step1Data?.tlt_bdate || this.currentContractData.tlt_bdate || '',
         tlt_edate: step1Data?.tlt_edate || this.currentContractData.tlt_edate || '',
         tlt_contract_bdate: step1Data?.tlt_contract_bdate || this.currentContractData.tlt_contract_bdate || '',
@@ -402,12 +402,12 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
   // 🎯 判斷是否顯示特定抽成類型的條件設定
   shouldShowCommissionType(commissionTypeCode: string): boolean {
-    const currentCommissionType = this.contractInfoData[0]?.comm_comp_type;
+    const currentCommissionType = this.contractInfoData[0]?.tlt_term_type;
     return currentCommissionType === commissionTypeCode;
   }
 
   get existingCommissionTypes(): string[] {
-    const commissionType = this.contractInfoData[0]?.comm_comp_type;
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
     return commissionType ? [commissionType] : [];
   }
 
@@ -614,7 +614,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       return;
     }
 
-    const commissionType = this.contractInfoData[0]?.comm_comp_type;
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
 
     if (!commissionType) {
       console.warn('❌ 沒有抽成別資訊，無法載入後端資料');
@@ -894,5 +894,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     } else {
       this.initializeConditionDataByCommissionType('6');
     }
+  }
+
+  getCommissionTypeName(): string {
+    const code = this.contractInfoData[0]?.tlt_term_type;
+    const option = TLS13010_DROPDOWN_OPTIONS.commissionCompType.find(opt => opt.value === code);
+    return option ? option.label : code || '未載入';
   }
 }

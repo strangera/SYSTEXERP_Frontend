@@ -133,6 +133,7 @@ export interface ContractInfo {
   locationInfo?: LocationItem[];
   bus_type?: string;
   bus_class?: string;
+  tlt_term_type?: string;
 }
 
 // 代扣款設定（next1）
@@ -376,4 +377,57 @@ export class DataChangeTracker {
   }
 }
 
+
+export interface BaseConditionItem {
+  id?: number | string;
+  talent_id: string;
+  tlt_id: string;           // 帳務期別
+  cag_bdate: string;        // 帳務起始日
+  cag_edate: string;        // 帳務結束日
+  _status?: 'original' | 'new' | 'modified' | 'deleted';
+}
+
+// 固定租金條件 (對應 TLTTALENT_RENT)
+export interface FixedRentCondition extends BaseConditionItem {
+  base_rent: number;        // 租金金額
+}
+
+// 底租抽成取高者條件 (TLTTALENT_RENT + TLTTALENT_CHARGED)
+export interface BaseRentHigherCondition extends BaseConditionItem {
+  base_rent: number;        // 租金金額
+  cag_charge_rate: number;  // 抽成率
+}
+
+// 包底抽成條件 (對應 TLTTALENT_LIMIT)
+export interface BaseCommissionCondition extends BaseConditionItem {
+  limit_amt: number;        // 包底金額
+  limit_charge_rate: number; // 抽成率
+}
+
+// 階梯式抽成條件 (對應 TLTTALENT_LEVEL + TLTTALENT_LEVELD)
+export interface GraduatedCommissionCondition extends BaseConditionItem {
+  seq_no: number;           // 序號
+  limit_amt?: number;       // 限制金額
+  start_number: number;     // 階梯金額(起值)
+  end_number: number;       // 階梯金額(迄值)
+  charge_rate: number;      // 抽成率
+}
+
+// 包底加階梯條件 (TLTTALENT_LIMIT + TLTTALENT_LEVEL)
+export interface BaseTierCondition extends BaseConditionItem {
+  seq_no: number;           // 序號
+  limit_amt: number;        // 包底金額
+  start_number: number;     // 階梯金額(起值)
+  end_number: number;       // 階梯金額(迄值)
+  charge_rate: number;      // 抽成率
+}
+
+// 統一的條件設定容器
+export interface CommissionConditionData {
+  fixedRentItems: FixedRentCondition[];
+  baseRentHigherItems: BaseRentHigherCondition[];
+  baseCommissionItems: BaseCommissionCondition[];
+  graduatedItems: GraduatedCommissionCondition[];
+  baseTierItems: BaseTierCondition[];
+}
 // 之後會陸續加入 CRU、扣款、抽成、條件設定等型別

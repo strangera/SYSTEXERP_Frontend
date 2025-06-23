@@ -641,7 +641,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     if (this.dataForm.valid) {
       this.saveToWorkflow(); // 確保最新資料已暫存
       this.router.navigate(['/TLS/TLS13010NEXT1']);
-      this.messageService.infoBubble('進入下一步：代扣款設定');
+      // this.messageService.infoBubble('進入下一步：代扣款設定');
     } else {
       this.submitted = true;
       this.markFormGroupTouched(this.dataForm);

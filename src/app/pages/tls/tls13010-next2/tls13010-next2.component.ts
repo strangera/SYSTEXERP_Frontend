@@ -1045,7 +1045,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     }
 
     this.router.navigate(['TLS/TLS13010NEXT3']);
-    this.messageService.infoBubble('進入下一步');
+    // this.messageService.infoBubble('進入下一步');
   }
 
   override onCancel(): void {

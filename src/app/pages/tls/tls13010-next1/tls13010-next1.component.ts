@@ -711,7 +711,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
           this.isShowingAll = true;  // 標記為已載入全部資料
           this.filterData();
           this.saveFareDataToWorkflow();
-          this.messageService.successBubble('扣款資料載入成功');
+          // this.messageService.successBubble('扣款資料載入成功');
         } else {
           console.log('API 沒有回傳扣款資料');
           this.messageService.infoBubble('沒有找到既有的扣款資料');
@@ -860,7 +860,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     console.log(`${capType} 類型扣款資料已更新`);
     this.saveFareDataToWorkflow();
-    this.messageService.successBubble('扣款資料已儲存');
+    // this.messageService.successBubble('扣款資料已儲存');
   }
 
   onFareTableEdit(rowData: any, capType: string): void {
@@ -927,7 +927,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     this.router.navigate(['TLS/TLS13010NEXT2']);
-    this.messageService.infoBubble('進入下一步：抽成設定');
+    // this.messageService.infoBubble('進入下一步：抽成設定');
   }
 
   override onCancel(): void {
@@ -966,7 +966,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     if (frm.valid && this.canQuery()) {
       console.log('扣款資料提交:', this.originalFareData);
       this.saveFareDataToWorkflow();
-      this.messageService.successBubble('扣款資料已儲存');
+      // this.messageService.successBubble('扣款資料已儲存');
     }
 
     this.loading = false;
@@ -999,7 +999,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   saveAllChanges(): void {
     this.saveFareDataToWorkflow();
-    this.messageService.successBubble('所有變更已儲存');
+    // this.messageService.successBubble('所有變更已儲存');
   }
 
   hasAnyData(): boolean {
