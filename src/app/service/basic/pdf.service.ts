@@ -16,7 +16,8 @@ export class PdfService {
       columns: { header: string, field: string, style?: string, format?: (val: any) => any }[],
       data: any[],
       subtotalFields?: string[],
-      summaryText?: string[]
+      summaryText?: string[],
+      mergeTotalCols?: number, // ✅ 新增這行
     }
   ): void {
     const {
@@ -29,6 +30,7 @@ export class PdfService {
       data,
       subtotalFields = [],
       summaryText = []
+
     } = options;
 
     const doc = new jsPDF({ orientation, unit: 'pt' });
@@ -66,14 +68,39 @@ export class PdfService {
       });
     });
 
-    const totalRow = columns.map(col => {
-      if (col.field === '__index') return '總和'; // ✅ 總和列第一格寫入文字
-      if (subtotalFields.includes(col.field)) {
-        const sum = data.reduce((acc, row) => acc + (parseFloat(row[col.field]) || 0), 0);
-        return sum.toLocaleString();
+    const mergeTotalCols = options.mergeTotalCols ?? 0; // 預設不合併
+
+    const totalRow: any[] = [];
+    if (mergeTotalCols > 0) {
+      totalRow.push({
+        content: '總計：',
+        colSpan: mergeTotalCols,
+        styles: { halign: 'right' },
+      });
+
+      for (let i = mergeTotalCols; i < columns.length; i++) {
+        const col = columns[i];
+        if (subtotalFields.includes(col.field)) {
+          const sum = data.reduce((acc, row) => acc + (parseFloat(row[col.field]) || 0), 0);
+          totalRow.push({ content: sum.toLocaleString(), styles: { halign: 'right' } });
+        } else {
+          totalRow.push({ content: '', styles: { halign: 'right' } });
+        }
       }
-      return '';
-    });
+    } else {
+      // 原本不合併欄的總計邏輯
+      columns.forEach(col => {
+        if (col.field === '__index') {
+          totalRow.push('總計');
+        } else if (subtotalFields.includes(col.field)) {
+          const sum = data.reduce((acc, row) => acc + (parseFloat(row[col.field]) || 0), 0);
+          totalRow.push(sum.toLocaleString());
+        } else {
+          totalRow.push('');
+        }
+      });
+    }
+
 
     body.push(totalRow);
 

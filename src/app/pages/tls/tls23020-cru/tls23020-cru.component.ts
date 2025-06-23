@@ -40,6 +40,9 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
   dateEnd: string = '';
   progressValue = 10;
   data: any[] = [];
+  netTotalSum = 0;
+  taxTotalSum = 0;
+   
   columns = [
     {
       field: 'TXN_Date',
@@ -302,63 +305,91 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
   invoiceSum = 0;
   showSummaryMode = false;
   summaryTableData: any[] = [];
+generateSummaryTable(): void {
+  const summaryMap = new Map<string, any>();
 
-  generateSummaryTable(): void {
-    const summaryMap = new Map<string, any>();
+  this.totalSum = 0;
+  this.invoiceSum = 0;
+  this.netTotalSum = 0;
+  this.taxTotalSum = 0;
 
-    this.totalSum = 0;
-    this.invoiceSum = 0;
+  this.data.forEach(row => {
+    const key = row.tlt_no;
 
-    this.data.forEach(row => {
-      const key = row.tlt_no;
-      if (!summaryMap.has(key)) {
-        summaryMap.set(key, {
-          dateStart: this.dateStart,
-          dateEnd: this.dateEnd,
-          tlt_no: row.tlt_no,
-          tlt_name: row.tlt_name,
-          sum: 0
-        });
-      }
+    if (!summaryMap.has(key)) {
+      summaryMap.set(key, {
+        dateStart: this.dateStart,
+        dateEnd: this.dateEnd,
+        tlt_no: row.tlt_no,
+        tlt_name: row.tlt_name,
+        sum: 0,
+        TXN_Net: 0,
+        TXN_Tax: 0
+      });
+    }
 
-      const saleAmt = parseFloat(row.TXN_TotSaleAmt) || 0;
-      const payAmt = parseFloat(row.TXN_TotPayAmt) || 0;
+    const saleAmt = parseFloat(row.TXN_TotSaleAmt) || 0;
+    const netAmt = parseFloat(row.TXN_Net) || 0;
+    const taxAmt = parseFloat(row.TXN_Tax) || 0;
+    const payAmt = parseFloat(row.TXN_TotPayAmt) || 0;
 
-      summaryMap.get(key).sum += saleAmt;
-      this.totalSum += saleAmt;
-      this.invoiceSum += payAmt;
-    });
+    const summary = summaryMap.get(key);
+    summary.sum += saleAmt;
+    summary.TXN_Net += netAmt;
+    summary.TXN_Tax += taxAmt;
 
-    this.summaryTableData = Array.from(summaryMap.values());
+    this.totalSum += saleAmt;
+    this.invoiceSum += payAmt;
+    this.netTotalSum += netAmt;
+    this.taxTotalSum += taxAmt;
+  });
 
-    console.log('summaryTableData ✅', this.summaryTableData);
-    this.groupedSummaryData = this.summaryTableData; // 保留舊用法相容性
-  }
+  this.summaryTableData = Array.from(summaryMap.values());
+  this.groupedSummaryData = this.summaryTableData;
+
+  console.log('summaryTableData ✅', this.summaryTableData);
+}
+
+
 
 
 
   exportSummaryPDF(): void {
-  const columns = [
-    { header: '序號', field: '__index' }, // ✅ 固定第一欄為序號
-    { header: '銷售日期起', field: 'dateStart' },
-    { header: '銷售日期迄', field: 'dateEnd' },
-    { header: '專櫃編號', field: 'tlt_no' },
-    { header: '櫃位名稱', field: 'tlt_name', style: 'text-left' },
-    { header: '發票總金額', field: 'sum', style: 'text-right', format: (val: number) => val.toLocaleString() }
-  ];
+    const columns = [
+      { header: '序號', field: '__index' }, // ✅ 固定第一欄為序號
+      { header: '銷售日期起', field: 'dateStart' },
+      { header: '銷售日期迄', field: 'dateEnd' },
+      { header: '專櫃編號', field: 'tlt_no' },
+      { header: '櫃位名稱', field: 'tlt_name', style: 'text-left' },
+      {
+        header: '發票總金額', field: 'sum', style: 'text-right', format: (val: number) => val.toLocaleString(),
+      },
+      {
+        field: 'TXN_Net', header: '未稅(免稅)金額', visible: true,
+        style: 'text-right',
+        format: (val: number) => val?.toLocaleString('en-US') || '0'
+      },
+      {
+        field: 'TXN_Tax', header: '稅額', visible: true,
+        style: 'text-right',
+        format: (val: number) => val?.toLocaleString('en-US') || '0'
+      },
 
-  this.pdfService.exportReportPDF({
-    orientation: 'l',
-    title: '銷售總額報表',
-    dateStart: this.dateStart,
-    dateEnd: this.dateEnd,
-    printedAt: this.printedAt,
-    columns,
-    data: this.groupedSummaryData,
-    subtotalFields: ['sum'],
-    summaryText: [] // ✅ 不列印 A~H 條列文字
-  });
-}
+    ];
+
+    this.pdfService.exportReportPDF({
+      orientation: 'l',
+      title: '銷售總額報表',
+      dateStart: this.dateStart,
+      dateEnd: this.dateEnd,
+      printedAt: this.printedAt,
+      columns,
+      data: this.groupedSummaryData,
+      subtotalFields: ['sum', 'TXN_Net', 'TXN_Tax'],
+      summaryText: [], // ✅ 不列印 A~H 條列文字
+      mergeTotalCols:5,
+    });
+  }
 
   exportSummaryExcel(): void {
     import('xlsx').then(xlsx => {
@@ -368,14 +399,18 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
           銷售日期迄: row.dateEnd,
           專櫃編號: row.tlt_no,
           櫃位名稱: row.tlt_name,
-          發票總金額: row.sum
+          發票總金額: row.sum,
+          '未稅(免稅)金額': row.TXN_Net,
+          稅額: row.TXN_Tax
         }))
       );
+
       const wb = xlsx.utils.book_new();
       xlsx.utils.book_append_sheet(wb, ws, '銷售總額');
       xlsx.writeFile(wb, `銷售總額_${new Date().toISOString()}.xlsx`);
     });
   }
+
 
   goToQueryPage(): void {
     this.router.navigate(['/TLS/TLS23010']);

@@ -27,27 +27,29 @@ import { CounterNameService } from '../../../service/basic/counter-name.service'
 })
 export class TLS23030Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
+    DisplayMode: ['report'],
     TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],
     TXN_DateEnd: [new Date(), [Validators.required]],
-    ECR_No: [''],
+    ECR_No: [[]],
     TXN_No_Start: [null],
     TXN_No_End: [null],
-    TLT_No: [''],
-    PAY_Type: [''],
+    TLT_No: [[]],
+    PAY_Type: [[]],
     TXN_PayAmt_Start: [null],
     TXN_PayAmt_End: [null],
-    TXN_Status: [''],
+    TXN_Status: [[]],
     TXN_MemCard: [''],
-    CRD_Type: [''],
+    CRD_Type: [[]],
     CRD_No: [''],
-
     pay_taxtype: [''],
-    org_id: [''],
+    org_id: [[]],
+    IsPayType: [false],
     rece_yn: [''],
     cash_yn: [''],
     tlt_building: [''],
-    tlt_floor: [''],
-    IsHaveTERM_No: [null], // 預設為 null 而不是 true
+    tlt_floor: [[]],
+    PAY_NO: [[]],
+    IsHaveTERM_No: [''],    
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }])
   });
 
