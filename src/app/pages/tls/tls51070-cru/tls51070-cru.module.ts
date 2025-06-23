@@ -20,7 +20,7 @@ export interface POS2020Detail {
     "PLU_TransType": string,
     "PLU_TransDay": number,
     "Remark": string,
-    "VDP_LastStockDate": string, //型別Date 先用 string 因為新增不能編輯
+    "VDP_LastStockDate"?: Date, //型別Date 先用 string 因為新增不能編輯
     "CRT_Date"?: Date,
     "CRT_USR_No"?: string,
     "CRT_USR_Name"?: string,
