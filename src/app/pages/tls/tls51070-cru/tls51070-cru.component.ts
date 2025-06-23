@@ -8,6 +8,7 @@ import { Tls51070Service } from '../../../service/API/tls/tls51070.service';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { environment } from '../../../../environments/environment';
 import { POS2005Detail, POS2020Detail, IMG1001Detail } from './tls51070-cru.module';
+import { detailHandlerService } from './detailHandlerService';
 
 // 2.5.1.7  商品基本資料 CRU
 @Component({
@@ -206,6 +207,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   constructor(
     private tls51070Service: Tls51070Service,
+    private detailHandler: detailHandlerService,// POS2005 table明細處理
   ) {
     super(); // 呼叫父類建構子
   }
@@ -553,106 +555,30 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     this.buttonID = buttonNum;
   }
 
-  //---新增表格編輯事件---
-  // 注意：這些方法需要明確接收正確的事件類型
+  //---POS2005表格編輯事件---
   onRowSave(event: any) {
-    // 確認事件對象有預期的屬性
-    if (event && 'oldData' in event && 'newData' in event) {
-      console.log('儲存主表格行:', event);
-      // 這裡可以加入實際的API儲存邏輯
-    } else {
-      console.warn('收到未預期的事件格式:', event);
-    }
+    this.detailHandler.handleRowSave(event);
   }
-
   onRowCancel(event: any) {
-    console.log('取消主表格編輯:', event);
+    this.detailHandler.handleRowCancel(event);
   }
-
   // 新增 POS2005 (新增)
   onAddPOS2005() {
-    const newPerson = {
-      ...this.defaultNew2005,
-      id: this.generate2005Id(),
-    };
-
-    console.log('新2005項目', newPerson);
-
-    this.POS2005Data.push(newPerson);
-
-    // 自動進入編輯模式
-    setTimeout(() => {
-      const index = this.POS2005Data.indexOf(newPerson);
-      if (index >= 0) {
-        this.expandableTable.onRowEditInit(newPerson, index);
-      }
-    }, 0);
+    this.detailHandler.addPOS2005(this.POS2005Data, this.defaultNew2005, this.expandableTable);
   }
-
-  // 生成 POS2005 ID (新增)
-  generate2005Id(): number {
-    const maxId = Math.max(...this.POS2005Data.map(p => p.id), 0);
-    return maxId + 1;
-  }
-
   // 批次刪除 POS2005
-  onBatchDelete2005(selectedItems: any[]): void {
-    if (confirm(`確定要刪除 ${selectedItems.length} 個國際條碼項目嗎？`)) {
-      selectedItems.forEach(item => {
-        const index = this.POS2005Data.findIndex(d => d.id === item.id);
-        if (index > -1) {
-          this.POS2005Data.splice(index, 1);
-          // console.log(`POS2005刪除後:`, this.POS2005Data);
-        }
-      });
-
-      // this.saveToWorkflow(); // 暫存
-      this.messageService.successBubble(`已刪除 ${selectedItems.length} 個位置項目`);
-    }
+  onBatchDelete2005(selectedItems: POS2005Detail[]): void {
+    this.detailHandler.deletePOS2005(selectedItems, this.POS2005Data, this.messageService);
   }
 
-  //------------------------------------------------------------------
-
+  //---POS2020表格編輯事件---
   // 新增 POS2020 (新增)
   onAddPOS2020() {
-    const newPerson = {
-      ...this.defaultNew2020,
-      id: this.generate2020Id(),
-    };
-
-    console.log('新2020項目', newPerson);
-
-    this.POS2020Data.push(newPerson);
-
-    // 自動進入編輯模式
-    setTimeout(() => {
-      const index = this.POS2020Data.indexOf(newPerson);
-      if (index >= 0) {
-        this.expandableTable.onRowEditInit(newPerson, index);
-      }
-    }, 0);
-  }
-
-  // 生成 POS2020 ID (新增)
-  generate2020Id(): number {
-    const maxId = Math.max(...this.POS2020Data.map(p => p.id), 0);
-    return maxId + 1;
+    this.detailHandler.addPOS2020(this.POS2020Data, this.defaultNew2020, this.expandableTable);
   }
 
   // 批次刪除 POS2020
   onBatchDelete2020(selectedItems: any[]): void {
-    if (confirm(`確定要刪除 ${selectedItems.length} 個採購廠商項目嗎？`)) {
-      selectedItems.forEach(item => {
-        const index = this.POS2020Data.findIndex(d => d.id === item.id);
-        if (index > -1) {
-          this.POS2020Data.splice(index, 1);
-          // console.log(`POS2020刪除後:`, this.POS2005Data);
-        }
-      });
-
-      // this.saveToWorkflow(); // 暫存
-      this.messageService.successBubble(`已刪除 ${selectedItems.length} 個位置項目`);
-    }
+    this.detailHandler.deletePOS2020(selectedItems, this.POS2020Data, this.messageService);
   }
-  //--表格事件--
 }
