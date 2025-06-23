@@ -8,7 +8,8 @@ import { Tls51070Service } from '../../../service/API/tls/tls51070.service';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { environment } from '../../../../environments/environment';
 import { POS2005Detail, POS2020Detail, IMG1001Detail } from './tls51070-cru.module';
-import { detailHandlerService } from './detailHandlerService';
+import { detail2005HandlerService } from './detail2005HandlerService';
+import { detail2020HandlerService } from './detail2020HandlerService';
 
 // 2.5.1.7  商品基本資料 CRU
 @Component({
@@ -18,7 +19,8 @@ import { detailHandlerService } from './detailHandlerService';
 })
 export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> implements OnInit {
   // 在父組件中聲明
-  @ViewChild(ExpandableEditTableComponent) expandableTable!: ExpandableEditTableComponent;
+  @ViewChild('pos2005Table') pos2005Table!: ExpandableEditTableComponent;
+  @ViewChild('pos2020Table') pos2020Table!: ExpandableEditTableComponent;
 
   //目前標籤列
   buttonID = 1; //預設在 基本資料標籤
@@ -108,9 +110,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     { value: '4', label: '下架' },
   ];
   counterOptions: apiOption[] = []; //專櫃編號：資料讀 TLTTALENT 
-  vendorOptions: option[] = [
-    { value: '1', label: 'test' }
-  ];  //廠商編號: 資料讀 POS2013 
+  vendorOptions: option[] = [];  //廠商編號: 資料讀 POS2013 
 
   // ---商品規格dropdown---
   attributeOptions: option[] = [ // 商品型態
@@ -144,6 +144,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // ---------國際條碼 (POS2005) 編輯表格 至少要一筆-------------------------------------------------------
   // 國際條碼編號	下拉
   POS2005Data: POS2005Detail[] = [];
+  orgPOS2005Data: POS2005Detail[] = []; //原始資料，用於比對
   // POS2005 展開式表格的欄位定義
   POS2005DataColumn: ColumnDef[] = [
     // { field: 'PLU_MagNo', header: '商品管理編號', editable: false, type: 'text' },  //key1
@@ -151,9 +152,17 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   ];
   // 預設新項目模板
   defaultNew2005 = {
-    PLU_MagNo: this.dataForm.get('PLU_MagNo')?.value || '',
+    PLU_MagNo: '',
     PLU_No: '', // 國際條碼
   };
+  // 預設 POS2020 新項目模板
+  createDefaultNew2005(pLU_MagNo: string) {
+    this.defaultNew2005 = {
+      PLU_MagNo: pLU_MagNo,
+      PLU_No: '', // 國際條碼
+    };
+  }
+
   // 展開式表格的載入狀態
   expand2005Loading = false;
   // ---------採購廠商 (POS2020) 編輯表格 至少要一筆-------------------------------------------------------
@@ -161,7 +170,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   POS2020Data: POS2020Detail[] = [];
   // 預設新項目模板
   defaultNew2020 = {
-    PLU_MagNo: this.dataForm.get('PLU_MagNo')?.value || '',
+    PLU_MagNo: '',
     VEN_No: '',
     STO_No: '',
     PLU_OrderPrc: 0,
@@ -207,7 +216,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   constructor(
     private tls51070Service: Tls51070Service,
-    private detailHandler: detailHandlerService,// POS2005 table明細處理
+    private detail2005Handler: detail2005HandlerService,// POS2005 table明細處理
+    private detail2020Handler: detail2020HandlerService, // POS2020 table明細處理
   ) {
     super(); // 呼叫父類建構子
   }
@@ -536,11 +546,13 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         this.pos2005Detail = response.Data[0].POS2005Detail;
         this.pos2020Detail = response.Data[0].POS2020Detail;
 
-        this.POS2020Data = this.pos2020Detail;
         this.POS2005Data = this.pos2005Detail;
+        this.orgPOS2005Data = this.pos2005Detail;
+        this.POS2020Data = this.pos2020Detail;
         this.img1001Data = this.img1001Detail;
 
         //建立項目模板
+        this.createDefaultNew2005(pLU_MagNo);
         this.createDefaultNew2020(pLU_MagNo);
 
         console.log('POS2005Data', this.POS2005Data);
@@ -556,29 +568,62 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   }
 
   //---POS2005表格編輯事件---
-  onRowSave(event: any) {
-    this.detailHandler.handleRowSave(event);
+  onRowSavePOS2005(event: any) {
+    const newPLUNo = event.newData?.PLU_No;
+    const currentId = event.newData?.id;
+
+    // 檢查國際條碼是否為空（放在最前面）
+    if (newPLUNo === undefined || newPLUNo === null || newPLUNo.trim() === '') {
+      this.messageService.errorBubble('國際條碼不可為空，請輸入有效的國際條碼。');
+      event.newData.PLU_No = event.oldData.PLU_No;
+      return;
+    }
+
+    if (!newPLUNo || !currentId) return;
+
+    // 比對 POS2005Data（最新畫面資料），排除自己那筆
+    const isDuplicate = this.POS2005Data.some(item =>
+      item.PLU_No === newPLUNo && item.id !== currentId
+    );
+
+    // 檢查是否有重複的國際條碼
+    if (isDuplicate) {
+      this.messageService.errorBubble(`國際條碼 ${newPLUNo} 已存在，請使用其他條碼。`);
+      // 還原為舊值
+      event.newData.PLU_No = event.oldData.PLU_No;
+      return;
+    }
+
+    // 通過驗證，處理儲存
+    this.detail2005Handler.handleRowSave(event);
   }
-  onRowCancel(event: any) {
-    this.detailHandler.handleRowCancel(event);
+  onRowCancelPOS2005(event: any) {
+    this.detail2005Handler.handleRowCancel(event);
   }
-  // 新增 POS2005 (新增)
+  // 新增 POS2005
   onAddPOS2005() {
-    this.detailHandler.addPOS2005(this.POS2005Data, this.defaultNew2005, this.expandableTable);
+    this.detail2005Handler.addPOS2005(this.POS2005Data, this.defaultNew2005, this.pos2005Table);
   }
   // 批次刪除 POS2005
   onBatchDelete2005(selectedItems: POS2005Detail[]): void {
-    this.detailHandler.deletePOS2005(selectedItems, this.POS2005Data, this.messageService);
+    this.detail2005Handler.deletePOS2005(selectedItems, this.POS2005Data, this.pos2005Table);
   }
 
   //---POS2020表格編輯事件---
-  // 新增 POS2020 (新增)
+  onRowSavePOS2020(event: any) {
+    // 通過驗證，處理儲存
+    this.detail2020Handler.handleRowSave(event);
+  }
+  onRowCancelPOS2020(event: any) {
+    this.detail2020Handler.handleRowCancel(event);
+  }
+  // 新增 POS2020
   onAddPOS2020() {
-    this.detailHandler.addPOS2020(this.POS2020Data, this.defaultNew2020, this.expandableTable);
+    this.detail2020Handler.addPOS2020(this.POS2020Data, this.defaultNew2020, this.pos2020Table);
   }
 
   // 批次刪除 POS2020
   onBatchDelete2020(selectedItems: any[]): void {
-    this.detailHandler.deletePOS2020(selectedItems, this.POS2020Data, this.messageService);
+    this.detail2020Handler.deletePOS2020(selectedItems, this.POS2020Data, this.pos2020Table);
   }
 }

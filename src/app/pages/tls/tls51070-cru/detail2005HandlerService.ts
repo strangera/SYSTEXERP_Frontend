@@ -4,13 +4,14 @@ import { Injectable } from '@angular/core';
 @Injectable({
     providedIn: 'root',
 })
-export class detailHandlerService {
+export class detail2005HandlerService {
     // 共通操作
     handleRowSave(event: any): void {
         if (event && 'oldData' in event && 'newData' in event) {
             console.log('儲存主表格行:', event);
         } else {
             console.warn('收到未預期的事件格式:', event);
+            this.handleRowCancel(event);
         }
     }
 
@@ -44,41 +45,6 @@ export class detailHandlerService {
 
     deletePOS2005(selectedItems: any[], data: any[], messageService: any): void {
         if (confirm(`確定要刪除 ${selectedItems.length} 個國際條碼項目嗎？`)) {
-            selectedItems.forEach(item => {
-                const index = data.findIndex(d => d.id === item.id);
-                if (index > -1) {
-                    data.splice(index, 1);
-                }
-            });
-            messageService.successBubble(`已刪除 ${selectedItems.length} 個位置項目`);
-        }
-    }
-
-    //---POS2020操作---
-    generate2020Id(data: any[]): number {
-        const maxId = Math.max(...data.map(p => p.id), 0);
-        return maxId + 1;
-    }
-
-    addPOS2020(data: any[], defaultNew: any, tableRef: any): void {
-        const newPerson = {
-            ...defaultNew,
-            id: this.generate2020Id(data),
-        };
-
-        console.log('新2020項目', newPerson);
-        data.push(newPerson);
-
-        setTimeout(() => {
-            const index = data.indexOf(newPerson);
-            if (index >= 0 && tableRef?.onRowEditInit) {
-                tableRef.onRowEditInit(newPerson, index);
-            }
-        }, 0);
-    }
-
-    deletePOS2020(selectedItems: any[], data: any[], messageService: any): void {
-        if (confirm(`確定要刪除 ${selectedItems.length} 個採購廠商項目嗎？`)) {
             selectedItems.forEach(item => {
                 const index = data.findIndex(d => d.id === item.id);
                 if (index > -1) {
