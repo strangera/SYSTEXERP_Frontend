@@ -6,7 +6,6 @@ import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { PluLogo, POS2004 } from '../../../shared/models/tls/tls000.model';
 import { Tls51070Service } from '../../../service/API/tls/tls51070.service';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { Tls51060Service } from '../../../service/API/tls/tls51060.service';
 import { environment } from '../../../../environments/environment';
 import { POS2005Detail, POS2020Detail, IMG1001Detail } from './tls51070-cru.module';
 
@@ -206,7 +205,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // ----------------------------------------------------------------
 
   constructor(
-    private tls51060Service: Tls51060Service, // 查詢 品牌下拉
     private tls51070Service: Tls51070Service,
   ) {
     super(); // 呼叫父類建構子
@@ -444,22 +442,13 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       });
 
     // 查詢 所有 品牌代碼
-    const pluLogoQuery = {
-      "PageSize": 1000,
-      "PageIndex": 1,
-      "Offset": 0,
-      "LOGO_No": "",
-      "LOGO_CH_NAME": "",
-      "LOGO_EN_NAME": "",
-      "LOGO_Remark": "",
-      "HOS_No": [""],
-    }
-    this.tls51060Service.queryTLS51060(pluLogoQuery)
+    this.tls51070Service.queryPLULOGO_DropDownList({})
       .subscribe((response) => {
-        this.pluLogoOption = response.Data.map((item: { LOGO_No: any; LOGO_CH_NAME: any; }) => ({
-          ...item,
-          Label: `${item.LOGO_No}-${item.LOGO_CH_NAME}`
-        }));;
+        this.pluLogoOption = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
 
         console.log('品牌詳細代碼:', this.pluLogoOption);
       });
@@ -606,6 +595,24 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     return maxId + 1;
   }
 
+  // 批次刪除 POS2005
+  onBatchDelete2005(selectedItems: any[]): void {
+    if (confirm(`確定要刪除 ${selectedItems.length} 個國際條碼項目嗎？`)) {
+      selectedItems.forEach(item => {
+        const index = this.POS2005Data.findIndex(d => d.id === item.id);
+        if (index > -1) {
+          this.POS2005Data.splice(index, 1);
+          // console.log(`POS2005刪除後:`, this.POS2005Data);
+        }
+      });
+
+      // this.saveToWorkflow(); // 暫存
+      this.messageService.successBubble(`已刪除 ${selectedItems.length} 個位置項目`);
+    }
+  }
+
+  //------------------------------------------------------------------
+
   // 新增 POS2020 (新增)
   onAddPOS2020() {
     const newPerson = {
@@ -630,6 +637,22 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   generate2020Id(): number {
     const maxId = Math.max(...this.POS2020Data.map(p => p.id), 0);
     return maxId + 1;
+  }
+
+  // 批次刪除 POS2020
+  onBatchDelete2020(selectedItems: any[]): void {
+    if (confirm(`確定要刪除 ${selectedItems.length} 個採購廠商項目嗎？`)) {
+      selectedItems.forEach(item => {
+        const index = this.POS2020Data.findIndex(d => d.id === item.id);
+        if (index > -1) {
+          this.POS2020Data.splice(index, 1);
+          // console.log(`POS2020刪除後:`, this.POS2005Data);
+        }
+      });
+
+      // this.saveToWorkflow(); // 暫存
+      this.messageService.successBubble(`已刪除 ${selectedItems.length} 個位置項目`);
+    }
   }
   //--表格事件--
 }

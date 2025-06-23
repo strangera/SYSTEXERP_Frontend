@@ -188,16 +188,16 @@
       <ng-container *ngIf="dataForm && dataForm.get('PLU_MagNo')?.value !== ''">
         <!-- 國際條碼 POS2005 -->
         <app-expandable-edit-table title="多筆國際條碼" [mainColumns]="POS2005DataColumn" [data]="POS2005Data"
-          [loading]="expand2005Loading" detailKey="" dataKey="PLU_MagNo" [showCheckBox]="true" [showPaginator]="false"
+          [loading]="expand2005Loading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
           [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false"
           [defaultNewItem]="defaultNew2005" (save)="onRowSave($event)" (cancel)="onRowCancel($event)"
-          (addMainItem)="onAddPOS2005()"></app-expandable-edit-table>
+          (batchDelete)="onBatchDelete2005($event)" (addMainItem)="onAddPOS2005()"></app-expandable-edit-table>
         <!-- 商品採購廠商 POS2020 -->
         <app-expandable-edit-table title="商品採購廠商" [mainColumns]="POS2020DataColumn" [data]="POS2020Data"
-          [loading]="expand2020Loading" detailKey="" dataKey="PLU_MagNo" [showCheckBox]="true" [showPaginator]="false"
+          [loading]="expand2020Loading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
           [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false"
           [defaultNewItem]="defaultNew2020" (save)="onRowSave($event)" (cancel)="onRowCancel($event)"
-          (addMainItem)="onAddPOS2020()"></app-expandable-edit-table>
+          (batchDelete)="onBatchDelete2020($event)" (addMainItem)="onAddPOS2020()"></app-expandable-edit-table>
       </ng-container>
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
         <app-button btnType="cancel"></app-button>
