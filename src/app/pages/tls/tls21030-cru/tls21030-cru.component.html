@@ -1,60 +1,40 @@
-<div class="grid">
-    <div class="col-12">
-        <div class="card">
-            <div class="grid align-items-center">
-                <div class="col" style="flex: 1;">
-                    <app-menubar [ProgNo]="ProgNo"></app-menubar>
-                </div>
-                <!-- <div *appHasPermission="addPermission">
-                    <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-                </div> -->
-            </div>
-            <p-panel [header]="formTitle" class="line-height-3 m-0">
-                <form [formGroup]="dataForm" id="queryForm" (ngSubmit)="onSubmit(dataForm)">
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="結帳方式" controlName="settlementMethod"
-                                [options]="settlementMethodOptions" optionLabel="label" optionValue="value"
-                                [control]="dataForm.controls.settlementMethod" [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="帳次" controlName="accountingPeriod" [options]="accountingPeriodOptions"
-                                optionLabel="label" optionValue="value" [control]="dataForm.controls.accountingPeriod"
-                                [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="是否使用業主發票" controlName="useOwnerInvoice"
-                                [options]="useOwnerInvoiceOptions" optionLabel="label" optionValue="value"
-                                [control]="dataForm.controls.useOwnerInvoice" [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-editor-text label="說明1" controlName="description1" [style]="{ height: '100px' }"
-                                [control]="dataForm.controls.description1" [submitted]="submitted">
-                            </app-editor-text>
-                        </div>
-
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-editor-text label="說明2" controlName="description2" [style]="{ height: '100px' }"
-                                [control]="dataForm.controls.description2" [submitted]="submitted">
-                            </app-editor-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-editor-text label="說明3" controlName="description3" [style]="{ height: '100px' }"
-                                [control]="dataForm.controls.description3" [submitted]="submitted">
-                            </app-editor-text>
-                        </div>
-                    </div>
-                </form>
-                <div class="col pt-4">
-                    <div class="grid justify-content-end">
-                        <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                        <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
-                    </div>
-                </div>
-            </p-panel>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="結帳方式" controlName="settlementMethod"
+          [options]="settlementMethodOptions" optionLabel="label" optionValue="value"
+          [control]="dataForm.controls.settlementMethod" [submitted]="submitted" />
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="帳次" controlName="accountingPeriod"
+          [options]="accountingPeriodOptions" optionLabel="label" optionValue="value"
+          [control]="dataForm.controls.accountingPeriod" [submitted]="submitted" />
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否使用業主發票" controlName="useOwnerInvoice"
+          [options]="useOwnerInvoiceOptions" optionLabel="label" optionValue="value"
+          [control]="dataForm.controls.useOwnerInvoice" [submitted]="submitted" />
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-editor-text label="說明1" controlName="description1" [style]="{ height: '100px' }"
+            [control]="dataForm.controls.description1" [submitted]="submitted" />
         </div>
-    </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-editor-text label="說明2" controlName="description2" [style]="{ height: '100px' }"
+            [control]="dataForm.controls.description2" [submitted]="submitted" />
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-editor-text label="說明3" controlName="description3" [style]="{ height: '100px' }"
+            [control]="dataForm.controls.description3" [submitted]="submitted" />
+        </div>
+      </div>
+      <app-table title="新增專櫃" [data]="data" [columns]="columns" [showCheckBox]="true" [showInsert]="true"
+        (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [showManage]="false"
+        [showReportMode]="false"></app-table>
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
+    </form>
+  </p-panel>
 </div>
