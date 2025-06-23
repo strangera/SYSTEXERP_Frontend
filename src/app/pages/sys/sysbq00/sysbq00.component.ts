@@ -1,142 +1,69 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { SystemTypeDetailService } from '../../../service/basic/system-type-detail.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { FormGroup, Validators } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { Sysbq00Service, Sysbq00Data } from '../../../service/api/sys/sysbq00.service';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-sysbq00',
   templateUrl: './sysbq00.component.html',
-  styleUrl: './sysbq00.component.scss'
 })
-// 簽核權限設定維護
-export class SYSBQ00Component extends BasicQpageComponent implements OnInit {
-  // 查詢
-  // ----------------------------------------------------------------
+export class SYSBQ00Component extends BasicQueryPageComponent<Sysbq00Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    signatureFieldName: ['', [Validators.maxLength(2)]], // 簽核欄名稱
-    status: ['', [Validators.maxLength(2)]], // 狀態
-    systemType: [1], // 系統別
-    jobCode: [1], // 作業代碼
-    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+    data_type: ['', [Validators.maxLength(10)]],          // 資料型態
+    data_type_desc: ['', [Validators.maxLength(200)]],     // 資料型態的描述 (line1, line2, line3, line4, line5)
+    ...createPaginationConfig([{ field: 'data_type', order: 1 }]) // 分頁和排序
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    { isdelete: true, systemType: 'SYSA000', jobCode: 'SYSA310', signatureFieldName: '廠商名稱', status: '啟用', order: 1, column: 1, showLoginUser: '否' },
-    { isdelete: true, systemType: 'SYSA000', jobCode: 'SYSA310', signatureFieldName: '業主:南紡夢時代', status: '啟用', order: 6, column: 1, showLoginUser: '否' },
-    { isdelete: true, systemType: 'SYSA000', jobCode: 'SYSA310', signatureFieldName: '經辦', status: '啟用', order: 25, column: 13, showLoginUser: '否' },
-    { isdelete: true, systemType: 'SYSA000', jobCode: 'SYSA310', signatureFieldName: 'Team主管', status: '啟用', order: 35, column: 13, showLoginUser: '否' },
-    // 其他資料
+
+  totalRecords = 0;
+  data: Sysbq00Data[] = [];
+  selectedRows: Sysbq00Data[] = [];
+
+  columns = [
+    { field: 'data_type', header: '資料型態', visible: true },
+    { field: 'line1', header: '第一行資料', visible: true },
+    { field: 'line2', header: '第二行資料', visible: true },
+    { field: 'line3', header: '第三行資料', visible: true },
+    { field: 'line4', header: '第四行資料', visible: true },
+    { field: 'line5', header: '第五行資料', visible: true },
+    { field: 'CRT_Date', header: '建立時間', visible: true, format: formatDateTime },
+    { field: 'CRT_USR_Name', header: '建立人員編號', visible: true },
+    { field: 'CRT_USR_No', header: '建立人員名稱', visible: true },
+    { field: 'UPD_Date', header: '變更時間', visible: true, format: formatDateTime },
+    { field: 'UPD_USR_Name', header: '變更人員編號', visible: true },
+    { field: 'UPD_USR_No', header: '變更人員名稱', visible: true },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'systemType', header: '系統別', visible: true },
-    { field: 'jobCode', header: '作業代碼', visible: true },
-    { field: 'signatureFieldName', header: '簽核欄名稱', visible: true },
-    { field: 'status', header: '狀態', visible: true },
-    { field: 'order', header: '排序', visible: true },
-    { field: 'column', header: '行別', visible: true },
-    { field: 'showLoginUser', header: '是否顯示登入者姓名', visible: true },
-    //
-  ];
-  // ----------------------------------------------------------------
-  systemTypeOptions: any[] = [];
-  jobTypeOptions: any[] = [];
+
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private systemTypeDetailService: SystemTypeDetailService,
+    private sysbq00Service: Sysbq00Service,
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '410012';
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
-    this.systemTypeDetailService.getSystemTypes().subscribe(data => {
-      this.systemTypeOptions = data;
-      this.jobTypeOptions = data;
-    });
+    this.initializePage('SYSBQ00', 'SYS/SYSBQ00CRU', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
+    this.handleSubmit(frm, () => {
+      this.loading = true;
+      this.sysbq00Service.querySYSBQ00(frm.value).pipe(finalize(() => this.loading = false)).subscribe(res => {
+        this.data = res.Data
+        this.totalRecords = res.TotalCount || 0;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      });
+    });
+  }
+
+  onDelete(rows: Sysbq00Data[]) {
+    const idList = rows.map(r => r.id).filter((id): id is number => id !== undefined);
+    if (idList.length === 0) return;
     this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      //console.log("extra", extras);
-      this.router.navigate(['/SYSB000/SYSBQ00CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      this.router.navigate(['/SYSB000/SYSBQ00CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
-    };
-
-    this.router.navigate(['/SYSB000/SYSBQ00CRU'], extras);
+    this.sysbq00Service.deleteSYSBQ00(idList).pipe(finalize(() => this.loading = false)).subscribe(res => {
+      this.messageService.successBubble(res.Message);
+      this.onSubmit(this.queryForm); // 重新查詢
+    });
   }
 }

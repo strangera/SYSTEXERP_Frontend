@@ -21,9 +21,9 @@ export class TLS53020CRUComponent extends BasicCrupageComponent implements OnIni
   // ProgNo: string = '250022';
   // funInfo?: FunsrightInfo;
   // // Permissions
-  // addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  // queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  // editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+  // a
+  // 
+  // 
   // loading: boolean = false;
   // submitted: boolean = false;
 

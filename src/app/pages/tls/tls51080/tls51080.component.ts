@@ -19,32 +19,36 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
     // STO_No: ['', [Validators.maxLength(10)]], // 公司編號/店號
     HOS_No: ['', [Validators.maxLength(10)]], // 倉庫代碼 STO_NO+HOS_NO唯一值
     HOS_NAME: ['', [Validators.maxLength(50)]], // 倉庫名稱
+    HOS_Remark: ['', [Validators.maxLength(100)]], // 備註說明
     org_id: ['', [Validators.maxLength(20)]], // 組織代碼/所屬部門
     // building_no: ['', [Validators.maxLength(1)]], // 館別代碼
-    HOS_Remark: ['', [Validators.maxLength(100)]], // 備註說明
 
     //分頁查詢
-    ...createPaginationConfig([{ field: 'STO_No', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'HOS_No', order: 1 }]), // 分頁和排序參數
   });
   // 表格
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   org_idOptions: apiOption[] = [];
+  SYS3100_Options: apiOption[] = [];
+  building_noOptions: apiOption[] = [];
 
   data: POS2034[] = [];
   columns: Column[] = [
-    { field: 'STO_No', header: '公司編號/店號', visible: true },
+    { field: 'STO_No', header: '公司編號/店號', visible: false },
     { field: 'HOS_No', header: '倉庫代碼', visible: true },
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
     {
       field: 'org_id', header: '組織代碼/所屬部門', visible: true
-      // ,format: (value: string) =>
-      //   this.storageOptions.find((option) => option.No === value)?.Label ||
-      //   value, 
+      , format: (value: string) =>
+        this.SYS3100_Options.find((option) => option.No === value)?.Label ||
+        value,
     },
     {
-      field: 'building_no', header: '館別代碼', visible: true
+      field: 'building_no', header: '館別代碼', visible: true, format: (value: string) =>
+        this.building_noOptions.find((option) => option.No === value)?.Label ||
+        value,
     },
     { field: 'HOS_Remark', header: '備註說明', visible: true }
   ];
@@ -63,7 +67,10 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      console.log('query condition', frm.value);
+      //查詢時去除org_id中/以後的部分
+      if (frm.value.org_id) {
+        frm.value.org_id = frm.value.org_id.split('/')[0];
+      }
       this.tls51080Service.queryTLS51080(frm.value).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
@@ -87,12 +94,9 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
   }
 
   //---刪除檢查---
-  /* LOGODISC 品牌進貨折數設定檔*/
-  /* LOGOBUDGET 品牌每月進貨限額設定檔*/
-  /* POS2004 商品基本資料檔 */
-  // 沒有該資料才可以刪除
+  // 到處都有倉別的資料，先不允許刪除
   //-------------
-  // 刪除項目
+  // 刪除項目(到處都有倉別的資料，先不允許刪除)
   onDelete(data: POS2034 | POS2034[]): void {
     console.log('Delete data:', JSON.stringify(data, null, 2));
 
@@ -149,17 +153,44 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
 
   loadOptions() {
     {
-      // this.tls51080Service
-      //   .queryPOS2034_DropDownList({})
-      //   .subscribe((response) => {
-      //     this.org_idOptions = response.Data.map((item: apiOption) => ({
-      //       No: item.No,
-      //       Name: item.Name,
-      //       Label: item.No + '-' + item.Name,
-      //     }));
+      // 部門下拉
+      this.tls51080Service
+        .querySYS3100_join_POS1001_DropDownList({})
+        .subscribe((response) => {
+          this.org_idOptions = response.Data.map((item: apiOption) => ({
+            No: item.No,
+            Name: item.Name,
+            Label: item.No + '-' + item.Name,
+          }));
 
-      //     console.log('storageOptions:', this.storageOptions);
-      //   });
+          // this.org_idOptions = [{ No: '102130', Name: '測試', Label: '102130-測試' }];
+
+          console.log('org_idOptions:', this.org_idOptions);
+        });
+
+
+      // 組織代碼下拉
+      this.tls51080Service
+        .querySYS3100_DropDownList({})
+        .subscribe((response) => {
+          this.SYS3100_Options = response.Data.map((item: apiOption) => ({
+            No: item.No,
+            Name: item.Name,
+            Label: item.No + '-' + item.Name,
+          }));
+
+          console.log('SYS3100_Options:', this.SYS3100_Options);
+        });
+      // 讀取館別代碼選項
+      this.tls51080Service
+        .querySYS3800_DropDownList({})
+        .subscribe((response) => {
+          this.building_noOptions = response.Data.map((item: apiOption) => ({
+            No: item.No,
+            Name: item.Name,
+            Label: item.No + '-' + item.Name,
+          }));
+        });
     }
   }
 

@@ -1,13 +1,10 @@
-import { Component, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { NavigationExtras, Router } from '@angular/router';
+import { Component, OnInit, } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-//
-import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { apiOption } from '../../../shared/models/sys/sysb000.module';
+import { POS2034 } from '../../../shared/models/tls/tls000.model';
+import { Tls51080Service } from '../../../service/API/tls/tls51080.service';
 
 // 2.5.1.6 品牌設定作業  CRU
 @Component({
@@ -15,91 +12,31 @@ import { OrganizationNumberService } from './../../../service/basic/organization
   templateUrl: './tls51080-cru.component.html',
   styleUrl: './tls51080-cru.component.scss'
 })
-export class TLS51080CRUComponent {
-  ProgNo: string = '250008';
-  // 權限
-  // ----------------------------------------------------------------
-  funInfo?: FunsrightInfo;
-  addPermission = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  editPermission = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
+  implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    storageID: [, [Validators.maxLength(4), this.validationService.numberValidator]], // Input serial number
-    storageName: ['', [Validators.required, Validators.maxLength(40)]], // Input Text
-    department: [, [Validators.required]], // DropDown
-    editortext: [,], // editor text
+    id: [null], // 主鍵ID，新增時為null，編輯時為存在的ID
+    // POS2034 倉庫設定檔
+    STO_No: [{ value: null, disabled: true }], // 公司編號/店號
+    HOS_No: ['', [Validators.required, Validators.maxLength(10)]], // 倉庫代碼 STO_NO+HOS_NO唯一值
+    HOS_NAME: ['', [Validators.required, Validators.maxLength(50)]], // 倉庫名稱
+    org_id: ['', [Validators.required, Validators.maxLength(20)]], // 組織代碼/所屬部門
+    building_no: ['', [Validators.maxLength(1)]], // 館別代碼
+    HOS_Remark: ['', [Validators.maxLength(100)]], // 備註說明
   });
+  //
+  org_idOptions: apiOption[] = [];
+  building_noOptions: apiOption[] = [];
+  STO_NoOptions: apiOption[] = [];
   // ----------------------------------------------------------------
-  crudstatus: CRUDStatus = CRUDStatus.Read;
-  formTitle: string = '';
-  showConfirm: boolean = false;
-  submitted = false;
-
-  // ----------------------------------------------------------------
-  departmentOptions: any[] = [];
-
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private organizationNumberService: OrganizationNumberService,
-  ) {
+  constructor(private tls51080Service: Tls51080Service) {
+    super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.organizationNumberService.getOrganizationNumbers().subscribe(data => {
-      this.departmentOptions = data;
-    });
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      case CRUDStatus.Create:
-        this.formTitle = '新增資料';
-        this.showConfirm = this.canAdd();
-        break;
-      case CRUDStatus.Edit:
-        console.log(state.rowdata);
-        this.formTitle = '編輯資料';
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      case CRUDStatus.Read:
-        this.formTitle = '顯示資料';
-        this.Read(state.rowdata);
-        break;
-    }
-  }
-  // ----------------------------------------------------------------
-  get isFormEditable(): boolean {
-    return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
+    this.initializePage('TLS51080', this.dataForm);
+    this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
@@ -111,17 +48,29 @@ export class TLS51080CRUComponent {
       return;
     }
 
+    // 送出前去除org_id中/以後的部分
+    if (frm.value.org_id) {
+      frm.value.org_id = frm.value.org_id.split('/')[0];
+    }
+
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble('新增成功');
+          console.log('insert', frm.value);
+          this.tls51080Service.insertTLS51080(frm.value).subscribe(() => {
+            this.messageService.successBubble('新增成功');
+            // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+            this.dataForm.reset(); // 重置表單
+          });
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble('更新成功');
+          console.log('update', frm.value);
+          this.tls51080Service.updateTLS51080(frm.value).subscribe(() => {
+            // this.messageService.successBubble('更新成功');
+            this.onCancel(); // 儲存後，會返回列表
+          });
         }
         break;
     }
@@ -131,15 +80,50 @@ export class TLS51080CRUComponent {
   }
 
   submitForm(frm: FormGroup) {
-    // 查詢邏輯
     this.onSubmit(frm);
   }
 
   onClearForm() {
-    this.dataForm.reset();  // 重置表單
+    this.dataForm.reset(); // 重置表單
   }
 
-  onCancel() {
-    this.router.navigate(['/TLS5000/TLS51080']);
+  // 讀取dopropdown選項
+  loadOptions() {
+    {
+      // 組織代碼/所屬部門 SYS3100 JOIN POS1001
+      this.tls51080Service
+        .querySYS3100_join_POS1001_DropDownList({})
+        .subscribe((response) => {
+          this.org_idOptions = response.Data.map((item: apiOption) => ({
+            No: item.No,
+            Name: item.Name,
+            Label: item.No + '-' + item.Name,
+          }));
+
+          // 如果org_id有資料進來，找出對應的完整No
+          if (this.dataForm.value.org_id) {
+            const matched = this.org_idOptions.find(opt => opt.No.startsWith(this.dataForm.value.org_id + '/'));
+            if (matched) {
+              this.dataForm.patchValue({
+                org_id: matched.No,  // 將org_id從 '0001' 改成 '0001/1000'
+              });
+            }
+          }
+        });
+
+      // 讀取館別代碼選項
+      this.tls51080Service
+        .querySYS3800_DropDownList({})
+        .subscribe((response) => {
+          this.building_noOptions = response.Data.map((item: apiOption) => ({
+            No: item.No,
+            Name: item.Name,
+            Label: item.No + '-' + item.Name,
+          }));
+        });
+
+
+      //如果org_id有資料進來 找出對應的Label 並補上/後面的部分
+    }
   }
 }

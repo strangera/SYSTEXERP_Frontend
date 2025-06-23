@@ -5,6 +5,7 @@ import { Column } from '../../../shared/componentkit/table/table.model';
 import { Aps1004Request, Sys1004Service } from '../../../service/api/sys/sys1004.service';
 import { ISysbc00Data, Sysbc00Service } from '../../../service/api/sys/sysbc00.service';
 import { concatMap, finalize, forkJoin, Observable, of } from 'rxjs';
+import { validateDuplicate, validateMaxLength, validateMaxNumber, validateRequired } from '../../../shared/models/system/validate-field.model';
 
 @Component({
   selector: 'app-sysbc00.cru',
@@ -14,39 +15,44 @@ import { concatMap, finalize, forkJoin, Observable, of } from 'rxjs';
 export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({// APS1001 銀行主檔
     id: [],
-    BNK_No: ['', [Validators.maxLength(10)]], // 金資中心銀行代碼
-    BNK_Name: ['', [Validators.maxLength(60)]], // 銀行名稱
-    BNK_ShortName: ['', [Validators.maxLength(30)]], // 銀行簡稱
+    BNK_No: ['', [Validators.required, Validators.maxLength(10)]], // 金資中心銀行代碼
+    BNK_Name: ['', [Validators.required, Validators.maxLength(60)]], // 銀行名稱
+    BNK_ShortName: ['', [Validators.required, Validators.maxLength(30)]], // 銀行簡稱
   });
   data: Aps1004Request[] = [];
   selectedRows: Aps1004Request[] = [];
   deleteRows: Aps1004Request[] = [];
   columns: Column[] = [
-    { field: 'BNK_BranchNo', header: '分行代碼', type: 'input' },
-    { field: 'BNK_BranchName', header: '分行名稱', type: 'input' },
-    { field: 'ACC_LEN', header: '該行帳號最小長度', type: 'inputNumber', useGrouping: false },
-    { field: 'ACC_LEN_MAX', header: '該行帳號最大長度', type: 'inputNumber', useGrouping: false },
+    { field: 'BNK_BranchNo', header: '分行代碼', type: 'input', validate: [validateDuplicate, validateRequired, validateMaxLength(10)] },
+    { field: 'BNK_BranchName', header: '分行名稱', type: 'input', validate: [validateRequired, validateMaxLength(100)] },
+    { field: 'ACC_LEN', header: '該行帳號最小長度', type: 'inputNumber', useGrouping: false, validate: [validateRequired, validateMaxNumber(99999999)] },
+    { field: 'ACC_LEN_MAX', header: '該行帳號最大長度', type: 'inputNumber', useGrouping: false, validate: [validateRequired, validateMaxNumber(99999999)] },
   ];
   constructor(
     private sys1004Service: Sys1004Service,
     private sysbc00Service: Sysbc00Service
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
   ngOnInit(): void {
     this.initializePage('SYSBC00', this.dataForm);
-    if (this.isFormEditable && this.dataForm.value.BNK_No) {
-      const body = { BNK_No: this.dataForm.value.BNK_No };
-      this.sys1004Service.queryAPS1004(body).subscribe(data => this.data = data.Data.map(item => ({ ...item, ID: item.id })));
+    if (!this.isFormCreateable && this.dataForm.value.BNK_No) {
+      this.dataForm.get('BNK_No')?.disable();
+      const body = { BNK_No: this.dataForm.getRawValue().BNK_No };
+      this.sys1004Service.queryAPS1004(body).subscribe(data => {
+        this.data = data.Data.map(item => ({ ...item, ID: item.id }));
+      });
     }
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
 
-      const saveMain$ = this.isFormCreateable
-        ? this.sysbc00Service.insertSYSBC00(frm.value)
-        : this.sysbc00Service.updateSYSBC00(frm.value);
+      const isCreate = this.isFormCreateable;
+
+      const saveMain$ = isCreate
+        ? this.sysbc00Service.insertSYSBC00(frm.getRawValue())
+        : this.sysbc00Service.updateSYSBC00(frm.getRawValue());
 
       saveMain$
         .pipe(
@@ -57,18 +63,12 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
           }),
           // 子表完成 → 判斷是否有要刪除的
           concatMap(() => {
-            console.log(this.deleteRows);
-
             const idList = this.deleteRows
               .map(item => item.id)
               .filter((id): id is number => id !== undefined);
-            console.log(idList);
-
-            if (idList.length === 0) {
-              return of(null); // 沒有要刪除的
-            }
-
-            return this.sys1004Service.deleteAPS1004(idList);
+            return idList.length > 0
+              ? this.sys1004Service.deleteAPS1004(idList)
+              : of(null);
           }),
           finalize(() => (this.loading = false))
         )
@@ -76,11 +76,20 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
           if (finalRes) {
             this.messageService.successBubble(finalRes.Message);
           }
+
           this.deleteRows = [];
-          this.onCancel(); // 最後統一收尾
+
+          if (isCreate) {
+            this.dataForm.reset();
+            this.data = [];
+            this.selectedRows = [];
+          } else {
+            this.onCancel();
+          }
         });
     });
   }
+
 
   getSys1004SaveObservables(data: Aps1004Request[]): Observable<any>[] {
     const newItems = data.filter(d => !d.id);

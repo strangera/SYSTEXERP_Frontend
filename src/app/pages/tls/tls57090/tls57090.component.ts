@@ -11,7 +11,7 @@ import { PriceChangeStatusService } from '../../../service/basic/price-change-st
 import { DisplayModeService } from '../../../service/basic/display-mode.service';
 // Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -24,10 +24,9 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 export class TLS57090Component {
   ProgNo: string = '250048';
   funInfo?: FunsrightInfo;
-  // Permissions
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+
+
+
   loading: boolean = false;
   submitted: boolean = false;
 

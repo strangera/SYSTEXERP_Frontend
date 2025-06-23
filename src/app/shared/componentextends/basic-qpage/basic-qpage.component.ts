@@ -1,5 +1,4 @@
-import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
-import { HasPermissionsValue } from '../../directive/has-permission.directive';
+import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { NavigationExtras, Router } from '@angular/router';
 import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { UserInfo } from '../../models/system/userInfo';
@@ -13,9 +12,6 @@ export class BasicQpageComponent {
   // 權限
   // ----------------------------------------------------------------
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
   // 查詢
   // ----------------------------------------------------------------
   loading = false;

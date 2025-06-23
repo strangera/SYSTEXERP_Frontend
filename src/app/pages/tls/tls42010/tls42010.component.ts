@@ -7,7 +7,7 @@ import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/fu
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 import { ValidationService } from '../../../shared/service/validation.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
 
@@ -24,9 +24,7 @@ export class TLS42010Component {
   ProgNo = '240007';
   // 權限
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+
   // 查詢
   // ----------------------------------------------------------------
   loading = false;

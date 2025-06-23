@@ -25,9 +25,9 @@ export class TLS56020CRUComponent extends BasicCrupageComponent
   // ProgNo: string = '250033';
   // funInfo?: FunsrightInfo;
   // // Permissions
-  // addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  // queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  // editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+  // a
+  // 
+  // 
   // loading: boolean = false;
   // submitted: boolean = false;
 

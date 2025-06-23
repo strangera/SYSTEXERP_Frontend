@@ -11,7 +11,7 @@ import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { FloorService } from '../../../service/basic/floor.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 import { MachinedisplayService } from '../../../service/basic/machinedisplay.service';
 
 @Component({
@@ -24,18 +24,9 @@ export class TLS22010Component implements OnInit {
 
   // 權限
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
+
+
+
 
   // 查詢表單
   loading: boolean = false;

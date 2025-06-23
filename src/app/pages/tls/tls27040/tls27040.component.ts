@@ -6,7 +6,7 @@ import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/fu
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 import { ValidationService } from '../../../shared/service/validation.service';
 // Services for dropdowns
 import { SalesStatusService } from '../../../service/basic/sales-status.service';
@@ -31,18 +31,9 @@ export class TLS27040Component {
   ProgNo: string = '220042';
   // 權限變數
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
+
+
+
 
   // 查詢表單
   loading: boolean = false;
