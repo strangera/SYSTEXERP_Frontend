@@ -1,77 +1,31 @@
 <!-- 📌 工具列區：包含欄位選擇、PDF/Excel匯出、合併顯示切換 -->
 <div class="flex flex-wrap justify-between items-center gap-3 mb-3">
   <div class="flex items-center gap-2" *ngIf="mergedView">
-    <button
-      pButton
-      type="button"
-      [label]="'每表格列數：' + rowsPerTable + ' 列'"
-      icon="pi pi-sliders-h"
-      (click)="openRowsPerTableDialog()"
-      class="p-button-sm p-button-info"
-    ></button>
+    <button pButton type="button" [label]="'每表格列數：' + rowsPerTable + ' 列'" icon="pi pi-sliders-h"
+      (click)="openRowsPerTableDialog()" class="p-button-sm p-button-info"></button>
   </div>
   <p-dialog header="調整每表格列數" [(visible)]="showRowsPerTableDialog">
-    <input
-      type="number"
-      [(ngModel)]="tempRowsPerTable"
-      min="1"
-      class="p-inputtext p-component"
-    />
-    <button
-      pButton
-      label="套用"
-      (click)="applyRowsPerTableChange()"
-      class="p-button-sm p-button-success"
-    ></button>
+    <input type="number" [(ngModel)]="tempRowsPerTable" min="1" class="p-inputtext p-component" />
+    <button pButton label="套用" (click)="applyRowsPerTableChange()" class="p-button-sm p-button-success"></button>
   </p-dialog>
 
   <!-- ✅ 合併顯示切換開關 -->
   <div class="flex items-center gap-2">
-    <p-inputSwitch [(ngModel)]="mergedView"></p-inputSwitch>
+    <p-inputSwitch [(ngModel)]="mergedView" (ngModelChange)="onMergedViewToggle($event)"></p-inputSwitch>
     <label class="text-sm">合併顯示</label>
   </div>
 
   <div class="space-x-2">
-    <button
-      pButton
-      type="button"
-      label="顯示欄位"
-      icon="pi pi-eye"
-      (click)="showColumnDialog = true"
-      class="p-button-sm p-button-info"
-    ></button>
-    <button
-      pButton
-      type="button"
-      label="匯出 PDF"
-      icon="pi pi-file-pdf"
-      (click)="exportPDF('l')"
-      class="p-button-sm p-button-danger"
-    ></button>
-    <button
-      pButton
-      type="button"
-      label="匯出 Excel"
-      icon="pi pi-file-excel"
-      (click)="exportExcel()"
-      class="p-button-sm p-button-success"
-    ></button>
-    <button
-      pButton
-      type="button"
-      label="列印"
-      icon="pi pi-print"
-      (click)="printPage()"
-      class="p-button-sm p-button-secondary"
-    ></button>
-    <button
-      pButton
-      type="button"
-      icon="pi pi-arrow-left"
-      label="回上頁"
-      class="p-button-sm p-button-secondary"
-      (click)="goBack()"
-    ></button>
+    <button pButton type="button" label="顯示欄位" icon="pi pi-eye" (click)="showColumnDialog = true"
+      class="p-button-sm p-button-info"></button>
+    <button pButton type="button" label="匯出 PDF" icon="pi pi-file-pdf" (click)="exportPDF('l')"
+      class="p-button-sm p-button-danger"></button>
+    <button pButton type="button" label="匯出 Excel" icon="pi pi-file-excel" (click)="exportExcel()"
+      class="p-button-sm p-button-success"></button>
+    <button pButton type="button" label="列印" icon="pi pi-print" (click)="printPage()"
+      class="p-button-sm p-button-secondary"></button>
+    <button pButton type="button" icon="pi pi-arrow-left" label="回上頁" class="p-button-sm p-button-secondary"
+      (click)="goBack()"></button>
   </div>
 </div>
 
@@ -79,38 +33,20 @@
 <div class="printable-section">
   <!-- ✅ 分群顯示區 -->
   <div *ngIf="!mergedView" class="grouped-view">
-    <div
-      *ngFor="let group of groupedData; let i = index"
-      class="report-table-wrapper mb-5"
-    >
+    <div *ngFor="let group of groupedData; let i = index" class="report-table-wrapper mb-5">
       <!-- 群組標題 -->
-      <div
-        *ngIf="group[0]?.__groupKey"
-        class="font-bold text-base mb-2 text-blue-700"
-      >
+      <div *ngIf="group[0]?.__groupKey" class="font-bold text-base mb-2 text-blue-700">
         {{ groupByField }}：{{ group[0].__groupKey }}
       </div>
 
       <!-- 群組資料表 -->
-      <p-table
-        [value]="group"
-        [columns]="selectedColumns"
-        [resizableColumns]="true"
-        [paginator]="false"
-        [styleClass]="
+      <p-table [value]="group" [columns]="selectedColumns" [resizableColumns]="true" [paginator]="false" [styleClass]="
           'p-datatable-sm p-datatable-striped p-datatable-gridlines'
-        "
-      >
+        ">
         <ng-template pTemplate="header" let-columns>
           <tr>
-            <th
-              *ngFor="let col of selectedColumns"
-              class="text-center"
-              [ngClass]="col.style"
-              [pSortableColumn]="
-                col.field !== '__index' ? col.field : undefined
-              "
-            >
+            <th *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style"
+              [pSortableColumn]="col.field !== '__index' ? col.field : undefined">
               {{ col.header }}
               <p-sortIcon *ngIf="col.field !== '__index'" [field]="col.field" />
             </th>
@@ -119,11 +55,7 @@
 
         <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
           <tr>
-            <td
-              *ngFor="let col of selectedColumns"
-              [ngClass]="col.style"
-              class="text-center"
-            >
+            <td *ngFor="let col of selectedColumns" [ngClass]="col.style" class="text-center">
               <ng-container *ngIf="col.field === '__index'">
                 {{ getRowIndex(i, rowIndex) }}
               </ng-container>
@@ -142,11 +74,7 @@
         <!-- 小計 -->
         <ng-template pTemplate="footer">
           <tr *ngIf="groupByField" class="bg-gray-100 font-semibold">
-            <td
-              *ngFor="let col of selectedColumns"
-              class="text-center"
-              [ngClass]="col.style"
-            >
+            <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
               <ng-container [ngSwitch]="col.field">
                 <ng-container *ngSwitchCase="'__index'">小計</ng-container>
                 <ng-container *ngSwitchDefault>
@@ -165,38 +93,24 @@
   <!-- ✅ 合併顯示區（大表） -->
   <!-- ✅ 合併顯示區（多張表） -->
   <div *ngIf="mergedView" class="merged-view">
-    <div
-      *ngFor="let group of mergedPagedGroups; let groupIndex = index"
-      class="mb-5"
-    >
-      <p-table
-        [value]="group"
-        [columns]="selectedColumns"
-        [resizableColumns]="true"
-        [paginator]="false"
-        [styleClass]="
-          'p-datatable-sm p-datatable-striped p-datatable-gridlines'
-        "
-      >
+    <div *ngFor="let group of mergedPagedGroups; let groupIndex = index" class="mb-5">
+      <p-table [value]="group" [columns]="selectedColumns" [resizableColumns]="true" [paginator]="false"
+        [customSort]="true" (sort)="onTableSort($event)"
+        [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'">
+
         <ng-template pTemplate="header">
           <tr>
-            <th
-              *ngFor="let col of selectedColumns"
-              class="text-center"
-              [ngClass]="col.style"
-            >
+            <th *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style"
+              [pSortableColumn]="col.field !== '__index' ? col.field : undefined">
               {{ col.header }}
+              <p-sortIcon *ngIf="col.field !== '__index'" [field]="col.field"></p-sortIcon>
             </th>
           </tr>
         </ng-template>
 
         <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
           <tr>
-            <td
-              *ngFor="let col of selectedColumns"
-              class="text-center"
-              [ngClass]="col.style"
-            >
+            <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
               <ng-container *ngIf="col.field === '__index'">
                 {{ getRowIndex(groupIndex, rowIndex) }}
               </ng-container>
@@ -215,11 +129,7 @@
         <!-- 總計 -->
         <ng-template pTemplate="footer">
           <tr class="bg-yellow-100 font-semibold">
-            <td
-              *ngFor="let col of selectedColumns"
-              class="text-center"
-              [ngClass]="col.style"
-            >
+            <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
               <ng-container [ngSwitch]="col.field">
                 <ng-container *ngSwitchCase="'__index'">小計</ng-container>
                 <ng-container *ngSwitchDefault>
@@ -234,31 +144,15 @@
       </p-table>
     </div>
   </div>
-  <p-dialog
-    header="選擇顯示欄位"
-    [(visible)]="showColumnDialog"
-    [modal]="true"
-    [style]="{ width: '40rem', height: '40rem' }"
-    [contentStyle]="{ height: '100%', overflow: 'auto' }"
-  >
+  <p-dialog header="選擇顯示欄位" [(visible)]="showColumnDialog" [modal]="true" [style]="{ width: '40rem', height: '40rem' }"
+    [contentStyle]="{ height: '100%', overflow: 'auto' }">
     <div class="grid p-fluid">
       <div class="col-12 md:col-6 lg:col-4">
-        <p-multiSelect
-          [options]="availableColumns"
-          [(ngModel)]="selectedColumns"
-          optionLabel="header"
-          display="chip"
-          class="w-full"
-        ></p-multiSelect>
+        <p-multiSelect [options]="availableColumns" [(ngModel)]="tempSelectedColumns" optionLabel="header"
+          display="chip" class="w-full"></p-multiSelect>
       </div>
       <div class="col-12 md:col-6 lg:col-4">
-        <button
-          pButton
-          type="button"
-          label="確定"
-          (click)="showColumnDialog = false"
-          class="p-button-sm"
-        ></button>
+        <button pButton type="button" label="確定" (click)="applyColumnSelection()" class="p-button-sm"></button>
       </div>
     </div>
   </p-dialog>

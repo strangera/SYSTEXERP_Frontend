@@ -10,6 +10,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable'; // ✅ 正確寫法
 import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
+import { PdfService } from '../../../service/basic/pdf.service';
 
 
 @Component({
@@ -170,6 +171,7 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
     private whetherService: WhetherService,
     private txnSubtypeService: TXN_SubtypeService,
     private location: Location,
+    private pdfService: PdfService,
     private carrierTypeService: CarrierTypeService
   ) {
     super();
@@ -326,72 +328,30 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
 
 
   exportSummaryPDF(): void {
-    const doc = new jsPDF('l', 'pt');
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const marginLeft = 40;
-    let currentY = 40;
-
-    // 設定全域字體
-    doc.setFont('NotoSansTC', 'normal');
-
-    // 標題與時間
-    doc.setFontSize(14);
-    doc.text('銷售總額報表', pageWidth / 2, currentY, { align: 'center' });
-    currentY += 20;
-
-    doc.setFontSize(10);
-    doc.text(`資料區間：${this.dateStart} ~ ${this.dateEnd}`, marginLeft, currentY);
-    doc.text(`列印時間：${this.printedAt}`, pageWidth - marginLeft, currentY, { align: 'right' });
-    currentY += 20;
-
-    // 表頭與資料
-    const headers = ['銷售日期起', '銷售日期迄', '專櫃編號', '櫃位名稱', '發票總金額'];
-    const body = this.groupedSummaryData.map(row => [
-      row.dateStart,
-      row.dateEnd,
-      row.tlt_no,
-      row.tlt_name,
-      row.sum.toLocaleString()
-    ]);
-
-    // 合計列
-    const foot = [[
-      '', '', '', '發票總金額合計：', this.totalSum.toLocaleString()
-    ]];
-
-    autoTable(doc, {
-      startY: currentY,
-      head: [headers],
-      body,
-      foot,
-      margin: { left: marginLeft, right: marginLeft },
-      styles: {
-        font: 'NotoSansTC',
-        fontStyle: 'normal',
-        fontSize: 9,
-        lineWidth: 0.1,
-        lineColor: [0, 0, 0],
-      },
-      headStyles: {
-        font: 'NotoSansTC',
-        fontStyle: 'normal',
-        fontSize: 10,
-        fillColor: [212, 222, 254],
-        textColor: [0, 0, 0],
-        halign: 'center',
-      },
-      footStyles: {
-        font: 'NotoSansTC',
-        fontStyle: 'normal',
-        fontSize: 10,
-        fillColor: [250, 250, 210],
-        textColor: [0, 0, 0],
-        halign: 'right',
-      },
-    });
-
-    doc.save(`銷售總額_${new Date().toISOString().slice(0, 10)}.pdf`);
-  }
+  this.pdfService.exportReportPDF({
+    orientation: 'l',
+    title: '銷售總額報表',
+    dateStart: this.dateStart,
+    dateEnd: this.dateEnd,
+    printedAt: this.printedAt,
+    columns: [
+      { header: '銷售日期起', field: 'dateStart' },
+      { header: '銷售日期迄', field: 'dateEnd' },
+      { header: '專櫃編號', field: 'tlt_no' },
+      { header: '櫃位名稱', field: 'tlt_name', style: 'text-left' },
+      {
+        header: '發票總金額',
+        field: 'sum',
+        style: 'text-right',
+        format: (val: number) => val?.toLocaleString('en-US') || '0'
+      }
+    ],
+    data: this.groupedSummaryData,
+    subtotalFields: ['sum'],
+    mergeTotalCols: 4,
+    summaryText: [] // 如果你要在 PDF 下方加備註可以填
+  });
+}
   exportSummaryExcel(): void {
     import('xlsx').then(xlsx => {
       const ws = xlsx.utils.json_to_sheet(

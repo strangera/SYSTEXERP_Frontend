@@ -5,6 +5,7 @@ import { Location } from '@angular/common';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-report-table-group',
@@ -31,6 +32,8 @@ export class ReportTableGroupComponent implements OnInit {
   tempRowsPerTable = this.rowsPerTable;
   sortedData: any[] = [];
   mergedView: boolean = false;
+  mergedPagedGroups: any[][] = [];
+  tempSelectedColumns: Column[] = [];
 
   public _data: any[] = [];
   @Input() set data(value: any[]) {
@@ -46,7 +49,7 @@ export class ReportTableGroupComponent implements OnInit {
   showPdfDialog = false;
   showColumnDialog = false;
 
-  constructor(private location: Location) { }
+  constructor(private location: Location, private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
     this.splitData();
@@ -55,12 +58,28 @@ export class ReportTableGroupComponent implements OnInit {
   }
 
   mergeGroupedTable(): void {
-    this.mergedView = true;
+    this.rowsPerTable = 1000;       // 預設每張表 1000 列
+    this.mergedView = true;         // 切換為合併模式
+    this.splitData();               // 切資料讓畫面顯示
   }
+  onMergedViewToggle(checked: boolean): void {
+    this.mergedView = checked;
+    if (checked) {
+      this.rowsPerTable = 1000; // 預設每表格列數
+      this.splitData();         // 切資料進大表
+    }
+  }
+
 
   openRowsPerTableDialog() {
     this.tempRowsPerTable = this.rowsPerTable;
     this.showRowsPerTableDialog = true;
+  }
+  applyColumnSelection(): void {
+    // 永遠保留序號欄位在最前面
+    const withIndex = [{ header: '序號', field: '__index' }];
+    this.selectedColumns = withIndex.concat(this.tempSelectedColumns);
+    this.showColumnDialog = false;
   }
 
   applyRowsPerTableChange() {
@@ -70,14 +89,14 @@ export class ReportTableGroupComponent implements OnInit {
       this.showRowsPerTableDialog = false;
     }
   }
-  get mergedPagedGroups(): any[][] {
-  const total = this._data.length;
-  const groupCount = Math.ceil(total / this.rowsPerTable);
-  return Array.from({ length: groupCount }, (_, i) =>
-    this._data.slice(i * this.rowsPerTable, (i + 1) * this.rowsPerTable)
-  );
-}
-availableColumns: Column[] = []; // 所有欄位，來自 @Input() columns
+  // get mergedPagedGroups(): any[][] {
+  //   const total = this._data.length;
+  //   const groupCount = Math.ceil(total / this.rowsPerTable);
+  //   return Array.from({ length: groupCount }, (_, i) =>
+  //     this._data.slice(i * this.rowsPerTable, (i + 1) * this.rowsPerTable)
+  //   );
+  // }
+  availableColumns: Column[] = []; // 所有欄位，來自 @Input() columns
   buildSelectedColumns(): void {
     const withIndex = [{ header: '序號', field: '__index' }];
     const processed = this.columns.map(col => col);
@@ -86,7 +105,15 @@ availableColumns: Column[] = []; // 所有欄位，來自 @Input() columns
 
   private splitData(): void {
     this.groupAndSplitData();
+    if (this.mergedView) {
+      const total = this._data.length;
+      const groupCount = Math.ceil(total / this.rowsPerTable);
+      this.mergedPagedGroups = Array.from({ length: groupCount }, (_, i) =>
+        this._data.slice(i * this.rowsPerTable, (i + 1) * this.rowsPerTable)
+      );
+    }
   }
+
 
   updateGroupedData(): void {
     this.groupAndSplitData();
@@ -184,7 +211,8 @@ availableColumns: Column[] = []; // 所有欄位，來自 @Input() columns
       columnStyles[index] = { halign };
     });
 
-    const body = this._data.map((row, rowIndex) =>
+    const sourceData = this.sortedData.length > 0 ? this.sortedData : this._data;
+    const body = sourceData.map((row, rowIndex) =>
       this.selectedColumns.map(col => {
         if (col.field === '__index') return String(rowIndex + 1);
         const value = col.format ? col.format(row[col.field]) : row[col.field];
@@ -196,7 +224,7 @@ availableColumns: Column[] = []; // 所有欄位，來自 @Input() columns
     const totalRow = this.selectedColumns.map(col => {
       if (col.field === '__index') return '總計';
       if (this.subtotalFields.includes(col.field)) {
-        const sum = this._data.reduce((acc, row) => acc + (parseFloat(row[col.field]) || 0), 0);
+        const sum = sourceData.reduce((acc, row) => acc + (parseFloat(row[col.field]) || 0), 0);
         return sum.toLocaleString();
       }
       return '';
@@ -362,5 +390,7 @@ availableColumns: Column[] = []; // 所有欄位，來自 @Input() columns
     });
     this._data = this.sortedData;
     this.splitData();
+    this.cdr.detectChanges(); // ⬅️ 讓表格真的刷新
   }
+
 }
