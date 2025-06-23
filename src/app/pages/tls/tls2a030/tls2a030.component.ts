@@ -1,151 +1,97 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
 
-import { ValidationService } from '../../../shared/service/validation.service';
+interface SalesRecord {
+  paymentTool: string;
+  actualShortfallAmount: number;
+  preAuditShortfallAmount: number;
+  receiptTotal: number;
+  systemTotal: number;
+  compareCD: '✔️' | '❌';
+  compareAB: '✔️' | '❌';
+}
 
-// 2.2.10.3 溢欠彙總表
 @Component({
   selector: 'app-tls2a030',
-  templateUrl: './tls2a030.component.html',
-  styleUrl: './tls2a030.component.scss'
+  templateUrl: './tls2a030.component.html'
 })
-export class TLS2A030Component {
-  ProgNo: string = '220052';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS2A030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    startdate: [, [Validators.required]], // 銷售日期
-    enddate: [, [Validators.required]], // 銷售日期
-    casherStart: [, [this.validationService.numberValidator, Validators.max(999999)]], // 收銀機編號
-    casherEnd: [, [this.validationService.numberValidator, Validators.max(999999)]], // 收銀機編號
-    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+    tlt_bdate_start: [null, Validators.required],
+    tlt_bdate_end: [null, Validators.required],
+    tlt_no: [''],
+    tlt_no_end: [''],
+    ...createPaginationConfig([{ field: 'paymentTool', order: 1 }])
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    // { contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    // { contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
+
+  data: SalesRecord[] = [];
+  totalRecords = 0;
+  selectedItems: SalesRecord[] = [];
+
+  // 表格欄位
+  columns = [
+    { field: 'paymentTool', header: '支付工具' },
+    { field: 'actualShortfallAmount', header: '實際淨欠總額 (A)' },
+    { field: 'preAuditShortfallAmount', header: '審核前淨欠總額 (B = C - D)' },
+    { field: 'receiptTotal', header: '實收總額 (C)' },
+    { field: 'systemTotal', header: '系統帳 (D)' },
+    { field: 'compareCD', header: '(C) 與 (D) 比較' },
+    { field: 'compareAB', header: '(A) 與 (B) 比較' }
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'contactPerson', header: '支付工具', visible: true },
-    { field: 'contactDate', header: '實際溢欠總額(A)', visible: true },
-    { field: 'UID', header: '審核前溢欠總額(B) = (C) - (D)', visible: true },
-    { field: 'industryType', header: '實收總額(C)', visible: true },
-    { field: 'category', header: '系統帳(D)', visible: true },
-    { field: 'version', header: '(C) 與 (D)比較', visible: true },
-    { field: 'rentNumber', header: '(A) 與 (B)比較', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
+    private locationOptionsService: LocationOptionsService,
+    private ecrNoService: ECRNoService
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS2A030', undefined, this.queryForm, this.onSubmit.bind(this));
   }
 
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
+  onSubmit(form: FormGroup): void {
     this.submitted = true;
+    if (form.invalid) return;
+
     this.loading = true;
-    this.messageService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      //console.log("extra", extras);
-      this.router.navigate(['/TLS2000/TLS2A030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      this.router.navigate(['/TLS2000/TLS2A030CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
+    // 假資料，實際應從 API 抓資料
+    const rawData = [
+      {
+        paymentTool: '現金',
+        actualShortfallAmount: -74760642,
+        receiptTotal: 1175669391,
+        systemTotal: 1250430033
       },
-      skipLocationChange: true
-    };
+      {
+        paymentTool: '聯合信用卡',
+        actualShortfallAmount: 1412153,
+        receiptTotal: 1128433256,
+        systemTotal: 1127021103
+      }
+    ];
 
-    this.router.navigate(['/TLS2000/TLS2A030CRU'], extras);
+    this.data = rawData.map(item => {
+      const preAudit = item.receiptTotal - item.systemTotal;
+      return {
+        ...item,
+        preAuditShortfallAmount: preAudit,
+        compareCD: this.compareValues(item.receiptTotal, item.systemTotal),
+        compareAB: this.compareValues(item.actualShortfallAmount, preAudit)
+      };
+    });
+
+    this.totalRecords = this.data.length;
+    this.loading = false;
   }
+
+  compareValues(a: number, b: number): '✔️' | '❌' {
+    return a === b ? '✔️' : '❌';
+  }
+
 }
