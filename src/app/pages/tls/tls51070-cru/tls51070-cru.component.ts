@@ -172,18 +172,20 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   defaultNew2020 = {
     PLU_MagNo: '',
     VEN_No: '',
-    STO_No: '',
+    STO_No: '10',
     PLU_OrderPrc: 0,
 
     PLU_Purchase: '1',
     PLU_TransType: '1',
     PLU_TransDay: 0,
     Remark: '',
-    VDP_LastStockDate: '',
+    VDP_LastStockDate: null,
   };
 
   // POS2020 展開式表格的欄位定義
-  POS2020DataColumn: ColumnDef[] = [];
+  POS2020DataColumn: ColumnDef[] = [
+
+  ];
   // 展開式表格的載入狀態
   expand2020Loading = false;
 
@@ -192,14 +194,14 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     this.defaultNew2020 = {
       PLU_MagNo: pLU_MagNo,
       VEN_No: '',
-      STO_No: '',
+      STO_No: '10',
       PLU_OrderPrc: 0,
 
-      PLU_Purchase: '',
-      PLU_TransType: '',
+      PLU_Purchase: '1',
+      PLU_TransType: '1',
       PLU_TransDay: 0,
       Remark: '',
-      VDP_LastStockDate: '',
+      VDP_LastStockDate: null,
     };
   }
 
@@ -396,11 +398,18 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           // POS2005Data 中所有的 PLU_No
           const POS2005PLUs = this.POS2005Data.map(item => item.PLU_No);
           console.log('現有的 PLU_No 陣列:', POS2005PLUs);
+          console.log('現有的 IMG :', this.files);
 
           const requestBody = {
             ...formValue,
             PLU_No: POS2005PLUs,
-            "IMG1001_INFO": this.img1001Data,
+            // IMG_File用files更新的name，其他保留原本的
+            "IMG1001_INFO": this.files.map((file, idx) => ({
+              // id: this.img1001Data[idx]?.id || 0, // 如果有ID就用，沒有就新建
+              id: 1, // 如果有ID就用，沒有就新建
+              IMG_File: file.name,
+              IMG_Remark: this.img1001Data[idx]?.IMG_Remark || ''
+            })),
             "POS2020_INFO": this.POS2020Data,
           };
 
@@ -480,7 +489,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         this.POS2020DataColumn = [
           // { field: 'PLU_MagNo', header: '商品管理編號', editable: false, type: 'text' },  //key1
           { field: 'VEN_No', header: '廠商編號', editable: true, type: 'dropdown', options: this.vendorOptions }, //key2
-          // { field: 'STO_No', header: '分店編號', editable: true, type: 'text' },
+          { field: 'STO_No', header: '分店編號', editable: true, type: 'text' },
 
           { field: 'PLU_TransType', header: '運輸方式', editable: true, type: 'dropdown', options: this.transTypeOption }, // １＝自行送貨２＝貨運  ３＝快遞  ４＝其它。
           { field: 'PLU_TransDay', header: '送貨天數', editable: true, type: 'number' },
@@ -542,7 +551,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       this.messageService.errorBubble('錯誤: 讀取明細為空');
     } else {
       this.tls51070Service.queryTLS51070_Detail({ 'PLU_MagNo': pLU_MagNo }).subscribe((response) => {
-        this.img1001Detail = response.Data[0].IMG1001Detail.map((item: { IMG_Path: string; IMG_File: File; }) => ({ ...item, IMG_Path: `${environment.ApiUrl}/${item.IMG_Path.replace('~', '')}/${item.IMG_File}` }));;
+        this.img1001Detail = response.Data[0].IMG1001Detail;
+        // this.img1001Detail = response.Data[0].IMG1001Detail.map((item: { IMG_Path: string; IMG_File: File; }) => ({ ...item, IMG_Path: `${environment.ApiUrl}/${item.IMG_Path.replace('~', '')}/${item.IMG_File}` }));
+
         this.pos2005Detail = response.Data[0].POS2005Detail;
         this.pos2020Detail = response.Data[0].POS2020Detail;
 
@@ -613,6 +624,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   onRowSavePOS2020(event: any) {
     // 通過驗證，處理儲存
     this.detail2020Handler.handleRowSave(event);
+
   }
   onRowCancelPOS2020(event: any) {
     this.detail2020Handler.handleRowCancel(event);
