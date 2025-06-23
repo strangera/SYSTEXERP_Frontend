@@ -759,11 +759,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     console.log('舊值:', oldValue);
     console.log('rowData ID:', rowData.id);
 
-    // ✅ 簡化條件判斷，只要是 location_no 欄位且有新值就處理
     if (field === 'location_no' && newValue) {
       console.log('位置編號變更，開始自動帶入...');
 
-      // 從選項中找到對應的資料
       const selectedLocation = this.locationWithDetailsOptions.find(
         location => location.value === newValue
       );
@@ -771,12 +769,14 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       console.log('找到的位置資料:', selectedLocation);
 
       if (selectedLocation) {
-        // ✅ 找到陣列中對應的項目並直接修改
         const targetIndex = this.locationData.findIndex((item: LocationItem) => item.id === rowData.id);
 
         if (targetIndex > -1) {
-          // 直接修改陣列中的項目
           const selected: Record<string, unknown> = selectedLocation as unknown as Record<string, unknown>;
+
+          // 🎯 重要：確保正確設定 _status
+          const newStatus = this.locationData[targetIndex]._status === 'new' ? 'new' : 'modified';
+
           this.locationData[targetIndex] = {
             ...this.locationData[targetIndex],
             location_no: newValue,
@@ -787,21 +787,16 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
             building_desc: String(selected['building_desc'] ?? ''),
             floor_desc: String(selected['floor_desc'] ?? ''),
             area_desc: String(selected['area_desc'] ?? ''),
-            _status: this.locationData[targetIndex]._status === 'original' ? 'modified' : 'new'
+            _status: newStatus  // 🎯 設定正確的狀態
           };
 
           console.log('更新後的項目:', this.locationData[targetIndex]);
 
-          // ✅ 重新建立陣列參考觸發變更偵測
           this.locationData = [...this.locationData];
-
-          // ✅ 額外確保 rowData 也被更新（給表格組件用）
           Object.assign(rowData, this.locationData[targetIndex]);
-
           this.saveToWorkflow();
           this.messageService.infoBubble(`已自動帶入位置 ${newValue} 的詳細資訊`);
 
-          // ✅ 延遲檢查確保更新成功
           setTimeout(() => {
             console.log('延遲確認更新結果:', this.locationData[targetIndex]);
           }, 100);
@@ -810,12 +805,15 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         }
       } else {
         console.warn('找不到位置詳細資料:', newValue);
-        console.warn('可用的位置選項:', this.locationWithDetailsOptions.map(opt => opt.value));
         this.messageService.warnBubble(`找不到位置 ${newValue} 的詳細資訊`);
       }
     }
 
-    // 其他欄位變更也觸發暫存
+    // 🎯 對於其他欄位的變更也要設定狀態
+    if (field !== 'location_no' && (!rowData._status || rowData._status === 'original')) {
+      rowData._status = 'modified';
+    }
+
     this.saveToWorkflow();
   }
 

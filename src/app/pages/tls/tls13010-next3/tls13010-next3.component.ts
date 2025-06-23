@@ -10,6 +10,7 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 import { ConditionDataItem, ContractInfo } from '../tls13010/tls13010.model';
+import { SubmitDataStructure } from '../tls13010/tls13010.model';
 
 // 🎯 後端 API Response 介面定義
 interface TLS13010CommissionResponse {
@@ -436,37 +437,144 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     this.loading = true;
 
     try {
-      // 收集所有步驟的資料
-      const step1Data = this.contractFlowService.getStep1Data();
-      const step2Data = this.contractFlowService.getStep2Data();
-      const step3Data = this.contractFlowService.getStep3Data();
-      const step4Data = this.contractFlowService.getStep4Data();
+      // 🎯 使用新的資料結構生成方法
+      const submitDataStructure = this.contractFlowService.generateSubmitData();
 
-      const submitData = {
-        contractInfo: step1Data,
-        deductionData: step2Data,
-        commissionData: step3Data,
-        conditionData: step4Data,
-        talentId: this.currentTalentId
-      };
+      // 🎯 詳細的 console 輸出，讓你知道要打什麼 API
+      console.log('='.repeat(80));
+      console.log('📋 完整提交資料結構:');
+      console.log('='.repeat(80));
 
-      console.log('📋 準備提交的資料:', submitData);
+      // Step 1 資料
+      console.log('📝 Step 1 - 合約基本資料:');
+      console.log(`   操作類型: ${submitDataStructure.step1.operation}`);
+      console.log('   資料內容:', submitDataStructure.step1.data);
+      console.log('');
 
-      // 🎯 目前先用模擬的成功回應
-      setTimeout(() => {
+      // Step 2 資料
+      console.log('💰 Step 2 - 代扣款設定:');
+      console.log('   摘要:', submitDataStructure.step2.summary);
+      if (submitDataStructure.step2.operations.toInsert.length > 0) {
+        console.log('   🟢 要新增的項目 (' + submitDataStructure.step2.operations.toInsert.length + ' 筆):');
+        submitDataStructure.step2.operations.toInsert.forEach((item, index) => {
+          console.log(`      ${index + 1}.`, item);
+        });
+      }
+      if (submitDataStructure.step2.operations.toUpdate.length > 0) {
+        console.log('   🟡 要修改的項目 (' + submitDataStructure.step2.operations.toUpdate.length + ' 筆):');
+        submitDataStructure.step2.operations.toUpdate.forEach((item, index) => {
+          console.log(`      ${index + 1}.`, item);
+        });
+      }
+      if (submitDataStructure.step2.operations.toDelete.length > 0) {
+        console.log('   🔴 要刪除的項目 (' + submitDataStructure.step2.operations.toDelete.length + ' 筆):');
+        submitDataStructure.step2.operations.toDelete.forEach((item, index) => {
+          console.log(`      ${index + 1}.`, item);
+        });
+      }
+      console.log('');
+
+      // Step 3 資料
+      console.log('📊 Step 3 - 抽成設定:');
+      console.log('   摘要:', submitDataStructure.step3.summary);
+      if (submitDataStructure.step3.operations.toInsert.length > 0) {
+        console.log('   🟢 要新增的項目 (' + submitDataStructure.step3.operations.toInsert.length + ' 筆):');
+        submitDataStructure.step3.operations.toInsert.forEach((item, index) => {
+          console.log(`      ${index + 1}.`, item);
+        });
+      }
+      if (submitDataStructure.step3.operations.toUpdate.length > 0) {
+        console.log('   🟡 要修改的項目 (' + submitDataStructure.step3.operations.toUpdate.length + ' 筆):');
+        submitDataStructure.step3.operations.toUpdate.forEach((item, index) => {
+          console.log(`      ${index + 1}.`, item);
+        });
+      }
+      if (submitDataStructure.step3.operations.toDelete.length > 0) {
+        console.log('   🔴 要刪除的項目 (' + submitDataStructure.step3.operations.toDelete.length + ' 筆):');
+        submitDataStructure.step3.operations.toDelete.forEach((item, index) => {
+          console.log(`      ${index + 1}.`, item);
+        });
+      }
+      console.log('');
+
+      // Step 4 資料
+      console.log('⚙️ Step 4 - 條件設定:');
+      console.log('   摘要:', submitDataStructure.step4.summary);
+      if (submitDataStructure.step4.operations.toInsert.length > 0) {
+        console.log('   🟢 要新增的項目 (' + submitDataStructure.step4.operations.toInsert.length + ' 筆):');
+        submitDataStructure.step4.operations.toInsert.forEach((item, index) => {
+          console.log(`      ${index + 1}.`, item);
+        });
+      }
+      if (submitDataStructure.step4.operations.toUpdate.length > 0) {
+        console.log('   🟡 要修改的項目 (' + submitDataStructure.step4.operations.toUpdate.length + ' 筆):');
+        submitDataStructure.step4.operations.toUpdate.forEach((item, index) => {
+          console.log(`      ${index + 1}.`, item);
+        });
+      }
+      if (submitDataStructure.step4.operations.toDelete.length > 0) {
+        console.log('   🔴 要刪除的項目 (' + submitDataStructure.step4.operations.toDelete.length + ' 筆):');
+        submitDataStructure.step4.operations.toDelete.forEach((item, index) => {
+          console.log(`      ${index + 1}.`, item);
+        });
+      }
+      console.log('');
+
+      // 總覽
+      console.log('📈 操作總覽:');
+      console.log(`   總操作數: ${submitDataStructure.metadata.totalOperations}`);
+      console.log(`   合約ID: ${submitDataStructure.metadata.contractId}`);
+      console.log(`   提交時間: ${submitDataStructure.metadata.submittedAt}`);
+      console.log('='.repeat(80));
+
+      // 🎯 建議的 API 呼叫結構
+      console.log('🔧 建議的 API 呼叫:');
+      console.log('POST /api/contracts/submit-complete');
+      console.log('Request Body:');
+      console.log(JSON.stringify(submitDataStructure, null, 2));
+      console.log('='.repeat(80));
+
+      // 🎯 實際 API 呼叫 (目前模擬)
+      this.callSubmitAPI(submitDataStructure);
+
+    } catch (error) {
+      console.error('❌ 準備提交資料時發生錯誤:', error);
+      this.loading = false;
+      this.notificationService.errorBubble('準備提交資料時發生錯誤');
+    }
+  }
+
+  private callSubmitAPI(submitData: SubmitDataStructure): void {
+    console.log('📡 準備呼叫後端 API...');
+
+    // 🎯 暫時模擬 API 呼叫，你可以在這裡看到完整的提交資料
+    console.log('📤 實際要送給後端的完整 JSON:');
+    console.log(JSON.stringify(submitData, null, 2));
+
+    setTimeout(() => {
+      this.loading = false;
+      this.notificationService.successBubble('契約資料提交成功！');
+      this.contractFlowService.clearAllData();
+      this.router.navigate(['/TLS/TLS13010']);
+    }, 2000);
+
+    // 🎯 實際 API 呼叫應該像這樣（先註解掉）:
+    /*
+    this.tls13010Service.submitCompleteContract(submitData).subscribe({
+      next: (response) => {
         this.loading = false;
         this.notificationService.successBubble('契約資料提交成功！');
         this.contractFlowService.clearAllData();
         this.router.navigate(['/TLS/TLS13010']);
-      }, 2000);
-
-    } catch (error) {
-      console.error('❌ 提交契約資料時發生錯誤:', error);
-      this.loading = false;
-      this.notificationService.errorBubble('契約資料提交失敗，請稍後再試');
-    }
+      },
+      error: (error) => {
+        console.error('❌ 提交失敗:', error);
+        this.loading = false;
+        this.notificationService.errorBubble('契約資料提交失敗，請稍後再試');
+      }
+    });
+    */
   }
-
   // 🔧 修正：使用父類的 onCancel，但自定義行為
   override onCancel(): void {
     console.log('🔙 準備回到前一步...');

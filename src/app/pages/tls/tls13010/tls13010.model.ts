@@ -266,4 +266,114 @@ export interface ConditionDataItem {
   G: string;
 }
 
+
+// 資料變更追蹤介面
+export interface BaseDataItem {
+  id?: string | number;
+  _status?: 'original' | 'new' | 'modified' | 'deleted';
+  _isNew?: boolean;
+}
+
+// 提交資料結構
+export interface SubmitDataStructure {
+  step1: {
+    operation: 'INSERT' | 'UPDATE';
+    data: ContractInfo;
+  };
+  step2: {
+    summary: ChangeSummary;
+    operations: {
+      toInsert: FareItem[];
+      toUpdate: FareItem[];
+      toDelete: FareItem[];
+    };
+  };
+  step3: {
+    summary: ChangeSummary;
+    operations: {
+      toInsert: CommissionItem[];
+      toUpdate: CommissionItem[];
+      toDelete: CommissionItem[];
+    };
+  };
+  step4: {
+    summary: ChangeSummary;
+    operations: {
+      toInsert: ConditionDataItem[];
+      toUpdate: ConditionDataItem[];
+      toDelete: ConditionDataItem[];
+    };
+  };
+  metadata: {
+    talentId: string;
+    contractId: string;
+    submittedAt: Date;
+    totalOperations: number;
+  };
+}
+
+export interface ChangeSummary {
+  insert: number;
+  update: number;
+  delete: number;
+  unchanged: number;
+  total: number;
+}
+
+// 資料變更追蹤工具類
+export class DataChangeTracker {
+
+  static trackArrayChanges<T extends BaseDataItem>(items: T[]): {
+    toInsert: T[];
+    toUpdate: T[];
+    toDelete: T[];
+    unchanged: T[];
+  } {
+    const toInsert: T[] = [];
+    const toUpdate: T[] = [];
+    const toDelete: T[] = [];
+    const unchanged: T[] = [];
+
+    items.forEach(item => {
+      switch (item._status) {
+        case 'new':
+          toInsert.push(item);
+          break;
+        case 'modified':
+          toUpdate.push(item);
+          break;
+        case 'deleted':
+          toDelete.push(item);
+          break;
+        case 'original':
+        default:
+          unchanged.push(item);
+          break;
+      }
+    });
+
+    return { toInsert, toUpdate, toDelete, unchanged };
+  }
+
+  static generateChangeSummary<T extends BaseDataItem>(items: T[], typeName: string) {
+    const changes = this.trackArrayChanges(items);
+
+    return {
+      type: typeName,
+      summary: {
+        insert: changes.toInsert.length,
+        update: changes.toUpdate.length,
+        delete: changes.toDelete.length,
+        unchanged: changes.unchanged.length,
+        total: items.length
+      },
+      data: {
+        toInsert: changes.toInsert,
+        toUpdate: changes.toUpdate,
+        toDelete: changes.toDelete
+      }
+    };
+  }
+}
+
 // 之後會陸續加入 CRU、扣款、抽成、條件設定等型別

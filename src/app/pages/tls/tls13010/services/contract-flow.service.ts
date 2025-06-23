@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { CommissionItem, ConditionDataItem, ContractInfo, FareItem, FinalData } from '../tls13010.model';
+import { DataChangeTracker, SubmitDataStructure } from '../tls13010.model';
 
 
 
@@ -562,5 +563,74 @@ export class ContractFlowService {
    */
   clearAllData(): void {
     this.clearTempData();
+  }
+
+  generateSubmitData(): SubmitDataStructure {
+    const step1Data = this.getStep1Data();
+    const step2Data = this.getStep2Data();
+    const step3Data = this.getStep3Data();
+    const step4Data = this.getStep4Data();
+
+    console.log('🔍 生成提交資料 - 原始資料檢查:');
+    console.log('Step1:', step1Data);
+    console.log('Step2:', step2Data);
+    console.log('Step3:', step3Data);
+    console.log('Step4:', step4Data);
+
+    // Step 1: 合約基本資料 (單筆，判斷是新增還是修改)
+    const step1Operation = step1Data?.talent_id ? 'UPDATE' : 'INSERT';
+
+    // Step 2: 代扣款資料 (多筆，追蹤變更)
+    const step2Changes = DataChangeTracker.generateChangeSummary(step2Data || [], '代扣款設定');
+
+    // Step 3: 抽成設定資料 (多筆，追蹤變更)
+    const step3Changes = DataChangeTracker.generateChangeSummary(step3Data || [], '抽成設定');
+
+    // Step 4: 條件設定資料 (多筆，追蹤變更)
+    const step4Changes = DataChangeTracker.generateChangeSummary(step4Data || [], '條件設定');
+
+    // 計算總操作數
+    const totalOperations =
+      1 + // Step 1 一定有一個操作
+      step2Changes.summary.insert + step2Changes.summary.update + step2Changes.summary.delete +
+      step3Changes.summary.insert + step3Changes.summary.update + step3Changes.summary.delete +
+      step4Changes.summary.insert + step4Changes.summary.update + step4Changes.summary.delete;
+
+    return {
+      step1: {
+        operation: step1Operation,
+        data: step1Data!
+      },
+      step2: {
+        summary: step2Changes.summary,
+        operations: {
+          toInsert: step2Changes.data.toInsert,
+          toUpdate: step2Changes.data.toUpdate,
+          toDelete: step2Changes.data.toDelete
+        }
+      },
+      step3: {
+        summary: step3Changes.summary,
+        operations: {
+          toInsert: step3Changes.data.toInsert,
+          toUpdate: step3Changes.data.toUpdate,
+          toDelete: step3Changes.data.toDelete
+        }
+      },
+      step4: {
+        summary: step4Changes.summary,
+        operations: {
+          toInsert: step4Changes.data.toInsert,
+          toUpdate: step4Changes.data.toUpdate,
+          toDelete: step4Changes.data.toDelete
+        }
+      },
+      metadata: {
+        talentId: this.contractData.contractId || '',
+        contractId: this.contractData.contractId || '',
+        submittedAt: new Date(),
+        totalOperations
+      }
+    };
   }
 }
