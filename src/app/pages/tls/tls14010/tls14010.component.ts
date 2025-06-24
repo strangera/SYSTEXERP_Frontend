@@ -31,19 +31,20 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
   // 查詢
   queryForm = this.formBuilder.group({
     // TLTTALENT_專櫃主檔+ TLTTALENT_LOCATION_專櫃店位明細檔
-    tlt_no: ['', [Validators.maxLength(12)]], // 專櫃編號
+    tlt_noList: [[], [Validators.maxLength(12)]], // 專櫃編號
     tlt_name: ['', [Validators.maxLength(100)]], // 專櫃名稱(品牌) 
-    location_no: ['', [Validators.maxLength(10)]], // 店位代碼 店位代碼-館別(1)+樓層(2)+區域(1)+流水編號(3)
+    location_noList: [[], [Validators.maxLength(10)]], // 店位代碼 店位代碼-館別(1)+樓層(2)+區域(1)+流水編號(3)
+    tlt_building: [''], // 館別
     tlt_floorList: [[]], // 樓層(SYS3900)
     area_noList: [[]], // 區域 (SYS3a00)
     bus_typeList: [[]], // 大分類 (tltbustype)
 
     tlt_openflagList: [[]], // 營運狀況 0閉店/撤櫃, 1=營業中, 2=合約結束, 9=核准時合約尚未開始
-    Version_start: ['', [Validators.maxLength(100)]], // 版本編號_start
-    Version_end: ['', [Validators.maxLength(100)]], // 版本編號_end
+    contract_subno_start: ['', [Validators.maxLength(100)]], // 版本編號_start
+    contract_subno_end: ['', [Validators.maxLength(100)]], // 版本編號_end
     apply_status: ['', [Validators.maxLength(100)]], // 合約狀態 1=洽談中 2=簽約中  5=已作廢
-    Date_start: ['', [Validators.maxLength(100)]], // 日期條件_start
-    Date_end: ['', [Validators.maxLength(100)]], // 日期條件_end
+    tlt_bdate: ['', [Validators.maxLength(100)]], // 日期條件_start
+    tlt_edate: ['', [Validators.maxLength(100)]], // 日期條件_end
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'tlt_no', order: 0 }]), // 分頁和排序參數
@@ -67,6 +68,7 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
   tlt_floorOptions: apiOption[] = []; // 樓層的下拉選單
   areaOptions: apiOption[] = []; // 區域的下拉選單
   bus_typeOptions: apiOption[] = []; // 大分類的下拉選單
+  location_noOptions: option[] = []; // 位置的下拉選單
 
 
   data: TLTContract[] = [];
@@ -75,12 +77,12 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
     { field: 'tlt_name', header: '專櫃名稱(品牌)', visible: true },
     { field: 'Version', header: '版本', visible: true },
     { field: 'bus_type', header: '大分類', visible: true, format: (value: string) => this.bus_typeOptions.find((option) => option.No === value)?.Label || value },
-    { field: 'tlt_bdate', header: '合約起始日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    { field: 'tlt_edate', header: '合約終止日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    { field: 'tlt_contract_bdate', header: '營運起始日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    { field: 'tlt_contract_edate', header: '營運終止日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
+    { field: 'tlt_contract_bdate', header: '合約起始日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
+    { field: 'tlt_contract_edate', header: '合約終止日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
+    { field: 'tlt_bdate', header: '營運起始日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
+    { field: 'tlt_edate', header: '營運終止日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
     { field: 'apply_status', header: '合約狀態', visible: true, format: (value: string) => this.statusOptions.find((option) => option.value === value)?.label || value },
-    { field: 'Location', header: '承租內容', visible: true },
+    { field: 'LocationText', header: '承租內容', visible: true },
     { field: 'tlt_openflag', header: '營運狀況', visible: true, format: (value: string) => this.tlt_openOptions.find((option) => option.value === value)?.label || value },
   ];
 

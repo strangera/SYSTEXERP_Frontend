@@ -9,7 +9,7 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="專櫃編號" controlName="tlt_no" [control]="queryForm.controls.tlt_no"
+            <app-input-text label="專櫃編號" controlName="tlt_noList" [control]="queryForm.controls.tlt_noList"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -17,11 +17,16 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="位置編號 " controlName="location_no" [control]="queryForm.controls.location_no"
-              [submitted]="submitted"></app-input-text>
+            <app-multi-select label="位置編號" controlName="location_noList" [options]="location_noOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.location_noList"
+              [submitted]="submitted"></app-multi-select>
           </div>
         </div>
         <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="館別" controlName="tlt_building" [control]="queryForm.controls.tlt_building"
+              [submitted]="submitted"></app-input-text>
+          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="樓層" controlName="tlt_floorList" [options]="tlt_floorOptions" optionLabel="Label"
               optionValue="No" [control]="queryForm.controls.tlt_floorList" [submitted]="submitted"></app-multi-select>
@@ -42,19 +47,20 @@
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range class="col-12 md:col-6 lg:col-5" label="版本編號"
-              [startControl]="queryForm.controls.Version_start" [endControl]="queryForm.controls.Version_start"
-              [submitted]="submitted" />
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="合約狀態" controlName="apply_status" [options]="statusOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.apply_status" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="合約狀態" controlName="apply_status" [options]="statusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.apply_status"
+              [submitted]="submitted"></app-multi-select>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range class="col-12 md:col-6 lg:col-5" label="版本編號"
+              [startControl]="queryForm.controls.contract_subno_start"
+              [endControl]="queryForm.controls.contract_subno_end" [submitted]="submitted" />
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick class="col-12 md:col-6 lg:col-5" label="日期條件"
-              [startControl]="queryForm.controls.Date_start" [endControl]="queryForm.controls.Date_end"
+              [startControl]="queryForm.controls.tlt_bdate" [endControl]="queryForm.controls.tlt_edate"
               [submitted]="submitted" />
           </div>
         </div>
