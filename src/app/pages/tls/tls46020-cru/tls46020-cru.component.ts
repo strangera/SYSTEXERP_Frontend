@@ -12,6 +12,7 @@ import { finalize } from 'rxjs';
 })
 export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
+    id: [{ value: 0, disabled: true }], // 主鍵 ID
     ECR_TmplNo: [{ value: '系統自動產生', disabled: true }], // 環境變數編號
     ECR_TmplBegDate: ['', [Validators.required]], // 有效日期(起始日期)
     ECR_TmplEndDate: ['', [Validators.required]], // 有效日期(結束日期)
@@ -45,6 +46,7 @@ export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> im
     ECR_CustTypeEntry: ['N', [Validators.required]], // 是否輸入客層數，預設N
     // 補齊錯誤訊息中提到的必填欄位預設值和驗證
     ECR_VoidTxn: ['Y', [Validators.required]], // 是否允許作廢交易，預設Y
+    ECR_RestoreVoid: ['Y', [Validators.required]], // 是否允許回復已作廢交易，預設Y
     ECR_SaleRpt3: ['Y', [Validators.required]], // 是否列印時段銷售報表，預設Y
     ECR_SaleRpt4: ['Y', [Validators.required]], // 是否列印部門銷售報表，預設Y
     ECR_SaleRpt5: ['Y', [Validators.required]], // 是否列印單品銷售報表，預設Y
@@ -90,7 +92,12 @@ export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> im
         : this.tls46020Service.updateTLS46020(this.createBody(frm));
       serviceCall.pipe(finalize(() => this.loading = false)).subscribe({
         next: (res) => {
-          console.log(res);
+          this.messageService.successBubble(res.Message);
+          if (this.isFormCreateable) {
+            this.dataForm.reset();
+          } else if (this.isFormEditable) {
+            this.onCancel();
+          }
         },
       });
     });

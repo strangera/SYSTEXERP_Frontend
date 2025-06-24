@@ -60,6 +60,9 @@
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否允許作廢交易" controlName="ECR_VoidTxn"
             [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_VoidTxn"
             [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否允許回復已作廢交易" controlName="ECR_RestoreVoid"
+            [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_RestoreVoid"
+            [submitted]="submitted" />
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否允許開立折讓單" controlName="ECR_CreditNote"
             [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_CreditNote"
             [submitted]="submitted" />
