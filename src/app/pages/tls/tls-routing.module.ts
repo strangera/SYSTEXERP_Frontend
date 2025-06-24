@@ -120,7 +120,6 @@ import { TLS29010CRUComponent } from './tls29010-cru/tls29010-cru.component';
 import { TLS29010Component } from './tls29010/tls29010.component';
 import { TLS2A010CRUComponent } from './tls2a010-cru/tls2a010-cru.component';
 import { TLS2A010Component } from './tls2a010/tls2a010.component';
-import { TLS2A020CRUComponent } from './tls2a020-cru/tls2a020-cru.component';
 import { TLS2A020Component } from './tls2a020/tls2a020.component';
 import { TLS2A030CRUComponent } from './tls2a030-cru/tls2a030-cru.component';
 import { TLS2A030Component } from './tls2a030/tls2a030.component';
@@ -607,7 +606,6 @@ const routes: Routes = [
   { path: 'TLS28050CRU', component: TLS28050CRUComponent }, // 收銀員領袋表 CRU
   { path: 'TLS29010CRU', component: TLS29010CRUComponent }, // 折扣開放維護作業 CRU
   { path: 'TLS2A010CRU', component: TLS2A010CRUComponent }, // 各支付工具審核作業 CRU
-  { path: 'TLS2A020CRU', component: TLS2A020CRUComponent }, // 未審核收銀機台報表 CRU
   { path: 'TLS2A030CRU', component: TLS2A030CRUComponent }, // 溢欠彙總表 CRU
   { path: 'TLS2A040CRU', component: TLS2A040CRUComponent }, // 缺單據/作廢發票報表 CRU
   { path: 'TLS2A050CRU', component: TLS2A050CRUComponent }, // 第三方支付帳差報表 CRU

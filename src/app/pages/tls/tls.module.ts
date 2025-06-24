@@ -123,7 +123,6 @@ import { TLS29010CRUComponent } from './tls29010-cru/tls29010-cru.component';
 import { TLS29010Component } from './tls29010/tls29010.component';
 import { TLS2A010CRUComponent } from './tls2a010-cru/tls2a010-cru.component';
 import { TLS2A010Component } from './tls2a010/tls2a010.component';
-import { TLS2A020CRUComponent } from './tls2a020-cru/tls2a020-cru.component';
 import { TLS2A020Component } from './tls2a020/tls2a020.component';
 import { TLS2A030CRUComponent } from './tls2a030-cru/tls2a030-cru.component';
 import { TLS2A030Component } from './tls2a030/tls2a030.component';
@@ -604,7 +603,6 @@ import { TLS23140CRUComponent } from './tls23140-cru/tls23140-cru.component'; //
     TLS28050CRUComponent,
     TLS29010CRUComponent,
     TLS2A010CRUComponent,
-    TLS2A020CRUComponent,
     TLS2A030CRUComponent,
     TLS2A040CRUComponent,
     TLS2A050CRUComponent,
