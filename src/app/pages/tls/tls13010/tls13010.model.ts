@@ -265,8 +265,112 @@ export interface ConditionDataItem {
   E: string;
   F: string;
   G: string;
+  _status?: 'original' | 'new' | 'modified' | 'deleted';
+  _isNew?: boolean;
 }
 
+
+export interface ChangeSummary {
+  insert: number;
+  update: number;
+  delete: number;
+  unchanged: number;
+  total: number;
+}
+
+// 基礎條件項目介面
+export interface BaseConditionItem {
+  id?: number | string;
+  talent_id: string;
+  _status?: 'original' | 'new' | 'modified' | 'deleted';
+  _isNew?: boolean;
+}
+
+// 固定租金條件 (對應 TLTTALENT_RENT)
+export interface FixedRentCondition extends BaseConditionItem {
+  tlt_id: string;           // 帳務期別
+  cag_bdate: string;        // 帳務起始日
+  cag_edate: string;        // 帳務結束日
+  base_rent: number;        // 租金金額
+}
+
+// 底租抽成取高者條件 (TLTTALENT_RENT + TLTTALENT_CHARGED)
+export interface BaseRentHigherCondition extends BaseConditionItem {
+  tlt_id: string;           // 帳務期別
+  cag_bdate: string;        // 帳務起始日
+  cag_edate: string;        // 帳務結束日
+  base_rent: number;        // 租金金額
+  cag_charge_rate: number;  // 抽成率
+}
+
+// 包底抽成條件 (對應 TLTTALENT_LIMIT)
+export interface BaseCommissionCondition extends BaseConditionItem {
+  tlt_id: string;           // 帳務期別
+  cag_bdate: string;        // 帳務起始日
+  cag_edate: string;        // 帳務結束日
+  limit_amt: number;        // 包底金額
+  limit_charge_rate: number; // 抽成率
+}
+
+// 階梯式抽成條件 (對應 TLTTALENT_LEVEL + TLTTALENT_LEVELD)
+export interface GraduatedCommissionCondition extends BaseConditionItem {
+  seq_no: number;           // 序號
+  cag_bdate: string;        // 帳務起始日
+  cag_edate: string;        // 帳務結束日
+  start_number: number;     // 階梯金額(起值)
+  end_number: number;       // 階梯金額(迄值)
+  charge_rate: number;      // 抽成率
+}
+
+// 包底加階梯條件 (TLTTALENT_LIMIT + TLTTALENT_LEVEL + TLTTALENT_LEVELD)
+export interface BaseTierCondition extends BaseConditionItem {
+  seq_no: number;           // 序號
+  tlt_id: string;
+  cag_bdate: string;        // 帳務起始日
+  cag_edate: string;        // 帳務結束日
+  limit_amt: number;        // 包底金額
+  start_number: number;     // 階梯金額(起值)
+  end_number: number;       // 階梯金額(迄值)
+  charge_rate: number;      // 抽成率
+}
+
+// 🎯 向後相容：保留舊的 ConditionDataItem 介面
+export interface ConditionDataItem {
+  id?: number | string;
+  A: string;
+  B: string;
+  C: string;
+  D: string;
+  E: string;
+  F: string;
+  G: string;
+  _status?: 'original' | 'new' | 'modified' | 'deleted';
+  _isNew?: boolean;
+}
+
+// 統一的條件設定容器
+export interface CommissionConditionData {
+  fixedRentItems: FixedRentCondition[];
+  baseRentHigherItems: BaseRentHigherCondition[];
+  baseCommissionItems: BaseCommissionCondition[];
+  graduatedItems: GraduatedCommissionCondition[];
+  baseTierItems: BaseTierCondition[];
+}
+
+// 🎯 新增：條件設定的聯合類型
+export type ConditionItem =
+  | FixedRentCondition
+  | BaseRentHigherCondition
+  | BaseCommissionCondition
+  | GraduatedCommissionCondition
+  | BaseTierCondition;
+
+// 資料變更追蹤介面
+export interface BaseDataItem {
+  id?: string | number;
+  _status?: 'original' | 'new' | 'modified' | 'deleted';
+  _isNew?: boolean;
+}
 
 // 資料變更追蹤介面
 export interface BaseDataItem {
@@ -300,9 +404,9 @@ export interface SubmitDataStructure {
   step4: {
     summary: ChangeSummary;
     operations: {
-      toInsert: ConditionDataItem[];
-      toUpdate: ConditionDataItem[];
-      toDelete: ConditionDataItem[];
+      toInsert: ConditionItem[];
+      toUpdate: ConditionItem[];
+      toDelete: ConditionItem[];
     };
   };
   metadata: {
@@ -319,6 +423,111 @@ export interface ChangeSummary {
   delete: number;
   unchanged: number;
   total: number;
+}
+
+// 🎯 新增：條件設定的 API 請求/回應介面
+
+// API 請求介面
+export interface TLS13010CommissionRequest {
+  TalentId: string;
+  CurrentTltTermType: string;
+}
+
+// API 回應介面
+export interface TLS13010CommissionResponse {
+  Status: string;
+  Data: CommissionResponseData;
+  Error?: any;
+  Meta?: any;
+  Message?: string;
+  TotalCount?: number;
+  TotalPage?: number;
+}
+
+export interface CommissionResponseData {
+  TalentId: string;
+  TalentName: string;
+  OriginalTltTermType: string;
+  CurrentTltTermType: string;
+  IsTermTypeChanged: boolean;
+  HasError: boolean;
+  ErrorMessage?: string;
+  DataToDelete?: CommissionDataStructure;
+  NewDataStructure?: {
+    TermType: string;
+  };
+  ExistingData?: CommissionDataStructure;
+}
+
+export interface CommissionDataStructure {
+  CommissionMasters?: CommissionMaster[];
+  ChargedDetails?: ChargedDetail[];
+  RentDetails?: RentDetail[];
+  LimitDetails?: LimitDetail[];
+  LevelDetails?: LevelDetail[];
+}
+
+// 🎯 後端資料表對應介面
+
+// TLTTALENT_CHARGEM
+export interface CommissionMaster {
+  id: number;
+  talent_id: number;
+  tlt_id: string;           // 抽成類別
+  tlt_id_desc: string;      // 抽成類別名稱
+  cag_bdate: string;        // 日期起日
+  cag_edate: string;        // 日期迄日
+  cag_taxtype: string;      // 課稅別
+  sst_amount: number;       // 單筆交易金額
+  sst_rate: number;         // 超過單筆交易金額特價抽成比率
+  cap_saletype1: string;    // 參加滿千送百
+  cap_saletype2: string;    // 參加全館消費滿額集點
+  cag_remark: string;       // 抽成類別備註
+}
+
+// TLTTALENT_CHARGED
+export interface ChargedDetail {
+  id: number;
+  talent_id: number;
+  tlt_id: string;           // 抽成類別
+  cag_barcode: string;      // 折數
+  tlt_bdate: string;        // 抽成起始日期
+  tlt_edate: string;        // 抽成終止日期
+  cag_charge_rate: number;  // 抽成比率
+}
+
+// TLTTALENT_RENT
+export interface RentDetail {
+  id: number;
+  talent_id: number;
+  tlt_id: string;           // 抽成類別
+  cag_bdate: string;        // 日期起日
+  cag_edate: string;        // 日期迄日
+  base_rent: number;        // 租金
+}
+
+// TLTTALENT_LIMIT
+export interface LimitDetail {
+  id: number;
+  talent_id: number;
+  tlt_id: string;           // 抽成類別
+  cag_bdate: string;        // 包底日期起日
+  cag_edate: string;        // 包底日期迄日
+  limit_amt: number;        // 包底金額
+  limit_charge_rate: number; // 包底比率
+}
+
+// TLTTALENT_LEVELD (階梯設定明細)
+export interface LevelDetail {
+  id: number;
+  talent_id: number;
+  seq_no: number;           // 序號
+  cag_bdate: string;        // 抽成日期起日
+  cag_edate: string;        // 抽成日期迄日
+  limit_amt?: number;       // 包底金額(包底加階梯用)
+  start_number: number;     // 起始金額
+  end_number: number;       // 終止金額
+  charge_rate: number;      // 層級抽取比率
 }
 
 // 資料變更追蹤工具類
@@ -375,59 +584,129 @@ export class DataChangeTracker {
       }
     };
   }
+
 }
 
+// 🎯 新增：條件設定工具類
+export class ConditionDataHelper {
 
-export interface BaseConditionItem {
-  id?: number | string;
-  talent_id: string;
-  tlt_id: string;           // 帳務期別
-  cag_bdate: string;        // 帳務起始日
-  cag_edate: string;        // 帳務結束日
-  _status?: 'original' | 'new' | 'modified' | 'deleted';
+  /**
+   * 將前端條件資料轉換為後端 API 格式
+   */
+  static convertToApiFormat(conditionData: CommissionConditionData, commissionType: string): any {
+    const result: any = {};
+
+    switch (commissionType) {
+      case '1': // 固定租金
+        result.RentDetails = conditionData.fixedRentItems.map(item => ({
+          talent_id: item.talent_id,
+          tlt_id: item.tlt_id,
+          cag_bdate: item.cag_bdate,
+          cag_edate: item.cag_edate,
+          base_rent: item.base_rent,
+          _status: item._status
+        }));
+        break;
+
+      case '2': // 底租抽成取高者
+        result.RentDetails = conditionData.baseRentHigherItems.map(item => ({
+          talent_id: item.talent_id,
+          tlt_id: item.tlt_id,
+          cag_bdate: item.cag_bdate,
+          cag_edate: item.cag_edate,
+          base_rent: item.base_rent,
+          _status: item._status
+        }));
+        result.ChargedDetails = conditionData.baseRentHigherItems.map(item => ({
+          talent_id: item.talent_id,
+          tlt_id: item.tlt_id,
+          cag_barcode: '', // 需要額外處理
+          tlt_bdate: item.cag_bdate,
+          tlt_edate: item.cag_edate,
+          cag_charge_rate: item.cag_charge_rate,
+          _status: item._status
+        }));
+        break;
+
+      case '4': // 包底抽成
+        result.LimitDetails = conditionData.baseCommissionItems.map(item => ({
+          talent_id: item.talent_id,
+          tlt_id: item.tlt_id,
+          cag_bdate: item.cag_bdate,
+          cag_edate: item.cag_edate,
+          limit_amt: item.limit_amt,
+          limit_charge_rate: item.limit_charge_rate,
+          _status: item._status
+        }));
+        break;
+
+      case '5': // 階梯式抽成
+        result.LevelDetails = conditionData.graduatedItems.map(item => ({
+          talent_id: item.talent_id,
+          seq_no: item.seq_no,
+          cag_bdate: item.cag_bdate,
+          cag_edate: item.cag_edate,
+          start_number: item.start_number,
+          end_number: item.end_number,
+          charge_rate: item.charge_rate,
+          _status: item._status
+        }));
+        break;
+
+      case '6': // 包底加階梯
+        result.LimitDetails = conditionData.baseTierItems.map(item => ({
+          talent_id: item.talent_id,
+          tlt_id: item.tlt_id || '0',
+          cag_bdate: item.cag_bdate,
+          cag_edate: item.cag_edate,
+          limit_amt: item.limit_amt,
+          limit_charge_rate: 0,
+          _status: item._status
+        }));
+        result.LevelDetails = conditionData.baseTierItems.map(item => ({
+          talent_id: item.talent_id,
+          seq_no: item.seq_no,
+          cag_bdate: item.cag_bdate,
+          cag_edate: item.cag_edate,
+          limit_amt: item.limit_amt,
+          start_number: item.start_number,
+          end_number: item.end_number,
+          charge_rate: item.charge_rate,
+          _status: item._status
+        }));
+        break;
+    }
+
+    return result;
+  }
+
+  /**
+   * 取得條件設定摘要
+   */
+  static getConditionSummary(conditionData: CommissionConditionData, commissionType: string): string {
+    switch (commissionType) {
+      case '1':
+        return `固定租金 ${conditionData.fixedRentItems.length} 個項目`;
+      case '2':
+        return `底租抽成取高者 ${conditionData.baseRentHigherItems.length} 個項目`;
+      case '3':
+        return '一般抽成 (無需額外條件設定)';
+      case '4':
+        return `包底抽成 ${conditionData.baseCommissionItems.length} 個項目`;
+      case '5':
+        return `階梯式抽成 ${conditionData.graduatedItems.length} 個項目`;
+      case '6':
+        return `包底加階梯 ${conditionData.baseTierItems.length} 個項目`;
+      default:
+        return '未知抽成類型';
+    }
+  }
 }
 
-// 固定租金條件 (對應 TLTTALENT_RENT)
-export interface FixedRentCondition extends BaseConditionItem {
-  base_rent: number;        // 租金金額
-}
+export type BaseRentHigherItem = BaseRentHigherCondition;
+export type BaseCommissionItem = BaseCommissionCondition;
+export type GraduatedItem = GraduatedCommissionCondition;
+export type BaseTierItem = BaseTierCondition;
 
-// 底租抽成取高者條件 (TLTTALENT_RENT + TLTTALENT_CHARGED)
-export interface BaseRentHigherCondition extends BaseConditionItem {
-  base_rent: number;        // 租金金額
-  cag_charge_rate: number;  // 抽成率
-}
-
-// 包底抽成條件 (對應 TLTTALENT_LIMIT)
-export interface BaseCommissionCondition extends BaseConditionItem {
-  limit_amt: number;        // 包底金額
-  limit_charge_rate: number; // 抽成率
-}
-
-// 階梯式抽成條件 (對應 TLTTALENT_LEVEL + TLTTALENT_LEVELD)
-export interface GraduatedCommissionCondition extends BaseConditionItem {
-  seq_no: number;           // 序號
-  limit_amt?: number;       // 限制金額
-  start_number: number;     // 階梯金額(起值)
-  end_number: number;       // 階梯金額(迄值)
-  charge_rate: number;      // 抽成率
-}
-
-// 包底加階梯條件 (TLTTALENT_LIMIT + TLTTALENT_LEVEL)
-export interface BaseTierCondition extends BaseConditionItem {
-  seq_no: number;           // 序號
-  limit_amt: number;        // 包底金額
-  start_number: number;     // 階梯金額(起值)
-  end_number: number;       // 階梯金額(迄值)
-  charge_rate: number;      // 抽成率
-}
-
-// 統一的條件設定容器
-export interface CommissionConditionData {
-  fixedRentItems: FixedRentCondition[];
-  baseRentHigherItems: BaseRentHigherCondition[];
-  baseCommissionItems: BaseCommissionCondition[];
-  graduatedItems: GraduatedCommissionCondition[];
-  baseTierItems: BaseTierCondition[];
-}
-// 之後會陸續加入 CRU、扣款、抽成、條件設定等型別
+// 🎯 修正 CommissionData 型別使用問題
+export type CommissionResponseApiData = CommissionResponseData;

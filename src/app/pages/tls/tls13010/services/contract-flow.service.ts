@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { CommissionItem, ConditionDataItem, ContractInfo, FareItem, FinalData } from '../tls13010.model';
+import { BaseCommissionCondition, BaseRentHigherCondition, BaseTierCondition, CommissionItem, ConditionDataItem, ConditionItem, ContractInfo, FareItem, FinalData, FixedRentCondition, GraduatedCommissionCondition } from '../tls13010.model';
 import { DataChangeTracker, SubmitDataStructure } from '../tls13010.model';
 
 
@@ -207,17 +207,73 @@ export class ContractFlowService {
   /**
    * 儲存第4步資料（條件設定）
    */
-  saveStep4Data(data: ConditionDataItem[]): void {
+  saveStep4Data(data: ConditionDataItem[] | ConditionItem[]): void {
     if (this.contractData.contractId) {
-      this.contractData.step4 = Array.isArray(data) ? data : [data];
+      // 如果傳入的是 ConditionItem[]，轉換為 ConditionDataItem[]
+      if (data.length > 0 && this.isConditionItem(data[0])) {
+        this.contractData.step4 = (data as ConditionItem[]).map(item =>
+          this.convertConditionItemToDataItem(item)
+        );
+      } else {
+        this.contractData.step4 = Array.isArray(data) ? data as ConditionDataItem[] : [data as ConditionDataItem];
+      }
+
       this.contractData.metadata.lastModified = new Date();
       this.contractData.metadata.version += 1;
       this.updateWorkflowStatus(WorkflowStep.CONDITION);
       this.saveToStorage();
 
-      console.log('儲存第4步資料:', data);
+      console.log('儲存第4步資料:', this.contractData.step4);
     }
   }
+
+  // 🎯 新增輔助方法
+  private isConditionItem(item: any): boolean {
+    return item && typeof item === 'object' &&
+      'talent_id' in item &&
+      ('tlt_id' in item || 'seq_no' in item);
+  }
+
+  private convertConditionItemToDataItem(item: ConditionItem): ConditionDataItem {
+    return {
+      id: item.id || Date.now() + Math.random(),
+      A: item.talent_id || '',
+      B: this.getConditionType(item),
+      C: this.getConditionValue1(item),
+      D: this.getConditionValue2(item),
+      E: this.getConditionValue3(item),
+      F: JSON.stringify(item),
+      G: item._status || 'original',
+      _status: item._status,
+      _isNew: item._isNew
+    };
+  }
+
+  private getConditionType(item: ConditionItem): string {
+    if ('base_rent' in item && 'cag_charge_rate' in item) return 'baseRentHigher';
+    if ('base_rent' in item) return 'fixedRent';
+    if ('limit_amt' in item && 'seq_no' in item) return 'baseTier';
+    if ('limit_amt' in item) return 'baseCommission';
+    if ('seq_no' in item) return 'graduated';
+    return 'unknown';
+  }
+
+  private getConditionValue1(item: ConditionItem): string {
+    if ('tlt_id' in item) return item.tlt_id || '';
+    if ('seq_no' in item) return item.seq_no?.toString() || '';
+    return '';
+  }
+
+  private getConditionValue2(item: ConditionItem): string {
+    if ('cag_bdate' in item) return item.cag_bdate || '';
+    return '';
+  }
+
+  private getConditionValue3(item: ConditionItem): string {
+    if ('cag_edate' in item) return item.cag_edate || '';
+    return '';
+  }
+
 
   /**
    * 取得步驟資料
@@ -586,8 +642,11 @@ export class ContractFlowService {
     // Step 3: 抽成設定資料 (多筆，追蹤變更)
     const step3Changes = DataChangeTracker.generateChangeSummary(step3Data || [], '抽成設定');
 
-    // Step 4: 條件設定資料 (多筆，追蹤變更)
-    const step4Changes = DataChangeTracker.generateChangeSummary(step4Data || [], '條件設定');
+    // 🎯 Step 4: 條件設定資料 - 轉換為 ConditionItem 型別
+    const step4ConditionItems = (step4Data || []).map(dataItem =>
+      this.convertDataItemToConditionItem(dataItem)
+    );
+    const step4Changes = DataChangeTracker.generateChangeSummary(step4ConditionItems, '條件設定');
 
     // 計算總操作數
     const totalOperations =
@@ -632,5 +691,96 @@ export class ContractFlowService {
         totalOperations
       }
     };
+  }
+
+  private convertDataItemToConditionItem(dataItem: ConditionDataItem): ConditionItem {
+    try {
+      const parsedData = JSON.parse(dataItem.F || '{}');
+      const baseItem = {
+        id: dataItem.id,
+        talent_id: dataItem.A,
+        _status: dataItem._status,
+        _isNew: dataItem._isNew
+      };
+
+      // 根據 B 欄位判斷類型
+      switch (dataItem.B) {
+        case 'fixedRent':
+          return {
+            ...baseItem,
+            tlt_id: dataItem.C,
+            cag_bdate: dataItem.D,
+            cag_edate: dataItem.E,
+            base_rent: parsedData.base_rent || 0
+          } as FixedRentCondition;
+
+        case 'baseRentHigher':
+          return {
+            ...baseItem,
+            tlt_id: dataItem.C,
+            cag_bdate: dataItem.D,
+            cag_edate: dataItem.E,
+            base_rent: parsedData.base_rent || 0,
+            cag_charge_rate: parsedData.cag_charge_rate || 0
+          } as BaseRentHigherCondition;
+
+        case 'baseCommission':
+          return {
+            ...baseItem,
+            tlt_id: dataItem.C,
+            cag_bdate: dataItem.D,
+            cag_edate: dataItem.E,
+            limit_amt: parsedData.limit_amt || 0,
+            limit_charge_rate: parsedData.limit_charge_rate || 0
+          } as BaseCommissionCondition;
+
+        case 'graduated':
+          return {
+            ...baseItem,
+            seq_no: parseInt(dataItem.C) || 0,
+            cag_bdate: dataItem.D,
+            cag_edate: dataItem.E,
+            start_number: parsedData.start_number || 0,
+            end_number: parsedData.end_number || 0,
+            charge_rate: parsedData.charge_rate || 0
+          } as GraduatedCommissionCondition;
+
+        case 'baseTier':
+          return {
+            ...baseItem,
+            seq_no: parseInt(dataItem.C) || 0,
+            tlt_id: '',
+            cag_bdate: dataItem.D,
+            cag_edate: dataItem.E,
+            limit_amt: parsedData.limit_amt || 0,
+            start_number: parsedData.start_number || 0,
+            end_number: parsedData.end_number || 0,
+            charge_rate: parsedData.charge_rate || 0
+          } as BaseTierCondition;
+
+        default:
+          // 預設返回固定租金類型
+          return {
+            ...baseItem,
+            tlt_id: dataItem.C,
+            cag_bdate: dataItem.D,
+            cag_edate: dataItem.E,
+            base_rent: 0
+          } as FixedRentCondition;
+      }
+    } catch (error) {
+      console.error('轉換 ConditionDataItem 失敗:', error);
+      // 返回預設值
+      return {
+        id: dataItem.id,
+        talent_id: dataItem.A,
+        tlt_id: '',
+        cag_bdate: '',
+        cag_edate: '',
+        base_rent: 0,
+        _status: dataItem._status,
+        _isNew: dataItem._isNew
+      } as FixedRentCondition;
+    }
   }
 }
