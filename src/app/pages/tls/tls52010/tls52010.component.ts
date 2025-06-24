@@ -4,60 +4,38 @@ import { VendorService } from './../../../service/basic/vendor.service';
 import { BrandCodeService } from './../../../service/basic/brand-code.service';
 import { ManagementIDService } from './../../../service/basic/management-id.service';
 import { BigCategoryCodeService } from './../../../service/basic/big-category-code.service';
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup } from '@angular/forms';
+import { ITLS52010Data } from '../../../service/api/tls/tls52010.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 // 2.5.2.1  採購單維護作業
 @Component({
   selector: 'app-tls52010',
   templateUrl: './tls52010.component.html',
-  styleUrl: './tls52010.component.scss'
 })
-export class TLS52010Component {
-  ProgNo: string = '250014';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    purchaseOrder: [, [this.validationService.numberValidator]], // Input serial number
-    storage: [], // DropDown
-    managementID: [], // DropDown
-    brandID: [], // DropDown
-    vendorID: [], // DropDown
-    paperStatus: [[] as number[]], // MultiSelect
-    applicant: [], // DropDown
-    applicantStartdate: [], // 日期限制 (start-end datetime yyyy/mm/dd)
-    applicantEnddate: [], // 日期限制 (start-end datetime yyyy/mm/dd)
-    checkPerson: [], // DropDown
-    checkStartdate: [], // 日期限制 (start-end datetime yyyy/mm/dd)
-    checkEnddate: [], // 日期限制 (start-end datetime yyyy/mm/dd)
-    closePerson: [], // DropDown
-    closeStartdate: [], // 日期限制 (start-end datetime yyyy/mm/dd)
-    closeEnddate: [], // 日期限制 (start-end datetime yyyy/mm/dd)
+    PO_No: [], // 採購單編號 input
+    HOS_No: [], // 倉庫代碼 multi-select
+    LOGO_No: [], // 品牌代碼 multi-select
+    VEN_No: [], // 廠商編號 multi-select
+    PO_Status: [], // 採購單狀態 multi-select
+    APPLY_USR: [], // 申請人員 multi-select
+    APPLY_Date_Start: [], // 申請日期 起 calendar-range
+    APPLY_Date_End: [], // 申請日期 迄
+    APRV_USR: [], // 審核人員 multi-select
+    APRV_Date_Start: [], // 審核日期 起 calendar-range
+    APRV_Date_End: [], // 審核日期 迄
+    CLOS_USR: [], // 強制結案人員 multi-select
+    CLOS_Date_Start: [], // 強制結案日期 起 calendar-range
+    CLOS_Date_End: [], // 強制結案日期 迄
+    ...createPaginationConfig([{ field: 'PO_No', order: 1 }]), // 分頁和排序參數
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    //{ contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    //{ contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    //{ contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
+  totalRecords = 0;
+  data: ITLS52010Data[] = [];
+  columns: Column[] = [
     { field: 'contactPerson', header: '採購單號', visible: true },
     { field: 'contactDate', header: '品牌編號', visible: true },
     { field: 'UID', header: '廠商編號', visible: true },
@@ -68,9 +46,7 @@ export class TLS52010Component {
     { field: 'progress', header: '審核人	', visible: true },
     { field: 'col1', header: '審核日期	', visible: true },
     { field: 'col2', header: '倉別	', visible: true },
-    // 其他欄位
   ];
-  // ----------------------------------------------------------------
   storageOptions: any[] = [];
   managementIDOptions: any[] = [];
   brandIDOptions: any[] = [];
@@ -79,123 +55,38 @@ export class TLS52010Component {
   applicantOptions: any[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
     private bigCategoryCodeService: BigCategoryCodeService,
     private managementIDService: ManagementIDService,
     private brandCodeService: BrandCodeService,
     private vendorService: VendorService,
     private paperStatusService: PaperStatusService,
     private userCodeService: UserCodeService,
-  ) {
-  }
+  ) { super(); }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('TLS52010', 'TLS/TLS52010CRU', this.queryForm, (form) => this.onSubmit(form));
     this.bigCategoryCodeService.getSystemTypes().subscribe(data => {
       this.storageOptions = data;
     });
-    // ----------------------------------------------------------------
     this.managementIDService.getSystemTypes().subscribe(data => {
       this.managementIDOptions = data;
     });
-    // ----------------------------------------------------------------
     this.brandCodeService.getSystemTypes().subscribe(data => {
       this.brandIDOptions = data;
     });
-    // ----------------------------------------------------------------
     this.vendorService.getVendors().subscribe(data => {
       this.vendorIDOptions = data;
     });
-    // ----------------------------------------------------------------
     this.userCodeService.getUserCode().subscribe(data => {
       this.applicantOptions = data;
     });
-    // ----------------------------------------------------------------
     this.paperStatusService.getSystemTypes().subscribe(data => {
       this.paperStatusOptions = data;
-
-      // 全選填入
-      // let allSystemValues = this.paperStatusOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   paperStatus: allSystemValues
-      // });
     });
   }
-
-  // 權限
-  // ----------------------------------------------------------------
-  canQuery(): boolean {
-    return true;
-  }
-  canAdd(): boolean {
-    return true;
-  }
-  canEdit(): boolean {
-    return true;
-  }
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
-    }
-  }
-
-  onDetail(data: any) {
-    console.log(data);
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
-
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
-      },
-    };
-
-    console.log(crudstatus);
-
-    this.router.navigate(['/TLS5000/TLS52010CRU'], extras);
+    });
   }
 }
