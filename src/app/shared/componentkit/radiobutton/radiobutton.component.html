@@ -1,10 +1,11 @@
 <label>{{ label }}
   <span *ngIf="isRequired" class="required">*</span>
 </label>
-<div class="flex flex-wrap gap-3">
-    <div *ngFor="let option of options" class="flex">
-        <p-radioButton [inputId]="option.value" [name]="groupname" [value]="option.value" [formControl]="control" (onClick)="onSelectionChange(option.value)"></p-radioButton>
-        <label [for]="option.value" class="ml-2">{{ option.label }}</label>
-    </div>
+<div class="flex flex-wrap gap-3 py-2">
+  <div *ngFor="let option of options" class="flex">
+    <p-radioButton [inputId]="option.value" [name]="groupname" [value]="option.value" [formControl]="control"
+      (onClick)="onSelectionChange(option.value)"></p-radioButton>
+    <label [for]="option.value" class="ml-2">{{ option.label }}</label>
+  </div>
 </div>
 <app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>

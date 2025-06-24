@@ -15,9 +15,9 @@
             [control]="queryForm.controls.ECR_Name" [submitted]="submitted"></app-input-text>
         </div>
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="所屬專櫃編號" controlName="ECR_TLT_No"
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="機台所屬專櫃編號" controlName="ECR_TLT_No"
             [control]="queryForm.controls.ECR_TLT_No" [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="所屬專櫃名稱" controlName="ECR_TLT_Name"
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="機台所屬專櫃名稱" controlName="ECR_TLT_Name"
             [control]="queryForm.controls.ECR_TLT_Name" [submitted]="submitted"></app-input-text>
         </div>
         <hr />
@@ -30,7 +30,7 @@
             [startControl]="queryForm.controls.ECR_CloseDateStart" [endControl]="queryForm.controls.ECR_CloseDateEnd"
             calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
 
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="狀態" controlName="ECR_Status"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="收銀機狀態" controlName="ECR_Status"
             [options]="statusOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_Status"
             [submitted]="submitted"></app-multi-select>
 
@@ -47,7 +47,7 @@
             [control]="queryForm.controls.ECR_Type" [options]="typeOptions" optionLabel="label" optionValue="value"
             [submitted]="submitted"></app-dropdown>
 
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="用途別" controlName="ECR_SAL_Type"
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="機台用途別" controlName="ECR_SAL_Type"
             [control]="queryForm.controls.ECR_SAL_Type" [options]="salTypeOptions" optionLabel="label"
             optionValue="value" [submitted]="submitted"></app-dropdown>
 
@@ -57,25 +57,25 @@
         </div>
         <hr />
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀員編號" controlName="ECR_USR_No"
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="機台所屬收銀員" controlName="ECR_USR_No"
             [control]="queryForm.controls.ECR_USR_No" [submitted]="submitted"></app-input-text>
 
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀員姓名" controlName="ECR_USR_Name"
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="機台所屬收銀員姓名" controlName="ECR_USR_Name"
             [control]="queryForm.controls.ECR_USR_Name" [submitted]="submitted"></app-input-text>
         </div>
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="電腦名稱" controlName="ECR_ComName"
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機電腦名稱" controlName="ECR_ComName"
             [control]="queryForm.controls.ECR_ComName" [submitted]="submitted"></app-input-text>
 
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機 IP" controlName="ECR_IP"
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機網路IP" controlName="ECR_IP"
             [control]="queryForm.controls.ECR_IP" [submitted]="submitted"></app-input-text>
 
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="後台主機 IP" controlName="ECR_SrvIP"
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機後台主機IP" controlName="ECR_SrvIP"
             [control]="queryForm.controls.ECR_SrvIP" [submitted]="submitted"></app-input-text>
         </div>
         <hr />
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="模版編號" controlName="ECR_TmplNo"
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="周邊設定模版編號" controlName="ECR_TmplNo"
             [control]="queryForm.controls.ECR_TmplNo" [submitted]="submitted"></app-input-text>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -88,7 +88,7 @@
 </div>
 
 <div class="card">
-  <app-table dataKey="id" [data]="data" [columns]="columns" (detail)="onDetail($event)" [showEdit]="false"
+  <app-table dataKey="id" [data]="data" [columns]="columns" (detail)="onDetail($event)" (edit)="onEdit($event)"
     [showCheckBox]="true" (delete)="onDelete($event)" (selectionChange)="selectedItems = $event"
     [selectedItems]="selectedItems" [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading">

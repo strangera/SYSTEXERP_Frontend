@@ -8,8 +8,8 @@ import { IAps1004Data } from './sys1004.service';
 
 /** 查詢條件介面 (querySYSBC00) */
 export interface IQuerySysbc00Request {
-  PageSize: number;
-  PageIndex: number;
+  PageSize?: number;
+  PageIndex?: number;
   OrderBy?: string; // 可選
   Offset?: number; // 可選
   SortBy?: SortMeta[]; // 可選
