@@ -656,6 +656,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   }
 
   // 🎯 新增：批次刪除處理
+  // 修改這個方法
   onBatchDelete(selectedItems: any[], type: string): void {
     if (!selectedItems || selectedItems.length === 0) {
       this.notificationService.warnBubble('請選擇要刪除的項目');
@@ -665,10 +666,8 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     if (confirm(`確定要刪除選取的 ${selectedItems.length} 個項目嗎？`)) {
       selectedItems.forEach(item => {
         if (item._status === 'new') {
-          // 新增的項目直接移除
           this.removeItemFromArray(item, type);
         } else {
-          // 既有項目標記為刪除
           item._status = 'deleted';
         }
       });
