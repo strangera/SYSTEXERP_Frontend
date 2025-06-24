@@ -6,10 +6,11 @@ import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { PluLogo, POS2004 } from '../../../shared/models/tls/tls000.model';
 import { Tls51070Service } from '../../../service/API/tls/tls51070.service';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { environment } from '../../../../environments/environment';
 import { POS2005Detail, POS2020Detail, IMG1001Detail } from './tls51070-cru.module';
 import { detail2005HandlerService } from './detail2005HandlerService';
 import { detail2020HandlerService } from './detail2020HandlerService';
+import { dropDown51070 } from './dropDown51070';
+import { Tls51060Service } from '../../../service/API/tls/tls51060.service';
 
 // 2.5.1.7  商品基本資料 CRU
 @Component({
@@ -103,40 +104,15 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   smallOption: apiOption[] = [];
   pluLogoOption: PluLogo[] = [];  // 品牌代碼
   unitOptions: apiOption[] = [];  //商品單位
-  statusOptions: option[] = [  //商品狀態
-    { value: '1', label: '正常' },
-    { value: '2', label: '停用' },
-    { value: '3', label: '停進' },
-    { value: '4', label: '下架' },
-  ];
+  statusOptions: option[] = this.dropDown51070.statusOptions;//商品狀態
   counterOptions: apiOption[] = []; //專櫃編號：資料讀 TLTTALENT 
   vendorOptions: option[] = [];  //廠商編號: 資料讀 POS2013 
-
   // ---商品規格dropdown---
-  attributeOptions: option[] = [ // 商品型態
-    { value: '1', label: '一般' },
-    { value: '2', label: '進口' },
-    { value: '3', label: '買斷' },
-    { value: '4', label: '試銷' },
-    { value: '5', label: '寄賣' },
-  ];
-  taxTypeOptions: option[] = [ // 稅別
-    { value: '0', label: '免稅' },
-    { value: '1', label: '應稅' },
-  ];
-
+  attributeOptions: option[] = this.dropDown51070.attributeOptions;  // 商品型態
+  taxTypeOptions: option[] = this.dropDown51070.taxTypeOptions; // 稅別
   // ---POS2020 dropdown區---
-  transTypeOption: option[] = [  //運輸方式
-    { value: '1', label: '自行送貨' },
-    { value: '2', label: '貨運' },
-    { value: '3', label: '快遞' },
-    { value: '4', label: '其它' },
-  ];
-
-  purchaseTypeOption: option[] = [  // 採購狀態
-    { value: '1', label: '正常採購' }, // 預設
-    { value: '2', label: '停止採購' },
-  ];
+  transTypeOption: option[] = this.dropDown51070.transTypeOption;  //運輸方式
+  purchaseTypeOption: option[] = this.dropDown51070.purchaseTypeOption;  // 採購狀態
   // ---POS2020 -------------
   pos2005Detail: POS2005Detail[] = [];
   pos2020Detail: POS2020Detail[] = [];
@@ -217,7 +193,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // ----------------------------------------------------------------
 
   constructor(
+    private tls51060Service: Tls51060Service, //查詢品牌代碼檔
     private tls51070Service: Tls51070Service,
+    private dropDown51070: dropDown51070, //下拉選單
     private detail2005Handler: detail2005HandlerService,// POS2005 table明細處理
     private detail2020Handler: detail2020HandlerService, // POS2020 table明細處理
   ) {
@@ -226,7 +204,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   ngOnInit(): void {
     this.initializePage('TLS51070', this.dataForm);
-
     console.log('大大大表單', this.dataForm.value);
 
     // 進價類的都不可編輯
@@ -322,8 +299,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     this.dataForm.get('LOGO_No')!.valueChanges.subscribe((newValue) => {
 
       if (newValue) {
-        // 找到符合的品牌資料
+        // 找到符合的品牌資料 (依照newValue 找到pluLogoOption對應的No)
         const matched = this.pluLogoOption.find(item => item.LOGO_No === newValue);
+        console.log('監聽品牌編號變化', newValue, matched);
 
         // 讀取整份 重新設置 進價折數、 標準進價
         if (matched) {
@@ -376,6 +354,12 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           console.log('讀取表單', frm);
           const formValue = frm.getRawValue();
 
+          // 沒有輸入國際條碼時，國際條碼=商品管理編號 (bubble跳出提示)
+          if (!formValue.PLU_No || formValue.PLU_No.trim() === '') {
+            formValue.PLU_No = formValue.PLU_MagNo; // 國際條碼=商品管理編號
+            this.messageService.infoBubble('沒有輸入國際條碼，國際條碼已自動設為商品管理編號');
+          }
+
           const requestBody = {
             ...formValue,
             PLU_No: [frm.get('PLU_No')?.value], //用[]包
@@ -415,12 +399,12 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
           console.log('update', requestBody);
 
-          this.tls51070Service.updateTLS51070(requestBody).subscribe({
-            next: () => {
-              this.messageService.successBubble('更新成功');
-              this.onCancel(); // 儲存後，會返回列表
-            }
-          });
+          // this.tls51070Service.updateTLS51070(requestBody).subscribe({
+          //   next: () => {
+          //     this.messageService.successBubble('更新成功');
+          //     this.onCancel(); // 儲存後，會返回列表
+          //   }
+          // });
         }
         break;
     }
@@ -463,16 +447,21 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       });
 
     // 查詢 所有 品牌代碼
-    this.tls51070Service.queryPLULOGO_DropDownList({})
-      .subscribe((response) => {
-        this.pluLogoOption = response.Data.map((item: apiOption) => ({
-          No: item.No,
-          Name: item.Name,
-          Label: item.No + '-' + item.Name,
-        }));
+    const request = {
+      "PageSize": 1000,
+      "PageIndex": 0,
+      "OrderBy": "LOGO_No",
+    }
 
-        console.log('品牌詳細代碼:', this.pluLogoOption);
-      });
+    this.tls51060Service.queryTLS51060(request).subscribe((response) => {
+      //將 LOGO_No 和 LOGO_CH_NAME 欄位組合成Label
+      this.pluLogoOption = response.Data.map((item: PluLogo) => ({
+        ...item,
+        No: item.LOGO_No, // 品牌代碼
+        Label: item.LOGO_No + '-' + item.LOGO_CH_NAME, // 組合成顯示用的Label
+      }));
+      console.log('品牌詳細代碼:', this.pluLogoOption);
+    });
 
     // 查詢 廠商代碼 (不確定怎麼帶 VEN_Flag)
     this.tls51070Service
@@ -577,6 +566,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   switchButton(buttonNum: number) {
     this.buttonID = buttonNum;
   }
+
+  // ---明細檔操作---
 
   //---POS2005表格編輯事件---
   onRowSavePOS2005(event: any) {
