@@ -145,6 +145,13 @@ export const formatYYYYMM = (dateStr: string): string => {
   return `${year}/${month}`;
 };
 
+// formatTimeHHMM 輸出為 HH:MM
+export const formatTimeHHMM = (value: string | number): string => {
+  if (!value) return '';
+  const strValue = String(value).padStart(4, '0'); // 確保是4位數字，不足補0
+  return `${strValue.substring(0, 2)}:${strValue.substring(2, 4)}`;
+};
+
 // 000,000,000
 export const formatAmount = (number: number | string): string => {
   if (!number) return '0';

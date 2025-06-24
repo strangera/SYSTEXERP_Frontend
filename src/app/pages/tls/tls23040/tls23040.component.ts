@@ -56,9 +56,9 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
-    { field: 'TXN_GUIBegNoFirstNo', header: '發票起號(字軌)', visible: true },
-    { field: 'TXN_GUIBegNo', header: '發票號碼(起)', visible: true },
-    { field: 'TXN_GUIEndNo', header: '發票號碼(迄)', visible: true },
+    { field: 'gui_track', header: '發票起號(字軌)', visible: true },
+    { field: 'GUIBegNo', header: '發票號碼(起)', visible: true },
+    { field: 'GUIEndNo', header: '發票號碼(迄)', visible: true },
     {
       field: 'TXN_TotGUI',
       header: '發票金額',
@@ -79,16 +79,16 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       visible: true,
       format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions)
     },
-    {
-      field: 'TXN_FlagStatus',
-      header: '狀態旗標',
-      visible: true,
-    },
-   {
-      field: 'TXN_Subtype',
-      header: '交易附屬型態',
-      visible: true,
-    },
+    // {
+    //   field: 'TXN_FlagStatus',
+    //   header: '狀態旗標',
+    //   visible: true,
+    // },
+    // {
+    //   field: 'TXN_Subtype',
+    //   header: '交易附屬型態',
+    //   visible: true,
+    // },
     { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
     { field: 'USR_No', header: '收銀員', visible: true },
     { field: 'TXN_PkngUID', header: '停車卡號', visible: true },

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, tap } from 'rxjs';
+import { catchError, map, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../shared/service/error-handler.service';
 
@@ -21,6 +21,16 @@ export class TLS13010Service {
   queryTLS13010(payload: any) {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010`, payload).pipe(
       tap((res) => console.log('查詢結果:', res)),
+      map((response: { Status: string; Data: any[]; }) => {
+        // 如果查詢成功且有資料，就清理空格
+        if (response.Status === '0000' && response.Data && Array.isArray(response.Data)) {
+          response.Data = response.Data.map((item: any) => ({
+            ...item,
+            tlt_term_type: item.tlt_term_type?.trim() || ''
+          }));
+        }
+        return response;
+      })
     );
   }
 

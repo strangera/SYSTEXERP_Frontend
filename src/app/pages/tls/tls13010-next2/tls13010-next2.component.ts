@@ -7,91 +7,20 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { SelectItem } from 'primeng/api';
 import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { ContractFlowService, WorkflowStep } from '../../../service/API/tls/tls13010contract-flow/contract-flow.service';
+import { ContractFlowService, WorkflowStep } from '../tls13010/services/contract-flow.service';
 import { TLS13010Service } from '../../../service/API/tls/tls13010.service';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
+import { ContractInfo, CommissionItem, DiscountSettingItem, AnnualPerformanceItem, DiscountLevelItem } from '../tls13010/tls13010.model';
 
 // ... 介面定義保持不變 ...
-interface CategoryItem {
-  id: number;
-  CAT_LNo: string;
-  CAT_LName: string;
-  CAT_LRemark: string | null;
-  CRT_USR_No: string | "";
-  CRT_USR_Name: string | "";
-}
-
-interface ContractInfo {
-  id: string | number;
-  talent_id: string;
-  apply_no: string;
-  tlt_name: string;
-  VEN_Name: string;
-  contract_subno?: string;
-  cap_name?: string;
-  cap_item?: string;
-  org_id?: string;
-  tpy_type?: string;
-  tlt_contract_bdate?: string;
-  tlt_contract_edate?: string;
-  tlt_bdate?: string;
-  tlt_edate?: string;
-  tpy_amount?: number;
-  tpy_unitamt?: number;
-  tpy_qty?: number;
-  ven_uniform?: any;
-  comm_comp_type?: any;
-  originalFareData?: any;
-}
-
-interface CommissionItem {
-  id: number;
-  commissionType: string;
-  commissionTypeName: string;
-  taxType: number;
-  discountSummary: string;
-  transactionAmount: number;
-  specialCommission: number;
-  fullPointActivity: boolean;
-  thousandDiscount: boolean;
-  selectedSettingOption: string;
-  discountSettingItems: DiscountSettingItem[];
-  annualPerformanceItems: AnnualPerformanceItem[];
-  discountLevelItems: DiscountLevelItem[];
-  detailItems: any[];
-}
-
-interface DiscountSettingItem {
-  selected: boolean;
-  cag_barcode: string;
-  startDate: Date;
-  endDate: Date;
-  rate: number;
-}
-
-interface AnnualPerformanceItem {
-  selected: boolean;
-  startDate: Date;
-  endDate: Date;
-  discountAmount: number;
-  rate: number;
-}
-
-interface DiscountLevelItem {
-  selected: boolean;
-  cag_barcode: string;
-  startAmount: number;
-  endAmount: number;
-  rate: number;
-}
 
 @Component({
   selector: 'app-tls13010-next2',
   templateUrl: './tls13010-next2.component.html',
   styleUrls: ['./tls13010-next2.component.scss']
 })
-export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
+export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> implements OnInit, OnDestroy {
   @ViewChild('expandedContent') expandedContentTemplate!: TemplateRef<any>;
 
   private subscriptions: Subscription[] = [];
@@ -158,11 +87,11 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
       autoWidth: true
     },
     {
-      field: 'comm_comp_type',
+      field: 'tlt_term_type',
       header: '抽成別',
       type: 'dropdown',
       editable: false,
-      options: TLS13010_DROPDOWN_OPTIONS.commissionCompType,
+      options: TLS13010_DROPDOWN_OPTIONS.tltTermType,
       autoWidth: true
     },
     {
@@ -311,7 +240,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
   private loadDiscountOptions(): Promise<void> {
     return new Promise((resolve) => {
       console.log('🔽 開始載入折數選項...');
-
+      console.log('discountOptions:', this.discountOptions);
       this.paperTypeService.getPaperTypeOptions('T102').subscribe({
         next: (options: any[]) => {
           console.log('📥 API 回傳的折扣選項:', options);
@@ -379,7 +308,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
         tlt_bdate: step1Data?.tlt_bdate || this.currentContractData.tlt_bdate || '',
         tlt_edate: step1Data?.tlt_edate || this.currentContractData.tlt_edate || '',
         tlt_contract_bdate: step1Data?.tlt_contract_bdate || this.currentContractData.tlt_contract_bdate || '',
-        tlt_contract_edate: step1Data?.tlt_contract_edate || this.currentContractData.tlt_contract_edate || ''
+        tlt_contract_edate: step1Data?.tlt_contract_edate || this.currentContractData.tlt_contract_edate || '',
+        tlt_term_type: (step1Data?.tlt_term_type || this.currentContractData.tlt_term_type || '').toString().trim() || '-',
       };
 
       this.contractInfoData = [{
@@ -644,13 +574,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
   getCurrentItems(rowData: CommissionItem): any[] {
     switch (this.selectedSettingTab) {
       case 'discount':
-        return rowData.discountSettingItems;
+        return rowData.discountSettingItems.filter(i => i._status !== 'deleted');
       case 'annual':
-        return rowData.annualPerformanceItems;
+        return rowData.annualPerformanceItems.filter(i => i._status !== 'deleted');
       case 'level':
-        return rowData.discountLevelItems;
+        return rowData.discountLevelItems.filter(i => i._status !== 'deleted');
       default:
-        return rowData.discountSettingItems;
+        return rowData.discountSettingItems.filter(i => i._status !== 'deleted');
     }
   }
 
@@ -818,26 +748,42 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   // 添加折扣設置項目
   addDiscountSettingItem(item: CommissionItem): void {
-    item.discountSettingItems.push(this.createDiscountSettingItem());
+    const newItem = this.createDiscountSettingItem();
+    newItem._status = 'new';
+    item.discountSettingItems.push(newItem);
     this.updateDetailItemsForDisplay();
+    this.saveCommissionDataToWorkflow();
   }
 
   // 添加年度業績項目
   addAnnualPerformanceItem(item: CommissionItem): void {
-    item.annualPerformanceItems.push(this.createAnnualPerformanceItem());
+    const newItem = this.createAnnualPerformanceItem();
+    newItem._status = 'new';
+    item.annualPerformanceItems.push(newItem);
     this.updateDetailItemsForDisplay();
+    this.saveCommissionDataToWorkflow();
   }
 
-  // 添加折扣等級項目
   addDiscountLevelItem(item: CommissionItem): void {
-    item.discountLevelItems.push(this.createDiscountLevelItem());
+    const newItem = this.createDiscountLevelItem();
+    newItem._status = 'new';
+    item.discountLevelItems.push(newItem);
     this.updateDetailItemsForDisplay();
+    this.saveCommissionDataToWorkflow();
   }
 
   // 刪除折扣設置項目
   removeDiscountSettingItem(item: CommissionItem, index: number): void {
-    item.discountSettingItems.splice(index, 1);
+    const target = item.discountSettingItems[index];
+    if (target._status === 'new') {
+      // 新增的直接移除
+      item.discountSettingItems.splice(index, 1);
+    } else {
+      // 既有的標記為 deleted
+      target._status = 'deleted';
+    }
     this.updateDetailItemsForDisplay();
+    this.saveCommissionDataToWorkflow();
   }
 
   // 刪除年度業績項目
@@ -858,6 +804,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   // 表格項目保存事件
   onItemSave(event: { oldData: any, newData: any }): void {
+    if (event.oldData._status === 'original') {
+      event.newData._status = 'modified';
+    }
     this.syncDetailItemsToSource(event.newData);
     this.updateDetailItemsForDisplay();
     this.saveCommissionDataToWorkflow();
@@ -1097,7 +1046,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     this.router.navigate(['TLS/TLS13010NEXT3']);
-    this.messageService.infoBubble('進入下一步');
+    // this.messageService.infoBubble('進入下一步');
   }
 
   override onCancel(): void {

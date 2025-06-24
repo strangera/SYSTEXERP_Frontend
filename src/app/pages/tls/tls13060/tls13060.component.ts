@@ -1,35 +1,42 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
-import { ITLTTALENT, TLTTALENT_columns } from './tls13060.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { TLTTALENT_columns } from './tls13060.model';
 import { VendorCategoryOptionsService } from '../../../service/API/dropdownservice/vendor-category-options.service';
 import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
+import { TLS13060ResponseItem, TLS13060Service } from '../../../service/api/tls/tls13060.service';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-tls13060',
   templateUrl: './tls13060.component.html',
-  styleUrls: ['./tls13060.component.scss'],
 })
-export class TLS13060Component extends BasicQueryPageComponent<ITLTTALENT> implements OnInit {
+export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseItem> implements OnInit {
   queryForm = this.formBuilder.group({
     apply_no: ['', [Validators.maxLength(12)]], // 專櫃招募編號
     ven_uniform: [null], // 廠商統一編號
     tlt_no: ['', [Validators.maxLength(12)]], // 專櫃編號
     tlt_name: ['', [Validators.maxLength(100)]], // 櫃位名稱
-    locationCode: [null], // 位置編號
-    tlt_openflag: [null], // 營運狀況
-    tlt_bdate: [null], // 契約起始日
-    tlt_edate: [null], // 契約截止日
-    tlt_contract_bdate: [null], // 營運起始日
-    tlt_contract_edate: [null], // 營運截止日
-    tlt_term_type: [null], // 抽成別
+    location_no: [null], // 位置編號
+    tlt_openflagList: [null], // 營運狀況
+    tlt_bdate_start: [null], // 契約起始日
+    tlt_bdate_end: [null], // 契約起始日
+    tlt_edate_start: [null], // 契約截止日
+    tlt_edate_end: [null], // 契約截止日
+    tlt_contract_bdate_start: [null], // 營運起始日
+    tlt_contract_bdate_end: [null], // 營運起始日
+    tlt_contract_edate_start: [null], // 營運截止日
+    tlt_contract_edate_end: [null], // 營運截止日
+    tlt_term_typeList: [null], // 抽成別
     paytype: [null], // 付款方式
     rece_yn: [null], // 是否開立業主發票
     pos_yn: [null], // 是否使用業主收銀機
     cash_yn: [null], // 是否為業主收現
+    ...createPaginationConfig([{ field: 'apply_no', order: 1 }]), // 分頁和排序參數
   });
-  data: ITLTTALENT[] = [];
+  totalRecords = 0;
+  data: TLS13060ResponseItem[] = [];
   columns: Column[] = TLTTALENT_columns;
   vandorCategoryOptions: { label: string, value: string }[] = [];
   locationOptions: { label: string, value: string }[] = [];
@@ -47,7 +54,8 @@ export class TLS13060Component extends BasicQueryPageComponent<ITLTTALENT> imple
 
   constructor(
     private vendorCategoryOptionsService: VendorCategoryOptionsService,
-    private locationOptionsService: LocationOptionsService
+    private locationOptionsService: LocationOptionsService,
+    private tLS13060Service: TLS13060Service
   ) {
     super();
   }
@@ -64,6 +72,11 @@ export class TLS13060Component extends BasicQueryPageComponent<ITLTTALENT> imple
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-    });
+      this.tLS13060Service.queryTLS13060(frm.value).pipe(finalize(() => this.loading = false)).subscribe(response => {
+        this.data = response.Data;
+        this.totalRecords = response.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      });
+    })
   }
 }

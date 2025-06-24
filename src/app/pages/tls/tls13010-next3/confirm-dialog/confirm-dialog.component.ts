@@ -1,7 +1,7 @@
 import { NotificationService } from './../../../../shared/component/notification-message/notification.service';
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { Router } from '@angular/router';
-import { ContractFlowService, WorkflowStep } from '../../../../service/API/tls/tls13010contract-flow/contract-flow.service';
+import { ContractFlowService, WorkflowStep } from '../../tls13010/services/contract-flow.service';
 import { TLS13010_DROPDOWN_OPTIONS } from '../../tls13010/tls13010.dropdown';
 
 // 🎯 資料摘要介面

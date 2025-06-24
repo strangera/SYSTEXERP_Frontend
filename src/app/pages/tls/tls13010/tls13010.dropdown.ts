@@ -5,7 +5,7 @@ import {
   DECO_TYPE_OPTIONS,
   MONEY_TYPE_OPTIONS,
   CHECK_TYPE_OPTIONS,
-  COMMISSION_COMP_TYPE_OPTIONS,
+  COMM_COMP_TYPE_OPTIONS,
   TLT_TERM_TYPE_OPTIONS,
   PAYTYPE_OPTIONS,
   STORE_WAY_OPTIONS,
@@ -41,8 +41,8 @@ export const TLS13010_DROPDOWN_OPTIONS = {
   decorationType: convertToDropdownOptions(DECO_TYPE_OPTIONS),
   moneyType: convertToDropdownOptions(MONEY_TYPE_OPTIONS),
   checkType: convertToDropdownOptions(CHECK_TYPE_OPTIONS),
-  commissionCompType: convertToDropdownOptions(COMMISSION_COMP_TYPE_OPTIONS),
-  commCompType: [{ value: '2', label: '除稅' }], // 固定只有除稅選項
+  // commissionCompType: convertToDropdownOptions(TLT_TERM_TYPE_OPTIONS),
+  // commCompType: [{ value: '2', label: '除稅' }], // 固定只有除稅選項
   tltTermType: convertToDropdownOptions(TLT_TERM_TYPE_OPTIONS),
   paytype: convertToDropdownOptions(PAYTYPE_OPTIONS),
   storeWay: convertToDropdownOptions(STORE_WAY_OPTIONS),
@@ -54,6 +54,7 @@ export const TLS13010_DROPDOWN_OPTIONS = {
   tltCtypeMtotal: convertToDropdownOptions(TLT_CTYPE_MTOTAL_OPTIONS),
   tpyTypeOption: convertToDropdownOptions(TPY_TYPE_OPTIONS),
   cagTaxTypeOption: convertToDropdownOptions(CAG_TAXTYPE_OPTIONS),
+  commCompType: convertToDropdownOptions(COMM_COMP_TYPE_OPTIONS),         // 抽成額計算方式
   yesNo: [{ value: 'Y', label: '是' }, { value: 'N', label: '否' }],
   depositPayment: [
     { value: 1, label: '現金' },

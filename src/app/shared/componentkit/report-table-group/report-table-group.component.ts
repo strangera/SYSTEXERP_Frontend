@@ -6,6 +6,9 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
 import { ChangeDetectorRef } from '@angular/core';
+import { formatDate } from '../table/table.model';
+
+
 
 @Component({
   selector: 'app-report-table-group',
@@ -26,7 +29,36 @@ export class ReportTableGroupComponent implements OnInit {
   @Input() continuousRowNumber = true;
   @Input() dateRangeLabel: string = '資料區間';
   @Input() pdfSummaryText: string[] = [];
-  @Input() groupByField: string | null = null;
+  @Input() groupByField?: string | null = null;
+  @Input() groupByLabel: string = '';
+
+  @Input() allowMergeToggle: boolean = false; // 預設不顯示切換開關
+  @Input() defaultMergedView: boolean = true; // 預設就是合併模式
+  @Input() enableGrouping: boolean = false;
+  private _data: any[] = [];
+
+  @Input()
+  set data(value: any[]) {
+    this._data = value;
+
+    if (this.groupByField) {
+      this._data = [...this._data].sort((a, b) => {
+        const valA = a[this.groupByField!];
+        const valB = b[this.groupByField!];
+        if (valA == null) return 1;
+        if (valB == null) return -1;
+        return String(valA).localeCompare(String(valB));
+      });
+    }
+
+    this.splitData();
+  }
+
+  get data(): any[] {
+    return this._data;
+  }
+
+
 
   showRowsPerTableDialog = false;
   tempRowsPerTable = this.rowsPerTable;
@@ -35,14 +67,8 @@ export class ReportTableGroupComponent implements OnInit {
   mergedPagedGroups: any[][] = [];
   tempSelectedColumns: Column[] = [];
 
-  public _data: any[] = [];
-  @Input() set data(value: any[]) {
-    this._data = value;
-    this.splitData();
-  }
-  get data(): any[] {
-    return this._data;
-  }
+
+
 
   groupedData: any[][] = [];
   selectedColumns: Column[] = [];
@@ -52,6 +78,7 @@ export class ReportTableGroupComponent implements OnInit {
   constructor(private location: Location, private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
+    this.mergedView = this.defaultMergedView ?? false; // ✅ 沒傳入就 false
     this.splitData();
     this.buildSelectedColumns();
     this.availableColumns = this.columns;
@@ -141,6 +168,8 @@ export class ReportTableGroupComponent implements OnInit {
     }
   }
 
+
+
   getSubtotal(group: any[], field: string): number | string {
     const sum = group.reduce((acc, row) => acc + (parseFloat(row[field]) || 0), 0);
     return sum.toLocaleString();
@@ -188,7 +217,11 @@ export class ReportTableGroupComponent implements OnInit {
     doc.text(this.reportTitle, pageWidth / 2, currentY, { align: 'center' });
     currentY += 20;
     doc.setFontSize(10);
-    doc.text(`${this.dateRangeLabel}：${this.dateStart} ~ ${this.dateEnd}`, marginLeft, currentY);
+    doc.text(
+      `${this.dateRangeLabel}：${formatDate(this.dateStart)} ~ ${formatDate(this.dateEnd)}`,
+      marginLeft,
+      currentY
+    );
     doc.text(`列印時間：${this.printedAt}`, pageWidth - marginLeft, currentY, { align: 'right' });
     currentY += 10;
 
@@ -277,7 +310,8 @@ export class ReportTableGroupComponent implements OnInit {
     this.groupedData.forEach((group, groupIndex) => {
       const groupKey = group[0]?.__groupKey ?? `群組${groupIndex + 1}`;
       // 群組標題列（跨欄）
-      allRows.push([{ content: `${this.groupByField}：${groupKey}`, colSpan: headers.length, styles: { halign: 'left', fontStyle: 'bold' } }]);
+      const groupTitle = this.groupByLabel || this.groupByField || '群組';
+      allRows.push([{ content: `${groupTitle}：${groupKey}`, colSpan: headers.length, styles: { halign: 'left', fontStyle: 'bold' } }]);
 
       // 資料列
       group.forEach((row, rowIndex) => {

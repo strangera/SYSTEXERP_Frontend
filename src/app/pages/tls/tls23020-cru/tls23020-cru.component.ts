@@ -1,22 +1,14 @@
 import { Component } from '@angular/core';
-import { TLS23010Service } from '../../../service/API/tls/tls23010.service';
-import { StatusFlagService } from '../../../service/basic/status-flag.service';
 import { WhetherService } from '../../../service/basic/whether.service';
-import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
-import { CarrierTypeService } from '../../../service/basic/carrier-type.service';
 import { finalize } from 'rxjs/operators';
 import { Location } from '@angular/common';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable'; // ✅ 正確寫法
+
 import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
 import { TaxableService } from '../../../service/basic/taxable.service';
 import { DiscountService } from '../../../service/basic/discount.service';
 import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
 import { TLS23020Service } from '../../../service/API/tls/tls23020.service';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { CommissionTypeService } from '../../../service/basic/commission-type.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
@@ -38,11 +30,11 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
   printedAt: string = '';
   dateStart: string = '';
   dateEnd: string = '';
-  progressValue = 10;
   data: any[] = [];
   netTotalSum = 0;
   taxTotalSum = 0;
-   
+  displayMode: 'SummaryReport' | 'Report' = 'SummaryReport';
+
   columns = [
     {
       field: 'TXN_Date',
@@ -115,12 +107,6 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
       format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions)
     },
   ];
-  formatTime(val: string): string {
-    if (!val) return '';
-    const date = new Date(val);
-    if (isNaN(date.getTime())) return val;
-    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-  }
 
 
   // 下拉選單選項
@@ -196,84 +182,77 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
   dataForm = this.formBuilder.nonNullable.group({});
 
   async ngOnInit(): Promise<void> {
+    this.loading = false;
     this.initializePage('TLS23020', this.dataForm);
+
     const state = history.state;
     const queryFormValue = state?.queryFormValue;
+    const preloadedData = state?.data;
 
-    this.printedAt = new Date().toLocaleString('zh-TW', { hour12: false });
-    this.dateStart = queryFormValue?.TXN_DateStart
-      ? this.formatDateToYMD(queryFormValue.TXN_DateStart)
-      : '';
-
-    this.dateEnd = queryFormValue?.TXN_DateEnd
-      ? this.formatDateToYMD(queryFormValue.TXN_DateEnd)
-      : '';
-
+    this.displayMode = queryFormValue?.DisplayMode || 'Report';
 
     if (queryFormValue) {
       Object.keys(queryFormValue).forEach((k) => {
         if (queryFormValue[k] === '') queryFormValue[k] = null;
       });
 
-      this.progressValue = 10;
+      this.dateStart = this.formatDateToYMD(queryFormValue.TXN_DateStart);
+      this.dateEnd = this.formatDateToYMD(queryFormValue.TXN_DateEnd);
+      this.printedAt = new Date().toLocaleString('zh-TW', { hour12: false });
+
+      if (Array.isArray(preloadedData) && preloadedData.length > 0) {
+        this.data = preloadedData;
+        this.generateSummaryTable();
+        this.generatePdfSummary();
+        this.loading = false;
+        return; // ✅ 直接顯示資料，跳過查詢
+      }
+
+      // fallback 查詢（若沒有資料才查）
       this.loading = true;
-
-      const progressTimer = setInterval(() => {
-        if (this.progressValue < 90) this.progressValue += 10;
-      }, 200);
-
-      const pageSize = state?.pageSize ?? 1000;
-
-      this.tls23020Service.queryTLS23020({
-        ...queryFormValue,
-        pageSize
-      }).pipe(
-        finalize(() => {
-          clearInterval(progressTimer);
-          this.progressValue = 100;
-          this.loading = false;
-        })
+      this.tls23020Service.queryTLS23020({ ...queryFormValue, pageSize: state?.pageSize ?? 1000 }).pipe(
+        finalize(() => this.loading = false)
       ).subscribe((res) => {
         this.data = (res.Status === '0000' && Array.isArray(res.Data)) ? res.Data : [];
-
-        // ✅ 正確放置位置：資料查詢完成後，計算 summary
-        const getSum = (field: string): number =>
-          this.data.reduce((sum, row) => sum + (parseFloat(row[field]) || 0), 0);
-
-        const A = getSum('TXN_TotSaleAmt');      // 發票金額
-        const B = getSum('TXN_TotPayAmt');       // 已開發票的支付工具
-        const C = getSum('TXN_TotOver');         // 已開發票的支付工具溢收
-        const D = getSum('TXN_TotPayAmt');       // 訂金（假設同欄位）
-        const E = getSum('TXN_TotSaleAmt');      // 訂金結帳金額（範例）
-        const F = getSum('TXN_TotPayAmt');       // 訂金結帳的訂金（範例）
-        const G = getSum('TXN_TotDisc');         // 預售（範例）
-        const H = getSum('TXN_TaxFreeCertNo');   // 預售結帳金額（範例）
-
-        const discountValue = A + B - C + E - G + H;
-        const paymentValue = A + B + D - F;
-
-        this.pdfSummary = [
-          `(A)發票金額 = ${A}`,
-          `(B)已開發票的支付工具 = ${B}`,
-          `(C)已開發票的支付工具溢收 = ${C}`,
-          `(D)訂金 = ${D}`,
-          `(E)訂金結帳金額 = ${E}`,
-          `(F)訂金結帳的訂金 = ${F}`,
-          `(G)預售 = ${G}`,
-          `(H)預售結帳金額 = ${H}`,
-          '=============================',
-          `折扣別(專櫃業績) = (A) + (B) - (C) + (E) - (G) + (H) = ${discountValue}`,
-          `付款別(支付工具) = (A) + (B) + (D) - (F) = ${paymentValue}`
-        ];
         this.generateSummaryTable();
-      }, () => {
-        this.data = [];
+        this.generatePdfSummary();
       });
-
     } else {
       this.loading = false;
     }
   }
+  generatePdfSummary(): void {
+    const getSum = (field: string): number =>
+      this.data.reduce((sum, row) => sum + (parseFloat(row[field]) || 0), 0);
+
+    const A = getSum('TXN_TotSaleAmt');
+    const B = getSum('TXN_TotPayAmt');
+    const C = getSum('TXN_TotOver');
+    const D = getSum('TXN_TotPayAmt');
+    const E = getSum('TXN_TotSaleAmt');
+    const F = getSum('TXN_TotPayAmt');
+    const G = getSum('TXN_TotDisc');
+    const H = getSum('TXN_TaxFreeCertNo');
+
+    const discountValue = A + B - C + E - G + H;
+    const paymentValue = A + B + D - F;
+
+    this.pdfSummary = [
+      `(A)發票金額 = ${A}`,
+      `(B)已開發票的支付工具 = ${B}`,
+      `(C)已開發票的支付工具溢收 = ${C}`,
+      `(D)訂金 = ${D}`,
+      `(E)訂金結帳金額 = ${E}`,
+      `(F)訂金結帳的訂金 = ${F}`,
+      `(G)預售 = ${G}`,
+      `(H)預售結帳金額 = ${H}`,
+      '=============================',
+      `折扣別(專櫃業績) = (A) + (B) - (C) + (E) - (G) + (H) = ${discountValue}`,
+      `付款別(支付工具) = (A) + (B) + (D) - (F) = ${paymentValue}`
+    ];
+  }
+
+
   formatDateToYMD(dateStr: string): string {
     const date = new Date(dateStr);
     const y = date.getFullYear();
@@ -303,52 +282,52 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
   groupedSummaryData: any[] = [];
   totalSum = 0;
   invoiceSum = 0;
-  showSummaryMode = false;
+
   summaryTableData: any[] = [];
-generateSummaryTable(): void {
-  const summaryMap = new Map<string, any>();
+  generateSummaryTable(): void {
+    const summaryMap = new Map<string, any>();
 
-  this.totalSum = 0;
-  this.invoiceSum = 0;
-  this.netTotalSum = 0;
-  this.taxTotalSum = 0;
+    this.totalSum = 0;
+    this.invoiceSum = 0;
+    this.netTotalSum = 0;
+    this.taxTotalSum = 0;
 
-  this.data.forEach(row => {
-    const key = row.tlt_no;
+    this.data.forEach(row => {
+      const key = row.tlt_no;
 
-    if (!summaryMap.has(key)) {
-      summaryMap.set(key, {
-        dateStart: this.dateStart,
-        dateEnd: this.dateEnd,
-        tlt_no: row.tlt_no,
-        tlt_name: row.tlt_name,
-        sum: 0,
-        TXN_Net: 0,
-        TXN_Tax: 0
-      });
-    }
+      if (!summaryMap.has(key)) {
+        summaryMap.set(key, {
+          dateStart: this.dateStart,
+          dateEnd: this.dateEnd,
+          tlt_no: row.tlt_no,
+          tlt_name: row.tlt_name,
+          sum: 0,
+          TXN_Net: 0,
+          TXN_Tax: 0
+        });
+      }
 
-    const saleAmt = parseFloat(row.TXN_TotSaleAmt) || 0;
-    const netAmt = parseFloat(row.TXN_Net) || 0;
-    const taxAmt = parseFloat(row.TXN_Tax) || 0;
-    const payAmt = parseFloat(row.TXN_TotPayAmt) || 0;
+      const saleAmt = parseFloat(row.TXN_TotSaleAmt) || 0;
+      const netAmt = parseFloat(row.TXN_Net) || 0;
+      const taxAmt = parseFloat(row.TXN_Tax) || 0;
+      const payAmt = parseFloat(row.TXN_TotPayAmt) || 0;
 
-    const summary = summaryMap.get(key);
-    summary.sum += saleAmt;
-    summary.TXN_Net += netAmt;
-    summary.TXN_Tax += taxAmt;
+      const summary = summaryMap.get(key);
+      summary.sum += saleAmt;
+      summary.TXN_Net += netAmt;
+      summary.TXN_Tax += taxAmt;
 
-    this.totalSum += saleAmt;
-    this.invoiceSum += payAmt;
-    this.netTotalSum += netAmt;
-    this.taxTotalSum += taxAmt;
-  });
+      this.totalSum += saleAmt;
+      this.invoiceSum += payAmt;
+      this.netTotalSum += netAmt;
+      this.taxTotalSum += taxAmt;
+    });
 
-  this.summaryTableData = Array.from(summaryMap.values());
-  this.groupedSummaryData = this.summaryTableData;
+    this.summaryTableData = Array.from(summaryMap.values());
+    this.groupedSummaryData = this.summaryTableData;
 
-  console.log('summaryTableData ✅', this.summaryTableData);
-}
+    console.log('summaryTableData ✅', this.summaryTableData);
+  }
 
 
 
@@ -387,7 +366,7 @@ generateSummaryTable(): void {
       data: this.groupedSummaryData,
       subtotalFields: ['sum', 'TXN_Net', 'TXN_Tax'],
       summaryText: [], // ✅ 不列印 A~H 條列文字
-      mergeTotalCols:5,
+      mergeTotalCols: 5,
     });
   }
 
@@ -413,6 +392,14 @@ generateSummaryTable(): void {
 
 
   goToQueryPage(): void {
-    this.router.navigate(['/TLS/TLS23010']);
+    this.router.navigate(['/TLS/TLS23020']);
   }
+  getGroupByLabel(field: string | null | undefined): string {
+    const map: Record<string, string> = {
+      TXN_GUINo: '發票號碼',
+      // 其他欄位可加上
+    };
+    return field ? (map[field] ?? field) : '';
+  }
+
 }

@@ -10,7 +10,7 @@
   </p-dialog>
 
   <!-- ✅ 合併顯示切換開關 -->
-  <div class="flex items-center gap-2">
+  <div class="flex items-center gap-2" *ngIf="allowMergeToggle">
     <p-inputSwitch [(ngModel)]="mergedView" (ngModelChange)="onMergedViewToggle($event)"></p-inputSwitch>
     <label class="text-sm">合併顯示</label>
   </div>
@@ -36,7 +36,7 @@
     <div *ngFor="let group of groupedData; let i = index" class="report-table-wrapper mb-5">
       <!-- 群組標題 -->
       <div *ngIf="group[0]?.__groupKey" class="font-bold text-base mb-2 text-blue-700">
-        {{ groupByField }}：{{ group[0].__groupKey }}
+        {{ groupByLabel || groupByField }}：{{ group[0].__groupKey }}
       </div>
 
       <!-- 群組資料表 -->
@@ -73,7 +73,8 @@
 
         <!-- 小計 -->
         <ng-template pTemplate="footer">
-          <tr *ngIf="groupByField" class="bg-gray-100 font-semibold">
+          <tr *ngIf="subtotalFields.length > 0" class="bg-yellow-100 font-semibold">
+
             <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
               <ng-container [ngSwitch]="col.field">
                 <ng-container *ngSwitchCase="'__index'">小計</ng-container>
@@ -127,20 +128,24 @@
         </ng-template>
 
         <!-- 總計 -->
+        <!-- 總計 -->
         <ng-template pTemplate="footer">
           <tr class="bg-yellow-100 font-semibold">
             <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
               <ng-container [ngSwitch]="col.field">
-                <ng-container *ngSwitchCase="'__index'">小計</ng-container>
+                <ng-container *ngSwitchCase="'__index'">總計</ng-container>
                 <ng-container *ngSwitchDefault>
                   <ng-container *ngIf="subtotalFields.includes(col.field)">
-                    {{ getSubtotal(group, col.field) }}
+                    {{ groupByField ? getSubtotal(mergedPagedGroups[groupIndex], col.field) : getSubtotal(data,
+                    col.field) }}
                   </ng-container>
                 </ng-container>
               </ng-container>
             </td>
           </tr>
         </ng-template>
+
+
       </p-table>
     </div>
   </div>
