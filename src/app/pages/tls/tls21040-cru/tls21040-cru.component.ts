@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
-
 @Component({
   selector: 'app-tls21040-cru',
   templateUrl: './tls21040-cru.component.html',
@@ -17,23 +16,25 @@ export class TLS21040CRUComponent extends BasicCruPageComponent<any> implements 
     retrieve: [],
     cardIdentifier: [],
   });
-  cardTypeOptions: any[] = [
-    { value: 'V', label: 'VISA' },
-    { value: 'M', label: 'MASTER' },
-    { value: 'J', label: 'JCB' },
+
+  cardTypeOptions: { value: string, label: string }[] = [
     { value: 'A', label: 'AE' },
-    { value: 'D', label: 'DINVER' },
-    { value: 'S', label: '銀聯卡' },
+    { value: 'D', label: '大來' },
+    { value: 'J', label: 'JCB' },
+    { value: 'M', label: 'MASTER' },
+    { value: 'O', label: 'OTHER' },
+    { value: 'U', label: 'U' },
+    { value: 'V', label: 'VISA' },
   ];
-  cardCategoryOptions: any[] = [
-    { value: 1, label: '普卡' },
-    { value: 2, label: '金卡' },
-    { value: 3, label: '白金卡' },
-  ];
-  bankOptions: any[] = [
-    { value: 1, label: '中國信託' },
-    { value: 2, label: '玉山銀行' },
-    { value: 3, label: '星展銀行' },
+  cardCategoryOptions: { value: string, label: string }[] = [
+    { value: 'B', label: '商務卡' },
+    { value: 'C', label: '普卡' },
+    { value: 'G', label: '金卡' },
+    { value: 'I', label: '無限卡' },
+    { value: 'O', label: '其他' },
+    { value: 'P', label: '白金卡' },
+    { value: 'S', label: '御璽、鈦金、晶緻卡' },
+    { value: 'T', label: '鈦金卡' },
   ];
   constructor(
   ) { super(); }

@@ -8,22 +8,17 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="銀行" controlName="bank" optionLabel="label" optionValue="value" [options]="bankOptions"
-              [control]="queryForm.controls.bank" [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="卡種" controlName="cardType" [options]="cardTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.cardType" [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="卡別" controlName="cardCategory" [options]="cardCategoryOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.cardCategory" [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="BIN" controlName="bin" [control]="queryForm.controls.bin"
-              [submitted]="submitted"></app-input-text>
-          </div>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="銀行" controlName="bank" optionLabel="label"
+            optionValue="BNK_No" [options]="bankOptions" [control]="queryForm.controls.bank"
+            [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="卡種" controlName="cardType" [options]="cardTypeOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.cardType"
+            [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="卡別" controlName="cardCategory"
+            [options]="cardCategoryOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.cardCategory" [submitted]="submitted"></app-dropdown>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="BIN" controlName="bin"
+            [control]="queryForm.controls.bin" [submitted]="submitted"></app-input-text>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
@@ -36,6 +31,6 @@
 <div class="card">
   <app-table dataKey="BNK_No" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [showCheckBox]="true" [multiSortMeta]="[{ field: 'BNK_No', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading"></app-table>
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [showExcel]="true" [showExcelExport]="false" (importExcel)="onImportExcel($event)"></app-table>
 </div>

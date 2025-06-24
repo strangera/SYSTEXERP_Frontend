@@ -50,12 +50,12 @@
             [label]="expression ? '收合' : '展開'" text />
         </div>
         <div *ngIf="showExcel" class="flex gap-2 align-items-center">
-          <p-button label="匯出excel範本" severity="success" [icon]="
+          <p-button *ngIf="showExcelExport" label="匯出excel範本" severity="success" [icon]="
               exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'
             " (click)="onExportExcel()" />
-          <p-fileUpload #fileUpload styleClass="p-button-info" mode="basic" chooseIcon="pi pi-file-import"
-            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" severity="info"
-            (onSelect)="onImportExcel($event)" [auto]="true" chooseLabel="Excel匯入" />
+          <p-fileUpload *ngIf="showExcelImport" #fileUpload styleClass="p-button-info" mode="basic"
+            chooseIcon="pi pi-file-import" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            severity="info" (onSelect)="onImportExcel($event)" [auto]="true" chooseLabel="Excel匯入" />
         </div>
         <p-dropdown *ngIf="showPage && showPaginator && IsPrint && data.length > 0" [options]="pages"
           [ngModel]="selectedPage" optionValue="value" (onChange)="goToPage($event.value)" appendTo="body" />

@@ -6,22 +6,21 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="銀行" controlName="bank" optionLabel="label" optionValue="value" [options]="bankOptions"
-            [control]="dataForm.controls.bankCode" [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="卡種" controlName="cardType" [options]="cardTypeOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.cardType" [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="卡別" controlName="cardCategory" [options]="cardCategoryOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.cardCategory" [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="BIN" controlName="bin" [control]="dataForm.controls.cardIdentifier"
-            [submitted]="submitted"></app-input-text>
-        </div>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="銀行代碼" controlName="bankCode"
+          [control]="dataForm.controls.bankCode" [submitted]="submitted" />
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="銀行名稱" controlName="bankName"
+          [control]="dataForm.controls.bankName" [submitted]="submitted" />
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="卡種" controlName="cardType" [options]="cardTypeOptions"
+          optionLabel="label" optionValue="value" [control]="dataForm.controls.cardType" [submitted]="submitted" />
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="卡別" controlName="cardCategory"
+          [options]="cardCategoryOptions" optionLabel="label" optionValue="value"
+          [control]="dataForm.controls.cardCategory" [submitted]="submitted"></app-dropdown>
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="第N碼開始取" controlName="ntRetrieve"
+          [control]="dataForm.controls.ntRetrieve" [submitted]="submitted"></app-input-number>
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="取N碼" controlName="retrieve"
+          [control]="dataForm.controls.retrieve" [submitted]="submitted"></app-input-number>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="卡種識別碼" controlName="cardIdentifier"
+          [control]="dataForm.controls.cardIdentifier" [submitted]="submitted"></app-input-text>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
