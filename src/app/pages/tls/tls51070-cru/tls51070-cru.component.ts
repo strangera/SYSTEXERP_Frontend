@@ -102,7 +102,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   largeOption: apiOption[] = [];
   middleOption: apiOption[] = [];
   smallOption: apiOption[] = [];
-  pluLogoOption: PluLogo[] = [];  // 品牌代碼
+  pluLogoOption: any[] = [];  // 品牌代碼
   unitOptions: apiOption[] = [];  //商品單位
   statusOptions: option[] = this.dropDown51070.statusOptions;//商品狀態
   counterOptions: apiOption[] = []; //專櫃編號：資料讀 TLTTALENT 
@@ -300,7 +300,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
       if (newValue) {
         // 找到符合的品牌資料 (依照newValue 找到pluLogoOption對應的No)
-        const matched = this.pluLogoOption.find(item => item.LOGO_No === newValue);
+        const matched = this.pluLogoOption.find(item => item.No === newValue);
         console.log('監聽品牌編號變化', newValue, matched);
 
         // 讀取整份 重新設置 進價折數、 標準進價
@@ -399,12 +399,12 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
           console.log('update', requestBody);
 
-          // this.tls51070Service.updateTLS51070(requestBody).subscribe({
-          //   next: () => {
-          //     this.messageService.successBubble('更新成功');
-          //     this.onCancel(); // 儲存後，會返回列表
-          //   }
-          // });
+          this.tls51070Service.updateTLS51070(requestBody).subscribe({
+            next: () => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel(); // 儲存後，會返回列表
+            }
+          });
         }
         break;
     }
@@ -446,19 +446,12 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         console.log('商品單位:', this.unitOptions);
       });
 
-    // 查詢 所有 品牌代碼
-    const request = {
-      "PageSize": 1000,
-      "PageIndex": 0,
-      "OrderBy": "LOGO_No",
-    }
-
-    this.tls51060Service.queryTLS51060(request).subscribe((response) => {
-      //將 LOGO_No 和 LOGO_CH_NAME 欄位組合成Label
-      this.pluLogoOption = response.Data.map((item: PluLogo) => ({
-        ...item,
-        No: item.LOGO_No, // 品牌代碼
-        Label: item.LOGO_No + '-' + item.LOGO_CH_NAME, // 組合成顯示用的Label
+    // 品牌編號與折扣別
+    this.tls51060Service.queryPLULOGO_OrderPrcRate_DropDownList({}).subscribe((response) => {
+      this.pluLogoOption = response.Data.map((item: any) => ({
+        No: item.No, // 品牌代碼
+        Label: item.No + '-' + item.Name, // 組合成顯示用的Label
+        PLU_OrderPrcRate: item.PLU_OrderPrcRate, // 折扣別
       }));
       console.log('品牌詳細代碼:', this.pluLogoOption);
     });
