@@ -14,6 +14,7 @@ import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { finalize } from 'rxjs/operators';
 
 const now = new Date();
 
@@ -23,6 +24,8 @@ const now = new Date();
   styleUrls: ['./tls23020.component.scss']
 })
 export class TLS23020Component extends BasicQueryPageComponent<any> {
+  useSummaryMode = false; // 預設為明細表模式
+
   data: any[] = [];
   totalRecords: number = 0;
   // 表單欄位
@@ -47,7 +50,9 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     tlt_building: [''],                                     // 所屬大樓
     tlt_floor: [[]],                                        // 所屬樓層
     org_id: [[]],                                           // 組織代碼
+    // DisplayMode: this.useSummaryMode ? 'SummaryReport' : 'Report', // 顯示模式
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }])
+
   });
 
   // 欄位定義（依後端欄位為主）
@@ -243,6 +248,8 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
 
   showPageSizeDialog = false;
   customPageSize = 1000;
+
+
   goToReportMode(): void {
     if (this.queryForm.invalid) {
       this.messageService.warnBubble('請先完成查詢條件');
@@ -251,26 +258,43 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     }
 
     this.customPageSize = 1000;
-    this.showPageSizeDialog = true; // 👈 顯示彈窗
+    this.showPageSizeDialog = true;
   }
-  confirmPageSizeAndNavigate(): void {
-    const rawFormValue: Record<string, any> = { ...this.queryForm.value };
-    for (const key in rawFormValue) {
-      if (rawFormValue[key] === '') rawFormValue[key] = null;
-    }
 
-    const queryFormValue = {
-      ...rawFormValue,
-      pageSize: this.customPageSize
-    };
+  confirmPageSizeAndNavigate(): void {
+  this.loading = true;
+
+  const rawFormValue: Record<string, any> = { ...this.queryForm.value };
+  for (const key in rawFormValue) {
+    if (rawFormValue[key] === '') rawFormValue[key] = null;
+  }
+
+  const queryFormValue = {
+    ...rawFormValue,
+    pageSize: this.customPageSize,
+    DisplayMode: this.useSummaryMode ? 'SummaryReport' : 'Report'
+  };
+
+  this.tls23020Service.queryTLS23020(queryFormValue).pipe(
+    finalize(() => {
+      this.loading = false;
+      this.showPageSizeDialog = false;
+    })
+  ).subscribe(res => {
+    const data = (res.Status === '0000' && Array.isArray(res.Data)) ? res.Data : [];
 
     this.router.navigate(['/TLS/TLS23020CRU'], {
       state: {
         queryFormValue,
+        data,
         pageSize: this.customPageSize
       }
     });
+  });
+}
 
-    this.showPageSizeDialog = false;
-  }
+
+
+
+
 }

@@ -69,9 +69,11 @@
             [readonly]="false"
             [detailKey]="''"
             [emptyMessage]="'尚未設定固定租金項目'"
+            (addMainItem)="onAddFixedRentItem()"
             (save)="onTableSave($event, 'fixedRent')"
             (edit)="onTableEdit($event, 'fixedRent')"
             (cancel)="onTableCancel($event, 'fixedRent')"
+            (batchDelete)="onBatchDelete($event, 'fixedRent')"
           ></app-expandable-edit-table>
         </div>
       </p-accordionTab>
@@ -97,9 +99,11 @@
             [readonly]="false"
             [detailKey]="''"
             [emptyMessage]="'尚未設定底租抽成取高者項目'"
+            (addMainItem)="onAddBaseRentHigherItem()"
             (save)="onTableSave($event, 'baseRentHigher')"
             (edit)="onTableEdit($event, 'baseRentHigher')"
             (cancel)="onTableCancel($event, 'baseRentHigher')"
+            (batchDelete)="onBatchDelete($event, 'baseRentHigher')"
           ></app-expandable-edit-table>
         </div>
       </p-accordionTab>
@@ -143,9 +147,11 @@
             [readonly]="false"
             [detailKey]="''"
             [emptyMessage]="'尚未設定包底抽成項目'"
+            (addMainItem)="onAddBaseCommissionItem()"
             (save)="onTableSave($event, 'baseCommission')"
             (edit)="onTableEdit($event, 'baseCommission')"
             (cancel)="onTableCancel($event, 'baseCommission')"
+            (batchDelete)="onBatchDelete($event, 'baseCommission')"
           ></app-expandable-edit-table>
         </div>
       </p-accordionTab>
@@ -171,9 +177,11 @@
             [readonly]="false"
             [detailKey]="''"
             [emptyMessage]="'尚未設定階梯式抽成項目'"
+            (addMainItem)="onAddGraduatedItem()"
             (save)="onTableSave($event, 'graduated')"
             (edit)="onTableEdit($event, 'graduated')"
             (cancel)="onTableCancel($event, 'graduated')"
+            (batchDelete)="onBatchDelete($event, 'graduated')"
           ></app-expandable-edit-table>
         </div>
       </p-accordionTab>
@@ -199,9 +207,11 @@
             [readonly]="false"
             [detailKey]="''"
             [emptyMessage]="'尚未設定包底加階梯項目'"
+            (addMainItem)="onAddBaseTierItem()"
             (save)="onTableSave($event, 'baseTier')"
             (edit)="onTableEdit($event, 'baseTier')"
             (cancel)="onTableCancel($event, 'baseTier')"
+            (batchDelete)="onBatchDelete($event, 'baseTier')"
           ></app-expandable-edit-table>
         </div>
       </p-accordionTab>
@@ -224,13 +234,7 @@
       <h5 class="text-gray-600 mb-2">此抽成類型暫不支援條件設定</h5>
       <p class="text-gray-500 mb-3">
         當前抽成類型代碼：
-        <strong>
-          {{
-            contractInfoData.length > 0
-              ? contractInfoData[0].comm_comp_type
-              : "未載入"
-          }}
-        </strong>
+        <strong>{{ getCommissionTypeName() }}</strong>
       </p>
       <p class="text-gray-500 text-sm">
         可直接進入下一步，或返回前一步修改抽成類型

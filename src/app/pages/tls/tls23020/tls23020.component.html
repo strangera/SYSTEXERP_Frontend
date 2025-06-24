@@ -3,154 +3,108 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
 
-     
-          <app-calendar-range-quick
-            class="col-12 md:col-6 lg:col-4"
-            label="銷售日期"
-            [startControl]="queryForm.controls.TXN_DateStart"
-            [endControl]="queryForm.controls.TXN_DateEnd"
-            [submitted]="submitted"
-          />
-        
+
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="銷售日期"
+            [startControl]="queryForm.controls.TXN_DateStart" [endControl]="queryForm.controls.TXN_DateEnd"
+            [submitted]="submitted" />
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="收銀機代號"
-              controlName="ECR_No"
-              [options]="ECRNoOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ECR_No"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="收銀機代號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range [useGrouping]="false" label="交易序號(起/迄)"
-              [startControl]="queryForm.controls.TXN_No_Start"
-              [endControl]="queryForm.controls.TXN_No_End"
+              [startControl]="queryForm.controls.TXN_No_Start" [endControl]="queryForm.controls.TXN_No_End"
               [submitted]="submitted">
             </app-input-number-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="專櫃編號"
-              controlName="TLT_No"
-              [options]="CounterOptions"
-              optionLabel="formLabel"
-              optionValue="value"
-              [control]="queryForm.controls.TLT_No"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="專櫃編號" controlName="TLT_No" [options]="CounterOptions" optionLabel="formLabel"
+              optionValue="value" [control]="queryForm.controls.TLT_No" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="字軌發票號碼" controlName="TXN_GUINo"
-              [control]="queryForm.controls.TXN_GUINo" [submitted]="submitted">
+            <app-input-text label="字軌發票號碼" controlName="TXN_GUINo" [control]="queryForm.controls.TXN_GUINo"
+              [submitted]="submitted">
             </app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range [useGrouping]="false" label="單項售價"
-              [startControl]="queryForm.controls.PLU_SalePrc_Start"
-              [endControl]="queryForm.controls.PLU_SalePrc_End"
+              [startControl]="queryForm.controls.PLU_SalePrc_Start" [endControl]="queryForm.controls.PLU_SalePrc_End"
               [submitted]="submitted">
             </app-input-number-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="稅別" controlName="TXN_TaxType" [options]="taxableOptions"
-              optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.TXN_TaxType" [submitted]="submitted">
+            <app-dropdown label="稅別" controlName="TXN_TaxType" [options]="taxableOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.TXN_TaxType" [submitted]="submitted">
             </app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="原折扣別" controlName="ORG_TXN_DiscCode"
-              [options]="discountOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.TXN_DiscCode" [submitted]="submitted">
+            <app-dropdown label="原折扣別" controlName="ORG_TXN_DiscCode" [options]="discountOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.TXN_DiscCode" [submitted]="submitted">
             </app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="商品抽成類別" controlName="tlt_id"
-              [options]="deductionbigCategoryOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.tlt_id" [submitted]="submitted">
+            <app-dropdown label="商品抽成類別" controlName="tlt_id" [options]="deductionbigCategoryOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.tlt_id" [submitted]="submitted">
             </app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="單品編號" controlName="PLU_MagNo"
-              [control]="queryForm.controls.PLU_MagNo" [submitted]="submitted">
+            <app-input-text label="單品編號" controlName="PLU_MagNo" [control]="queryForm.controls.PLU_MagNo"
+              [submitted]="submitted">
             </app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="歸屬折扣別" controlName="TXN_DiscCode"
-              [options]="discountOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.ACT_DiscCode" [submitted]="submitted">
+            <app-dropdown label="歸屬折扣別" controlName="TXN_DiscCode" [options]="discountOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ACT_DiscCode" [submitted]="submitted">
             </app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-             <label>顯示狀態</label>
-            <p-checkbox
-              label="自營櫃無單品條碼"
-              binary="true"
-              formControlName="IsNoPLU_No">
+            <label>顯示狀態</label>
+            <p-checkbox label="自營櫃無單品條碼" binary="true" formControlName="IsNoPLU_No">
             </p-checkbox>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="是否開立業主發票" controlName="rece_yn"
-              [options]="whetherOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.rece_yn" [submitted]="submitted">
+            <app-dropdown label="是否開立業主發票" controlName="rece_yn" [options]="whetherOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.rece_yn" [submitted]="submitted">
             </app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="是否為業主收現收現" controlName="cash_yn"
-              [options]="whetherOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.cash_yn" [submitted]="submitted">
+            <app-dropdown label="是否為業主收現收現" controlName="cash_yn" [options]="whetherOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.cash_yn" [submitted]="submitted">
             </app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="館別" controlName="tlt_building"
-              [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.tlt_building" [submitted]="submitted">
+            <app-dropdown label="館別" controlName="tlt_building" [options]="BUILDING_NO_Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.tlt_building" [submitted]="submitted">
             </app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="樓層"
-              [options]="floorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.tlt_floor"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="組織代碼/名稱"
-              [options]="OrganizationCodeOptions"
-              optionLabel="formLabel"
-              optionValue="value"
-              [control]="queryForm.controls.org_id"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="組織代碼/名稱" [options]="OrganizationCodeOptions" optionLabel="formLabel"
+              optionValue="value" [control]="queryForm.controls.org_id" [submitted]="submitted"></app-multi-select>
           </div>
 
         </div>
@@ -158,11 +112,7 @@
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
-                    <app-button
-            btnType="report"
-            label="報表模式"
-            (clickEvent)="goToReportMode()"
-          ></app-button>
+          <app-button btnType="report" label="報表模式" (clickEvent)="goToReportMode()"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -170,58 +120,32 @@
 </div>
 
 <div class="card">
-  <app-table
-    tableKey="TLS23020"
-    [data]="data"
-    [columns]="columns"
-    [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    [showCheckBox]="false"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showManage]="false"
-    [showDelete]="false"
+  <app-table tableKey="TLS23020" [data]="data" [columns]="columns" [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+    [totalRecords]="totalRecords" [lazy]="true" [loading]="loading" [showCheckBox]="false" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [showManage]="false" [showDelete]="false"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)">
   </app-table>
 </div>
 
-<p-dialog
-  header="限制筆數"
-  [(visible)]="showPageSizeDialog"
-  [modal]="true"
-  [closable]="false"
-  [style]="{ width: '300px' }"
->
+<p-dialog header="限制筆數" [(visible)]="showPageSizeDialog" [modal]="true" [closable]="false" [style]="{ width: '300px' }">
   <div class="p-fluid">
     <div class="field">
       <label for="pageSize">限制筆數</label>
-      <input
-        id="pageSize"
-        type="number"
-        pInputText
-        [(ngModel)]="customPageSize"
-        min="1"
-        style="width: 100%"
-      />
+      <input id="pageSize" type="number" pInputText [(ngModel)]="customPageSize" min="1" style="width: 100%" />
+    </div>
+
+    <div class="field mt-3">
+      <label for="displayMode">查詢模式</label>
+      <div class="flex align-items-center gap-2">
+        <span>明細表</span>
+        <p-inputSwitch [(ngModel)]="useSummaryMode"></p-inputSwitch>
+        <span>彙總表</span>
+      </div>
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <button
-      type="button"
-      pButton
-      label="取消"
-      class="p-button-text"
-      (click)="showPageSizeDialog = false"
-    ></button>
-    <button
-      type="button"
-      pButton
-      label="確定"
-      (click)="confirmPageSizeAndNavigate()"
-    ></button>
+    <button type="button" pButton label="取消" class="p-button-text" (click)="showPageSizeDialog = false"></button>
+    <button type="button" pButton label="確定" (click)="confirmPageSizeAndNavigate()" [loading]="loading"></button>
   </ng-template>
 </p-dialog>
-

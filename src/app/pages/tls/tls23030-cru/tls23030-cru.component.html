@@ -1,1 +1,24 @@
-<p>tls23030-cru works!</p>
+<div class="card">
+    <div class="flex gap-2 mb-2">
+        <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    </div>
+
+    <div class="card">
+        <app-report-table-group 
+        [columns]="columns" 
+        [data]="data"
+            [subtotalFields]="displayMode === 'SummaryReport' ? ['TXN_TaxAlwnc', 'TXN_PayAmt'] : []"
+            [enableGrouping]="false"         
+                 
+            [reportTitle]="displayMode === 'SummaryReport' ? '銷售總額報表' : '交易明細報表'"
+            [currentPage]="1"
+            [dateStart]="dateStart"
+            [dateEnd]="dateEnd"
+            [printedAt]="printedAt"
+            [showTotalOnly]="displayMode === 'SummaryReport'"
+            [pdfSummaryText]="[]"
+            [defaultMergedView]="true">
+        </app-report-table-group>
+
+    </div>
+</div>
