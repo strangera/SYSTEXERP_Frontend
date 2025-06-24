@@ -172,11 +172,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       autoWidth: true
     },
     {
-      field: 'comm_comp_type',
+      field: 'tlt_term_type',
       header: '抽成別',
       type: 'dropdown',
       editable: false,
-      options: TLS13010_DROPDOWN_OPTIONS.commissionCompType,
+      options: TLS13010_DROPDOWN_OPTIONS.tltTermType,
       autoWidth: true
     },
     {
@@ -303,11 +303,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
         ven_uniform: step1Data?.ven_uniform || this.currentContractData.ven_uniform || '-',
         contract_subno: step1Data?.contract_subno || this.currentContractData.contract_subno || '-',
         comm_comp_type: step1Data?.comm_comp_type || this.currentContractData.comm_comp_type || '-',
-        tlt_term_type: step1Data?.tlt_term_type || this.currentContractData.tlt_term_type || '-',
         tlt_bdate: step1Data?.tlt_bdate || this.currentContractData.tlt_bdate || '',
         tlt_edate: step1Data?.tlt_edate || this.currentContractData.tlt_edate || '',
         tlt_contract_bdate: step1Data?.tlt_contract_bdate || this.currentContractData.tlt_contract_bdate || '',
-        tlt_contract_edate: step1Data?.tlt_contract_edate || this.currentContractData.tlt_contract_edate || ''
+        tlt_contract_edate: step1Data?.tlt_contract_edate || this.currentContractData.tlt_contract_edate || '',
+        tlt_term_type: (step1Data?.tlt_term_type || this.currentContractData.tlt_term_type || '').toString().trim() || '-',
       };
 
       this.contractInfoData = [{
@@ -402,7 +402,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
   // 🎯 判斷是否顯示特定抽成類型的條件設定
   shouldShowCommissionType(commissionTypeCode: string): boolean {
-    const currentCommissionType = this.contractInfoData[0]?.tlt_term_type;
+    const currentCommissionType = this.contractInfoData[0]?.comm_comp_type;
     return currentCommissionType === commissionTypeCode;
   }
 
@@ -580,14 +580,14 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     console.log('🔙 準備回到前一步...');
     this.saveConditionDataToWorkflow();
     this.router.navigate(['/TLS/TLS13010NEXT2']);
-    this.notificationService.infoBubble('已返回抽成設定頁面');
+    // this.notificationService.infoBubble('已返回抽成設定頁面');
   }
 
   onRealCancel(): void {
     if (confirm('確定要離開契約編輯流程嗎？所有暫存資料將會保留。')) {
       this.saveConditionDataToWorkflow();
       this.router.navigate(['/TLS/TLS13010']);
-      this.notificationService.infoBubble('已離開契約編輯流程');
+      // this.notificationService.infoBubble('已離開契約編輯流程');
     }
   }
 
@@ -595,7 +595,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   onTableSave(event: any, type: string): void {
     console.log(`${type} 表格儲存:`, event);
     this.saveConditionDataToWorkflow();
-    this.notificationService.successBubble('條件設定已儲存');
+    // this.notificationService.successBubble('條件設定已儲存');
   }
 
   onTableEdit(event: any, type: string): void {
@@ -643,7 +643,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
           console.error('❌ 載入後端抽成設定資料失敗:', error);
           this.loading = false;
           this.initializeConditionDataByCommissionType(commissionType);
-          this.notificationService.warnBubble('載入現有抽成設定失敗，可新增條件設定');
+          // this.notificationService.warnBubble('載入現有抽成設定失敗，可新增條件設定');
         }
       });
 
@@ -663,8 +663,24 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
         return;
       }
 
-      if (data.IsTermTypeChanged) {
-        console.log('⚠️ 抽成別已改變，需要處理資料變更');
+      // 🔧 修復：清理空格後再比較
+      const originalType = (data.OriginalTltTermType || '').toString().trim();
+      const currentType = (data.CurrentTltTermType || '').toString().trim();
+
+      console.log('🔍 清理後的抽成別比較:', {
+        原始_原值: data.OriginalTltTermType,
+        原始_清理後: originalType,
+        目前_原值: data.CurrentTltTermType,
+        目前_清理後: currentType,
+        後端判斷: data.IsTermTypeChanged,
+        實際是否不同: originalType !== currentType
+      });
+
+      if (data.IsTermTypeChanged && originalType !== currentType) {
+        console.log('⚠️ 抽成別確實有改變，需要處理資料變更');
+        this.notificationService.warnBubble(
+          `抽成別已從 ${originalType} 變更為 ${currentType}，舊資料將被清除`
+        );
         this.handleCommissionTypeChange(data);
       } else {
         console.log('ℹ️ 抽成別未改變，載入現有資料');
@@ -675,7 +691,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
     } catch (error) {
       console.error('❌ 處理後端抽成設定資料時發生錯誤:', error);
-      // this.initializeConditionDataByCommissionType(this.contractInfoData[0]?.comm_comp_type);
       this.notificationService.errorBubble('處理抽成設定資料時發生錯誤');
     }
   }
@@ -898,7 +913,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
   getCommissionTypeName(): string {
     const code = this.contractInfoData[0]?.tlt_term_type;
-    const option = TLS13010_DROPDOWN_OPTIONS.commissionCompType.find(opt => opt.value === code);
+    const option = TLS13010_DROPDOWN_OPTIONS.tltTermType.find(opt => opt.value === code);
     return option ? option.label : code || '未載入';
   }
 }

@@ -224,13 +224,7 @@
       <h5 class="text-gray-600 mb-2">此抽成類型暫不支援條件設定</h5>
       <p class="text-gray-500 mb-3">
         當前抽成類型代碼：
-        <strong>
-          {{
-            contractInfoData.length > 0
-              ? contractInfoData[0].tlt_term_type
-              : "未載入"
-          }}
-        </strong>
+        <strong>{{ getCommissionTypeName() }}</strong>
       </p>
       <p class="text-gray-500 text-sm">
         可直接進入下一步，或返回前一步修改抽成類型

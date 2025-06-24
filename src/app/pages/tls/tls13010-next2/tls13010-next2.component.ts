@@ -87,11 +87,11 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       autoWidth: true
     },
     {
-      field: 'comm_comp_type',
+      field: 'tlt_term_type',
       header: '抽成別',
       type: 'dropdown',
       editable: false,
-      options: TLS13010_DROPDOWN_OPTIONS.commissionCompType,
+      options: TLS13010_DROPDOWN_OPTIONS.tltTermType,
       autoWidth: true
     },
     {
@@ -308,7 +308,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         tlt_bdate: step1Data?.tlt_bdate || this.currentContractData.tlt_bdate || '',
         tlt_edate: step1Data?.tlt_edate || this.currentContractData.tlt_edate || '',
         tlt_contract_bdate: step1Data?.tlt_contract_bdate || this.currentContractData.tlt_contract_bdate || '',
-        tlt_contract_edate: step1Data?.tlt_contract_edate || this.currentContractData.tlt_contract_edate || ''
+        tlt_contract_edate: step1Data?.tlt_contract_edate || this.currentContractData.tlt_contract_edate || '',
+        tlt_term_type: (step1Data?.tlt_term_type || this.currentContractData.tlt_term_type || '').toString().trim() || '-',
       };
 
       this.contractInfoData = [{

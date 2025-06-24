@@ -190,7 +190,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   openflagStatusOptions = [...TLS13010_DROPDOWN_OPTIONS.openflagStatus];
   overallStatusOptions = [...TLS13010_DROPDOWN_OPTIONS.overallStatus];
   depositTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.depositType];
-  commissionCompTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.commissionCompType];
+  tltTermTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.tltTermType];
   commCompTypeDropdown = [...TLS13010_DROPDOWN_OPTIONS.commCompType];
   tltopenflagOption = [...TLS13010_DROPDOWN_OPTIONS.openflagStatus];
   tltctypemtotalOption = [...TLS13010_DROPDOWN_OPTIONS.tltCtypeMtotal];
@@ -427,7 +427,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       deco_type: queryData['deco_type'] as string,
       money_type: queryData['money_type'] as string,
       check_type: queryData['check_type'] as string,
-      tlt_term_type: queryData['tlt_term_type'] as string,
+      tlt_term_type: (queryData['tlt_term_type'] as string)?.trim() || '',
       comm_comp_type: queryData['comm_comp_type'] as string || '2',
       store_way: queryData['store_way'] as string,
       rece_yn: queryData['rece_yn'] as string,

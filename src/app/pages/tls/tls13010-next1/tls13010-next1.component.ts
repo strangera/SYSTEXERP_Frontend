@@ -86,11 +86,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       autoWidth: true
     },
     {
-      field: 'comm_comp_type',
+      field: 'tlt_term_type',
       header: '抽成別',
       type: 'dropdown',
       editable: false,
-      options: TLS13010_DROPDOWN_OPTIONS.commissionCompType,
+      options: TLS13010_DROPDOWN_OPTIONS.tltTermType,
       autoWidth: true
     },
     {
@@ -622,7 +622,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         VEN_Name: step1Data?.VEN_Name || this.currentContractData.VEN_Name || '-',
         ven_uniform: step1Data?.ven_uniform || this.currentContractData.ven_uniform || '-',
         contract_subno: step1Data?.contract_subno || this.currentContractData.contract_subno || '-',
-
+        tlt_term_type: (step1Data?.tlt_term_type || this.currentContractData.tlt_term_type || '').toString().trim() || '-',
         // 商務條件 - 優先使用編輯資料
         comm_comp_type: step1Data?.comm_comp_type || this.currentContractData.comm_comp_type || '-',
 

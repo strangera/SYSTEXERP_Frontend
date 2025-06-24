@@ -10,11 +10,12 @@ import { Column, createPaginationConfig, formatDate, formatYN } from '../../../s
 // 格式化函數
 import {
   formatCheckType,
-  formatCommissionCompType,
+  formatTltTermType,
+  formatStoreWay,
+  formatCommCompType,
   formatDecoType,
   formatMoneyType,
   formatOpenflagStatus,
-  formatTltTermType
 } from './tls13010.constants';
 
 // 下拉選單服務
@@ -138,8 +139,9 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     { field: 'deco_type', header: '裝潢方式', visible: true, format: formatDecoType },
     { field: 'money_type', header: '結帳方式', visible: true, format: formatMoneyType },
     { field: 'check_type', header: '對帳方式', visible: true, format: formatCheckType },
-    { field: 'comm_comp_type', header: '抽成別', visible: true, format: formatCommissionCompType },
-    { field: 'store_way', header: '配合方式', visible: true, format: formatTltTermType },
+    { field: 'tlt_term_type', header: '抽成別', visible: true, format: formatTltTermType },
+    { field: 'comm_comp_type', header: '抽成額計算方式', visible: true, format: formatCommCompType },
+    { field: 'store_way', header: '配合方式', visible: true, format: formatStoreWay },
     { field: 'rece_yn', header: '開立業主發票', visible: true, format: formatYN },
     { field: 'pos_yn', header: '使用業主收現', visible: true, format: formatYN },
     { field: 'cash_yn', header: '業主收現銀行', visible: true, format: formatYN },
@@ -163,9 +165,10 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   overallStatusOptions = [...TLS13010_DROPDOWN_OPTIONS.overallStatus];
   depositTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.depositType];
   depositPaymentOptions = [...TLS13010_DROPDOWN_OPTIONS.depositPayment];
-  commissionCompTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.commissionCompType];
+  // commissionCompTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.commissionCompType];
   commCompTypeDropdown = [...TLS13010_DROPDOWN_OPTIONS.commCompType];
   tltopenflagOption = [...TLS13010_DROPDOWN_OPTIONS.openflagStatus];
+  tltTermTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.tltTermType];
 
   // API 載入的選項
   vendorOptions: any[] = [];
