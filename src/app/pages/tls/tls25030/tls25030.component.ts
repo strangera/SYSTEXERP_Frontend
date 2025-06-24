@@ -15,7 +15,7 @@ import { ViolationCategoryService } from '../../../service/basic/violation-categ
 import { FloorService } from '../../../service/basic/floor.service';
 import { ViolationStatusService } from '../../../service/basic/violation-status.service';
 import { DeductionItemService } from '../../../service/basic/deduction-item.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 
@@ -32,18 +32,9 @@ export class TLS25030Component {
 
   // 權限變數
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
+
+
+
 
   // 查詢表單
   loading: boolean = false;

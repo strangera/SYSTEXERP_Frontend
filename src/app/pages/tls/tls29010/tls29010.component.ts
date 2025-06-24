@@ -7,7 +7,7 @@ import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/fu
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 import { ValidationService } from '../../../shared/service/validation.service';
 // Services for dropdowns
 import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
@@ -27,18 +27,9 @@ export class TLS29010Component {
   ProgNo: string = '220049';
   // 權限變數
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
+
+  
+  
 
   // 查詢表單
   loading: boolean = false;

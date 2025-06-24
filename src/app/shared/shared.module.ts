@@ -46,7 +46,6 @@ import { EditorModule } from 'primeng/editor';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { MenubarComponent } from './component/menubar/menubar.component';
 import { ControlMessagesComponent } from './component/control-messages/control-messages.component';
-import { HasPermissionDirective } from './directive/has-permission.directive';
 import { InputTextComponent } from './componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from './componentkit/multi-select/multi-select.component';
 import { InputNumberComponent } from './componentkit/input-number/input-number.component';
@@ -108,7 +107,6 @@ import { DialogComponent } from './componentkit/dialog/dialog.component';
     InputGroupComponent,
     EditorTextComponent,
     RadiobuttonComponent,
-    HasPermissionDirective,
     MultiLocationFilterComponent,
     AutoCompleteComponent,
     QueryYearMonthComponent,
@@ -203,7 +201,6 @@ import { DialogComponent } from './componentkit/dialog/dialog.component';
     ControlMessagesComponent,
     ButtonComponent,
     DropdownComponent,
-    HasPermissionDirective,
     ButtonDynamicallyaddComponent,
     ButtonDynamicallydeleteComponent,
     InputTextComponent,

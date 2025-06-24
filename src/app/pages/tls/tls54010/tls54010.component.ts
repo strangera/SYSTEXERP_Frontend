@@ -10,7 +10,7 @@ import { CounterCodeService } from '../../../service/basic/counter-code.service'
 import { TransactionTypeService } from '../../../service/basic/transaction-type.service';
 // Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -25,10 +25,9 @@ export class TLS54010Component {
 
   ProgNo: string = '250025';
   funInfo?: FunsrightInfo;
-  // Permissions
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+
+
+
   loading: boolean = false;
   submitted: boolean = false;
 

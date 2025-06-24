@@ -13,7 +13,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { CardTypeService } from '../../../service/basic/card-type.service';
 import { CardCategoryService } from '../../../service/basic/card-category.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 @Component({
   selector: 'app-tls29010-cru',
   templateUrl: './tls29010-cru.component.html',
@@ -24,18 +24,9 @@ export class TLS29010CRUComponent {
   ProgNo: string = '220049';
   // 權限
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
+
+  
+  
   // 查詢表單
   loading: boolean = false;
   submitted: boolean = false;

@@ -2,7 +2,6 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
-
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
@@ -30,6 +29,25 @@
               [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
           </div>
 
+          <div class="col-12 lg:col-8">
+            <app-radiobutton label="查詢條件" groupname="radioOption" [control]="queryForm.controls.radioOption"
+              [submitted]="submitted" [options]="[
+      { value: 'ECR', label: '收銀機號' },
+      { value: 'payTool', label: '支付工具' }
+    ]" (valueChange)="queryForm.controls.radioOption.setValue($event)">
+            </app-radiobutton>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-multi-select>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="館別" [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
+          </div>
+
         </div>
 
 
@@ -40,6 +58,7 @@
         </div>
 
       </form>
+
     </p-accordionTab>
   </p-accordion>
 </div>
@@ -48,10 +67,10 @@
   <app-table tableKey="TLS2A020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event" [showCheckBox]="true" dataKey="id"
     [multiSortMeta]="[{ field: 'pendingApprovalRegisterCode', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
-    [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" (delete)="onDelete($event)"></app-table>
+    [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="false">
+  </app-table>
 </div>
-<p-dialog header="限制筆數" [(visible)]="showPageSizeDialog" [modal]="true" [closable]="false" [style]="{ width: '300px' }">
+<!-- <p-dialog header="限制筆數" [(visible)]="showPageSizeDialog" [modal]="true" [closable]="false" [style]="{ width: '300px' }">
   <div class="p-fluid">
     <div class="field">
       <label for="pageSize">限制筆數</label>

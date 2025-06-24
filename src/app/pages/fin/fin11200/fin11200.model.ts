@@ -1,4 +1,4 @@
-import { Column, formatDate, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { Column, formatDate, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
 
 export interface Pos1018 {
   ID: number; // 唯一識別碼
@@ -29,26 +29,29 @@ export interface Pos1018 {
 }
 
 export const columns: Column[] = [
-  { field: 'guiYymm', header: '發票年月', visible: true, format: formatYYYYMM },
-  { field: 'posNos', header: '收銀機號', visible: true },
-  { field: 'serNos', header: '發票號碼序號', visible: true },
-  { field: 'status', header: '使用狀態', visible: true, format: (value: string) => statusOptions.find(item => item.value === value)?.label || value },
-  { field: 'guiTrack', header: '發票字軌', visible: true },
-  { field: 'guiSnos', header: '發票起始號', visible: true },
-  { field: 'guiEnos', header: '發票終止號', visible: true },
-  { field: 'nextSnos', header: '下一個發票號碼', visible: true },
-  { field: 'usedNos', header: '已用張數', visible: true },
-  { field: 'totNos', header: '全部張數', visible: true },
-  { field: 'freeNos', header: '未用張數', visible: true },
-  { field: 'remark', header: '備註', visible: true },
-  { field: 'creDate', header: '建檔日期', visible: true, format: formatDate },
-  { field: 'updDate', header: '異動日期', visible: true, format: formatDate },
-  { field: 'updUser', header: '異動者', visible: true },
-  { field: 'guiOpenYn', header: '跨月開立旗標', visible: true },
-  { field: 'stoNo', header: '分店編號', visible: true },
-  { field: 'guiOverBegDate', header: '跨月開立起始日期', visible: true, format: formatDate },
-  { field: 'guiOverEndDate', header: '跨月開立終止日期', visible: true, format: formatDate },
-  { field: 'einvFlag', header: '電子發票註記', visible: true },
+  { field: 'GUI_YYMM', header: '發票年月', visible: true, format: formatYYYYMM },
+  { field: 'ECR_No', header: '收銀機號', visible: true },
+  { field: 'SER_NOS', header: '發票號碼序號', visible: true },
+  { field: 'GUI_Status', header: '使用狀態', visible: true, format: (value: string) => statusOptions.find(item => item.value === value)?.label || value },
+  { field: 'GUI_TRACK', header: '發票字軌', visible: true },
+  { field: 'GUI_SNOS', header: '發票起始號', visible: true },
+  { field: 'GUI_ENOS', header: '發票終止號', visible: true },
+  { field: 'NEXT_SNOS', header: '下一個發票號碼', visible: true },
+  { field: 'USED_NOS', header: '已用張數', visible: true },
+  { field: 'TOT_NOS', header: '全部張數', visible: true },
+  { field: 'FREE_NOS', header: '未用張數', visible: true },
+  { field: 'REMARK', header: '備註', visible: true },
+  { field: 'STO_Uniform', header: '門市統一編號(賣方統編)', visible: true },
+  { field: 'GUI_Type', header: '發票類別', visible: true, format: (value: string) => value === '02' ? '二聯式' : '電子發票' },
+  { field: 'GUI_DownDate', header: '發票下傳日期時間', visible: true, format: formatDateTime },
+  { field: 'GUI_DownUsrNo', header: '發票下傳人員', visible: true },
+  { field: 'GUI_Down_UsrName', header: '發票下傳人員姓名', visible: true },
+  { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime },
+  { field: 'CRT_USR_No', header: '建立人員', visible: true },
+  { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
+  { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDateTime },
+  { field: 'UPD_USR_No', header: '變更人員', visible: true },
+  { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
 ];
 
 export const statusOptions = [

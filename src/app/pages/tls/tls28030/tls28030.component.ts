@@ -10,7 +10,7 @@ import { MachineAttributeService } from '../../../service/basic/machine-attribut
 import { PaymentTimingService } from '../../../service/basic/payment-timing.service';
 import { ViolationStatusService } from '../../../service/basic/violation-status.service';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 
 const now = new Date();
 
@@ -25,18 +25,9 @@ export class TLS28030Component {
   ProgNo: string = '220046';
   // 權限變數
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
+
+
+
 
   // 查詢表單
   loading: boolean = false;

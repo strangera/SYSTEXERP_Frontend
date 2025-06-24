@@ -11,7 +11,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { DisplayService } from '../../../service/basic/display.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 
 @Component({
   selector: 'app-tls22030',
@@ -22,18 +22,9 @@ import { HasPermissionsValue } from '../../../shared/directive/has-permission.di
 export class TLS22030Component {
   ProgNo: string = '220008';
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
+
+
+
   loading: boolean = false;
   submitted: boolean = false;
 

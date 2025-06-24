@@ -13,7 +13,7 @@ import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/fu
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 import { ValidationService } from '../../../shared/service/validation.service';
 
 // 2.5.2.2  退貨單維護作業
@@ -26,9 +26,7 @@ export class TLS52020Component {
   ProgNo: string = '250015';
   // 權限
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+
   // 查詢
   // ----------------------------------------------------------------
   loading: boolean = false;

@@ -20,7 +20,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   // 基本設置
   @ViewChild('dt', { static: false }) dt!: Table;                               // table 元件
   @ViewChild('fileUpload') fileUpload!: FileUpload;                             // 檔案上傳 元件
-  @Input() dataKey = 'id';                                                      // table 資料key
+  @Input() dataKey = 'ID';                                                      // table 資料key
   @Input() tableKey: string | undefined = undefined;                            // table 唯一標識 (必填)
   @Input() title: string | undefined = undefined;                               // table 標題
   @Input() columns!: Column[];                                                  // table 欄位配置 (必填)
@@ -65,9 +65,11 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
   // Header(右) 相關
   @Input() showExcel = false;                      // 是否顯示 匯出Excel
+  @Input() showExcelExport = true;                         // 是否顯示 匯出Excel按鈕
+  @Input() showExcelImport = true;                         // 是否顯示 匯入Excel按鈕
   @Output() exportExcel = new EventEmitter<any>(); // 匯出 Excel 事件
   @Input() exportExcelLoading = false;             // 匯出 Excel loading
-  @Output() importExcel = new EventEmitter<any>(); // 匯入 Excel 事件
+  @Output() importExcel = new EventEmitter<FileSelectEvent>(); // 匯入 Excel 事件
   @Input() showPage = true;                        // 是否顯示 下拉選單分頁器
   // 管理 欄位
   @Input() showManage = true;                // 是否顯示 管理欄位

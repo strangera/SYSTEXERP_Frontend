@@ -5,7 +5,6 @@ import { PluUnit } from '../../../shared/models/tls/tls000.model';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { option } from '../../../shared/models/sys/sysb000.module';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { Tls51050Service } from '../../../service/API/tls/tls51050.service';
 //
 
@@ -42,9 +41,7 @@ export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
 
   // ----------------------------------------------------------------
   constructor(
-    private tls51050Service: Tls51050Service,
-    private validationService: ValidationService
-  ) {
+    private tls51050Service: Tls51050Service) {
     super(); // 呼叫父類建構子
   }
 

@@ -13,7 +13,7 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { FloorService } from '../../../service/basic/floor.service';
 import { PaymentToolService } from '../../../service/basic/payment-tool.service';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 
 const now = new Date();
 
@@ -29,18 +29,9 @@ export class TLS2A010Component {
 
   // 權限
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
+
+  
+  
 
   // 查詢表單
   loading: boolean = false;

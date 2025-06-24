@@ -30,4 +30,18 @@ export class Tls51080Service {
   deleteTLS51080(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS51080`, body);
   }
+  // 查詢 SYS3100/POS1001 部門編號/分店 資料表
+  querySYS3100_join_POS1001_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/querySYS3100_join_POS1001_DropDownList`, body);
+  }
+
+  // 查詢 SYS3100 組織代碼 資料表
+  querySYS3100_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/querySYS3100_DropDownList`, body);
+  }
+
+  // 查詢 SYS3800 館別代碼 資料表
+  querySYS3800_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/querySYS3800_DropDownList`, body);
+  }
 }

@@ -21,7 +21,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
     user_Name: ['', [Validators.required, Validators.maxLength(20)]], // 使用者名稱
     user_Password: ['', [Validators.required]], // 使用者密碼-加密
     title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000 (就是職位)
-    org_ID: ['', Validators.maxLength(20)], // 組織編號 (SYSB400_SYS3100)
+    org_ID: ['', [Validators.required, Validators.maxLength(20)]], // 組織編號 (SYSB400_SYS3100)
     str_date: [null], // 帳號有效開始日期
     end_date: [null], // 帳號有效結束日期
     status: ['', [Validators.required, Validators.maxLength(1)]], // 使用者狀態 1=有效 2=停用
@@ -47,6 +47,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
   SYS3700_Options: { value: string; label: string }[] = [];
   SYS3800_Options: { value: string; label: string }[] = [];
   SYS3A00_Options: { value: string; label: string }[] = [];
+  TLTTALENT_OPTIONS: { No: string; Name: string }[] = [];
   TLT_Kind_Options: { value: string; label: string }[] = [
     { value: '1', label: '正櫃' },
     { value: '2', label: '臨時櫃' },
@@ -80,6 +81,23 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
 
     }
     this.loadAndSetupColumns(); // 呼叫新的方法來處理異步載入和 columns 設定
+    this.dataForm.get('org_ID')?.valueChanges.subscribe((value) => {
+      if (this.isFormCreateable && value && this.data.length === 0) {
+        this.data = [
+          {
+            ID: 0,
+            User_No: this.dataForm.get('user_No')?.value,
+            Org_ID: value,
+            Building_No: null,
+            Floor_No: null,
+            Area_No: null,
+            TLT_No: null,
+            TLT_Kind: null,
+            BUS_Type: null
+          }
+        ];
+      }
+    });
   }
   // 加載下拉選項
   loadAndSetupColumns() {
@@ -105,6 +123,13 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
     const floorOptions$ = this.locationOptionsService.getFloorOptions()
     const regionOptions$ = this.locationOptionsService.getRegionOptions()
     const busTypeOptions$ = this.sysb800DropdownService.getSystemTypes();
+    const TLTTALENT_OPTIONS$ = this.sys0110Service.queryTLTTALENT_DropDownList({}).pipe(
+      map((response) => response.Data
+        .map((item: { No: string, Name: string }) => ({
+          ...item,
+          label: item.No + '-' + item.Name,
+        })))
+    );
 
     // 使用 forkJoin 等待所有異步請求完成
     forkJoin([
@@ -113,14 +138,16 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
       buildingOptions$,
       floorOptions$,
       regionOptions$,
-      busTypeOptions$
+      busTypeOptions$,
+      TLTTALENT_OPTIONS$,
     ]).subscribe(([
       orgOptions,
       systemCodeOptions,
       buildingOptions,
       floorOptions,
       regionOptions,
-      busTypeOptions
+      busTypeOptions,
+      TLTTALENT_OPTIONS
     ]) => {
       // 在這裡，所有的選項都已經載入完畢
       this.SYS3100_Options = orgOptions;
@@ -129,6 +156,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
       this.SYS3800_Options = floorOptions;
       this.SYS3A00_Options = regionOptions;
       this.BUS_TypeOptions = busTypeOptions;
+      this.TLTTALENT_OPTIONS = TLTTALENT_OPTIONS;
 
       // 設定靜態選項 (如果它們是靜態的)
       this.userStatusOptions = [
@@ -150,7 +178,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
         { field: 'Building_No', header: '館別代碼', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value' },
         { field: 'Floor_No', header: '樓層代碼', type: 'dropdown', options: this.SYS3800_Options, optionLabel: 'label', optionValue: 'value' },
         { field: 'Area_No', header: '區域代碼', type: 'dropdown', options: this.SYS3A00_Options, optionLabel: 'label', optionValue: 'value' },
-        { field: 'TLT_No', header: '專櫃編號', type: 'input' },
+        { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', options: this.TLTTALENT_OPTIONS, optionLabel: 'label', optionValue: 'No' },
         { field: 'TLT_Kind', header: '專櫃類型', type: 'dropdown', options: this.TLT_Kind_Options, optionLabel: 'label', optionValue: 'value' }, // 假設這是靜態的
         { field: 'BUS_Type', header: '大分類代碼', type: 'dropdown', options: this.BUS_TypeOptions, optionLabel: 'label', optionValue: 'value' },
       ];
@@ -168,8 +196,6 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
       const today = new Date();
       const expireDate = new Date(today);
       expireDate.setDate(today.getDate() + 90);
-      console.log(this.data);
-
       const body = {
         ...frm.value,
         user_No: frm.get('user_No')?.value,
@@ -186,11 +212,17 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
         if (this.isFormCreateable) {
           this.messageService.successBubble('新增成功');
           this.dataForm.reset();
+          this.resetTable();
         } else if (this.isFormEditable) {
           this.messageService.successBubble('更新成功');
           this.onCancel();
         }
       });
     });
+  }
+
+  resetTable() {
+    this.data = [];
+    this.selectedRows = [];
   }
 }
