@@ -14,6 +14,7 @@ import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { finalize } from 'rxjs/operators';
 
 const now = new Date();
 
@@ -23,31 +24,35 @@ const now = new Date();
   styleUrls: ['./tls23020.component.scss']
 })
 export class TLS23020Component extends BasicQueryPageComponent<any> {
+  useSummaryMode = false; // 預設為明細表模式
+
   data: any[] = [];
   totalRecords: number = 0;
   // 表單欄位
   queryForm = this.formBuilder.group({
     TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],            // 交易日期起
     TXN_DateEnd: [now, [Validators.required]],              // 交易日期訖
-    ECR_No: [''],                                           // 收銀機機號
+    ECR_No: [[]],                                           // 收銀機機號
     TXN_No_Start: [null, [this.validationService.numberValidator]],  // 交易序號起
     TXN_No_End: [null, [this.validationService.numberValidator]],    // 交易序號訖
-    TLT_No: [''],                                           // 專櫃編號
+    TLT_No: [[]],
     TXN_GUINo: [''],                                        // 發票號碼
     PLU_SalePrc_Start: [null],                              // 售價起
     PLU_SalePrc_End: [null],                                // 售價訖
     TXN_TaxType: [''],                                      // 稅別
-    ORG_TXN_DiscCode: [''],                                 // 原始折扣代碼
-    tlt_id: [''],                                           // 分類抽成類別
+    TXN_DiscCode: [[]],                                 // 原始折扣代碼
+    tlt_id: [[]],                                           // 分類抽成類別
     PLU_MagNo: [''],                                        // 商品管理編號
-    TXN_DiscCode: [''],                                     // 專櫃折數代碼
-    IsNoPLU_No: [null],                                     // 是否無條碼商品
+    ACT_DiscCode: [[]],                                     // 專櫃折數代碼
+    IsNoPLU_No: [false],                                     // 是否無條碼商品
     rece_yn: [''],                                          // 是否代收(顯示方式)
     cash_yn: [''],                                          // 是否代售(顯示方式)
     tlt_building: [''],                                     // 所屬大樓
-    tlt_floor: [''],                                        // 所屬樓層
-    org_id: [''],                                           // 組織代碼
+    tlt_floor: [[]],                                        // 所屬樓層
+    org_id: [[]],                                           // 組織代碼
+    // DisplayMode: this.useSummaryMode ? 'SummaryReport' : 'Report', // 顯示模式
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }])
+
   });
 
   // 欄位定義（依後端欄位為主）
@@ -68,8 +73,8 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' }, // 若無此欄位請移除
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
-    
-    
+
+
     {
       field: 'PLU_SalePrc', header: '單項售價', visible: true,
       style: 'text-right',
@@ -87,7 +92,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0'
     },
-        {
+    {
       field: 'TXN_Disc', header: '折扣金額', visible: true,
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0'
@@ -154,7 +159,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     private counterNameService: CounterNameService,
     private whetherService: WhetherService,
     private txnStatusService: TxnStatusService,
-    
+
     private validationService: ValidationService
   ) {
     super();
@@ -240,4 +245,56 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     const found = options?.find(opt => String(opt.value) === String(value));
     return found ? found.label : value;
   }
+
+  showPageSizeDialog = false;
+  customPageSize = 1000;
+
+
+  goToReportMode(): void {
+    if (this.queryForm.invalid) {
+      this.messageService.warnBubble('請先完成查詢條件');
+      this.queryForm.markAllAsTouched();
+      return;
+    }
+
+    this.customPageSize = 1000;
+    this.showPageSizeDialog = true;
+  }
+
+  confirmPageSizeAndNavigate(): void {
+  this.loading = true;
+
+  const rawFormValue: Record<string, any> = { ...this.queryForm.value };
+  for (const key in rawFormValue) {
+    if (rawFormValue[key] === '') rawFormValue[key] = null;
+  }
+
+  const queryFormValue = {
+    ...rawFormValue,
+    pageSize: this.customPageSize,
+    DisplayMode: this.useSummaryMode ? 'SummaryReport' : 'Report'
+  };
+
+  this.tls23020Service.queryTLS23020(queryFormValue).pipe(
+    finalize(() => {
+      this.loading = false;
+      this.showPageSizeDialog = false;
+    })
+  ).subscribe(res => {
+    const data = (res.Status === '0000' && Array.isArray(res.Data)) ? res.Data : [];
+
+    this.router.navigate(['/TLS/TLS23020CRU'], {
+      state: {
+        queryFormValue,
+        data,
+        pageSize: this.customPageSize
+      }
+    });
+  });
+}
+
+
+
+
+
 }

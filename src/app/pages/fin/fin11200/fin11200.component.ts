@@ -84,7 +84,12 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
       }
     }
     this.fin11200Service.execProcClosed(params).pipe(finalize(() => this.loading = false)).subscribe((response) => {
-      console.log(response);
+      if (response.Status === "0000") {
+        this.messageService.successBubble(response.Message);
+        this.onSubmit(this.queryForm);
+      } else {
+        this.messageService.errorBubble(response.Message);
+      }
     });
   }
 
@@ -98,7 +103,10 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
       }))
     }
     this.fin11200Service.execProcExport(params).pipe(finalize(() => this.loading = false)).subscribe((response) => {
-      console.log(response);
+      if (response.Status === "0000") {
+        this.messageService.successBubble(response.Message);
+        this.onSubmit(this.queryForm);
+      }
     });
   }
 }

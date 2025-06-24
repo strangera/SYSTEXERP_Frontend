@@ -16,7 +16,7 @@ import { OperationStatusService } from '../../../service/basic/operation-status.
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { DeductionService } from '../../../service/basic/deduction.service';
 import { DeductionCodeNameService } from '../../../service/basic/deduction-code-name.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 
 @Component({
   selector: 'app-tls21050',
@@ -27,18 +27,9 @@ export class TLS21050Component {
   ProgNo: string = '220005';
   // 权限
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
+
+
+
   // 查询表单
   loading: boolean = false;
   submitted: boolean = false;

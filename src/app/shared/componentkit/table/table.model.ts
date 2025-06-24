@@ -15,11 +15,12 @@ export interface Column {
   style?: string; // styles
   maxWidth?: string; // 最大寬度 max-w-{{ col.maxWidth }}
 
-  validate?: ((value: string, rowData: any, data: any[], field: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
+  validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
 
   type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'checkbox' | 'date' | 'default'; // 欄位類型
   prefix?: string;
   fractionDigits?: number;
+  useGrouping?: boolean;
 
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
   optionLabel?: string; // 下拉選單 optionLabel
@@ -97,7 +98,7 @@ export function validateRowData(rowData: any, columns: Column[], data: any, mess
   // 原始的驗證邏輯
   return columns.every(col =>
     !(col.validate?.some(validateFn => {
-      const { isValid, errorMessage } = validateFn(rowData[col.field], rowData, data, col.field);
+      const { isValid, errorMessage } = validateFn(rowData[col.field], rowData, data, col.field, col.header);
       if (!isValid) {
         const [message, title] = errorMessage;
         messageService.errorBubble(message, title);
@@ -142,6 +143,13 @@ export const formatYYYYMM = (dateStr: string): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   return `${year}/${month}`;
+};
+
+// formatTimeHHMM 輸出為 HH:MM
+export const formatTimeHHMM = (value: string | number): string => {
+  if (!value) return '';
+  const strValue = String(value).padStart(4, '0'); // 確保是4位數字，不足補0
+  return `${strValue.substring(0, 2)}:${strValue.substring(2, 4)}`;
 };
 
 // 000,000,000

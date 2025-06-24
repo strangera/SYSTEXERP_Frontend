@@ -8,7 +8,7 @@ import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/fu
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 import { ValidationService } from '../../../shared/service/validation.service';
 
 // 2.2.19.4 餘代卡交易補登作業
@@ -21,9 +21,7 @@ export class TLS2K040Component {
   ProgNo: string = '220100';
   // 權限
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.add };
-  queryPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.query };
-  editPermission: HasPermissionsValue = { progNo: this.ProgNo, permission: PermissionsInfo.edit };
+
   // 查詢
   // ----------------------------------------------------------------
   loading: boolean = false;

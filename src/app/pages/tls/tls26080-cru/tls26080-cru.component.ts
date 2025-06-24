@@ -21,7 +21,8 @@ interface ActivityData {
 interface CounterData {
   id: number;
   counterCode: string;
-  counterName: string; // 確保包含 counterName
+  counterName: string;
+  itemCode: string;
   commissionTypeCode: string;
   commissionTypeName: string;
   presaleStartCalculation: string;
@@ -56,6 +57,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
   dataForm = this.formBuilder.nonNullable.group({
     id: [0],
     activityType: ['', [Validators.required]],
+    pod_no: [''],
+    itemCode: [''],
     department: ['', [Validators.required]],
     activityGroup: ['', [Validators.required]],
     activityName: ['', [Validators.required]],
@@ -88,6 +91,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
   counterColumns: Column[] = [
     { field: 'counterCode', header: '專櫃編號', visible: true },
     { field: 'counterName', header: '專櫃名稱', visible: true },
+    { field: 'itemCode', header: '扣款項目編號', visible: true },
     { field: 'commissionTypeCode', header: '抽成類別代碼', visible: true },
     { field: 'commissionTypeName', header: '抽成類別名稱', visible: true },
     { field: 'presaleStartCalculation', header: '預售起日計算', visible: true },
@@ -117,6 +121,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
       id: 1,
       counterCode: '00231',
       counterName: '女裝專櫃A', // 新增 counterName
+      itemCode: 'D16',
       commissionTypeCode: '1',
       commissionTypeName: '女裝專櫃',
       presaleStartCalculation: 'Y',
@@ -130,6 +135,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
       id: 2,
       counterCode: '00232',
       counterName: '男裝專櫃B', // 新增 counterName
+      itemCode: 'D16',
       commissionTypeCode: '1',
       commissionTypeName: '男裝專櫃',
       presaleStartCalculation: 'N',
@@ -142,7 +148,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
     {
       id: 3,
       counterCode: '00233',
-      counterName: '化妝品專櫃C', // 新增 counterName
+      counterName: '化妝品專櫃C',
+      itemCode: 'D16',
       commissionTypeCode: '3',
       commissionTypeName: '化妝品專櫃',
       presaleStartCalculation: 'Y',
@@ -184,6 +191,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
   }
 
   ngOnInit(): void {
+    this.dataForm.get('pod_no')?.setValue('20250401');
     this.initializePage('TLS26080', this.dataForm);
     this.loadMockData();
   }
@@ -211,7 +219,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
     const newCounter: CounterData = {
       id: this.counterData.length + 1,
       counterCode: '',
-      counterName: '', // 新增 counterName 初始值
+      counterName: '',
+      itemCode: '',
       commissionTypeCode: '',
       commissionTypeName: '',
       presaleStartCalculation: '',

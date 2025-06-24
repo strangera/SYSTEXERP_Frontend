@@ -1,229 +1,164 @@
-<p-dialog header="選擇匯出方向" [(visible)]="showPdfDialog" [modal]="true">
-  <p>請選擇匯出 PDF 的方向：</p>
-  <div class="mt-3 flex justify-end gap-2">
-    <button
-      pButton
-      label="直印 (Portrait)"
-      (click)="exportPDF('p')"
-      class="p-button-sm"
-    ></button>
-    <button
-      pButton
-      label="橫印 (Landscape)"
-      (click)="exportPDF('l')"
-      class="p-button-sm p-button-secondary"
-    ></button>
-  </div>
-</p-dialog>
-
-<p-dialog
-  header="選擇顯示欄位"
-  [(visible)]="showColumnDialog"
-  [modal]="true"
-  [style]="{ width: '30rem', height: '60vh' }"
-  [contentStyle]="{ height: '100%', overflow: 'auto' }"
->
-  <div class="grid p-fluid">
-    <div class="col-12 md:col-6 lg:col-10">
-  
-  <p-multiSelect
-    [options]="columns"
-    [(ngModel)]="selectedColumns"
-    optionLabel="header"
-    display="chip"
-    class="w-full"
-    placeholder="選擇要顯示的欄位"
-  ></p-multiSelect>
-  </div>
-   <div class="col-12 md:col-6 lg:col-2">
-    <button
-      pButton
-      type="button"
-      label="確定"
-      (click)="showColumnDialog = false"
-      class="p-button-sm"
-    ></button>
-  </div>
-  </div>
-</p-dialog>
-
+<!-- 📌 工具列區：包含欄位選擇、PDF/Excel匯出、合併顯示切換 -->
 <div class="flex flex-wrap justify-between items-center gap-3 mb-3">
-  <div class="flex items-center gap-2">
-    
-    <button
-      pButton
-      type="button"
-      [label]="'每表格列數：'+ rowsPerTable + ' 列'"
-      icon="pi pi-sliders-h"
-      (click)="openRowsPerTableDialog()"
-      class="p-button-sm p-button-info"
-    ></button>
+  <div class="flex items-center gap-2" *ngIf="mergedView">
+    <button pButton type="button" [label]="'每表格列數：' + rowsPerTable + ' 列'" icon="pi pi-sliders-h"
+      (click)="openRowsPerTableDialog()" class="p-button-sm p-button-info"></button>
   </div>
-  <p-dialog
-    header="設定每個表格的列數"
-    [(visible)]="showRowsPerTableDialog"
-    [modal]="true"
-    [style]="{ width: '30rem', height: '20rem' }"
-    [contentStyle]="{ 'padding-bottom': '0' }"
-  >
-    <div class="flex flex-col gap-4">
-      <!-- 輸入框 -->
-      <div>
-        <label for="rowsInput" class="block mb-2 text-sm text-gray-700">
-          每表格列數：
-        </label>
-        <input
-          id="rowsInput"
-          type="number"
-          [(ngModel)]="tempRowsPerTable"
-          min="1"
-          class="p-inputtext w-full"
-        />
-      </div>
-
-      <!-- 按鈕區塊 -->
-      <div class="flex justify-end gap-2 mt-4">
-        <button
-          pButton
-          type="button"
-          label="取消"
-          icon="pi pi-times"
-          class="p-button-sm p-button-secondary"
-          (click)="showRowsPerTableDialog = false"
-        ></button>
-        <button
-          pButton
-          type="button"
-          label="確定"
-          icon="pi pi-check"
-          class="p-button-sm p-button-primary"
-          (click)="applyRowsPerTableChange()"
-        ></button>
-      </div>
-    </div>
+  <p-dialog header="調整每表格列數" [(visible)]="showRowsPerTableDialog">
+    <input type="number" [(ngModel)]="tempRowsPerTable" min="1" class="p-inputtext p-component" />
+    <button pButton label="套用" (click)="applyRowsPerTableChange()" class="p-button-sm p-button-success"></button>
   </p-dialog>
 
-  <div class="space-x-2">
-    <button
-      pButton
-      type="button"
-      label="顯示欄位"
-      icon="pi pi-eye"
-      (click)="showColumnDialog = true"
-      class="p-button-sm p-button-info"
-    ></button>
-    <button
-      pButton
-      type="button"
-      label="匯出 PDF"
-      icon="pi pi-file-pdf"
-      (click)="exportPDF('l')"
-      class="p-button-sm p-button-danger"
-    ></button>
+  <!-- ✅ 合併顯示切換開關 -->
+  <div class="flex items-center gap-2" *ngIf="allowMergeToggle">
+    <p-inputSwitch [(ngModel)]="mergedView" (ngModelChange)="onMergedViewToggle($event)"></p-inputSwitch>
+    <label class="text-sm">合併顯示</label>
+  </div>
 
-    <button
-      pButton
-      type="button"
-      label="匯出 Excel"
-      icon="pi pi-file-excel"
-      (click)="exportExcel()"
-      class="p-button-sm p-button-success"
-    ></button>
-    <button
-      pButton
-      type="button"
-      label="列印"
-      icon="pi pi-print"
-      (click)="printPage()"
-      class="p-button-sm p-button-secondary"
-    ></button>
-    <button
-      pButton
-      type="button"
-      icon="pi pi-arrow-left"
-      label="回上頁"
-      class="p-button-sm p-button-secondary"
-      (click)="goBack()"
-    ></button>
+  <div class="space-x-2">
+    <button pButton type="button" label="顯示欄位" icon="pi pi-eye" (click)="showColumnDialog = true"
+      class="p-button-sm p-button-info"></button>
+    <button pButton type="button" label="匯出 PDF" icon="pi pi-file-pdf" (click)="exportPDF('l')"
+      class="p-button-sm p-button-danger"></button>
+    <button pButton type="button" label="匯出 Excel" icon="pi pi-file-excel" (click)="exportExcel()"
+      class="p-button-sm p-button-success"></button>
+    <button pButton type="button" label="列印" icon="pi pi-print" (click)="printPage()"
+      class="p-button-sm p-button-secondary"></button>
+    <button pButton type="button" icon="pi pi-arrow-left" label="回上頁" class="p-button-sm p-button-secondary"
+      (click)="goBack()"></button>
   </div>
 </div>
 
-<div id="print-section">
-  <div
-    *ngFor="let group of groupedData; let i = index"
-    class="report-table-wrapper mb-5"
-  >
-    <div class="text-sm text-gray-600 mb-2 flex flex-wrap items-center gap-4">
-      <div>共 {{ totalCount }} 筆</div>
-      <div>第 {{ i + 1 }} 頁 / 共 {{ groupedData.length }} 頁</div>
-      <div>銷售日期：{{ dateStart }} 至 {{ dateEnd }}</div>
-      <div>列印日期：{{ printedAt }}</div>
-    </div>
+<!-- ✅ 上方操作列與對話框區保留不變 -->
+<div class="printable-section">
+  <!-- ✅ 分群顯示區 -->
+  <div *ngIf="!mergedView" class="grouped-view">
+    <div *ngFor="let group of groupedData; let i = index" class="report-table-wrapper mb-5">
+      <!-- 群組標題 -->
+      <div *ngIf="group[0]?.__groupKey" class="font-bold text-base mb-2 text-blue-700">
+        {{ groupByLabel || groupByField }}：{{ group[0].__groupKey }}
+      </div>
 
-    <p-table
-      [value]="group"
-      [columns]="selectedColumns"
-      [resizableColumns]="true"
-      [paginator]="false"
-      [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'"
-    >
-      <ng-template pTemplate="header" let-columns>
-        <tr>
-          <th *ngFor="let col of selectedColumns" class="text-center">
-            {{ col.header }}
-          </th>
-        </tr>
-      </ng-template>
+      <!-- 群組資料表 -->
+      <p-table [value]="group" [columns]="selectedColumns" [resizableColumns]="true" [paginator]="false" [styleClass]="
+          'p-datatable-sm p-datatable-striped p-datatable-gridlines'
+        ">
+        <ng-template pTemplate="header" let-columns>
+          <tr>
+            <th *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style"
+              [pSortableColumn]="col.field !== '__index' ? col.field : undefined">
+              {{ col.header }}
+              <p-sortIcon *ngIf="col.field !== '__index'" [field]="col.field" />
+            </th>
+          </tr>
+        </ng-template>
 
-      <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
-        <tr>
-          <td
-            *ngFor="let col of selectedColumns"
-            [ngClass]="col.style"
-            class="text-center"
-          >
-            <ng-container *ngIf="col.field === '__index'">
-              {{ getRowIndex(i, rowIndex) }}
-            </ng-container>
-            <ng-container *ngIf="col.field !== '__index'">
-              <ng-container *ngIf="col.format; else raw">
-                {{ col.format(rowData[col.field]) }}
+        <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
+          <tr>
+            <td *ngFor="let col of selectedColumns" [ngClass]="col.style" class="text-center">
+              <ng-container *ngIf="col.field === '__index'">
+                {{ getRowIndex(i, rowIndex) }}
               </ng-container>
-              <ng-template #raw>
-                {{ rowData[col.field] }}
-              </ng-template>
-            </ng-container>
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="footer" let-columns>
-        <tr
-          *ngIf="!showTotalOnly || i === groupedData.length - 1"
-          class="bg-gray-100 font-semibold"
-        >
-          <td
-            *ngFor="let col of selectedColumns"
-            class="text-center"
-            [ngClass]="col.style"
-          >
-            <ng-container [ngSwitch]="col.field">
-              <ng-container *ngSwitchCase="'__index'">
-                {{ showTotalOnly ? "總計" : "小計" }}
+              <ng-container *ngIf="col.field !== '__index'">
+                <ng-container *ngIf="col.format; else raw">
+                  {{ col.format(rowData[col.field]) }}
+                </ng-container>
+                <ng-template #raw>
+                  {{ rowData[col.field] }}
+                </ng-template>
               </ng-container>
-              <ng-container *ngSwitchDefault>
-                <ng-container *ngIf="subtotalFields.includes(col.field)">
-                  {{
-                    showTotalOnly
-                      ? getGrandTotal(col.field)
-                      : getSubtotal(group, col.field)
-                  }}
+            </td>
+          </tr>
+        </ng-template>
+
+        <!-- 小計 -->
+        <ng-template pTemplate="footer">
+          <tr *ngIf="subtotalFields.length > 0" class="bg-yellow-100 font-semibold">
+
+            <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
+              <ng-container [ngSwitch]="col.field">
+                <ng-container *ngSwitchCase="'__index'">小計</ng-container>
+                <ng-container *ngSwitchDefault>
+                  <ng-container *ngIf="subtotalFields.includes(col.field)">
+                    {{ getSubtotal(group, col.field) }}
+                  </ng-container>
                 </ng-container>
               </ng-container>
-            </ng-container>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
   </div>
+
+  <!-- ✅ 合併顯示區（大表） -->
+  <!-- ✅ 合併顯示區（多張表） -->
+  <div *ngIf="mergedView" class="merged-view">
+    <div *ngFor="let group of mergedPagedGroups; let groupIndex = index" class="mb-5">
+      <p-table [value]="group" [columns]="selectedColumns" [resizableColumns]="true" [paginator]="false"
+        [customSort]="true" (sort)="onTableSort($event)"
+        [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'">
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style"
+              [pSortableColumn]="col.field !== '__index' ? col.field : undefined">
+              {{ col.header }}
+              <p-sortIcon *ngIf="col.field !== '__index'" [field]="col.field"></p-sortIcon>
+            </th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
+          <tr>
+            <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
+              <ng-container *ngIf="col.field === '__index'">
+                {{ getRowIndex(groupIndex, rowIndex) }}
+              </ng-container>
+              <ng-container *ngIf="col.field !== '__index'">
+                <ng-container *ngIf="col.format; else raw">
+                  {{ col.format(rowData[col.field]) }}
+                </ng-container>
+                <ng-template #raw>
+                  {{ rowData[col.field] }}
+                </ng-template>
+              </ng-container>
+            </td>
+          </tr>
+        </ng-template>
+
+        <!-- 總計 -->
+        <!-- 總計 -->
+        <ng-template pTemplate="footer">
+          <tr class="bg-yellow-100 font-semibold">
+            <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
+              <ng-container [ngSwitch]="col.field">
+                <ng-container *ngSwitchCase="'__index'">總計</ng-container>
+                <ng-container *ngSwitchDefault>
+                  <ng-container *ngIf="subtotalFields.includes(col.field)">
+                    {{ groupByField ? getSubtotal(mergedPagedGroups[groupIndex], col.field) : getSubtotal(data,
+                    col.field) }}
+                  </ng-container>
+                </ng-container>
+              </ng-container>
+            </td>
+          </tr>
+        </ng-template>
+
+
+      </p-table>
+    </div>
+  </div>
+  <p-dialog header="選擇顯示欄位" [(visible)]="showColumnDialog" [modal]="true" [style]="{ width: '40rem', height: '40rem' }"
+    [contentStyle]="{ height: '100%', overflow: 'auto' }">
+    <div class="grid p-fluid">
+      <div class="col-12 md:col-6 lg:col-4">
+        <p-multiSelect [options]="availableColumns" [(ngModel)]="tempSelectedColumns" optionLabel="header"
+          display="chip" class="w-full"></p-multiSelect>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <button pButton type="button" label="確定" (click)="applyColumnSelection()" class="p-button-sm"></button>
+      </div>
+    </div>
+  </p-dialog>
 </div>

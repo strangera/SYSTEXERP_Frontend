@@ -1,77 +1,30 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="銀行代號" controlName="BNK_No" [control]="dataForm.controls.BNK_No"
-                        [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="銀行名稱" controlName="BNK_Name" [control]="dataForm.controls.BNK_Name"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-text label="銀行簡稱" controlName="BNK_ShortName" [control]="dataForm.controls.BNK_ShortName"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid" *ngIf="crudstatus !== 'Create'">
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-number label="該行帳號最小長度" controlName="Min_Length" [control]="dataForm.controls.Min_Length"
-                        [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-12 lg:col-4">
-                    <app-input-number label="該行帳號最大長度" controlName="Max_Length" [control]="dataForm.controls.Max_Length"
-                        [submitted]="submitted">
-                    </app-input-number>
-                </div>
-            </div>
-            <hr />
-            <ng-container formArrayName="items">
-                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                    <div class="grid align-items-center">
-                        <div class="col" style="flex: 1">
-                            <h5>分行 {{ i + 1 }}</h5>
-                        </div>
-                        <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
-                                class="col"></app-button-dynamicallydelete>
-                        </div>
-                    </div>
-                    <!-- 分行 選擇區 -->
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="銀行分行代號" controlName="BNK_BranchNo"
-                                [control]="getFormControl(i, 'BNK_BranchNo')" [submitted]="submitted">
-                            </app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="銀行分行名稱" controlName="BNK_BranchName"
-                                [control]="getFormControl(i, 'BNK_BranchName')" [submitted]="submitted">
-                            </app-input-text>
-                        </div>
-                    </div>
-                    <hr />
-                </ng-container>
-            </ng-container>
-            <div class="pt-1">
-                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
-            </div>
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
-            </div>
-        </div>
-    </p-panel>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="銀行代號" controlName="BNK_No"
+          [control]="dataForm.controls.BNK_No" [submitted]="submitted">>
+        </app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="銀行名稱" controlName="BNK_Name"
+          [control]="dataForm.controls.BNK_Name" [submitted]="submitted">
+        </app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="銀行簡稱" controlName="BNK_ShortName"
+          [control]="dataForm.controls.BNK_ShortName" [submitted]="submitted">
+        </app-input-text>
+        <app-table class="col-12" [data]="data" [columns]="columns" [showEdit]="false" [showDetail]="false"
+          [showCheckBox]="true" [showInsert]="true" [showRowEdit]="true" (delete)="onDelete($event)"
+          (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [showCaption]="!isFormReadable"
+          [showManage]="!isFormReadable" [showCheckBox]="!isFormReadable" [showReportMode]="false"
+          [insertRowData]="true" (dataChange)="data = $event"></app-table>
+      </div>
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm" (clickEvent)="resetTable()"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
+    </form>
+  </p-panel>
 </div>

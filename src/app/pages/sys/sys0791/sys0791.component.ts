@@ -10,7 +10,7 @@ import {
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { QueryAngleService } from '../../../service/basic/query-angle.service';
@@ -31,18 +31,9 @@ export class SYS0791Component {
   ProgNo: string = '420016';
   // 權限
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
+
+
+
   // 查詢
   loading: boolean = false;
   submitted: boolean = false;

@@ -1,0 +1,102 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
+import { SortMeta } from 'primeng/api';
+import { ApiResponse } from '../../system/auth.service';
+import { IAps1004Data } from './sys1004.service';
+
+/** 查詢條件介面 (querySYSBC00) */
+export interface IQuerySysbc00Request {
+  PageSize?: number;
+  PageIndex?: number;
+  OrderBy?: string; // 可選
+  Offset?: number; // 可選
+  SortBy?: SortMeta[]; // 可選
+  BNK_No?: string; // 銀行代碼
+  BNK_Name?: string; // 銀行名稱
+  BNK_ShortName?: string; // 銀行簡稱
+}
+
+/** APS1001 資料表的單筆資料介面 */
+export interface ISysbc00Data {
+  id: number;
+  BNK_No: string;
+  BNK_Name: string;
+  BNK_ShortName: string;
+  CRT_Date: string; // 日期時間字串
+  CRT_USR_No: string;
+  CRT_USR_Name: string;
+  UPD_Date: string; // 日期時間字串
+  UPD_USR_No: string;
+  UPD_USR_Name: string;
+  CanDel: boolean; // 是否可刪除
+  details?: IAps1004Data[];
+}
+
+/** 新增資料介面 (insertSYSBC00) */
+export interface IInsertSysbc00Request {
+  BNK_No: string; // 銀行代碼
+  BNK_Name: string; // 銀行名稱
+  BNK_ShortName: string; // 銀行簡稱
+}
+
+/** 更新資料介面 (updateSYSBC00) */
+export interface IUpdateSysbc00Request {
+  id: number; // 記錄 ID (用於識別要更新的記錄)
+  BNK_No: string; // 銀行代碼
+  BNK_Name: string; // 銀行名稱
+  BNK_ShortName: string; // 銀行簡稱
+}
+
+/** 刪除資料介面 (deleteSYSBC00) */
+export interface IDeleteSysbc00Request {
+  idList: number[]; // 要刪除的記錄 ID 列表
+}
+
+@Injectable({
+  providedIn: 'root',
+})
+export class Sysbc00Service {
+  private apiUrl: string = environment.ApiUrl + '/SYS0000/BAS1000';
+
+  constructor(private http: HttpClient) { }
+
+  /**
+   * 查詢 APS1001 (銀行基本資料) 資料表
+   * @param params 查詢條件
+   * @returns 包含 ISysbc00Data 陣列的 API 響應
+   */
+  querySYSBC00(params: IQuerySysbc00Request): Observable<ApiResponse<ISysbc00Data[]>> {
+    return this.http.post<ApiResponse<ISysbc00Data[]>>(`${this.apiUrl}/querySYSBC00`, params);
+  }
+
+  /**
+   * 新增 APS1001 (銀行基本資料) 資料
+   * @param data 要新增的銀行基本資料
+   * @returns API 響應
+   */
+  insertSYSBC00(data: IInsertSysbc00Request): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertSYSBC00`, data);
+  }
+
+  /**
+   * 更新 APS1001 (銀行基本資料) 資料
+   * @param data 要更新的銀行基本資料，包含 ID
+   * @returns API 響應
+   */
+  updateSYSBC00(data: IUpdateSysbc00Request): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateSYSBC00`, data);
+  }
+
+  /**
+   * 刪除 APS1001 (銀行基本資料) 資料
+   * @param idList 要刪除的記錄 ID 列表
+   * @returns API 響應
+   */
+  deleteSYSBC00(idList: number[]): Observable<ApiResponse<any>> {
+    // 根據 Swagger 範例，請求體需要是一個包含 idList 屬性的物件
+    const body: IDeleteSysbc00Request = { idList: idList };
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/deleteSYSBC00`, body);
+  }
+}

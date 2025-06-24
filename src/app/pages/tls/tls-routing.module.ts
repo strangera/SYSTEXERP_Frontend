@@ -120,7 +120,6 @@ import { TLS29010CRUComponent } from './tls29010-cru/tls29010-cru.component';
 import { TLS29010Component } from './tls29010/tls29010.component';
 import { TLS2A010CRUComponent } from './tls2a010-cru/tls2a010-cru.component';
 import { TLS2A010Component } from './tls2a010/tls2a010.component';
-import { TLS2A020CRUComponent } from './tls2a020-cru/tls2a020-cru.component';
 import { TLS2A020Component } from './tls2a020/tls2a020.component';
 import { TLS2A030CRUComponent } from './tls2a030-cru/tls2a030-cru.component';
 import { TLS2A030Component } from './tls2a030/tls2a030.component';
@@ -395,7 +394,22 @@ import { NotfoundComponent } from '../base/notfound/notfound.component';
 import { Tls13010Next3Component } from './tls13010-next3/tls13010-next3.component';
 import { TLS26080Component } from './tls26080/tls26080.component';
 import { TLS26080CRUComponent } from './tls26080-cru/tls26080-cru.component';
-import { TLS23010CRUComponent } from './tls23010-cru/tls23010-cru.component';
+
+import { TLS23010CRUComponent } from './tls23010-cru/tls23010-cru.component'; // 型態別明細報表
+import { TLS23020CRUComponent } from './tls23020-cru/tls23020-cru.component'; // 折扣別報表
+import { TLS23030CRUComponent } from './tls23030-cru/tls23030-cru.component'; // 付款別報表
+import { TLS23040CRUComponent } from './tls23040-cru/tls23040-cru.component'; // 發票報表
+import { TLS23050CRUComponent } from './tls23050-cru/tls23050-cru.component'; // 收銀機日報表
+import { TLS23060CRUComponent } from './tls23060-cru/tls23060-cru.component'; // 收銀機區間報表
+import { TLS23070CRUComponent } from './tls23070-cru/tls23070-cru.component'; // 專櫃收銀機日報表
+import { TLS23080CRUComponent } from './tls23080-cru/tls23080-cru.component'; // 支付工具資料收報表
+import { TLS23090CRUComponent } from './tls23090-cru/tls23090-cru.component'; // 信用卡明細報表
+import { TLS23100CRUComponent } from './tls23100-cru/tls23100-cru.component'; // 付款別明細報表
+import { TLS23110CRUComponent } from './tls23110-cru/tls23110-cru.component'; // 折扣別明細報表
+import { TLS23120CRUComponent } from './tls23120-cru/tls23120-cru.component'; // 專櫃日對帳單
+import { TLS23130CRUComponent } from './tls23130-cru/tls23130-cru.component'; // 信用卡銷退日報表
+import { TLS23140CRUComponent } from './tls23140-cru/tls23140-cru.component'; // 有價券查詢報表
+
 
 const routes: Routes = [
   { path: '', redirectTo: '404', pathMatch: 'full' },
@@ -548,6 +562,20 @@ const routes: Routes = [
   { path: 'TLS22010CRU', component: TLS22010CRUComponent }, // 收銀機對帳查詢作業 CRU
   { path: 'TLS22020CRU', component: TLS22020CRUComponent }, // 系統監控報表 CRU
   { path: 'TLS23010CRU', component: TLS23010CRUComponent }, // 型態別報表 CRU
+  { path: 'TLS23010CRU', component: TLS23010CRUComponent }, // 型態別明細報表
+  { path: 'TLS23020CRU', component: TLS23020CRUComponent }, // 折扣別報表
+  { path: 'TLS23030CRU', component: TLS23030CRUComponent }, // 付款別報表
+  { path: 'TLS23040CRU', component: TLS23040CRUComponent }, // 發票報表
+  { path: 'TLS23050CRU', component: TLS23050CRUComponent }, // 收銀機日報表
+  { path: 'TLS23060CRU', component: TLS23060CRUComponent }, // 收銀機區間報表
+  { path: 'TLS23070CRU', component: TLS23070CRUComponent }, // 專櫃收銀機日報表
+  { path: 'TLS23080CRU', component: TLS23080CRUComponent }, // 支付工具資料收報表
+  { path: 'TLS23090CRU', component: TLS23090CRUComponent }, // 信用卡明細報表
+  { path: 'TLS23100CRU', component: TLS23100CRUComponent }, // 付款別明細報表
+  { path: 'TLS23110CRU', component: TLS23110CRUComponent }, // 折扣別明細報表
+  { path: 'TLS23120CRU', component: TLS23120CRUComponent }, // 專櫃日對帳單
+  { path: 'TLS23130CRU', component: TLS23130CRUComponent }, // 信用卡銷退日報表
+  { path: 'TLS23140CRU', component: TLS23140CRUComponent }, // 有價券查詢報表
 
 
   { path: 'TLS24010CRU', component: TLS24010CRUComponent }, // 交易補登作業 CRU
@@ -578,7 +606,6 @@ const routes: Routes = [
   { path: 'TLS28050CRU', component: TLS28050CRUComponent }, // 收銀員領袋表 CRU
   { path: 'TLS29010CRU', component: TLS29010CRUComponent }, // 折扣開放維護作業 CRU
   { path: 'TLS2A010CRU', component: TLS2A010CRUComponent }, // 各支付工具審核作業 CRU
-  { path: 'TLS2A020CRU', component: TLS2A020CRUComponent }, // 未審核收銀機台報表 CRU
   { path: 'TLS2A030CRU', component: TLS2A030CRUComponent }, // 溢欠彙總表 CRU
   { path: 'TLS2A040CRU', component: TLS2A040CRUComponent }, // 缺單據/作廢發票報表 CRU
   { path: 'TLS2A050CRU', component: TLS2A050CRUComponent }, // 第三方支付帳差報表 CRU

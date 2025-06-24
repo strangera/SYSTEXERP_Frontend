@@ -123,7 +123,6 @@ import { TLS29010CRUComponent } from './tls29010-cru/tls29010-cru.component';
 import { TLS29010Component } from './tls29010/tls29010.component';
 import { TLS2A010CRUComponent } from './tls2a010-cru/tls2a010-cru.component';
 import { TLS2A010Component } from './tls2a010/tls2a010.component';
-import { TLS2A020CRUComponent } from './tls2a020-cru/tls2a020-cru.component';
 import { TLS2A020Component } from './tls2a020/tls2a020.component';
 import { TLS2A030CRUComponent } from './tls2a030-cru/tls2a030-cru.component';
 import { TLS2A030Component } from './tls2a030/tls2a030.component';
@@ -397,7 +396,20 @@ import { TLS57170Component } from './tls57170/tls57170.component';
 import { Tls13010Next3Component } from './tls13010-next3/tls13010-next3.component';
 import { TLS26080Component } from './tls26080/tls26080.component';
 import { TLS26080CRUComponent } from './tls26080-cru/tls26080-cru.component';
-import { TLS23010CRUComponent } from './tls23010-cru/tls23010-cru.component';
+import { TLS23010CRUComponent } from './tls23010-cru/tls23010-cru.component'; // 型態別明細報表
+import { TLS23020CRUComponent } from './tls23020-cru/tls23020-cru.component'; // 折扣別報表
+import { TLS23030CRUComponent } from './tls23030-cru/tls23030-cru.component'; // 付款別報表
+import { TLS23040CRUComponent } from './tls23040-cru/tls23040-cru.component'; // 發票報表
+import { TLS23050CRUComponent } from './tls23050-cru/tls23050-cru.component'; // 收銀機日報表
+import { TLS23060CRUComponent } from './tls23060-cru/tls23060-cru.component'; // 收銀機區間報表
+import { TLS23070CRUComponent } from './tls23070-cru/tls23070-cru.component'; // 專櫃收銀機日報表
+import { TLS23080CRUComponent } from './tls23080-cru/tls23080-cru.component'; // 支付工具資料收報表
+import { TLS23090CRUComponent } from './tls23090-cru/tls23090-cru.component'; // 信用卡明細報表
+import { TLS23100CRUComponent } from './tls23100-cru/tls23100-cru.component'; // 付款別明細報表
+import { TLS23110CRUComponent } from './tls23110-cru/tls23110-cru.component'; // 折扣別明細報表
+import { TLS23120CRUComponent } from './tls23120-cru/tls23120-cru.component'; // 專櫃日對帳單
+import { TLS23130CRUComponent } from './tls23130-cru/tls23130-cru.component'; // 信用卡銷退日報表
+import { TLS23140CRUComponent } from './tls23140-cru/tls23140-cru.component'; // 有價券查詢報表
 
 @NgModule({
   declarations: [
@@ -549,6 +561,20 @@ import { TLS23010CRUComponent } from './tls23010-cru/tls23010-cru.component';
     TLS22010CRUComponent,
     TLS22020CRUComponent,
     TLS23010CRUComponent,
+    TLS23020CRUComponent,
+    TLS23030CRUComponent,
+    TLS23040CRUComponent,
+    TLS23050CRUComponent,
+    TLS23060CRUComponent,
+    TLS23070CRUComponent,
+    TLS23080CRUComponent,
+    TLS23090CRUComponent,
+    TLS23100CRUComponent,
+    TLS23110CRUComponent,
+    TLS23120CRUComponent,
+    TLS23130CRUComponent,
+    TLS23140CRUComponent,
+
     TLS24010CRUComponent,
     TLS24020CRUComponent,
     TLS24030CRUComponent,
@@ -577,7 +603,6 @@ import { TLS23010CRUComponent } from './tls23010-cru/tls23010-cru.component';
     TLS28050CRUComponent,
     TLS29010CRUComponent,
     TLS2A010CRUComponent,
-    TLS2A020CRUComponent,
     TLS2A030CRUComponent,
     TLS2A040CRUComponent,
     TLS2A050CRUComponent,

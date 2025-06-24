@@ -7,6 +7,10 @@ import { CarrierTypeService } from '../../../service/basic/carrier-type.service'
 import { finalize } from 'rxjs/operators';
 import { Location } from '@angular/common';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable'; // ✅ 正確寫法
+import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
+import { PdfService } from '../../../service/basic/pdf.service';
 
 
 @Component({
@@ -14,7 +18,8 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
   templateUrl: './tls23010-cru.component.html',
   styleUrls: ['./tls23010-cru.component.scss']
 })
-export class TLS23010CRUComponent extends BasicCruPageComponent<any>{
+export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
+  pdfSummary: string[] = [];
   override loading = true;
   printedAt: string = '';
   dateStart: string = '';
@@ -166,6 +171,7 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any>{
     private whetherService: WhetherService,
     private txnSubtypeService: TXN_SubtypeService,
     private location: Location,
+    private pdfService: PdfService,
     private carrierTypeService: CarrierTypeService
   ) {
     super();
@@ -174,7 +180,7 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any>{
     this.txnSubtypeService.getTXNSubtype().subscribe(res => this.transactionSubTypeOptions = res);
     this.carrierTypeService.getCarrierType().subscribe(res => this.carrierTypeOptions = res);
   }
-   dataForm = this.formBuilder.nonNullable.group({});
+  dataForm = this.formBuilder.nonNullable.group({});
 
   async ngOnInit(): Promise<void> {
     this.initializePage('TLS23010', this.dataForm);
@@ -216,9 +222,41 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any>{
         })
       ).subscribe((res) => {
         this.data = (res.Status === '0000' && Array.isArray(res.Data)) ? res.Data : [];
+
+        // ✅ 正確放置位置：資料查詢完成後，計算 summary
+        const getSum = (field: string): number =>
+          this.data.reduce((sum, row) => sum + (parseFloat(row[field]) || 0), 0);
+
+        const A = getSum('TXN_TotSaleAmt');      // 發票金額
+        const B = getSum('TXN_TotPayAmt');       // 已開發票的支付工具
+        const C = getSum('TXN_TotOver');         // 已開發票的支付工具溢收
+        const D = getSum('TXN_TotPayAmt');       // 訂金（假設同欄位）
+        const E = getSum('TXN_TotSaleAmt');      // 訂金結帳金額（範例）
+        const F = getSum('TXN_TotPayAmt');       // 訂金結帳的訂金（範例）
+        const G = getSum('TXN_TotDisc');         // 預售（範例）
+        const H = getSum('TXN_TaxFreeCertNo');   // 預售結帳金額（範例）
+
+        const discountValue = A + B - C + E - G + H;
+        const paymentValue = A + B + D - F;
+
+        this.pdfSummary = [
+          `(A)發票金額 = ${A}`,
+          `(B)已開發票的支付工具 = ${B}`,
+          `(C)已開發票的支付工具溢收 = ${C}`,
+          `(D)訂金 = ${D}`,
+          `(E)訂金結帳金額 = ${E}`,
+          `(F)訂金結帳的訂金 = ${F}`,
+          `(G)預售 = ${G}`,
+          `(H)預售結帳金額 = ${H}`,
+          '=============================',
+          `折扣別(專櫃業績) = (A) + (B) - (C) + (E) - (G) + (H) = ${discountValue}`,
+          `付款別(支付工具) = (A) + (B) + (D) - (F) = ${paymentValue}`
+        ];
+        this.generateSummaryTable();
       }, () => {
         this.data = [];
       });
+
     } else {
       this.loading = false;
     }
@@ -247,4 +285,91 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any>{
   printPage(): void {
     window.print();
   }
+  // 計算所有 A~H = TXN_PrintGUI 加總
+
+  groupedSummaryData: any[] = [];
+  totalSum = 0;
+  invoiceSum = 0;
+  showSummaryMode = false;
+  summaryTableData: any[] = [];
+
+  generateSummaryTable(): void {
+    const summaryMap = new Map<string, any>();
+
+    this.totalSum = 0;
+    this.invoiceSum = 0;
+
+    this.data.forEach(row => {
+      const key = row.tlt_no;
+      if (!summaryMap.has(key)) {
+        summaryMap.set(key, {
+          dateStart: this.dateStart,
+          dateEnd: this.dateEnd,
+          tlt_no: row.tlt_no,
+          tlt_name: row.tlt_name,
+          sum: 0
+        });
+      }
+
+      const saleAmt = parseFloat(row.TXN_TotSaleAmt) || 0;
+      const payAmt = parseFloat(row.TXN_TotPayAmt) || 0;
+
+      summaryMap.get(key).sum += saleAmt;
+      this.totalSum += saleAmt;
+      this.invoiceSum += payAmt;
+    });
+
+    this.summaryTableData = Array.from(summaryMap.values());
+
+    console.log('summaryTableData ✅', this.summaryTableData);
+    this.groupedSummaryData = this.summaryTableData; // 保留舊用法相容性
+  }
+
+
+
+  exportSummaryPDF(): void {
+  this.pdfService.exportReportPDF({
+    orientation: 'l',
+    title: '銷售總額報表',
+    dateStart: this.dateStart,
+    dateEnd: this.dateEnd,
+    printedAt: this.printedAt,
+    columns: [
+      { header: '銷售日期起', field: 'dateStart' },
+      { header: '銷售日期迄', field: 'dateEnd' },
+      { header: '專櫃編號', field: 'tlt_no' },
+      { header: '櫃位名稱', field: 'tlt_name', style: 'text-left' },
+      {
+        header: '發票總金額',
+        field: 'sum',
+        style: 'text-right',
+        format: (val: number) => val?.toLocaleString('en-US') || '0'
+      }
+    ],
+    data: this.groupedSummaryData,
+    subtotalFields: ['sum'],
+    mergeTotalCols: 4,
+    summaryText: [] // 如果你要在 PDF 下方加備註可以填
+  });
+}
+  exportSummaryExcel(): void {
+    import('xlsx').then(xlsx => {
+      const ws = xlsx.utils.json_to_sheet(
+        this.groupedSummaryData.map(row => ({
+          銷售日期起: row.dateStart,
+          銷售日期迄: row.dateEnd,
+          專櫃編號: row.tlt_no,
+          櫃位名稱: row.tlt_name,
+          發票總金額: row.sum
+        }))
+      );
+      const wb = xlsx.utils.book_new();
+      xlsx.utils.book_append_sheet(wb, ws, '銷售總額');
+      xlsx.writeFile(wb, `銷售總額_${new Date().toISOString()}.xlsx`);
+    });
+  }
+
+goToQueryPage(): void {
+  this.router.navigate(['/TLS/TLS23010']);
+}
 }

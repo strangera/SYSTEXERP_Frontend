@@ -1,13 +1,13 @@
 // 定義 sys3700 列表中的子項目介面 (與您上一個問題中的 UserSys3700Detail 相同)
 export interface UserSys3700Detail {
   ID?: number;
-  User_No: string;
-  SEQ_No: number;
+  User_No?: string;
+  SEQ_No?: number;
   Org_ID: string | null;      // 這裡根據 JSON 數據可能為 null
   Building_No: string | null;
   Floor_No: string | null;
   Area_No: string | null;
-  TLT_No: string;
+  TLT_No: string | null;
   TLT_Kind: string | null;
   BUS_Type: string | null;
   CRT_Date?: string; // ISO 8601 date string

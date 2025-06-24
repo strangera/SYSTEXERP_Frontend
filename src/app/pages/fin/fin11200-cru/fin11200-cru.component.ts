@@ -71,7 +71,12 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
         })),
       };
       this.fin11200Service.execProcNumber(body).pipe(finalize(() => this.loading = false)).subscribe((response) => {
-        console.log(response);
+        if (response.Status === '0000') {
+          this.messageService.successBubble(response.Message);
+          this.dataForm.reset();
+          this.data = [];
+          this.selectedData = [];
+        }
       });
     });
   }
@@ -112,6 +117,10 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
   }
   onDelete(selectedRows: POS1002[]) {
     this.data = this.data.filter(row => !selectedRows.includes(row));
+    this.selectedData = [];
+  }
+  resetTable() {
+    this.data = [];
     this.selectedData = [];
   }
 }

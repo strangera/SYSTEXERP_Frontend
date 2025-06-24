@@ -11,7 +11,7 @@ import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/fu
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 
 const nowDate = new Date();

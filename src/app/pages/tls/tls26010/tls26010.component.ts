@@ -11,7 +11,7 @@ import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 // 預購活動檔期設定
 const now = new Date();
 
@@ -26,18 +26,9 @@ export class TLS26010Component {
 
   // 權限變數
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
+
+
+
 
   // 查詢表單
   loading: boolean = false;

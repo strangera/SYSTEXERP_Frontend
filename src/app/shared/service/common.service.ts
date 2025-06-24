@@ -23,8 +23,8 @@ export class CommonService {
   }
   // get NOW
   getNOW(): any {
-    var date = new Date();
-    var utc_nowtime = formatDate(date, 'yyyyMMddhhmmss', 'zh-Hant-TW');
+    const date = new Date();
+    const utc_nowtime = formatDate(date, 'yyyyMMddhhmmss', 'zh-Hant-TW');
     return { "utc_nowtime": utc_nowtime };
   }
 }

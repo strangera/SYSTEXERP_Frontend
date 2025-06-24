@@ -12,7 +12,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { CardTypeService } from '../../../service/basic/card-type.service';
 import { CardCategoryService } from '../../../service/basic/card-category.service';
-import { HasPermissionsValue } from '../../../shared/directive/has-permission.directive';
+
 
 @Component({
   selector: 'app-tls21040-mod',
@@ -24,18 +24,9 @@ export class TLS21040ModComponent implements OnInit {
 
   // 權限
   funInfo?: FunsrightInfo;
-  addPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.add,
-  };
-  queryPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.query,
-  };
-  editPermission: HasPermissionsValue = {
-    progNo: this.ProgNo,
-    permission: PermissionsInfo.edit,
-  };
+
+
+
 
   // 查詢表單
   loading: boolean = false;

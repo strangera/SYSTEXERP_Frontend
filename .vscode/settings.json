@@ -18,5 +18,8 @@
   "prettier.useTabs": false,
   "[typescript]": {
     "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
   } // 使用空格而非 Tab
 }

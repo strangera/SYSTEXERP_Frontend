@@ -1,181 +1,127 @@
-import { ValidationService } from './../../../shared/service/validation.service';
-import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
+import { Aps1004Request, Sys1004Service } from '../../../service/api/sys/sys1004.service';
+import { ISysbc00Data, Sysbc00Service } from '../../../service/api/sys/sysbc00.service';
+import { concatMap, finalize, forkJoin, Observable, of } from 'rxjs';
+import { validateDuplicate, validateMaxLength, validateMaxNumber, validateRequired } from '../../../shared/models/system/validate-field.model';
 
 @Component({
   selector: 'app-sysbc00.cru',
   templateUrl: './sysbc00.cru.component.html',
-  styleUrl: './sysbc00.cru.component.scss'
 })
 // 銀行基本資料維護作業 CRU
-export class SYSBC00CRUComponent extends BasicCrupageComponent implements OnInit {
-  CashRegisterTypeItems: any[] = [
-    { label: '業主', value: '1' },
-    { label: '非業主', value: '2' },
-  ];
-  // ----------------------------------------------------------------
-  dataForm = this.formBuilder.nonNullable.group({
-    // APS1001 銀行主檔
-    BNK_No: ['', [Validators.maxLength(10)]], // 金資中心銀行代碼
-    BNK_Name: ['', [Validators.maxLength(60)]], // 銀行名稱
-    BNK_ShortName: ['', [Validators.maxLength(30)]], // 銀行簡稱
-    Min_Length: [, [this.validationService.numberValidator, Validators.max(99)]], // 該行帳號最小長度
-    Max_Length: [, [this.validationService.numberValidator, Validators.max(99)]], // 該行帳號最大長度
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> implements OnInit {
+  dataForm = this.formBuilder.nonNullable.group({// APS1001 銀行主檔
+    id: [],
+    BNK_No: ['', [Validators.required, Validators.maxLength(10)]], // 金資中心銀行代碼
+    BNK_Name: ['', [Validators.required, Validators.maxLength(60)]], // 銀行名稱
+    BNK_ShortName: ['', [Validators.required, Validators.maxLength(30)]], // 銀行簡稱
   });
-  // ----------------------------------------------------------------
+  data: Aps1004Request[] = [];
+  selectedRows: Aps1004Request[] = [];
+  deleteRows: Aps1004Request[] = [];
+  columns: Column[] = [
+    { field: 'BNK_BranchNo', header: '分行代碼', type: 'input', validate: [validateDuplicate, validateRequired, validateMaxLength(10)] },
+    { field: 'BNK_BranchName', header: '分行名稱', type: 'input', validate: [validateRequired, validateMaxLength(100)] },
+    { field: 'ACC_LEN', header: '該行帳號最小長度', type: 'inputNumber', useGrouping: false, validate: [validateRequired, validateMaxNumber(99999999)] },
+    { field: 'ACC_LEN_MAX', header: '該行帳號最大長度', type: 'inputNumber', useGrouping: false, validate: [validateRequired, validateMaxNumber(99999999)] },
+  ];
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
+    private sys1004Service: Sys1004Service,
+    private sysbc00Service: Sysbc00Service
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
-
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '410010';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    this.crudstatus = state.crudstatus;
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
-  }
-
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      // APS1004 銀行分行代碼檔
-      BNK_BranchNo: ['', [Validators.maxLength(10)]], // 銀行分行代號
-      BNK_BranchName: ['', [Validators.maxLength(50)]], // 銀行分行名稱
-
-      ACC_LEN: [, [Validators.maxLength(10)]], // 該行帳號最小長度-沒有使用
-      ACC_LEN_MAX: [, [Validators.maxLength(10)]], // 該行帳號最大長度-沒有使用
-
-      // 以下可以不用顯示於查詢頁
-      CRT_Date: [], // 建立日期
-      CRT_USR_No: [, [Validators.maxLength(8)]], // 建立人員
-      CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-      UPD_Date: [], // 變更日期
-      UPD_USR_No: [, [Validators.maxLength(8)]], // 變更人員
-      UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-
-    // 清空原本的 items 並重新填入分行資料
-    this.items.clear();
-    if (rowdata.children) {
-      console.log('有分行資料');
-      rowdata.children.forEach((branch: any) => {
-        const branchForm = this.createItem();
-        branchForm.patchValue(branch);
-        this.items.push(branchForm);
+    this.initializePage('SYSBC00', this.dataForm);
+    if (!this.isFormCreateable && this.dataForm.value.BNK_No) {
+      this.dataForm.get('BNK_No')?.disable();
+      const body = { BNK_No: this.dataForm.getRawValue().BNK_No };
+      this.sys1004Service.queryAPS1004(body).subscribe(data => {
+        this.data = data.Data.map(item => ({ ...item, ID: item.id }));
       });
     }
   }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
+    this.handleSubmit(frm, () => {
+      this.loading = true;
 
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
+      const isCreate = this.isFormCreateable;
 
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
+      const saveMain$ = isCreate
+        ? this.sysbc00Service.insertSYSBC00(frm.getRawValue())
+        : this.sysbc00Service.updateSYSBC00(frm.getRawValue());
 
-    this.messageService.unblockUi();
-    this.submitted = false;
+      saveMain$
+        .pipe(
+          // 儲存主檔完成 → 儲存子表
+          concatMap(() => {
+            const saveChildren$ = this.getSys1004SaveObservables(this.data);
+            return saveChildren$.length > 0 ? forkJoin(saveChildren$) : of(null);
+          }),
+          // 子表完成 → 判斷是否有要刪除的
+          concatMap(() => {
+            const idList = this.deleteRows
+              .map(item => item.id)
+              .filter((id): id is number => id !== undefined);
+            return idList.length > 0
+              ? this.sys1004Service.deleteAPS1004(idList)
+              : of(null);
+          }),
+          finalize(() => (this.loading = false))
+        )
+        .subscribe((finalRes) => {
+          if (finalRes) {
+            this.messageService.successBubble(finalRes.Message);
+          }
+
+          this.deleteRows = [];
+
+          if (isCreate) {
+            this.dataForm.reset();
+            this.data = [];
+            this.selectedRows = [];
+          } else {
+            this.onCancel();
+          }
+        });
+    });
   }
 
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
 
-  onCancel() {
-    this.router.navigate(['/SYSB000/SYSBC00']);
+  getSys1004SaveObservables(data: Aps1004Request[]): Observable<any>[] {
+    const newItems = data.filter(d => !d.id);
+    const updateItems = data.filter(d => !!d.id);
+
+    return [
+      ...newItems.map(item =>
+        this.sys1004Service.insertAPS1004({ ...item, BNK_No: this.dataForm.value.BNK_No })
+      ),
+      ...updateItems.map(item =>
+        this.sys1004Service.updateAPS1004({ ...item, BNK_No: this.dataForm.value.BNK_No })
+      ),
+    ];
   }
+
+  resetTable() {
+    this.data = [];
+    this.selectedRows = [];
+  }
+
+  // 刪除資料的方法
+  onDelete(rows: Aps1004Request[]) {
+    // 將畫面資料中刪除這些 row
+    this.data = this.data.filter(item => !rows.includes(item));
+
+    // 將有 id 的項目（表示是資料庫已存在的）加進 deleteRows，避免重複
+    rows
+      .filter(item => item.id !== undefined && !this.deleteRows.some(d => d.id === item.id))
+      .forEach(item => this.deleteRows.push(item));
+
+    // 清空選取列
+    this.selectedRows = [];
+  }
+
 }
