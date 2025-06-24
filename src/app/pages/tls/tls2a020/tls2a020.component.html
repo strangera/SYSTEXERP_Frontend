@@ -37,12 +37,25 @@
     ]" (valueChange)="queryForm.controls.radioOption.setValue($event)">
             </app-radiobutton>
           </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-multi-select>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="館別" [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
+          </div>
+
         </div>
+
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
+
       </form>
 
     </p-accordionTab>
