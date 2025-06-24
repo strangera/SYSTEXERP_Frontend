@@ -11,8 +11,8 @@ interface SalesRecord {
   preAuditShortfallAmount: number;
   receiptTotal: number;
   systemTotal: number;
-  compareCD: '✔️' | '❌';
-  compareAB: '✔️' | '❌';
+  compareCD: 'Y' | 'N';
+  compareAB: 'Y' | 'N';
 }
 
 @Component({
@@ -90,8 +90,8 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     this.loading = false;
   }
 
-  compareValues(a: number, b: number): '✔️' | '❌' {
-    return a === b ? '✔️' : '❌';
+  compareValues(a: number, b: number): 'Y' | 'N' {
+    return a === b ? 'Y' : 'N';
   }
 
 }

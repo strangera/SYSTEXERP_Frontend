@@ -28,9 +28,9 @@ const now = new Date();
 export class TLS2A020Component extends BasicQueryPageComponent<any> implements OnInit {
 
   // 進度條、頁數設定
-  progressValue = 0;
-  showPageSizeDialog = false;
-  customPageSize = 1000;
+  // progressValue = 0;
+  // showPageSizeDialog = false;
+  // customPageSize = 1000;
 
   // 表單
   queryForm = this.formBuilder.group({
