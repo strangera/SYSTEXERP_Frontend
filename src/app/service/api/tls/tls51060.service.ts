@@ -35,4 +35,9 @@ export class Tls51060Service {
   queryPOS2034_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryPOS2034_DropDownList`, body);
   }
+
+  // 查詢 PLULOGO 資料表 (包含折扣別)
+  queryPLULOGO_OrderPrcRate_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryPLULOGO_OrderPrcRate_DropDownList`, body);
+  }
 }
