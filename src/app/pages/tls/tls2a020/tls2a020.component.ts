@@ -117,7 +117,6 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
   // 清除功能
   onClearForm(): void {
     this.queryForm.reset();
-    this.queryForm.patchValue({ salesDate: now });
   }
 
   // 刪除項目
