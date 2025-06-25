@@ -14,7 +14,7 @@ export interface Pos10015 {
   SYS_SrvNo: string;
   SYS_SrvIP: string;
   SYS_SrvPort: number;
-  SYS_SrvStatus: 'A' | 'C'; //主機狀態,「A.啟用」與「C.停用」,預設值為「A」
+  SYS_SrvStatus: '啟用' | '停用'; //主機狀態,「A.啟用」與「C.停用」,預設值為「A」
   SYS_SrvName?: string;
   SYS_SrvUsrID?: string;
   SYS_SrvUsrPwd?: string;
@@ -63,8 +63,8 @@ export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implem
   });
 
   SYS_SrvStatus_Option: any = [
-    { value: 'A', label: '啟用' },
-    { value: 'C', label: '停用' }
+    { value: '啟用', label: '啟用' },
+    { value: '停用', label: '停用' }
   ];
   private userSubscription: Subscription | undefined; // 使用者訂閱
   userInfo: UserInfo | null = null;

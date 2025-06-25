@@ -1,114 +1,72 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateOne"
-              label="日期"
-              [control]="queryForm.controls.date"
-              [submitted]="submitted"
-            ></app-calendar>
-          </div>
 
-          <!-- Radio button and 樓層 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <div class="grid align-items-center">
-              <div class="col-2">
-                <input
-                  type="radio"
-                  [checked]="queryForm.controls.floorRadio.value === 'floor'"
-                  (click)="onRadioSelect('floor')"
-                />
-              </div>
-              <div class="col-10">
-                <app-dropdown
-                  label="樓層"
-                  controlName="floor"
-                  [options]="floorOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.floor"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-            </div>
-          </div>
-
-          <!-- Radio button and 收銀機代碼 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <div class="grid align-items-center">
-              <div class="col-2">
-                <input
-                  type="radio"
-                  [checked]="
-                    queryForm.controls.machineCodeRadio.value === 'machineCode'
-                  "
-                  (click)="onRadioSelect('machineCode')"
-                />
-              </div>
-              <div class="col-10">
-                <app-input-number
-                  [useGrouping]="false"
-                  label="收銀機代碼"
-                  controlName="machineCode"
-                  [control]="queryForm.controls.machineCode"
-                  [submitted]="submitted"
-                ></app-input-number>
-              </div>
-            </div>
+            <app-calendar label="日期" calendarType="dateOne" [control]="queryForm.controls.salesDate"
+              [submitted]="submitted"></app-calendar>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="顯示選項"
-              groupname="machineDisplayOptions"
-              [control]="queryForm.controls.machineDisplayOptions"
-              [options]="machinedisplayOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
+            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-multi-select>
           </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="收銀機代號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <label for="status1">系統帳</label>
+            <p-dropdown [options]="statusOptions" optionLabel="label" optionValue="value"
+              [formControl]="queryForm.controls.status1" placeholder="請選擇">
+            </p-dropdown>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <label for="status2">清機帳</label>
+            <p-dropdown [options]="statusOptions" optionLabel="label" optionValue="value"
+              [formControl]="queryForm.controls.status2" placeholder="請選擇">
+            </p-dropdown>
+          </div>
+
+
+
+
+          <div class="col-12 lg:col-8">
+            <app-radiobutton label="查詢條件" groupname="radioOption" [control]="queryForm.controls.radioOption"
+              [submitted]="submitted" [options]="[
+      { value: 'hasTransaction', label: '只顯示有交易之機台' },
+      { value: 'allMachines', label: '顯示所有之機台' },
+      { value: 'offlineMachines', label: '顯示可能離線之機台' },
+      { value: 'unclearedMachines', label: '顯示未清機之機台' }
+    ]" (valueChange)="queryForm.controls.radioOption.setValue($event)">
+            </app-radiobutton>
+          </div>
+        </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
+
     </p-accordionTab>
   </p-accordion>
 </div>
 
 <div class="card">
   <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+    <app-table tableKey="TLS22010" [data]="data" [columns]="columns"></app-table>
   </div>
 </div>
 * 發票總金額(F) = 發票未稅金額(M) + 發票稅額(N) + 發票免稅金額(O) * 付款金額(H)
 = 發票總金額(F) + 溢收(G) + 已開發票金額 (E) + 訂金結帳訂金 (C3) + 代收/付金額
-(L) * 已開發票溢付(I)=溢收 (G))
+(L) * 已開發票溢付(I)=溢收 (G)

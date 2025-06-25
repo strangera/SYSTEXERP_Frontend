@@ -31,10 +31,10 @@ export class TLS46010Component
     { field: 'SYS_SrvNo', header: '主機編號', visible: true },
     { field: 'SYS_SrvIP', header: '主機IP', visible: true },
     { field: 'SYS_SrvPort', header: '主機連接埠', visible: true },
-    { field: 'SYS_SrvStatus', header: '主機狀態', visible: true },
+    { field: 'SYS_SrvStatusName', header: '主機狀態', visible: true },
     { field: 'SYS_SrvName', header: '主機名稱', visible: true },
     { field: 'SYS_SrvUsrID', header: '主機登入帳號', visible: true },
-    { field: 'SYS_SrvUsrPwd', header: '主機登入密碼', visible: true },
+    { field: 'maskedPwd', header: '主機登入密碼', visible: true },
     { field: 'SYS_SRVDDir', header: '後台系統下載目錄', visible: true },
     { field: 'SYS_SRVUDir', header: '後台系統上傳目錄', visible: true },
     { field: 'SYS_MyPOSDDir', header: '傳輸程式下載目', visible: true },
@@ -50,11 +50,19 @@ export class TLS46010Component
   ];
   // ----------------------------------------------------------------
 
-  // SYS_SrvStatus_Option: option[] = [];
-  SYS_SrvStatus_Option: { no: string, name: string }[] = [
+  getSrvStatusName(code: string): string {
+    switch (code) {
+      case 'A': return '啟用';
+      case 'C': return '停用';
+      default: return code ?? '-';
+    }
+  }
+
+  SYS_SrvStatus_Option = [
     { no: 'A', name: '啟用' },
-    { no: 'C', name: '停用' },
+    { no: 'C', name: '停用' }
   ];
+
 
   constructor(
     private tls46010Service: Tls46010Service,
@@ -72,7 +80,11 @@ export class TLS46010Component
         next: (response) => {
           console.log('API response:', response);
           if (response.Status === '0000') {
-            this.data = response.Data || [];
+            this.data = (response.Data || []).map((item: Pos10015) => ({
+              ...item,
+              SYS_SrvStatusName: this.getSrvStatusName(item.SYS_SrvStatus),
+              maskedPwd: '*'.repeat(item.SYS_SrvUsrPwd?.length || 0)
+            }));
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {
@@ -89,6 +101,7 @@ export class TLS46010Component
       });
     });
   }
+
 
   // 刪除項目
   onDelete(rowData: Pos10015[]): void {

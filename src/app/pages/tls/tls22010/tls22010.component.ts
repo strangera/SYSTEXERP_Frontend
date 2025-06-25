@@ -1,43 +1,29 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { FormGroup } from '@angular/forms';
 import { FloorService } from '../../../service/basic/floor.service';
-
 import { MachinedisplayService } from '../../../service/basic/machinedisplay.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
 
 @Component({
-  selector: 'app-tls22010',
   templateUrl: './tls22010.component.html',
-  styleUrls: ['./tls22010.component.scss'],
 })
-export class TLS22010Component implements OnInit {
-  ProgNo: string = '220006';
+export class TLS22010Component extends BasicQueryPageComponent<any> implements OnInit {
 
-  // 權限
-  funInfo?: FunsrightInfo;
-
-
-
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
   queryForm = this.formBuilder.group({
-    date: [],                    // 日期
+    salesDate: [],                    // 日期
+    tlt_floor: [[]],
+    ECR_No: [[]],
     floor: [],                   // 樓層
     floorRadio: [''],            // 樓層單選按鈕
     machineCode: [],             // 收銀機代碼
     machineCodeRadio: [''],      // 收銀機代碼單選按鈕
     machineDisplayOptions: [],   // 收銀機顯示選項
+    radioOption: [null],          // 單選按鈕選項
+    systemStatus: [null],
+    clearMachineStatus: [null],
+    status1: [''],
+    status2: [''],
   });
 
   // 表格資料
@@ -67,22 +53,27 @@ export class TLS22010Component implements OnInit {
     { field: 'kioskOperation', header: '後台(作廢/補登)', visible: true },
     { field: 'status', header: '狀態', visible: true },
   ];
+  statusOptions = [
+    { label: '正常', value: 'normal' },
+    { label: '異常', value: 'abnormal' }
+  ];
 
   // 樓層選項
   floorOptions: any[] = [];
   // 收銀機顯示選項
   machinedisplayOptions: any[] = [];
-
+  ECRNoOptions: any[] = [];
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private floorService: FloorService,
-    private machineDisplayService: MachinedisplayService
-  ) { }
+    private machineDisplayService: MachinedisplayService,
+    private ECRNoService: ECRNoService
+    // private messageService: NotificationService
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
+    this.initializePage('TLS22010', '/TLS/TLS22010CRU', this.queryForm, (form) => this.onSubmit(form));
     // 初始化權限
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
@@ -95,6 +86,11 @@ export class TLS22010Component implements OnInit {
     this.machineDisplayService.getMachinedisplay().subscribe((data) => {
       this.machinedisplayOptions = data;
     });
+
+    this.ECRNoService.getECRNo().subscribe((data) => {
+      this.ECRNoOptions = data;
+    });
+
   }
 
   // 檢查是否有查詢權限
@@ -111,82 +107,119 @@ export class TLS22010Component implements OnInit {
   canEdit(): boolean {
     return true;
   }
-
-  // 提交表單
-  onSubmit(frm: FormGroup): void {
-    console.log(frm.value);
+  onSubmit(form: FormGroup): void {
     this.submitted = true;
     this.loading = true;
     this.messageService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // 提交查詢邏輯
+    if (form.valid && this.canQuery()) {
+      this.data = [
+        {
+          collectionMachineCode: 'M001',
+          line: 'L1',
+          district: 'A區',
+          floor: '1F',
+          salesAmountA: 10000,
+          depositAmount: 2000,
+          refundAmountC2: 500,
+          discountD: 9500,
+          agencyFeeL: 300,
+          invoicedAmountE: 9000,
+          reportedAmountK: 100,
+          remittedAmountI: 9400,
+          invoiceTotalAmountF: 9700,
+          invoiceNoTaxAmountM: 8500,
+          invoiceTaxAmountN: 850,
+          invoiceCashAmountO: 350,
+          collectionAmountG: 200,
+          discountJ: 100,
+          paymentAmountH: 9600,
+          zReportAmount: 10000,
+          kioskOperation: '補登1筆',
+          status: '正常',
+        }
+      ];
     }
 
     this.loading = false;
     this.messageService.unblockUi();
   }
 
-  // 查詢邏輯
-  onSubmitQuery(frm: FormGroup): void {
-    this.onSubmit(frm);
-  }
+  // // 提交表單
+  // onSubmit(frm: FormGroup): void {
+  //   console.log(frm.value);
+  //   this.submitted = true;
+  //   this.loading = true;
+  //   this.messageService.blockUi();
 
-  // 清空表單
-  onClearForm(): void {
-    this.queryForm.reset(); // 重置表單
-  }
+  //   if (frm.valid && this.canQuery()) {
+  //     // 提交查詢邏輯
+  //   }
 
-  // Handle Radio Button Selection
-  onRadioSelect(selected: string): void {
-    if (selected === 'floor') {
-      this.queryForm.controls.floorRadio.setValue('floor');
-      this.queryForm.controls.machineCodeRadio.setValue(''); // Deselect 收銀機代碼
-    } else if (selected === 'machineCode') {
-      this.queryForm.controls.machineCodeRadio.setValue('machineCode');
-      this.queryForm.controls.floorRadio.setValue(''); // Deselect 樓層
-    }
-  }
+  //   this.loading = false;
+  //   this.messageService.unblockUi();
+  // }
 
-  // 創建新數據
-  onCreate(): void {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm.value,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
+  // // 查詢邏輯
+  // onSubmitQuery(frm: FormGroup): void {
+  //   this.onSubmit(frm);
+  // }
 
-  // 編輯數據
-  onEdit(data: any): void {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm.value,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
+  // // 清空表單
+  // onClearForm(): void {
+  //   this.queryForm.reset(); // 重置表單
+  // }
+
+  // // Handle Radio Button Selection
+  // onRadioSelect(selected: string): void {
+  //   if (selected === 'floor') {
+  //     this.queryForm.controls.floorRadio.setValue('floor');
+  //     this.queryForm.controls.machineCodeRadio.setValue(''); // Deselect 收銀機代碼
+  //   } else if (selected === 'machineCode') {
+  //     this.queryForm.controls.machineCodeRadio.setValue('machineCode');
+  //     this.queryForm.controls.floorRadio.setValue(''); // Deselect 樓層
+  //   }
+  // }
+
+  // // 創建新數據
+  // onCreate(): void {
+  //   if (this.canAdd()) {
+  //     let extras: NavigationExtras = {
+  //       state: {
+  //         crudstatus: CRUDStatus.Create,
+  //         queryform: this.queryForm.value,
+  //       },
+  //       skipLocationChange: true,
+  //     };
+  //     this.router.navigate(['/demo/demoInputTableCRU'], extras);
+  //   }
+  // }
+
+  // // 編輯數據
+  // onEdit(data: any): void {
+  //   if (this.canEdit()) {
+  //     let extras: NavigationExtras = {
+  //       state: {
+  //         crudstatus: CRUDStatus.Edit,
+  //         rowdata: data,
+  //         queryform: this.queryForm.value,
+  //       },
+  //       skipLocationChange: true,
+  //     };
+  //     this.router.navigate(['/demo/demoInputTableCRU'], extras);
+  //   }
+  // }
 
   // 查看詳細信息
-  onDetail(data: any): void {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm.value,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
-  }
+  //   onDetail(data: any): void {
+  //     let extras: NavigationExtras = {
+  //       state: {
+  //         crudstatus: CRUDStatus.Read,
+  //         rowdata: data,
+  //         queryform: this.queryForm.value,
+  //       },
+  //       skipLocationChange: true,
+  //     };
+  //     this.router.navigate(['/demo/demoInputTableCRU'], extras);
+  //   }
 }
