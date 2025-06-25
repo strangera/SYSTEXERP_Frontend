@@ -89,7 +89,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_IsStock: ['Y', [Validators.maxLength(1)]], // 是否計算庫存 Y:是 N:否
     PLU_ReadyDay: [0, [Validators.maxLength(4)]], // 備貨天數 預設0
     PLU_StockType: ['0', [Validators.maxLength(1)]], // 庫存類別 0:一般 1:標準用量 2:自動轉換(沒用到) 3:子母商品 4:手動轉換
-    PLU_TaxRate: [0.05, [Validators.maxLength(7)]], // 稅率 預設0
+    PLU_TaxRate: [0, [Validators.maxLength(7)]], // 稅率 預設0
 
     PLU_StopSale: ['N', [Validators.maxLength(1)]], // 停止銷售註記(Y/N)
     PLU_CalcSaleStock: ['N', [Validators.maxLength(1)]], // 計算庫存方式(N:依數量 Y:依金額)
@@ -361,11 +361,34 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
             this.messageService.infoBubble('沒有輸入國際條碼，國際條碼已自動設為商品管理編號');
           }
 
+          const simplifiedFiles = this.files.map(file => ({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified
+          }));
+          console.log('上傳 IMG :', JSON.stringify(simplifiedFiles, null, 2));
+          console.log('現有的 IMG1001 :', JSON.stringify(this.img1001Data, null, 2));
+
+          // 將所有 file 都轉為新資料項目（id: 0）
+          const newIMGEntries: Partial<IMG1001Detail>[] = this.files.map(file => ({
+            id: 0,
+            IMG_File: file.name,
+            IMG_Remark: ''
+          }));
+
+          // 合併原本資料 + 所有新 file
+          const mergedIMG1001: (IMG1001Detail | Partial<IMG1001Detail>)[] = [
+            ...this.img1001Data,
+            ...newIMGEntries
+          ];
+
+
           const requestBody = {
             ...formValue,
             PLU_No: [frm.get('PLU_No')?.value], //用[]包
             "POS2020_INFO": this.POS2020Data,
-            "IMG1001_INFO": this.img1001Data,
+            "IMG1001_INFO": mergedIMG1001,
           }
           console.log('insert', requestBody);
 
@@ -383,18 +406,33 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           // POS2005Data 中所有的 PLU_No
           const POS2005PLUs = this.POS2005Data.map(item => item.PLU_No);
           console.log('現有的 PLU_No 陣列:', POS2005PLUs);
-          console.log('現有的 IMG :', this.files);
+          const simplifiedFiles = this.files.map(file => ({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified
+          }));
+          console.log('上傳 IMG :', JSON.stringify(simplifiedFiles, null, 2));
+          console.log('現有的 IMG1001 :', JSON.stringify(this.img1001Data, null, 2));
+
+          // 將所有 file 都轉為新資料項目（id: 0）
+          const newIMGEntries: Partial<IMG1001Detail>[] = this.files.map(file => ({
+            id: 0,
+            IMG_File: file.name,
+            IMG_Remark: ''
+          }));
+
+          // 合併原本資料 + 所有新 file
+          const mergedIMG1001: (IMG1001Detail | Partial<IMG1001Detail>)[] = [
+            ...this.img1001Data,
+            ...newIMGEntries
+          ];
 
           const requestBody = {
             ...formValue,
             PLU_No: POS2005PLUs,
-            // IMG_File用files更新的name，其他保留原本的
-            "IMG1001_INFO": this.files.map((file, idx) => ({
-              // id: this.img1001Data[idx]?.id || 0, // 如果有ID就用，沒有就新建
-              id: 0, // 如果有ID就用，沒有就新建
-              IMG_File: file.name,
-              IMG_Remark: this.img1001Data[idx]?.IMG_Remark || ''
-            })),
+            // 如果IMG_File也有資料，就合併進去IMG1001
+            "IMG1001_INFO": mergedIMG1001,
             "POS2020_INFO": this.POS2020Data,
           };
 
