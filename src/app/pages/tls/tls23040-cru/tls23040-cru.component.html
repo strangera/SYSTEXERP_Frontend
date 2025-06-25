@@ -1,1 +1,28 @@
-<p>tls23040-cru works!</p>
+<div class="card">
+    <div class="flex gap-2 mb-2">
+        <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    </div>
+
+    <div class="card">
+<app-report-table-group 
+  [columns]="columns" 
+  [data]="data"
+  [subtotalFields]="displayMode === 'Report' ? ['TXN_TotGUI', 'TXN_TotSaleAmt'] : 
+                    displayMode === 'ByPaymentType' ? ['TXN_PayAmt'] : 
+                    displayMode === 'ByDiscountType' ? ['TXN_DiscAmt'] : []"
+  [enableGrouping]="displayMode === 'ByPaymentType' || displayMode === 'ByDiscountType'"
+  [groupByField]="displayMode === 'ByPaymentType' ? 'TXN_No' : 
+                  displayMode === 'ByDiscountType' ? 'TXN_GUINo' : ''"
+  [reportTitle]="'發票報表'"
+  [currentPage]="1"
+  [dateStart]="dateStart"
+  [dateEnd]="dateEnd"
+  [printedAt]="printedAt"
+  [showTotalOnly]="false"
+  [pdfSummaryText]="[]"
+  [defaultMergedView]="true">
+</app-report-table-group>
+
+
+    </div>
+</div>

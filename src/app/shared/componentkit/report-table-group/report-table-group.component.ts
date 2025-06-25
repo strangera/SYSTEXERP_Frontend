@@ -184,8 +184,10 @@ export class ReportTableGroupComponent implements OnInit {
 
   getGrandTotal(field: string): number | string {
     const sum = this._data.reduce((acc, row) => acc + (parseFloat(row[field]) || 0), 0);
+    console.log('🔍 總計', field, '=', sum);
     return sum.toLocaleString();
   }
+
   get mergedPagedData(): any[] {
     return this._data.slice(0, this.rowsPerTable);
   }

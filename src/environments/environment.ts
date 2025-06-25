@@ -7,8 +7,6 @@ export const environment = {
   // ApiUrl: 'https://localhost:7271',
   BaseUrl: 'http://43.207.4.99/TSRD_WEBAPI',
   ApiUrl: 'http://43.207.4.99/TSRD_WEBAPI',
-  // BaseUrl: 'http://localhost:5142',
-  // ApiUrl: 'http://localhost:5142',
   // BaseUrl: 'http://localhost/TSRD_WEBAPI',
   // ApiUrl: 'http://localhost/TSRD_WEBAPI',
   // BaseUrl: 'https://10.3.11.2/TSRD_WEBAPI',
