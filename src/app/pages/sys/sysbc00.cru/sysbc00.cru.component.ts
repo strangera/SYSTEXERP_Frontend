@@ -72,13 +72,9 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
           }),
           finalize(() => (this.loading = false))
         )
-        .subscribe((finalRes) => {
-          if (finalRes) {
-            this.messageService.successBubble(finalRes.Message);
-          }
-
+        .subscribe(() => {
+          this.messageService.successBubble(isCreate ? '新增成功' : '修改成功');
           this.deleteRows = [];
-
           if (isCreate) {
             this.dataForm.reset();
             this.data = [];
@@ -97,10 +93,10 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
 
     return [
       ...newItems.map(item =>
-        this.sys1004Service.insertAPS1004({ ...item, BNK_No: this.dataForm.value.BNK_No })
+        this.sys1004Service.insertAPS1004({ ...item, BNK_No: this.dataForm.getRawValue().BNK_No })
       ),
       ...updateItems.map(item =>
-        this.sys1004Service.updateAPS1004({ ...item, BNK_No: this.dataForm.value.BNK_No })
+        this.sys1004Service.updateAPS1004({ ...item, BNK_No: this.dataForm.getRawValue().BNK_No })
       ),
     ];
   }

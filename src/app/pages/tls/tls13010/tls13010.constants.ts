@@ -22,7 +22,7 @@ export const CHECK_TYPE_OPTIONS = {
 } as const;
 
 // 抽成別
-export const COMMISSION_COMP_TYPE_OPTIONS = {
+export const TLT_TERM_TYPE_OPTIONS = {
   '1': '固定租金',
   '2': '底租抽成取高者',
   '3': '一般抽成',
@@ -32,7 +32,7 @@ export const COMMISSION_COMP_TYPE_OPTIONS = {
 } as const;
 
 // 配合方式(1=專櫃 2=自營)
-export const TLT_TERM_TYPE_OPTIONS = {
+export const STORE_WAY_OPTIONS = {
   '1': '專櫃',
   '2': '自營'
 } as const;
@@ -44,11 +44,11 @@ export const PAYTYPE_OPTIONS = {
 } as const;
 
 // 收款方式
-export const STORE_WAY_OPTIONS = {
-  '1': '現場收款',
-  '2': '統一收款',
-  '3': '分期收款'
-} as const;
+// export const STORE_WAY_OPTIONS = {
+//   '1': '現場收款',
+//   '2': '統一收款',
+//   '3': '分期收款'
+// } as const;
 
 // 發票類型 invoice_type(0:發票 1:收據)
 export const INVOICE_TYPE_OPTIONS = {
@@ -106,6 +106,10 @@ export const CAG_TAXTYPE_OPTIONS = {
   '1': '應稅',
 } as const;
 
+export const COMM_COMP_TYPE_OPTIONS = {
+  // '1': '含稅',
+  '2': '除稅'
+} as const;
 // ========== 格式化函數 ==========
 
 // 通用的多選格式化函數
@@ -121,7 +125,8 @@ export const formatMultipleOptions = (value: string, options: Record<string, str
 // 單選格式化函數
 export const formatSingleOption = (value: string, options: Record<string, string>): string => {
   if (!value) return '';
-  return options[value] || value;
+  const trimmedValue = value.toString().trim();
+  return options[trimmedValue] || value;
 };
 
 // ========== 專門的格式化函數 ==========
@@ -142,13 +147,13 @@ export const formatDecoType = (value: string): string => {
 };
 
 // 抽成別格式化
-export const formatCommissionCompType = (value: string): string => {
-  return formatSingleOption(value, COMMISSION_COMP_TYPE_OPTIONS);
+export const formatTltTermType = (value: string): string => {
+  return formatSingleOption(value, TLT_TERM_TYPE_OPTIONS);
 };
 
 // 配合方式格式化
-export const formatTltTermType = (value: string): string => {
-  return formatSingleOption(value, TLT_TERM_TYPE_OPTIONS);
+export const formatStoreWay = (value: string): string => {
+  return formatSingleOption(value, STORE_WAY_OPTIONS);
 };
 
 // 付款方式格式化
@@ -156,10 +161,7 @@ export const formatPaytype = (value: string): string => {
   return formatSingleOption(value, PAYTYPE_OPTIONS);
 };
 
-// 收款方式格式化
-export const formatStoreWay = (value: string): string => {
-  return formatSingleOption(value, STORE_WAY_OPTIONS);
-};
+
 
 // 發票類型格式化
 export const formatInvoiceType = (value: string): string => {
@@ -200,4 +202,8 @@ export const formatCount = (value: string | number): string => {
   if (!value || value === '0') return '0';
   const num = typeof value === 'string' ? parseInt(value) : value;
   return isNaN(num) ? '0' : num.toString();
+};
+
+export const formatCommCompType = (value: string): string => {
+  return formatSingleOption(value, COMM_COMP_TYPE_OPTIONS);
 };
