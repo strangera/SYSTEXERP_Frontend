@@ -52,17 +52,27 @@ export class LoginComponent implements OnInit {
     if (frm.invalid) return;
     this.loading = true;
     this.loginForm.value.client_ip = this.ipAddress;
+
     this.authService.login(this.loginForm.value as userLogin).pipe(first()).subscribe({
-      next: () => {
+      next: (res) => {
+        const sysStoreNo = res?.Data?.SYS_StoreNo;
+        if (sysStoreNo) {
+          sessionStorage.setItem('SYS_StoreNo', sysStoreNo);
+          console.log('✅ 已儲存 SYS_StoreNo:', sysStoreNo);
+        }
+
         this.notemessage.successBubble('登入成功');
         console.log('登入成功', this.loginForm.value);
         this.loading = false;
+
+        // 若需要自動導頁，這裡可以補：this.router.navigate(['/dashboard']);
       },
       error: () => {
         this.loginForm.patchValue({ password: '' }); //清空密碼
         this.loading = false;
       }
     });
+
     this.notemessage.unblockUi();
   }
 }
