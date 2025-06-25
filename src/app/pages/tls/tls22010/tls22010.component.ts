@@ -93,26 +93,8 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
 
   }
 
-  // 檢查是否有查詢權限
-  canQuery(): boolean {
-    return true;
-  }
-
-  // 檢查是否有新增權限
-  canAdd(): boolean {
-    return true;
-  }
-
-  // 檢查是否有編輯權限
-  canEdit(): boolean {
-    return true;
-  }
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (form.valid && this.canQuery()) {
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
       this.data = [
         {
           collectionMachineCode: 'M001',
@@ -139,36 +121,9 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
           status: '正常',
         }
       ];
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    })
   }
 
-  // // 提交表單
-  // onSubmit(frm: FormGroup): void {
-  //   console.log(frm.value);
-  //   this.submitted = true;
-  //   this.loading = true;
-  //   this.messageService.blockUi();
-
-  //   if (frm.valid && this.canQuery()) {
-  //     // 提交查詢邏輯
-  //   }
-
-  //   this.loading = false;
-  //   this.messageService.unblockUi();
-  // }
-
-  // // 查詢邏輯
-  // onSubmitQuery(frm: FormGroup): void {
-  //   this.onSubmit(frm);
-  // }
-
-  // // 清空表單
-  // onClearForm(): void {
-  //   this.queryForm.reset(); // 重置表單
-  // }
 
   // // Handle Radio Button Selection
   // onRadioSelect(selected: string): void {
@@ -181,45 +136,4 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   //   }
   // }
 
-  // // 創建新數據
-  // onCreate(): void {
-  //   if (this.canAdd()) {
-  //     let extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Create,
-  //         queryform: this.queryForm.value,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['/demo/demoInputTableCRU'], extras);
-  //   }
-  // }
-
-  // // 編輯數據
-  // onEdit(data: any): void {
-  //   if (this.canEdit()) {
-  //     let extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Edit,
-  //         rowdata: data,
-  //         queryform: this.queryForm.value,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['/demo/demoInputTableCRU'], extras);
-  //   }
-  // }
-
-  // 查看詳細信息
-  //   onDetail(data: any): void {
-  //     let extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Read,
-  //         rowdata: data,
-  //         queryform: this.queryForm.value,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['/demo/demoInputTableCRU'], extras);
-  //   }
 }
