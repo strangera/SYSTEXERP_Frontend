@@ -17,6 +17,7 @@
         <app-input-textarea class="col-12" label="模版備註" controlName="ECR_TmplDesc"
           [control]="dataForm.controls.ECR_TmplDesc" [submitted]="submitted" />
       </div>
+
       <div class="card">
         <h4>收銀設定</h4>
         <div class="grid p-fluid">
@@ -24,62 +25,65 @@
             [options]="ECR_SernoType_Option" optionLabel="label" optionValue="value"
             [control]="dataForm.controls.ECR_SernoType" [submitted]="submitted">
           </app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="發票使用類別" controlName="ECR_GUI_Type"
+            [options]="ECR_GUI_Type_Option" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.ECR_GUI_Type" [submitted]="submitted" />
           <app-input-number class="col-12 md:col-6 lg:col-4" label="系統對時間隔(秒)" controlName="ECR_TimeTickInvl"
             [control]="dataForm.controls.ECR_TimeTickInvl" [submitted]="submitted">
           </app-input-number>
-        </div>
-        <div class="grid p-fluid">
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="上下傳異動檔間隔(秒)" controlName="ECR_Interval"
+            [control]="dataForm.controls.ECR_Interval" [submitted]="submitted" />
           <app-input-number class="col-12 md:col-6 lg:col-4" label="單筆交易數量上限" controlName="ECR_MaxQty"
             [control]="dataForm.controls.ECR_MaxQty" [submitted]="submitted" />
           <app-input-number class="col-12 md:col-6 lg:col-4" label="單筆交易金額上限" controlName="ECR_MaxAmt"
             [control]="dataForm.controls.ECR_MaxAmt" [submitted]="submitted" />
           <app-input-number class="col-12 md:col-6 lg:col-4" label="單一明細金額上限" controlName="ECR_MaxItemAmt"
             [control]="dataForm.controls.ECR_MaxItemAmt" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="單筆交易最大折扣比率限制" controlName="ECR_MaxDisc"
+            [control]="dataForm.controls.ECR_MaxDisc" [submitted]="submitted" />
           <app-input-number class="col-12 md:col-6 lg:col-4" label="信用卡刷卡機連線時限(秒)" controlName="ECR_EdcTimeout"
             [control]="dataForm.controls.ECR_EdcTimeout" [submitted]="submitted" />
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="信用卡刷卡機連動日結" controlName="ECR_EdcSettle"
             [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_EdcSettle"
             [submitted]="submitted" />
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否輸入來客數" controlName="ECR_CustCntEntry"
-            [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_CustCntEntry"
-            [submitted]="submitted" />
-          <app-input-number class="col-12 md:col-6 lg:col-4" label="上下傳異動檔間隔(秒)" controlName="ECR_Interval"
-            [control]="dataForm.controls.ECR_Interval" [submitted]="submitted" />
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否強制輸入付款金額" controlName="ECR_ForceInput"
             [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_ForceInput"
             [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否輸入來客數" controlName="ECR_CustCntEntry"
+            [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_CustCntEntry"
+            [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否輸入客層數" controlName="ECR_CustTypeEntry"
+            [options]="YN_Option" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.ECR_CustTypeEntry" [submitted]="submitted" />
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否強制輸入營業員" controlName="ECR_ClerkEntry"
             [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_ClerkEntry"
             [submitted]="submitted" />
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否強制輸入會員編號" controlName="ECR_ForceMember"
             [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_ForceMember"
             [submitted]="submitted" />
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否輸入客層數" controlName="ECR_CustTypeEntry"
-            [options]="YN_Option" optionLabel="label" optionValue="value"
-            [control]="dataForm.controls.ECR_CustTypeEntry" [submitted]="submitted" />
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否允許作廢交易" controlName="ECR_VoidTxn"
-            [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_VoidTxn"
-            [submitted]="submitted" />
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否允許回復已作廢交易" controlName="ECR_RestoreVoid"
-            [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_RestoreVoid"
-            [submitted]="submitted" />
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否允許開立折讓單" controlName="ECR_CreditNote"
-            [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_CreditNote"
-            [submitted]="submitted" />
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="發票使用類別" controlName="ECR_GUI_Type"
-            [options]="ECR_GUI_Type_Option" optionLabel="label" optionValue="value"
-            [control]="dataForm.controls.ECR_GUI_Type" [submitted]="submitted" />
-          <app-input-number class="col-12 md:col-6 lg:col-4" label="機台每期電子發票預設配號數量" controlName="ECR_GUI_PeriodQty"
-            [control]="dataForm.controls.ECR_GUI_PeriodQty" [submitted]="submitted" />
-          <app-input-number class="col-12 md:col-6 lg:col-4" label="機台電子發票最小安全存量" controlName="ECR_GUI_MinQty"
-            [control]="dataForm.controls.ECR_GUI_MinQty" [submitted]="submitted" />
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="清機提示日期" controlName="ECR_SettleDD"
             [options]="ECR_SettleDD_Option" optionLabel="label" optionValue="value"
             [control]="dataForm.controls.ECR_SettleDD" [submitted]="submitted" />
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="timeOne" label="清機提示時間"
             controlName="ECR_SettleHHNN" [control]="dataForm.controls.ECR_SettleHHNN" [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否允許作廢交易" controlName="ECR_VoidTxn"
+            [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_VoidTxn"
+            [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="作廢交易限制天數" controlName="ECR_VoidRstDay"
+            [control]="dataForm.controls.ECR_VoidRstDay" [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否允許開立折讓單" controlName="ECR_CreditNote"
+            [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_CreditNote"
+            [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否允許回復已作廢交易" controlName="ECR_RestoreVoid"
+            [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_RestoreVoid"
+            [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="機台每期電子發票預設配號數量" controlName="ECR_GUI_PeriodQty"
+            [control]="dataForm.controls.ECR_GUI_PeriodQty" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="機台電子發票最小安全存量" controlName="ECR_GUI_MinQty"
+            [control]="dataForm.controls.ECR_GUI_MinQty" [submitted]="submitted" />
         </div>
       </div>
+
       <div class="card">
         <h4>報表設定</h4>
         <div class="grid p-fluid">
@@ -91,6 +95,15 @@
             [submitted]="submitted" />
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印收銀機財務報表" controlName="ECR_SaleRpt2"
             [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_SaleRpt2"
+            [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印時段銷售報表" controlName="ECR_SaleRpt3"
+            [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_SaleRpt3"
+            [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印部門銷售報表" controlName="ECR_SaleRpt4"
+            [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_SaleRpt4"
+            [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印單品銷售報表" controlName="ECR_SaleRpt5"
+            [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_SaleRpt5"
             [submitted]="submitted" />
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印銷貨明細表" controlName="ECR_SaleRpt6"
             [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_SaleRpt6"
@@ -104,15 +117,6 @@
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印保全現金帳條(現金明細表)" controlName="ECR_SaleRpt9"
             [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_SaleRpt9"
             [submitted]="submitted" />
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印時段銷售報表" controlName="ECR_SaleRpt3"
-            [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_SaleRpt3"
-            [submitted]="submitted" />
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印部門銷售報表" controlName="ECR_SaleRpt4"
-            [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_SaleRpt4"
-            [submitted]="submitted" />
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印單品銷售報表" controlName="ECR_SaleRpt5"
-            [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_SaleRpt5"
-            [submitted]="submitted" />
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="保留(ECR_SaleRpt10)" controlName="ECR_SaleRpt10"
             [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_SaleRpt10"
             [submitted]="submitted" />
@@ -125,8 +129,23 @@
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否允許補印發票" controlName="ECR_ReprintGUI"
             [options]="YN_Option" optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_ReprintGUI"
             [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否列印商標" controlName="ECR_PrnLogo" [options]="YN_Option"
+            optionLabel="label" optionValue="value" [control]="dataForm.controls.ECR_PrnLogo" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="商標1 (門市名稱)" controlName="ECR_Logo1"
+            [control]="dataForm.controls.ECR_Logo1" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="商標2 (門市地址)" controlName="ECR_Logo2"
+            [control]="dataForm.controls.ECR_Logo2" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="商標3 (門市電話)" controlName="ECR_Logo3"
+            [control]="dataForm.controls.ECR_Logo3" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="商標4 (門市統一編號)" controlName="ECR_Logo4"
+            [control]="dataForm.controls.ECR_Logo4" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="商標5" controlName="ECR_Logo5"
+            [control]="dataForm.controls.ECR_Logo5" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="商標6" controlName="ECR_Logo6"
+            [control]="dataForm.controls.ECR_Logo6" [submitted]="submitted" />
         </div>
       </div>
+
       <div class="card">
         <h3>周邊設定</h3>
         <h4>輸入</h4>
@@ -139,8 +158,147 @@
             [control]="dataForm.controls.ECR_Scanner" [submitted]="submitted" />
           <app-input-number class="col-12 md:col-6 lg:col-4" label="掃描器連接埠" controlName="ECR_ScannerCom"
             [control]="dataForm.controls.ECR_ScannerCom" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="MSR型態" controlName="ECR_MSR"
+            [control]="dataForm.controls.ECR_MSR" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="MSR連接埠" controlName="ECR_MSRCom"
+            [control]="dataForm.controls.ECR_MSRCom" [submitted]="submitted" />
+        </div>
+
+        <h4>顯示</h4>
+        <div class="grid p-fluid">
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀畫面樣式" controlName="ECR_ScrType"
+            [control]="dataForm.controls.ECR_ScrType" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="客戶顯示器型態" controlName="ECR_CD"
+            [control]="dataForm.controls.ECR_CD" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="客戶顯示器連接埠" controlName="ECR_CDCom"
+            [control]="dataForm.controls.ECR_CDCom" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀外接顯示器名稱" controlName="ECR_ExtScr"
+            [control]="dataForm.controls.ECR_ExtScr" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="收銀外接顯示器連接埠" controlName="ECR_ExtScrCom"
+            [control]="dataForm.controls.ECR_ExtScrCom" [submitted]="submitted" />
+        </div>
+
+        <h4>列印</h4>
+        <div class="grid p-fluid">
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="發票印表機型態" controlName="ECR_GUIPrn"
+            [control]="dataForm.controls.ECR_GUIPrn" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="發票印表機連接埠" controlName="ECR_GUICom"
+            [control]="dataForm.controls.ECR_GUICom" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="收據印表機型態" controlName="ECR_SlipPrn"
+            [control]="dataForm.controls.ECR_SlipPrn" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="收據印表機連接埠" controlName="ECR_SlipPrnCom"
+            [control]="dataForm.controls.ECR_SlipPrnCom" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="訂單印表機型態" controlName="ECR_OrderPrn"
+            [control]="dataForm.controls.ECR_OrderPrn" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="訂單印表機連接埠" controlName="ECR_OrderPrnCom"
+            [control]="dataForm.controls.ECR_OrderPrnCom" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="標籤印表機型態" controlName="ECR_LablePrn"
+            [control]="dataForm.controls.ECR_LablePrn" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="標籤印表機連接埠" controlName="ECR_LablePrnCom"
+            [control]="dataForm.controls.ECR_LablePrnCom" [submitted]="submitted" />
+        </div>
+
+        <h4>信用卡</h4>
+        <div class="grid p-fluid">
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="信用卡刷卡機型態" controlName="ECR_EDC"
+            [control]="dataForm.controls.ECR_EDC" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="信用卡刷卡機連接埠" controlName="ECR_EDCCom"
+            [control]="dataForm.controls.ECR_EDCCom" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="第二台信用卡刷卡機型態" controlName="ECR_EDC2"
+            [control]="dataForm.controls.ECR_EDC2" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="第二台信用卡刷卡機連接埠" controlName="ECR_EDC2Com"
+            [control]="dataForm.controls.ECR_EDC2Com" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="第三台信用卡刷卡機型態" controlName="ECR_EDC3"
+            [control]="dataForm.controls.ECR_EDC3" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="第三台信用卡刷卡機連接埠" controlName="ECR_EDC3Com"
+            [control]="dataForm.controls.ECR_EDC3Com" [submitted]="submitted" />
+        </div>
+
+        <h4>電子票證、電子支付</h4>
+        <div class="grid p-fluid">
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="悠遊卡型態" controlName="ECR_ElecSVCrdA"
+            [control]="dataForm.controls.ECR_ElecSVCrdA" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="悠遊卡連接埠" controlName="ECR_ElecSVCrdACom"
+            [control]="dataForm.controls.ECR_ElecSVCrdACom" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="一卡通型態" controlName="ECR_ElecSVCrdB"
+            [control]="dataForm.controls.ECR_ElecSVCrdB" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="一卡通連接埠" controlName="ECR_ElecSVCrdBCom"
+            [control]="dataForm.controls.ECR_ElecSVCrdBCom" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="愛金卡型態" controlName="ECR_ElecSVCrdC"
+            [control]="dataForm.controls.ECR_ElecSVCrdC" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="愛金卡連接埠" controlName="ECR_ElecSVCrdCCom"
+            [control]="dataForm.controls.ECR_ElecSVCrdCCom" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="電子支付型態" controlName="ECR_ElecPay"
+            [control]="dataForm.controls.ECR_ElecPay" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="電子支付連接埠" controlName="ECR_ElecPayCom"
+            [control]="dataForm.controls.ECR_ElecPayCom" [submitted]="submitted" />
+        </div>
+
+        <h4>其他</h4>
+        <div class="grid p-fluid">
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="錢櫃型態" controlName="ECR_Drawer"
+            [control]="dataForm.controls.ECR_Drawer" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="錢櫃連接埠" controlName="ECR_DrawerCom"
+            [control]="dataForm.controls.ECR_DrawerCom" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="週邊裝置1 名稱" controlName="ECR_Device1Name"
+            [control]="dataForm.controls.ECR_Device1Name" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="週邊裝置1 連接埠" controlName="ECR_Device1Com"
+            [control]="dataForm.controls.ECR_Device1Com" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="週邊裝置2 名稱" controlName="ECR_Device2Name"
+            [control]="dataForm.controls.ECR_Device2Name" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="週邊裝置2 連接埠" controlName="ECR_Device2Com"
+            [control]="dataForm.controls.ECR_Device2Com" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="週邊裝置3 名稱" controlName="ECR_Device3Name"
+            [control]="dataForm.controls.ECR_Device3Name" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="週邊裝置3 連接埠" controlName="ECR_Device3Com"
+            [control]="dataForm.controls.ECR_Device3Com" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="週邊裝置4 名稱" controlName="ECR_Device4Name"
+            [control]="dataForm.controls.ECR_Device4Name" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="週邊裝置4 連接埠" controlName="ECR_Device4Com"
+            [control]="dataForm.controls.ECR_Device4Com" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="週邊裝置5 名稱" controlName="ECR_Device5Name"
+            [control]="dataForm.controls.ECR_Device5Name" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="週邊裝置5 連接埠" controlName="ECR_Device5Com"
+            [control]="dataForm.controls.ECR_Device5Com" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="週邊裝置6 名稱" controlName="ECR_Device6Name"
+            [control]="dataForm.controls.ECR_Device6Name" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="週邊裝置6 連接埠" controlName="ECR_Device6Com"
+            [control]="dataForm.controls.ECR_Device6Com" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="週邊裝置7 名稱" controlName="ECR_Device7Name"
+            [control]="dataForm.controls.ECR_Device7Name" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="週邊裝置7 連接埠" controlName="ECR_Device7Com"
+            [control]="dataForm.controls.ECR_Device7Com" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="週邊裝置8 名稱" controlName="ECR_Device8Name"
+            [control]="dataForm.controls.ECR_Device8Name" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="週邊裝置8 連接埠" controlName="ECR_Device8Com"
+            [control]="dataForm.controls.ECR_Device8Com" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="週邊裝置9 名稱" controlName="ECR_Device9Name"
+            [control]="dataForm.controls.ECR_Device9Name" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="週邊裝置9 連接埠" controlName="ECR_Device9Com"
+            [control]="dataForm.controls.ECR_Device9Com" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="週邊裝置10 名稱" controlName="ECR_Device10Name"
+            [control]="dataForm.controls.ECR_Device10Name" [submitted]="submitted" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="週邊裝置10 連接埠" controlName="ECR_Device10Com"
+            [control]="dataForm.controls.ECR_Device10Com" [submitted]="submitted" />
         </div>
       </div>
+      <div class="card">
+        <div class="grid p-fluid">
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="建立日期" controlName="CRT_Date"
+            [control]="dataForm.controls.CRT_Date" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="建立人員編號" controlName="CRT_USR_No"
+            [control]="dataForm.controls.CRT_USR_No" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="建立人員姓名" controlName="CRT_USR_Name"
+            [control]="dataForm.controls.CRT_USR_Name" [submitted]="submitted" />
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="變更日期" controlName="UPD_Date"
+            [control]="dataForm.controls.UPD_Date" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="變更人員編號" controlName="UPD_USR_No"
+            [control]="dataForm.controls.UPD_USR_No" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="變更人員姓名" controlName="UPD_USR_Name"
+            [control]="dataForm.controls.UPD_USR_Name" [submitted]="submitted" />
+        </div>
+      </div>
+
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading" />
