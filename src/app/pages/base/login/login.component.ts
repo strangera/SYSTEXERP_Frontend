@@ -7,7 +7,6 @@ import { AuthService } from '../../../service/system/auth.service';
 import { CommonService } from '../../../shared/service/common.service';
 import { userLogin } from '../../../shared/models/system/userLogin';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { Router } from '@angular/router';
 
 registerLocaleData(zhHant, 'zh-tw');
 
@@ -31,7 +30,6 @@ export class LoginComponent implements OnInit {
     private formBuilder: FormBuilder,
     private notemessage: NotificationService,
     private commService: CommonService,
-    private router: Router,
   ) {
   }
 
@@ -52,27 +50,17 @@ export class LoginComponent implements OnInit {
     if (frm.invalid) return;
     this.loading = true;
     this.loginForm.value.client_ip = this.ipAddress;
-
     this.authService.login(this.loginForm.value as userLogin).pipe(first()).subscribe({
-      next: (res) => {
-        const sysStoreNo = res?.Data?.SYS_StoreNo;
-        if (sysStoreNo) {
-          sessionStorage.setItem('SYS_StoreNo', sysStoreNo);
-          console.log('✅ 已儲存 SYS_StoreNo:', sysStoreNo);
-        }
-
+      next: () => {
         this.notemessage.successBubble('登入成功');
         console.log('登入成功', this.loginForm.value);
         this.loading = false;
-
-        // 若需要自動導頁，這裡可以補：this.router.navigate(['/dashboard']);
       },
       error: () => {
         this.loginForm.patchValue({ password: '' }); //清空密碼
         this.loading = false;
       }
     });
-
     this.notemessage.unblockUi();
   }
 }
