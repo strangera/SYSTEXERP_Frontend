@@ -286,6 +286,17 @@ export interface BaseConditionItem {
   _isNew?: boolean;
 }
 
+// 一般抽成條件
+export interface GeneralCommissionCondition extends BaseConditionItem {
+  tlt_id: string;           // 抽成類別
+  tlt_id_desc: string;      // 抽成類別名稱
+  cag_taxtype: string;      // 稅別
+  cag_bdate: string;        // 帳務起
+  cag_edate: string;        // 帳務迄
+  cag_barcode?: string;     // 折扣別
+  cag_charge_rate?: number; // 抽成率
+}
+
 // 固定租金條件 (對應 TLTTALENT_RENT)
 export interface FixedRentCondition extends BaseConditionItem {
   tlt_id: string;           // 帳務期別
@@ -361,16 +372,10 @@ export interface CommissionConditionData {
 export type ConditionItem =
   | FixedRentCondition
   | BaseRentHigherCondition
+  | GeneralCommissionCondition
   | BaseCommissionCondition
   | GraduatedCommissionCondition
   | BaseTierCondition;
-
-// 資料變更追蹤介面
-export interface BaseDataItem {
-  id?: string | number;
-  _status?: 'original' | 'new' | 'modified' | 'deleted';
-  _isNew?: boolean;
-}
 
 // 資料變更追蹤介面
 export interface BaseDataItem {
@@ -409,11 +414,19 @@ export interface SubmitDataStructure {
       toDelete: ConditionItem[];
     };
   };
+  legacyDataToDelete?: {
+    CommissionMasters?: CommissionMaster[];
+    ChargedDetails?: ChargedDetail[];
+    RentDetails?: RentDetail[];
+    LimitDetails?: LimitDetail[];
+    LevelDetails?: LevelDetail[];
+  } | null;
   metadata: {
     talentId: string;
     contractId: string;
     submittedAt: Date;
     totalOperations: number;
+    hasLegacyDataToDelete?: boolean; // 🎯 新增：標記是否有舊資料要刪除
   };
 }
 
@@ -444,6 +457,13 @@ export interface TLS13010CommissionResponse {
   TotalPage?: number;
 }
 
+export interface CommissionWarning {
+  Message: string;
+  ItemsToBeDeleted: string[];
+  TotalItemsCount: number;
+  HasCriticalData: boolean;
+}
+
 export interface CommissionResponseData {
   TalentId: string;
   TalentName: string;
@@ -451,13 +471,21 @@ export interface CommissionResponseData {
   CurrentTltTermType: string;
   IsTermTypeChanged: boolean;
   HasError: boolean;
-  ErrorMessage?: string;
-  DataToDelete?: CommissionDataStructure;
-  NewDataStructure?: {
+  ErrorMessage?: string | null;
+  ActionType?: string;        // 🎯 新增：如 "CLEAR_AND_INIT"
+  UserMessage?: string;       // 🎯 新增：給使用者的訊息
+  Warning?: CommissionWarning; // 🎯 新增：警告訊息結構
+  DataToDelete?: CommissionDataStructure; // 要刪除的舊資料
+  NewDataStructure?: {        // 新的資料結構
     TermType: string;
-  };
-  ExistingData?: CommissionDataStructure;
+    ChargedDetails?: any[];
+    RentDetails?: any[];
+    LimitDetails?: any[];
+    LevelDetails?: any[];
+  } | null;
+  ExistingData?: CommissionDataStructure | null; // 現有資料
 }
+
 
 export interface CommissionDataStructure {
   CommissionMasters?: CommissionMaster[];

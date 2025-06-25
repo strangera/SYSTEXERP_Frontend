@@ -23,7 +23,9 @@ import {
   ChargedDetail,
   LevelDetail,
   RentDetail,
-  LimitDetail
+  LimitDetail,
+  GeneralCommissionCondition,
+  ConditionItem
 } from '../tls13010/tls13010.model';
 
 @Component({
@@ -47,6 +49,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   // 🎯 修正：使用更明確的資料結構
   fixedRentItems: FixedRentCondition[] = [];
   baseRentHigherItems: BaseRentHigherCondition[] = [];
+  generalCommissionItems: GeneralCommissionCondition[] = [];
   baseCommissionItems: BaseCommissionCondition[] = [];
   graduatedItems: GraduatedCommissionCondition[] = [];
   baseTierItems: BaseTierCondition[] = [];
@@ -153,6 +156,63 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
     { field: 'base_rent', header: '租金金額', type: 'number', editable: true, autoWidth: true },
     { field: 'cag_charge_rate', header: '抽成率(%)', type: 'number', editable: true, autoWidth: true }
+  ];
+
+  generalCommissionColumns: ColumnDef[] = [
+    {
+      field: 'tlt_id',
+      header: '抽成類別',
+      type: 'text',
+      editable: true,
+      autoWidth: true
+    },
+    {
+      field: 'tlt_id_desc',
+      header: '抽成類別名稱',
+      type: 'text',
+      editable: true,
+      autoWidth: true
+    },
+    {
+      field: 'cag_taxtype',
+      header: '稅別',
+      type: 'dropdown',
+      editable: true,
+      autoWidth: true,
+      options: [
+        { label: '應稅', value: '1' },
+        { label: '免稅', value: '2' },
+        { label: '零稅率', value: '3' }
+      ]
+    },
+    {
+      field: 'cag_bdate',
+      header: '帳務起',
+      type: 'date',
+      editable: true,
+      autoWidth: true
+    },
+    {
+      field: 'cag_edate',
+      header: '帳務迄',
+      type: 'date',
+      editable: true,
+      autoWidth: true
+    },
+    {
+      field: 'cag_barcode',
+      header: '折扣別',
+      type: 'text',
+      editable: true,
+      autoWidth: true
+    },
+    {
+      field: 'cag_charge_rate',
+      header: '抽成率(%)',
+      type: 'number',
+      editable: true,
+      autoWidth: true
+    }
   ];
 
   // 包底抽成欄位 (TLTTALENT_LIMIT)
@@ -274,11 +334,18 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     try {
       console.log('🔄 從暫存載入條件資料:', savedData);
 
-      this.fixedRentItems = savedData.fixedRentItems || [];
-      this.baseRentHigherItems = savedData.baseRentHigherItems || [];
-      this.baseCommissionItems = savedData.baseCommissionItems || [];
-      this.graduatedItems = savedData.graduatedItems || [];
-      this.baseTierItems = savedData.baseTierItems || [];
+      if (Array.isArray(savedData)) {
+        // 🎯 直接分類到各個陣列
+        this.categorizeConditionItems(savedData);
+      } else {
+        // 向下相容：如果是舊格式物件
+        this.fixedRentItems = savedData.fixedRentItems || [];
+        this.baseRentHigherItems = savedData.baseRentHigherItems || [];
+        this.generalCommissionItems = savedData.generalCommissionItems || [];
+        this.baseCommissionItems = savedData.baseCommissionItems || [];
+        this.graduatedItems = savedData.graduatedItems || [];
+        this.baseTierItems = savedData.baseTierItems || [];
+      }
 
       console.log('✅ 暫存條件資料載入完成');
     } catch (error) {
@@ -287,6 +354,41 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     }
   }
 
+  private categorizeConditionItems(conditionItems: ConditionItem[]): void {
+    console.log('🏷️ 分類條件項目:', conditionItems);
+
+    this.initializeEmptyConditionData();
+
+    conditionItems.forEach(item => {
+      if ('base_rent' in item && 'cag_charge_rate' in item) {
+        // 底租抽成取高者
+        this.baseRentHigherItems.push(item as BaseRentHigherCondition);
+      } else if ('base_rent' in item) {
+        // 固定租金
+        this.fixedRentItems.push(item as FixedRentCondition);
+      } else if ('tlt_id_desc' in item && 'cag_barcode' in item) {
+        // 一般抽成
+        this.generalCommissionItems.push(item as GeneralCommissionCondition);
+      } else if ('limit_amt' in item && 'seq_no' in item) {
+        // 包底加階梯
+        this.baseTierItems.push(item as BaseTierCondition);
+      } else if ('limit_amt' in item) {
+        // 包底抽成
+        this.baseCommissionItems.push(item as BaseCommissionCondition);
+      } else if ('seq_no' in item) {
+        // 階梯式抽成
+        this.graduatedItems.push(item as GraduatedCommissionCondition);
+      }
+    });
+
+    console.log('📊 分類結果:');
+    console.log('   - 固定租金:', this.fixedRentItems.length);
+    console.log('   - 底租抽成取高者:', this.baseRentHigherItems.length);
+    console.log('   - 一般抽成:', this.generalCommissionItems.length);
+    console.log('   - 包底抽成:', this.baseCommissionItems.length);
+    console.log('   - 階梯式抽成:', this.graduatedItems.length);
+    console.log('   - 包底加階梯:', this.baseTierItems.length);
+  }
   // 🎯 初始化空的條件資料
   private initializeEmptyConditionData(): void {
     console.log('📝 初始化空的條件設定資料');
@@ -296,22 +398,24 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     this.baseCommissionItems = [];
     this.graduatedItems = [];
     this.baseTierItems = [];
+    this.generalCommissionItems = [];
   }
 
   // 🎯 儲存條件設定到工作流程
   private saveConditionDataToWorkflow(): void {
     console.log('💾 儲存條件設定資料到工作流程');
 
-    const conditionItems: ConditionDataItem[] = [
-      ...this.fixedRentItems.map(item => this.convertToConditionDataItem(item, 'fixedRent')),
-      ...this.baseRentHigherItems.map(item => this.convertToConditionDataItem(item, 'baseRentHigher')),
-      ...this.baseCommissionItems.map(item => this.convertToConditionDataItem(item, 'baseCommission')),
-      ...this.graduatedItems.map(item => this.convertToConditionDataItem(item, 'graduated')),
-      ...this.baseTierItems.map(item => this.convertToConditionDataItem(item, 'baseTier'))
+    const allConditionItems: ConditionItem[] = [
+      ...this.fixedRentItems,
+      ...this.baseRentHigherItems,
+      ...this.generalCommissionItems,
+      ...this.baseCommissionItems,
+      ...this.graduatedItems,
+      ...this.baseTierItems
     ];
 
     try {
-      this.contractFlowService.saveStep4Data(conditionItems);
+      this.contractFlowService.saveStep4Data(allConditionItems);
       console.log('✅ 已成功暫存條件設定資料到工作流程');
     } catch (error) {
       console.error('❌ 儲存條件設定資料時發生錯誤:', error);
@@ -321,6 +425,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   // 🎯 判斷是否顯示特定抽成類型的條件設定
   shouldShowCommissionType(commissionTypeCode: string): boolean {
     const currentCommissionType = this.contractInfoData[0]?.tlt_term_type;
+    // console.log('🔍 檢查抽成類型:', { current: currentCommissionType, target: commissionTypeCode });
     return currentCommissionType === commissionTypeCode;
   }
 
@@ -557,7 +662,14 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     this.notificationService.successBubble('已新增包底加階梯項目');
   }
 
-  // 🎯 新增：創建各類型條件項目的工廠方法
+  // 🎯 新增：一般抽成新增項目方法
+  onAddGeneralCommissionItem(): void {
+    console.log('➕ 新增一般抽成項目');
+    const newItem: GeneralCommissionCondition = this.createGeneralCommissionItem();
+    this.generalCommissionItems.push(newItem);
+    this.saveConditionDataToWorkflow();
+    this.notificationService.successBubble('已新增一般抽成項目');
+  }
 
   private createFixedRentItem(): FixedRentCondition {
     return {
@@ -634,6 +746,22 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     };
   }
 
+  private createGeneralCommissionItem(): GeneralCommissionCondition {
+    return {
+      id: Date.now() + Math.random(),
+      talent_id: this.currentTalentId,
+      tlt_id: '0', // 預設抽成類別
+      tlt_id_desc: '',
+      cag_taxtype: '1', // 預設稅別
+      cag_bdate: this.contractInfoData[0]?.tlt_bdate || new Date().toISOString().split('T')[0],
+      cag_edate: this.contractInfoData[0]?.tlt_edate || new Date().toISOString().split('T')[0],
+      cag_barcode: '000', // 預設折數
+      cag_charge_rate: 0,
+      _status: 'new',
+      _isNew: true
+    };
+  }
+
   // 🎯 表格事件處理
   onTableSave(event: any, type: string): void {
     console.log(`${type} 表格儲存:`, event);
@@ -689,6 +817,12 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
         const baseRentIndex = this.baseRentHigherItems.findIndex(x => x.id === item.id);
         if (baseRentIndex > -1) {
           this.baseRentHigherItems.splice(baseRentIndex, 1);
+        }
+        break;
+      case 'generalCommission': // 🎯 新增
+        const generalIndex = this.generalCommissionItems.findIndex(x => x.id === item.id);
+        if (generalIndex > -1) {
+          this.generalCommissionItems.splice(generalIndex, 1);
         }
         break;
       case 'baseCommission':
@@ -805,18 +939,29 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   private handleCommissionTypeChange(data: CommissionResponseData): void {
     console.log('🔄 處理抽成別改變:', data);
 
-    this.notificationService.warnBubble(
-      `抽成別已從 ${data.OriginalTltTermType} 變更為 ${data.CurrentTltTermType}，舊資料將被清除`
-    );
+    // 🎯 顯示詳細的警告訊息
+    if (data.Warning) {
+      this.notificationService.warnBubble(data.Warning.Message);
 
-    if (data.DataToDelete) {
-      console.log('🗑️ 有資料需要刪除:', data.DataToDelete);
+      // 如果有要刪除的項目，可以詳細列出
+      if (data.Warning.ItemsToBeDeleted && data.Warning.ItemsToBeDeleted.length > 0) {
+        console.log('🗑️ 將被刪除的項目:', data.Warning.ItemsToBeDeleted);
+      }
     }
 
-    if (data.NewDataStructure) {
-      console.log('📝 載入新的資料結構:', data.NewDataStructure);
+    // 🎯 標記要刪除的舊資料（供後續提交時使用）
+    if (data.DataToDelete) {
+      console.log('🗑️ 記錄要刪除的舊資料:', data.DataToDelete);
+      // 可以將 DataToDelete 存到 contractFlowService 中，供最終提交時使用
+      this.contractFlowService.setDataToDelete(data.DataToDelete);
+    }
+
+    // 🎯 根據新的抽成別初始化空資料
+    if (data.NewDataStructure?.TermType) {
+      console.log('📝 初始化新的資料結構:', data.NewDataStructure.TermType);
       this.initializeConditionDataByCommissionType(data.NewDataStructure.TermType);
     } else {
+      // 備援方案
       this.initializeConditionDataByCommissionType(data.CurrentTltTermType);
     }
   }
@@ -942,27 +1087,89 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     }
   }
 
-  // 🎯 對應一般抽成資料 (TLTTALENT_CHARGEM + TLTTALENT_CHARGED)
+  // 🎯 一般抽成
   private mapGeneralCommissionData(data: CommissionDataStructure): void {
-    console.log('ℹ️ 一般抽成無需額外條件設定');
-    this.initializeEmptyConditionData();
+    console.log('🔄 載入一般抽成資料:', data);
+
+    // 🎯 一般抽成需要載入現有的抽成設定資料，而不是初始化空資料
+    if (data.CommissionMasters && data.ChargedDetails) {
+      console.log('📋 發現一般抽成設定資料:');
+      console.log('   - CommissionMasters:', data.CommissionMasters.length, '筆');
+      console.log('   - ChargedDetails:', data.ChargedDetails.length, '筆');
+
+      // 🎯 將一般抽成資料轉換為 GeneralCommissionCondition 格式
+      const generalCommissionItems: GeneralCommissionCondition[] = [];
+
+      // 結合 CommissionMasters 和 ChargedDetails
+      data.CommissionMasters.forEach(master => {
+        // 找到對應的 ChargedDetails
+        const relatedChargedDetails = data.ChargedDetails?.filter(
+          charged => charged.tlt_id === master.tlt_id && charged.talent_id === master.talent_id
+        ) || [];
+
+        if (relatedChargedDetails.length > 0) {
+          // 每個 ChargedDetail 建立一個條件項目
+          relatedChargedDetails.forEach(charged => {
+            generalCommissionItems.push({
+              id: master.id, // 組合 ID
+              talent_id: master.talent_id.toString(),
+              tlt_id: master.tlt_id,
+              tlt_id_desc: master.tlt_id_desc,
+              cag_taxtype: master.cag_taxtype,
+              cag_bdate: this.formatDate(master.cag_bdate),
+              cag_edate: this.formatDate(master.cag_edate),
+              cag_barcode: charged.cag_barcode || '',
+              cag_charge_rate: charged.cag_charge_rate || 0,
+              _status: 'original'
+            });
+          });
+        } else {
+          // 如果沒有對應的 ChargedDetail，建立基本項目
+          generalCommissionItems.push({
+            id: master.id,
+            talent_id: master.talent_id.toString(),
+            tlt_id: master.tlt_id,
+            tlt_id_desc: master.tlt_id_desc,
+            cag_taxtype: master.cag_taxtype,
+            cag_bdate: master.cag_bdate?.split('T')[0] || '',
+            cag_edate: master.cag_edate?.split('T')[0] || '',
+            cag_barcode: '',
+            cag_charge_rate: 0,
+            _status: 'original'
+          });
+        }
+      });
+
+      // 🎯 儲存到對應的陣列（您可能需要新增這個陣列）
+      this.generalCommissionItems = generalCommissionItems;
+
+      console.log('✅ 載入一般抽成資料:', this.generalCommissionItems.length, '筆');
+      console.log('📊 一般抽成項目詳細:', this.generalCommissionItems);
+
+    } else {
+      console.log('📭 沒有一般抽成資料，初始化空資料供新增');
+      this.generalCommissionItems = [this.createGeneralCommissionItem()];
+    }
   }
 
-  // 🎯 對應包底抽成資料 (TLTTALENT_LIMIT)
   private mapBaseCommissionData(data: CommissionDataStructure): void {
+    console.log('🔄 載入包底抽成資料:', data);
+
     if (data.LimitDetails && data.LimitDetails.length > 0) {
       this.baseCommissionItems = data.LimitDetails.map((item: LimitDetail): BaseCommissionCondition => ({
         id: item.id,
         talent_id: item.talent_id.toString(),
         tlt_id: item.tlt_id || '',
-        cag_bdate: item.cag_bdate || '',
-        cag_edate: item.cag_edate || '',
+        cag_bdate: item.cag_bdate?.split('T')[0] || '', // 🎯 處理日期格式
+        cag_edate: item.cag_edate?.split('T')[0] || '',
         limit_amt: item.limit_amt || 0,
         limit_charge_rate: item.limit_charge_rate || 0,
         _status: 'original'
       }));
       console.log('✅ 載入包底抽成資料:', this.baseCommissionItems.length, '筆');
+      console.log('📊 包底抽成項目詳細:', this.baseCommissionItems);
     } else {
+      console.log('📭 沒有包底抽成資料，初始化空資料供新增');
       this.initializeConditionDataByCommissionType('4');
     }
   }
@@ -1009,7 +1216,12 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       this.initializeConditionDataByCommissionType('6');
     }
   }
-  getCommissionTypeName(): string {
+  private getCommissionTypeName(code: string): string {
+    const option = TLS13010_DROPDOWN_OPTIONS.tltTermType.find(opt => opt.value === code);
+    return option ? option.label : `代碼 ${code}`;
+  }
+
+  getCurrentCommissionTypeName(): string {
     const code = this.contractInfoData[0]?.tlt_term_type;
     const option = TLS13010_DROPDOWN_OPTIONS.tltTermType.find(opt => opt.value === code);
     return option ? option.label : code || '未載入';
@@ -1025,7 +1237,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       case '2': // 底租抽成取高者
         return this.baseRentHigherItems.length > 0;
       case '3': // 一般抽成
-        return true; // 一般抽成不需要額外條件
+        return this.generalCommissionItems && this.generalCommissionItems.length > 0; // 🎯 修正
       case '4': // 包底抽成
         return this.baseCommissionItems.length > 0;
       case '5': // 階梯式抽成
@@ -1047,7 +1259,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       case '2':
         return this.baseRentHigherItems.filter(item => item._status !== 'deleted').length;
       case '3':
-        return 0; // 一般抽成不需要條件設定
+        return this.generalCommissionItems ? this.generalCommissionItems.filter(item => item._status !== 'deleted').length : 0; // 🎯 修正
       case '4':
         return this.baseCommissionItems.filter(item => item._status !== 'deleted').length;
       case '5':
@@ -1059,27 +1271,29 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     }
   }
 
-  // 🎯 新增：轉換條件項目為統一格式的方法
-  convertToConditionDataItem(item: any, type: string): ConditionDataItem {
-    return {
-      id: item.id || Date.now() + Math.random(),
-      A: item.talent_id || this.currentTalentId || '',
-      B: type,
-      C: item.tlt_id || item.seq_no?.toString() || '',
-      D: item.cag_bdate || '',
-      E: item.cag_edate || '',
-      F: JSON.stringify({
-        base_rent: item.base_rent,
-        cag_charge_rate: item.cag_charge_rate,
-        limit_amt: item.limit_amt,
-        limit_charge_rate: item.limit_charge_rate,
-        start_number: item.start_number,
-        end_number: item.end_number,
-        charge_rate: item.charge_rate
-      }),
-      G: item._status || 'new',
-      _status: item._status || 'new',
-      _isNew: item._isNew || false
-    };
+
+  // 🎯 顯示詳細的用戶訊息
+  private showCommissionTypeChangeMessage(data: CommissionResponseData): void {
+    const originalTypeName = this.getCommissionTypeName(data.OriginalTltTermType);
+    const currentTypeName = this.getCommissionTypeName(data.CurrentTltTermType);
+
+    const message = `
+    抽成別已從「${originalTypeName}」變更為「${currentTypeName}」
+    ${data.Warning?.ItemsToBeDeleted ?
+        `\n將清除：${data.Warning.ItemsToBeDeleted.join('、')}` : ''
+      }
+    \n請重新設定條件參數
+  `;
+
+    this.notificationService.warnBubble(message);
+  }
+
+  private formatDate(date: any): string {
+    if (!date) return '';
+    try {
+      return new Date(date).toISOString().split('T')[0];
+    } catch {
+      return String(date).split('T')[0] || '';
+    }
   }
 }
