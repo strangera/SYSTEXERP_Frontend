@@ -19,7 +19,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
   dataForm = this.formBuilder.nonNullable.group({
     // PLULOGO  商品品牌設定檔
     id: [],
-    LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌代碼
+    LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌編碼
     LOGO_CH_NAME: ['', [Validators.required, Validators.maxLength(50)]], // 品牌中文名稱
     LOGO_EN_NAME: ['', [Validators.maxLength(100)]], // 品牌英文名稱
     LOGO_Remark: ['', [Validators.maxLength(100)]], // 備註說明

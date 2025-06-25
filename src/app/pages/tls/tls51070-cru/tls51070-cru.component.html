@@ -34,7 +34,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="國際條碼" controlName="PLU_No" [control]="dataForm.controls.PLU_No"
               [submitted]="submitted">
-              <header>
+              <header *ngIf="crudstatus !== 'Read'">
                 <p-button label="同商品管理編號" [raised]="true" size="small" styleClass="p-0" (click)="setNoToMagNo()"
                   [style]="{ width: '8rem', height: '1.3rem' }" />
               </header>
