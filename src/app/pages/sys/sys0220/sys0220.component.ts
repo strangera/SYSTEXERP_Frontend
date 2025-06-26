@@ -54,8 +54,8 @@ export class SYS0220Component extends BasicQueryPageComponent<tblUser> implement
         this.SYS3100_Options.find((option) => option.No === value)?.Label ||
         value
     },
-    { field: 'str_dateStart', header: '帳號有效開始日期', visible: true },
-    { field: 'str_dateEnd', header: '帳號有效結束日期', visible: true },
+    { field: 'str_dateStart', header: '帳號有效開始日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : ''},
+    { field: 'str_dateEnd', header: '帳號有效結束日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
     {
       field: 'user_type', header: '使用者型態', visible: true, format: (value: string) =>
         this.userTypeOptions.find((option) => option.value === value)?.label ||
@@ -64,7 +64,7 @@ export class SYS0220Component extends BasicQueryPageComponent<tblUser> implement
     { field: 'user_email', header: '使用者email帳號', visible: true },
     { field: 'TLT_No', header: '備註', visible: true },
     { field: 'user_priority', header: '使用者等級', visible: true },
-    { field: 'USER_PwdExpireDate', header: '密碼到期日', visible: true },
+    { field: 'USER_PwdExpireDate', header: '密碼到期日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
   ];
   selectedItems: tblUser[] = [];// 多選項目
 
