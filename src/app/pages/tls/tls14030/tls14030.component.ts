@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
