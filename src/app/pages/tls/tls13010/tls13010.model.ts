@@ -255,21 +255,6 @@ export interface DiscountLevelItem {
   _status?: 'original' | 'modified' | 'new' | 'deleted';
 }
 
-// next3 - 條件設定
-export interface ConditionDataItem {
-  id?: number | string;
-  A: string;
-  B: string;
-  C: string;
-  D: string;
-  E: string;
-  F: string;
-  G: string;
-  _status?: 'original' | 'new' | 'modified' | 'deleted';
-  _isNew?: boolean;
-}
-
-
 export interface ChangeSummary {
   insert: number;
   update: number;
