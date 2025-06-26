@@ -91,7 +91,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() showPaginator = true;                    // 是否顯示 分頁器
   @Input() totalRecords = 0;                        // 記錄總數
   totalPages = 0;                                   // 共幾頁數
-  rows = 30;                                        // 每頁顯示的行數
+  rows = 100;                                        // 每頁顯示的行數
   first = 0;                                        // 當前表格的起始索引
   pages: { label: string, value: number }[] = [];   // (右上)下拉選單 頁數選項
   selectedPage: number | null = 1;                  // (右上)下拉選單 當前選擇的頁數

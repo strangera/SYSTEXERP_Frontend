@@ -18,7 +18,8 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     HOS_No: [null], // 倉庫代碼 multi-select
     LOGO_No: [null], // 品牌代碼 multi-select
     VEN_No: [null], // 廠商編號 multi-select
-    PO_Status: [null, [Validators.required]], // 採購單狀態 multi-select
+    // PO_Status: [null, [Validators.required]], // 採購單狀態 multi-select
+    PO_Status: [null], // 採購單狀態 multi-select
     APPLY_USR: [null], // 申請人員 multi-select
     APPLY_Date_Start: [null], // 申請日期 起 calendar-range
     APPLY_Date_End: [null], // 申請日期 迄
@@ -33,7 +34,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
 
   totalRecords = 0;
   data: ITLS52010Data[] = [];
-
+  selectedItems: ITLS52010Data[] = []; // 用於儲存選中的項目
   // 表格欄位定義
   columns: Column[] = [
     { field: 'PO_No', header: '採購單號', visible: true }, // 採購單號
@@ -142,5 +143,11 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     })
+  }
+
+  print(selectedItems: ITLS52010Data[]) {
+  }
+
+  close(selectedItems: ITLS52010Data[]) {
   }
 }

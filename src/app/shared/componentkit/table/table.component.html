@@ -5,8 +5,8 @@
 </p-divider>
 <p-table #dt [value]="data" [columns]="selectedColumns" [(selection)]="selectedItems" sortMode="multiple"
   [selectionMode]="showCheckBox && IsPrint ? selectionMode : null" [dataKey]="dataKey" [rowTrackBy]="trackByRow"
-  [resizableColumns]="true" [paginator]="showPaginator && IsPrint && !rowEditing" [scrollable]="scrollable"
-  [showCurrentPageReport]="IsPrint" [multiSortMeta]="multiSortMeta" [rowsPerPageOptions]="[30, 60, 90,{showAll:'我要選部'}]"
+  [resizableColumns]="true" [paginator]="showPaginator && IsPrint && !rowEditing && !loading" [scrollable]="scrollable"
+  [showCurrentPageReport]="IsPrint" [multiSortMeta]="multiSortMeta" [rowsPerPageOptions]="[100, 250, 500, 1000]"
   [scrollHeight]="IsPrint ? scrollHeight : '385px'" [rows]="rows" [(first)]="first" (onPage)="onPageChange($event)"
   (onLazyLoad)="loadDataLazy($event)" [lazy]="lazy || !IsPrint" [styleClass]="
     IsPrint
@@ -16,7 +16,7 @@
   currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})" (onSort)="onSort($event)"
   (selectionChange)="onSelectionChange($event)" (onRowSelect)="select.emit($event)"
   (onRowUnselect)="unSelect.emit($event)" [rowSelectable]="rowSelectableWrapper"
-  [expandedRowKeys]="IsPrint ? expandedRows : {}" paginatorDropdownAppendTo="body" editMode="row" [loading]="loading">
+  [expandedRowKeys]="IsPrint ? expandedRows : {}" paginatorDropdownAppendTo="body" editMode="row">
   <ng-template pTemplate="caption">
     <div class="grid align-items-center justify-content-between mx-0" *ngIf="showCaption && !rowEditing">
       <div class="caption-left button-group flex gap-2 py-2">
@@ -90,125 +90,114 @@
       [pSelectableRowDisabled]="!isRowSelectable(rowData)" [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }"
       (dblclick)="detailRow(rowData)" [pEditableRow]="rowData" [pSelectableRow]="rowData"
       [pSelectableRowIndex]="rowIndex">
-      <td class="text-center">{{ rowIndex + 1 }}</td>
-      <td *ngIf="
-          IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'
-        ">
-        <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
-          [value]="rowData" [disabled]="!isRowSelectable(rowData)" />
-      </td>
-      <td *ngIf="expansionDataKey && IsPrint" class="text-center">
-        <p-button pRipple [pRowToggler]="rowData" [text]="true" [rounded]="true" [plain]="true" severity="secondary"
-          [raised]="!expanded" [pTooltip]="
-            rowData[expansionDataKey]?.length > 0
-              ? expanded
-                ? '收合'
-                : '展開'
-              : ''
-          " [style]="
-            expanded
-              ? {
-                  'box-shadow':
-                    'inset 2px 2px 5px rgba(0, 0, 0, 0.2), inset -2px -2px 5px rgba(255, 255, 255, 0.5)',
-                }
-              : {}
-          " [icon]="
-            rowData[expansionDataKey]?.length > 0
-              ? expanded
-                ? 'pi pi-chevron-down'
-                : 'pi pi-chevron-right'
-              : 'pi pi-minus text-gray-500'
-          " [disabled]="rowData[expansionDataKey]?.length === 0" tooltipPosition="right" pButton
-          [ngClass]="{ 'p-button-danger': rowData[expansionDataKey]?.length === 0 }" />
-      </td>
-      <td *ngFor="let col of columns" (click)="editing ? $event.stopPropagation() : null"
-        class="max-w-{{ col.maxWidth }} text-center" style="text-overflow: ellipsis" [ngClass]="col.style"
-        [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="IsPrint && col.frozen">
-        <p-cellEditor *ngIf="showRowEdit">
-          <ng-template pTemplate="input">
-            <input *ngIf="col.type === 'input'" pInputText class="w-full min-w-max" [(ngModel)]="rowData[col.field]"
-              placeholder="請輸入{{ col.header }}" [ngModelOptions]="{ standalone: true }"
-              [disabled]="col.disabled ? col.disabled(rowData) : false"
-              (ngModelChange)="onFieldChange(rowData, col.field, $event)" />
-            <p-inputNumber *ngIf="col.type === 'inputNumber'" class="w-full min-w-max" [(ngModel)]="rowData[col.field]"
-              placeholder="請輸入{{ col.header }}" [ngModelOptions]="{ standalone: true }"
-              [disabled]="col.disabled ? col.disabled(rowData) : false" mode="decimal"
-              (ngModelChange)="onFieldChange(rowData, col.field, $event)" [prefix]="col.prefix"
-              [minFractionDigits]="col.fractionDigits" [maxFractionDigits]="col.fractionDigits"
-              [useGrouping]="col.useGrouping" />
-            <p-dropdown *ngIf="col.type === 'dropdown'" [(ngModel)]="rowData[col.field]"
-              [ngModelOptions]="{ standalone: true }" styleClass="w-full" placeholder="請輸入{{ col.header }}"
-              [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
-              [showClear]="true" appendTo="body" [disabled]="col.disabled ? col.disabled(rowData) : false"
-              (onChange)="onFieldChange(rowData, col.field, $event.value)" [filter]="true"></p-dropdown>
-            <p-calendar *ngIf="col.type === 'date'" [(ngModel)]="rowData[col.field]"
-              [ngModelOptions]="{ standalone: true }" class="w-full" styleClass="min-w-max"
-              placeholder="請選擇{{ col.header }}" [dateFormat]="col.dateFormat || 'yy-mm-dd'" [showIcon]="true"
-              appendTo="body" [disabled]="col.disabled ? col.disabled(rowData) : false" [minDate]="col.minDate"
-              [maxDate]="col.maxDate" (ngModelChange)="onFieldChange(rowData, col.field, $event)"></p-calendar>
-            <p-checkbox *ngIf="col.type === 'checkbox'" [(ngModel)]="rowData[col.field]" [binary]="true"
-              [label]="col.label" [ngModelOptions]="{ standalone: true }"
-              [disabled]="col.disabled ? col.disabled(rowData) : false"
-              (ngModelChange)="onFieldChange(rowData, col.field, $event)" />
-          </ng-template>
-          <ng-template pTemplate="output">
-            <span *ngIf="col.type === 'input'" class="w-full min-w-max">
-              {{ rowData[col.field] }}
-            </span>
-            <span *ngIf="col.type === 'inputNumber'" class="w-full min-w-max">
-              {{ col.prefix }}{{ rowData[col.field] }}
-            </span>
-            <p-dropdown *ngIf="col.type === 'dropdown'" class="table-dropdown" [(ngModel)]="rowData[col.field]"
-              [ngModelOptions]="{ standalone: true }" [options]="getOptions(rowData, col)"
-              [optionLabel]="col.optionLabel" [optionValue]="col.optionValue" [group]="col.group"
-              [optionGroupChildren]="col.optionGroupChildren"></p-dropdown>
-            <span *ngIf="col.type === 'date'" class="w-full min-w-max">
-              {{ rowData[col.field] | date: "yyyy/MM/dd" }}
-            </span>
-            <span *ngIf="col.type === 'checkbox'">
-              {{
-              rowData[col.field]
-              ? col.checkboxTrueLabel || "是"
-              : col.checkboxFalseLabel || "否"
-              }}
-            </span>
-          </ng-template>
-        </p-cellEditor>
-        <ng-container *ngIf="col.type === 'button'">
-          <p-button *ngIf="IsPrint" label="{{ col.buttonLabel }}" severity="info" (click)="onSelectButton(rowData)"
-            [disabled]="col.disabled ? col.disabled(rowData) : false"></p-button>
-        </ng-container>
-        <ng-container *ngIf="col.type === 'html'">
-          <div class="whitespace-pre-wrap">
-            <span [innerHTML]="rowData[col.field]"></span>
-          </div>
-        </ng-container>
-        <span *ngIf="
+      <ng-container *ngIf="!loading; else loadingTemplate">
+        <td class="text-center">{{ rowIndex + 1 }}</td>
+        <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
+          <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
+            [value]="rowData" [disabled]="!isRowSelectable(rowData)" />
+        </td>
+        <td *ngIf="expansionDataKey && IsPrint" class="text-center">
+          <p-button pRipple [pRowToggler]="rowData" [text]="true" [rounded]="true" [plain]="true" severity="secondary"
+            [raised]="!expanded" [pTooltip]="rowData[expansionDataKey]?.length > 0? expanded? '收合': '展開': ''" [style]="expanded? {'box-shadow':'inset 2px 2px 5px rgba(0, 0, 0, 0.2), inset -2px -2px 5px rgba(255, 255, 255, 0.5)',}
+              : {}"
+            [icon]="rowData[expansionDataKey]?.length > 0? expanded? 'pi pi-chevron-down': 'pi pi-chevron-right': 'pi pi-minus text-gray-500'"
+            [disabled]="rowData[expansionDataKey]?.length === 0" tooltipPosition="right" pButton
+            [ngClass]="{ 'p-button-danger': rowData[expansionDataKey]?.length === 0 }" />
+        </td>
+        <td *ngFor="let col of columns" (click)="editing ? $event.stopPropagation() : null"
+          class="max-w-{{ col.maxWidth }} text-center" style="text-overflow: ellipsis" [ngClass]="col.style"
+          [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="IsPrint && col.frozen">
+          <p-cellEditor *ngIf="showRowEdit">
+            <ng-template pTemplate="input">
+              <input *ngIf="col.type === 'input'" pInputText class="w-full min-w-max" [(ngModel)]="rowData[col.field]"
+                placeholder="請輸入{{ col.header }}" [ngModelOptions]="{ standalone: true }"
+                [disabled]="col.disabled ? col.disabled(rowData) : false"
+                (ngModelChange)="onFieldChange(rowData, col.field, $event)" />
+              <p-inputNumber *ngIf="col.type === 'inputNumber'" class="w-full min-w-max"
+                [(ngModel)]="rowData[col.field]" placeholder="請輸入{{ col.header }}"
+                [ngModelOptions]="{ standalone: true }" [disabled]="col.disabled ? col.disabled(rowData) : false"
+                mode="decimal" (ngModelChange)="onFieldChange(rowData, col.field, $event)" [prefix]="col.prefix"
+                [minFractionDigits]="col.fractionDigits" [maxFractionDigits]="col.fractionDigits"
+                [useGrouping]="col.useGrouping" />
+              <p-dropdown *ngIf="col.type === 'dropdown'" [(ngModel)]="rowData[col.field]"
+                [ngModelOptions]="{ standalone: true }" styleClass="w-full" placeholder="請輸入{{ col.header }}"
+                [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
+                [showClear]="true" appendTo="body" [disabled]="col.disabled ? col.disabled(rowData) : false"
+                (onChange)="onFieldChange(rowData, col.field, $event.value)" [filter]="true"></p-dropdown>
+              <p-calendar *ngIf="col.type === 'date'" [(ngModel)]="rowData[col.field]"
+                [ngModelOptions]="{ standalone: true }" class="w-full" styleClass="min-w-max"
+                placeholder="請選擇{{ col.header }}" [dateFormat]="col.dateFormat || 'yy-mm-dd'" [showIcon]="true"
+                appendTo="body" [disabled]="col.disabled ? col.disabled(rowData) : false" [minDate]="col.minDate"
+                [maxDate]="col.maxDate" (ngModelChange)="onFieldChange(rowData, col.field, $event)"></p-calendar>
+              <p-checkbox *ngIf="col.type === 'checkbox'" [(ngModel)]="rowData[col.field]" [binary]="true"
+                [label]="col.label" [ngModelOptions]="{ standalone: true }"
+                [disabled]="col.disabled ? col.disabled(rowData) : false"
+                (ngModelChange)="onFieldChange(rowData, col.field, $event)" />
+            </ng-template>
+            <ng-template pTemplate="output">
+              <span *ngIf="col.type === 'input'" class="w-full min-w-max">
+                {{ rowData[col.field] }}
+              </span>
+              <span *ngIf="col.type === 'inputNumber'" class="w-full min-w-max">
+                {{ col.prefix }}{{ rowData[col.field] }}
+              </span>
+              <p-dropdown *ngIf="col.type === 'dropdown'" class="table-dropdown" [(ngModel)]="rowData[col.field]"
+                [ngModelOptions]="{ standalone: true }" [options]="getOptions(rowData, col)"
+                [optionLabel]="col.optionLabel" [optionValue]="col.optionValue" [group]="col.group"
+                [optionGroupChildren]="col.optionGroupChildren"></p-dropdown>
+              <span *ngIf="col.type === 'date'" class="w-full min-w-max">
+                {{ rowData[col.field] | date: "yyyy/MM/dd" }}
+              </span>
+              <span *ngIf="col.type === 'checkbox'">
+                {{
+                rowData[col.field]
+                ? col.checkboxTrueLabel || "是"
+                : col.checkboxFalseLabel || "否"
+                }}
+              </span>
+            </ng-template>
+          </p-cellEditor>
+          <ng-container *ngIf="col.type === 'button'">
+            <p-button *ngIf="IsPrint" label="{{ col.buttonLabel }}" severity="info" (click)="onSelectButton(rowData)"
+              [disabled]="col.disabled ? col.disabled(rowData) : false"></p-button>
+          </ng-container>
+          <ng-container *ngIf="col.type === 'html'">
+            <div class="whitespace-pre-wrap">
+              <span [innerHTML]="rowData[col.field]"></span>
+            </div>
+          </ng-container>
+          <span *ngIf="
             rowData[col.field] !== undefined &&
             rowData[col.field] !== null &&
             !col.type
           ">
-          {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
-        </span>
-      </td>
-      <td [hidden]="!IsPrint || !showManage" [ngClass]="{
+            {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
+          </span>
+        </td>
+        <td [hidden]="!IsPrint || !showManage" [ngClass]="{
           'flex justify-content-center gap-2': IsPrint && showManage,
         }" class="no-wrap icon-button" alignFrozen="right" pFrozenColumn [frozen]="IsPrint"
-        [style.text-align]="'center'">
-        <div *ngIf="showRowEdit" class="flex align-items-center justify-content-center gap-2">
-          <p-button *ngIf="!editing" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pen-to-square"
-            (click)="onRowEditInit(rowData)" [text]="true" [disabled]="rowEditing || rowEditDisabled(rowData)" />
-          <p-button *ngIf="editing" icon="pi pi-check text-green-500"
-            (click)="onRowEditSave(rowData, ri, htmlTableRowElement)" />
-          <p-button *ngIf="editing" icon="pi pi-times text-red-500" (click)="onRowEditCancel(rowData, ri)" />
-        </div>
-        <p-button [text]="true" [outlined]="true" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pencil"
-          (click)="editRow(rowData)" *ngIf="showEdit" [disabled]="editDisabled(rowData)" />
-        <p-button pTooltip="查看" tooltipPosition="top" icon="pi pi-eye" (click)="detailRow(rowData)"
-          *ngIf="showDetail" />
-        <p-button *ngFor="let btn of addButton" pTooltip="{{ btn.label }}" tooltipPosition="top" [icon]="btn.icon"
-          (click)="btn.action(rowData)" [disabled]="btn.disabled ? btn.disabled(rowData) : false" />
-      </td>
+          [style.text-align]="'center'">
+          <div *ngIf="showRowEdit" class="flex align-items-center justify-content-center gap-2">
+            <p-button *ngIf="!editing" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pen-to-square"
+              (click)="onRowEditInit(rowData)" [text]="true" [disabled]="rowEditing || rowEditDisabled(rowData)" />
+            <p-button *ngIf="editing" icon="pi pi-check text-green-500"
+              (click)="onRowEditSave(rowData, ri, htmlTableRowElement)" />
+            <p-button *ngIf="editing" icon="pi pi-times text-red-500" (click)="onRowEditCancel(rowData, ri)" />
+          </div>
+          <p-button [text]="true" [outlined]="true" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pencil"
+            (click)="editRow(rowData)" *ngIf="showEdit" [disabled]="editDisabled(rowData)" />
+          <p-button pTooltip="查看" tooltipPosition="top" icon="pi pi-eye" (click)="detailRow(rowData)"
+            *ngIf="showDetail" />
+          <p-button *ngFor="let btn of addButton" pTooltip="{{ btn.label }}" tooltipPosition="top" [icon]="btn.icon"
+            (click)="btn.action(rowData)" [disabled]="btn.disabled ? btn.disabled(rowData) : false" />
+        </td>
+      </ng-container>
+      <ng-template #loadingTemplate>
+        <td *ngFor="let _ of [].constructor(getVisibleHeaderCount)">
+          <p-skeleton />
+        </td>
+      </ng-template>
     </tr>
   </ng-template>
   <ng-template pTemplate="footer" let-columns>

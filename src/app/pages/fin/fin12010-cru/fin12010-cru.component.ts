@@ -130,7 +130,7 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
     id: number;
     SAL_Type: string;
   } {
-    return { id: frm.get('id')?.value ?? 0, SAL_Type: frm.get('SAL_Type')?.value || '' };
+    return { id: this.rowdata?.id ?? 0, SAL_Type: frm.get('SAL_Type')?.value || '' };
   }
 
 

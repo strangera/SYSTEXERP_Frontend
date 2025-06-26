@@ -7,7 +7,7 @@
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-calendar-range calendarType="dateMonthRange" label="發票年月" class="col-12 lg:col-6 xl:col-4" label="發票年"
+          <app-calendar-range calendarType="dateMonthRange" label="發票年月" class="col-12 lg:col-6 xl:col-4"
             [startControl]="queryForm.controls.SAL_GUIYYYYMM_start" [endControl]="queryForm.controls.SAL_GUIYYYYMM_end"
             [submitted]="submitted" />
           <app-input-text class="col-12 lg:col-6 xl:col-4" label="字軌" controlName="SAL_GUITrack"
