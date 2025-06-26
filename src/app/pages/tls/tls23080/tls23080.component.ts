@@ -3,9 +3,9 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { WhetherService } from '../../../service/basic/whether.service';
-import { TLS23080Service } from '../../../service/API/tls/tls23080.service';
+import { TLS23080Service } from '../../../service/api/tls/tls23080.service';
 import { FloorService } from '../../../service/basic/floor.service';
-import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 
@@ -15,24 +15,28 @@ import { CounterNameService } from '../../../service/basic/counter-name.service'
   styleUrls: ['./tls23080.component.scss']
 })
 export class TLS23080Component extends BasicQueryPageComponent<any> {
+
+  showPageSizeDialog = false;
+  customPageSize = 1000;
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [null,],
-    TXN_DateEnd: [null,],
-    ECR_No: [''],
-    tlt_no: [''],
-    tlt_building: [''],
-    tlt_floor: [''],
-    org_id: [''],
-    TXN_Year: [''],
-    TXN_Month: [''],
-    queryMonthYear: [''],
-    ...createPaginationConfig([{ field: 'TXN_DateStart', order: 1 }])
+    TXN_DateStart: [new Date('2020-01-01'), [Validators.required]],
+    TXN_DateEnd: [new Date('2020-01-02'), [Validators.required]],
+    tlt_openflag: ['Y'],
+    ECR_No: [],
+    
+    tlt_building: [],
+    tlt_floor: [],
+    org_id: [],
+    // TXN_Year: [],
+    // TXN_Month: [],
+    // queryMonthYear: [],
+    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }])
   });
 
   data: any[] = [];
   totalRecords = 0;
 
-   columns: any[] = [
+  columns: any[] = [
 
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
@@ -87,9 +91,6 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_PayAmt23', header: '外來禮券-高夢', visible: true, style: 'text-right', format: this.moneyFormat },
     { field: 'TXN_CancelAmt', header: '作廢', visible: true, style: 'text-right', format: this.moneyFormat },
   ];
-    moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0';
-  }
 
   WhetherOptions: any[] = [];
 
@@ -111,9 +112,12 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23080', '', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS23080', 'TLS23080CRU', this.queryForm, (form) => this.onSubmit(form));
 
-    this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
+    this.whetherService.getWhetherOptions().subscribe(data => {
+  this.WhetherOptions = data.filter(opt => opt.value !== null);
+});
+
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
     this.tls11010Service.getOrgOptions().subscribe((res) => {
@@ -181,6 +185,63 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
         }
       });
     });
+  }
+
+
+  goToReportMode(): void {
+    this.customPageSize = 1000;
+    this.showPageSizeDialog = true;
+  }
+
+confirmPageSizeAndNavigate(): void {
+  this.submitted = true;
+  if (this.queryForm.invalid) {
+    this.messageService.warnBubble('請確認欄位資料是否完整');
+    this.queryForm.markAllAsTouched();
+    return;
+  }
+
+  const queryFormValue = {
+    ...this.queryForm.value,
+    pageSize: this.customPageSize
+  };
+
+  this.loading = true;
+  this.messageService.blockUi();
+
+  this.tls23080Service.queryTLS23080(queryFormValue).subscribe({
+    next: (res) => {
+      if (res.Status === '0000') {
+        this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
+        this.router.navigate(['/TLS/TLS23080CRU'], {
+          state: {
+            queryFormValue,
+            pageSize: this.customPageSize,
+            data: res.Data || []
+          }
+        });
+        this.messageService.successBubble('查詢成功');
+      } else {
+        this.messageService.errorBubble('查詢失敗');
+      }
+    },
+    error: () => {
+      this.messageService.errorBubble('查詢錯誤');
+      this.loading = false;
+      this.messageService.unblockUi();
+      this.showPageSizeDialog = false;
+    },
+    complete: () => {
+      this.loading = false;
+      this.messageService.unblockUi();
+      this.showPageSizeDialog = false;
+    }
+  });
+}
+
+
+  moneyFormat(value: number): string {
+    return value != null ? value.toLocaleString('en-US') : '0';
   }
 
   getLabelFromOptions(value: any, options: any[]): string {

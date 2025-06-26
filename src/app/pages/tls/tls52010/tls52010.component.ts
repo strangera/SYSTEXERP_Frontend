@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatAmount, formatDateTime, formatYN } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime, formatYN } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IPOS2013Request } from '../../../service/api/dropdownservice/dropDownList.service'; // 導入 DropDownListService 和所需介面
 import { finalize, map } from 'rxjs'; // 只需要 map 運算符，因為我們將直接訂閱
 
@@ -33,6 +33,16 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
 
   totalRecords = 0;
   data: ITLS52010Data[] = [];
+  selectedItems: ITLS52010Data[] = []; // 用於儲存選中的項目
+  // 管理：單據審核、反審核、產生標籤檔、作廢、取消單據功能
+  // 註:已審核且未有任何驗收才可作廢
+  addButton: AddButton[] = [
+    { label: '單據審核', icon: 'pi pi-check-circle', action: (rowData: ITLS52010Data) => { this.approveDocument(rowData); } }, // 審核
+    { label: '反審核', icon: 'pi pi-undo', action: (rowData: ITLS52010Data) => { this.revokeApproval(rowData); } }, // 反審核
+    { label: '產生標籤檔', icon: 'pi pi-tags', action: (rowData: ITLS52010Data) => { this.generateLabelFile(rowData); } }, // 標籤檔
+    { label: '作廢', icon: 'pi pi-trash', action: (rowData: ITLS52010Data) => { this.voidDocument(rowData); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== '2' }, // 作廢
+    { label: '取消單據', icon: 'pi pi-times-circle', action: (rowData: ITLS52010Data) => { this.cancelDocument(rowData); } }, // 取消單據
+  ];
 
   // 表格欄位定義
   columns: Column[] = [
@@ -90,30 +100,23 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   ngOnInit(): void {
     // 初始化頁面，設定服務名稱、CRU 路徑和表單提交處理函數
     this.initializePage('TLS52010', 'TLS/TLS52010CRU', this.queryForm, (form) => this.onSubmit(form));
-
-    // 呼叫 API 獲取下拉選單資料並直接賦值給陣列變數
     // 倉別 (HOS_No)
     this.dropDownListService.getPOS2034Options().pipe(
       map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
     ).subscribe(options => {
       this.warehouseOptions = options;
     });
-
     // 品牌代碼 (LOGO_No)
     this.dropDownListService.queryPLULOGO_DropDownList().pipe(
       map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
     ).subscribe(options => {
       this.brandOptions = options;
     });
-
     // 廠商編號 (VEN_No)
     const venFlagParams: IPOS2013Request = { VEN_Flag: '' }; // 根據實際需求設定 VEN_Flag
     this.dropDownListService.queryPOS2013_DropDownList(venFlagParams).pipe(
       map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
-    ).subscribe(options => {
-      this.vendorOptions = options;
-    });
-
+    ).subscribe(options => { this.vendorOptions = options; });
     // 採購單狀態 (PO_Status) - 靜態資料，已更新為你提供的正確值
     this.poStatusOptions = [
       { label: '已申請', value: '0' },
@@ -142,5 +145,37 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     })
+  }
+
+  // 多筆事件
+
+  print(rowData: ITLS52010Data[]) {
+    console.log('列印多筆事件:', rowData);
+  }
+
+  close(rowData: ITLS52010Data[]) {
+    console.log('關閉多筆事件:', rowData);
+  }
+
+  // 單筆事件
+  approveDocument(rowData: ITLS52010Data) {
+    // 實現單據審核邏輯
+    console.log('審核單據:', rowData);
+  }
+  revokeApproval(rowData: ITLS52010Data) {
+    // 實現反審核邏輯
+    console.log('反審核單據:', rowData);
+  }
+  generateLabelFile(rowData: ITLS52010Data) {
+    // 實現產生標籤檔邏輯
+    console.log('產生標籤檔:', rowData);
+  }
+  voidDocument(rowData: ITLS52010Data) {
+    // 實現作廢單據邏輯
+    console.log('作廢單據:', rowData);
+  }
+  cancelDocument(rowData: ITLS52010Data) {
+    // 實現取消單據邏輯
+    console.log('取消單據:', rowData);
   }
 }

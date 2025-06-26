@@ -33,12 +33,20 @@ export class PdfService {
 
     } = options;
 
-    const doc = new jsPDF({ orientation, unit: 'pt' });
+    const columnCount = columns.length;
+    const columnWidth = 80; // 每欄給 80pt（約28mm）
+    const pageWidth = Math.max(595, columnCount * columnWidth); // 最小寬度為 A4 的 595pt
+
+    const doc = new jsPDF({
+      orientation: 'l',
+      unit: 'pt',
+      format: [pageWidth, 842] // 高為 A4 高度 842pt，自訂寬度
+    });
 
     // ✅ 直接使用註冊好的字型
     doc.setFont('NotoSansTC');
 
-    const pageWidth = doc.internal.pageSize.getWidth();
+
     const marginLeft = 40;
     let currentY = 40;
 
@@ -109,11 +117,13 @@ export class PdfService {
       head: [headers],
       body,
       margin: { left: marginLeft, right: marginLeft },
+      tableWidth: 'wrap', // ✅ 重點一：讓表格寬度跟內容一致
       styles: {
         font: 'NotoSansTC',
         fontSize: 9,
         lineColor: [0, 0, 0],
         lineWidth: 0.1,
+        minCellWidth: 80 // ✅ 重點二：避免欄位縮太小（視欄數調整）
       },
       columnStyles,
       headStyles: {

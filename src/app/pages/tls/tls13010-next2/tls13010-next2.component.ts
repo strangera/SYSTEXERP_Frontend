@@ -8,9 +8,9 @@ import { Column } from '../../../shared/componentkit/table/table.model';
 import { SelectItem } from 'primeng/api';
 import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { ContractFlowService, WorkflowStep } from '../tls13010/services/contract-flow.service';
-import { TLS13010Service } from '../../../service/API/tls/tls13010.service';
+import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
-import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { ContractInfo, CommissionItem, DiscountSettingItem, AnnualPerformanceItem, DiscountLevelItem } from '../tls13010/tls13010.model';
 
 // ... 介面定義保持不變 ...

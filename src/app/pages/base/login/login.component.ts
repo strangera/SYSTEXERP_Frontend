@@ -31,16 +31,18 @@ export class LoginComponent implements OnInit {
     private formBuilder: FormBuilder,
     private notemessage: NotificationService,
     private commService: CommonService,
-    private router: Router,
+    private router: Router
   ) {
   }
 
   ngOnInit(): void {
     // 檢查使用者是否已經登入
-    if (this.authService.currentUserValue) {
+    if (!this.authService.currentUserValue) {
       // 如果已經登入，則導向到主頁面（例如 dashboard）
       this.authService.logout();
       return; // 終止 ngOnInit 的執行，避免不必要的 IP 請求
+    } else {
+      this.router.navigate(['/SSO/dashboard']); // 如果已經登入，則導向到主頁面
     }
     this.commService.getIPAddress().subscribe((result: any) => {
       this.ipAddress = result.ip;
@@ -52,27 +54,17 @@ export class LoginComponent implements OnInit {
     if (frm.invalid) return;
     this.loading = true;
     this.loginForm.value.client_ip = this.ipAddress;
-
     this.authService.login(this.loginForm.value as userLogin).pipe(first()).subscribe({
-      next: (res) => {
-        const sysStoreNo = res?.Data?.SYS_StoreNo;
-        if (sysStoreNo) {
-          sessionStorage.setItem('SYS_StoreNo', sysStoreNo);
-          console.log('✅ 已儲存 SYS_StoreNo:', sysStoreNo);
-        }
-
+      next: () => {
         this.notemessage.successBubble('登入成功');
         console.log('登入成功', this.loginForm.value);
         this.loading = false;
-
-        // 若需要自動導頁，這裡可以補：this.router.navigate(['/dashboard']);
       },
       error: () => {
         this.loginForm.patchValue({ password: '' }); //清空密碼
         this.loading = false;
       }
     });
-
     this.notemessage.unblockUi();
   }
 }

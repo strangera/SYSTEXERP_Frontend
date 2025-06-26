@@ -3,8 +3,8 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { TLTTALENT_columns } from './tls13060.model';
-import { VendorCategoryOptionsService } from '../../../service/API/dropdownservice/vendor-category-options.service';
-import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
+import { VendorCategoryOptionsService } from '../../../service/api/dropdownservice/vendor-category-options.service';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { TLS13060ResponseItem, TLS13060Service } from '../../../service/api/tls/tls13060.service';
 import { finalize } from 'rxjs';
 

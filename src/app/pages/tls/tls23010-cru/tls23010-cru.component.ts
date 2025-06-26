@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { TLS23010Service } from '../../../service/API/tls/tls23010.service';
+import { TLS23010Service } from '../../../service/api/tls/tls23010.service';
 import { StatusFlagService } from '../../../service/basic/status-flag.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';

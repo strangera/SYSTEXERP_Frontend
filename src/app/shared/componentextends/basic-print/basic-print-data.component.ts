@@ -24,7 +24,7 @@ export class BasicPrintDataComponent {
   tableService = inject(TableService);
   authService = inject(AuthService);
 
-  exportPDFDownload(event: TableExport, columns: Column[],): void {
+  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.authService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(ProgNo);
@@ -44,7 +44,7 @@ export class BasicPrintDataComponent {
 
     const body = {
       query_condition: {
-        ServiceName: `query${ProgNo}`,
+        ServiceName: `${apiUrl}`,
         Conditions: queryState?.value || []
       },
       report_title: REPORT_TITLES[`query${ProgNo}`] || 'Report',
@@ -83,7 +83,7 @@ export class BasicPrintDataComponent {
       }
     });
   }
-  exportExcelDownload(event: TableExport, columns: Column[],): void {
+  exportExcelDownload(event: TableExport, columns: Column[], apiUrl?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.authService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(ProgNo);
@@ -103,7 +103,7 @@ export class BasicPrintDataComponent {
 
     const body = {
       query_condition: {
-        ServiceName: `query${ProgNo}`,
+        ServiceName: `${apiUrl}`,
         Conditions: queryState
       },
       report_title: REPORT_TITLES[`query${ProgNo}`] || 'Report',

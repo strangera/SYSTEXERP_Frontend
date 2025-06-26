@@ -3,7 +3,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
-import { Tls14010Service } from '../../../service/API/tls/tls14010.service';
+import { Tls14010Service } from '../../../service/api/tls/tls14010.service';
 
 //建立查詢項目的interface
 export interface TLTContract {

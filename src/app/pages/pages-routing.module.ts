@@ -8,7 +8,6 @@ const routes: Routes = [
     path: '',
     component: PagesComponent,
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }, // 重定向到 dashboard
       { path: 'dashboard', loadChildren: () => import('./base/dashboard/dashboard.module').then(m => m.DashboardModule), canActivate: [AuthGuard] },
       { path: 'demo', loadChildren: () => import('./base/demo/demo.module').then(m => m.DemoModule), canActivate: [AuthGuard] },
       { path: 'changepsw', loadChildren: () => import('./base/changepsw/changepsw.module').then(m => m.ChangepswModule), canActivate: [AuthGuard] },

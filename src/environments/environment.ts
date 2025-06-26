@@ -3,16 +3,23 @@ export const environment = {
   production: false,
   // AWSApiUrl: 'http://10.60.8.66/TSRD_WEBAPI',
   // AWSBaseUrl: 'http://10.60.8.66/TSRD_WEBAPI',
+<<<<<<< eugene06262
   BaseUrl: 'https://localhost:7271',
   ApiUrl: 'https://localhost:7271',
+=======
+  // BaseUrl: 'https://localhost:7271',
+  // ApiUrl: 'https://localhost:7271',
+>>>>>>> main
   // BaseUrl: 'http://43.207.4.99/TSRD_WEBAPI',
   // ApiUrl: 'http://43.207.4.99/TSRD_WEBAPI',
   // BaseUrl: 'http://localhost/TSRD_WEBAPI',
   // ApiUrl: 'http://localhost/TSRD_WEBAPI',
-  // BaseUrl: 'https://10.3.11.2/TSRD_WEBAPI',
-  // ApiUrl: 'https://10.3.11.2/TSRD_WEBAPI',
+  BaseUrl: 'https://10.3.11.2/TSRD_WEBAPIDEV',
+  ApiUrl: 'https://10.3.11.2/TSRD_WEBAPIDEV',
   // BaseUrl: 'http://10.7.55.13/TSRD_WEBAPI',
   // ApiUrl: 'http://10.7.55.13/TSRD_WEBAPI',
+  // BaseUrl: 'http://localhost:5142',
+  // ApiUrl: 'http://localhost:5142',
   PasswordKey: '8a9zx@a1231sdl!aafohc.u',
   PasswordIV: '12523648',
   APIKey:

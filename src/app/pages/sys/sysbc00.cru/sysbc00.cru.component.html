@@ -18,8 +18,8 @@
         <app-table class="col-12" [data]="data" [columns]="columns" [showEdit]="false" [showDetail]="false"
           [showCheckBox]="true" [showInsert]="true" [showRowEdit]="true" (delete)="onDelete($event)"
           (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [showCaption]="!isFormReadable"
-          [showManage]="!isFormReadable" [showCheckBox]="!isFormReadable" [showReportMode]="false"
-          [insertRowData]="true" (dataChange)="data = $event"></app-table>
+          [showManage]="!isFormReadable" [showCheckBox]="!isFormReadable" [insertRowData]="true"
+          (dataChange)="data = $event"></app-table>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" (clickEvent)="resetTable()"></app-button>
