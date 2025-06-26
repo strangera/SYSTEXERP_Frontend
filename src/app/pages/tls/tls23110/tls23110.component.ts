@@ -170,10 +170,7 @@ this.tls23110Service.queryTLS23110(payload).subscribe({
     this.totalRecords = 0;
     this.messageService.errorBubble('查詢錯誤');
   }
-  ,
-  complete: () => {
-    this.loading = false; // ✅ 補上這一行
-  }
+  
 });
     });
   }
