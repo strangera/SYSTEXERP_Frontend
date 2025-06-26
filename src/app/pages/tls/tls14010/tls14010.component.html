@@ -53,12 +53,17 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range class="col-12 md:col-6 lg:col-5" label="版本編號"
-              [startControl]="queryForm.controls.contract_subno_start"
-              [endControl]="queryForm.controls.contract_subno_end" [submitted]="submitted" />
+            <app-input-text label="版本編號(起)" controlName="contract_subno_start" [control]="queryForm.controls.contract_subno_start"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick class="col-12 md:col-6 lg:col-5" label="日期條件"
+            <app-input-text label="版本編號(迄) " controlName="contract_subno_end" [control]="queryForm.controls.contract_subno_end"
+              [submitted]="submitted"></app-input-text>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range-quick class="col-12 md:col-6 lg:col-5" label="營運日期"
               [startControl]="queryForm.controls.tlt_bdate" [endControl]="queryForm.controls.tlt_edate"
               [submitted]="submitted" />
           </div>

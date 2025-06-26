@@ -383,7 +383,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
             ...newIMGEntries
           ];
 
-
           const requestBody = {
             ...formValue,
             PLU_No: [frm.get('PLU_No')?.value], //用[]包
