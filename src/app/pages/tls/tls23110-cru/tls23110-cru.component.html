@@ -1,1 +1,44 @@
-<p>tls23110-cru works!</p>
+<div class="card">
+  <!-- 上方功能列 -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+
+  <!-- 報表區塊 -->
+  <div class="card">
+    <app-report-table-group 
+      [columns]="columns"
+      [data]="data"
+      [subtotalFields]="[
+        'OriginalPrice_TXN_SaleNoTax',
+        'OriginalPrice_TXN_Tax',
+        'OriginalPrice_Total',
+        'Discount90_TXN_SaleNoTax',
+        'Discount90_TXN_Tax',
+        'Discount90_Total',
+        'Discount80_TXN_SaleNoTax',
+        'Discount80_TXN_Tax',
+        'Discount80_Total',
+        'SpecialPrice_TXN_SaleNoTax',
+        'SpecialPrice_TXN_Tax',
+        'SpecialPrice_Total',
+        'Total_TXN_SaleNoTax',
+        'Total_TXN_Tax',
+        'Total_Total'
+      ]"
+      [enableGrouping]="false"
+      [reportTitle]="'折扣別月報表 '"
+      [currentPage]="1"
+      [dateStart]="dateStart"
+      [dateEnd]="dateEnd"
+      [printedAt]="printedAt"
+      [showTotalOnly]="false"
+      [pdfSummaryText]="[]"
+      [defaultMergedView]="true"
+      [showExpandColumn]="false"
+      [detailFieldKeys]="['TXN_Date']"
+    >
+    </app-report-table-group>
+  </div>  
+</div>
+
