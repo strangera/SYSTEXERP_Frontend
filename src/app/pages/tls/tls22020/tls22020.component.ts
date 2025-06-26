@@ -1,40 +1,24 @@
 import { WhetherService } from './../../../service/basic/whether.service';
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
+import { Component, OnInit } from '@angular/core';
+import { FormGroup } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ValidationService } from '../../../shared/service/validation.service';
-const day = new Date();
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+
 @Component({
-  selector: 'app-tls22020',
   templateUrl: './tls22020.component.html',
-  styleUrl: './tls22020.component.scss'
 })
-export class TLS22020Component {
 
-  ProgNo: string = '220007';
-  // 權限
-  funInfo?: FunsrightInfo;
+export class TLS22020Component extends BasicQueryPageComponent<any> implements OnInit {
 
-
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
   queryForm = this.formBuilder.group({
-    saleDate: [day, [Validators.required]], // 銷售日期
-    cashierStartCode: [, [this.validationService.numberValidator]], // 收銀機代號起
-    cashierEndCode: [, [this.validationService.numberValidator]], // 收銀機代號迄
-    listZeroDifference: [, []], // 差異為0是否列出
+    salesDate: [],
+    ECR_No: [[]],
+    status1: [''],
+    status2: [''],
+    cashierStartCode: [[this.validationService.numberValidator]], // 收銀機代號起
+    cashierEndCode: [[this.validationService.numberValidator]], // 收銀機代號迄
+    listZeroDifference: [[]], // 差異為0是否列出
     displayOptions: [1, []], // 顯示選項, radioButton
   });
   // 表格資料
@@ -145,95 +129,129 @@ export class TLS22020Component {
   // 下拉選單選項
   machinedisplayOptions: any[] = [];
   whetherOptions: any[] = [];
-
+  statusOptions = [
+    { label: '是', value: 'yes' },
+    { label: '否', value: 'no' }
+  ];
+  ECRNoOptions: any[] = [];
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private validationService: ValidationService,
-    private whetherService: WhetherService
-  ) { }
+    private whetherService: WhetherService,
+    private ECRNoService: ECRNoService
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
+    this.initializePage('TLS22020', '/TLS/TLS22020CRU', this.queryForm, (form) => this.onSubmit(form));
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
+    this.ECRNoService.getECRNo().subscribe((data) => {
+      this.ECRNoOptions = data;
+    });
     this.whetherService.getWhetherOptions().subscribe(data => {
       this.whetherOptions = data;
     });
+
+    // 👉 模擬假資料
+    this.data = [
+      {
+        cashRegisterCode: 'A001',
+        dedicatedLane: 'Y',
+        cashDetail: 10000,
+        cashZ: 10000,
+        cashDifference: 0,
+        jointCreditCardDetail: 2000,
+        jointCreditCardZ: 2000,
+        jointCreditCardDifference: 0,
+        chinaTrustParkingCardDetail: 500,
+        chinaTrustParkingCardZ: 500,
+        chinaTrustParkingCardDifference: 0,
+        chinaTrustCreditCardDetail: 3000,
+        chinaTrustCreditCardZ: 3000,
+        chinaTrustCreditCardDifference: 0,
+        ezCardParkingDetail: 0,
+        ezCardParkingZ: 0,
+        ezCardParkingDifference: 0,
+        ezCardDetail: 100,
+        ezCardZ: 100,
+        ezCardDifference: 0,
+        giftVoucherDetail: 800,
+        giftVoucherZ: 800,
+        giftVoucherDifference: 0,
+        goodsDeliveryNoteDetail: 0,
+        goodsDeliveryNoteZ: 0,
+        goodsDeliveryNoteDifference: 0,
+        thermalVoucherDetail: 0,
+        thermalVoucherZ: 0,
+        thermalVoucherDifference: 0,
+        productVoucherDetail: 0,
+        productVoucherZ: 0,
+        productVoucherDifference: 0,
+        awardDeliveryNoteDetail: 0,
+        awardDeliveryNoteZ: 0,
+        awardDeliveryNoteDifference: 0,
+        externalGiftVoucherDetail: 0,
+        externalGiftVoucherZ: 0,
+        externalGiftVoucherDifference: 0,
+        externalDeliveryNoteDetail: 0,
+        externalDeliveryNoteZ: 0,
+        externalDeliveryNoteDifference: 0,
+        activityVoucherDetail: 0,
+        activityVoucherZ: 0,
+        activityVoucherDifference: 0,
+        discountVoucherDetail: 0,
+        discountVoucherZ: 0,
+        discountVoucherDifference: 0,
+        cashCouponDetail: 0,
+        cashCouponZ: 0,
+        cashCouponDifference: 0,
+        giftCardBalanceDetail: 0,
+        giftCardBalanceZ: 0,
+        giftCardBalanceDifference: 0,
+        deliveryNoteWithCardDetail: 0,
+        deliveryNoteWithCardZ: 0,
+        deliveryNoteWithCardDifference: 0,
+        memberDiscountDetail: 0,
+        memberDiscountZ: 0,
+        memberDiscountDifference: 0,
+        linePayParkingDetail: 0,
+        linePayParkingZ: 0,
+        linePayParkingDifference: 0,
+        linePayDetail: 0,
+        linePayZ: 0,
+        linePayDifference: 0,
+        appVoucherDetail: 0,
+        appVoucherZ: 0,
+        appVoucherDifference: 0,
+        appDeliveryNoteDetail: 0,
+        appDeliveryNoteZ: 0,
+        appDeliveryNoteDifference: 0,
+        detailTotalAmount: 20000,
+        bAccountTotalAmount: 20000,
+        differenceAmount: 0
+      }
+    ];
+
+    this.filteredData = [...this.data];
   }
 
-  canQuery(): boolean {
-    return true;
-  }
 
-  canAdd(): boolean {
-    return true;
-  }
+  //   canQuery(): boolean {
+  //     return true;
+  //   }
 
-  canEdit(): boolean {
-    return true;
-  }
+  //   canAdd(): boolean {
+  //     return true;
+  //   }
+
+  //   canEdit(): boolean {
+  //     return true;
+  //   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.handleSubmit(frm, () => {
+      console.log(123);
+    })
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
-  }
 }
