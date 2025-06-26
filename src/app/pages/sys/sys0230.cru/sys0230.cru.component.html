@@ -55,7 +55,7 @@
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         *ngIf="!isFormReadable"
       >
-        <app-button btnType="cancel"></app-button>
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>
     </form>
