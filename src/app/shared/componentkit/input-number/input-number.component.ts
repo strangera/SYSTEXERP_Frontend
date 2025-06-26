@@ -1,14 +1,14 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-input-number',
   templateUrl: './input-number.component.html',
   styleUrl: './input-number.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class InputNumberComponent extends BasicKitComponent implements OnInit, OnDestroy {
+export class InputNumberComponent extends BasicKitComponent implements OnInit {
   @Input() label = '';
   @Input() suffix: string | undefined | null = null;
   @Input() controlName = '';
@@ -27,7 +27,6 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit, O
   @Input() customPlaceholder: string | undefined;
   @Output() changeEvent = new EventEmitter<any>();
   @Output() blurEvent = new EventEmitter<any>();
-  private destroy$ = new Subject<void>();
 
   ngOnInit(): void {
     // 動態設置 max 值，// 設置 max 為 10^maxLength - 1
@@ -40,22 +39,8 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit, O
     } else {
       this.updateControlState(this.control);
     }
-    // 訂閱 control 的狀態變化
-    this.control.statusChanges
-      .pipe(takeUntil(this.destroy$)) // 使用 takeUntil 確保組件銷毀時取消訂閱
-      .subscribe(() => {
-        this.updatePlaceholderState(); // 當狀態改變時重新評估 placeholder
-      });
   }
 
-  // 抽出邏輯到一個獨立的方法，方便重用
-  private updatePlaceholderState(): void {
-    if (this.control?.disabled) {
-      this.placeholder = '';
-    } else {
-      this.updateControlState(this.control); // 假設 updateControlState 會處理 placeholder
-    }
-  }
   onInputChange(event: Event) {
     const input = event.target as HTMLInputElement;
     this.changeEvent.emit(input.value);
@@ -63,9 +48,5 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit, O
 
   onBlur(event: Event) {
     this.blurEvent.emit(event);
-  }
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 }

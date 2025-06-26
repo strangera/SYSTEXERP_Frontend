@@ -1,4 +1,4 @@
-import { Column, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { Column, formatDate, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
 
 export interface Pos1018 {
   ID: number; // 唯一識別碼

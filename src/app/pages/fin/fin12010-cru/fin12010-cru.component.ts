@@ -5,15 +5,15 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { SystemOption } from '../../../shared/models/sys/sys1000.model';
 import { SystemOptionsService } from '../../../service/system/sys1000.service';
 import { monthOptions } from '../fin11200/fin11200.model';
-import { Fin12010Service, IFin12010Data } from '../../../service/api/fin/fin12010.service';
-import { finalize } from 'rxjs';
+import { IAPS2001 } from '../fin12010/fin12010.model';
 
 //1.1.2.1 電子式發票各系統配號維護
 @Component({
   selector: 'app-fin12010-cru',
   templateUrl: './fin12010-cru.component.html',
+  styleUrl: './fin12010-cru.component.scss'
 })
-export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> implements OnInit {
+export class FIN12010CRUComponent extends BasicCruPageComponent<IAPS2001> implements OnInit {
   dataForm = this.formBuilder.group({
     SAL_GUIYYYYMM: [null, [Validators.required, this.validationService.oddMonthValidator]],                          // 發票年月
     SAL_GUITrack: ['', [Validators.required, Validators.maxLength(2), Validators.minLength(2), this.validationService.guiTrackValidator]],  // 發票字軌
@@ -28,20 +28,12 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
 
   constructor(
     private validationService: ValidationService,
-    private fin12010Service: Fin12010Service
   ) {
     super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
     this.initializePage('FIN12010', this.dataForm);
-    if (!this.isFormCreateable) {
-      this.dataForm.get('SAL_GUIYYYYMM')?.disable();
-      this.dataForm.get('SAL_GUITrack')?.disable();
-      this.dataForm.get('GUI_Qty')?.disable();
-      this.dataForm.get('SAL_GUIBegNo')?.disable();
-      this.dataForm.get('SAL_GUIEndNo')?.disable();
-    }
     const totQtyValue = this.dataForm.get('SAL_BlankCnt')?.value;
     if (totQtyValue && totQtyValue !== 0) {
       const qty = Math.floor(totQtyValue / 50);
@@ -87,19 +79,18 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = true;
-      const serviceCall = this.isFormCreateable
-        ? this.fin12010Service.insertFIN12010(this.buildInsertBody(frm))
-        : this.fin12010Service.updateFIN12010(this.buildUpdateBody(frm));
-      serviceCall.pipe(finalize(() => this.loading = false)).subscribe(res => {
-        this.messageService.successBubble(res.Message)
-        if (this.isFormCreateable) {
-          this.dataForm.reset();
-        }
-        if (this.isFormEditable) {
-          this.onCancel();
-        }
-      });
+      // this.loading = true;
+      // const serviceCall = this.isFormCreateable
+      //   ? this.fin11020Service.insertFIN11020(this.buildInsertBody(frm))
+      //   : this.fin11020Service.updateFIN11020(this.buildUpdateBody(frm));
+      // serviceCall.subscribe({
+      //   next: () => {
+      //     this.loading = false;
+      //   },
+      //   error: () => {
+      //     this.loading = false;
+      //   },
+      // });
     });
   }
 
@@ -110,7 +101,7 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
     SAL_GUIEndNo: string;
     SAL_Type: string;
   } {
-    const guiDate: Date | null = frm.get('SAL_GUIYYYYMM')?.value;
+    const guiDate: Date | null = frm.get('GUI_YYMM')?.value;
     let guiYYMM = '';
     if (guiDate instanceof Date && !isNaN(guiDate.getTime())) {
       const year = guiDate.getFullYear();
@@ -120,18 +111,29 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
 
     return {
       SAL_GUIYYYYMM: guiYYMM,
-      SAL_GUITrack: frm.get('SAL_GUITrack')?.value,
-      SAL_GUIBegNo: frm.get('SAL_GUIBegNo')?.value,
-      SAL_GUIEndNo: frm.get('SAL_GUIEndNo')?.value,
+      SAL_GUITrack: frm.get('GUI_Track')?.value,
+      SAL_GUIBegNo: frm.get('GUI_BegNo')?.value,
+      SAL_GUIEndNo: frm.get('GUI_EndNo')?.value,
       SAL_Type: frm.get('SAL_Type')?.value
     };
   }
   private buildUpdateBody(frm: FormGroup): {
-    id: number;
+    ID: number;
+    SAL_GUIYYYYMM: string;
+    SAL_GUITrack: string;
+    SAL_GUIBegNo: string;
+    SAL_GUIEndNo: string;
     SAL_Type: string;
   } {
-    return { id: frm.get('id')?.value ?? 0, SAL_Type: frm.get('SAL_Type')?.value || '' };
+    return { ID: this.dataForm.get('ID')?.value ?? 0, ...this.buildInsertBody(frm) };
   }
-
-
+  // 僅在 isFormCreateable 為 true 時才提供 minDate，否則回傳 null
+  get minDate(): Date | undefined {
+    if (this.isFormCreateable) {
+      const today = new Date();
+      const prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1); // 前一個月的 1 號
+      return prevMonth;
+    }
+    return undefined;
+  }
 }

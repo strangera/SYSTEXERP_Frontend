@@ -7,17 +7,18 @@
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-calendar-range calendarType="dateMonthRange" label="發票年月" class="col-12 lg:col-6 xl:col-4" label="發票年"
-            [startControl]="queryForm.controls.SAL_GUIYYYYMM_start" [endControl]="queryForm.controls.SAL_GUIYYYYMM_end"
-            [submitted]="submitted" />
-          <app-input-text class="col-12 lg:col-6 xl:col-4" label="字軌" controlName="SAL_GUITrack"
-            [control]="queryForm.controls.SAL_GUITrack" [submitted]="submitted" />
+          <app-calendar calendarType="dateYearOne" class="col-12 lg:col-6 xl:col-2" label="發票年"
+            [control]="queryForm.controls.GUI_YY" [submitted]="submitted" />
+          <app-dropdown class=" col-12 lg:col-6 xl:col-2" label="發票月" controlName="registerID" [options]="monthOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.GUI_MM" />
+          <app-input-text class="col-12 lg:col-6 xl:col-4" label="字軌" controlName="track"
+            [control]="queryForm.controls.GUI_Track" [submitted]="submitted" />
           <app-input-text-range class="col-12 lg:col-6 xl:col-4" startLabel="發票起始號碼" endLabel="發票結束號碼"
-            [startControl]="queryForm.controls.SAL_GUINo_start" [endControl]="queryForm.controls.SAL_GUINo_end"
+            [startControl]="queryForm.controls.GUI_No_start" [endControl]="queryForm.controls.GUI_No_end"
             [submitted]="submitted" [errorForGroup]="true" />
-          <app-multi-select class="col-12 lg:col-6 xl:col-4" label="使用別" controlName="SAL_GUIPaper"
+          <app-multi-select class="col-12 lg:col-6 xl:col-4" label="使用別" controlName="usageType"
             [options]="usageTypeOptions" optionLabel="SYS_Name" optionValue="SYS_Code"
-            [control]="queryForm.controls.SAL_GUIPaper" [submitted]="submitted" />
+            [control]="queryForm.controls.usageType" [submitted]="submitted"></app-multi-select>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
@@ -28,10 +29,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="fin12010" dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [showCheckBox]="true" [multiSortMeta]="[{ field: 'SAL_GUIYYYYMM', order: 1 }]"
+  <app-table tableKey="fin11030" dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [showCheckBox]="true" [multiSortMeta]="[{ field: 'id', order: 1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" (delete)="onDelete($event)" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event">
+    [loading]="loading">
   </app-table>
 </div>

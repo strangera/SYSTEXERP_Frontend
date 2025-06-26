@@ -1,62 +1,41 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatAmount, formatDateTime, formatDate, formatYN, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { monthOptions } from '../fin11200/fin11200.model';
 import { SystemOptionsService } from '../../../service/system/sys1000.service';
 import { SystemOption } from '../../../shared/models/sys/sys1000.model';
-import { Fin12010Service, IFin12010Data } from '../../../service/api/fin/fin12010.service';
-import { finalize } from 'rxjs';
-import { formatDate as dateFnsFormatDate } from '@angular/common';
-import { SAL_GUIPaperOptions } from '../fin11030/fin11030.model';
+import { IAPS2001 } from './fin12010.model';
 
 @Component({
   selector: 'app-fin12010',
   templateUrl: './fin12010.component.html',
 })
 //1.1.2.1 電子式發票各系統配號維護
-export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> implements OnInit {
+export class FIN12010Component extends BasicQueryPageComponent<IAPS2001> implements OnInit {
   queryForm = this.formBuilder.group({
-    SAL_GUIYYYYMM_start: [null, [Validators.required]], // 發票年月
-    SAL_GUIYYYYMM_end: [null, [Validators.required]], // 發票年月
-    SAL_GUITrack: ['', [Validators.maxLength(2)]], // 字軌
-    SAL_GUINo_start: [null, [Validators.maxLength(8), Validators.max(99999999)]], // 發票號碼(起)
-    SAL_GUINo_end: [null, [Validators.maxLength(8), Validators.max(99999999)]], // 發票號碼(迄)
-    SAL_GUIPaper: [[]], // 使用別
-    ...createPaginationConfig([{ field: 'SAL_GUIYYYYMM', order: 1 }]), // 分頁和排序參數
+    GUI_YY: [null], // 發票年月
+    GUI_MM: [null], // 發票年月
+    GUI_Track: ['', [Validators.maxLength(2)]], // 字軌
+    GUI_No_start: [null, [Validators.maxLength(8), Validators.max(99999999)]], // 發票號碼(起)
+    GUI_No_end: [null, [Validators.maxLength(8), Validators.max(99999999)]], // 發票號碼(迄)
+    usageType: [[]], // 使用別
+    ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
-  data: IFin12010Data[] = [];
-  selectedItems: IFin12010Data[] = [];
+  monthOptions = monthOptions;
+  data: IAPS2001[] = [];
   columns: Column[] = [
-    { field: 'SAL_GUIYYYYMM', header: '發票年月', visible: true, format: formatYYYYMM },
-    { field: 'SAL_GUITrack', header: '字軌', visible: true },
-    { field: 'SAL_GUIBegNo', header: '發票起號', visible: true },
-    { field: 'SAL_GUIEndNo', header: '發票迄號', visible: true },
-    { field: 'SAL_LastUsedGUINo', header: '已使用的發票號', visible: true },
-    { field: 'SAL_Type', header: '發票用途', visible: true, format: value => this.usageTypeOptions.find(x => x.SYS_Code === value)?.SYS_Name || value }, // 修正為 '發票用途'
-    { field: 'GUI_DingType', header: '是否為丁種發票', visible: true, format: formatYN },
-    { field: 'SAL_GUIBegMM', header: '起始月份', visible: false, format: formatDate },
-    { field: 'SAL_GUIEndMM', header: '終止月份', visible: false, format: formatDate },
-    { field: 'SAL_GUIPaper', header: '發票聯式', visible: false, format: value => this.SAL_GUIPaperOptions.find(x => x.value === value)?.label || value }, // 修正為 '發票聯式'
-    { field: 'SAL_VoidGUICnt', header: '作廢發票張數', visible: false, format: formatAmount },
-    { field: 'SAL_BlankCnt', header: '發票張數', visible: false, format: formatAmount },
-    { field: 'SAL_SAmt', header: '應稅金額', visible: false, format: formatAmount },
-    { field: 'SAL_TaxAmt', header: '稅額', visible: false, format: formatAmount },
-    { field: 'SAL_NoTaxAmt', header: '免稅金額', visible: false, format: formatAmount }, // 修正為 '免稅金額'
-    { field: 'SAL_ZeroTaxAmt', header: '零稅金額', visible: false, format: formatAmount }, // 修正為 '零稅金額'
-    { field: 'STR_Uniform', header: '統一編號', visible: false }, // 修正為 '統一編號'
-    { field: 'STO_No', header: '分店編號', visible: false }, // 修正為 '分店編號'
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 修正為 '建立日期'
-    { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 修正為 '建立人員'
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime }, // 修正為 '變更日期'
-    { field: 'UPD_USR_No', header: '變更人員', visible: false }, // 修正為 '變更人員'
-    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
+    { field: 'col1', header: '發票年月', visible: true },
+    { field: 'col2', header: '字軌', visible: true },
+    { field: 'col3', header: '發票號碼(起)', visible: true },
+    { field: 'col4', header: '發票號碼(迄)', visible: true },
+    { field: 'col5', header: 'NEXT發票配號號碼', visible: true },
+    { field: 'col6', header: '使用別', visible: true },
+    { field: 'col7', header: '使用狀態', visible: true },
   ];
   usageTypeOptions: SystemOption[] = SystemOptionsService.getOptions('T205');
-  SAL_GUIPaperOptions = SAL_GUIPaperOptions
   constructor(
-    private fin12010Service: Fin12010Service,
   ) { super(); }
 
   ngOnInit(): void {
@@ -65,45 +44,6 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const formValue = frm.value;
-      const SAL_GUIYYYYMM_start = formValue.SAL_GUIYYYYMM_start ? dateFnsFormatDate(formValue.SAL_GUIYYYYMM_start, 'yyyyMM', 'en-US') : '';
-      const SAL_GUIYYYYMM_end = formValue.SAL_GUIYYYYMM_end ? dateFnsFormatDate(formValue.SAL_GUIYYYYMM_end, 'yyyyMM', 'en-US') : '';
-      const body = {
-        ...formValue,
-        SAL_GUIYYYYMM_start,
-        SAL_GUIYYYYMM_end,
-      };
-      this.fin12010Service.queryFIN12010(body).pipe(finalize(() => this.loading = false)).subscribe(res => {
-        this.data = res.Data.map(item => ({
-          ...item,
-          SAL_GUIYYYYMM_Date: item.SAL_GUIYYYYMM
-            ? new Date(+item.SAL_GUIYYYYMM.substring(0, 4), +item.SAL_GUIYYYYMM.substring(4, 6) - 1, 1)
-            : null,
-        }));
-        this.totalRecords = res.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, formValue);
-      });
     });
   }
-
-  onDelete(selectedRows: IFin12010Data[]) {
-    if (!selectedRows || selectedRows.length === 0) return;
-
-    const idList = selectedRows.map(row => row.id);
-    this.loading = true;
-
-    this.fin12010Service.deleteFIN12010(idList)
-      .pipe(finalize(() => this.loading = false))
-      .subscribe({
-        next: () => {
-          this.messageService.successBubble('刪除成功');
-          this.onSubmit(this.queryForm); // 重新查詢資料
-          this.selectedItems = []; // 清空已選項目（假設你有這個變數）
-        },
-        error: () => {
-          this.messageService.errorBubble('刪除失敗');
-        }
-      });
-  }
-
 }

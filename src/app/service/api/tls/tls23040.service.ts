@@ -16,7 +16,7 @@ export class TLS23040Service {
   ) { }
 
   queryTLS23040(query: any): Observable<any> {
-    const storeNo = JSON.parse(localStorage.getItem('UserInfo') || '{}').SYS_StoreNo;
+    const storeNo = sessionStorage.getItem('SYS_StoreNo');
     if (storeNo) {
       query.SYS_StoreNo = storeNo;
     }
@@ -27,7 +27,7 @@ export class TLS23040Service {
   }
 
   queryTLS23040Detail(query: any): Observable<any> {
-    const storeNo = JSON.parse(localStorage.getItem('UserInfo') || '{}').SYS_StoreNo;
+    const storeNo = sessionStorage.getItem('SYS_StoreNo');
     if (storeNo) {
       query.SYS_StoreNo = storeNo;
     }
@@ -38,7 +38,7 @@ export class TLS23040Service {
   }
 
   queryCombined(query: any): Observable<any> {
-    const storeNo = JSON.parse(localStorage.getItem('UserInfo') || '{}').SYS_StoreNo;
+    const storeNo = sessionStorage.getItem('SYS_StoreNo');
     if (storeNo) {
       query.SYS_StoreNo = storeNo;
     }
