@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { TLS23070Service } from '../../../service/API/tls/tls23070.service';
+import { TLS23070Service } from '../../../service/api/tls/tls23070.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { FloorService } from '../../../service/basic/floor.service';
-import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 
 @Component({
   selector: 'app-tls23070',
@@ -24,6 +24,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   customPageSize = 1000;
 
   queryForm = this.formBuilder.group({
+    
     TXN_DateStart: [new Date('2020-01-01'), [Validators.required]],
     TXN_DateEnd: [new Date('2020-01-02'), [Validators.required]],
     tlt_no: [],

@@ -1,29 +1,36 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
-import { Observable } from 'rxjs';
+import {
+  ActivatedRouteSnapshot,
+  CanActivate,
+  Router,
+  RouterStateSnapshot,
+  UrlTree,
+} from '@angular/router';
 import { AuthService } from './auth.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthGuard implements CanActivate {
-
-  constructor(
-    private authService: AuthService,
-    private router: Router) { }
+  constructor(private authService: AuthService, private router: Router) { }
 
   canActivate(
     route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
+    state: RouterStateSnapshot
+  ): boolean | UrlTree {
+    const currentUser = this.authService.currentUserValue;
 
-    const user = this.authService.currentUserValue;
-    if (user) {
-      // authorised so return true
-      return true;
+    if (!currentUser) {
+      return this.router.createUrlTree(['/login'], {
+        queryParams: { returnUrl: state.url },
+      });
     }
 
-    // not logged in so redirect to login page with the return url
-    this.router.navigate(['/login']);
-    return false;
+    const funRightsInfo = sessionStorage.getItem('FunRightsInfo');
+    const isDashboard = state.url === '/SSO/dashboard';
+    if (!funRightsInfo && !isDashboard) {
+      return this.router.createUrlTree(['/SSO/dashboard']);
+    }
+    return true;
   }
 }

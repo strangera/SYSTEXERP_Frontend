@@ -4,7 +4,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption, Sysb300m } from '../../../shared/models/sys/sysb000.module';
 import { PluLogo } from '../../../shared/models/tls/tls000.model';
-import { Tls51060Service } from '../../../service/API/tls/tls51060.service';
+import { Tls51060Service } from '../../../service/api/tls/tls51060.service';
 //
 
 // 2.5.1.6 品牌設定作業  CRU

@@ -3,12 +3,12 @@ import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { TLS23050Service } from '../../../service/API/tls/tls23050.service';
+import { TLS23050Service } from '../../../service/api/tls/tls23050.service';
 import { TypeService } from '../../../service/basic/type.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { FloorService } from '../../../service/basic/floor.service';
-import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { catchError, timeout } from 'rxjs/operators';
 import { of } from 'rxjs';
 
