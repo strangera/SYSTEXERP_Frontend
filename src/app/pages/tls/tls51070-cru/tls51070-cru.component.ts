@@ -3,7 +3,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
-import { PluLogo, POS2004 } from '../../../shared/models/tls/tls000.model';
+import { POS2004 } from '../../../shared/models/tls/tls000.model';
 import { Tls51070Service } from '../../../service/API/tls/tls51070.service';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { POS2005Detail, POS2020Detail, IMG1001Detail } from './tls51070-cru.module';
@@ -89,7 +89,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_IsStock: ['Y', [Validators.maxLength(1)]], // 是否計算庫存 Y:是 N:否
     PLU_ReadyDay: [0, [Validators.maxLength(4)]], // 備貨天數 預設0
     PLU_StockType: ['0', [Validators.maxLength(1)]], // 庫存類別 0:一般 1:標準用量 2:自動轉換(沒用到) 3:子母商品 4:手動轉換
-    PLU_TaxRate: [0.05, [Validators.maxLength(7)]], // 稅率 預設0
+    PLU_TaxRate: [0, [Validators.maxLength(7)]], // 稅率 預設0
 
     PLU_StopSale: ['N', [Validators.maxLength(1)]], // 停止銷售註記(Y/N)
     PLU_CalcSaleStock: ['N', [Validators.maxLength(1)]], // 計算庫存方式(N:依數量 Y:依金額)
@@ -120,7 +120,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // ---------國際條碼 (POS2005) 編輯表格 至少要一筆-------------------------------------------------------
   // 國際條碼編號	下拉
   POS2005Data: POS2005Detail[] = [];
-  orgPOS2005Data: POS2005Detail[] = []; //原始資料，用於比對
   // POS2005 展開式表格的欄位定義
   POS2005DataColumn: ColumnDef[] = [
     // { field: 'PLU_MagNo', header: '商品管理編號', editable: false, type: 'text' },  //key1
@@ -146,6 +145,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   POS2020Data: POS2020Detail[] = [];
   // 預設新項目模板
   defaultNew2020 = {
+    id: 0, //新增
     PLU_MagNo: '',
     VEN_No: '',
     STO_No: '10',
@@ -168,6 +168,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // 預設 POS2020 新項目模板
   createDefaultNew2020(pLU_MagNo: string) {
     this.defaultNew2020 = {
+      id: 0,
       PLU_MagNo: pLU_MagNo,
       VEN_No: '',
       STO_No: '10',
@@ -231,7 +232,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     //初始導入所有大分類、中分類、小分類表單
     this.loadCATOptions();
 
-    if (this.crudstatus == CRUDStatus.Edit) {
+    if (this.crudstatus == CRUDStatus.Edit || CRUDStatus.Read) {
       //查詢明細檔案 (編輯模式)
       console.log('編輯模式，讀取表單', this.dataForm.value);
 
@@ -360,11 +361,34 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
             this.messageService.infoBubble('沒有輸入國際條碼，國際條碼已自動設為商品管理編號');
           }
 
+          const simplifiedFiles = this.files.map(file => ({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified
+          }));
+          console.log('上傳 IMG :', JSON.stringify(simplifiedFiles, null, 2));
+          console.log('現有的 IMG1001 :', JSON.stringify(this.img1001Data, null, 2));
+
+          // 將所有 file 都轉為新資料項目（id: 0）
+          const newIMGEntries: Partial<IMG1001Detail>[] = this.files.map(file => ({
+            id: 0,
+            IMG_File: file.name,
+            IMG_Remark: ''
+          }));
+
+          // 合併原本資料 + 所有新 file
+          const mergedIMG1001: (IMG1001Detail | Partial<IMG1001Detail>)[] = [
+            ...this.img1001Data,
+            ...newIMGEntries
+          ];
+
+
           const requestBody = {
             ...formValue,
             PLU_No: [frm.get('PLU_No')?.value], //用[]包
             "POS2020_INFO": this.POS2020Data,
-            "IMG1001_INFO": this.img1001Data,
+            "IMG1001_INFO": mergedIMG1001,
           }
           console.log('insert', requestBody);
 
@@ -382,18 +406,33 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           // POS2005Data 中所有的 PLU_No
           const POS2005PLUs = this.POS2005Data.map(item => item.PLU_No);
           console.log('現有的 PLU_No 陣列:', POS2005PLUs);
-          console.log('現有的 IMG :', this.files);
+          const simplifiedFiles = this.files.map(file => ({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified
+          }));
+          console.log('上傳 IMG :', JSON.stringify(simplifiedFiles, null, 2));
+          console.log('現有的 IMG1001 :', JSON.stringify(this.img1001Data, null, 2));
+
+          // 將所有 file 都轉為新資料項目（id: 0）
+          const newIMGEntries: Partial<IMG1001Detail>[] = this.files.map(file => ({
+            id: 0,
+            IMG_File: file.name,
+            IMG_Remark: ''
+          }));
+
+          // 合併原本資料 + 所有新 file
+          const mergedIMG1001: (IMG1001Detail | Partial<IMG1001Detail>)[] = [
+            ...this.img1001Data,
+            ...newIMGEntries
+          ];
 
           const requestBody = {
             ...formValue,
             PLU_No: POS2005PLUs,
-            // IMG_File用files更新的name，其他保留原本的
-            "IMG1001_INFO": this.files.map((file, idx) => ({
-              // id: this.img1001Data[idx]?.id || 0, // 如果有ID就用，沒有就新建
-              id: 1, // 如果有ID就用，沒有就新建
-              IMG_File: file.name,
-              IMG_Remark: this.img1001Data[idx]?.IMG_Remark || ''
-            })),
+            // 如果IMG_File也有資料，就合併進去IMG1001
+            "IMG1001_INFO": mergedIMG1001,
             "POS2020_INFO": this.POS2020Data,
           };
 
@@ -533,14 +572,20 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       this.messageService.errorBubble('錯誤: 讀取明細為空');
     } else {
       this.tls51070Service.queryTLS51070_Detail({ 'PLU_MagNo': pLU_MagNo }).subscribe((response) => {
-        this.img1001Detail = response.Data[0].IMG1001Detail;
         // this.img1001Detail = response.Data[0].IMG1001Detail.map((item: { IMG_Path: string; IMG_File: File; }) => ({ ...item, IMG_Path: `${environment.ApiUrl}/${item.IMG_Path.replace('~', '')}/${item.IMG_File}` }));
 
         this.pos2005Detail = response.Data[0].POS2005Detail;
         this.pos2020Detail = response.Data[0].POS2020Detail;
 
+        // 圖片讀取時進行轉檔 將IMG1001Detail的IMG_File內容變更為_以後的內容
+        this.img1001Detail = response.Data[0].IMG1001Detail.map((item: { IMG_File: string; }) => {
+          return {
+            ...item,
+            IMG_File: item.IMG_File.split('_').slice(1).join('_'),
+          };
+        });
+
         this.POS2005Data = this.pos2005Detail;
-        this.orgPOS2005Data = this.pos2005Detail;
         this.POS2020Data = this.pos2020Detail;
         this.img1001Data = this.img1001Detail;
 
