@@ -410,6 +410,10 @@ import { TLS23110CRUComponent } from './tls23110-cru/tls23110-cru.component'; //
 import { TLS23120CRUComponent } from './tls23120-cru/tls23120-cru.component'; // 專櫃日對帳單
 import { TLS23130CRUComponent } from './tls23130-cru/tls23130-cru.component'; // 信用卡銷退日報表
 import { TLS23140CRUComponent } from './tls23140-cru/tls23140-cru.component'; // 有價券查詢報表
+import { Tls14030CRUComponent } from './tls14030-cru/tls14030-cru.component';
+import { Tls14040CRUComponent } from './tls14040-cru/tls14040-cru.component';
+import { Tls14030Component } from './tls14030/tls14030.component';
+import { Tls14040Component } from './tls14040/tls14040.component';
 
 @NgModule({
   declarations: [
@@ -431,6 +435,8 @@ import { TLS23140CRUComponent } from './tls23140-cru/tls23140-cru.component'; //
     TLS13070Component,
     TLS14010Component,
     TLS14020Component,
+    Tls14030Component,
+    Tls14040Component,
     TLS11010CRUComponent,
     TLS11020CRUComponent,
     TLS12010CRUComponent,
@@ -447,6 +453,8 @@ import { TLS23140CRUComponent } from './tls23140-cru/tls23140-cru.component'; //
     TLS13070CRUComponent,
     TLS14010CRUComponent,
     TLS14020CRUComponent,
+    Tls14030CRUComponent,
+    Tls14040CRUComponent,
     TLS13010Next1Component,
     TLS13010Next2Component,
     Tls13010Next3Component,

@@ -40,13 +40,13 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
     { field: 'HOS_No', header: '倉庫代碼', visible: true },
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
     {
-      field: 'org_id', header: '組織代碼/所屬部門', visible: true
+      field: 'org_id', header: '部門編號/分店', visible: true
       , format: (value: string) =>
         this.SYS3100_Options.find((option) => option.No === value)?.Label ||
         value,
     },
     {
-      field: 'building_no', header: '館別代碼', visible: true, format: (value: string) =>
+      field: 'building_no', header: '館別', visible: true, format: (value: string) =>
         this.building_noOptions.find((option) => option.No === value)?.Label ||
         value,
     },

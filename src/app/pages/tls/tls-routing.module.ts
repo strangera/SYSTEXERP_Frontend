@@ -409,6 +409,10 @@ import { TLS23110CRUComponent } from './tls23110-cru/tls23110-cru.component'; //
 import { TLS23120CRUComponent } from './tls23120-cru/tls23120-cru.component'; // 專櫃日對帳單
 import { TLS23130CRUComponent } from './tls23130-cru/tls23130-cru.component'; // 信用卡銷退日報表
 import { TLS23140CRUComponent } from './tls23140-cru/tls23140-cru.component'; // 有價券查詢報表
+import { Tls14030CRUComponent } from './tls14030-cru/tls14030-cru.component';
+import { Tls14040CRUComponent } from './tls14040-cru/tls14040-cru.component';
+import { Tls14030Component } from './tls14030/tls14030.component';
+import { Tls14040Component } from './tls14040/tls14040.component';
 
 
 const routes: Routes = [
@@ -431,6 +435,8 @@ const routes: Routes = [
   { path: 'TLS13070', component: TLS13070Component }, // 調整櫃位合約一覽表
   { path: 'TLS14010', component: TLS14010Component }, // 合約狀態清單
   { path: 'TLS14020', component: TLS14020Component }, // 專櫃契約書列印
+  { path: 'TLS14030', component: Tls14030Component }, // 保證票維護作業
+  { path: 'TLS14040', component: Tls14040Component }, // 保證票彙總表
   { path: 'TLS11010CRU', component: TLS11010CRUComponent }, // 專櫃位置資料維護 CRU
   { path: 'TLS11020CRU', component: TLS11020CRUComponent }, // 扣款項目維護作業 CRU
   { path: 'TLS12010CRU', component: TLS12010CRUComponent }, // 潛在客戶資料維護 CRU
@@ -447,6 +453,8 @@ const routes: Routes = [
   { path: 'TLS13070CRU', component: TLS13070CRUComponent }, // 調整櫃位合約一覽表 CRU
   { path: 'TLS14010CRU', component: TLS14010CRUComponent }, // 合約狀態清單 CRU
   { path: 'TLS14020CRU', component: TLS14020CRUComponent }, // 專櫃契約書列印 CRU
+  { path: 'TLS14030CRU', component: Tls14030CRUComponent }, // 保證票維護作業 CRU
+  { path: 'TLS14040CRU', component: Tls14040CRUComponent }, // 保證票彙總表 CRU
   { path: 'TLS13010NEXT1', component: TLS13010Next1Component }, // 專櫃契約書維護 NEXT1
   { path: 'TLS13010NEXT2', component: TLS13010Next2Component }, // 專櫃契約書維護 NEXT2
   { path: 'TLS13010NEXT3', component: Tls13010Next3Component }, // 專櫃契約書維護 NEXT3
