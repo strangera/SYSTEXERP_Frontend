@@ -9,14 +9,15 @@ import { Tls14010Service } from '../../../service/API/tls/tls14010.service';
 export interface TLTContract {
   tlt_no: string;              // 專櫃編號
   tlt_name: string;            // 專櫃名稱(品牌)
-  Version: string;             // 版本
+  contract_subno: string;      // 版本
   bus_type: string;            // 大分類 (代碼)
+  bus_type_name: string;       // 大分類 (名稱)
   tlt_bdate: string;           // 合約起始日 (ISO 日期字串)
   tlt_edate: string;           // 合約終止日
   tlt_contract_bdate: string;  // 營運起始日
   tlt_contract_edate: string;  // 營運終止日
   apply_status: string;        // 合約狀態 (代碼)
-  Location: string;            // 承租內容
+  LocationText: string;            // 承租內容
   tlt_openflag: string;        // 營運狀況 (代碼)
 }
 
@@ -78,8 +79,9 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
   columns: Column[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱(品牌)', visible: true },
-    { field: 'Version', header: '版本', visible: true },
-    { field: 'bus_type', header: '大分類', visible: true, format: (value: string) => this.bus_typeOptions.find((option) => option.No === value)?.Label || value },
+    { field: 'contract_subno', header: '版本', visible: true },
+    { field: 'bus_type', header: '大分類', visible: true },
+    { field: 'bus_type_name', header: '大分類名稱', visible: true },
     { field: 'tlt_contract_bdate', header: '合約起始日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
     { field: 'tlt_contract_edate', header: '合約終止日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
     { field: 'tlt_bdate', header: '營運起始日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
