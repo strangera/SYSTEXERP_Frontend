@@ -42,9 +42,9 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
     tlt_openflagList: [[]], // 營運狀況 閉店/撤櫃, 營業中, 合約結束,核准時合約尚未開始, 洽談中, 簽約中, 已作廢 fix
     contract_subno_start: ['', [Validators.maxLength(100)]], // 版本編號_start
     contract_subno_end: ['', [Validators.maxLength(100)]], // 版本編號_end
-    apply_statusList: ['', [Validators.maxLength(100)]], // 合約狀態 1=未審核 2=已審核 fix
-    tlt_bdate: ['', [Validators.maxLength(100)]], // 日期條件_start
-    tlt_edate: ['', [Validators.maxLength(100)]], // 日期條件_end
+    apply_statusList: [[], [Validators.maxLength(100)]], // 合約狀態 1=未審核 2=已審核 fix
+    tlt_bdate: ['', [Validators.maxLength(100)]], // 營運起始日
+    tlt_edate: ['', [Validators.maxLength(100)]], // 營運終止日
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'tlt_no', order: 0 }]), // 分頁和排序參數
@@ -102,6 +102,7 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
     this.loadOptions();
   }
 
+  //測試位置 B1B19
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       console.log('query condition', frm.value);
