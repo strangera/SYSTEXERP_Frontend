@@ -2,7 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 
@@ -41,12 +41,22 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
   });
 
   // 表格欄位
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'salesDate', header: '銷售日期', visible: true },
     { field: 'pendingApprovalRegisterCode', header: '未審核收銀機號', visible: true },
     { field: 'pendingApprovalPaymentTool', header: '未審核支付工具', visible: true },
-    { field: 'systemAmount', header: '系統金額', visible: true },
+    { field: 'systemAmount', header: '系統金額', visible: true, format: formatAmount },
     { field: 'receiptAmount', header: '實收金額', visible: true }
+  ];
+  data: SalesRecord[] = [
+    {
+      id: 1,
+      salesDate: '1',
+      pendingApprovalRegisterCode: '1',
+      pendingApprovalPaymentTool: '1',
+      systemAmount: 11111111111111,
+      receiptAmount: 1,
+    },
   ];
 
   // 選單資料
@@ -57,7 +67,6 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
   // 表格資料
   selectedItems: any[] = [];
   totalRecords = 0;
-  data: SalesRecord[] = [];
 
   constructor(
     private locationOptionsService: LocationOptionsService,

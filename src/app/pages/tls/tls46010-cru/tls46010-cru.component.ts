@@ -14,7 +14,7 @@ export interface Pos10015 {
   SYS_SrvNo: string;
   SYS_SrvIP: string;
   SYS_SrvPort: number;
-  SYS_SrvStatus: '啟用' | '停用'; //主機狀態,「A.啟用」與「C.停用」,預設值為「A」
+  SYS_SrvStatus: 'A' | 'C'; //主機狀態,「A.啟用」與「C.停用」,預設值為「A」
   SYS_SrvName?: string;
   SYS_SrvUsrID?: string;
   SYS_SrvUsrPwd?: string;
@@ -50,10 +50,10 @@ export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implem
     SYS_SrvUsrPwd: [''],
     SYS_SRVDDir: [''],
     SYS_SRVUDir: [''],
-    SYS_MyPOSDDir: [''],
-    SYS_MyPOSUDir: [''],
-    SYS_SRVDDirClt: [''],
-    SYS_SRVUDirClt: [''],
+    SYS_MyPOSDDir: ['/MyPOSDown'],
+    SYS_MyPOSUDir: ['/MyPOSUp'],
+    SYS_SRVDDirClt: ['/PosDown'],
+    SYS_SRVUDirClt: ['/PosUp'],
     CRT_USR_No: [''],
     CRT_USR_Name: [''],
     CRT_Date: [''],
@@ -63,8 +63,8 @@ export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implem
   });
 
   SYS_SrvStatus_Option: any = [
-    { value: '啟用', label: '啟用' },
-    { value: '停用', label: '停用' }
+    { value: 'A', label: '啟用' },
+    { value: 'C', label: '停用' }
   ];
   private userSubscription: Subscription | undefined; // 使用者訂閱
   userInfo: UserInfo | null = null;
@@ -88,7 +88,7 @@ export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implem
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const formValue = frm.getRawValue(); // ✅ 包含 disabled 欄位
+      const formValue = frm.getRawValue();
       const body = {
         ...formValue,
         SYS_StoreNo: this.userInfo?.SYS_StoreNo
@@ -124,7 +124,4 @@ export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implem
     this.dataForm.disable();
   }
 
-  // onCancel() {
-  //   this.router.navigate(['/TLS4000/TLS46010']);
-  // }
 }

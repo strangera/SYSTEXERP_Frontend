@@ -6,27 +6,27 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <!-- <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="門市店號" controlName="SYS_StoreNo" [control]="dataForm.controls.SYS_StoreNo" [submitted]="submitted">
-                            </app-input-text>
-                        </div> -->
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="主機編號" controlName="SYS_SrvNo" [control]="dataForm.controls.SYS_SrvNo"
             [submitted]="submitted">
           </app-input-text>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="主機狀態" controlName="SYS_SrvStatus" [options]="SYS_SrvStatus_Option" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.SYS_SrvStatus" [submitted]="submitted">
           </app-dropdown>
         </div>
       </div>
+
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="主機IP" controlName="SYS_SrvIP" [control]="dataForm.controls.SYS_SrvIP"
             [submitted]="submitted">
           </app-input-text>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number [useGrouping]="false" label="主機連接埠" controlName="SYS_SrvPort"
             [control]="dataForm.controls.SYS_SrvPort" [submitted]="submitted">
@@ -52,12 +52,12 @@
       </div>
       <hr>
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
+        <div class="col-12 md:col-6 lg:col-4" *ngIf="false">
           <app-input-text label="後台系統下載目錄" controlName="SYS_SRVDDir" [control]="dataForm.controls.SYS_SRVDDir"
             [submitted]="submitted">
           </app-input-text>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
+        <div class="col-12 md:col-6 lg:col-4" *ngIf="false">
           <app-input-text label="後台系統上傳目錄" controlName="SYS_SRVUDir" [control]="dataForm.controls.SYS_SRVUDir"
             [submitted]="submitted">
           </app-input-text>

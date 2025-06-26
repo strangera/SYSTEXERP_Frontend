@@ -1,45 +1,32 @@
 import { WhetherService } from './../../../service/basic/whether.service';
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
 import { DisplayService } from '../../../service/basic/display.service';
-
-
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+// import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
 @Component({
   selector: 'app-tls22030',
-  templateUrl: './tls22030.component.html',
-  styleUrls: ['./tls22030.component.scss'],
+  templateUrl: './tls22030.component.html'
 })
-// 序號報表
-export class TLS22030Component {
-  ProgNo: string = '220008';
-  funInfo?: FunsrightInfo;
 
-
-
-  loading: boolean = false;
-  submitted: boolean = false;
-
+export class TLS22030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    saleStartDate: [, [Validators.required]], // 銷售開始日期
-    saleEndDate: [, [Validators.required]], // 銷售結束日期
+    ECR_No: [[]],
+    tlt_no: [''],
+    tlt_bdate_start: [null, Validators.required],
+    tlt_bdate_end: [null, Validators.required],
     cashRegisterCode: [], // 收銀機編號
     counterCode: [], // 專櫃編號
     listZeroDifference: [1, []], // 差異為0是否列出
     displayCondition: [1, []], // 顯示條件
+    radioOption: [null],
+    ...createPaginationConfig([{ field: 'paymentTool', order: 1 }])
   });
 
-  data: any[] = [
-
-  ];
+  data: any[] = [];
+  ECRNoOptions: any[] = [];
   filteredData: any[] = [...this.data];
   columns: any[] = [
     { field: 'transactionTotal', header: '總合', visible: true },
@@ -59,25 +46,24 @@ export class TLS22030Component {
 
   listZeroDifferenceOptions: any[] = [];
   displayConditionOptions: any[] = [];
-
+  tlt_no?: string;
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
+    private ECRNoService: ECRNoService,
     private whetherService: WhetherService,
     private displayService: DisplayService
-  ) { }
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
+    this.initializePage('TLS22030', '/TLS/TLS22030CRU', this.queryForm, (form) => this.onSubmit(form));
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
     this.whetherService.getWhetherOptions().subscribe((data) => {
       this.listZeroDifferenceOptions = data;
     });
 
-    this.displayService.getDisplay().subscribe((data) => {
-      this.displayConditionOptions = data;
+    this.ECRNoService.getECRNo().subscribe((data) => {
+      this.ECRNoOptions = data;
     });
   }
 
@@ -94,64 +80,40 @@ export class TLS22030Component {
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
+    this.handleSubmit(frm, () => {
+      // ✅ 假資料模擬
+      this.data = [
+        {
+          transactionTotal: 23000,
+          counterCode: 'A001',
+          counterName: '男裝專櫃',
+          date: '2025-06-26',
+          backendTransactionCode: 'TXB123',
+          backendTransactionDetails: '退款一筆、取消一筆',
+          frontendTransactionCode: 'TXF456',
+          frontendTransactionDetails: '現金銷售兩筆',
+          invoiceStartNumber: 'AA12345678',
+          invoiceEndNumber: 'AA12345680',
+          isSameDay: '否',
+          isCrossDay: '是',
         },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
+        {
+          transactionTotal: 15800,
+          counterCode: 'B002',
+          counterName: '化妝品專櫃',
+          date: '2025-06-25',
+          backendTransactionCode: 'TXB789',
+          backendTransactionDetails: '補登一筆',
+          frontendTransactionCode: 'TXF987',
+          frontendTransactionDetails: '發票開立正常',
+          invoiceStartNumber: 'BB98765432',
+          invoiceEndNumber: 'BB98765433',
+          isSameDay: '是',
+          isCrossDay: '否',
+        }
+      ];
+    });
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
-  }
 }
+
