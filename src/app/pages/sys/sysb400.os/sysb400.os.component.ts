@@ -65,8 +65,10 @@ export class Sysb400OsComponent extends BasicCruPageComponent<Sysb400m> implemen
     this.sysb400Service.querySYS3100_tree_DropDownList(this.dataForm.value).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
+          // console.log('篩查前結果',response.Data);
           const filtered = this.filterByDeepestUnique(response.Data || []);
           this.orgData = filtered;
+          // console.log('篩查結果',this.orgData);
         } else {
           this.orgData = [];
           console.error('API error:', response.Status, response.Message);
