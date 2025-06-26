@@ -29,4 +29,19 @@ export class Tls14010Service {
   querySYS3900_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/querySYS3900_DropDownList`, body);
   }
+
+  // 查詢 專櫃(TLTTALENT) 下拉選單
+  queryTLTTALENT_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_DropDownList`, body);
+  }
+
+  // 查詢 館別(SYS3800) 下拉選單
+  querySYS3800_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/querySYS3800_DropDownList`, body);
+  }
+
+  //查詢 位置編號(SYS3A00) 下拉選單
+  queryPOS2002_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryPOS2002_DropDownList`, body);
+  }
 }

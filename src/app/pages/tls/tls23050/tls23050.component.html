@@ -23,18 +23,12 @@
           ></app-calendar-range-quick>
 
           <!-- 是否收銀 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="類型"
-              controlName="rece_yn"
-              [options]="WhetherOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.rece_yn"
-              [submitted]="submitted">
-            </app-dropdown>
-          </div>
 
+          
+           <div class="col-12 md:col-6 lg:col-4">
+                    <app-radiobutton class="col-12" label="類型" groupname="rece_yn" [control]="queryForm.controls.rece_yn"
+            [options]="WhetherOptions" [submitted]="submitted"></app-radiobutton>  
+</div>
           <!-- 收銀機號 -->
    
           <div class="col-12 md:col-6 lg:col-4">
@@ -91,6 +85,7 @@
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
+          <app-button btnType="report" label="報表模式" (clickEvent)="goToReportMode()"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -115,3 +110,17 @@
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)">
   </app-table>
 </div>
+<p-dialog header="限制筆數" [(visible)]="showPageSizeDialog" [modal]="true" [closable]="false" [style]="{ width: '300px' }">
+  <div class="p-fluid">
+    <div class="field">
+      <label for="pageSize">限制筆數</label>
+      <input id="pageSize" type="number" pInputText [(ngModel)]="customPageSize" min="1" style="width: 100%" />
+    </div>
+
+    </div>
+    <ng-template pTemplate="footer">
+      <button type="button" pButton label="取消" class="p-button-text" (click)="showPageSizeDialog = false"></button>
+      <button type="button" pButton label="確定" (click)="confirmPageSizeAndNavigate()" [loading]="loading"></button>
+    </ng-template>
+
+</p-dialog>

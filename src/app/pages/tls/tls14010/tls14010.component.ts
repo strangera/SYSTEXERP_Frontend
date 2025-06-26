@@ -34,15 +34,15 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
     tlt_noList: [[], [Validators.maxLength(12)]], // 專櫃編號
     tlt_name: ['', [Validators.maxLength(100)]], // 專櫃名稱(品牌) 
     location_noList: [[], [Validators.maxLength(10)]], // 店位代碼 店位代碼-館別(1)+樓層(2)+區域(1)+流水編號(3)
-    tlt_building: [''], // 館別
+    tlt_building: [''], // 館別 (SYS3800)
     tlt_floorList: [[]], // 樓層(SYS3900)
     area_noList: [[]], // 區域 (SYS3a00)
     bus_typeList: [[]], // 大分類 (tltbustype)
 
-    tlt_openflagList: [[]], // 營運狀況 0閉店/撤櫃, 1=營業中, 2=合約結束, 9=核准時合約尚未開始
+    tlt_openflagList: [[]], // 營運狀況 閉店/撤櫃, 營業中, 合約結束,核准時合約尚未開始, 洽談中, 簽約中, 已作廢 fix
     contract_subno_start: ['', [Validators.maxLength(100)]], // 版本編號_start
     contract_subno_end: ['', [Validators.maxLength(100)]], // 版本編號_end
-    apply_status: ['', [Validators.maxLength(100)]], // 合約狀態 1=洽談中 2=簽約中  5=已作廢
+    apply_statusList: ['', [Validators.maxLength(100)]], // 合約狀態 1=未審核 2=已審核 fix
     tlt_bdate: ['', [Validators.maxLength(100)]], // 日期條件_start
     tlt_edate: ['', [Validators.maxLength(100)]], // 日期條件_end
 
@@ -54,22 +54,25 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   tlt_openOptions: option[] = [ //營運狀況選單
-    { 'value': "0", 'label': '閉店/撤櫃' },
-    { 'value': "1", 'label': '營業中' },
-    { 'value': "2", 'label': '合約結束' },
-    { 'value': "9", 'label': '核准時合約尚未開始' }
+    { 'value': "閉店/撤櫃", 'label': '閉店/撤櫃' },
+    { 'value': "營業中", 'label': '營業中' },
+    { 'value': "合約結束", 'label': '合約結束' },
+    { 'value': "核准時合約尚未開始", 'label': '核准時合約尚未開始' },
+    { 'value': "洽談中", 'label': '洽談中' },
+    { 'value': "簽約中", 'label': '簽約中' },
+    { 'value': "已作廢", 'label': '已作廢' }
   ];
   statusOptions: option[] = [ // 合約狀態的下拉選單
-    { 'value': "1", 'label': '洽談中' },
-    { 'value': "2", 'label': '簽約中' },
-    { 'value': "5", 'label': '已作廢' },
+    { 'value': "1", 'label': '未審核' },
+    { 'value': "2", 'label': '已審核' },
   ];
 
+  tlt_noOptions: apiOption[] = []; // 專櫃清單的下拉選單
   tlt_floorOptions: apiOption[] = []; // 樓層的下拉選單
   areaOptions: apiOption[] = []; // 區域的下拉選單
   bus_typeOptions: apiOption[] = []; // 大分類的下拉選單
   location_noOptions: option[] = []; // 位置的下拉選單
-
+  buildingOptions: apiOption[] = []; // 館別的下拉選單
 
   data: TLTContract[] = [];
   columns: Column[] = [
@@ -127,6 +130,16 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
 
   loadOptions() {
     {
+      // 專櫃專櫃清單 下拉選單
+      this.tls14010Service.queryTLTTALENT_DropDownList({}).subscribe((response) => {
+        this.tlt_noOptions = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
+
+        console.log('tlt_noOptions:', this.tlt_noOptions);
+      });
       // 樓層 下拉選單
       this.tls14010Service.querySYS3900_DropDownList({}).subscribe((response) => {
         this.tlt_floorOptions = response.Data.map((item: apiOption) => ({
@@ -158,6 +171,26 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
         }));
 
         console.log('bus_typeOptions:', this.bus_typeOptions);
+      });
+      // 館別 下拉選單
+      this.tls14010Service.querySYS3800_DropDownList({}).subscribe((response) => {
+        this.buildingOptions = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
+
+        console.log('buildingOptions:', this.buildingOptions);
+      });
+      // 位置編號 下拉選單
+      this.tls14010Service.queryPOS2002_DropDownList({}).subscribe((response) => {
+        this.location_noOptions = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
+
+        console.log('buildingOptions:', this.location_noOptions);
       });
     }
   }

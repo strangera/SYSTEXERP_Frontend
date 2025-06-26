@@ -68,7 +68,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="PO_No" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+  <app-table tableKey="TLS52010" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [showCheckBox]="true" [multiSortMeta]="[{ field: 'APPLY_Date', order: -1 }, { field: 'PO_No', order: 1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
     [loading]="loading" [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event">
