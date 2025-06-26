@@ -29,8 +29,7 @@
         </div>
       </div>
       <app-table title="新增專櫃" [data]="data" [columns]="columns" [showCheckBox]="true" [showInsert]="true"
-        (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [showManage]="false"
-        [showReportMode]="false"></app-table>
+        (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [showManage]="false"></app-table>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>

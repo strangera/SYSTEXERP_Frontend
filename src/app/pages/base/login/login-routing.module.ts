@@ -4,11 +4,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { LoginComponent } from './login.component';
 
 const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' }, // 重定向到 dashboard
-  {
-    path: 'login',
-    component: LoginComponent
-  },
+  { path: '', component: LoginComponent },
 ];
 
 @NgModule({

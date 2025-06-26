@@ -35,7 +35,7 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
 
-   columns: any[] = [
+  columns: any[] = [
 
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },

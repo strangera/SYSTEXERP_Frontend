@@ -6,18 +6,29 @@ import { SsoDashboardComponent } from './pages/base/sso-dashboard/sso-dashboard.
 export const routes: Routes = [
   {
     path: '',
-    loadChildren: () => import('./pages/base/login/login.module').then(m => m.LoginModule),
+    redirectTo: 'login',
+    pathMatch: 'full',
   },
-  { path: 'SSO/dashboard', component: SsoDashboardComponent, canActivate: [AuthGuard] },
+  {
+    path: 'login',
+    loadChildren: () =>
+      import('./pages/base/login/login.module').then((m) => m.LoginModule),
+  },
+  {
+    path: 'SSO/dashboard',
+    component: SsoDashboardComponent,
+    canActivate: [AuthGuard],
+  },
   {
     path: '',
-    loadChildren: () => import('./pages/pages.module').then(m => m.PagesModule),
-    canActivate: [AuthGuard], // 添加路由守衛
+    loadChildren: () =>
+      import('./pages/pages.module').then((m) => m.PagesModule),
+    canActivate: [AuthGuard],
   },
   {
     path: '**',
-    redirectTo: ''
-  } // 重定向未匹配的路徑
+    redirectTo: 'login',
+  },
 ];
 
 @NgModule({
