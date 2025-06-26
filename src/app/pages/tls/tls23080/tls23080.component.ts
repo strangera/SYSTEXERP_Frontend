@@ -21,15 +21,16 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     TXN_DateStart: [new Date('2020-01-01'), [Validators.required]],
     TXN_DateEnd: [new Date('2020-01-02'), [Validators.required]],
+    tlt_openflag: ['Y'],
     ECR_No: [],
-    tlt_no: [],
+    
     tlt_building: [],
     tlt_floor: [],
     org_id: [],
-    TXN_Year: [],
-    TXN_Month: [],
-    queryMonthYear: [],
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }])
+    // TXN_Year: [],
+    // TXN_Month: [],
+    // queryMonthYear: [],
+    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }])
   });
 
   data: any[] = [];
@@ -111,9 +112,12 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23080', '', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS23080', 'TLS23080CRU', this.queryForm, (form) => this.onSubmit(form));
 
-    this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
+    this.whetherService.getWhetherOptions().subscribe(data => {
+  this.WhetherOptions = data.filter(opt => opt.value !== null);
+});
+
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
     this.tls11010Service.getOrgOptions().subscribe((res) => {
@@ -189,45 +193,52 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     this.showPageSizeDialog = true;
   }
 
-  confirmPageSizeAndNavigate(): void {
-    this.submitted = true;
-    if (this.queryForm.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      this.queryForm.markAllAsTouched();
-      return;
-    }
-
-    const queryFormValue = {
-      ...this.queryForm.value,
-      pageSize: this.customPageSize
-    };
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.tls23080Service.queryTLS23080(queryFormValue).subscribe({
-      next: (res) => {
-        if (res.Status === '0000') {
-          this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-          this.router.navigate(['/TLS/TLS23080CRU'], {
-            state: {
-              queryFormValue,
-              pageSize: this.customPageSize,
-              data: res.Data || []
-            }
-          });
-          this.messageService.successBubble('查詢成功');
-        } else {
-          this.messageService.errorBubble('查詢失敗');
-        }
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-        this.showPageSizeDialog = false;
-      }
-    });
+confirmPageSizeAndNavigate(): void {
+  this.submitted = true;
+  if (this.queryForm.invalid) {
+    this.messageService.warnBubble('請確認欄位資料是否完整');
+    this.queryForm.markAllAsTouched();
+    return;
   }
+
+  const queryFormValue = {
+    ...this.queryForm.value,
+    pageSize: this.customPageSize
+  };
+
+  this.loading = true;
+  this.messageService.blockUi();
+
+  this.tls23080Service.queryTLS23080(queryFormValue).subscribe({
+    next: (res) => {
+      if (res.Status === '0000') {
+        this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
+        this.router.navigate(['/TLS/TLS23080CRU'], {
+          state: {
+            queryFormValue,
+            pageSize: this.customPageSize,
+            data: res.Data || []
+          }
+        });
+        this.messageService.successBubble('查詢成功');
+      } else {
+        this.messageService.errorBubble('查詢失敗');
+      }
+    },
+    error: () => {
+      this.messageService.errorBubble('查詢錯誤');
+      this.loading = false;
+      this.messageService.unblockUi();
+      this.showPageSizeDialog = false;
+    },
+    complete: () => {
+      this.loading = false;
+      this.messageService.unblockUi();
+      this.showPageSizeDialog = false;
+    }
+  });
+}
+
 
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
