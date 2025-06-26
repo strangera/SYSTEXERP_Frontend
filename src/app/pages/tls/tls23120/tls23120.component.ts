@@ -5,14 +5,14 @@ import { FloorService } from '../../../service/basic/floor.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { WhetherService } from '../../../service/basic/whether.service';
-import { TLS23120Service } from '../../../service/API/tls/tls23120.service';
+import { TLS23120Service } from '../../../service/api/tls/tls23120.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
-import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 @Component({
   selector: 'app-tls23120',
   templateUrl: './tls23120.component.html',

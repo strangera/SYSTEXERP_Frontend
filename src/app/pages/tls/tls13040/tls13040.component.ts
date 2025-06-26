@@ -9,11 +9,11 @@ import { DeductionbigCategoryService } from '../../../service/basic/deductionbig
 import { CommissionTypeService } from '../../../service/basic/commission-type.service';
 import { DiscountService } from '../../../service/basic/discount.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { TLS13040Service } from '../../../service/API/tls/tls13040.service';
+import { TLS13040Service } from '../../../service/api/tls/tls13040.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
-import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 
 @Component({
   selector: 'app-tls13040',

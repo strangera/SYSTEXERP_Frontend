@@ -3,7 +3,7 @@ import { Location } from '@angular/common';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
 import { PdfService } from '../../../service/basic/pdf.service';
-import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 
 @Component({
   selector: 'app-tls23050-cru',

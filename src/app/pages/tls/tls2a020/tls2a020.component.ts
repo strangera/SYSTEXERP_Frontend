@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 
 interface SalesRecord {

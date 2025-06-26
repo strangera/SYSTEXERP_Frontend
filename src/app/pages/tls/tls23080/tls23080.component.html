@@ -15,7 +15,7 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-query-year-month
               [formGroup]="queryForm"
               [submitted]="submitted"
@@ -33,7 +33,7 @@
                   [control]="queryForm.controls.queryMonthYear"
                   [submitted]="submitted"
                 ></app-calendar>
-              </div>
+              </div> -->
           <!-- 銷售日期 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick
@@ -60,16 +60,11 @@
 
           <!-- 專櫃編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="顯示非營運的專櫃"
-              controlName="TLT_No"
-              [options]="CounterOptions"
-              optionLabel="formLabel"
-              optionValue="value"
-              [control]="queryForm.controls.tlt_no"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
+                       
+                    <app-radiobutton class="col-12" label="顯示非營運的專櫃" groupname="rece_yn" [control]="queryForm.controls.tlt_openflag"
+            [options]="WhetherOptions" [submitted]="submitted"></app-radiobutton>  
+</div>
+
 
           <!-- 館別 -->
           <div class="col-12 md:col-6 lg:col-4">

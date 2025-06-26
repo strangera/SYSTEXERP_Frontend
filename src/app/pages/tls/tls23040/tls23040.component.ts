@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { TLS23040Service } from '../../../service/API/tls/tls23040.service';
+import { TLS23040Service } from '../../../service/api/tls/tls23040.service';
 import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { StatusFlagService } from '../../../service/basic/status-flag.service';
 import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
 import { FloorService } from '../../../service/basic/floor.service';
-import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { CounterNameService } from '../../../service/basic/counter-name.service';

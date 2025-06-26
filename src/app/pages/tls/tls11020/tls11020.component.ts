@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { DeductionService } from '../../../service/basic/deduction.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { TLS11020Service } from '../../../service/API/tls/tls11020.service';
+import { TLS11020Service } from '../../../service/api/tls/tls11020.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
 

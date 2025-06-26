@@ -3,11 +3,11 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { TLS23060Service } from '../../../service/API/tls/tls23060.service';
+import { TLS23060Service } from '../../../service/api/tls/tls23060.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { TypeService } from '../../../service/basic/type.service';
 import { FloorService } from '../../../service/basic/floor.service';
-import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { ColumnLabelService } from '../../../service/basic/column-label.service'; // 加入 import
 import { of } from 'rxjs';

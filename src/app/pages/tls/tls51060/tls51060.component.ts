@@ -4,7 +4,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.module';
 import { PluLogo } from '../../../shared/models/tls/tls000.model';
-import { Tls51060Service } from '../../../service/API/tls/tls51060.service';
+import { Tls51060Service } from '../../../service/api/tls/tls51060.service';
 // Permissions
 // Shared
 

@@ -2,11 +2,11 @@ import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { CardTypeService } from '../../../service/basic/card-type.service';
-import { TLS23090Service } from '../../../service/API/tls/tls23090.service';
+import { TLS23090Service } from '../../../service/api/tls/tls23090.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 import { FloorService } from '../../../service/basic/floor.service';
-import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
