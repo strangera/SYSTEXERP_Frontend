@@ -146,9 +146,9 @@ export interface IInsertTLS52010Request {
   LOGO_No: string; // LOGO代碼
   HOS_No: string; // 醫院代號
   PO_TotalSubQty: number; // 採購總數量
-  PO_TotalBuyNet: number; // 採購總淨額
-  PO_TotalBuyTax: number; // 採購總稅額
-  PO_TotalBuyAmt: number; // 採購總金額
+  PO_TotalSaleNet: number; // 售價未稅小計
+  PO_TotalSaleTax: number; // 售價稅額
+  PO_TotalSaleAmt: number; // 售價總金額
   APPLY_Date: string; // 申請日期 (ISO 格式字串)
   APPLY_USR_No: string; // 申請人員編號
   APPLY_USR_Name: string; // 申請人員姓名
