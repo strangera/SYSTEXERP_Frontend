@@ -69,7 +69,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     this.dataForm.controls.VEN_No.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(vendorNo => {
       if (vendorNo) { // !!! 可以改成下拉觸發事件
         const selectedVendor = this.vendorOptions.find(opt => opt.No === vendorNo);// 顯示廠商簡稱
-        this.dataForm.controls.vendorShortName.setValue(selectedVendor ? selectedVendor.Name : ''); // 假設 Name 是簡稱
+        this.dataForm.controls.vendorShortName.setValue(selectedVendor ? selectedVendor.ShortName : ''); // 假設 Name 是簡稱
         // 載入品牌編號 (依商品主檔中該廠商的商品，顯示所有的品牌資料)
         // 這裡需要一個API：根據VEN_No獲取品牌清單
         // 目前你的 service.ts 中沒有直接提供 "根據廠商獲取品牌" 的 API
