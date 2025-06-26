@@ -24,7 +24,7 @@ export class ReportTableGroupComponent implements OnInit {
   @Input() dateStart: string = '';
   @Input() dateEnd: string = '';
   @Input() printedAt: string = '';
-  @Input() rowsPerTable = 25;
+  @Input() rowsPerTable = 1000;
   @Input() reportTitle: string = '報表';
   @Input() continuousRowNumber = true;
   @Input() dateRangeLabel: string = '資料區間';
@@ -204,10 +204,14 @@ export class ReportTableGroupComponent implements OnInit {
 
 
   exportPDF(orientation: 'p' | 'l' = 'p'): void {
+    const columnCount = this.selectedColumns.length;
+    const columnWidth = 80; // 自訂欄位寬度（你可調整）
+    const customWidth = Math.max(595, columnCount * columnWidth); // A4 至少 595pt 寬
+
     const doc = new jsPDF({
       orientation,
       unit: 'pt',
-      format: 'a4',
+      format: [customWidth, 842], // 寬動態，高固定 A4 高度
     });
 
     const marginLeft = 40;
