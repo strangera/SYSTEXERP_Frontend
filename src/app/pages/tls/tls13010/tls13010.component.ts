@@ -96,7 +96,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     tlt_kindList: [[]],
     deco_typeList: [[]],
     overall_statusList: [[]],
-    check_day: [, [Validators.maxLength(10)]],
+    check_day: [, [Validators.maxLength(6)]],
 
     // Y/N 條件
     rece_yn: [],
