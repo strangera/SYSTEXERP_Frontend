@@ -4,7 +4,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { option } from '../../../shared/models/sys/sysb000.module';
 import { PluUnit } from '../../../shared/models/tls/tls000.model';
-import { Tls51050Service } from '../../../service/API/tls/tls51050.service';
+import { Tls51050Service } from '../../../service/api/tls/tls51050.service';
 
 // 2.5.1.5  商品單位設定
 @Component({

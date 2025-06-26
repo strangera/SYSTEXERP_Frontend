@@ -4,7 +4,7 @@ import { apiOption, option, SYS1000 } from '../../../shared/models/sys/sysb000.m
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { EncryptionService } from '../../../shared/service/encryption.service';
-import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { forkJoin, map } from 'rxjs';

@@ -19,11 +19,11 @@ import {
   CAG_TAXTYPE_OPTIONS
 } from './tls13010.constants';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
-import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { Sysb900DropdownService } from '../../../service/api/sys/sysb900-dropdown.service';
-import { BussclassDropdownService } from '../../../service/API/dropdownservice/tltbussclass-options.service';
-import { VendorCategoryOptionsService } from './../../../service/API/dropdownservice/vendor-category-options.service';
-import { NegotiatorOptionsService } from '../../../service/API/dropdownservice/negotiator-options.service';
+import { BussclassDropdownService } from '../../../service/api/dropdownservice/tltbussclass-options.service';
+import { VendorCategoryOptionsService } from './../../../service/api/dropdownservice/vendor-category-options.service';
+import { NegotiatorOptionsService } from '../../../service/api/dropdownservice/negotiator-options.service';
 
 // ========== 介面定義 ==========
 export interface DropdownOption {

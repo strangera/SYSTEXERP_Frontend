@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { Validators } from '@angular/forms';
 
 interface RecruitmentSummary {

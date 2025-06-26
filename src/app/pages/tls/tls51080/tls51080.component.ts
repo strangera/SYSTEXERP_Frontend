@@ -4,7 +4,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.module';
 import { POS2034 } from '../../../shared/models/tls/tls000.model';
-import { Tls51080Service } from '../../../service/API/tls/tls51080.service';
+import { Tls51080Service } from '../../../service/api/tls/tls51080.service';
 
 // 2.5.1.8  分倉資料處理
 @Component({

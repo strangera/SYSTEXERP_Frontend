@@ -5,7 +5,7 @@ import { PluUnit } from '../../../shared/models/tls/tls000.model';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { option } from '../../../shared/models/sys/sysb000.module';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { Tls51050Service } from '../../../service/API/tls/tls51050.service';
+import { Tls51050Service } from '../../../service/api/tls/tls51050.service';
 //
 
 // 2.5.1.5 商品單位設定  CRU

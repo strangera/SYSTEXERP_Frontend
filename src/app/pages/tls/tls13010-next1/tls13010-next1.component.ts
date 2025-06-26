@@ -7,7 +7,7 @@ import { Router, NavigationEnd } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TLS13010Service } from '../../../service/API/tls/tls13010.service';
+import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { ContractFlowService, WorkflowStep } from '../tls13010/services/contract-flow.service';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 import { FareItem, ContractInfo } from '../tls13010/tls13010.model';

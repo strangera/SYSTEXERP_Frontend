@@ -3,9 +3,9 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { WhetherService } from '../../../service/basic/whether.service';
-import { TLS23080Service } from '../../../service/API/tls/tls23080.service';
+import { TLS23080Service } from '../../../service/api/tls/tls23080.service';
 import { FloorService } from '../../../service/basic/floor.service';
-import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 

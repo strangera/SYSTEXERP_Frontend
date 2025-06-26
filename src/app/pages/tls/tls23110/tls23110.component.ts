@@ -6,9 +6,9 @@ import { DeductionbigCategoryService } from '../../../service/basic/deductionbig
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { TypeService } from '../../../service/basic/type.service';
 import { CategoryService } from '../../../service/basic/category.service';
-import { TLS23110Service } from '../../../service/API/tls/tls23110.service';
+import { TLS23110Service } from '../../../service/api/tls/tls23110.service';
 import { FloorService } from '../../../service/basic/floor.service';
-import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { CounterOpCatService } from '../../../service/basic/counter-op-cat.service';
