@@ -35,6 +35,8 @@ export class ReportTableGroupComponent implements OnInit {
   @Input() allowMergeToggle: boolean = false; // 預設不顯示切換開關
   @Input() defaultMergedView: boolean = true; // 預設就是合併模式
   @Input() enableGrouping: boolean = false;
+  @Input() detailColumns: Column[] = []; // 自訂明細欄位
+
   private _data: any[] = [];
 
   @Input()
@@ -58,6 +60,31 @@ export class ReportTableGroupComponent implements OnInit {
     return this._data;
   }
 
+@Input() showExpandColumn: boolean = false;
+@Input() detailFieldKeys: string[] = [];
+@Input() fetchDetailFn: (payload: any) => Promise<any[]> = async () => [];
+
+expandedRows: { [key: string]: boolean } = {};
+rowDetails: { [key: string]: any[] } = {};
+
+getRowKey(row: any): string {
+  return row[this.dataKey] ?? JSON.stringify(row);
+}
+
+async onRowExpand(event: any, rowData: any): Promise<void> {
+  const key = this.getRowKey(rowData);
+  if (!this.rowDetails[key]) {
+    const payload = this.detailFieldKeys.reduce((acc, k) => {
+      acc[k] = rowData[k];
+      return acc;
+    }, {} as any);
+    this.rowDetails[key] = await this.fetchDetailFn(payload);
+  }
+}
+
+objectKeys(obj: any): string[] {
+  return Object.keys(obj || {});
+}
 
 
   showRowsPerTableDialog = false;
@@ -432,5 +459,14 @@ export class ReportTableGroupComponent implements OnInit {
     this.splitData();
     this.cdr.detectChanges(); // ⬅️ 讓表格真的刷新
   }
+  getHeaderWidth(header: string): number {
+  if (!header) return 80;
+  const fullWidth = [...header].reduce((acc, char) => {
+    const isChinese = /[\u4e00-\u9fa5]/.test(char);
+    return acc + (isChinese ? 16 : 10);
+  }, 0);
+  return Math.max(80, fullWidth + 24); // 加上 padding 預留
+}
+
 
 }

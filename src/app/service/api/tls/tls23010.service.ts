@@ -13,23 +13,17 @@ export class TLS23010Service {
     private errorHandler: ErrorHandlerService
   ) { }
 
-  queryTLS23010(body: any): Observable<any> {
-    const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23010`;
-    return this.http.post<any>(url, body).pipe(
-      tap(res => console.log('🎯 TLS23010 查詢結果:', res)),
-      catchError((error) => this.errorHandler.handleError(error))  // ✅ 正確
-    );
-  }
-  queryTLS23010Detail(payload: {
-    SYS_StoreNo: string;
-    TXN_Date: string;
-    ECR_No: string;
-    TXN_No: number;
-  }): Observable<any> {
-    return this.http
-      .post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS23010_Detail`, payload)
-      .pipe(catchError(this.errorHandler.handleError));
-  }
+queryTLS23010(body: any, displayMode: 'Detail' | 'Summary' = 'Detail'): Observable<any> {
+  // 根據 displayMode 呼叫不同 API
+  const url =
+    displayMode === 'Detail'
+      ? `${this.apiUrl}/TLS0000/TLS2000/queryTLS23010`
+      : `${this.apiUrl}/TLS0000/TLS2000/queryTLS23010_Summary`; // 假設 Summary 用此 API
 
+  return this.http.post<any>(url, body).pipe(
+    tap(res => console.log(`🎯 TLS23010 ${displayMode} 查詢結果:`, res)),
+    catchError((error) => this.errorHandler.handleError(error))
+  );
+}
 
 }

@@ -93,62 +93,141 @@
 
   <!-- ✅ 合併顯示區（大表） -->
   <!-- ✅ 合併顯示區（多張表） -->
-  <div *ngIf="mergedView" class="merged-view">
-    <div *ngFor="let group of mergedPagedGroups; let groupIndex = index" class="mb-5">
-      <p-table [value]="group" [columns]="selectedColumns" [resizableColumns]="true" [paginator]="false"
-        [customSort]="true" (sort)="onTableSort($event)"
-        [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'">
+<div *ngIf="mergedView" class="merged-view">
+  <div *ngFor="let group of mergedPagedGroups; let groupIndex = index" class="mb-5">
+    <!-- p-table 加上 #dt 作為展開控制參照 -->
+    <p-table
+      #dt
+      [value]="group"
+      [columns]="selectedColumns"
+      [resizableColumns]="true"
+      [paginator]="false"
+      [customSort]="true"
+      (sort)="onTableSort($event)"
+      [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'"
+      [dataKey]="dataKey"
+      [rowExpandMode]="'single'"
+    >
+      <!-- 📌 表頭區 -->
+      <ng-template pTemplate="header">
+        <tr>
+          <!-- 展開欄位（僅在 showExpandColumn=true 時出現） -->
+          <th *ngIf="showExpandColumn" style="width: 3rem"></th>
+          <!-- 其他欄位 -->
+          <th
+            *ngFor="let col of selectedColumns"
+            class="text-center"
+            [ngClass]="col.style"
+            [pSortableColumn]="col.field !== '__index' ? col.field : undefined"
+          >
+            {{ col.header }}
+            <p-sortIcon *ngIf="col.field !== '__index'" [field]="col.field"></p-sortIcon>
+          </th>
+        </tr>
+      </ng-template>
 
-        <ng-template pTemplate="header">
-          <tr>
-            <th *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style"
-              [pSortableColumn]="col.field !== '__index' ? col.field : undefined">
-              {{ col.header }}
-              <p-sortIcon *ngIf="col.field !== '__index'" [field]="col.field"></p-sortIcon>
-            </th>
-          </tr>
-        </ng-template>
+      <!-- 📌 資料列 -->
+      <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
+        <tr>
+          <!-- 展開控制欄（使用 dt.toggleRow） -->
+          <td *ngIf="showExpandColumn">
+            <a
+              href="#"
+              (click)="
+                dt.toggleRow(rowData);
+                onRowExpand($event, rowData);
+                $event.preventDefault()
+              "
+            >
+              <i
+                class="pi"
+                [ngClass]="{
+                  'pi-chevron-down': dt.isRowExpanded(rowData),
+                  'pi-chevron-right': !dt.isRowExpanded(rowData)
+                }"
+              ></i>
+            </a>
+          </td>
 
-        <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
-          <tr>
-            <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
-              <ng-container *ngIf="col.field === '__index'">
-                {{ getRowIndex(groupIndex, rowIndex) }}
+          <!-- 資料列欄位 -->
+          <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
+            <ng-container *ngIf="col.field === '__index'">
+              {{ getRowIndex(groupIndex, rowIndex) }}
+            </ng-container>
+            <ng-container *ngIf="col.field !== '__index'">
+              <ng-container *ngIf="col.format; else raw">
+                {{ col.format(rowData[col.field]) }}
               </ng-container>
-              <ng-container *ngIf="col.field !== '__index'">
-                <ng-container *ngIf="col.format; else raw">
-                  {{ col.format(rowData[col.field]) }}
+              <ng-template #raw>{{ rowData[col.field] }}</ng-template>
+            </ng-container>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- 📌 展開內容列 -->
+<!-- 📌 展開內容列（跨欄顯示明細） -->
+<ng-template pTemplate="rowexpansion" let-rowData>
+  <tr>
+    <td [attr.colspan]="(showExpandColumn ? selectedColumns.length + 1 : selectedColumns.length)">
+      <div class="mt-2 mb-3 p-3 bg-gray-50 border border-gray-300 rounded shadow-sm">
+        <div class="font-bold text-blue-800 mb-2">📌 明細資料</div>
+        <div style="overflow-x: auto; max-width: 100%;">
+        <table class=" text-sm border border-collapse border-gray-400">
+          <thead class="bg-gray-200">
+            <tr>
+              <th *ngFor="let col of detailColumns"
+                  class="border border-gray-300 p-1 text-center"
+                  [style.width.px]="getHeaderWidth(col.header)">
+                {{ col.header }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let detail of rowDetails[getRowKey(rowData)] ?? []">
+              <td *ngFor="let col of detailColumns"
+                  class="border border-gray-300 p-1 text-center"
+                  [style.width.px]="getHeaderWidth(col.header)">
+                <ng-container *ngIf="col.format; else rawDetail">
+                  {{ col.format(detail[col.field]) }}
                 </ng-container>
-                <ng-template #raw>
-                  {{ rowData[col.field] }}
+                <ng-template #rawDetail>
+                  {{ detail[col.field] }}
                 </ng-template>
-              </ng-container>
-            </td>
-          </tr>
-        </ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </td>
+  </tr>
+</ng-template>
 
-        <!-- 總計 -->
-        <!-- 總計 -->
-        <ng-template pTemplate="footer">
-          <tr class="bg-yellow-100 font-semibold">
-            <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
-              <ng-container [ngSwitch]="col.field">
-                <ng-container *ngSwitchCase="'__index'">總計</ng-container>
-                <ng-container *ngSwitchDefault>
-                  <ng-container *ngIf="subtotalFields.includes(col.field)">
-                    {{ groupByField ? getSubtotal(mergedPagedGroups[groupIndex], col.field) : getSubtotal(data,
-                    col.field) }}
-                  </ng-container>
+
+
+      <!-- 📌 表尾小計 -->
+      <ng-template pTemplate="footer">
+        <tr class="bg-yellow-100 font-semibold">
+          <td *ngIf="showExpandColumn"></td>
+          <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
+            <ng-container [ngSwitch]="col.field">
+              <ng-container *ngSwitchCase="'__index'">總計</ng-container>
+              <ng-container *ngSwitchDefault>
+                <ng-container *ngIf="subtotalFields.includes(col.field)">
+                  {{ groupByField
+                    ? getSubtotal(mergedPagedGroups[groupIndex], col.field)
+                    : getSubtotal(data, col.field) }}
                 </ng-container>
               </ng-container>
-            </td>
-          </tr>
-        </ng-template>
-
-
-      </p-table>
-    </div>
+            </ng-container>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
   </div>
+</div>
+
+
   <p-dialog header="選擇顯示欄位" [(visible)]="showColumnDialog" [modal]="true" [style]="{ width: '40rem', height: '40rem' }"
     [contentStyle]="{ height: '100%', overflow: 'auto' }">
     <div class="grid p-fluid">
