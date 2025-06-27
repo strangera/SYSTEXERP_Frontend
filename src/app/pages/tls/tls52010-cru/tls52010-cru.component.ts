@@ -64,8 +64,9 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   }
   private setInitialValuesAndWatchChanges(): void {
     this.dataForm.controls.APPLY_Date.setValue(new Date());
-    this.userOptions = [{ user_No: '', user_Name: '' }]; // 假設有一個選項
-    this.dataForm.controls.APPLY_USR_No.setValue(this.authService.currentUserValue?.user_No || ''); // 假設用戶對象有 userName 屬性
+    const userInfo = this.authService.currentUserValue;
+    this.userOptions = [{ user_No: userInfo?.user_No || '', user_Name: userInfo?.user_Name || '' }];
+    this.dataForm.controls.APPLY_USR_No.setValue(this.userOptions[0]?.user_No || ''); // 假設用戶對象有 userName 屬性
     this.dataForm.controls.VEN_No.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(vendorNo => {
       if (vendorNo) { // !!! 可以改成下拉觸發事件
         const selectedVendor = this.vendorOptions.find(opt => opt.No === vendorNo);// 顯示廠商簡稱

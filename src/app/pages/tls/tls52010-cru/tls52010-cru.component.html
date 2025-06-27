@@ -8,11 +8,14 @@
       <div class="grid p-fluid">
         <app-input-text class="col-12 md:col-6 lg:col-4" label="採購單號" controlName="PO_No"
           [control]="dataForm.controls.PO_No" [submitted]="submitted" />
-
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號" controlName="VEN_No" [options]="vendorOptions"
-          optionLabel="Name" optionValue="No" [control]="dataForm.controls.VEN_No" [submitted]="submitted" />
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="廠商簡稱" controlName="vendorShortName"
-          [control]="dataForm.controls.vendorShortName" [submitted]="submitted" />
+      </div>
+      <div class="grid p-fluid">
+        <app-dropdown
+          [ngClass]="dataForm.controls.VEN_No.value ? 'col-12 md:col-6 lg:col-2' : 'col-12 md:col-6 lg:col-4'"
+          label="廠商編號" controlName="VEN_No" [options]="vendorOptions" optionLabel="Name" optionValue="No"
+          [control]="dataForm.controls.VEN_No" [submitted]="submitted" />
+        <app-input-text *ngIf="dataForm.controls.VEN_No.value" class="col-12 md:col-6 lg:col-2" label="廠商簡稱"
+          controlName="vendorShortName" [control]="dataForm.controls.vendorShortName" [submitted]="submitted" />
 
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="品牌編號" controlName="LOGO_No" [options]="brandOptions"
           optionLabel="Name" optionValue="No" [control]="dataForm.controls.LOGO_No" [submitted]="submitted" />
@@ -46,7 +49,7 @@
         <app-calendar class="col-12 md:col-6 lg:col-4" label="申請日期" controlName="APPLY_Date"
           [control]="dataForm.controls.APPLY_Date" [submitted]="submitted" />
 
-        <app-editor-text class="col-12" label="採購單說明" controlName="PO_Remark" [control]="dataForm.controls.PO_Remark"
+        <app-input-textarea class="col-12" label="採購單說明" controlName="PO_Remark" [control]="dataForm.controls.PO_Remark"
           [submitted]="submitted" />
       </div>
 
