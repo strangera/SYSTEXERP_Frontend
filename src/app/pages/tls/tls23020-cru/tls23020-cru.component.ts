@@ -34,9 +34,17 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
   netTotalSum = 0;
   taxTotalSum = 0;
   displayMode: 'SummaryReport' | 'Report' = 'SummaryReport';
-
-  columns = [
-    {
+  get columns() {
+  if (this.displayMode === 'SummaryReport') {
+    return [
+      { field: 'tlt_no', header: '專櫃編號' },
+      { field: 'tlt_name', header: '櫃位名稱' },
+      { field: 'TotalAmt', header: '總金額', style: 'text-right', format: this.moneyFormat },
+      { field: 'TotalTxn', header: '總交易筆數', style: 'text-right' }
+    ];
+  } else {
+    return [
+       {
       field: 'TXN_Date',
       header: '銷售日期',
       visible: true,
@@ -106,8 +114,12 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
       visible: true,
       format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions)
     },
-  ];
-
+    ];
+  }
+}
+  moneyFormat(value: number): string {
+    return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
+  }
 
   // 下拉選單選項
   taxableOptions: any[] = [];

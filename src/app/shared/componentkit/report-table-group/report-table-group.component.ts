@@ -42,6 +42,7 @@ export class ReportTableGroupComponent implements OnInit {
   @Input()
   set data(value: any[]) {
     this._data = value;
+     this.groupBodyExpanded = {}; // ✅ 每次新資料清空展開狀態
 
     if (this.groupByField) {
       this._data = [...this._data].sort((a, b) => {
@@ -66,6 +67,8 @@ export class ReportTableGroupComponent implements OnInit {
 
 expandedRows: { [key: string]: boolean } = {};
 rowDetails: { [key: string]: any[] } = {};
+showGroupedBody: boolean = false;
+groupBodyExpanded: { [key: string]: boolean } = {};
 
 getRowKey(row: any): string {
   return row[this.dataKey] ?? JSON.stringify(row);
@@ -166,6 +169,11 @@ objectKeys(obj: any): string[] {
         this._data.slice(i * this.rowsPerTable, (i + 1) * this.rowsPerTable)
       );
     }
+ // ✅ 預設展開狀態與 showGroupedBody 同步
+  this.groupedData.forEach(group => {
+    const key = group[0]?.__groupKey ?? '';
+    this.groupBodyExpanded[key] = this.showGroupedBody;
+  });
   }
 
 
@@ -193,6 +201,12 @@ objectKeys(obj: any): string[] {
         this._data.slice(i * this.rowsPerTable, (i + 1) * this.rowsPerTable)
       );
     }
+    this.groupedData.forEach(group => {
+  const key = group[0]?.__groupKey ?? '';
+  if (key && !(key in this.groupBodyExpanded)) {
+    this.groupBodyExpanded[key] = this.showGroupedBody; // ✅ 根據全域切換
+  }
+});
   }
 
 
@@ -467,6 +481,31 @@ objectKeys(obj: any): string[] {
   }, 0);
   return Math.max(80, fullWidth + 24); // 加上 padding 預留
 }
+collapseAllRows(): void {
+  this.showGroupedBody = false;
+}
 
+expandAllRows(): void {
+  this.showGroupedBody = true;
+}
+onToggleGroupedBody(): void {
+  for (const key of Object.keys(this.groupBodyExpanded)) {
+    this.groupBodyExpanded[key] = this.showGroupedBody;
+  }
+}
+toggleGroupBody(key: string): void {
+  this.groupBodyExpanded[key] = !this.groupBodyExpanded[key];
+}
+expandAllGroupBodies(): void {
+  for (const key of Object.keys(this.groupBodyExpanded)) {
+    this.groupBodyExpanded[key] = true;
+  }
+}
+
+collapseAllGroupBodies(): void {
+  for (const key of Object.keys(this.groupBodyExpanded)) {
+    this.groupBodyExpanded[key] = false;
+  }
+}
 
 }

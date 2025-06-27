@@ -1,34 +1,34 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
-const day = new Date();
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-interface TLS22040 {
-  id: 0,
-  Role_No: "string",
-  Role_Name: "string",
-  Description: "string",
-  CRT_Date: "2025-06-18T15:37:00.263Z",
-  CRT_USR_No: "string",
-  CRT_USR_Name: "string",
-  UPD_Date: "2025-06-18T15:37:00.263Z",
-  UPD_USR_No: "string",
-  UPD_USR_Name: "string"
-}
+// interface TLS22040 {
+//   id: 0,
+//   Role_No: "string",
+//   Role_Name: "string",
+//   Description: "string",
+//   CRT_Date: "2025-06-18T15:37:00.263Z",
+//   CRT_USR_No: "string",
+//   CRT_USR_Name: "string",
+//   UPD_Date: "2025-06-18T15:37:00.263Z",
+//   UPD_USR_No: "string",
+//   UPD_USR_Name: "string"
+// }
 
 @Component({
   selector: 'app-tls22040',
   templateUrl: './tls22040.component.html',
-  styleUrl: './tls22040.component.scss'
 })
+
 export class TLS22040Component extends BasicQueryPageComponent<any> implements OnInit {
-  // 查詢表單
   queryForm = this.formBuilder.group({
-    fileDate: [day, [Validators.required]], // 產檔日期*
-    saleDateRange: [null, []], // 銷售日期
+    tlt_bdate_start: [null, Validators.required],
+    tlt_bdate_end: [null, Validators.required],
+      ...createPaginationConfig([{ field: 'paymentTool', order: 1 }])
   });
-  // 表格資料
+  // selectedItems: SalesRecord[] = [];
+
   data: any[] = [];
   columns: Column[] = [
     { field: 'salesDate', header: 'IMS應上送筆數-銷售日期', visible: true },
@@ -46,13 +46,47 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    // 初始一定要下initializePage
-    this.initializePage('TLS22040', '/TLS/TLS22040CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS22040', undefined, this.queryForm, this.onSubmit.bind(this));
   }
+
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      // 打API
+      this.data = [
+        {
+          salesDate: '2025/06/01',
+          invoiceTypeIMS: '一般稅額',
+          invoiceAmountIMS: 120000,
+          invoiceCountIMS: 45,
+          creationTimeIMS: '2025/06/02 08:15:30',
+          fileDate: '2025/06/02',
+          invoiceTypeTurnkey: '一般稅額',
+          invoiceCountTurnkey: 45
+        },
+        {
+          salesDate: '2025/06/02',
+          invoiceTypeIMS: '特種稅額',
+          invoiceAmountIMS: 85000,
+          invoiceCountIMS: 30,
+          creationTimeIMS: '2025/06/03 09:10:12',
+          fileDate: '2025/06/03',
+          invoiceTypeTurnkey: '特種稅額',
+          invoiceCountTurnkey: 30
+        },
+        {
+          salesDate: '2025/06/03',
+          invoiceTypeIMS: '免稅',
+          invoiceAmountIMS: 53000,
+          invoiceCountIMS: 20,
+          creationTimeIMS: '2025/06/04 07:48:55',
+          fileDate: '2025/06/04',
+          invoiceTypeTurnkey: '免稅',
+          invoiceCountTurnkey: 20
+        }
+      ];
+      this.loading = false;
+      this.messageService.blockUi();
+
     });
   }
 
