@@ -3,6 +3,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { option } from '../../../shared/models/sys/sysb000.module';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -19,6 +20,7 @@ interface CategoryItem {
   CanDel: boolean;
 }
 
+// 保證傳票
 @Component({
   selector: 'app-tls14030',
   templateUrl: './tls14030.component.html',
@@ -30,17 +32,17 @@ export class Tls14030Component extends BasicQueryPageComponent<CategoryItem> imp
       // id: [{ value: '', disabled: true }], // read only
       // talent_id: [{ value: '', disabled: true }], // 合約編號系統id read only
       tlt_no: ['', [Validators.maxLength(12)]], // 專櫃編號 read only
-      ticket_type: ['', [Validators.maxLength(1)]], // 保證票型態
-      ticket_no: ['', [Validators.maxLength(20)]], // 票據編號
-      ticket_kind: ['', [Validators.maxLength(1)]], // 票據種類 非必填但有限制長度
-      ticket_amount: [null, [Validators.min(0)]], // 保證票金額 整數金額
-      expiry_date: [null], // 票據到期日期 date, nullable
-      get_ticket_status: ['', [Validators.maxLength(1)]], // 票據收票狀態
-      get_date: [null], // 繳票日期
-      return_date: [null], // 退票日期
-      close_date: [null], // 封存日期
-      ticket_remarks: ['', [Validators.maxLength(1000)]], // 保證票摘要-合約主檔
-      // remark: ['', [Validators.maxLength(200)]], // 備註
+      ticket_type: [[]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿保證票"
+      ticket_no: ['', [Validators.maxLength(20)]], // 票據編號 手動輸入
+      ticket_kind: [[]], // 票據種類 非必填但有限制長度 "1=本票 2=支票 3=行銀保證函 9=其他"
+      ticket_amount: [null, [Validators.min(0)]], // 保證票金額 整數金額 "讀取 TLTTALENT 專櫃主檔相對的保證金金額"
+      expiry_date: [null], // 票據到期日期 手動輸入
+      get_ticket_status: [[]], // 票據收票狀態 "0=未繳票  1=已繳票  2=已退票  9=封存"
+      get_date: [null], // 繳票日期 手動輸入
+      return_date: [null], // 退票日期 手動輸入
+      close_date: [null], // 封存日期 手動輸入
+      ticket_remarks: ['', [Validators.maxLength(1000)]], // 保證票摘要-合約主檔 "讀取 TLTTALENT 專櫃主檔ticket_remarks"
+      // remark: ['', [Validators.maxLength(200)]], // 備註 手動輸入
 
       ...createPaginationConfig([{ field: 'talent_id', order: 1 }]), // 分頁和排序參數
     });
@@ -63,6 +65,26 @@ export class Tls14030Component extends BasicQueryPageComponent<CategoryItem> imp
       { field: 'remark', header: '備註', visible: true },
     ];
     selectedItems: CategoryItem[] = [];// 多選項目
+
+    ticket_typeOption: option[] = [ //保證票型態
+      {value: '1', label: '準時開業保證票'},
+      {value: '2', label: '施工保證票'},
+      {value: '3', label: '契約屆滿保證票'},
+    ];
+
+    ticket_kindOption: option[] = [ //票據種類
+      {value: '1', label: '本票'},
+      {value: '2', label: '支票'},
+      {value: '3', label: '行銀保證函'},
+      {value: '9', label: '其他'},
+    ];
+
+    get_ticket_statusOption: option[] = [ //票據收票狀態
+      {value: '1', label: '未繳票'},
+      {value: '2', label: '已繳票'},
+      {value: '3', label: '已退票'},
+      {value: '9', label: '封存'},
+    ];
   
     constructor(
       private apiService: TLS5000Service,
