@@ -91,13 +91,13 @@ export interface IPOS2004DetailData {
   id: number;
   PLU_MagNo: string; // 商品管理編號
   PLU_Name: string; // 商品名稱
-  PLU_No: string; // 商品編號
+  PLU_No: string; // 國際條碼
   PLU_Unit: string; // 商品單位
   UNIT_NAME: string; // 單位名稱
-  PLU_BoxQty: number; // 箱入數
+  PLU_BoxQty: number; // 包裝入數
   PLU_StockTaxType: string; // 進貨稅別
-  PLU_SalePrc_UNI: number; // 統一價格
-  PLU_SalePrc: number; // 銷售價格
+  PLU_SalePrc_UNI: number; // 單價
+  PLU_SalePrc: number; // 售價
 }
 
 /** 商品管理編號/國際條碼/廠商貨號查詢商品 (queryPOS2004Detail) 的請求介面 */
@@ -243,7 +243,7 @@ export class Tls52010Service {
    * 查詢廠商所有商品 (POS2004 詳細資料)
    * @param params 查詢條件 (VEN_No, PLU_MagNo, PLU_Name, CAT_LNo, CAT_MNo, CAT_SNo, LOGO_No)
    * @returns 包含 IPOS2004DetailData 陣列的 API 響應
-   *///!!!未完成
+   */
   queryPOS2004DetailByVenNo(params: IQueryPOS2004DetailByVenNoRequest): Observable<ApiResponse<IPOS2004DetailData[]>> {
     return this.http.post<ApiResponse<IPOS2004DetailData[]>>(`${this.apiUrl}/queryPOS2004Detail_VEN_No`, params);
   }

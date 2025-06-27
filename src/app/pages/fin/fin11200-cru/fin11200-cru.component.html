@@ -20,7 +20,8 @@
   </p-panel>
 </div>
 
-<app-dialog [visible]="dialogVisible" header="選擇收銀機" (visibleChange)="dialogVisible = $event" (save)="saveDialog()">
+<app-dialog [visible]="dialogVisible" header="選擇收銀機" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+  [disable]="selectedItemsDialog.length > 0">
   <form [formGroup]="dialogQueryForm" class="flex pb-2 align-items-end gap-2">
     <app-input-text class="flex-grow-1" label="收銀機編號" controlName="ECR_No" [control]="dialogQueryForm.controls.ECR_No"
       (input)="inputEnter()" />
