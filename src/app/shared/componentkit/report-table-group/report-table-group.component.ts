@@ -35,11 +35,14 @@ export class ReportTableGroupComponent implements OnInit {
   @Input() allowMergeToggle: boolean = false; // 預設不顯示切換開關
   @Input() defaultMergedView: boolean = true; // 預設就是合併模式
   @Input() enableGrouping: boolean = false;
+  @Input() detailColumns: Column[] = []; // 自訂明細欄位
+
   private _data: any[] = [];
 
   @Input()
   set data(value: any[]) {
     this._data = value;
+     this.groupBodyExpanded = {}; // ✅ 每次新資料清空展開狀態
 
     if (this.groupByField) {
       this._data = [...this._data].sort((a, b) => {
@@ -58,6 +61,33 @@ export class ReportTableGroupComponent implements OnInit {
     return this._data;
   }
 
+@Input() showExpandColumn: boolean = false;
+@Input() detailFieldKeys: string[] = [];
+@Input() fetchDetailFn: (payload: any) => Promise<any[]> = async () => [];
+
+expandedRows: { [key: string]: boolean } = {};
+rowDetails: { [key: string]: any[] } = {};
+showGroupedBody: boolean = false;
+groupBodyExpanded: { [key: string]: boolean } = {};
+
+getRowKey(row: any): string {
+  return row[this.dataKey] ?? JSON.stringify(row);
+}
+
+async onRowExpand(event: any, rowData: any): Promise<void> {
+  const key = this.getRowKey(rowData);
+  if (!this.rowDetails[key]) {
+    const payload = this.detailFieldKeys.reduce((acc, k) => {
+      acc[k] = rowData[k];
+      return acc;
+    }, {} as any);
+    this.rowDetails[key] = await this.fetchDetailFn(payload);
+  }
+}
+
+objectKeys(obj: any): string[] {
+  return Object.keys(obj || {});
+}
 
 
   showRowsPerTableDialog = false;
@@ -139,6 +169,11 @@ export class ReportTableGroupComponent implements OnInit {
         this._data.slice(i * this.rowsPerTable, (i + 1) * this.rowsPerTable)
       );
     }
+ // ✅ 預設展開狀態與 showGroupedBody 同步
+  this.groupedData.forEach(group => {
+    const key = group[0]?.__groupKey ?? '';
+    this.groupBodyExpanded[key] = this.showGroupedBody;
+  });
   }
 
 
@@ -166,6 +201,12 @@ export class ReportTableGroupComponent implements OnInit {
         this._data.slice(i * this.rowsPerTable, (i + 1) * this.rowsPerTable)
       );
     }
+    this.groupedData.forEach(group => {
+  const key = group[0]?.__groupKey ?? '';
+  if (key && !(key in this.groupBodyExpanded)) {
+    this.groupBodyExpanded[key] = this.showGroupedBody; // ✅ 根據全域切換
+  }
+});
   }
 
 
@@ -432,5 +473,39 @@ export class ReportTableGroupComponent implements OnInit {
     this.splitData();
     this.cdr.detectChanges(); // ⬅️ 讓表格真的刷新
   }
+  getHeaderWidth(header: string): number {
+  if (!header) return 80;
+  const fullWidth = [...header].reduce((acc, char) => {
+    const isChinese = /[\u4e00-\u9fa5]/.test(char);
+    return acc + (isChinese ? 16 : 10);
+  }, 0);
+  return Math.max(80, fullWidth + 24); // 加上 padding 預留
+}
+collapseAllRows(): void {
+  this.showGroupedBody = false;
+}
+
+expandAllRows(): void {
+  this.showGroupedBody = true;
+}
+onToggleGroupedBody(): void {
+  for (const key of Object.keys(this.groupBodyExpanded)) {
+    this.groupBodyExpanded[key] = this.showGroupedBody;
+  }
+}
+toggleGroupBody(key: string): void {
+  this.groupBodyExpanded[key] = !this.groupBodyExpanded[key];
+}
+expandAllGroupBodies(): void {
+  for (const key of Object.keys(this.groupBodyExpanded)) {
+    this.groupBodyExpanded[key] = true;
+  }
+}
+
+collapseAllGroupBodies(): void {
+  for (const key of Object.keys(this.groupBodyExpanded)) {
+    this.groupBodyExpanded[key] = false;
+  }
+}
 
 }

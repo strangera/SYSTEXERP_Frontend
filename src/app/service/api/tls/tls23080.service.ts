@@ -4,6 +4,8 @@ import { catchError, Observable, of, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../shared/service/error-handler.service';
 
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -13,7 +15,8 @@ export class TLS23080Service {
 
   constructor(
     private http: HttpClient,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    
   ) { }
 
   queryTLS23080(query: any): Observable<any> {
@@ -21,5 +24,27 @@ export class TLS23080Service {
       tap(response => console.log('查詢結果:', response)),
       catchError((error) => this.errorHandler.handleError(error))  // ✅ 正確
     );
+  }
+  queryTLS23080Detail(query: { TXN_Date: string }): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS23080_Detail`, query).pipe(
+    tap(response => console.log('🔍 明細查詢結果:', response)),
+    catchError((error) => this.errorHandler.handleError(error))
+  );
+}
+// ✅ 提供 fetchDetailFn
+  async fetchDetailFn(payload: { TXN_Date: string }): Promise<any[]> {
+    if (!payload?.TXN_Date) return [];
+    try {
+      const result = await this.queryTLS23080Detail({ TXN_Date: payload.TXN_Date }).toPromise();
+      if (result.Status === '0000') {
+        return result.Data ?? [];
+      } else {
+       
+        return [];
+      }
+    } catch (error) {
+      
+      return [];
+    }
   }
 }

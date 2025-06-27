@@ -1,1 +1,40 @@
-<p>tls23090-cru works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+
+  <div class="card">
+    <app-report-table-group 
+      [columns]="columns" 
+      [data]="data"
+      [subtotalFields]="
+        displayMode === 'CreditCardDetail'
+          ?  ['TXN_PayAmt', 'TXN_Bonus', 'TXN_Installment']
+          : displayMode === 'CounterCardAnalysis'
+            ? [
+                'CRD_Type_List.VISA.Amount', 'CRD_Type_List.VISA.Count',
+                'CRD_Type_List.MASTER.Amount', 'CRD_Type_List.MASTER.Count',
+                'CRD_Type_List.JCB.Amount', 'CRD_Type_List.JCB.Count',
+                'CRD_Type_List.AE.Amount', 'CRD_Type_List.AE.Count',
+                'CRD_Type_List.DA.Amount', 'CRD_Type_List.DA.Count',
+                'CRD_Type_List.UnionPay.Amount', 'CRD_Type_List.UnionPay.Count',
+                'CRD_Type_List.Others.Amount', 'CRD_Type_List.Others.Count',
+                'CRD_Type_List.Total.Amount', 'CRD_Type_List.Total.Count'
+              ]
+            : []"
+      [enableGrouping]="false"
+      [groupByField]="''"
+      [reportTitle]="
+        displayMode === 'CreditCardDetail'
+          ? '信用卡明細查詢報表'
+          : '專櫃卡別分析查詢報表'"
+      [currentPage]="1"
+      [dateStart]="dateStart"
+      [dateEnd]="dateEnd"
+      [printedAt]="printedAt"
+      [showTotalOnly]="false"
+      [pdfSummaryText]="[]"
+      [defaultMergedView]="true">
+    </app-report-table-group>
+  </div>
+</div>

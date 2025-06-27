@@ -1,1 +1,36 @@
-<p>tls23120-cru works!</p>
+<div class="card">
+  <!-- 上方功能列 -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+
+  <!-- 報表區塊 -->
+  <div class="card">
+    <app-report-table-group 
+      [columns]="columns"
+      [data]="data"
+      [subtotalFields]="[
+        'transactionCount',
+        'netSales',
+        'businessTax',
+        'transactionAmount',
+        'preSaleCount',
+        'preSaleAmount',
+        'settleCount',
+        'settleAmount'
+      ]"
+      [enableGrouping]="false"
+      [reportTitle]="'區分銷售月報表'"
+      [currentPage]="1"
+      [dateStart]="dateStart"
+      [dateEnd]="dateEnd"
+      [printedAt]="printedAt"
+      [showTotalOnly]="false"
+      [pdfSummaryText]="[]"
+      [defaultMergedView]="true"
+      [showExpandColumn]="false"
+      [detailFieldKeys]="['area']"
+    >
+    </app-report-table-group>
+  </div>  
+</div>

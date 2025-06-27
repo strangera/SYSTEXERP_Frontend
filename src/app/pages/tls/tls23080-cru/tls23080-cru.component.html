@@ -31,7 +31,11 @@
       [printedAt]="printedAt"
       [showTotalOnly]="false"
       [pdfSummaryText]="[]"
-      [defaultMergedView]="true">
+      [defaultMergedView]="true"
+      [showExpandColumn]="true"
+      [detailFieldKeys]="['TXN_Date']"
+      [fetchDetailFn]="fetchDetailFn"
+      [detailColumns]="detailColumns">
     </app-report-table-group>
   </div>
 </div>
