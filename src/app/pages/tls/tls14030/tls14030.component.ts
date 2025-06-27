@@ -29,7 +29,7 @@ interface CategoryItem {
 export class Tls14030Component extends BasicQueryPageComponent<CategoryItem> implements OnInit{
   // 查詢表單：包含大分類代碼和名稱
     queryForm = this.formBuilder.group({
-      // id: [{ value: '', disabled: true }], // read only
+      // id: [{ value: null, disabled: true }], // read only
       // talent_id: [{ value: '', disabled: true }], // 合約編號系統id read only
       tlt_no: ['', [Validators.maxLength(12)]], // 專櫃編號 read only
       ticket_type: [[]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿保證票"
