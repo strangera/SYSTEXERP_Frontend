@@ -23,10 +23,6 @@ interface SalesRecord {
 
 export class TLS2A020Component extends BasicQueryPageComponent<any> implements OnInit {
 
-  // 進度條、頁數設定
-  // progressValue = 0;
-  // showPageSizeDialog = false;
-  // customPageSize = 1000;
 
   // 表單
   queryForm = this.formBuilder.group({
@@ -85,14 +81,26 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
     });
 
     this.locationOptionsService.getBuildingOptions().subscribe({
-      next: (res) => this.BUILDING_NO_Options = res,
+      next: (res) => {
+        this.BUILDING_NO_Options = res.map((item: any) => ({
+          label: item.name || item.BUILDING_NAME || item.label,  // 根據實際欄位調整
+          value: item.code || item.BUILDING_NO || item.value
+        }));
+      },
       error: () => this.messageService.errorBubble('載入館別選單失敗')
     });
 
+
     this.locationOptionsService.getFloorOptions().subscribe({
-      next: (res) => this.floorOptions = res,
+      next: (res) => {
+        this.floorOptions = res.map((item: any) => ({
+          label: item.name || item.FLOOR_NAME || item.label,
+          value: item.code || item.FLOOR_NO || item.value
+        }));
+      },
       error: () => this.messageService.errorBubble('載入樓層選單失敗')
     });
+
   }
 
   // 查詢功能

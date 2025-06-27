@@ -225,7 +225,7 @@ export class Tls52010Service {
    * 取得預算金額
    * @param params 預算查詢條件 (LOGO_No, YYYYMM)
    * @returns 預算金額的 API 響應
-   *///!!!未完成
+   */
   GetBudgetAmount(params: IGetBudgetAmountRequest): Observable<ApiResponse<number>> { // 假設返回的 Data 是數字
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/GetBudgetAmount`, params);
   }
