@@ -55,7 +55,7 @@
 
       <app-table [columns]="columns" [data]="data" [selectedItems]="selectedItems" [showCheckBox]="true"
         (selectionChange)="selectedItems = $event" [showEdit]="false" [showDetail]="false" [showInsert]="true"
-        (insert)="dialogVisible = true"
+        (insert)="dialogVisible = true" [isRowSelectable]="isRowSelectable.bind(this)"
         [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true" />
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -66,7 +66,8 @@
   </p-panel>
 </div>
 
-<app-dialog [visible]="dialogVisible" header="選擇商品明細" (visibleChange)="dialogVisible = $event" (save)="saveDialog()">
+<app-dialog [visible]="dialogVisible" header="選擇商品明細" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+  [disable]="selectedItemsDialog.length > 0">
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
       <app-input-text class="col-12 col-6 lg:col-4" label="商品管理編號" controlName="PLU_MagNo"
