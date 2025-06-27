@@ -278,8 +278,7 @@
     (detail)="onDetail($event)"
     [showManage]="false"
     [showDelete]="false"
-    [expansionDataKey]="'details'"
-    [expansionColumns]="expansionColumns"
+    
     [showSubtotal]="false"
     [subtotalFields]="['TXN_TotPayAmt', 'TXN_TotDisc']"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
@@ -293,6 +292,7 @@
   [style]="{ width: '300px' }"
 >
   <div class="p-fluid">
+    <!-- 限制筆數輸入欄 -->
     <div class="field">
       <label for="pageSize">限制筆數</label>
       <input
@@ -304,8 +304,34 @@
         style="width: 100%"
       />
     </div>
+
+    <!-- 查詢模式選擇 -->
+    <div class="field mt-3">
+      <label>查詢模式</label>
+      <div class="flex flex-column gap-2">
+        <div class="flex align-items-center gap-2">
+          <p-radioButton
+            name="displayMode"
+            [value]="'Detail'"
+            [(ngModel)]="displayMode"
+            inputId="mode-detail"
+          ></p-radioButton>
+          <label for="mode-detail">一般報表</label>
+        </div>
+        <div class="flex align-items-center gap-2">
+          <p-radioButton
+            name="displayMode"
+            [value]="'Summary'"
+            [(ngModel)]="displayMode"
+            inputId="mode-summary"
+          ></p-radioButton>
+          <label for="mode-summary">彙總報表</label>
+        </div>
+      </div>
+    </div>
   </div>
 
+  <!-- 對話框按鈕 -->
   <ng-template pTemplate="footer">
     <button
       type="button"
@@ -319,6 +345,7 @@
       pButton
       label="確定"
       (click)="confirmPageSizeAndNavigate()"
+      [loading]="loading"
     ></button>
   </ng-template>
 </p-dialog>

@@ -32,7 +32,7 @@
               [options]="cardTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.CRD_Type"
+              [control]="queryForm.controls.BNK_No"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -51,17 +51,8 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="區域"
-              controlName="regionCode"
-              [options]="regionOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.regionCode"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
+                  
+         
                     <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="樓層"
@@ -90,6 +81,7 @@
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
+          <app-button btnType="report" label="報表模式" (clickEvent)="goToReportMode()"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -102,8 +94,8 @@
     [data]="data"
     [columns]="columns"
     [showCheckBox]="false"
-    dataKey="TXN_No"
-    [multiSortMeta]="[{ field: 'cardNumber', order: 1 }]"
+    dataKey="BNK_No"
+    [multiSortMeta]="[{ field: 'BNK_No', order: 1 }]"
     [totalRecords]="totalRecords"
     [lazy]="true"
     [loading]="loading"
@@ -114,3 +106,17 @@
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
   ></app-table>
 </div>
+<p-dialog header="限制筆數" [(visible)]="showPageSizeDialog" [modal]="true" [closable]="false" [style]="{ width: '300px' }">
+  <div class="p-fluid">
+    <div class="field">
+      <label for="pageSize">限制筆數</label>
+      <input id="pageSize" type="number" pInputText [(ngModel)]="customPageSize" min="1" style="width: 100%" />
+    </div>
+
+    </div>
+    <ng-template pTemplate="footer">
+      <button type="button" pButton label="取消" class="p-button-text" (click)="showPageSizeDialog = false"></button>
+      <button type="button" pButton label="確定" (click)="confirmPageSizeAndNavigate()" [loading]="loading"></button>
+    </ng-template>
+
+</p-dialog>
