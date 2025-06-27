@@ -10,23 +10,10 @@
       [columns]="columns"
       [data]="data"
       [subtotalFields]="[
-        'OriginalPrice_TXN_SaleNoTax',
-        'OriginalPrice_TXN_Tax',
-        'OriginalPrice_Total',
-        'Discount90_TXN_SaleNoTax',
-        'Discount90_TXN_Tax',
-        'Discount90_Total',
-        'Discount80_TXN_SaleNoTax',
-        'Discount80_TXN_Tax',
-        'Discount80_Total',
-        'SpecialPrice_TXN_SaleNoTax',
-        'SpecialPrice_TXN_Tax',
-        'SpecialPrice_Total',
-        'Total_TXN_SaleNoTax',
-        'Total_TXN_Tax',
-        'Total_Total'
-      ]"
-      [enableGrouping]="false"
+    'TXN_PayAmt'
+ 
+  ]"
+      [enableGrouping]="false"             
       [reportTitle]="'折扣別月報表 '"
       [currentPage]="1"
       [dateStart]="dateStart"
@@ -37,8 +24,7 @@
       [defaultMergedView]="true"
       [showExpandColumn]="false"
       [detailFieldKeys]="['TXN_Date']"
-    >
+ >
     </app-report-table-group>
-  </div>  
+  </div>
 </div>
-

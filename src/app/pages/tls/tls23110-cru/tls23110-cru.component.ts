@@ -95,7 +95,7 @@ export class TLS23110CRUComponent extends BasicCruPageComponent<any> {
   exportSummaryPDF(): void {
     this.pdfService.exportReportPDF({
       orientation: 'l',
-      title: '折扣別月報表',
+      title: '各日各折扣明細報表',
       dateStart: this.dateStart,
       dateEnd: this.dateEnd,
       printedAt: this.printedAt,
