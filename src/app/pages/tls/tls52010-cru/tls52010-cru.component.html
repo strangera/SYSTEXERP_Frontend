@@ -67,7 +67,7 @@
 </div>
 
 <app-dialog [visible]="dialogVisible" header="選擇商品明細" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
-  [disable]="selectedItemsDialog.length > 0">
+  [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
       <app-input-text class="col-12 col-6 lg:col-4" label="商品管理編號" controlName="PLU_MagNo"
