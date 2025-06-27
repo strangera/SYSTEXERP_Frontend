@@ -8,35 +8,34 @@ import { WhetherService } from '../../../service/basic/whether.service';
 import { TLS23120Service } from '../../../service/api/tls/tls23120.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+
 @Component({
   selector: 'app-tls23120',
   templateUrl: './tls23120.component.html',
   styleUrls: ['./tls23120.component.scss']
 })
 export class TLS23120Component extends BasicQueryPageComponent<any> {
-  queryForm = this.formBuilder.group({
-    saleDateStart: [new Date(), [Validators.required]],
-    saleDateEnd: [new Date(), [Validators.required]],
-    organizationCode: [{ value: '' }],
-    regionCode: [[]], // ✅ 改為陣列
-    businessTypeCode: [{ value: '' }],
-    whetherDisplayBusinessType: [],
-    locationRadio: [''],
-    tlt_building: [''],
-    tlt_floor: [[]], // ✅
-    org_id: [[]],     // ✅
-    bus_typeList: [[]],
-    tlt_no: [[]],     // ✅
-    
+  showPageSizeDialog = false;
+  customPageSize = 1000;
 
+  queryForm = this.formBuilder.group({
+    saleDateStart: [new Date('2020-01-01') as Date, [Validators.required]],
+    saleDateEnd: [new Date('2020-01-15') as Date, [Validators.required]],
+    organizationCode: [{}],
+    regionCode: [],
+    businessTypeCode: [],
+    whetherDisplayBusinessType: [],
+    locationRadio: [],
+    tlt_building: [],
+    tlt_floor: [],
+    org_id: [],
+    bus_typeList: [],
+    tlt_no: [],
     ...createPaginationConfig([{ field: 'area', order: 1 }])
   });
-
 
   data: any[] = [];
   totalRecords = 0;
@@ -60,9 +59,8 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
   whetherOptions: any[] = [];
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
-  OrganizationCodeOptions: any[] = []
+  OrganizationCodeOptions: any[] = [];
   CounterOptions: any[] = [];
-
 
   constructor(
     private tls23120Service: TLS23120Service,
@@ -87,21 +85,12 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
     this.businessTypeCodeService.getBusinessTypeCodes().subscribe(data => this.businessTypeCodeOptions = data);
     this.whetherService.getWhetherOptions().subscribe(data => this.whetherOptions = data);
     this.bigCategoryCodeService.getSystemTypes().subscribe(data => this.bus_typeOptions = data);
-    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
-    this.tls11010Service.getOrgOptions().subscribe((res) => {
-      this.OrganizationCodeOptions = res?.map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
-      })) || [];
+    this.tls11010Service.getOrgOptions().subscribe(res => {
+      this.OrganizationCodeOptions = res?.map(x => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) || [];
     });
-    this.counterNameService.getCounters().subscribe((res) => {
-      this.CounterOptions = res?.map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
-      })) || [];
+    this.counterNameService.getCounters().subscribe(res => {
+      this.CounterOptions = res?.map(x => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) || [];
     });
   }
 
@@ -116,24 +105,15 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
 
     this.handleSubmit(form, () => {
       const payload = { ...form.value };
-
-      // ✅ 將 'Y' / 'N' 轉成 true / false
-      if (payload.IsHaveTERM_No === 'Y') {
-        payload.IsHaveTERM_No = true;
-      } else if (payload.IsHaveTERM_No === 'N') {
-        payload.IsHaveTERM_No = false;
-      }
-
-      // ✅ 將空字串轉 null
       Object.keys(payload).forEach(key => {
         if (payload[key] === '') payload[key] = null;
       });
 
-      console.log('查詢參數:', payload);
+      this.loading = true;
+      this.messageService.blockUi();
 
       this.tls23120Service.queryTLS23120(payload).subscribe({
         next: (res) => {
-          console.log('查詢結果:', res);
           if (res.Status === '0000') {
             this.data = res.Data || [];
             this.totalRecords = res.TotalCount || this.data.length;
@@ -148,17 +128,67 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
         error: () => {
           this.data = [];
           this.totalRecords = 0;
-          this.loading = false;
           this.messageService.errorBubble('查詢錯誤');
         },
         complete: () => {
           this.loading = false;
           this.messageService.unblockUi();
+          this.showPageSizeDialog = false;
         }
       });
     });
   }
 
+  goToReportMode(): void {
+    this.customPageSize = 1000;
+    this.showPageSizeDialog = true;
+  }
+
+  confirmPageSizeAndNavigate(): void {
+    this.submitted = true;
+    if (this.queryForm.invalid) {
+      this.messageService.warnBubble('請確認欄位資料是否完整');
+      this.queryForm.markAllAsTouched();
+      return;
+    }
+
+    const queryFormValue = {
+      ...this.queryForm.value,
+      pageSize: this.customPageSize
+    };
+
+    this.loading = true;
+    this.messageService.blockUi();
+
+    this.tls23120Service.queryTLS23120(queryFormValue).subscribe({
+      next: (res) => {
+        if (res.Status === '0000') {
+          this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
+          this.router.navigate(['/TLS/TLS23120CRU'], {
+            state: {
+              queryFormValue,
+              pageSize: this.customPageSize,
+              data: res.Data || []
+            }
+          });
+          this.messageService.successBubble('查詢成功');
+        } else {
+          this.messageService.errorBubble('查詢失敗');
+        }
+      },
+      error: () => {
+        this.messageService.errorBubble('查詢錯誤');
+        this.loading = false;
+        this.messageService.unblockUi();
+        this.showPageSizeDialog = false;
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
+        this.showPageSizeDialog = false;
+      }
+    });
+  }
 
   getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find(opt => String(opt.value) === String(value));

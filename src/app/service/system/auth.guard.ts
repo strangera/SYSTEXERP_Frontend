@@ -19,7 +19,6 @@ export class AuthGuard implements CanActivate {
     state: RouterStateSnapshot
   ): boolean | UrlTree {
     const currentUser = this.authService.currentUserValue;
-
     if (!currentUser) {
       return this.router.createUrlTree(['/login'], {
         queryParams: { returnUrl: state.url },

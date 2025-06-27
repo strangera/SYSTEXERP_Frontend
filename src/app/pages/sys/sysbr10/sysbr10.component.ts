@@ -17,9 +17,9 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
 const nowDate = new Date();
 
 @Component({
-  selector: 'app-SYSBR10',
-  templateUrl: './SYSBR10.component.html',
-  styleUrl: './SYSBR10.component.scss'
+  selector: 'app-sysbr10',
+  templateUrl: './sysbr10.component.html',
+  styleUrl: './sysbr10.component.scss'
 })
 // 佈告欄管理作業
 export class SYSBR10Component extends BasicQpageComponent implements OnInit {

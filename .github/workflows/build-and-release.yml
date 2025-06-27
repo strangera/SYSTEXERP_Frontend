@@ -1,0 +1,104 @@
+name: Build and Release Angular App
+on:
+  push:
+    branches: [ prod ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Angular 專案用 ubuntu 比較常見
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'  # 或 '20'，根據你的專案需求
+        cache: 'npm'
+    
+    - name: List project structure
+      run: |
+        echo "=== Project Structure ==="
+        find . -name "package.json" -not -path "./node_modules/*"
+        find . -name "angular.json"
+        find . -name "tsconfig.json" -not -path "./node_modules/*"
+    
+    - name: Install dependencies
+      run: npm ci
+      continue-on-error: false
+    
+    - name: Build project
+      run: npm run build --if-present
+      continue-on-error: false
+      env:
+        NODE_OPTIONS: "--max_old_space_size=4096"  # 增加記憶體限制，避免建置時記憶體不足
+    
+    # 可選：執行測試
+    # - name: Run tests
+    #   run: npm run test:ci --if-present
+    
+    # 可選：執行 linting
+    # - name: Run linting
+    #   run: npm run lint --if-present
+    
+    - name: List build output
+      run: |
+        echo "=== Build Output ==="
+        if [ -d "dist" ]; then
+          find dist -type f -name "*.js" -o -name "*.css" -o -name "*.html" | head -20
+          echo "Total files in dist: $(find dist -type f | wc -l)"
+          echo "Dist folder size: $(du -sh dist)"
+        else
+          echo "Dist folder not found!"
+          ls -la
+        fi
+    
+    - name: Remove source maps (optional)
+      run: |
+        if [ -d "dist" ]; then
+          find dist -name "*.map" -delete
+          echo "Source maps removed"
+        fi
+    
+    - name: Create zip package
+      run: |
+        if [ -d "dist" ]; then
+          cd dist
+          zip -r ../Angular_App.zip . -x "*.map"
+          cd ..
+          echo "Package created successfully"
+          echo "Package size: $(du -sh Angular_App.zip)"
+        else
+          echo "Dist directory not found!"
+          exit 1
+        fi
+    
+    - name: Get current timestamp
+      id: timestamp
+      run: echo "timestamp=$(date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_OUTPUT
+    
+    - name: Get package version
+      id: package_version
+      run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: "v${{ steps.package_version.outputs.version }}-${{ steps.timestamp.outputs.timestamp }}"
+        name: "Angular App v${{ steps.package_version.outputs.version }} - ${{ steps.timestamp.outputs.timestamp }}"
+        body: |
+          🚀 Angular 應用程式自動建置版本
+          
+          **版本**: v${{ steps.package_version.outputs.version }}
+          **建置時間**: ${{ steps.timestamp.outputs.timestamp }}
+          **提交**: ${{ github.sha }}
+          **分支**: ${{ github.ref_name }}
+          **建置者**: ${{ github.actor }}
+          
+          📦 這個版本包含了完整的建置檔案，可以直接部署到靜態網站伺服器。
+        files: ./Angular_App.zip
+        make_latest: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

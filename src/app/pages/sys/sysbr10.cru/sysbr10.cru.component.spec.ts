@@ -1,6 +1,6 @@
+import { SYSBR10CRUComponent } from './sysbr10.cru.component';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SYSBR10CRUComponent } from './SYSBR10.cru.component';
 
 describe('SYSBR10CRUComponent', () => {
   let component: SYSBR10CRUComponent;
@@ -10,7 +10,7 @@ describe('SYSBR10CRUComponent', () => {
     await TestBed.configureTestingModule({
       imports: [SYSBR10CRUComponent]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(SYSBR10CRUComponent);
     component = fixture.componentInstance;

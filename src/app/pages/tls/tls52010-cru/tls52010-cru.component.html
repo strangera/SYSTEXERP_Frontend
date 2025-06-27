@@ -6,65 +6,53 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="採購單號" controlName="purchaseOrder"
-            [control]="dataForm.controls.purchaseOrder" [submitted]="submitted">
-          </app-input-number>
-        </div>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="採購單號" controlName="PO_No"
+          [control]="dataForm.controls.PO_No" [submitted]="submitted" />
       </div>
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="廠商編號" controlName="vendorID" [options]="vendorIDOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.vendorID" [submitted]="submitted">
-          </app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="品牌編號" controlName="brandID" [options]="brandIDOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.brandID" [submitted]="submitted">
-          </app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="倉別" controlName="storage" [options]="storageOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.storage" [submitted]="submitted">
-          </app-dropdown>
-        </div>
+        <app-dropdown
+          [ngClass]="dataForm.controls.VEN_No.value ? 'col-12 md:col-6 lg:col-2' : 'col-12 md:col-6 lg:col-4'"
+          label="廠商編號" controlName="VEN_No" [options]="vendorOptions" optionLabel="Name" optionValue="No"
+          [control]="dataForm.controls.VEN_No" [submitted]="submitted" />
+        <app-input-text *ngIf="dataForm.controls.VEN_No.value" class="col-12 md:col-6 lg:col-2" label="廠商簡稱"
+          controlName="vendorShortName" [control]="dataForm.controls.vendorShortName" [submitted]="submitted" />
+
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="品牌編號" controlName="LOGO_No" [options]="brandOptions"
+          optionLabel="Name" optionValue="No" [control]="dataForm.controls.LOGO_No" [submitted]="submitted" />
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="剩餘預算金額" controlName="remainingBudgetAmount"
+          [control]="dataForm.controls.remainingBudgetAmount" [useGrouping]="true" [minFractionDigits]="0"
+          [maxFractionDigits]="2" [submitted]="submitted" />
+
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="倉別" controlName="HOS_No" [options]="warehouseOptions"
+          optionLabel="Name" optionValue="No" [control]="dataForm.controls.HOS_No" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="採購金額(含稅)" controlName="PO_TotalBuyAmt"
+          [control]="dataForm.controls.PO_TotalBuyAmt" [useGrouping]="true" [minFractionDigits]="0"
+          [maxFractionDigits]="2" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="採購稅額" controlName="PO_TotalBuyTax"
+          [control]="dataForm.controls.PO_TotalBuyTax" [useGrouping]="true" [minFractionDigits]="0"
+          [maxFractionDigits]="2" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="採購淨額(不含稅)" controlName="PO_TotalBuyNet"
+          [control]="dataForm.controls.PO_TotalBuyNet" [useGrouping]="true" [minFractionDigits]="0"
+          [maxFractionDigits]="2" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="銷售總金額" controlName="PO_TotalSaleAmt"
+          [control]="dataForm.controls.PO_TotalSaleAmt" [useGrouping]="true" [minFractionDigits]="0"
+          [maxFractionDigits]="2" [submitted]="submitted" />
+
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人" controlName="APPLY_USR_No" [options]="userOptions"
+          optionLabel="user_Name" optionValue="user_No" [control]="dataForm.controls.APPLY_USR_No"
+          [submitted]="submitted" />
+
+        <app-calendar class="col-12 md:col-6 lg:col-4" label="申請日期" controlName="APPLY_Date"
+          [control]="dataForm.controls.APPLY_Date" [submitted]="submitted" />
+
+        <app-input-textarea class="col-12" label="採購單說明" controlName="PO_Remark" [control]="dataForm.controls.PO_Remark"
+          [submitted]="submitted" />
       </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="採購金額" controlName="cost" [control]="dataForm.controls.cost" [submitted]="submitted">
-          </app-input-number>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="稅額" controlName="tax" [control]="dataForm.controls.tax" [submitted]="submitted">
-          </app-input-number>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="合計金額" controlName="totalCost" [control]="dataForm.controls.totalCost"
-            [submitted]="submitted">
-          </app-input-number>
-        </div>
-      </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="申請人" controlName="applicant" [control]="dataForm.controls.applicant"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.applicantdate"
-            [submitted]="submitted">
-          </app-calendar>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="售價總計" controlName="money" [control]="dataForm.controls.totalSales"
-            [submitted]="submitted">
-          </app-input-number>
-        </div>
-      </div>
-      <hr>
-      <app-editor-text label="採購單說明" controlName="editortext" [control]="dataForm.controls.editortext"
-        [style]="{ height: '100px' }" [submitted]="submitted">
-      </app-editor-text>
+
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>

@@ -1,6 +1,5 @@
+import { SYSBR10Component } from './sysbr10.component';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
-import { SYSBR10Component } from './SYSBR10.component';
 
 describe('SYSBR10Component', () => {
   let component: SYSBR10Component;
@@ -10,7 +9,7 @@ describe('SYSBR10Component', () => {
     await TestBed.configureTestingModule({
       imports: [SYSBR10Component]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(SYSBR10Component);
     component = fixture.componentInstance;

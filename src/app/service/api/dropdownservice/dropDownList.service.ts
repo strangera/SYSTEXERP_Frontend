@@ -8,6 +8,7 @@ import { ApiResponse } from '../../system/auth.service'; // 假設 ApiResponse �
 export interface IDropdownItem {
   No: string;
   Name: string;
+  ShortName: string;
 }
 
 // 針對 querySYS3100_tree_DropDownList 的資料結構
