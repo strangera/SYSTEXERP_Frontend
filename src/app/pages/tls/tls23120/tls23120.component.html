@@ -137,7 +137,7 @@
     (detail)="onDetail($event)"
     [showManage]="false"
     [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); "
   ></app-table>
 </div>
 <p-dialog header="限制筆數" [(visible)]="showPageSizeDialog" [modal]="true" [closable]="false" [style]="{ width: '300px' }">

@@ -26,6 +26,10 @@
       class="p-button-sm p-button-secondary"></button>
     <button pButton type="button" icon="pi pi-arrow-left" label="回上頁" class="p-button-sm p-button-secondary"
       (click)="goBack()"></button>
+     <div class="flex items-center gap-2" *ngIf="!mergedView">
+  <p-inputSwitch [(ngModel)]="showGroupedBody" (ngModelChange)="onToggleGroupedBody()" />
+  <label class="text-sm">顯示資料列</label>
+</div>
   </div>
 </div>
 
@@ -34,27 +38,62 @@
   <!-- ✅ 分群顯示區 -->
   <div *ngIf="!mergedView" class="grouped-view">
     <div *ngFor="let group of groupedData; let i = index" class="report-table-wrapper mb-5">
-      <!-- 群組標題 -->
-      <div *ngIf="group[0]?.__groupKey" class="font-bold text-base mb-2 text-blue-700">
-        {{ groupByLabel || groupByField }}：{{ group[0].__groupKey }}
-      </div>
+  <!-- ✅ 報表標題與資料區間 -->
+  <div class="mb-2 text-sm text-gray-600 font-medium">
+ 
+    <div>
+  {{ dateRangeLabel }}：
+  {{ dateStart | date: 'yyyy/MM/dd' }} ~ {{ dateEnd | date: 'yyyy/MM/dd' }}
+</div>
+   
+  </div>
+
+  <!-- 群組標題（如有） -->
+<div *ngIf="group[0]?.__groupKey"
+     class="mb-2 text-blue-700 font-bold text-base"
+     (click)="toggleGroupBody(group[0].__groupKey)">
+  {{ groupByLabel || groupByField }}：{{ group[0].__groupKey }}
+</div>
+
 
       <!-- 群組資料表 -->
-      <p-table [value]="group" [columns]="selectedColumns" [resizableColumns]="true" [paginator]="false" [styleClass]="
-          'p-datatable-sm p-datatable-striped p-datatable-gridlines'
-        ">
-        <ng-template pTemplate="header" let-columns>
-          <tr>
-            <th *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style"
-              [pSortableColumn]="col.field !== '__index' ? col.field : undefined">
-              {{ col.header }}
-              <p-sortIcon *ngIf="col.field !== '__index'" [field]="col.field" />
-            </th>
-          </tr>
-        </ng-template>
+<p-table [value]="group"
+         [columns]="selectedColumns"
+         [resizableColumns]="true"
+         [paginator]="false"
+         [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'">
+<ng-template pTemplate="header">
+  <tr>
+    <th *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style"
+        [pSortableColumn]="col.field !== '__index' ? col.field : undefined">
+      <ng-container *ngIf="col.field === '__index'; else normalHeader">
+        <!-- ⬅️ 統一使用 group[0].__groupKey 為控制鍵 -->
+        <i
+          class="pi cursor-pointer mr-1"
+          [ngClass]="{
+            'pi-chevron-down': groupBodyExpanded[group[0]?.__groupKey],
+            'pi-chevron-right': !groupBodyExpanded[group[0]?.__groupKey]
+          }"
+          (click)="toggleGroupBody(group[0]?.__groupKey)"
+        ></i>
+        {{ col.header }}
+      </ng-container>
+      <ng-template #normalHeader>
+        {{ col.header }}
+        <p-sortIcon *ngIf="col.field !== '__index'" [field]="col.field" />
+      </ng-template>
+    </th>
+  </tr>
+</ng-template>
 
-        <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
-          <tr>
+
+<ng-template
+  pTemplate="body"
+  let-rowData
+  let-rowIndex="rowIndex"
+>
+<tr *ngIf="groupBodyExpanded[group[0].__groupKey]">
+
             <td *ngFor="let col of selectedColumns" [ngClass]="col.style" class="text-center">
               <ng-container *ngIf="col.field === '__index'">
                 {{ getRowIndex(i, rowIndex) }}
@@ -96,18 +135,20 @@
 <div *ngIf="mergedView" class="merged-view">
   <div *ngFor="let group of mergedPagedGroups; let groupIndex = index" class="mb-5">
     <!-- p-table 加上 #dt 作為展開控制參照 -->
-    <p-table
-      #dt
-      [value]="group"
-      [columns]="selectedColumns"
-      [resizableColumns]="true"
-      [paginator]="false"
-      [customSort]="true"
-      (sort)="onTableSort($event)"
-      [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'"
-      [dataKey]="dataKey"
-      [rowExpandMode]="'single'"
-    >
+<p-table
+  #dt
+  [value]="group"
+  [columns]="selectedColumns"
+  [resizableColumns]="true"
+  [paginator]="false"
+  [customSort]="true"
+  scrollable="true"
+  scrollHeight="500px"
+  (sort)="onTableSort($event)"
+  [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'"
+  [dataKey]="dataKey"
+  [rowExpandMode]="'single'"
+>
       <!-- 📌 表頭區 -->
       <ng-template pTemplate="header">
         <tr>

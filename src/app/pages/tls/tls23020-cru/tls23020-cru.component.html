@@ -1,4 +1,10 @@
-<!-- 🔁 用 DisplayMode 判斷模式，不用 showSummaryMode -->
+
+<div class="card">
+  <!-- 上方功能列 -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+
 <ng-container *ngIf="displayMode === 'Report'">
   <!-- 明細表 -->
   <app-report-table-group
@@ -28,60 +34,3 @@
   </div>
 </ng-container>
 
-<ng-container *ngIf="displayMode === 'SummaryReport'">
-  <!-- 彙總表 -->
-  <div class="space-x-2 mb-2">
-    <button pButton type="button" label="回查詢頁" icon="pi pi-arrow-left"
-      class="p-button-sm p-button-secondary" (click)="goToQueryPage()"></button>
-
-    <button pButton type="button" label="匯出 PDF" icon="pi pi-file-pdf"
-      class="p-button-sm p-button-danger" (click)="exportSummaryPDF()"></button>
-
-    <button pButton type="button" label="匯出 Excel" icon="pi pi-file-excel"
-      class="p-button-sm p-button-success" (click)="exportSummaryExcel()"></button>
-  </div>
-
-  <p-table [value]="summaryTableData"
-    class="p-datatable-sm p-datatable-striped p-datatable-gridlines w-full mt-4">
-
-    <ng-template pTemplate="header">
-      <tr>
-        <th>銷售日期起</th>
-        <th>銷售日期迄</th>
-        <th>專櫃編號</th>
-        <th>櫃位名稱</th>
-        <th class="text-right">發票總金額</th>
-        <th class="text-right">未稅(免稅)金額</th>
-        <th class="text-right">稅額</th>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="body" let-row>
-      <tr>
-        <td>{{ row.dateStart }}</td>
-        <td>{{ row.dateEnd }}</td>
-        <td>{{ row.tlt_no }}</td>
-        <td>{{ row.tlt_name }}</td>
-        <td class="text-right">{{ row.sum?.toLocaleString() || '0' }}</td>
-        <td class="text-right">{{ row.TXN_Net?.toLocaleString() || '0' }}</td>
-        <td class="text-right">{{ row.TXN_Tax?.toLocaleString() || '0' }}</td>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="footer">
-      <tr>
-        <td colspan="4" class="text-right font-semibold">總計</td>
-        <td class="text-right font-semibold">{{ totalSum.toLocaleString() }}</td>
-        <td class="text-right font-semibold">{{ netTotalSum.toLocaleString() }}</td>
-        <td class="text-right font-semibold">{{ taxTotalSum.toLocaleString() }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
-
-  <div class="mt-2 text-sm font-semibold text-blue-800">
-    發票總金額合計：{{ totalSum.toLocaleString() }}
-  </div>
-  <div class="text-sm font-semibold text-blue-800">
-    已開發票金額合計：{{ invoiceSum.toLocaleString() }}
-  </div>
-</ng-container>
