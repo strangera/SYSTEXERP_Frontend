@@ -52,6 +52,7 @@ export interface PluLogo {
   'LOGO_Remark': string;
   'PLU_OrderPrcRate': number; // 標準進貨折數 預設100
   'HOS_No': string;
+  'HOS_NAME': string;
   'VEN_No': string;
 
   'CRT_Date': Date;
