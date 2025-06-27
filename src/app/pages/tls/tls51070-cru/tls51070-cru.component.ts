@@ -62,7 +62,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_Reserve3: ['', [Validators.maxLength(400)]], // 系列
 
     // 商品資訊 顯示畫面
-    LOGO_No: ['', [Validators.maxLength(4)]], // 品牌代碼 ---PLULOGO
+    LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌編號 ---PLULOGO
     PLU_SalePrc: [0, [Validators.required, Validators.maxLength(10)]], // 商品售價
     stock: [0, [Validators.maxLength(10)]], // 庫存量 讀POS2099 新增固定0 ---未確認---
     PLU_OrderPrc: [0, [Validators.required, Validators.maxLength(10)]], // 標準進價 商品售價＊進貨折數/1.05 ，計算到小數點以下2位，必填 (不可編輯 新增遵循此規則)
@@ -130,7 +130,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_MagNo: '',
     PLU_No: '', // 國際條碼
   };
-  // 預設 POS2020 新項目模板
+  // 預設 POS2005 新項目模板
   createDefaultNew2005(pLU_MagNo: string) {
     this.defaultNew2005 = {
       PLU_MagNo: pLU_MagNo,
@@ -165,14 +165,14 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // 展開式表格的載入狀態
   expand2020Loading = false;
 
-  // 預設 POS2020 新項目模板
-  createDefaultNew2020(pLU_MagNo: string) {
+  // 預設 POS2020 新項目模板 (最後進價=POS2004的標準進價PLU_OrderPrc)
+  createDefaultNew2020(pLU_MagNo: string, pLU_OrderPrc: number) {
     this.defaultNew2020 = {
       id: 0,
       PLU_MagNo: pLU_MagNo,
       VEN_No: '',
       STO_No: '10',
-      PLU_OrderPrc: 0,
+      PLU_OrderPrc: pLU_OrderPrc,
 
       PLU_Purchase: '1',
       PLU_TransType: '1',
@@ -215,7 +215,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     }
     this.dataForm.get('PLU_SafeQty')?.disable();  // 安全存量
     this.dataForm.get('PLU_OrderPrc')?.disable();  // 標準進價
-    this.dataForm.get('PLU_OrderPrc')?.disable();  // 標準進價
+    this.dataForm.get('stock')?.disable();  // 庫存量
     this.dataForm.get('PLU_OrderPrcRate')?.disable();  // 進價折數
 
     //國際條碼 新增可空白、其他狀況必填
@@ -236,8 +236,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       //查詢明細檔案 (編輯模式)
       console.log('編輯模式，讀取表單', this.dataForm.value);
 
-      //讀取明細檔
-      this.loadDetail(this.dataForm.get('PLU_MagNo')?.value || '');
+      //讀取明細檔 並載入預設值
+      this.loadDetail(this.dataForm.get('PLU_MagNo')?.value || '', this.dataForm.get('PLU_OrderPrcRate')?.value || 0);
     }
 
     // 監聽 大分類 是否為''
@@ -461,11 +461,20 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   //複製商品管理編號(pluMagno) 到 國際條碼(pluNo)
   //新增時可選擇pluNo與pluMagno相同，此情況pluNo可為''
-  setNoToMagNo() {
+  copyNoToMagNo() {
     const pluMagNo = this.dataForm.get('PLU_MagNo')?.value || '';
     if (pluMagNo !== '') {
       this.dataForm.get('PLU_No')?.setValue(pluMagNo);
-      console.log('國際條碼已複製', pluMagNo);
+      this.messageService.infoBubble('已複製商品管理編號');
+    }
+  }
+
+  //複製商品中文名稱(PLU_Name) 到 標籤名稱(PLU_Lable)
+  copyPLU_NameToPLU_Lable() {
+    const pluName = this.dataForm.get('PLU_Name')?.value || '';
+    if (pluName !== '') {
+      this.dataForm.get('PLU_Lable')?.setValue(pluName);
+      this.messageService.infoBubble('已複製商品中文名稱');
     }
   }
 
@@ -566,9 +575,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   }
 
   //讀取明細檔案
-  loadDetail(pLU_MagNo: string) {
+  loadDetail(pLU_MagNo: string, pLU_OrderPrc: number) {
     if (pLU_MagNo == '') {
-      this.messageService.errorBubble('錯誤: 讀取明細為空');
+      this.messageService.infoBubble('商品管理碼為空，不載入明細檔');
     } else {
       this.tls51070Service.queryTLS51070_Detail({ 'PLU_MagNo': pLU_MagNo }).subscribe((response) => {
         // this.img1001Detail = response.Data[0].IMG1001Detail.map((item: { IMG_Path: string; IMG_File: File; }) => ({ ...item, IMG_Path: `${environment.ApiUrl}/${item.IMG_Path.replace('~', '')}/${item.IMG_File}` }));
@@ -590,7 +599,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
         //建立項目模板
         this.createDefaultNew2005(pLU_MagNo);
-        this.createDefaultNew2020(pLU_MagNo);
+        this.createDefaultNew2020(pLU_MagNo, pLU_OrderPrc);
 
         console.log('POS2005Data', this.POS2005Data);
         console.log('POS2020Data', this.POS2020Data);
