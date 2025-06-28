@@ -15,11 +15,21 @@ import { NotificationMessageComponent } from './shared/component/notification-me
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
-import { SuccessInterceptor } from './interceptors/successinterceptor.service';
+// import { SuccessInterceptor } from './interceptors/successinterceptor.service';
 import { DateToISOStringInterceptor } from './interceptors/dateToISOStringInterceptor.interceptor';
+import { JwtModule } from '@auth0/angular-jwt';
+import { environment } from '../environments/environment';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
+}
+
+export function tokenGetter() {
+  const currentUser = localStorage.getItem('UserInfo');
+  if (currentUser) {
+    return JSON.parse(currentUser).AccessToken;
+  }
+  return null;
 }
 
 @NgModule({
@@ -39,6 +49,13 @@ export function HttpLoaderFactory(http: HttpClient) {
         provide: TranslateLoader,
         useFactory: HttpLoaderFactory,
         deps: [HttpClient]
+      }
+    }),
+    JwtModule.forRoot({ // 配置 JwtModule，用於 AuthService 中的 isTokenExpired
+      config: {
+        tokenGetter: tokenGetter,
+        allowedDomains: [`${environment.ApiUrl}`], // 你的後端 API 網域
+        disallowedRoutes: [`${environment.ApiUrl}/login`], // 登入 API 不需要帶 Token
       }
     })
   ],

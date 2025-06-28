@@ -1,12 +1,6 @@
 // app/interceptors/successinterceptor.service.ts
 import { Injectable } from '@angular/core';
-import {
-  HttpEvent,
-  HttpHandler,
-  HttpInterceptor,
-  HttpRequest,
-  HttpResponse
-} from '@angular/common/http';
+import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpResponse } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { NotificationService } from '../shared/component/notification-message/notification.service';
 
