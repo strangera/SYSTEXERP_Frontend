@@ -26,7 +26,7 @@ export const routes: Routes = [
   //    然後再由 PagesModule 內部的子路由處理。
   //    PagesModule 的根路由 (path: '') 本身也應該被 AuthGuard 守護。
   {
-    path: '', // 匹配所有其他路徑，作為 PagesModule 的入口
+    path: 'account', // 匹配所有其他路徑，作為 PagesModule 的入口
     loadChildren: () => import('./pages/pages.module').then((m) => m.PagesModule),
     canActivate: [AuthGuard], // 守護 PagesModule 及其所有子路由
   },

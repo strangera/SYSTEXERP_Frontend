@@ -9,6 +9,7 @@ export interface IDropdownItem {
   No: string;
   Name: string;
   ShortName?: string;
+  VEN_No?: string;
 }
 
 // 針對 querySYS3100_tree_DropDownList 的資料結構

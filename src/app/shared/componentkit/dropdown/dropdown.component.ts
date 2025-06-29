@@ -36,7 +36,7 @@ export class DropdownComponent extends BasicKitComponent implements OnInit, OnCh
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['options']) {
+    if (changes['options'] && changes['options'].currentValue.length > 0) {
       this.loading = false;
     }
   }

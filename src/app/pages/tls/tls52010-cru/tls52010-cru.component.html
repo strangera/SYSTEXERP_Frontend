@@ -12,7 +12,7 @@
       <div class="grid p-fluid">
         <app-dropdown
           [ngClass]="dataForm.controls.VEN_No.value ? 'col-12 md:col-6 lg:col-2' : 'col-12 md:col-12 lg:col-4'"
-          label="廠商編號" controlName="VEN_No" [options]="vendorOptions" optionLabel="label" optionValue="No"
+          label="廠商編號" controlName="VEN_No" [options]="vendorOptions" optionLabel="label" optionValue="VEN_No"
           [control]="dataForm.controls.VEN_No" [submitted]="submitted" />
         <app-input-text *ngIf="dataForm.controls.VEN_No.value" class="col-12 md:col-6 lg:col-2" label="廠商簡稱"
           controlName="vendorShortName" [control]="dataForm.controls.vendorShortName" [submitted]="submitted" />
@@ -26,23 +26,23 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="倉別" controlName="HOS_No" [options]="warehouseOptions"
           optionLabel="Name" optionValue="No" [control]="dataForm.controls.HOS_No" [submitted]="submitted" />
 
-        <app-input-number class="col-12 md:col-6 lg:col-4" label="採購金額" controlName="PO_TotalBuyAmt"
-          [control]="dataForm.controls.PO_TotalBuyAmt" [useGrouping]="true" [minFractionDigits]="0"
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="採購金額" controlName="PO_TotalBuyNet"
+          [control]="dataForm.controls.PO_TotalBuyNet" [useGrouping]="true" [minFractionDigits]="0"
           [maxFractionDigits]="2" [submitted]="submitted" />
 
         <app-input-number class="col-12 md:col-6 lg:col-4" label="稅額" controlName="PO_TotalBuyTax"
           [control]="dataForm.controls.PO_TotalBuyTax" [useGrouping]="true" [minFractionDigits]="0"
           [maxFractionDigits]="2" [submitted]="submitted" />
 
-        <app-input-number class="col-12 md:col-6 lg:col-4" label="合計金額" controlName="PO_TotalBuyNet"
-          [control]="dataForm.controls.PO_TotalBuyNet" [useGrouping]="true" [minFractionDigits]="0"
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="合計金額" controlName="PO_TotalBuyAmt"
+          [control]="dataForm.controls.PO_TotalBuyAmt" [useGrouping]="true" [minFractionDigits]="0"
           [maxFractionDigits]="2" [submitted]="submitted" />
 
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人" controlName="APPLY_USR_No" [options]="userOptions"
           optionLabel="user_Name" optionValue="user_No" [control]="dataForm.controls.APPLY_USR_No"
           [submitted]="submitted" />
 
-        <app-calendar class="col-12 md:col-6 lg:col-4" label="申請日期" controlName="APPLY_Date"
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateTimeOne" label="申請日期" controlName="APPLY_Date"
           [control]="dataForm.controls.APPLY_Date" [submitted]="submitted" />
 
         <app-input-number class="col-12 md:col-6 lg:col-4" label="售價總計" controlName="PO_TotalSaleAmt"
@@ -53,10 +53,11 @@
           [submitted]="submitted" />
       </div>
 
-      <app-table [columns]="columns" [data]="data" [selectedItems]="selectedItems" [showCheckBox]="true"
-        (selectionChange)="selectedItems = $event" [showEdit]="false" [showDetail]="false" [showInsert]="true"
-        (insert)="dialogVisible = true" [isRowSelectable]="isRowSelectable.bind(this)"
-        [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true" />
+      <app-table dataKey="PLU_MagNo" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
+        [showCheckBox]="true" (selectionChange)="selectedItems = $event" [showEdit]="false" [showDetail]="false"
+        [showInsert]="true" (insert)="dialogVisible = true" [showRowEdit]="true" (delete)="onDelete($event)"
+        [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true"
+        (rowEditSave)="onRowEditSave($event)" />
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" />
@@ -72,9 +73,7 @@
     <div class="grid p-fluid">
       <app-input-text class="col-12 col-6 lg:col-4" label="商品管理編號" controlName="PLU_MagNo"
         [control]="dialogQueryForm.controls.PLU_MagNo" />
-    </div>
-    <div class="grid p-fluid">
-      <app-input-text class="col-12 col-6 lg:col-4" label="商品名稱" controlName="PLU_Name"
+      <app-input-text class="col-12 col-6 lg:col-8" label="商品名稱" controlName="PLU_Name"
         [control]="dialogQueryForm.controls.PLU_Name" />
     </div>
     <div class="grid p-fluid">
@@ -90,8 +89,9 @@
       <app-button btnType="query" [loading]="dialogLoading"></app-button>
     </div>
   </form>
-  <app-table tableKey="fin11200DialogTable" dataKey="ECR_No" [data]="dialogData" [columns]="columns"
-    [selectedItems]="selectedItemsDialog" (selectionChange)="selectedItemsDialog = $event" [showHeader]="false"
-    [showManage]="false" [showCheckBox]="true">
+  <hr />
+  <app-table tableKey="fin11200DialogTable" dataKey="PLU_MagNo" [data]="dialogData" [columns]="dialogColumns"
+    [showDelete]="false" [selectedItems]="selectedItemsDialog" (selectionChange)="selectedItemsDialog = $event"
+    [showHeader]="false" [showManage]="false" [showCheckBox]="true" [isRowSelectable]="isRowSelectable.bind(this)">
   </app-table>
 </app-dialog>

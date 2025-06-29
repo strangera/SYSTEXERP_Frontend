@@ -49,7 +49,7 @@ export class BasicQueryPageComponent<T> {
   canPerformAction(action: string): boolean {
     return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: T, pageroute?: string) {
+  navigateWithState(crudstatus: CRUDStatus, rowdata?: T) {
     const extras: NavigationExtras = {
       state: {
         crudstatus: crudstatus,
@@ -57,7 +57,7 @@ export class BasicQueryPageComponent<T> {
         fromRoute: this.router.url, // 加入 fromRoute 並設定為目前頁面的 URL
       },
     };
-    this.router.navigate([pageroute || this.cruPage], extras);
+    this.router.navigate([`account/${this.cruPage}`], extras);
   }
   // 移動路由
   onCreate() {
