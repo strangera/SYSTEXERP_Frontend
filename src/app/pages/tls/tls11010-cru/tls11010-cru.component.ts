@@ -5,7 +5,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { HttpClient } from '@angular/common/http';
-import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 
 @Component({
   selector: 'app-tls11010-cru',

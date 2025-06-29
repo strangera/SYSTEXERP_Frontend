@@ -1,14 +1,16 @@
+
 import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { TLS23050Service } from '../../../service/API/tls/tls23050.service';
+import { TLS23050Service } from '../../../service/api/tls/tls23050.service';
 import { TypeService } from '../../../service/basic/type.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { FloorService } from '../../../service/basic/floor.service';
-import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
-
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { catchError, timeout } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-tls23050',
@@ -17,21 +19,198 @@ import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
 })
 export class TLS23050Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],  // 銷售日期起
-    TXN_DateEnd: [new Date(), [Validators.required]],    // 銷售日期迄
-    rece_yn: [''],                                       // 是否收銀
-    // ECR_No_Start: [''],                                  // 收銀機號起
-    // ECR_No_End: [''],                                    // 收銀機號迄
-    tlt_building: [''],                                  // 樓層建物
-    tlt_floor: [''],                                     // 樓層編號
-    org_id: [''],
-    ECR_No: [''],
-    ...createPaginationConfig([{ field: 'TXN_DateStart', order: 1 }])
+    TXN_DateStart: [new Date('2020-01-01'), [Validators.required]],
+    TXN_DateEnd: [new Date(), [Validators.required]],
+    rece_yn: [null],
+    tlt_building: [],
+    tlt_floor: [],
+    org_id: [],
+    ECR_No: [],
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }])
   });
-
 
   data: any[] = [];
   totalRecords = 0;
+  showPageSizeDialog = false;
+  customPageSize = 1000;
+
+  WhetherOptions: any[] = [];
+  typeOptions: any[] = [];
+  ECRNoOptions: any[] = [];
+  floorOptions: any[] = [];
+  BUILDING_NO_Options: any[] = [];
+  OrganizationCodeOptions: any[] = [];
+
+  constructor(
+    private tls23050Service: TLS23050Service,
+    private whetherService: WhetherService,
+    private typeService: TypeService,
+    private floorService: FloorService,
+    private ECRNoService: ECRNoService,
+    private tls11010Service: Tls11010Service
+  ) {
+    super();
+  }
+
+  ngOnInit(): void {
+    this.initializePage('TLS23050', '', this.queryForm, (form) => this.onSubmit(form));
+
+    this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
+    this.typeService.getTypeOptions().subscribe(data => this.typeOptions = data);
+    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
+
+    this.tls11010Service.getBuildingOptions().subscribe(data => {
+      this.BUILDING_NO_Options = data;
+    });
+
+    this.tls11010Service.getOrgOptions().subscribe(data => {
+      this.OrganizationCodeOptions = data?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
+    });
+
+    this.ECRNoService.getECRNo().subscribe(data => {
+      this.ECRNoOptions = data?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
+    });
+  }
+
+  onSubmit(form: FormGroup): void {
+    this.submitted = true;
+    if (this.loading) return;
+
+    if (form.invalid) {
+      this.messageService.warnBubble('請確認欄位資料是否完整');
+      return;
+    }
+
+    this.handleSubmit(form, () => {
+      const payload = this.cleanFormPayload({ ...form.value });
+
+
+
+      this.loading = true;
+      this.messageService.blockUi();
+
+      this.tls23050Service.queryTLS23050(payload).pipe(
+        timeout(30000),
+        catchError(err => {
+          this.messageService.errorBubble('查詢失敗');
+          this.loading = false;
+          this.messageService.unblockUi();
+          return of({ Status: '9999', Data: [] });
+        })
+      ).subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            this.data = res.Data || [];
+            this.totalRecords = res.TotalCount || this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, payload);
+            this.messageService.successBubble('查詢成功');
+          } else {
+            this.data = [];
+            this.totalRecords = 0;
+            this.messageService.errorBubble('查詢失敗');
+          }
+        },
+        complete: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        }
+      });
+    });
+  }
+
+  goToReportMode(): void {
+    this.customPageSize = 1000;
+    this.showPageSizeDialog = true;
+  }
+
+  confirmPageSizeAndNavigate(): void {
+    this.submitted = true;
+    if (this.queryForm.invalid) {
+      this.messageService.warnBubble('請確認欄位資料是否完整');
+      this.queryForm.markAllAsTouched();
+      return;
+    }
+
+    const queryFormValue = this.cleanFormPayload({
+      ...this.queryForm.value,
+      pageSize: this.customPageSize
+    });
+
+    this.loading = true;
+    this.messageService.blockUi();
+
+    this.tls23050Service.queryTLS23050(queryFormValue).pipe(
+      timeout(30000),
+      catchError(err => {
+        this.messageService.errorBubble('查詢失敗');
+        this.loading = false;
+        this.messageService.unblockUi();
+        return of({ Status: '9999', Data: [] });
+      })
+    ).subscribe({
+      next: (res) => {
+        if (res.Status === '0000') {
+          const resultData = res.Data || [];
+
+          this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
+
+          // ✅ 導向 CRU 頁面
+          this.router.navigate(['/TLS/TLS23050CRU'], {
+            state: {
+              queryFormValue,
+              pageSize: this.customPageSize,
+              data: resultData
+            }
+          });
+
+          this.messageService.successBubble('查詢成功');
+        } else {
+          this.messageService.errorBubble('查詢失敗');
+        }
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
+        this.showPageSizeDialog = false;
+      }
+    });
+  }
+
+
+  private cleanFormPayload(payload: any): any {
+    for (const key in payload) {
+      const val = payload[key];
+      if (val === '' || val === null || (Array.isArray(val) && val.length === 0)) {
+        payload[key] = null;
+      }
+    }
+
+    return {
+      ...payload,
+      pageSize: payload.pageSize ?? 30,
+      pageIndex: (payload.pageIndex ?? 1) - 1,
+      Offset: 0,
+      OrderBy: '',
+      SortBy: payload.SortBy ?? [{ field: 'ECR_No', order: 1 }]
+    };
+  }
+
+  moneyFormat(value: number): string {
+    return value != null ? value.toLocaleString('en-US') : '0';
+  }
+
+  getLabelFromOptions(value: any, options: any[]): string {
+    const found = options?.find(opt => String(opt.value) === String(value));
+    return found ? found.label : value;
+  }
 
   columns: any[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
@@ -81,105 +260,4 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_ExchangeAmt', header: '換貨金額', visible: true, style: 'text-right', format: this.moneyFormat },
     { field: 'TXN_CancelAmt', header: '作廢金額', visible: true, style: 'text-right', format: this.moneyFormat }
   ];
-
-  moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0';
-  }
-
-
-  WhetherOptions: any[] = [];
-  typeOptions: any[] = [];
-  ECRNoOptions: any[] = []; // 收銀機號下拉選單
-  floorOptions: any[] = [];
-  BUILDING_NO_Options: any[] = [];
-  OrganizationCodeOptions: any[] = []
-
-  constructor(
-    private tls23050Service: TLS23050Service,
-    private whetherService: WhetherService,
-    private typeService: TypeService,
-    private floorService: FloorService,
-    private ECRNoService: ECRNoService,
-    private tls11010Service: Tls11010Service
-  ) {
-    super();
-  }
-
-  ngOnInit(): void {
-    this.initializePage('TLS23050', '', this.queryForm, (form) => this.onSubmit(form));
-    this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
-    this.typeService.getTypeOptions().subscribe(data => this.typeOptions = data);
-
-    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
-    this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
-    this.tls11010Service.getOrgOptions().subscribe((res) => {
-      this.OrganizationCodeOptions = res?.map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
-      })) || [];
-    });
-    this.ECRNoService.getECRNo().subscribe((res) => {
-      this.ECRNoOptions = res?.map((x: any) => ({
-        label: x.label,                                 // 給 table 用
-        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
-        value: x.value,
-      })) || [];
-    });
-
-
-  }
-
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (this.loading) return;
-
-    if (form.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      return;
-    }
-    const payload = { ...form.value };
-    // ✅ 將 'Y' / 'N' 轉成 true / false
-    if (payload.IsHaveTERM_No === 'Y') {
-      payload.IsHaveTERM_No = true;
-    } else if (payload.IsHaveTERM_No === 'N') {
-      payload.IsHaveTERM_No = false;
-    }
-    this.handleSubmit(form, () => {
-      const payload = { ...form.value };
-      Object.keys(payload).forEach(key => {
-        if (payload[key] === '') payload[key] = null;
-      });
-
-      this.tls23050Service.queryTLS23050(payload).subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.data = res.Data || [];
-            this.totalRecords = res.TotalCount || this.data.length;
-            this.queryStateService.setQueryState(this.ProgNo, payload);
-            this.messageService.successBubble('查詢成功');
-          } else {
-            this.data = [];
-            this.totalRecords = 0;
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        error: () => {
-          this.data = [];
-          this.totalRecords = 0;
-          this.loading = false;
-          this.messageService.errorBubble('查詢錯誤');
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        }
-      });
-    });
-  }
-
-  getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find(opt => String(opt.value) === String(value));
-    return found ? found.label : value;
-  }
 }

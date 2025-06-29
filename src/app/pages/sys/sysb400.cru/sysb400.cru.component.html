@@ -41,13 +41,22 @@
         *ngIf="dataForm.get('org_id')?.value !== '100000'"
       >
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <!-- <app-input-text
             label="上層組織階層代碼/名稱"
             controlName="p_level_id"
             [control]="dataForm.controls.p_level_id"
             [submitted]="submitted"
             [disabled]="true"
-          ></app-input-text>
+          ></app-input-text> -->
+          <app-dropdown
+            label="上層組織階層代碼/名稱"
+            controlName="p_level_id"
+            [options]="upgroup_Options"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.p_level_id"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
@@ -79,7 +88,7 @@
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         *ngIf="!isFormReadable"
       >
-        <app-button btnType="cancel"></app-button>
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>
     </form>

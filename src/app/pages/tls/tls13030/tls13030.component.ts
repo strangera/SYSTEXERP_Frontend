@@ -6,9 +6,9 @@ import { FloorService } from '../../../service/basic/floor.service';
 import { OperationStatusService } from '../../../service/basic/operation-status.service';
 import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
 import { DeductionService } from '../../../service/basic/deduction.service';
-import { TLS13030Service } from '../../../service/API/tls/tls13030.service';
+import { TLS13030Service } from '../../../service/api/tls/tls13030.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 @Component({

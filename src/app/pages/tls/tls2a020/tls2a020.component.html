@@ -3,82 +3,101 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar label="銷售日期" calendarType="dateOne" [control]="queryForm.controls.salesDate"
-              [submitted]="submitted"></app-calendar>
+            <app-calendar
+              label="銷售日期"
+              calendarType="dateOne"
+              [control]="queryForm.controls.salesDate"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="收銀機代號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="收銀機代號"
+              controlName="ECR_No"
+              [options]="ECRNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_No"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="樓層"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_floor"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="館別" [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="館別"
+              [options]="BUILDING_NO_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_building"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <div class="col-12 lg:col-8">
-            <app-radiobutton label="查詢條件" groupname="radioOption" [control]="queryForm.controls.radioOption"
-              [submitted]="submitted" [options]="[
-      { value: 'ECR', label: '收銀機號' },
-      { value: 'payTool', label: '支付工具' }
-    ]" (valueChange)="queryForm.controls.radioOption.setValue($event)">
-            </app-radiobutton>
+            <app-radiobutton
+              label="查詢條件"
+              groupname="radioOption"
+              [control]="queryForm.controls.radioOption"
+              [submitted]="submitted"
+              [options]="[
+                { value: 'ECR', label: '收銀機號' },
+                { value: 'payTool', label: '支付工具' },
+              ]"
+              (valueChange)="queryForm.controls.radioOption.setValue($event)"
+            ></app-radiobutton>
           </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-multi-select>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="館別" [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
-          </div>
-
         </div>
 
-
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
-
       </form>
-
     </p-accordionTab>
   </p-accordion>
 </div>
 
 <div class="card">
-  <app-table tableKey="TLS2A020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [showCheckBox]="true" dataKey="id"
-    [multiSortMeta]="[{ field: 'pendingApprovalRegisterCode', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
-    [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="false">
-  </app-table>
+  <app-table
+    tableKey="TLS2A020"
+    [data]="data"
+    [columns]="columns"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    [showCheckBox]="true"
+    dataKey="id"
+    [multiSortMeta]="[{ field: 'pendingApprovalRegisterCode', order: 1 }]"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [loading]="loading"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [showManage]="false"
+  ></app-table>
 </div>
-<!-- <p-dialog header="限制筆數" [(visible)]="showPageSizeDialog" [modal]="true" [closable]="false" [style]="{ width: '300px' }">
-  <div class="p-fluid">
-    <div class="field">
-      <label for="pageSize">限制筆數</label>
-      <input id="pageSize" type="number" pInputText [(ngModel)]="customPageSize" min="1" style="width: 100%" />
-    </div>
-  </div>
-
-  <ng-template pTemplate="footer">
-    <button type="button" pButton label="取消" class="p-button-text" (click)="showPageSizeDialog = false"></button>
-    <button type="button" pButton label="確定" (click)="confirmPageSizeAndNavigate()"></button>
-  </ng-template>
-</p-dialog> -->

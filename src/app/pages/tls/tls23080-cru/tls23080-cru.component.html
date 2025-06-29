@@ -1,1 +1,41 @@
-<p>tls23080-cru works!</p>
+<div class="card">
+  <!-- 上方功能列 -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+
+  <!-- 報表區塊 -->
+  <div class="card">
+    <app-report-table-group 
+      [columns]="columns"
+      [data]="data"
+      [subtotalFields]="[
+    'TXN_TotPayAmt',
+    'TXN_PayAmt10', 'TXN_PayAmt41', 'TXN_PayAmt42', 'TXN_PayAmt12',
+    'TXN_PayAmt81', 'TXN_PayAmt43', 'TXN_PayAmt44', 'TXN_PayAmt14',
+    'TXN_PayAmt82', 'TXN_PayAmt52', 'TXN_PayAmt20', 'TXN_PayAmt62',
+    'TXN_PayAmt77', 'TXN_PayAmt71', 'TXN_PayAmt30', 'TXN_PayAmt73',
+    'TXN_PayAmt72', 'TXN_PayAmt74', 'TXN_PayAmt75', 'TXN_PayAmt76',
+    'TXN_PayAmt24', 'TXN_PayAmt25', 'TXN_PayAmt07', 'TXN_PayAmt55',
+    'TXN_PayAmt83', 'TXN_PayAmt78', 'TXN_PayAmt79', 'TXN_PayAmt21',
+    'TXN_PayAmt53', 'TXN_PayAmt56', 'TXN_PayAmt57', 'TXN_PayAmt58',
+    'TXN_PayAmt59', 'TXN_PayAmt60', 'TXN_PayAmt22', 'TXN_PayAmt23',
+    'PreSale_Received', 'PreSale_Checkout',
+    'TXN_OverAmt', 'TXN_ReturnAmt', 'TXN_ExchangeAmt', 'TXN_CancelAmt','TXN_AgentAmt'
+  ]"
+      [enableGrouping]="false"             
+      [reportTitle]="'支付工具實收報表'"
+      [currentPage]="1"
+      [dateStart]="dateStart"
+      [dateEnd]="dateEnd"
+      [printedAt]="printedAt"
+      [showTotalOnly]="false"
+      [pdfSummaryText]="[]"
+      [defaultMergedView]="true"
+      [showExpandColumn]="true"
+      [detailFieldKeys]="['TXN_Date']"
+      [fetchDetailFn]="fetchDetailFn"
+      [detailColumns]="detailColumns">
+    </app-report-table-group>
+  </div>
+</div>

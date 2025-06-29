@@ -50,10 +50,10 @@ export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implem
     SYS_SrvUsrPwd: [''],
     SYS_SRVDDir: [''],
     SYS_SRVUDir: [''],
-    SYS_MyPOSDDir: [''],
-    SYS_MyPOSUDir: [''],
-    SYS_SRVDDirClt: [''],
-    SYS_SRVUDirClt: [''],
+    SYS_MyPOSDDir: ['/MyPOSDown'],
+    SYS_MyPOSUDir: ['/MyPOSUp'],
+    SYS_SRVDDirClt: ['/PosDown'],
+    SYS_SRVUDirClt: ['/PosUp'],
     CRT_USR_No: [''],
     CRT_USR_Name: [''],
     CRT_Date: [''],
@@ -88,7 +88,7 @@ export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implem
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const formValue = frm.getRawValue(); // ✅ 包含 disabled 欄位
+      const formValue = frm.getRawValue();
       const body = {
         ...formValue,
         SYS_StoreNo: this.userInfo?.SYS_StoreNo
@@ -124,7 +124,4 @@ export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implem
     this.dataForm.disable();
   }
 
-  // onCancel() {
-  //   this.router.navigate(['/TLS4000/TLS46010']);
-  // }
 }

@@ -22,12 +22,14 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @ViewChild('fileUpload') fileUpload!: FileUpload;                             // 檔案上傳 元件
   @Input() dataKey = 'ID';                                                      // table 資料key
   @Input() tableKey: string | undefined = undefined;                            // table 唯一標識 (必填)
+  @Input() apiUrl?: string;                                                     // table API URL (可選)
   @Input() title: string | undefined = undefined;                               // table 標題
   @Input() columns!: Column[];                                                  // table 欄位配置 (必填)
   selectedColumns!: Column[];                                                   // table 預設顯示欄位
   @Input() data: any[] = [];                                                    // table 資料 (必填)
   @Output() dataChange = new EventEmitter<any[]>();                             // table 資料改變 (事件)
   @Input() loading = false;                                                     // 是否顯示 loading
+
   // select 選擇Row相關
   @Input() showCheckBox = false;                                                // 是否顯示 checkbox
   @Input() selectionMode: 'multiple' | 'single' | null | undefined = 'multiple';// table 勾選 Mode (預設多選)
@@ -91,7 +93,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() showPaginator = true;                    // 是否顯示 分頁器
   @Input() totalRecords = 0;                        // 記錄總數
   totalPages = 0;                                   // 共幾頁數
-  rows = 30;                                        // 每頁顯示的行數
+  rows = 100;                                        // 每頁顯示的行數
   first = 0;                                        // 當前表格的起始索引
   pages: { label: string, value: number }[] = [];   // (右上)下拉選單 頁數選項
   selectedPage: number | null = 1;                  // (右上)下拉選單 當前選擇的頁數
@@ -99,8 +101,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>(); // Lazy 加載事件
   // 其他
   @Input() emptyMessage = '查無資料';                // table 無資料時顯示文字
-
-  @Input() showReportMode = true;                // 是否顯示報表模式切換按鈕
   @Input() showDelete = true;                    // 是否顯示刪除按鈕
   // 權限
   @Input() showSubtotal = false; // 是否顯示小計

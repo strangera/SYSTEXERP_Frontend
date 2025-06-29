@@ -8,7 +8,7 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
-            label="品牌代碼"
+            label="品牌編碼"
             controlName="LOGO_No"
             [control]="dataForm.controls.LOGO_No"
             [submitted]="submitted"
@@ -43,7 +43,7 @@
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
-            label="建議倉別"
+            label="建議倉別代碼/名稱"
             controlName="HOS_No"
             [options]="storageOptions"
             optionLabel="Label"
@@ -65,7 +65,7 @@
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         *ngIf="!isFormReadable"
       >
-        <app-button btnType="cancel"></app-button>
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>
     </form>

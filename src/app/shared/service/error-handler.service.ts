@@ -4,6 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment'; // 確保路徑正確
 import { NotificationService } from '../component/notification-message/notification.service'; // 確保路徑正確
+import { AuthService } from '../../service/system/auth.service';
 
 /**
  * 集中處理應用程式中的 HTTP 錯誤。
@@ -19,7 +20,8 @@ export class ErrorHandlerService {
 
   constructor(
     private router: Router,
-    private notificationService: NotificationService, // 建議變數名稱與服務名稱一致
+    private notificationService: NotificationService,
+    private authService: AuthService,
   ) { }
 
   /**
@@ -37,7 +39,7 @@ export class ErrorHandlerService {
     } else if (error.status === 401) {
       // 未經授權 (Unauthorized)：Token 過期、無效或缺少。導向登入頁面。
       userFriendlyMessage = '您的會話已過期或未經授權，請重新登入。';
-      this.router.navigate(['/login']);
+      this.authService.logout();
     } else if (error.status === 403) {
       // 禁止存取 (Forbidden)：有權限但無此操作權限。
       userFriendlyMessage = '您沒有執行此操作的權限。';
@@ -67,34 +69,28 @@ export class ErrorHandlerService {
     // 解除任何可能被加載中的 UI 阻擋 (例如進度條或遮罩)
     this.notificationService.unblockUi();
     // 將錯誤訊息記錄到 Session Storage (用於後續除錯或報錯)
+    // 記錄錯誤到 Session Storage
     try {
       const errorsString = sessionStorage.getItem(this.LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS);
-      // 安全地解析 JSON，如果為 null 或解析失敗則初始化為空陣列
       const errors = errorsString ? JSON.parse(errorsString) : [];
 
-      // 將新錯誤添加到列表開頭，並限制總數量，保留最新的 N 條錯誤
-      // 這裡假設我們只保留最新的 100 條錯誤日誌
       const MAX_ERROR_LOGS = 100;
       errors.unshift({
         datetime: new Date().toLocaleString(),
-        status: error.status, // 記錄 HTTP 狀態碼
+        status: error.status,
         message: userFriendlyMessage,
-        originalError: error.message // 記錄原始錯誤訊息，幫助追溯
+        originalError: error.message
       });
 
-      // 如果超出最大數量，移除最舊的錯誤
       if (errors.length > MAX_ERROR_LOGS) {
         errors.splice(MAX_ERROR_LOGS);
       }
-
       sessionStorage.setItem(this.LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS, JSON.stringify(errors));
     } catch (e) {
-      // 如果 Session Storage 操作本身出現錯誤 (如空間不足)，則只在控制台日誌
       console.error('Error logging to Session Storage:', e);
     }
 
-    // 重新拋出錯誤，讓訂閱 API 服務的組件或服務可以繼續處理錯誤，
-    // 例如，根據錯誤類型進行更細緻的 UI 調整或數據回滾。
-    return throwError(() => new Error(userFriendlyMessage)); // 建議拋出 Error 物件而非字串
+    // 重新拋出錯誤，讓訂閱者知道發生了錯誤
+    return throwError(() => new Error(userFriendlyMessage));
   }
 }

@@ -2,8 +2,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
+import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 
 interface SalesRecord {
@@ -23,10 +23,6 @@ interface SalesRecord {
 
 export class TLS2A020Component extends BasicQueryPageComponent<any> implements OnInit {
 
-  // 進度條、頁數設定
-  // progressValue = 0;
-  // showPageSizeDialog = false;
-  // customPageSize = 1000;
 
   // 表單
   queryForm = this.formBuilder.group({
@@ -41,12 +37,22 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
   });
 
   // 表格欄位
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'salesDate', header: '銷售日期', visible: true },
     { field: 'pendingApprovalRegisterCode', header: '未審核收銀機號', visible: true },
     { field: 'pendingApprovalPaymentTool', header: '未審核支付工具', visible: true },
-    { field: 'systemAmount', header: '系統金額', visible: true },
+    { field: 'systemAmount', header: '系統金額', visible: true, format: formatAmount },
     { field: 'receiptAmount', header: '實收金額', visible: true }
+  ];
+  data: SalesRecord[] = [
+    {
+      id: 1,
+      salesDate: '1',
+      pendingApprovalRegisterCode: '1',
+      pendingApprovalPaymentTool: '1',
+      systemAmount: 11111111111111,
+      receiptAmount: 1,
+    },
   ];
 
   // 選單資料
@@ -57,7 +63,6 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
   // 表格資料
   selectedItems: any[] = [];
   totalRecords = 0;
-  data: SalesRecord[] = [];
 
   constructor(
     private locationOptionsService: LocationOptionsService,
@@ -76,14 +81,26 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
     });
 
     this.locationOptionsService.getBuildingOptions().subscribe({
-      next: (res) => this.BUILDING_NO_Options = res,
+      next: (res) => {
+        this.BUILDING_NO_Options = res.map((item: any) => ({
+          label: item.name || item.BUILDING_NAME || item.label,  // 根據實際欄位調整
+          value: item.code || item.BUILDING_NO || item.value
+        }));
+      },
       error: () => this.messageService.errorBubble('載入館別選單失敗')
     });
 
+
     this.locationOptionsService.getFloorOptions().subscribe({
-      next: (res) => this.floorOptions = res,
+      next: (res) => {
+        this.floorOptions = res.map((item: any) => ({
+          label: item.name || item.FLOOR_NAME || item.label,
+          value: item.code || item.FLOOR_NO || item.value
+        }));
+      },
       error: () => this.messageService.errorBubble('載入樓層選單失敗')
     });
+
   }
 
   // 查詢功能

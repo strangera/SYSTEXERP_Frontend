@@ -4,7 +4,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption } from '../../../shared/models/sys/sysb000.module';
 import { POS2034 } from '../../../shared/models/tls/tls000.model';
-import { Tls51080Service } from '../../../service/API/tls/tls51080.service';
+import { Tls51080Service } from '../../../service/api/tls/tls51080.service';
 
 // 2.5.1.6 品牌設定作業  CRU
 @Component({
@@ -21,8 +21,8 @@ export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
     STO_No: [{ value: null, disabled: true }], // 公司編號/店號
     HOS_No: ['', [Validators.required, Validators.maxLength(10)]], // 倉庫代碼 STO_NO+HOS_NO唯一值
     HOS_NAME: ['', [Validators.required, Validators.maxLength(50)]], // 倉庫名稱
-    org_id: ['', [Validators.required, Validators.maxLength(20)]], // 組織代碼/所屬部門
-    building_no: ['', [Validators.maxLength(1)]], // 館別代碼
+    org_id: ['', [Validators.required, Validators.maxLength(20)]], // 部門編號/分店
+    building_no: ['', [Validators.required, Validators.maxLength(1)]], // 館別
     HOS_Remark: ['', [Validators.maxLength(100)]], // 備註說明
   });
   //
@@ -37,6 +37,13 @@ export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
   ngOnInit(): void {
     this.initializePage('TLS51080', this.dataForm);
     this.loadOptions();
+
+    console.log('讀取資料', this.dataForm.value);
+
+    //因此作業不可刪除，倉庫代碼 不可異動
+    if(this.crudstatus == CRUDStatus.Edit){
+      this.dataForm.get('HOS_No')?.disable();
+    }
   }
 
   onSubmit(frm: FormGroup) {
@@ -120,6 +127,8 @@ export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
             Name: item.Name,
             Label: item.No + '-' + item.Name,
           }));
+
+          console.log('館別',this.building_noOptions);
         });
 
 

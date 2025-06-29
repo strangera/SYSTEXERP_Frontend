@@ -23,7 +23,7 @@ import { TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from './tls13010.d
 
 // 業務服務
 import { ContractFlowService, WorkflowStep } from './services/contract-flow.service';
-import { TLS13010Service } from '../../../service/API/tls/tls13010.service';
+import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 
 // API 服務
 import { VendorService } from '../../../service/basic/vendor.service';

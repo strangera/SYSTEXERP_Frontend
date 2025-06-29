@@ -22,11 +22,11 @@ import { CooperationMethodService } from '../../../service/basic/cooperation-met
 import { CounterCategoryService } from '../../../service/basic/counter-category.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { BankOptionsService } from '../../../service/API/dropdownservice/bank-option.service';
+import { BankOptionsService } from '../../../service/api/dropdownservice/bank-option.service';
 import { AutoCompleteOption } from '../../../shared/componentkit/app-autocomplete/app-autocomplete.component';
 import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
-import { TLS13010Service } from '../../../service/API/tls/tls13010.service';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { CategoryItem, ContractInfo, LocationItem } from '../tls13010/tls13010.model';
 import { DropdownOption } from '../tls13010/tls13010.dropdown';
 

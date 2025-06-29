@@ -4,7 +4,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.module';
 import { PluLogo } from '../../../shared/models/tls/tls000.model';
-import { Tls51060Service } from '../../../service/API/tls/tls51060.service';
+import { Tls51060Service } from '../../../service/api/tls/tls51060.service';
 // Permissions
 // Shared
 
@@ -19,7 +19,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
   // 查詢
   queryForm = this.formBuilder.group({
     // PLULOGO  商品品牌設定檔
-    LOGO_No: ['', [Validators.maxLength(4)]], // 品牌代碼
+    LOGO_No: ['', [Validators.maxLength(4)]], // 品牌編碼
     LOGO_CH_NAME: ['', [Validators.maxLength(50)]], // 品牌中文名稱
     LOGO_EN_NAME: ['', [Validators.maxLength(100)]], // 品牌英文名稱
     LOGO_Remark: ['', [Validators.maxLength(100)]], // 備註說明
@@ -42,14 +42,8 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
     { field: 'LOGO_CH_NAME', header: '品牌中文名稱', visible: true },
     { field: 'LOGO_EN_NAME', header: '品牌英文名稱', visible: true },
     { field: 'PLU_OrderPrcRate', header: '標準進貨折數', visible: false },
-    {
-      field: 'HOS_No',
-      header: '建議倉別',
-      visible: true,
-      format: (value: string) =>
-        this.storageOptions.find((option) => option.No === value)?.Label ||
-        value,
-    },
+    { field: 'HOS_No', header: '建議倉別代碼', visible: true },
+    { field: 'HOS_NAME', header: '建議倉別名稱', visible: true },
     { field: 'VEN_No', header: '廠商編號', visible: false },
     { field: 'LOGO_Remark', header: '備註說明', visible: true }
   ];

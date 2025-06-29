@@ -8,10 +8,10 @@ import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
 import { TaxableService } from '../../../service/basic/taxable.service';
 import { DiscountService } from '../../../service/basic/discount.service';
 import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
-import { TLS23020Service } from '../../../service/API/tls/tls23020.service';
+import { TLS23020Service } from '../../../service/api/tls/tls23020.service';
 import { CommissionTypeService } from '../../../service/basic/commission-type.service';
 import { FloorService } from '../../../service/basic/floor.service';
-import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
@@ -34,9 +34,17 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
   netTotalSum = 0;
   taxTotalSum = 0;
   displayMode: 'SummaryReport' | 'Report' = 'SummaryReport';
-
-  columns = [
-    {
+  get columns() {
+  if (this.displayMode === 'SummaryReport') {
+    return [
+      { field: 'tlt_no', header: '專櫃編號' },
+      { field: 'tlt_name', header: '櫃位名稱' },
+      { field: 'TotalAmt', header: '總金額', style: 'text-right', format: this.moneyFormat },
+      { field: 'TotalTxn', header: '總交易筆數', style: 'text-right' }
+    ];
+  } else {
+    return [
+       {
       field: 'TXN_Date',
       header: '銷售日期',
       visible: true,
@@ -106,8 +114,12 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
       visible: true,
       format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions)
     },
-  ];
-
+    ];
+  }
+}
+  moneyFormat(value: number): string {
+    return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
+  }
 
   // 下拉選單選項
   taxableOptions: any[] = [];

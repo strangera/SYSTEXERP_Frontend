@@ -16,9 +16,9 @@ import { AnnouncementCategoryService } from './../../../service/basic/announceme
 import { UserStatusService } from './../../../service/basic/user-status.service';
 
 @Component({
-  selector: 'app-SYSBR10.cru',
-  templateUrl: './SYSBR10.cru.component.html',
-  styleUrl: './SYSBR10.cru.component.scss'
+  selector: 'app-sysbr10.cru',
+  templateUrl: './sysbr10.cru.component.html',
+  styleUrl: './sysbr10.cru.component.scss'
 })
 // 佈告欄管理作業 CRU
 export class SYSBR10CRUComponent extends BasicCrupageComponent implements OnInit {

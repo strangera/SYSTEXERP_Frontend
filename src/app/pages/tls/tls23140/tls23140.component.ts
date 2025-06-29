@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { TLS23140Service } from '../../../service/API/tls/tls23140.service';
+import { TLS23140Service } from '../../../service/api/tls/tls23140.service';
 import { TransactionMachineService } from '../../../service/basic/transaction-machine.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';

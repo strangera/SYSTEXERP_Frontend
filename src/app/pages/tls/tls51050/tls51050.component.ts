@@ -4,7 +4,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { option } from '../../../shared/models/sys/sysb000.module';
 import { PluUnit } from '../../../shared/models/tls/tls000.model';
-import { Tls51050Service } from '../../../service/API/tls/tls51050.service';
+import { Tls51050Service } from '../../../service/api/tls/tls51050.service';
 
 // 2.5.1.5  商品單位設定
 @Component({
@@ -19,7 +19,7 @@ export class TLS51050Component extends BasicQueryPageComponent<PluUnit>
     // PLUUNIT  商品單位設定檔
     UNIT_No: ['', [Validators.maxLength(2)]], // 單位代碼
     UNIT_NAME: ['', [Validators.maxLength(40)]], // 單位名稱
-    UNIT_Attribute: ['', [Validators.maxLength(1)]], // 單位屬性 1基本單位 2包裝單位
+    // UNIT_Attribute: ['', [Validators.maxLength(1)]], // 單位屬性 1基本單位 2包裝單位
     // CHILD_UNIT: ['', [Validators.maxLength(2)]], // 子項單位代號 --沒有使用
     // CHILD_QTY: [,[this.validationService.numberValidator]], // 子項單位數量 --沒有使用
 

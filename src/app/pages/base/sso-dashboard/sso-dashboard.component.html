@@ -1,10 +1,9 @@
 <div class="layout-wrapper" *ngIf="user">
   <div #appTopbarDiv class="layout-topbar justify-content-between flex-wrap lg:flex-nowrap">
-    <a class="layout-topbar-logo" routerLink="/">
+    <a class="layout-topbar-logo" routerLink="/SSO/dashboard">
       <img [src]="logo" alt="logo">
       <span class="min-w-max">{{'management-platform-title' | translate}}</span>
     </a>
-    <!--手機-->
     <button #topbarmenubutton class="p-link layout-topbar-menu-button layout-topbar-button"
       (click)="layoutService.showProfileSidebar()">
       <i class="pi pi-ellipsis-v"></i>
@@ -39,15 +38,17 @@
       </div>
     </div>
   </div>
+
   <div class="relative flex align-items-center justify-content-center flex-wrap gap-3 px-1 mt-5 pt-7">
     <div *ngIf="loading" class="col-12 flex flex-column align-items-center justify-content-center">
       <p-progressSpinner></p-progressSpinner>
-      <span>載入中......</span>
+      <span>資料載入與系統準備中，請稍候...</span>
     </div>
-    <div *ngIf="errorMessage" class="col-12 text-red-500 text-center">
+    <div *ngIf="errorMessage && !loading" class="col-12 text-red-500 text-center">
       {{ errorMessage }}
     </div>
-    <div *ngIf="!loading" class="grid col-12 px-0 sm:px-4">
+
+    <div *ngIf="!loading && !errorMessage" class="grid col-12 px-0 sm:px-4">
       <div *ngFor="let item of urlItems" pAnimateOnScroll enterClass="fadein"
         class="animation-duration-1000 col-12 sm:col-6 md:col-3 flex justify-content-center">
         <p-card styleClass="w-full h-full flex flex-column justify-content-between">
@@ -111,7 +112,6 @@
         <small
           *ngIf="form.controls['newPassword'].touched && form.controls['newPassword'].errors?.['invalidPasswordStrength']"
           class="p-error block">密碼強度不足，請符合密碼規則。</small>
-        <!-- 錯誤訊息 -->
         <small *ngIf="form.hasError('mismatch') && form.get('confirmPassword')?.touched"
           class="text-red-500 text-sm mt-1">
           新密碼與確認密碼不一致

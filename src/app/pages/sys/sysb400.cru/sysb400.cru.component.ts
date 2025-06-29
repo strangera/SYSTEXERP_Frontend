@@ -39,6 +39,8 @@ export class SYSB400CRUComponent
   });
   showConfirm = false;
 
+  isFirstLevelChange = true; // 上層組織變動鎖定
+
   raw_org_Option: orgOption[] = []; // 原始資料（永不變動）
   upgroup_Options: apiOption[] = [];
   filtered_p_level_Options: apiOption[] = [];   //依據組織階層代碼 動態變化的 上層組織階層代碼
@@ -59,6 +61,10 @@ export class SYSB400CRUComponent
 
   ngOnInit(): void {
     this.initializePage('SYSB400', this.dataForm);
+    console.log('表單',this.dataForm.value);
+    this.dataForm.get('p_level_id')?.disable(); // 上層組織階層代碼/名稱 不可手動更改
+
+    // 不可點選上層組織代碼
     //新增模式的CanDel設定
     if (this.crudstatus == 'Create') {
       this.dataForm.patchValue({
@@ -103,7 +109,8 @@ export class SYSB400CRUComponent
       const parentLevelNo = (parseInt(levelId, 10) - 10).toString();
       this.dataForm.controls.p_level_id.setValue(parentLevelNo);
 
-      console.log('自動帶入 p_level_id:', parentLevelNo);
+      //把 上層組織代碼/名稱 設置為null
+      // this.dataForm.get('p_org_id')?.setValue("");
     }
 
     // 假設上層階層的編碼比下層小，例如：10 是最上層，20 是中層，30 是底層
@@ -119,6 +126,13 @@ export class SYSB400CRUComponent
     this.org_Option = this.raw_org_Option.filter(item =>
       item.Level && filteredNos.includes(item.Level)
     );
+
+    // ✅ 如果不是第一次進入頁面（使用者變更才清空）
+    if (!this.isFirstLevelChange) {
+      this.dataForm.get('p_org_id')?.setValue("");
+    }
+
+    this.isFirstLevelChange = false; // ✅ 將旗標設為 false，之後就會套用清空邏輯
 
     // console.log('org_Option', this.org_Option); // 檢查[上層階層] 預帶的 [上層組織代碼/名稱] 是否正確
   }
@@ -163,10 +177,13 @@ export class SYSB400CRUComponent
   onSubmit(frm: FormGroup) {
     // 修改：使用父類的 handleSubmit 方法
     this.handleSubmit(frm, () => {
+      const formValue = frm.getRawValue();
+      console.log('送出',formValue);
+      
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            this.sysb400Service.insertSYSB400(frm.value).subscribe(() => {
+            this.sysb400Service.insertSYSB400(formValue).subscribe(() => {
               this.messageService.successBubble('新增成功');
               // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
               this.dataForm.reset(); // 重置表單
@@ -175,8 +192,7 @@ export class SYSB400CRUComponent
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            console.log('frm.value', frm.value);
-            this.sysb400Service.updateSYSB400(frm.value).subscribe(() => {
+            this.sysb400Service.updateSYSB400(formValue).subscribe(() => {
               this.messageService.successBubble('更新成功');
               this.onCancel(); // 更新成功後返回查詢頁面
             });

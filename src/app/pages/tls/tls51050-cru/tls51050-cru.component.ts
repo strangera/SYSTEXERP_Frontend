@@ -5,7 +5,7 @@ import { PluUnit } from '../../../shared/models/tls/tls000.model';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { option } from '../../../shared/models/sys/sysb000.module';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { Tls51050Service } from '../../../service/API/tls/tls51050.service';
+import { Tls51050Service } from '../../../service/api/tls/tls51050.service';
 //
 
 // 2.5.1.5 商品單位設定  CRU
@@ -28,6 +28,8 @@ export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
 
     UNIT_Remark: ['', [Validators.maxLength(100)]], // 備註說明
 
+    CanDel: [null], // 刪除(僅顯示)
+
     //分頁查詢
     ...createPaginationConfig([{ field: 'UNIT_No', order: 1 }]), // 分頁和排序參數
   });
@@ -48,6 +50,13 @@ export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
   ngOnInit(): void {
     this.initializePage('TLS51050', this.dataForm);
     this.loadOptions();
+
+    // 0626新增 卡控 編輯的卡控 同 [刪除] ，若不可刪除也不可編輯 單位代碼
+    const canDelValue = this.dataForm.get('CanDel')?.value as unknown as boolean;
+    if (canDelValue === false) {
+      this.dataForm.get('UNIT_No')?.disable();            // 單位代碼不可編輯
+    }
+
   }
 
   onSubmit(frm: FormGroup) {

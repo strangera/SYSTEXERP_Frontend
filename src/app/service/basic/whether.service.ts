@@ -14,6 +14,7 @@ export class WhetherService {
   options: any[] = [
     { value: 'Y', label: '是' },
     { value: 'N', label: '否' },
+    { value: null, label: '全部' },
   ];
 
   constructor(

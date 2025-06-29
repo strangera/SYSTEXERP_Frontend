@@ -1,0 +1,276 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable, map } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { ApiResponse } from '../../system/auth.service'; // 假設 ApiResponse 介面在此定義
+
+// 通用的下拉選單項目介面，用於大部分返回 { No: string, Name: string } 的 API
+export interface IDropdownItem {
+  No: string;
+  Name: string;
+  ShortName?: string;
+}
+
+// 針對 querySYS3100_tree_DropDownList 的資料結構
+export interface ISYS3100TreeItem {
+  org_id: string;
+  org10Label: string;
+  org20Label: string;
+  org30Label: string;
+  org40Label: string;
+  org_name: string;
+}
+
+// 針對 queryPLULOGO_OrderPrcRate_DropDownList 的資料結構
+export interface IPLULOGOOrderPrcRateItem {
+  No: string;
+  Name: string;
+  PLU_OrderPrcRate: number;
+}
+
+// 針對 queryPOS2002_Location_DropDownList 的資料結構
+export interface IPOS2002LocationItem {
+  location_no: string;
+  tlt_building: string;
+  tlt_floor: string;
+  area_no: string;
+  tlt_space: number;
+  building_desc: string;
+  floor_desc: string;
+  area_desc: string;
+}
+
+// 請求參數介面
+export interface ITLTBUSCLASSRequest {
+  bus_type: string[];
+}
+
+export interface ITLTBUSSCLASSRequest {
+  bus_type: string[];
+  bus_class: string[];
+}
+
+export interface ISYS3100TreeRequest {
+  org_id: string;
+  stop_flag: string;
+}
+
+export interface IAPS1003Request {
+  cap_typeList: string[];
+}
+
+export interface IPOS20031Request {
+  CAT_LNo: string[];
+}
+
+export interface IPOS20032Request {
+  CAT_LNo: string[];
+  CAT_MNo: string[];
+}
+
+export interface ISYS1000Request {
+  SYS_Type: string;
+}
+
+export interface IBankRequest {
+  SearchKeyword: string;
+}
+
+export interface IPOS2002LocationRequest {
+  talentId: string;
+}
+
+export interface IPOS2013Request {
+  VEN_Flag?: string;
+}
+
+
+@Injectable({
+  providedIn: 'root'
+})
+export class DropDownListService {
+  private apiUrl = environment.ApiUrl;
+
+  constructor(
+    private http: HttpClient,
+  ) { }
+
+  // 查詢倉別(POS2034)資料表下拉選單 (原先的 getBankOptions 已更名以符合API功能)
+  getPOS2034Options(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS2034_DropDownList`, {});
+  }
+
+  // 查詢上層組織(SYS3000)資料表下拉選單
+  querySYS3000_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/querySYS3000_DropDownList`, {});
+  }
+
+  // 查詢專櫃大分類(業種)設定檔(TLTBUSTYPE)資料表
+  queryTLTBUSTYPE_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTBUSTYPE_DropDownList`, {});
+  }
+
+  // 查詢中分類(商品類別)設定檔(TLTBUSCLASS)資料表
+  queryTLTBUSCLASS_DropDownList(params: ITLTBUSCLASSRequest): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTBUSCLASS_DropDownList`, params);
+  }
+
+  // 查詢TLTBUSSCLASS資料表 (小分類)
+  queryTLTBUSSCLASS_DropDownList(params: ITLTBUSSCLASSRequest): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTBUSSCLASS_DropDownList`, params);
+  }
+
+  // 查詢組織代碼(SYS3100)資料表下拉選單
+  querySYS3100_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/querySYS3100_DropDownList`, {});
+  }
+
+  // 查詢組織階層樹狀圖(SYS3100)下拉選單
+  querySYS3100_tree_DropDownList(params: ISYS3100TreeRequest): Observable<ApiResponse<ISYS3100TreeItem[]>> {
+    return this.http.post<ApiResponse<ISYS3100TreeItem[]>>(`${this.apiUrl}/querySYS3100_tree_DropDownList`, params);
+  }
+
+  // 查詢館別代碼(SYS3800)資料表下拉選單
+  querySYS3800_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/querySYS3800_DropDownList`, {});
+  }
+
+  // 查詢樓層代碼(SYS3900)資料表下拉選單
+  querySYS3900_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/querySYS3900_DropDownList`, {});
+  }
+
+  // 查詢區域代碼(SYS3A00)資料表下拉選單
+  querySYS3A00_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/querySYS3A00_DropDownList`, {});
+  }
+
+  // 查詢用途代碼(SYS3F00)資料表下拉選單
+  querySYS3F00_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/querySYS3F00_DropDownList`, {});
+  }
+
+  // 查詢會計科目設定檔(GLS1005)下拉式選單
+  queryGLS1005_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1005_DropDownList`, {});
+  }
+
+  // 查詢扣款代碼檔(APS1003)資料表
+  queryAPS1003_DropDownList(params: IAPS1003Request): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryAPS1003_DropDownList`, params);
+  }
+
+  // 查詢後台主機IP(POS10015)資料表下拉選單
+  queryPOS10015_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS10015_DropDownList`, {});
+  }
+
+  // 查詢環境變數編號(POS1002TML)資料表下拉選單
+  queryPOS1002TML_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1002TML_DropDownList`, {});
+  }
+
+  // 查詢位置編號(SYS3A00)資料表下拉選單 (注意：Swagger 中寫 SYS3A00，但實際路徑是 POS2002)
+  queryPOS2002_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS2002_DropDownList`, {});
+  }
+
+  // 查詢表格定義檔(DEFTBL)資料表
+  queryDEFTBL_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryDEFTBL_DropDownList`, {});
+  }
+
+  // 查詢收銀機設定檔(POS1002)資料表
+  queryPOS1002_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1002_DropDownList`, {});
+  }
+
+  // 查詢電子發票配號作業(POS1002)資料表
+  queryPOS1002_Bill_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1002_Bill_DropDownList`, {});
+  }
+
+  // 查詢大分類(POS2003)資料表
+  queryPOS2003_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS2003_DropDownList`, {});
+  }
+
+  // 查詢中分類(POS20031)資料表
+  queryPOS20031_DropDownList(params: IPOS20031Request): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS20031_DropDownList`, params);
+  }
+
+  // 查詢小分類代碼(POS20032)資料表下拉選單
+  queryPOS20032_DropDownList(params: IPOS20032Request): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS20032_DropDownList`, params);
+  }
+
+  // 查詢品牌代碼(PLULOGO)資料表下拉選單
+  queryPLULOGO_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPLULOGO_DropDownList`, {});
+  }
+
+  // 查詢品牌代碼(PLULOGO)資料表下拉選單 (包含 PLU_OrderPrcRate)
+  queryPLULOGO_OrderPrcRate_DropDownList(): Observable<ApiResponse<IPLULOGOOrderPrcRateItem[]>> {
+    // 根據 Swagger Schema, Data 內部還有一個 Data 陣列，這可能是 Swagger 文件描述的問題或特殊結構。
+    // 如果實際 API 返回的是直接包含 IPLULOGOOrderPrcRateItem 的陣列，則下面的 map 不必要。
+    // 此處假設 Data 層級是多餘的，直接取用最內層的陣列。
+    return this.http.post<ApiResponse<{ TotalCount: number, Data: IPLULOGOOrderPrcRateItem[] }[]>>(`${this.apiUrl}/queryPLULOGO_OrderPrcRate_DropDownList`, {})
+      .pipe(
+        map(response => {
+          if (response.Data && response.Data.length > 0 && response.Data[0].Data) {
+            return {
+              ...response,
+              Data: response.Data[0].Data // 提取內層的 Data 陣列
+            };
+          }
+          return { ...response, Data: [] }; // 如果沒有，返回空陣列
+        })
+      );
+  }
+
+  // 查詢商品單位(PLUUNIT)資料表下拉選單
+  queryPLUUNIT_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPLUUNIT_DropDownList`, {});
+  }
+
+  // 查詢部門編號/分店(SYS3100/POS1001)資料表下拉選單
+  querySYS3100_join_POS1001_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/querySYS3100_join_POS1001_DropDownList`, {});
+  }
+
+  // 查詢專櫃主檔(TLTTALENT)資料表下拉選單
+  queryTLTTALENT_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_DropDownList`, {});
+  }
+
+  // 查詢營業型態(SYS1000)資料表下拉選單
+  querySYS1000_DropDownList(params: ISYS1000Request): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/querySYS1000_DropDownList`, params);
+  }
+
+  // 查詢收銀員設定檔(POS2001)資料表下拉選單
+  queryPOS2001_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS2001_DropDownList`, {});
+  }
+
+  // 查詢銀行資料表下拉選單
+  queryBank_DropDownList(params: IBankRequest): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryBank_DropDownList`, params);
+  }
+
+  // 查詢洽談人員資料表下拉選單
+  queryUser_Name_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryUser_Name_DropDownList`, {});
+  }
+
+  // 查詢POS2002位置代碼資料表下拉選單
+  queryPOS2002_Location_DropDownList(params: IPOS2002LocationRequest): Observable<ApiResponse<IPOS2002LocationItem[]>> {
+    return this.http.post<ApiResponse<IPOS2002LocationItem[]>>(`${this.apiUrl}/queryPOS2002_Location_DropDownList`, params);
+  }
+
+  // 查詢POS2013廠商資料表下拉選單
+  queryPOS2013_DropDownList(params: IPOS2013Request = {}): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS2013_DropDownList`, params);
+  }
+}

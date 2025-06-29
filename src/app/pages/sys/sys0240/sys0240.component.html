@@ -33,10 +33,11 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table tableKey="SYS0240" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showDetail]="false"
-      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-      [showCheckBox]="false" [showDelete]="false" dataKey="id" [multiSortMeta]="[{ field: 'Role_No', order: 1 }]"
-      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true" [loading]="loading"></app-table>
+    <app-table apiUrl="queryRole" tableKey="SYS0240" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+      [showDetail]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+      (delete)="onDelete($event)" [showCheckBox]="false" [showDelete]="false" dataKey="id"
+      [multiSortMeta]="[{ field: 'Role_No', order: 1 }]" [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+      [loading]="loading"></app-table>
   </div>
 </div>

@@ -34,8 +34,9 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="國際條碼" controlName="PLU_No" [control]="dataForm.controls.PLU_No"
               [submitted]="submitted">
-              <header>
-                <p-button label="同商品管理編號" [raised]="true" size="small" styleClass="p-0" (click)="setNoToMagNo()"
+
+              <header *ngIf="crudstatus !== 'Read'">
+                <p-button label="同商品管理編號" [raised]="true" size="small" styleClass="p-0" (click)="copyNoToMagNo()"
                   [style]="{ width: '8rem', height: '1.3rem' }" />
               </header>
             </app-input-text>
@@ -43,15 +44,15 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="大分類代碼" controlName="CAT_LNo" [options]="largeOption" optionLabel="Label"
+            <app-dropdown label="大分類代碼/名稱" controlName="CAT_LNo" [options]="largeOption" optionLabel="Label"
               optionValue="No" [control]="dataForm.controls.CAT_LNo" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="中分類代碼" controlName="CAT_MNo" [options]="middleOption" optionLabel="Label"
+            <app-dropdown label="中分類代碼/名稱" controlName="CAT_MNo" [options]="middleOption" optionLabel="Label"
               optionValue="No" [control]="dataForm.controls.CAT_MNo" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="小分類代碼" controlName="CAT_SNo" [options]="smallOption" optionLabel="Label"
+            <app-dropdown label="小分類代碼/名稱" controlName="CAT_SNo" [options]="smallOption" optionLabel="Label"
               optionValue="No" [control]="dataForm.controls.CAT_SNo" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
@@ -61,8 +62,20 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="標籤名稱" controlName="PLU_Lable" [control]="dataForm.controls.PLU_Lable"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="標籤名稱" controlName="PLU_Lable" [control]="dataForm.controls.PLU_Lable"
+              [submitted]="submitted">
+              <header *ngIf="crudstatus !== 'Read'">
+                <p-button
+                  label="同商品中文名稱"
+                  [raised]="true"
+                  size="small"
+                  styleClass="p-0"
+                  (click)="copyPLU_NameToPLU_Lable()"
+                  [style]="{ width: '8rem', height: '1.3rem' }"
+                />
+              </header>
+            </app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="說明" controlName="PLU_Reserve1" [control]="dataForm.controls.PLU_Reserve1"
@@ -140,7 +153,7 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="品牌編號" controlName="LOGO_No" [options]="pluLogoOption" optionLabel="Label"
-              optionValue="LOGO_No" [control]="dataForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
+              optionValue="No" [control]="dataForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="商品售價" controlName="PLU_SalePrc" [control]="dataForm.controls.PLU_SalePrc"
@@ -172,10 +185,10 @@
           </div>
         </div>
       </ng-container>
-      <!-- 商品圖檔 顯示畫面 -->
-      <ng-container *ngIf="buttonID === 5">
+      <!-- 商品圖檔 顯示畫面 有管理號碼PLU_MagNo才能編輯IMG1001 -->
+      <ng-container *ngIf="buttonID === 5 && dataForm.get('PLU_MagNo')?.value !== ''">
         <p-divider align="left" type="solid">
-          <b class="text-primary">上傳圖片(新)</b>
+          <b class="text-primary">上傳圖片</b>
         </p-divider>
         <div class="grid p-fluid">
           <app-img-upload class="col-12" (uploadFiles)="files = $event" [images]="img1001Data"
@@ -200,7 +213,7 @@
           (batchDelete)="onBatchDelete2020($event)" (addMainItem)="onAddPOS2020()"></app-expandable-edit-table>
       </ng-container>
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
-        <app-button btnType="cancel"></app-button>
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>
     </form>

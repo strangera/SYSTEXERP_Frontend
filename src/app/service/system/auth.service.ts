@@ -10,6 +10,7 @@ import { FunsrightInfo } from '../../shared/models/system/funsrightInfo';
 import { UserInfo } from '../../shared/models/system/userInfo';
 import { NotificationService } from '../../shared/component/notification-message/notification.service';
 import { QueryStateService } from '../../shared/service/query-state.service';
+import { JwtHelperService } from '@auth0/angular-jwt';
 
 export interface ApiResponse<T> {
   Status: string;
@@ -34,6 +35,7 @@ export class AuthService {
   public user: Observable<UserInfo | null>;
   private _menuUpdated = new BehaviorSubject<any[]>([]);
   menuUpdated = this._menuUpdated.asObservable();
+  private jwtHelper: JwtHelperService;
   updateMenu(newData: any[]): void {
     this._menuUpdated.next(newData);
   }
@@ -54,9 +56,32 @@ export class AuthService {
       const parsedFunRightsInfo = JSON.parse(storedFunRightsInfo) as FunsrightInfo[];
       this._menuUpdated.next(parsedFunRightsInfo); // 使用儲存的資料更新選單
     }
+    this.jwtHelper = new JwtHelperService();
   }
   public get currentUserValue(): UserInfo | null {
     return this.userSubject.value; // 獲取存儲的 JWT Token
+  }
+  isLoggedIn(): boolean {
+    const user = this.currentUserValue; // 獲取當前用戶資訊
+    if (user && user.AccessToken) {
+      // 使用 jwtHelper 判斷 Token 是否過期
+      const isTokenExpired = this.jwtHelper.isTokenExpired(user.AccessToken);
+      if (isTokenExpired) {
+        console.warn('Access Token expired. User needs to re-login.');
+        // 如果 Token 過期，可以考慮在這裡直接執行登出操作
+        // 但更好的做法是在 HttpInterceptor 中集中處理 401 錯誤
+        // this.logout();
+        return false;
+      }
+      return true; // Token 存在且未過期
+    }
+    return false; // 沒有用戶資訊或沒有 Token
+  }
+  // 獲取 Token 的方法，提供給 JwtModule 的 tokenGetter 使用
+  // 確保 JwtModule 可以正確獲取到 AccessToken
+  getToken(): string | null {
+    const user = this.currentUserValue;
+    return user ? user.AccessToken : null;
   }
   login(data: userLogin): Observable<ApiResponse<UserInfo>> {
     data.password = this.encrypt.getPassword(data.code as string, data.password as string);
@@ -81,31 +106,29 @@ export class AuthService {
   logout(): void {
     const userInfoStr = this.getUserInfo();
     const token = userInfoStr ? userInfoStr.AccessToken : null;
-    if (!token) {
-      sessionStorage.clear();
-      localStorage.clear();
-      this.userSubject.next(null);
-      this.router.navigate(['/login'], { replaceUrl: true });
-      this.queryStateService.clearAllQueryStates();
-      this.notemessage.infoBubble('已成功登出');
-      return;
+    // 如果有 Token 且需要後端登出，才發送請求
+    if (token) {
+      this.http.post<ApiResponse<any>>(`${this.apiUrl}/User/userLogout`, {}).pipe(
+        catchError((error) => {
+          // 後端登出失敗不影響前端登出狀態，但可以記錄錯誤
+          console.error('後端登出請求失敗:', error);
+          // 不再彈出錯誤訊息，因為前端已經顯示成功登出
+          return throwError(() => error);
+        })
+      ).subscribe(); // 不需要 next 和 error 處理，因為主要登出邏輯已在前面執行
     }
-    this.http.post<ApiResponse<any>>(`${this.apiUrl}/User/userLogout`, {}).pipe(
-      catchError((error) => {
-        this.notemessage.errorBubble('登出失敗，請稍後再試');
-        return throwError(() => error);
-      })
-    ).subscribe({
-      next: () => {
-        sessionStorage.clear();
-        localStorage.clear();
-        this.userSubject.next(null);
-        this.router.navigate(['/login'], { replaceUrl: true });
-        this.notemessage.infoBubble('已成功登出');
-        this.queryStateService.clearAllQueryStates();
-      },
-      error: (error) => { console.error('Logout error:', error); }
-    });
+
+    // 統一清除邏輯
+    this.clearSessionAndLocalStorage();
+  }
+  // 新增一個私有方法來統一清除儲存
+  private clearSessionAndLocalStorage(): void {
+    sessionStorage.clear();
+    localStorage.clear();
+    this.userSubject.next(null);
+    this.router.navigate(['/login'], { replaceUrl: true });
+    this.queryStateService.clearAllQueryStates();
+    this.notemessage.infoBubble('已成功登出');
   }
   // 獲取我的最愛
   getFavorites(user_No?: string): Observable<any> {
@@ -157,7 +180,7 @@ export class AuthService {
     }
   }
   // 獲取使用者資訊
-  getUserInfo(): any {
+  getUserInfo(): UserInfo | null {
     const userInfo = localStorage.getItem('UserInfo');
     if (userInfo) {
       return JSON.parse(userInfo);

@@ -4,9 +4,9 @@ import { StatusFlagService } from '../../../service/basic/status-flag.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
 import { CarrierTypeService } from '../../../service/basic/carrier-type.service';
-import { TLS23010Service } from '../../../service/API/tls/tls23010.service';
+import { TLS23010Service } from '../../../service/api/tls/tls23010.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Tls11010Service } from '../../../service/API/tls/tls11010.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { TxnStatusService } from '../../../service/basic/txn-status.service';
@@ -34,6 +34,7 @@ const now = new Date();
   styleUrls: ['./tls23010.component.scss'],
 })
 export class TLS23010Component extends BasicQueryPageComponent<any> {
+  displayMode: 'Detail' | 'Summary' = 'Detail'; // 預設顯示明細報表
 
   progressValue = 0;
   showPageSizeDialog = false;
@@ -315,61 +316,50 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
       })) || [];
     });
   }
-  onSubmit(form: FormGroup): void {
-    if (this.loading) return;
-    // ⛔️ 必填欄位未填時跳出提示
-    if (form.invalid) {
-      this.messageService.warnBubble('請完整填寫所有必填欄位');
-      form.markAllAsTouched();  // 標記所有欄位為 touched，讓驗證樣式出現
-      return;
-    }
+onSubmit(form: FormGroup): void {
+  if (this.loading) return;
 
-    this.handleSubmit(form, () => {
-      const formValue = { ...form.value };
-      this.loading = true;
-      this.messageService.blockUi();
+  if (form.invalid) {
+    this.messageService.warnBubble('請完整填寫所有必填欄位');
+    form.markAllAsTouched();
+    return;
+  }
 
-      for (const key in formValue) {
-        if (formValue[key] === '') {
-          formValue[key] = null;
+  this.handleSubmit(form, () => {
+    const payload = { ...form.value };
+    Object.keys(payload).forEach(k => { if (payload[k] === '') payload[k] = null; });
+
+    this.loading = true;
+    this.messageService.blockUi();
+
+    this.tls23010Service.queryTLS23010(payload, this.displayMode).subscribe({
+      next: (res) => {
+        if (res.Status === '0000') {
+          this.data = res.Data || [];
+          this.totalRecords = res.TotalCount || this.data.length;
+          this.queryStateService.setQueryState(this.ProgNo, payload);
+          this.messageService.successBubble('查詢成功');
+        } else {
+          this.data = [];
+          this.totalRecords = 0;
+          this.messageService.errorBubble('查詢失敗');
         }
+      },
+      error: () => {
+        this.messageService.errorBubble('查詢錯誤');
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
       }
-
-      this.tls23010Service.queryTLS23010(formValue).subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.data = (res.Data || []).map((item: MainData) => ({
-              ...item,
-              details: []
-            }));
-
-            this.totalRecords = res.TotalCount || this.data.length;
-            this.queryStateService.setQueryState(this.ProgNo, formValue);
-            this.messageService.successBubble('查詢成功');
-
-            // ✅ 自動載入每筆明細
-            this.data.forEach(item => this.loadDetail(item));
-
-          } else {
-            this.data = [];
-            this.totalRecords = 0;
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        error: () => {
-          this.messageService.errorBubble('查詢錯誤');
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        }
-      });
-      localStorage.setItem('TLS23010_queryForm', JSON.stringify(this.queryForm.value)); // 儲存條件
     });
 
-  }
+    localStorage.setItem('TLS23010_queryForm', JSON.stringify(payload));
+  });
+}
+
 
 
 
@@ -379,116 +369,70 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
   }
 
 
-  loadDetail(rowData: any) {
-    this.expandLoading = true;
+  
 
-    const query = {
-      SYS_StoreNo: rowData.SYS_StoreNo,
-      TXN_Date: rowData.TXN_Date,
-      ECR_No: rowData.ECR_No,
-      TXN_No: rowData.TXN_No,
-    };
 
-    console.log('📦 傳給明細API的參數:', query);
-
-    this.tls23010Service.queryTLS23010Detail(query).subscribe({
-      next: (res) => {
-        console.log('📥 明細API回傳:', res);
-
-        // ✅ 正確使用 Data 欄位
-        if (res.Status === '0000') {
-          rowData.details = res.Data || [];
-        } else {
-          rowData.details = [];
-          this.messageService.warnBubble('查無明細資料');
-        }
-
-        // ✅ 展開該筆
-        this.expandedRows = {
-          [rowData.TXN_No]: true,
-        };
-      },
-      error: () => {
-        this.messageService.errorBubble('載入明細失敗');
-      },
-      complete: () => {
-        this.expandLoading = false;
-      }
-    });
-  }
-
-  expandedRows: { [key: string]: boolean } = {};
-  override onDetail(rowData: any): void {
-    this.loadDetail(rowData); // ✅ 載入明細資料
-
-    // ✅ 僅展開該筆資料
-    this.expandedRows = {
-      [rowData.TXN_No]: true,
-    };
-  }
-  expansionColumns = [
-
-    {
-      field: 'TXN_Date',
-      header: '銷售日期',
-      visible: true,
-      format: (val: string) => {
-        const date = new Date(val);
-        return isNaN(date.getTime())
-          ? val
-          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-      }
-    },
-
-    { field: 'ECR_No', header: '收銀機代號' },
-    { field: 'TXN_No', header: '交易序號' },
-    { field: 'tlt_no', header: '專櫃編號' },
-    { field: 'tlt_name', header: '櫃位名稱', style: 'text-left' },
-    { field: 'PAY_Type', header: '付款別' },
-    { field: 'CRD_Type', header: '卡別' },
-    { field: 'CRD_No', header: '號碼' },
-    { field: 'TERM_No', header: '分期期數' },
-    { field: 'TXN_PayAmt', header: '銷售金額', style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-  ];
 
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
 
-  goToReportMode(): void {
-    if (this.queryForm.invalid) {
-      this.messageService.warnBubble('請先完成查詢條件');
-      this.queryForm.markAllAsTouched();
-      return;
-    }
+  
 
-    this.customPageSize = 1000;
-    this.showPageSizeDialog = true; // 👈 顯示彈窗
+
+goToReportMode(): void {
+  this.customPageSize = 1000;
+  this.showPageSizeDialog = true;
+}
+
+confirmPageSizeAndNavigate(): void {
+  this.submitted = true;
+  if (this.queryForm.invalid) {
+    this.messageService.warnBubble('請確認欄位資料是否完整');
+    this.queryForm.markAllAsTouched();
+    return;
   }
 
-  confirmPageSizeAndNavigate(): void {
-    const rawFormValue: Record<string, any> = { ...this.queryForm.value };
-    for (const key in rawFormValue) {
-      if (rawFormValue[key] === '') rawFormValue[key] = null;
-    }
+  const rawFormValue = { ...this.queryForm.value } as any;
+  for (const key in rawFormValue) {
+    if (rawFormValue[key] === '') rawFormValue[key] = null;
+  }
 
-    const queryFormValue = {
-      ...rawFormValue,
-      pageSize: this.customPageSize
-    };
+  const queryFormValue = {
+    ...rawFormValue,
+    pageSize: this.customPageSize
+  };
 
-    this.router.navigate(['/TLS/TLS23010CRU'], {
-      state: {
-        queryFormValue,
-        pageSize: this.customPageSize
+  this.loading = true;
+  this.messageService.blockUi();
+
+  this.tls23010Service.queryTLS23010(queryFormValue, this.displayMode).subscribe({
+    next: (res) => {
+      if (res.Status === '0000') {
+        this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
+        this.router.navigate(['/TLS/TLS23010CRU'], {
+          state: {
+            queryFormValue,
+            pageSize: this.customPageSize,
+            data: res.Data || [],
+            displayMode: this.displayMode
+          }
+        });
+        this.messageService.successBubble('查詢成功');
+      } else {
+        this.messageService.errorBubble('查詢失敗');
       }
-    });
-
-    this.showPageSizeDialog = false;
-  }
-
-
-
-
-
+    },
+    error: () => {
+      this.messageService.errorBubble('查詢錯誤');
+      this.loading = false;
+      this.messageService.unblockUi();
+    },
+    complete: () => {
+      this.loading = false;
+      this.messageService.unblockUi();
+      this.showPageSizeDialog = false;
+    }
+  });
+}
 }

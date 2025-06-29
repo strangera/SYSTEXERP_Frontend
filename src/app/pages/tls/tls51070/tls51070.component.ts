@@ -4,7 +4,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { POS2004 } from '../../../shared/models/tls/tls000.model';
-import { Tls51070Service } from '../../../service/API/tls/tls51070.service';
+import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 
 // 2.5.1.7  商品基本資料
 @Component({

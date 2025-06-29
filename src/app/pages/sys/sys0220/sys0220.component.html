@@ -1,11 +1,6 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -121,7 +116,8 @@
       [selectedItems]="selectedItems"
       (selectionChange)="selectedItems = $event"
       (delete)="onDelete($event)"
-      [showCheckBox]="true"
+      [showCheckBox]="false"
+      [showDelete]="false"
       dataKey="id"
       [multiSortMeta]="[{ field: 'user_No', order: 1 }]"
       [totalRecords]="totalRecords"
