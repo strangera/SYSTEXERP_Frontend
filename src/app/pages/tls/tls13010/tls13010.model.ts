@@ -210,6 +210,10 @@ export interface FareItem {
   is_selected: boolean;
   is_new_item: boolean;
   _status?: 'new' | 'modified' | 'deleted' | 'original';
+
+  _originalSelected?: boolean;    // 追蹤初始選中狀態
+  _originalData?: Partial<FareItem>; // 追蹤原始資料用於比較
+  [key: string]: any;
 }
 
 // next2 - 抽成設定

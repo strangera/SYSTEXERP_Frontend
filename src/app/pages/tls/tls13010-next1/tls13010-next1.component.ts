@@ -691,78 +691,40 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
     const validatedData: Record<string, FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
 
-    console.log('🔍 驗證和修復資料，原始格式:', typeof data, data);
+    console.log('🔍 驗證和修復暫存資料...');
 
-    if (!data || typeof data !== 'object') {
-      console.log('⚠️ 資料為空或格式錯誤，回傳空物件');
-      return validatedData;
-    }
-
-    // ✅ 處理陣列格式（主要格式）
     if (Array.isArray(data)) {
-      console.log('🔄 偵測到陣列格式，按 cap_type 分類');
       data.forEach(item => {
         if (item && item.cap_type && capTypes.includes(item.cap_type)) {
-          // 🎯 確保暫存的資料保持原有狀態，但驗證一致性
-          const validatedItem = {
-            ...item,
-            cap_type: item.cap_type
-          };
 
-          // 🎯 狀態一致性檢查
-          if (validatedItem.is_selected && !validatedItem._status && validatedItem.data_source === 'CONTRACT_EXISTING') {
-            console.warn(`⚠️ 修復暫存資料 ${validatedItem.cap_item}: 已勾選但無狀態，補上 original`);
-            validatedItem._status = 'original';
+          // 🎯 關鍵修改：確保 _originalSelected 存在
+          if (typeof item._originalSelected === 'undefined') {
+            item._originalSelected = item.data_source === 'CONTRACT_EXISTING' && item.is_selected;
+            console.warn(`⚠️ 補充暫存資料 ${item.cap_item}: 設定 _originalSelected = ${item._originalSelected}`);
           }
 
+          // 🎯 關鍵修改：修正狀態邏輯
+          let validStatus = item._status;
+
+          if (item.is_selected && !validStatus && item._originalSelected) {
+            validStatus = 'original';
+            console.warn(`⚠️ 修復暫存資料 ${item.cap_item}: 已勾選的原有項目補上 original 狀態`);
+          }
+
+          const validatedItem: FareItem = {
+            ...item,
+            id: item.id ? item.id.toString() : `missing_id_${Date.now()}_${Math.random()}`,
+            cap_type: item.cap_type,
+            _status: validStatus,
+            _originalSelected: item._originalSelected,
+            _originalData: item._originalData || { ...item }
+          };
+
           validatedData[item.cap_type].push(validatedItem);
-        } else if (item) {
-          console.warn('⚠️ 項目缺少 cap_type:', item);
-        }
-      });
-    } else {
-      // ✅ 處理物件格式（向下相容）
-      console.log('🔄 偵測到物件格式，轉換為分類格式');
-      capTypes.forEach(capType => {
-        if (Array.isArray(data[capType])) {
-          validatedData[capType] = data[capType].map(item => {
-            const validatedItem = {
-              ...item,
-              cap_type: item.cap_type || capType
-            };
-
-            // 🎯 同樣的狀態一致性檢查
-            if (validatedItem.is_selected && !validatedItem._status && validatedItem.data_source === 'CONTRACT_EXISTING') {
-              console.warn(`⚠️ 修復暫存資料 ${validatedItem.cap_item}: 已勾選但無狀態，補上 original`);
-              validatedItem._status = 'original';
-            }
-
-            return validatedItem;
-          });
         }
       });
     }
 
-    // ✅ 統計載入結果
-    let totalLoaded = 0;
-    let selectedLoaded = 0;
-    let originalLoaded = 0;
-
-    capTypes.forEach(capType => {
-      const count = validatedData[capType].length;
-      const selectedCount = validatedData[capType].filter(item => item.is_selected).length;
-      const originalCount = validatedData[capType].filter(item => item._status === 'original').length;
-
-      totalLoaded += count;
-      selectedLoaded += selectedCount;
-      originalLoaded += originalCount;
-
-      if (count > 0) {
-        console.log(`📝 ${capType} 類型載入: ${count} 筆 (選中 ${selectedCount} 筆, original ${originalCount} 筆)`);
-      }
-    });
-
-    console.log(`✅ 總共載入 ${totalLoaded} 筆資料，其中 ${selectedLoaded} 筆已選中，${originalLoaded} 筆為 original 狀態`);
     return validatedData;
   }
 
@@ -816,46 +778,103 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
     const processedData: Record<string, FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
 
-    console.log('🔄 處理 API 資料，設定初始狀態...');
+    console.log('🔄 處理 API 資料，設定正確的初始狀態...');
+    console.log('🔍 API 原始資料檢查:', faresByType);
 
     capTypes.forEach(capType => {
       if (Array.isArray(faresByType[capType])) {
-        processedData[capType] = faresByType[capType].map((item: FareItem) => {
-          // 🎯 關鍵修復：根據 is_selected 和 data_source 設定正確的初始狀態
-          let initialStatus: string | undefined = undefined;
+        console.log(`📊 處理 ${capType} 類型，共 ${faresByType[capType].length} 筆`);
 
-          if (item.is_selected) {
-            // 如果已勾選，判斷是否為合約原有資料
-            if (item.data_source === 'CONTRACT_EXISTING') {
-              initialStatus = 'original';  // 合約原有且已勾選
-              console.log(`📋 ${item.cap_item} (${capType}) - 合約原有資料，狀態: original`);
-            } else {
-              // 這種情況理論上不應該發生（非合約資料卻已勾選）
-              initialStatus = 'original';  // 保險起見也設為 original
-              console.warn(`⚠️ ${item.cap_item} (${capType}) - 非合約資料卻已勾選，設為: original`);
-            }
-          } else {
-            // 如果未勾選，不給狀態（無論是什麼 data_source）
-            initialStatus = undefined;
-            console.log(`📋 ${item.cap_item} (${capType}) - 未勾選，狀態: 無`);
+        processedData[capType] = faresByType[capType].map((item: FareItem, index: number) => {
+
+          // 🔍 先記錄原始資料
+          console.log(`📋 ${capType}[${index}] ${item.cap_item}:`);
+          console.log(`   - 原始 ID: ${item.id} (type: ${typeof item.id})`);
+          console.log(`   - data_source: ${item.data_source}`);
+          console.log(`   - is_selected: ${item.is_selected}`);
+
+          // 🎯 關鍵修改：記錄初始選中狀態
+          const originalSelected = item.is_selected || false;
+
+          // 🎯 關鍵修改：正確設定初始 _status
+          let initialStatus: 'original' | 'new' | 'modified' | 'deleted' | undefined = undefined;
+
+          if (originalSelected && item.data_source === 'CONTRACT_EXISTING') {
+            // 合約原有且已選中的項目
+            initialStatus = 'original';
+            console.log(`📋 ${item.cap_item} (${capType}) - 合約原有資料，狀態: original`);
           }
 
-          return {
-            ...item,           // 展開原始項目的所有屬性
-            cap_type: item.cap_type || capType,  // 確保有 cap_type
-            _status: initialStatus               // 新增正確的 _status
-          } as FareItem;       // 明確聲明返回的類型
+          // 🎯 關鍵修正：根據 data_source 決定 ID 處理
+          let finalId: string;
+
+          if (item.data_source === 'CONTRACT_EXISTING') {
+            // 合約已有的項目：保持原有 ID
+            if (item.id && item.id.toString() !== '0' && item.id.toString() !== '') {
+              finalId = item.id.toString();
+              console.log(`🔑 保持合約原有 ID: ${finalId} (${item.cap_item})`);
+            } else {
+              console.error(`❌ 合約項目 ${item.cap_item} 缺少有效 ID！原始 ID: ${item.id}`);
+              finalId = `error_missing_id_${item.cap_item}_${Date.now()}`;
+            }
+          } else {
+            // APS 可用項目：生成臨時 ID
+            finalId = `temp_${this.currentTalentId}_${capType}_${item.cap_item}_${Date.now()}_${index}`;
+            console.log(`🆕 生成臨時 ID: ${finalId} (${item.cap_item})`);
+          }
+
+          const processedItem = {
+            ...item,
+            id: finalId,  // 🎯 使用正確的 ID
+            cap_type: item.cap_type || capType,
+            _status: initialStatus,
+
+            // 🎯 新增：記錄初始狀態用於後續比較
+            _originalSelected: originalSelected,
+            _originalData: { ...item }
+          } as FareItem;
+
+          console.log(`✅ 處理完成 ${item.cap_item}: ID=${finalId}, _status=${initialStatus}, _originalSelected=${originalSelected}`);
+
+          return processedItem;
         });
 
         console.log(`📊 ${capType} 類型處理完成: ${processedData[capType].length} 筆`);
-        const selectedCount = processedData[capType].filter(item => item.is_selected).length;
-        const originalCount = processedData[capType].filter(item => item._status === 'original').length;
-        console.log(`   - 已勾選: ${selectedCount} 筆`);
-        console.log(`   - original 狀態: ${originalCount} 筆`);
       }
     });
 
+    // 🔍 驗證處理結果
+    this.verifyProcessedData(processedData);
+
     return processedData;
+  }
+
+  private verifyProcessedData(processedData: Record<string, FareItem[]>): void {
+    console.log('=== 🔍 處理結果驗證 ===');
+
+    Object.keys(processedData).forEach(capType => {
+      if (processedData[capType].length > 0) {
+        console.log(`📊 ${capType} 類型驗證:`);
+
+        processedData[capType].forEach((item, index) => {
+          const idStr = item.id?.toString() || '';
+
+          if (item.data_source === 'CONTRACT_EXISTING') {
+            if (idStr.startsWith('temp_') || idStr.includes('new')) {
+              console.error(`❌ 合約項目 ${item.cap_item} 的 ID 不正確: ${item.id}`);
+            } else {
+              console.log(`✅ 合約項目 ${item.cap_item} ID 正確: ${item.id}`);
+            }
+          } else if (item.data_source === 'APS_AVAILABLE') {
+            if (!idStr.startsWith('temp_')) {
+              console.warn(`⚠️ APS 項目 ${item.cap_item} 的 ID 格式異常: ${item.id}`);
+            } else {
+              console.log(`✅ APS 項目 ${item.cap_item} 臨時 ID 正確: ${item.id}`);
+            }
+          }
+        });
+      }
+    });
   }
 
 
@@ -1016,23 +1035,30 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     const { newData } = event;
 
-    // 🎯 如果是原有資料被編輯，標記為 modified
-    if (!newData._status || newData._status === 'original') {
-      newData._status = 'modified';
-      console.log(`📝 ${capType} 項目狀態變更: ${newData._status || 'original'} → modified`);
-    }
-    // 如果是 new 狀態，保持 new
-    // 如果是 deleted 狀態，這應該不會發生（已刪除的不應該能編輯）
+    // 🔥 強制檢查是否有變更
+    const hasChanges = this.hasDataChanges(newData);
+    const originallySelected = newData._originalSelected || false;
 
+    if (hasChanges && originallySelected && newData.is_selected) {
+      // 有變更的既有項目
+      newData._status = 'modified';
+      console.log(`📝 ${newData.cap_item} 編輯後有變更: → modified`);
+    } else if (!hasChanges && originallySelected && newData.is_selected) {
+      // 沒變更的既有項目
+      newData._status = 'original';
+      console.log(`📝 ${newData.cap_item} 編輯後無變更: → original`);
+    } else if (!originallySelected && newData.is_selected) {
+      // 新增的項目
+      newData._status = 'new';
+      console.log(`📝 ${newData.cap_item} 新增項目編輯: → new`);
+    }
+
+    // 更新原始資料
     const originalIndex = this.originalFareData[capType].findIndex(item => item.id === newData.id);
     if (originalIndex > -1) {
-      console.log(`🔄 更新 ${capType}[${originalIndex}] 資料`);
       this.originalFareData[capType][originalIndex] = { ...newData };
-    } else {
-      console.error(`❌ 找不到要更新的項目: ${capType}, id: ${newData.id}`);
     }
 
-    console.log(`${capType} 類型扣款資料已更新`);
     this.saveFareDataToWorkflow();
   }
 
@@ -1047,34 +1073,42 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   onItemSelectionChange(capType: string): void {
     console.log(`🔄 ${capType} 類型項目選擇狀態改變`);
 
-    // 🎯 正確的狀態邏輯
     this.fareData[capType].forEach(item => {
+      const originallySelected = item._originalSelected || false;
+
       if (item.is_selected) {
         // ✅ 被勾選
-        if (!item._status) {
-          // 原本沒狀態 → 新增
+        if (originallySelected) {
+          // 原本就存在於合約的項目
+          if (item._status === 'deleted') {
+            // 從刪除狀態恢復
+            item._status = this.hasDataChanges(item) ? 'modified' : 'original';
+            console.log(`✅ 項目 ${item.cap_item} 恢復勾選，狀態: deleted → ${item._status}`);
+          } else {
+            // 🔥 關鍵修正：檢查資料是否有變更
+            if (this.hasDataChanges(item)) {
+              item._status = 'modified';
+              console.log(`📝 項目 ${item.cap_item} 資料已變更，狀態: → modified`);
+            } else {
+              item._status = 'original';
+              console.log(`✅ 項目 ${item.cap_item} 無變更，狀態: → original`);
+            }
+          }
+        } else {
+          // 原本不存在於合約的項目 → 新增
           item._status = 'new';
-          console.log(`✅ 項目 ${item.cap_item} 被勾選，狀態: 無 → new`);
-        } else if (item._status === 'deleted') {
-          // 原本是刪除狀態 → 改回原狀態
-          item._status = 'original';
-          console.log(`✅ 項目 ${item.cap_item} 重新勾選，狀態: deleted → original`);
+          console.log(`✅ 項目 ${item.cap_item} 勾選，狀態: 無 → new`);
         }
-        // 如果原本是 'original' 或 'modified' 就保持不變
       } else {
         // ❌ 取消勾選
-        if (item._status === 'original') {
-          // 原有資料被取消 → 刪除
+        if (originallySelected) {
+          // 原本存在於合約的項目 → 刪除
           item._status = 'deleted';
-          console.log(`❌ 項目 ${item.cap_item} 取消勾選，狀態: original → deleted`);
-        } else if (item._status === 'new') {
-          // 新增項目被取消 → 回到初始狀態
+          console.log(`❌ 項目 ${item.cap_item} 取消勾選，狀態: → deleted`);
+        } else {
+          // 原本不存在於合約的項目 → 回到無狀態
           delete item._status;
           console.log(`❌ 項目 ${item.cap_item} 取消勾選，狀態: new → 無狀態`);
-        } else if (item._status === 'modified') {
-          // 修改過的項目被取消 → 刪除
-          item._status = 'deleted';
-          console.log(`❌ 項目 ${item.cap_item} 取消勾選，狀態: modified → deleted`);
         }
       }
     });
@@ -1082,6 +1116,49 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.updateOriginalData(capType);
     this.saveFareDataToWorkflow();
   }
+
+  // 🎯 新增：檢查資料是否有變更
+  private hasDataChanges(item: FareItem): boolean {
+    if (!item._originalData) {
+      console.log(`⚠️ 項目 ${item.cap_item} 沒有原始資料，視為無變更`);
+      return false;
+    }
+
+    // 定義需要比較的欄位
+    const editableFields = [
+      'tpy_bdate', 'tpy_edate', 'tpy_type', 'tpy_qty', 'tpy_unitamt',
+      'tpy_amount', 'tpy_totalamt', 'day_account', 'interval',
+      'down_payment', 'period_nos', 'tpy_1stamt', 'gui_flag',
+      'tpy_rate', 'org_id'
+    ];
+
+    for (const field of editableFields) {
+      const currentValue = (item as any)[field];
+      const originalValue = (item._originalData as any)[field];
+
+      // 處理 null/undefined/空字串的比較
+      const normalizedCurrent = this.normalizeValue(currentValue);
+      const normalizedOriginal = this.normalizeValue(originalValue);
+
+      if (normalizedCurrent !== normalizedOriginal) {
+        console.log(`📝 項目 ${item.cap_item} 欄位 ${field} 有變更:`, {
+          原始: originalValue,
+          目前: currentValue
+        });
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private normalizeValue(value: any): string {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string') return value.trim();
+    return String(value);
+  }
+
+
 
   // 輔助方法
   getSelectedCount(capType: string): number {
@@ -1353,5 +1430,31 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     });
 
     this.messageService.infoBubble('狀態分布已輸出到 console');
+  }
+
+  debugCheckIds(): void {
+    console.log('=== 🔍 ID 檢查 ===');
+
+    Object.keys(this.originalFareData).forEach(capType => {
+      const items = this.originalFareData[capType];
+
+      if (items.length > 0) {
+        console.log(`📊 ${capType} 類型 ID 檢查:`);
+
+        items.slice(0, 5).forEach((item, index) => {
+          console.log(`   ${index + 1}. ID: ${item.id} (${typeof item.id}) - ${item.cap_item}`);
+        });
+
+        // 檢查是否有重複 ID
+        const ids = items.map(item => item.id);
+        const uniqueIds = new Set(ids);
+
+        if (ids.length !== uniqueIds.size) {
+          console.warn(`⚠️ ${capType} 類型有重複 ID！總數: ${ids.length}, 唯一: ${uniqueIds.size}`);
+        } else {
+          console.log(`✅ ${capType} 類型 ID 唯一性檢查通過`);
+        }
+      }
+    });
   }
 }
