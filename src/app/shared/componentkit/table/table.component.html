@@ -188,8 +188,11 @@
             (click)="editRow(rowData)" *ngIf="showEdit" [disabled]="editDisabled(rowData)" />
           <p-button pTooltip="查看" tooltipPosition="top" icon="pi pi-eye" (click)="detailRow(rowData)"
             *ngIf="showDetail" />
-          <p-button *ngFor="let btn of addButton" pTooltip="{{ btn.label }}" tooltipPosition="top" [icon]="btn.icon"
-            (click)="btn.action(rowData)" [disabled]="btn.disabled ? btn.disabled(rowData) : false" />
+          <ng-container *ngIf="addButton.length">
+            <div [ngStyle]="{ border: '1px solid var(--surface-border)', 'border-left': '0' }"></div>
+            <p-button *ngFor="let btn of addButton" pTooltip="{{ btn.label }}" tooltipPosition="top" [icon]="btn.icon"
+              (click)="btn.action(rowData)" [disabled]="btn.disabled ? btn.disabled(rowData) : false" />
+          </ng-container>
         </td>
       </ng-container>
       <ng-template #loadingTemplate>
