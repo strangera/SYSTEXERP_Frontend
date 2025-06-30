@@ -20,7 +20,7 @@ export class DropdownComponent extends BasicKitComponent implements OnInit, OnCh
   @Input() optionValue = ''; // 資料的 Value
   @Input() control = new FormControl();
   @Input() submitted = false; // 檢查欄位是否標準
-  @Input() loading = true; // 是否必填
+  @Input() loading = true; // 載入狀態
   destroy$ = new Subject<void>(); // 銷毀訂閱
   // 選項
   @Output() changeEvent = new EventEmitter<DropdownChangeEvent>();
