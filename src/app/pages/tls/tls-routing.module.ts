@@ -1,3 +1,4 @@
+import { Tls51070OsComponent } from './tls51070-os/tls51070-os.component';
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { TLS11010CRUComponent } from './tls11010-cru/tls11010-cru.component';
@@ -800,6 +801,7 @@ const routes: Routes = [
   { path: 'TLS51050CRU', component: TLS51050CRUComponent }, // 商品單位設定 CRU
   { path: 'TLS51060CRU', component: TLS51060CRUComponent }, // 品牌設定作業 CRU
   { path: 'TLS51070CRU', component: TLS51070CRUComponent }, // 商品基本資料 CRU
+  { path: 'TLS51070OS', component: Tls51070OsComponent }, // 商品基本資料 OS
   { path: 'TLS51080CRU', component: TLS51080CRUComponent }, // 分倉資料處理 CRU
   { path: 'TLS51090CRU', component: TLS51090CRUComponent }, // 自營收銀機維護作業 CRU
   { path: 'TLS51100CRU', component: TLS51100CRUComponent }, // 商品資料轉入 CRU
