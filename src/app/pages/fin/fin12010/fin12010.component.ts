@@ -28,7 +28,7 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
   data: IFin12010Data[] = [];
   selectedItems: IFin12010Data[] = [];
   columns: Column[] = [
-    { field: 'SAL_GUIYYYYMM', header: '發票年月', visible: true, format: formatYYYYMM },
+    { field: 'SAL_GUIYYYYMM_Date', header: '發票年月', visible: true, format: formatYYYYMM },
     { field: 'SAL_GUITrack', header: '字軌', visible: true },
     { field: 'SAL_GUIBegNo', header: '發票起號', visible: true },
     { field: 'SAL_GUIEndNo', header: '發票迄號', visible: true },

@@ -15,7 +15,7 @@ import { finalize } from 'rxjs';
 })
 export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> implements OnInit {
   dataForm = this.formBuilder.group({
-    SAL_GUIYYYYMM: [null, [Validators.required, this.validationService.oddMonthValidator]],                          // 發票年月
+    SAL_GUIYYYYMM_Date: [null, [Validators.required, this.validationService.oddMonthValidator]],                          // 發票年月
     SAL_GUITrack: ['', [Validators.required, Validators.maxLength(2), Validators.minLength(2), this.validationService.guiTrackValidator]],  // 發票字軌
     GUI_Qty: [0, [Validators.required, Validators.maxLength(8), Validators.max(99999999)]], // 券數
     SAL_BlankCnt: [{ value: 0, disabled: true }],       // 發票張數
@@ -36,7 +36,6 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
   ngOnInit(): void {
     this.initializePage('FIN12010', this.dataForm);
     if (!this.isFormCreateable) {
-      this.dataForm.get('SAL_GUIYYYYMM')?.disable();
       this.dataForm.get('SAL_GUITrack')?.disable();
       this.dataForm.get('GUI_Qty')?.disable();
       this.dataForm.get('SAL_GUIBegNo')?.disable();
@@ -110,7 +109,7 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
     SAL_GUIEndNo: string;
     SAL_Type: string;
   } {
-    const guiDate: Date | null = frm.get('SAL_GUIYYYYMM')?.value;
+    const guiDate: Date | null = frm.get('SAL_GUIYYYYMM_Date')?.value;
     let guiYYMM = '';
     if (guiDate instanceof Date && !isNaN(guiDate.getTime())) {
       const year = guiDate.getFullYear();

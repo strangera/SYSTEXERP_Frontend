@@ -40,7 +40,7 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
   taxTotalSum = 0;
   displayMode: DisplayMode = 'Detail';
 
-  
+
   // 下拉選單選項
   taxableOptions: any[] = [];
   discountOptions: any[] = [];
@@ -94,61 +94,61 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
 
 
-    {
-      field: 'PLU_SalePrc', header: '單項售價', visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0'
-    },
-    {
-      field: 'TXN_Net', header: '未稅(免稅)金額', visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0'
-    },
+        {
+          field: 'PLU_SalePrc', header: '單項售價', visible: true,
+          style: 'text-right',
+          format: (val: number) => val?.toLocaleString('en-US') || '0'
+        },
+        {
+          field: 'TXN_Net', header: '未稅(免稅)金額', visible: true,
+          style: 'text-right',
+          format: (val: number) => val?.toLocaleString('en-US') || '0'
+        },
 
 
-    {
-      field: 'TXN_Tax', header: '稅額', visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0'
-    },
-    {
-      field: 'TXN_Disc', header: '折扣金額', visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0'
-    },
+        {
+          field: 'TXN_Tax', header: '稅額', visible: true,
+          style: 'text-right',
+          format: (val: number) => val?.toLocaleString('en-US') || '0'
+        },
+        {
+          field: 'TXN_Disc', header: '折扣金額', visible: true,
+          style: 'text-right',
+          format: (val: number) => val?.toLocaleString('en-US') || '0'
+        },
 
-    {
-      field: 'tlt_id',
-      header: '商品抽成類別',
-      visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.deductionbigCategoryOptions)
-    },
-    {
-      field: 'ORG_TXN_DiscCode', header: '原折扣', visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.discountOptions)
-    }, // 查無該欄位，請確認是否有誤或應移除
-    {
-      field: 'TXN_DiscCode', header: '歸屬折扣', visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.discountOptions)
-    },
+        {
+          field: 'tlt_id',
+          header: '商品抽成類別',
+          visible: true,
+          format: (val: any) => this.getLabelFromOptions(val, this.deductionbigCategoryOptions)
+        },
+        {
+          field: 'ORG_TXN_DiscCode', header: '原折扣', visible: true,
+          format: (val: any) => this.getLabelFromOptions(val, this.discountOptions)
+        }, // 查無該欄位，請確認是否有誤或應移除
+        {
+          field: 'TXN_DiscCode', header: '歸屬折扣', visible: true,
+          format: (val: any) => this.getLabelFromOptions(val, this.discountOptions)
+        },
 
-    {
-      field: 'PLU_TaxType',
-      header: '稅別',
-      visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.taxableOptions)
-    },
-    { field: 'PLU_MagNo', header: '單品編號', visible: true },
+        {
+          field: 'PLU_TaxType',
+          header: '稅別',
+          visible: true,
+          format: (val: any) => this.getLabelFromOptions(val, this.taxableOptions)
+        },
+        { field: 'PLU_MagNo', header: '單品編號', visible: true },
 
-    {
-      field: 'TXN_Status',
-      header: '狀態',
-      visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions)
-    },
-    ];
+        {
+          field: 'TXN_Status',
+          header: '狀態',
+          visible: true,
+          format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions)
+        },
+      ];
+    }
   }
-}
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
   }
@@ -216,7 +216,7 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
     const queryFormValue = state?.queryFormValue;
     const preloadedData = state?.data;
     this.data = state?.data || [];
-    this.displayMode = state?.displayMode ?? 'Detail'; 
+    this.displayMode = state?.displayMode ?? 'Detail';
     // this.displayMode = queryFormValue?.DisplayMode ?? state?.displayMode ?? 'Detail';
 
 

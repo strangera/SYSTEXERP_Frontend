@@ -22,9 +22,10 @@
       <div class="caption-left button-group flex gap-2 py-2">
         <p-multiSelect [options]="columns" [(ngModel)]="selectedColumns" optionLabel="header" dropdownIcon="pi pi-cog"
           pTooltip="過濾欄位" tooltipPosition="top" (onChange)="onFilterChange($event)" />
-        <p-button [icon]="IsPrint ? 'pi pi-file' : 'pi pi-times'" [rounded]="true" *ngIf="apiUrl && data.length > 0"
-          (click)="toggleVisibility()" [pTooltip]="IsPrint ? '報表模式' : '關閉報表模式'" tooltipPosition="top"
-          [outlined]="!IsPrint" [disabled]="!canPerformAction('50')" />
+        <p-button [icon]="IsPrint ? 'pi pi-file' : 'pi pi-times'" [rounded]="true"
+          *ngIf="showReportMode && data.length > 0" (click)="toggleVisibility()"
+          [pTooltip]="IsPrint ? '報表模式' : '關閉報表模式'" tooltipPosition="top" [outlined]="!IsPrint"
+          [disabled]="!canPerformAction('50')" />
         <div [@toggleButtons]="!IsPrint ? 'visible' : 'hidden'" [ngClass]="IsPrint ? 'hidden' : 'flex'" class="gap-2">
           <p-button pButton tooltipPosition="top" pTooltip="列印PDF" class="p-button-rounded p-button-text p-button-info"
             icon="fa-regular fa-file-pdf" (click)="exportStatus = 'PDF'; exportDialog = true"

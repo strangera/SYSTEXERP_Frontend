@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 
@@ -16,6 +16,13 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
   @Input() showCopyButton = false;
   @Input() customPlaceholder: string | undefined;
   @Input() errorForGroup = false;
+  @Input() showStar = false;
+  value = '********************************************************************************************************************************************************************************************************************************************************************************************************';
+
+  @Input() showButton = false;
+  @Input() buttonLabel = '';
+  @Input() buttonLoading = false;
+  @Output() clickButton = new EventEmitter<any>();
 
   ngOnInit(): void {
     if (this.disabled) {
@@ -25,5 +32,9 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
       this.placeholder = this.customPlaceholder;
     }
     this.updateControlState(this.control);
+  }
+
+  onClick(): void {
+    this.clickButton.emit();
   }
 }

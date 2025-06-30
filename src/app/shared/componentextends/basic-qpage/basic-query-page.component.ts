@@ -10,6 +10,7 @@ import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { LazyLoadEvent } from '../../componentkit/table/table.model';
+import { SortMeta } from 'primeng/api';
 
 export class BasicQueryPageComponent<T> {
   ProgNo = '';

@@ -11,7 +11,9 @@
         <app-input-text class="col-12 md:col-6 lg:col-4" label="使用者名稱" controlName="user_Name"
           [control]="dataForm.controls.user_Name" [submitted]="submitted" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="使用者密碼" controlName="user_Password"
-          [control]="dataForm.controls.user_Password" [submitted]="submitted" />
+          [control]="dataForm.controls.user_Password" [submitted]="submitted" [showButton]="isFormEditable"
+          [buttonLabel]="'重製密碼'" (clickButton)="resetPassword()" [buttonLoading]="resetLoading"
+          [showStar]="!isFormCreateable && showStar" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="組織代碼" controlName="org_ID" [options]="SYS3100_Options"
           optionLabel="label" optionValue="value" [control]="dataForm.controls.org_ID" [submitted]="submitted" />
         <app-calendar-range-quick class="col-12 lg:col-8" label="有效日期" [startControl]="dataForm.controls.str_date"
