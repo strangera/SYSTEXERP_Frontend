@@ -18,17 +18,35 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="商品管理碼/國際條碼/廠商貨號"
+              label="商品管理碼"
               controlName="PLU_MagNo"
               [control]="queryForm.controls.PLU_MagNo"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="國際條碼"
+              controlName="PLU_No"
+              [control]="queryForm.controls.PLU_No"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="廠商貨號"
+              controlName="PLU_OrgPLUNo"
+              [control]="queryForm.controls.PLU_OrgPLUNo"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-input-number
               label="標籤數量"
-              controlName="labelNumber"
-              [control]="queryForm.controls.labelNumber"
+              controlName="Label_Qty"
+              [control]="queryForm.controls.Label_Qty"
               [submitted]="submitted"
             ></app-input-number>
           </div>
@@ -49,7 +67,7 @@
   <div class="col-13">
     <app-expandable-edit-table #labelTable title="產生標籤檔" [mainColumns]="labelColumn" [data]="labelData"
           [loading]="expandlabelLoading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
-          [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false"
+          [showAddButton]="false" [showDetailTabs]="false" [showDetailAddButton]="false"
           [defaultNewItem]="defaultNewLabel" (save)="onRowSave($event)" (cancel)="onRowCancel($event)"
           (batchDelete)="deleteLabel()" (addMainItem)="addPOSLabel()"></app-expandable-edit-table>
   </div>

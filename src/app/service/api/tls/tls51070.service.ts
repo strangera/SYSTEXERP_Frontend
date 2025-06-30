@@ -36,6 +36,13 @@ export class Tls51070Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLS51070_Detail`, body);
   }
 
+  //取得標籤檔資料
+  getLabelTLS51070(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/getLabelTLS51070`, body);
+  }
+
+  // --- dropDown ---
+
   // 查詢 大分類(業種)設定檔
   queryCAT_LNo_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryPOS2003_DropDownList`, body);
