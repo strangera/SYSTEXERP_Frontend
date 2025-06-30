@@ -9,7 +9,7 @@ export class CustomheaderinterceptorService implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // TransactionTime
-    let utc_now = formatDate(new Date(), 'yyyy/MM/ddThh:mm:ssZ', 'zh-Hant-TW');
+    const utc_now = formatDate(new Date(), 'yyyy/MM/ddThh:mm:ssZ', 'zh-Hant-TW');
 
     // 您的自定義
     const clonedReq = req.clone({

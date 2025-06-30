@@ -177,11 +177,13 @@ export class SYSB400CRUComponent
   onSubmit(frm: FormGroup) {
     // 修改：使用父類的 handleSubmit 方法
     this.handleSubmit(frm, () => {
-      console.log('送出',frm.value);
+      const formValue = frm.getRawValue();
+      console.log('送出',formValue);
+      
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            this.sysb400Service.insertSYSB400(frm.value).subscribe(() => {
+            this.sysb400Service.insertSYSB400(formValue).subscribe(() => {
               this.messageService.successBubble('新增成功');
               // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
               this.dataForm.reset(); // 重置表單
@@ -190,8 +192,7 @@ export class SYSB400CRUComponent
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            console.log('frm.value', frm.value);
-            this.sysb400Service.updateSYSB400(frm.value).subscribe(() => {
+            this.sysb400Service.updateSYSB400(formValue).subscribe(() => {
               this.messageService.successBubble('更新成功');
               this.onCancel(); // 更新成功後返回查詢頁面
             });

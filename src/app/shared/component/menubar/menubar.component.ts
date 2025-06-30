@@ -37,7 +37,7 @@ export class MenubarComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this.home = { icon: 'pi pi-home', routerLink: '/dashboard' };
+    this.home = { icon: 'pi pi-home', routerLink: '/account/dashboard' };
     if (this.customBreadcrumbItems.length > 0) {
       return;
     }

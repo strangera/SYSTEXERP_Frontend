@@ -8,7 +8,8 @@ import { ApiResponse } from '../../system/auth.service'; // 假設 ApiResponse �
 export interface IDropdownItem {
   No: string;
   Name: string;
-  ShortName: string;
+  ShortName?: string;
+  VEN_No?: string;
 }
 
 // 針對 querySYS3100_tree_DropDownList 的資料結構
@@ -81,7 +82,7 @@ export interface IPOS2002LocationRequest {
 }
 
 export interface IPOS2013Request {
-  VEN_Flag: string;
+  VEN_Flag?: string;
 }
 
 
@@ -200,6 +201,11 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS20031_DropDownList`, params);
   }
 
+  // 查詢小分類代碼(POS20032)資料表下拉選單
+  queryPOS20032_DropDownList(params: IPOS20032Request): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS20032_DropDownList`, params);
+  }
+
   // 查詢品牌代碼(PLULOGO)資料表下拉選單
   queryPLULOGO_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPLULOGO_DropDownList`, {});
@@ -222,11 +228,6 @@ export class DropDownListService {
           return { ...response, Data: [] }; // 如果沒有，返回空陣列
         })
       );
-  }
-
-  // 查詢小分類代碼(POS20032)資料表下拉選單
-  queryPOS20032_DropDownList(params: IPOS20032Request): Observable<ApiResponse<IDropdownItem[]>> {
-    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS20032_DropDownList`, params);
   }
 
   // 查詢商品單位(PLUUNIT)資料表下拉選單
@@ -270,7 +271,7 @@ export class DropDownListService {
   }
 
   // 查詢POS2013廠商資料表下拉選單
-  queryPOS2013_DropDownList(params: IPOS2013Request): Observable<ApiResponse<IDropdownItem[]>> {
+  queryPOS2013_DropDownList(params: IPOS2013Request = {}): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS2013_DropDownList`, params);
   }
 }

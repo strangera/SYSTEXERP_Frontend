@@ -42,14 +42,8 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
     { field: 'LOGO_CH_NAME', header: '品牌中文名稱', visible: true },
     { field: 'LOGO_EN_NAME', header: '品牌英文名稱', visible: true },
     { field: 'PLU_OrderPrcRate', header: '標準進貨折數', visible: false },
-    {
-      field: 'HOS_No',
-      header: '建議倉別',
-      visible: true,
-      format: (value: string) =>
-        this.storageOptions.find((option) => option.No === value)?.Label ||
-        value,
-    },
+    { field: 'HOS_No', header: '建議倉別代碼', visible: true },
+    { field: 'HOS_NAME', header: '建議倉別名稱', visible: true },
     { field: 'VEN_No', header: '廠商編號', visible: false },
     { field: 'LOGO_Remark', header: '備註說明', visible: true }
   ];
