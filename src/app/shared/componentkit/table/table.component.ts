@@ -133,6 +133,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
         const dataLength = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
         if (dataLength > 0) {
           this.calculateTotalPages(); // 計算總頁數
+        } else {
+          this.dt.totalRecords = 0;
         }
         this.selectionChange.emit(this.selectedItems);
       });

@@ -83,9 +83,9 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   poStatusOptions: { label: string, value: string }[] = []; // 採購單狀態 (靜態資料)
   userOptions: { label: string, value: string }[] = []; // 申請人員、審核人員、結案人員
   addButton: AddButton[] = [
-    { label: '單據審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, POStatus.已審核); }, disabled: (rowData: ITLS52020Data) => rowData.PO_Status !== '0' }, // 審核
-    { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, POStatus.已申請); }, disabled: (rowData: ITLS52020Data) => rowData.PO_Status !== '2' }, // 反審核
-    { label: '作廢單據', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, POStatus.作廢); }, disabled: (rowData: ITLS52020Data) => rowData.PO_Status !== '2' }, // 作廢
+    { label: '單據審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, POStatus.已審核); }, disabled: (rowData: ITLS52020Data) => rowData.CRN_Status !== '1' }, // 審核
+    { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, POStatus.已申請); }, disabled: (rowData: ITLS52020Data) => rowData.CRN_Status !== '2' }, // 反審核
+    { label: '作廢單據', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, POStatus.作廢); }, disabled: (rowData: ITLS52020Data) => rowData.CRN_Status !== '2' }, // 作廢
   ];
 
   constructor(
