@@ -26,8 +26,13 @@
     overflow-x: auto; /* ✅ 確保表格層可左右捲動 */
   }
 
+  .card {
+    overflow-x: auto;     /* ✅ 讓它可捲動 */
+  }
+
   .p-datatable-scrollable .p-datatable-wrapper {
-    min-width: 1200px; /* ✅ 強迫內容超出可捲動 */
+    width: max-content;   /* ✅ 寬度根據內容決定 */
+    min-width: 100%;      /* ✅ 但至少佔滿容器 */
   }
 
   .grouped-view,
