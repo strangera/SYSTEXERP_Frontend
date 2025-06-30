@@ -20,10 +20,10 @@ export const enum POStatus {
 export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> implements OnInit {
   queryForm = this.formBuilder.group({
     ODM_No: ['', [Validators.maxLength(16)]], // 驗收編號
-    HOS_No: [''], // 倉庫代碼
-    LOGO_No: [''], // 品牌代碼
+    HOS_NoList: [null], // 倉庫代碼
+    LOGO_NoList: [null], // 品牌代碼
     VEN_No: [''], // 廠商代號
-    ODM_Status: ['', [Validators.required]], // 驗收狀態
+    ODM_StatusList: [null, [Validators.required]], // 驗收狀態
     ODM_USR: [''], // 申請人員
     ODM_Date_Start: [''], // 申請日期起
     ODM_Date_End: [''], // 申請日期迄
@@ -37,7 +37,6 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   data: ITLS52030Data[] = [];
   selectedItems: ITLS52030Data[] = [];
   columns: Column[] = [
-    { field: 'id', header: 'ID', visible: true },
     { field: 'ODM_No', header: '驗收編號', visible: true },
     { field: 'SYS_StoreNo', header: '公司編號/店號', visible: false },
     { field: 'VEN_No', header: '廠商代號', visible: true },
@@ -78,9 +77,24 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
   ];
   addButton: AddButton[] = [
-    { label: '單據審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52030Data) => { this.statusChange(rowData, POStatus.已審核); }, disabled: (rowData: ITLS52030Data) => rowData.ODM_Status !== POStatus.已確認 }, // 審核
-    { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52030Data) => { this.statusChange(rowData, POStatus.已確認); }, disabled: (rowData: ITLS52030Data) => rowData.Request_No !== null }, // 反審核
-    { label: '作廢單據', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS52030Data) => { this.statusChange(rowData, POStatus.作廢); }, disabled: (rowData: ITLS52030Data) => rowData.ODM_Status !== POStatus.已確認 }, // 作廢
+    {
+      label: '單據審核',
+      icon: 'pi pi-check-circle text-green-500',
+      action: (rowData: ITLS52030Data) => { this.statusChange(rowData, POStatus.已審核); },
+      disabled: (rowData: ITLS52030Data) => rowData.ODM_Status !== POStatus.已確認
+    },
+    {
+      label: '反審核',
+      icon: 'pi pi-undo text-orange-500',
+      action: (rowData: ITLS52030Data) => { this.statusChange(rowData, POStatus.已確認); },
+      disabled: (rowData: ITLS52030Data) => rowData.Request_No !== null
+    },
+    {
+      label: '作廢單據',
+      icon: 'pi pi-trash text-red-500',
+      action: (rowData: ITLS52030Data) => { this.statusChange(rowData, POStatus.作廢); },
+      disabled: (rowData: ITLS52030Data) => rowData.ODM_Status !== POStatus.已確認
+    },
   ];
   warehouseOptions: IDropdownItem[] = []; // 倉別
   pluMagNoOptions: { label: string, value: string }[] = []; // 商品管理編號
@@ -92,7 +106,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
 
   constructor(
     private tls52030Service: Tls52030Service,
-    private dropDownListService: DropDownListService
+    private dropDownListService: DropDownListService,
   ) { super(); }
 
   ngOnInit(): void {
