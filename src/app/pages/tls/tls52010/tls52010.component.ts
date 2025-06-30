@@ -2,9 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime, formatYN } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IPOS2013Request } from '../../../service/api/dropdownservice/dropDownList.service'; // 導入 DropDownListService 和所需介面
 import { finalize, map } from 'rxjs'; // 只需要 map 運算符，因為我們將直接訂閱
+
+export const enum POStatus {
+  已申請 = '0',
+  取消 = '1',
+  已審核 = '2',
+  部分驗收 = '3',
+  全部驗收 = '4',
+  作廢 = '5',
+  強制結案 = '6',
+}
 
 // 2.5.2.1 採購單維護作業
 @Component({
@@ -18,7 +28,8 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     HOS_No: [null], // 倉庫代碼 multi-select
     LOGO_No: [null], // 品牌代碼 multi-select
     VEN_No: [null], // 廠商編號 multi-select
-    PO_Status: [null, [Validators.required]], // 採購單狀態 multi-select
+    PO_Status: [null], // 採購單狀態 multi-select // !!! 記得改成必填
+    // PO_Status: [null, [Validators.required]], // 採購單狀態 multi-select
     APPLY_USR: [null], // 申請人員 multi-select
     APPLY_Date_Start: [null], // 申請日期 起 calendar-range
     APPLY_Date_End: [null], // 申請日期 迄
@@ -35,13 +46,12 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   data: ITLS52010Data[] = [];
   selectedItems: ITLS52010Data[] = []; // 用於儲存選中的項目
   // 管理：單據審核、反審核、產生標籤檔、作廢、取消單據功能
-  // 註:已審核且未有任何驗收才可作廢
   addButton: AddButton[] = [
-    { label: '單據審核', icon: 'pi pi-check-circle', action: (rowData: ITLS52010Data) => { this.approveDocument(rowData); } }, // 審核
-    { label: '反審核', icon: 'pi pi-undo', action: (rowData: ITLS52010Data) => { this.revokeApproval(rowData); } }, // 反審核
+    { label: '單據審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.已審核); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== '0' }, // 審核
+    { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.已申請); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== '2' }, // 反審核
     { label: '產生標籤檔', icon: 'pi pi-tags', action: (rowData: ITLS52010Data) => { this.generateLabelFile(rowData); } }, // 標籤檔
-    { label: '作廢', icon: 'pi pi-trash', action: (rowData: ITLS52010Data) => { this.voidDocument(rowData); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== '2' }, // 作廢
-    { label: '取消單據', icon: 'pi pi-times-circle', action: (rowData: ITLS52010Data) => { this.cancelDocument(rowData); } }, // 取消單據
+    { label: '作廢', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.作廢); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== '2' }, // 作廢
+    { label: '取消單據', icon: 'pi pi-times-circle text-gray-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.取消); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== '0' }, // 取消單據
   ];
 
   // 表格欄位定義
@@ -54,6 +64,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true }, // 倉庫名稱
     { field: 'org_id', header: '組織代碼', visible: true }, // 組織代碼
     { field: 'ODM_TaxType', header: '稅別', visible: true, format: value => value === '1' ? '應稅' : '免稅' }, // 稅別
+    { field: 'PO_Status', header: '採購單狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value }, // 採購單狀態
     { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime }, // 申請日期 (ISO 格式字串)
     { field: 'APPLY_USR_No', header: '申請人員編號', visible: true }, // 申請人員編號
     { field: 'APPLY_USR_Name', header: '申請人員姓名', visible: true }, // 申請人員姓名
@@ -64,7 +75,6 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     { field: 'PO_TotalSaleNet', header: '銷售總淨額', visible: true, format: formatAmount }, // 銷售總淨額
     { field: 'PO_TotalSaleTax', header: '銷售總稅額', visible: true, format: formatAmount }, // 銷售總稅額
     { field: 'PO_TotalSaleAmt', header: '銷售總金額', visible: true, format: formatAmount }, // 銷售總金額
-    { field: 'PO_Status', header: '採購單狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value }, // 採購單狀態
     { field: 'APRV_Date', header: '核准日期', visible: true, format: formatDateTime }, // 核准日期 (ISO 格式字串)
     { field: 'APRV_USR_No', header: '核准人員編號', visible: true }, // 核准人員編號
     { field: 'APRV_USR_Name', header: '核准人員姓名', visible: true }, // 核准人員姓名
@@ -75,13 +85,12 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     { field: 'CLOS_USR_No', header: '結案人員編號', visible: true }, // 結案人員編號
     { field: 'CLOS_USR_Name', header: '結案人員姓名', visible: true }, // 結案人員姓名
     { field: 'PO_Remark', header: '採購單備註', visible: true }, // 採購單備註
-    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime }, // 建立日期 (ISO 格式字串)
-    { field: 'CRT_USR_No', header: '建立人員編號', visible: true }, // 建立人員編號
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true }, // 建立人員姓名
-    { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDateTime }, // 變更日期 (ISO 格式字串)
-    { field: 'UPD_USR_No', header: '變更人員編號', visible: true }, // 變更人員編號
-    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true }, // 變更人員姓名
-    { field: 'CanClos', header: '是否可結案', visible: true, format: formatYN }, // 是否可結案
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期 (ISO 格式字串)
+    { field: 'CRT_USR_No', header: '建立人員編號', visible: false }, // 建立人員編號
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期 (ISO 格式字串)
+    { field: 'UPD_USR_No', header: '變更人員編號', visible: false }, // 變更人員編號
+    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
   ];
   // 聲明用於儲存下拉選單選項的變數，直接為陣列型別
   warehouseOptions: { label: string, value: string }[] = []; // 倉別
@@ -155,27 +164,30 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
 
   close(rowData: ITLS52010Data[]) {
     console.log('關閉多筆事件:', rowData);
+    const body = {
+      idList: rowData.map(item => item.id),
+      PO_Status: POStatus.強制結案
+    }
+    this.tls52010Service.SetCloseTLS52010(body).pipe(finalize(() => this.loading = false)).subscribe(response => {
+      this.messageService.successBubble(response.Message);
+      this.selectedItems = [];
+      this.onSubmit(this.queryForm);
+    });
   }
-
-  // 單筆事件
-  approveDocument(rowData: ITLS52010Data) {
-    // 實現單據審核邏輯
-    console.log('審核單據:', rowData);
-  }
-  revokeApproval(rowData: ITLS52010Data) {
-    // 實現反審核邏輯
-    console.log('反審核單據:', rowData);
-  }
+  // 產生標籤
   generateLabelFile(rowData: ITLS52010Data) {
     // 實現產生標籤檔邏輯
     console.log('產生標籤檔:', rowData);
   }
-  voidDocument(rowData: ITLS52010Data) {
-    // 實現作廢單據邏輯
-    console.log('作廢單據:', rowData);
-  }
-  cancelDocument(rowData: ITLS52010Data) {
-    // 實現取消單據邏輯
-    console.log('取消單據:', rowData);
+
+  statusChange(rowData: ITLS52010Data, status: string) {
+    const body = {
+      idList: [rowData.id],
+      PO_Status: status
+    }
+    this.tls52010Service.SetCloseTLS52010(body).pipe(finalize(() => this.loading = false)).subscribe(response => {
+      this.messageService.successBubble(response.Message);
+      this.onSubmit(this.queryForm);
+    });
   }
 }
