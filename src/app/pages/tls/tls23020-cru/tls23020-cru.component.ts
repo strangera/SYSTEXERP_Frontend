@@ -65,14 +65,13 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
     return [
       { field: 'tlt_no', header: '專櫃編號' },
       { field: 'tlt_name', header: '櫃位名稱' },
-      { field: 'TotalAmt', header: '銷售金額', style: 'text-right', format: this.moneyFormat },
-      { field: 'TotalAmt', header: '未稅金額', style: 'text-right', format: this.moneyFormat },
-      { field: 'TotalAmt', header: '結帳金額', style: 'text-right', format: this.moneyFormat },
-      { field: 'TotalAmt', header: '結帳未稅', style: 'text-right', format: this.moneyFormat },
-      { field: 'TotalAmt', header: '結帳稅額', style: 'text-right', format: this.moneyFormat },
-      { field: 'TotalAmt', header: '預購金額', style: 'text-right', format: this.moneyFormat },
-      { field: 'TotalAmt', header: '預購未稅', style: 'text-right', format: this.moneyFormat },
-      { field: 'TotalAmt', header: '預購稅額', style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_TotSaleAmt', header: '銷售金額', style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_TotNet', header: '未稅金額', style: 'text-right', format: this.moneyFormat },
+     
+
+      { field: 'TXN_TotTax', header: '預購金額', style: 'text-right', format: this.moneyFormat },
+      { field: 'Pre_TotSaleAmt', header: '預購未稅', style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_TotTax', header: '預購稅額', style: 'text-right', format: this.moneyFormat },
       
     ];
   } else {

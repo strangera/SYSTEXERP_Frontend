@@ -17,6 +17,7 @@ import { NotificationService } from '../../../shared/component/notification-mess
   styleUrls: ['./tls13030.component.scss'],
 })
 export class TLS13030Component extends BasicQueryPageComponent<any> {
+  isPrint = true; // 或預設為 false，視需求切換
   queryForm = this.formBuilder.group({
     tlt_no: ['', [Validators.maxLength(10)]],
     tlt_name: ['', [Validators.maxLength(50)]],

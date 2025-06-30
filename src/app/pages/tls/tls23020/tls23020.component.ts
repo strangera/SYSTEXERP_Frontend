@@ -51,6 +51,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     tlt_building: [],                                     // 所屬大樓
     tlt_floor: [],                                        // 所屬樓層
     org_id: [],                                           // 組織代碼
+    isSummary: false,
     // DisplayMode: this.useSummaryMode ? 'SummaryReport' : 'Report', // 顯示模式
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }])
 
