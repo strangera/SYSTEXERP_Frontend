@@ -689,14 +689,64 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       return true;
     });
 
-    // 確保所有項目都有正確的狀態
-    return validLocationData.map(item => ({
-      ...item,
-      _status: item._status || 'original'
-    }));
+    // ✅ 確保所有項目都有正確的狀態並清理空 key
+    return validLocationData.map(item => {
+      const cleanedItem = this.cleanObjectKeys({
+        ...item,
+        _status: item._status || 'original'
+      });
+
+      // ✅ 確保必要欄位存在且有效
+      return {
+        id: cleanedItem.id,
+        talent_id: cleanedItem.talent_id,
+        location_no: cleanedItem.location_no || '',
+        tlt_building: cleanedItem.tlt_building || '',
+        tlt_floor: cleanedItem.tlt_floor || '',
+        area_no: cleanedItem.area_no || '',
+        tlt_space: cleanedItem.tlt_space || 0,
+        building_desc: cleanedItem.building_desc || '',
+        floor_desc: cleanedItem.floor_desc || '',
+        area_desc: cleanedItem.area_desc || '',
+        _status: cleanedItem._status,
+        _isNew: cleanedItem._isNew || false
+      } as LocationItem;
+    });
   }
 
+  private cleanObjectKeys(obj: any): any {
+    if (obj === null || obj === undefined) {
+      return obj;
+    }
 
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.cleanObjectKeys(item));
+    }
+
+    if (typeof obj === 'object') {
+      const cleaned: any = {};
+
+      Object.keys(obj).forEach(key => {
+        // ✅ 過濾空 key 和無效 key
+        if (key && key.trim() !== '' && key !== 'undefined' && key !== 'null') {
+          const value = obj[key];
+
+          // 遞迴清理嵌套物件
+          if (typeof value === 'object' && value !== null) {
+            cleaned[key] = this.cleanObjectKeys(value);
+          } else {
+            cleaned[key] = value;
+          }
+        } else {
+          console.warn(`⚠️ 發現並移除空/無效 key: "${key}"`);
+        }
+      });
+
+      return cleaned;
+    }
+
+    return obj;
+  }
 
   // ==========  按鈕事件處理 ==========
   onSave(): void {
