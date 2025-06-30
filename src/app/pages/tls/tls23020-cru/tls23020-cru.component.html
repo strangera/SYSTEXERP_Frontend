@@ -13,7 +13,7 @@
   [subtotalFields]="
     displayMode === 'Detail'
       ? ['TXN_TotGUI', 'TXN_TotSaleAmt', 'TXN_TotPayAmt']
-      : ['TXN_TotSaleAmt']
+      : ['TXN_TotSaleAmt', 'TXN_TotNet', 'TXN_TotTax', 'Pre_TotSaleAmt', 'TXN_TotTax']
   "
   [groupByField]="displayMode === 'Summary' ? 'tlt_name' : null"
   [groupByLabel]="'櫃位名稱'"

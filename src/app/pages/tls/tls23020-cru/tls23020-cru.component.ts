@@ -61,38 +61,37 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
 
 
   get columns() {
-    if (this.displayMode === 'Summary') {
-      return [
-        { field: 'tlt_no', header: '專櫃編號' },
-        { field: 'tlt_name', header: '櫃位名稱' },
-        { field: 'TotalAmt', header: '銷售金額', style: 'text-right', format: this.moneyFormat },
-        { field: 'TotalAmt', header: '未稅金額', style: 'text-right', format: this.moneyFormat },
-        { field: 'TotalAmt', header: '結帳金額', style: 'text-right', format: this.moneyFormat },
-        { field: 'TotalAmt', header: '結帳未稅', style: 'text-right', format: this.moneyFormat },
-        { field: 'TotalAmt', header: '結帳稅額', style: 'text-right', format: this.moneyFormat },
-        { field: 'TotalAmt', header: '預購金額', style: 'text-right', format: this.moneyFormat },
-        { field: 'TotalAmt', header: '預購未稅', style: 'text-right', format: this.moneyFormat },
-        { field: 'TotalAmt', header: '預購稅額', style: 'text-right', format: this.moneyFormat },
+  if (this.displayMode === 'Summary') {
+    return [
+      { field: 'tlt_no', header: '專櫃編號' },
+      { field: 'tlt_name', header: '櫃位名稱' },
+      { field: 'TXN_TotSaleAmt', header: '銷售金額', style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_TotNet', header: '未稅金額', style: 'text-right', format: this.moneyFormat },
+     
 
-      ];
-    } else {
-      return [
-        {
-          field: 'TXN_Date',
-          header: '銷售日期',
-          visible: true,
-          format: (val: string) => {
-            const date = new Date(val);
-            return isNaN(date.getTime())
-              ? val
-              : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-          }
-        },
-        { field: 'ECR_No', header: '收銀機代號', visible: true },
-        { field: 'TXN_No', header: '交易序號', visible: true },
-        { field: 'tlt_no', header: '專櫃編號', visible: true },
-        { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' }, // 若無此欄位請移除
-        { field: 'TXN_GUINo', header: '發票號碼', visible: true },
+      { field: 'TXN_TotTax', header: '預購金額', style: 'text-right', format: this.moneyFormat },
+      { field: 'Pre_TotSaleAmt', header: '預購未稅', style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_TotTax', header: '預購稅額', style: 'text-right', format: this.moneyFormat },
+      
+    ];
+  } else {
+    return [
+       {
+      field: 'TXN_Date',
+      header: '銷售日期',
+      visible: true,
+      format: (val: string) => {
+        const date = new Date(val);
+        return isNaN(date.getTime())
+          ? val
+          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+      }
+    },
+    { field: 'ECR_No', header: '收銀機代號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' }, // 若無此欄位請移除
+    { field: 'TXN_GUINo', header: '發票號碼', visible: true },
 
 
         {
