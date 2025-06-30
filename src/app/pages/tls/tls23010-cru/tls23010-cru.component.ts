@@ -114,26 +114,32 @@ set displayMode(value: 'Detail' | 'Summary') {
     return this.data.reduce((sum, row) => sum + (parseFloat(row[field]) || 0), 0);
   }
 
- private updatePdfSummary(): void {
+private updatePdfSummary(): void {
   if (this.displayMode === 'Detail') {
-    const A = this.getSum('TXN_TotSaleAmt');
-    const B = this.getSum('TXN_TotPayAmt');
-    const C = this.getSum('TXN_TotOver');
-    const D = this.getSum('TXN_TotDisc');
-    const E = this.getSum('TXN_TaxFreeCertNo');
+    const A = this.getSum('TXN_TotSaleAmt');       // 發票金額
+    const B = this.getSum('TXN_TotPayAmt');        // 已開發票的支付工具
+    const C = this.getSum('TXN_TotOver');          // 已開發票的支付工具溢收
+    const D = this.getSum('TXN_Deposit');          // 訂金
+    const E = this.getSum('TXN_DepositSettle');    // 訂金結帳金額
+    const F = this.getSum('TXN_DepositUsed');      // 訂金結帳的訂金
+    const G = this.getSum('TXN_TotDisc');          // 預售 (使用折扣金額欄位)
+    const H = this.getSum('TXN_TaxFreeCertNo');    // 預售結帳金額
 
-    const discountValue = A + B - C - D;
-    const paymentValue = A + B;
+    const discountValue = A + B - C + E - G + H;
+    const paymentValue = A + B + D - F;
 
     this.pdfSummary = [
-      `(A) 發票金額 = ${A.toLocaleString()}`,
-      `(B) 訂金實收 = ${B.toLocaleString()}`,
-      `(C) 溢收金額 = ${C.toLocaleString()}`,
-      `(D) 折讓金額 = ${D.toLocaleString()}`,
-      `(E) 外交官免稅 = ${E.toLocaleString()}`,
-      '=============================',
-      `折扣別(專櫃業績) = (A + B - C - D) = ${discountValue.toLocaleString()}`,
-      `付款別(支付工具) = (A + B) = ${paymentValue.toLocaleString()}`
+      `(A)發票金額 =\t${A.toLocaleString()}`,
+      `(B)已開發票的支付工具 =\t${B.toLocaleString()}`,
+      `(C)已開發票的支付工具溢收 =\t${C.toLocaleString()}`,
+      `(D)訂金 =\t${D.toLocaleString()}`,
+      `(E)訂金結帳全額 =\t${E.toLocaleString()}`,
+      `(F)訂金結帳的訂金 =\t${F.toLocaleString()}`,
+      `(G)預售 =\t${G.toLocaleString()}`,
+      `(H)預售結帳金額 =\t${H.toLocaleString()}`,
+      '====================================================',
+      `折扣別(專櫃業績) = (A) + (B) - (C) + (E) - (G) + (H)=\t${discountValue.toLocaleString()}`,
+      `付款別(支付工具) = (A) + (B) + (D) - (F)=\t${paymentValue.toLocaleString()}`
     ];
   } else if (this.displayMode === 'Summary') {
     const totalAmt = this.getSum('TXN_TotSaleAmt');
@@ -143,12 +149,11 @@ set displayMode(value: 'Detail' | 'Summary') {
       `總金額合計 = ${totalAmt.toLocaleString()}`,
       `總交易筆數合計 = ${totalTxn.toLocaleString()}`,
       '=============================',
-      `平均每筆金額 = ${
-        totalTxn > 0 ? (totalAmt / totalTxn).toFixed(2) : '0.00'
-      }`
+      `平均每筆金額 = ${totalTxn > 0 ? (totalAmt / totalTxn).toFixed(2) : '0.00'}`
     ];
   }
 }
+
  get columns(): ReportColumn[] {
     switch (this.displayMode) {
       case 'Detail':
