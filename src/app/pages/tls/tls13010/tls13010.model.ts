@@ -106,6 +106,7 @@ export interface LocationItem {
   floor_desc: string;
   area_desc: string;
   _status?: 'new' | 'modified' | 'deleted' | 'original';
+  _isNew?: boolean; // 標記是否為新資料
 }
 
 // 合約主檔（CRU）
