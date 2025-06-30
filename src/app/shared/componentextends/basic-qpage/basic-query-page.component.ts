@@ -10,6 +10,7 @@ import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { LazyLoadEvent } from '../../componentkit/table/table.model';
+import { SortMeta } from 'primeng/api';
 
 export class BasicQueryPageComponent<T> {
   ProgNo = '';
@@ -81,7 +82,7 @@ export class BasicQueryPageComponent<T> {
     }
   }
   // 送出查詢
-  handleSubmit(queryForm: FormGroup, callback: () => void) {
+  handleSubmit(queryForm: FormGroup, callback: () => void, SortBy?: SortMeta[]) {
     this.submitted = true;
     this.loading = true;
     this.messageService.blockUi();
@@ -111,6 +112,7 @@ export class BasicQueryPageComponent<T> {
   }
 
   onLazyLoadData(event: LazyLoadEvent, queryForm: FormGroup) {
+    console.log(123);
     queryForm.patchValue({
       pageSize: event.pageSize,
       pageIndex: event.pageIndex,

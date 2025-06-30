@@ -146,7 +146,7 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
           this.messageService.unblockUi();
         },
       });
-    });
+    }, [{ field: 'user_No', order: 1 }]);
   }
   // 刪除項目
   onDelete(data: tblUser | tblUser[]): void {

@@ -15,11 +15,11 @@
         <app-input-text class="col-12 md:col-6 lg:col-4" label="銀行簡稱" controlName="BNK_ShortName"
           [control]="dataForm.controls.BNK_ShortName" [submitted]="submitted">
         </app-input-text>
-        <app-table class="col-12" [data]="data" [columns]="columns" [showEdit]="false" [showDetail]="false"
-          [showCheckBox]="true" [showInsert]="true" [showRowEdit]="true" (delete)="onDelete($event)"
-          (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [showCaption]="!isFormReadable"
-          [showManage]="!isFormReadable" [showCheckBox]="!isFormReadable" [insertRowData]="true"
-          (dataChange)="data = $event"></app-table>
+        <app-table [showReportMode]="false" class="col-12" [data]="data" [columns]="columns" [showEdit]="false"
+          [showDetail]="false" [showCheckBox]="true" [showInsert]="true" [showRowEdit]="true"
+          (delete)="onDelete($event)" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
+          [showCaption]="!isFormReadable" [showManage]="!isFormReadable" [showCheckBox]="!isFormReadable"
+          [insertRowData]="true" (dataChange)="data = $event"></app-table>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" (clickEvent)="resetTable()"></app-button>
