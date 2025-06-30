@@ -212,10 +212,17 @@ objectKeys(obj: any): string[] {
 
 
 
-  getSubtotal(group: any[], field: string): number | string {
-    const sum = group.reduce((acc, row) => acc + (parseFloat(row[field]) || 0), 0);
-    return sum.toLocaleString();
-  }
+getSubtotal(group: any[], field: string): string {
+  const sum = group.reduce((acc, row) => {
+    const raw = row[field];
+    if (raw == null) return acc;
+
+    const numeric = parseFloat(String(raw).replace(/,/g, '')); // 去掉逗號後轉數字
+    return acc + (isNaN(numeric) ? 0 : numeric);
+  }, 0);
+
+  return sum.toLocaleString();
+}
   get pagedData(): any[] {
     if (this.mergedView) {
       return this._data.slice(0, this.rowsPerTable);

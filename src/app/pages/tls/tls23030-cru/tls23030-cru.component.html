@@ -7,7 +7,7 @@
 <app-report-table-group 
   [columns]="columns" 
   [data]="data"
-  [subtotalFields]="displayMode === 'SummaryReport' ? ['TXN_TaxAlwnc', 'TXN_PayAmt'] : []"
+  [subtotalFields]="displayMode === 'SummaryReport' ? ['TXN_TaxAlwnc', 'TXN_PayAmt'] : ['TXN_PayAmt', 'TXN_TaxAlwnc']"
   [enableGrouping]="displayMode === 'Report'"
   [groupByField]="displayMode === 'Report' ? 'TXN_No' : null"
   [groupByLabel]="'交易序號'"
