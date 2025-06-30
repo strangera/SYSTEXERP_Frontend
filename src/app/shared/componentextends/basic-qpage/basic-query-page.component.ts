@@ -82,7 +82,7 @@ export class BasicQueryPageComponent<T> {
     }
   }
   // 送出查詢
-  handleSubmit(queryForm: FormGroup, callback: () => void, SortBy?: SortMeta[]) {
+  handleSubmit(queryForm: FormGroup, callback: () => void) {
     this.submitted = true;
     this.loading = true;
     this.messageService.blockUi();

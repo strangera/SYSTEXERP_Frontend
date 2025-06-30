@@ -73,7 +73,10 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblRole> implemen
   ngOnInit(): void {
     this.initializePage('SYS0240', this.dataForm);
     this.sys0210Service.queryAllRole().subscribe((response) => {
-      this.targetOptions = response.Data
+      this.targetOptions = response.Data.map((item: any) => ({
+        ...item,
+        label: item.Role_No + ' - ' + item.Role_Name
+      }));
     });
 
     // 查詢來源角色使用者權限 (只顯示 match 為 true 的)

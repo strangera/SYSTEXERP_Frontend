@@ -42,9 +42,9 @@ export interface LazyLoadEvent {
 
 export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
   return {
-    pageSize: [{ value: 100, disabled: true }],
-    pageIndex: [{ value: 1, disabled: true }], // 你將初始頁碼改為 1
-    SortBy: [{ value: defaultSortBy, disabled: true }],
+    pageSize: [100],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [defaultSortBy],
   };
 };
 
