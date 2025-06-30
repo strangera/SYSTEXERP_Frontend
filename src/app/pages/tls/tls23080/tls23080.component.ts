@@ -212,7 +212,7 @@ confirmPageSizeAndNavigate(): void {
     next: (res) => {
       if (res.Status === '0000') {
         this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-        this.router.navigate(['/TLS/TLS23080CRU'], {
+        this.router.navigate(['account/TLS/TLS23080CRU'], {
           state: {
             queryFormValue,
             pageSize: this.customPageSize,

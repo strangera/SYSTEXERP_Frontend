@@ -248,7 +248,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
           return of({ Status: '9999', Data: [] });
         })
       ).subscribe({
-        next: (res) => {
+        next: (res: any) => {
           if (res.Status === '0000') {
             this.data = res.Data || [];
             this.totalRecords = res.TotalCount || this.data.length;
@@ -325,7 +325,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
           console.log('✅ 導頁前 router:', this.router);
           console.log('📦 傳遞狀態:', { queryFormValue, pageSize: this.customPageSize, data: resultData });
 
-          this.router.navigate(['/TLS/TLS23030CRU'], {
+          this.router.navigate(['account/TLS/TLS23030CRU'], {
             state: {
               queryFormValue,
               pageSize: this.customPageSize, // ✅ 使用大寫
