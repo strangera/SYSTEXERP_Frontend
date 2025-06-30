@@ -1,0 +1,56 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onBack()"></app-button>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      [header]="formTitle"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="商品管理碼/國際條碼/廠商貨號"
+              controlName="PLU_MagNo"
+              [control]="queryForm.controls.PLU_MagNo"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              label="標籤數量"
+              controlName="labelNumber"
+              [control]="queryForm.controls.labelNumber"
+              [submitted]="submitted"
+            ></app-input-number>
+          </div>
+        </div>
+        <!-- <div> -->
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+        <!-- </div> -->
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <div class="col-13">
+    <app-expandable-edit-table #labelTable title="產生標籤檔" [mainColumns]="labelColumn" [data]="labelData"
+          [loading]="expandlabelLoading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
+          [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false"
+          [defaultNewItem]="defaultNewLabel" (save)="onRowSave($event)" (cancel)="onRowCancel($event)"
+          (batchDelete)="deleteLabel()" (addMainItem)="addPOSLabel()"></app-expandable-edit-table>
+  </div>
+</div>
