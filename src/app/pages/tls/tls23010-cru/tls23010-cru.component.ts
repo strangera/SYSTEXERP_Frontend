@@ -90,6 +90,12 @@ set displayMode(value: 'Detail' | 'Summary') {
     const date = new Date(dateStr);
     return isNaN(date.getTime()) ? '' : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
   }
+  formatTimeToHHMM(timeStr: string): string {
+  const date = new Date(`1970-01-01T${timeStr}`);
+  if (isNaN(date.getTime())) return '';
+  return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+}
+
 
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
@@ -216,7 +222,8 @@ private updatePdfSummary(): void {
       format: (val: number) => val?.toLocaleString('en-US') || '0'
     },
     { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號',  },
-    { field: 'TXN_Time', header: '起始時間',  }, { field: 'TXN_Time', header: '結束時間',  },
+    { field: 'TXN_Time', header: '起始時間', format: this.formatTimeToHHMM.bind(this) },
+{ field: 'TXN_Time', header: '結束時間', format: this.formatTimeToHHMM.bind(this) },
 
     { field: 'USR_No', header: '收銀員',  style: 'text-left' },
     { field: 'TXN_PreOrderNo', header: '預售/訂金單號',  },
@@ -306,4 +313,5 @@ case 'Summary':
         return [{ header: '錯誤', field: '', format: () => '未知模式' }];
     }
   }
+
 }

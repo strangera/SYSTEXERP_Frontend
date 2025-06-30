@@ -4,7 +4,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
 import { PdfService } from '../../../service/basic/pdf.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-
+type DisplayMode = 'Report' | 'SummaryReport';
 @Component({
   selector: 'app-tls23030-cru',
   templateUrl: './tls23030-cru.component.html',
@@ -16,10 +16,10 @@ export class TLS23030CRUComponent extends BasicCruPageComponent<any> {
   dateStart: string = '';
   dateEnd: string = '';
   pdfSummary: string[] = [];
-  displayMode: 'SummaryReport' | 'Report' = 'SummaryReport';
+ 
   OrganizationCodeOptions: any[] = [
   ];
-
+  displayMode: DisplayMode = 'Report';
   dataForm = this.formBuilder.nonNullable.group({});
 
   constructor(

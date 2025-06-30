@@ -3,23 +3,45 @@
     background-color: #c5e4fc;
     color: #000000;
   }
+
   .p-selectable-row:not(.p-disabled-row):hover {
     background-color: #d5edff !important;
     cursor: pointer;
   }
+
   .p-datatable .p-datatable-thead > tr > th {
     background: var(--table-header-bg);
   }
+
   .p-datatable .p-datatable-tbody > tr:nth-child(even) {
     background: #eef2ff;
   }
+
   .p-datatable-wrapper {
     border: 1px solid #e9ecef;
   }
+
   .report-table-wrapper {
     page-break-after: always;
+    overflow-x: auto; /* ✅ 確保表格層可左右捲動 */
+  }
+
+  .card {
+    overflow-x: auto;     /* ✅ 讓它可捲動 */
+  }
+
+  .p-datatable-scrollable .p-datatable-wrapper {
+    width: max-content;   /* ✅ 寬度根據內容決定 */
+    min-width: 100%;      /* ✅ 但至少佔滿容器 */
+  }
+
+  .grouped-view,
+  .merged-view {
+    width: 100%;
+    overflow-x: auto; /* ✅ 外層也開啟 scroll 能力 */
   }
 }
+
 @media print {
   body * {
     visibility: hidden !important;
@@ -37,7 +59,6 @@
     width: 100%;
   }
 
-  /* 隱藏按鈕區 */
   .p-button,
   label[for="rowsPerTable"],
   #rowsPerTable {

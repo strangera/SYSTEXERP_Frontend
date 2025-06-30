@@ -15,21 +15,32 @@
     <label class="text-sm">合併顯示</label>
   </div>
 
-  <div class="space-x-2">
-    <button pButton type="button" label="顯示欄位" icon="pi pi-eye" (click)="showColumnDialog = true"
-      class="p-button-sm p-button-info"></button>
-    <button pButton type="button" label="匯出 PDF" icon="pi pi-file-pdf" (click)="exportPDF('l')"
-      class="p-button-sm p-button-danger"></button>
-    <button pButton type="button" label="匯出 Excel" icon="pi pi-file-excel" (click)="exportExcel()"
-      class="p-button-sm p-button-success"></button>
-    <button pButton type="button" label="列印" icon="pi pi-print" (click)="printPage()"
-      class="p-button-sm p-button-secondary"></button>
-    <button pButton type="button" icon="pi pi-arrow-left" label="回上頁" class="p-button-sm p-button-secondary"
-      (click)="goBack()"></button>
-     <div class="flex items-center gap-2" *ngIf="!mergedView">
-  <p-inputSwitch [(ngModel)]="showGroupedBody" (ngModelChange)="onToggleGroupedBody()" />
-  <label class="text-sm">顯示資料列</label>
-</div>
+<div class="flex items-center flex-wrap gap-2">
+  <button pButton type="button" label="顯示欄位" icon="pi pi-eye"
+          (click)="showColumnDialog = true"
+          class="p-button-sm p-button-info"></button>
+
+  <button pButton type="button" label="匯出 PDF" icon="pi pi-file-pdf"
+          (click)="exportPDF('l')"
+          class="p-button-sm p-button-danger"></button>
+
+  <button pButton type="button" label="匯出 Excel" icon="pi pi-file-excel"
+          (click)="exportExcel()"
+          class="p-button-sm p-button-success"></button>
+
+  <button pButton type="button" label="列印" icon="pi pi-print"
+          (click)="printPage()"
+          class="p-button-sm p-button-secondary"></button>
+
+  <button pButton type="button" icon="pi pi-arrow-left" label="回上頁"
+          class="p-button-sm p-button-secondary"
+          (click)="goBack()"></button>
+
+  <!-- ✅ 顯示資料列的開關 -->
+  <div class="flex items-center gap-2" *ngIf="!mergedView">
+    <p-inputSwitch [(ngModel)]="showGroupedBody"
+                   (ngModelChange)="onToggleGroupedBody()" />
+    <label class="text-sm">顯示資料列</label>
   </div>
 </div>
 
@@ -57,10 +68,13 @@
 
 
       <!-- 群組資料表 -->
+       <div style="overflow-x: auto;">
 <p-table [value]="group"
          [columns]="selectedColumns"
          [resizableColumns]="true"
          [paginator]="false"
+         scrollable="true"
+        [style]="{ 'min-width': '1200px' }"
          [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'">
 <ng-template pTemplate="header">
   <tr>
@@ -111,22 +125,25 @@
         </ng-template>
 
         <!-- 小計 -->
-        <ng-template pTemplate="footer">
-          <tr *ngIf="subtotalFields.length > 0" class="bg-yellow-100 font-semibold">
+<ng-template pTemplate="footer" let-value>
+  <tr class="bg-yellow-100 font-semibold" *ngIf="subtotalFields.length > 0">
+    <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
+      <ng-container [ngSwitch]="col.field">
+        <ng-container *ngSwitchCase="'__index'">小計</ng-container>
+        <ng-container *ngSwitchDefault>
+          <ng-container *ngIf="subtotalFields.includes(col.field)">
+            {{ getSubtotal(value, col.field) }}
+          </ng-container>
+        </ng-container>
+      </ng-container>
+    </td>
+  </tr>
+</ng-template>
 
-            <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
-              <ng-container [ngSwitch]="col.field">
-                <ng-container *ngSwitchCase="'__index'">小計</ng-container>
-                <ng-container *ngSwitchDefault>
-                  <ng-container *ngIf="subtotalFields.includes(col.field)">
-                    {{ getSubtotal(group, col.field) }}
-                  </ng-container>
-                </ng-container>
-              </ng-container>
-            </td>
-          </tr>
-        </ng-template>
+
+
       </p-table>
+      </div>
     </div>
   </div>
 
@@ -134,7 +151,8 @@
 
 <div *ngIf="mergedView" class="merged-view">
   <div *ngFor="let group of mergedPagedGroups; let groupIndex = index" class="mb-5">
-    <!-- p-table 加上 #dt 作為展開控制參照 -->
+   
+     <div style="overflow-x: auto;">
 <p-table
   #dt
   [value]="group"
@@ -144,6 +162,7 @@
   [customSort]="true"
   scrollable="true"
   scrollHeight="500px"
+  [style]="{ 'min-width': '1200px' }"
   (sort)="onTableSort($event)"
   [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'"
   [dataKey]="dataKey"
@@ -265,6 +284,7 @@
         </tr>
       </ng-template>
     </p-table>
+    </div>
   </div>
 </div>
 

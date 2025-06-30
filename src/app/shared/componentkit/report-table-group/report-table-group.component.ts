@@ -36,6 +36,7 @@ export class ReportTableGroupComponent implements OnInit {
   @Input() defaultMergedView: boolean = true; // 預設就是合併模式
   @Input() enableGrouping: boolean = false;
   @Input() detailColumns: Column[] = []; // 自訂明細欄位
+ @Input() showGroupedBody: boolean = false;
 
   private _data: any[] = [];
 
@@ -67,7 +68,7 @@ export class ReportTableGroupComponent implements OnInit {
 
 expandedRows: { [key: string]: boolean } = {};
 rowDetails: { [key: string]: any[] } = {};
-showGroupedBody: boolean = false;
+
 groupBodyExpanded: { [key: string]: boolean } = {};
 
 getRowKey(row: any): string {
@@ -211,10 +212,17 @@ objectKeys(obj: any): string[] {
 
 
 
-  getSubtotal(group: any[], field: string): number | string {
-    const sum = group.reduce((acc, row) => acc + (parseFloat(row[field]) || 0), 0);
-    return sum.toLocaleString();
-  }
+getSubtotal(group: any[], field: string): string {
+  const sum = group.reduce((acc, row) => {
+    const raw = row[field];
+    if (raw == null) return acc;
+
+    const numeric = parseFloat(String(raw).replace(/,/g, '')); // 去掉逗號後轉數字
+    return acc + (isNaN(numeric) ? 0 : numeric);
+  }, 0);
+
+  return sum.toLocaleString();
+}
   get pagedData(): any[] {
     if (this.mergedView) {
       return this._data.slice(0, this.rowsPerTable);
