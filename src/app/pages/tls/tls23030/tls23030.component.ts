@@ -21,19 +21,20 @@ import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { timeout, catchError } from 'rxjs/operators';
 import { throwError, of } from 'rxjs'; // 確保有 import
-
+type DisplayMode = 'Report' | 'SummaryReport';
 @Component({
   selector: 'app-tls23030',
   templateUrl: './tls23030.component.html',
   styleUrls: ['./tls23030.component.scss']
 })
 export class TLS23030Component extends BasicQueryPageComponent<any> {
-  displayMode: 'Detail' | 'Summary' = 'Detail'; // 預設顯示明細報表
+  
+  displayMode: DisplayMode = 'Report';
   
   useSummaryMode = false; // 預設為明細表模式
 
   queryForm = this.formBuilder.group({
-    DisplayMode: this.useSummaryMode ? 'SummaryReport' : 'Report',
+    DisplayMode: this.displayMode, // 預設為明細表模式
     TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],
     TXN_DateEnd: [new Date('2020-01-03') as Date, [Validators.required]],
     ECR_No: [],                 // ✅ 修正為 []
@@ -285,52 +286,62 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     this.customPageSize = 1000;
     this.showPageSizeDialog = true; // 👈 顯示彈窗
   }
-confirmPageSizeAndNavigate(): void {
+  confirmPageSizeAndNavigate(): void {
   console.log('✅ displayMode 傳送前:', this.displayMode);
-
   this.submitted = true;
+
   if (this.queryForm.invalid) {
     this.messageService.warnBubble('請確認欄位資料是否完整');
     this.queryForm.markAllAsTouched();
     return;
   }
 
-  const rawFormValue = { ...this.queryForm.value } as any;
-  for (const key in rawFormValue) {
-    if (rawFormValue[key] === '') rawFormValue[key] = null;
-  }
+  const queryFormValue = this.cleanFormPayload({
+    ...this.queryForm.value,
+    pageSize: this.customPageSize,
+    DisplayMode: this.displayMode  // ✅ 改這裡
+  });
 
-  const queryFormValue = {
-    ...rawFormValue,
-    pageSize: this.customPageSize
-  };
+  console.log('🔍 當前查詢模式:', this.displayMode);
+  console.log('📤 查詢參數:', queryFormValue);
 
   this.loading = true;
   this.messageService.blockUi();
 
-  this.tls23030Service.queryTLS23030(queryFormValue, this.displayMode).subscribe({
+  this.tls23030Service.queryTLS23030(queryFormValue).pipe(
+    timeout(30000),
+    catchError(err => {
+      if (err.name === 'TimeoutError') {
+        this.messageService.warnBubble('查詢時間過久，請嘗試縮小查詢條件範圍');
+      } else {
+        this.messageService.errorBubble('查詢失敗');
+      }
+      this.loading = false;
+      this.messageService.unblockUi();
+      return of({ Status: '9999', Data: [] });
+    })
+  ).subscribe({
     next: (res) => {
       if (res.Status === '0000') {
+        const resultData = res.Data || [];
         this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
 
         this.router.navigate(['account/TLS/TLS23030CRU'], {
           state: {
             queryFormValue,
             pageSize: this.customPageSize,
-            data: res.Data || [],
-            displayMode: this.displayMode
+            data: resultData
+          }
+        }).then(success => {
+          if (!success) {
+            this.messageService.errorBubble('導航失敗');
           }
         });
 
         this.messageService.successBubble('查詢成功');
-      } else {
+      } else if (res.Status !== '9999') {
         this.messageService.errorBubble('查詢失敗');
       }
-    },
-    error: () => {
-      this.messageService.errorBubble('查詢錯誤');
-      this.loading = false;
-      this.messageService.unblockUi();
     },
     complete: () => {
       this.loading = false;

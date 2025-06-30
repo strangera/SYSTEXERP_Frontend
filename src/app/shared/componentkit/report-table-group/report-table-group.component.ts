@@ -36,6 +36,7 @@ export class ReportTableGroupComponent implements OnInit {
   @Input() defaultMergedView: boolean = true; // 預設就是合併模式
   @Input() enableGrouping: boolean = false;
   @Input() detailColumns: Column[] = []; // 自訂明細欄位
+ @Input() showGroupedBody: boolean = false;
 
   private _data: any[] = [];
 
@@ -67,7 +68,7 @@ export class ReportTableGroupComponent implements OnInit {
 
 expandedRows: { [key: string]: boolean } = {};
 rowDetails: { [key: string]: any[] } = {};
-showGroupedBody: boolean = false;
+
 groupBodyExpanded: { [key: string]: boolean } = {};
 
 getRowKey(row: any): string {

@@ -4,21 +4,25 @@
     </div>
 
     <div class="card">
-        <app-report-table-group 
-        [columns]="columns" 
-        [data]="data"
-            [subtotalFields]="displayMode === 'SummaryReport' ? ['TXN_TaxAlwnc', 'TXN_PayAmt'] : []"
-            [enableGrouping]="false"         
-                 
-            [reportTitle]="displayMode === 'SummaryReport' ? '銷售總額報表' : '交易明細報表'"
-            [currentPage]="1"
-            [dateStart]="dateStart"
-            [dateEnd]="dateEnd"
-            [printedAt]="printedAt"
-            [showTotalOnly]="displayMode === 'SummaryReport'"
-            [pdfSummaryText]="[]"
-            [defaultMergedView]="true">
-        </app-report-table-group>
+<app-report-table-group 
+  [columns]="columns" 
+  [data]="data"
+  [subtotalFields]="displayMode === 'SummaryReport' ? ['TXN_TaxAlwnc', 'TXN_PayAmt'] : []"
+  [enableGrouping]="displayMode === 'Report'"
+  [groupByField]="displayMode === 'Report' ? 'TXN_No' : null"
+  [groupByLabel]="'交易序號'"
+  [reportTitle]="displayMode === 'SummaryReport' ? '付款別報表' : '付款別報表'"
+  [currentPage]="1"
+  [dateStart]="dateStart"
+  [dateEnd]="dateEnd"
+  [printedAt]="printedAt"
+  [showGroupedBody]="true"
+  [allowMergeToggle]="true"
+  [showTotalOnly]="displayMode === 'SummaryReport'"
+  [pdfSummaryText]="[]"
+  [defaultMergedView]="false">
+</app-report-table-group>
+
 
     </div>
 </div>

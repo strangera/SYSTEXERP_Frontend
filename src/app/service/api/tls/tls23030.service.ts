@@ -15,7 +15,7 @@ export class TLS23030Service {
     private errorHandler: ErrorHandlerService
   ) { }
 
-  queryTLS23030(body: any, displayMode: 'Detail' | 'Summary' = 'Detail'): Observable<any> {
+  queryTLS23030(body: any, displayMode: 'Report' | 'SummaryReport' = 'Report'): Observable<any> {
     const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23030`;
 
     return this.http.post<any>(url, body).pipe(
