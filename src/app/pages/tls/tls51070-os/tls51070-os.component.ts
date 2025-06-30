@@ -4,16 +4,17 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { PluLogo } from '../../../shared/models/tls/tls000.model';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 
 export interface Label{
   id: number,
-  PLU_MagNo: string, // 商品管理碼
+  PLU_MagNO: string, // 商品管理碼
   PLU_Name: string,// 商品名稱
-  labelNumber: number // 標籤數量
+  Label_Qty: number // 標籤數量
   PLU_SalePrc: number // 商品售價
   PLU_Unit: string,// 商品單位
   PLU_OrgPLUNo: string,// 廠商貨號
-  PLU_No: string,// 國際條碼
+  PLU_NO: string,// 國際條碼
 }
 
 @Component({
@@ -28,12 +29,15 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
   @ViewChild('labelTable') labelTable!: ExpandableEditTableComponent;
 
   formTitle!: string; //表頭
+  baseId = 0; //初始id
 
   // 查詢
   queryForm = this.formBuilder.group({
     // PLULOGO  商品品牌設定檔
-    PLU_MagNo: ['', [Validators.maxLength(20)]], // 商品管理碼/國際條碼/廠商貨號
-    labelNumber: [], // 標籤數量
+    PLU_MagNo: ['', [Validators.required, Validators.maxLength(20)]], // 商品管理碼
+    PLU_No: ['', [Validators.required, Validators.maxLength(20)]], // 國際條碼
+    PLU_OrgPLUNo: ['', [Validators.required, Validators.maxLength(20)]], // 廠商貨號
+    Label_Qty: [], // 標籤數量
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
@@ -42,28 +46,28 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
-  // ---------國際條碼 (POS2005) 編輯表格 至少要一筆-------------------------------------------------------
-    // 國際條碼編號	下拉
+  // ---------標籤檔 (label) 編輯表格 至少要一筆-------------------------------------------------------
+    // label	資料
     labelData: Label[] = [];
     // label 展開式表格的欄位定義
     labelColumn: ColumnDef[] = [
-      { field: 'PLU_MagNo', header: '商品管理碼', editable: false, type: 'text' },
+      { field: 'PLU_MagNO', header: '商品管理碼', editable: false, type: 'text' },
       { field: 'PLU_Name', header: '商品名稱', editable: false, type: 'text' },
-      { field: 'labelNumber', header: '標籤數量', editable: true, type: 'number' },
+      { field: 'Label_Qty', header: '標籤數量', editable: true, type: 'number' },
       { field: 'PLU_SalePrc', header: '商品售價', editable: false, type: 'number' },
       { field: 'PLU_Unit', header: '商品單位', editable: false, type: 'text' },
       { field: 'PLU_OrgPLUNo', header: '廠商貨號', editable: false, type: 'text' },
-      { field: 'PLU_No', header: '國際條碼', editable: false, type: 'text' },
+      { field: 'PLU_NO', header: '國際條碼', editable: false, type: 'text' },
     ];
     // 預設新項目模板
     defaultNewLabel = {
-      PLU_MagNo: '', // 商品管理碼
+      PLU_MagNO: '', // 商品管理碼
       PLU_Name: '',
-      labelNumber: 0,
+      Label_Qty: 0,
       PLU_SalePrc: 0,
       PLU_Unit: '',
       PLU_OrgPLUNo: '',
-      PLU_No: ''
+      PLU_NO: ''
     };
   
     // 展開式表格的載入狀態
@@ -71,7 +75,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
 
     selectedItems: Label[] = [];// 多選項目
   // ----------------------------------------------------------------
-  constructor() {
+  constructor(private tls51070Service: Tls51070Service) {
     super();
   }
 
@@ -94,26 +98,45 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     this.handleSubmit(frm, () => {
       console.log('query condition', frm.value);
       this.loading = false;
-      // this.tls51060Service.queryTLS51060(frm.value).subscribe({
-      //   next: (response) => {
-      //     // console.log('回傳階層:', response.Data);
-      //     if (response.Status === '0000') {
-      //       this.data = response.Data || [];
-      //       console.log('Result', this.data);
-      //       this.totalRecords = response.TotalCount || response.Data.length;
-      //       this.queryStateService.setQueryState(this.ProgNo, frm.value);
-      //     } else {
-      //       console.error('API error:', response.Status, response.Message);
-      //     }
-      //     this.loading = false;
-      //     this.messageService.unblockUi();
-      //   },
-      //   error: (err: string) => {
-      //     console.error('API error:', err);
-      //     this.loading = false;
-      //     this.messageService.unblockUi();
-      //   },
-      // });
+      this.tls51070Service.getLabelTLS51070(frm.value).subscribe({
+        next: (response) => {
+          // console.log('回傳階層:', response.Data);
+          if (response.Status === '0000') {
+            const apiData = response.Data || [];
+            console.log('標籤',apiData);
+
+            // 賦值給 labelData（你想顯示的表格資料）
+            const newLabelData = apiData.map((item: any, index: number) => ({
+              id: this.baseId + 1, // 你原本的表格有使用 id 作為唯一值
+              PLU_MagNO: item.PLU_MagNO,
+              PLU_Name: item.PLU_Name,
+              Label_Qty: item.Label_Qty || 0, // 預設數量為 0
+              PLU_SalePrc: item.PLU_SalePrc,
+              PLU_Unit: item.PLU_Unit,
+              PLU_OrgPLUNo: item.PLU_OrgPLUNo,
+              PLU_NO: item.PLU_NO,
+            }));
+
+            this.baseId+=1;
+
+            // ✅ 疊加進 labelData，允許重複
+            this.labelData = [...this.labelData, ...newLabelData];
+
+            console.log('標籤資料',this.labelData);
+
+
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
     });
   }
 
@@ -168,7 +191,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
             this.labelData.splice(index, 1);
         }
       });
-      this.messageService.successBubble(`已刪除 ${this.selectedItems.length} 個位置項目`);
+      this.messageService.successBubble(`已刪除 ${this.selectedItems.length} 國際條碼`);
     }
   }
 
