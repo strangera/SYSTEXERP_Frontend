@@ -263,6 +263,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   }
 
   confirmPageSizeAndNavigate(): void {
+    console.log('✅ displayMode 傳送前:', this.displayMode);
   this.submitted = true;
   if (this.queryForm.invalid) {
     this.messageService.warnBubble('請確認欄位資料是否完整');

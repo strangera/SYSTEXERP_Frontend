@@ -129,6 +129,7 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
           this.data = [];
           this.totalRecords = 0;
           this.messageService.errorBubble('查詢錯誤');
+          this.loading = false;
         },
         complete: () => {
           this.loading = false;

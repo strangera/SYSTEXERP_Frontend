@@ -16,8 +16,13 @@ import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { PdfService } from '../../../service/basic/pdf.service';
-
-
+type DisplayMode = 'Detail' | 'Summary';
+interface ReportColumn {
+  header: string;
+  field: string;
+  format?: (value: any) => string | number | null;
+  style?: string;
+}
 
 @Component({
   selector: 'app-tls23020-cru',
@@ -33,9 +38,30 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
   data: any[] = [];
   netTotalSum = 0;
   taxTotalSum = 0;
-  displayMode: 'SummaryReport' | 'Report' = 'SummaryReport';
+  displayMode: DisplayMode = 'Detail';
+
+  
+  // 下拉選單選項
+  taxableOptions: any[] = [];
+  discountOptions: any[] = [];
+  deductionbigCategoryOptions: any[] = [];
+  floorOptions: any[] = [];
+  BUILDING_NO_Options: any[] = [];
+  commissionTypeOptions: any[] = [];
+  whetherOptions: any[] = [];
+  txnStatusOptions: any[] = [];
+  checkTotalAmount = [
+    { value: 1, label: '是' },
+    { value: 2, label: '否' },
+  ];
+  OrganizationCodeOptions: any[] = [];
+  ECRNoOptions: any[] = []; // 收銀機號下拉選單
+  CounterOptions: any[] = []; // 專櫃選項
+
+
+
   get columns() {
-  if (this.displayMode === 'SummaryReport') {
+  if (this.displayMode === 'Summary') {
     return [
       { field: 'tlt_no', header: '專櫃編號' },
       { field: 'tlt_name', header: '櫃位名稱' },
@@ -121,23 +147,6 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
     return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
   }
 
-  // 下拉選單選項
-  taxableOptions: any[] = [];
-  discountOptions: any[] = [];
-  deductionbigCategoryOptions: any[] = [];
-  floorOptions: any[] = [];
-  BUILDING_NO_Options: any[] = [];
-  commissionTypeOptions: any[] = [];
-  whetherOptions: any[] = [];
-  txnStatusOptions: any[] = [];
-  checkTotalAmount = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-  ];
-  OrganizationCodeOptions: any[] = [];
-  ECRNoOptions: any[] = []; // 收銀機號下拉選單
-  CounterOptions: any[] = []; // 專櫃選項
-
   constructor(
     private tls23020Service: TLS23020Service,
     private taxableService: TaxableService,
@@ -200,8 +209,11 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
     const state = history.state;
     const queryFormValue = state?.queryFormValue;
     const preloadedData = state?.data;
+    this.data = state?.data || [];
+    this.displayMode = state?.displayMode ?? 'Detail'; 
+    // this.displayMode = queryFormValue?.DisplayMode ?? state?.displayMode ?? 'Detail';
 
-    this.displayMode = queryFormValue?.DisplayMode || 'Report';
+
 
     if (queryFormValue) {
       Object.keys(queryFormValue).forEach((k) => {
