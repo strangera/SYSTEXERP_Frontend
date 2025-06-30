@@ -112,7 +112,6 @@ export class BasicQueryPageComponent<T> {
   }
 
   onLazyLoadData(event: LazyLoadEvent, queryForm: FormGroup) {
-    console.log(123);
     queryForm.patchValue({
       pageSize: event.pageSize,
       pageIndex: event.pageIndex,
