@@ -928,6 +928,56 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     });
   }
 
+  private cleanObjectKeys(obj: any): any {
+    if (obj === null || obj === undefined) {
+      return obj;
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.cleanObjectKeys(item));
+    }
+
+    if (typeof obj === 'object') {
+      const cleaned: any = {};
+
+      Object.keys(obj).forEach(key => {
+        // ✅ 過濾空 key 和無效 key
+        if (key && key.trim() !== '' && key !== 'undefined' && key !== 'null') {
+          const value = obj[key];
+
+          // 遞迴清理嵌套物件
+          if (typeof value === 'object' && value !== null) {
+            cleaned[key] = this.cleanObjectKeys(value);
+          } else {
+            cleaned[key] = value;
+          }
+        } else {
+          console.warn(`⚠️ 發現並移除空/無效 key: "${key}"`);
+        }
+      });
+
+      return cleaned;
+    }
+
+    return obj;
+  }
+
+  // ✅ 新增：清理扣款項目用於儲存
+  private cleanFareItemForStorage(item: FareItem): FareItem {
+    const {
+      // 🗑️ 移除前端專用欄位（但暫存時保留 _status 等追蹤欄位）
+      _originalData,
+      _originalSelected,
+      ...itemForStorage
+    } = item;
+
+    // ✅ 清理空 key
+    const cleanedItem = this.cleanObjectKeys(itemForStorage);
+
+    return cleanedItem as FareItem;
+  }
+
+  // ✅ 修改現有的 saveFareDataToWorkflow 方法
   private saveFareDataToWorkflow(): void {
     try {
       console.log('💾 準備儲存暫存資料...');
@@ -946,12 +996,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
           const selected = this.originalFareData[capType].filter(item => item.is_selected);
           selectedItems += selected.length;
 
-          // ✅ 確保每個項目都有 cap_type
+          // ✅ 確保每個項目都有 cap_type 並清理前端欄位
           this.originalFareData[capType].forEach(item => {
             if (!item.cap_type) {
               item.cap_type = capType;
             }
-            mergedFareItems.push(item);
+
+            // ✅ 清理前端專用欄位和空 key
+            const cleanedItem = this.cleanFareItemForStorage(item);
+            mergedFareItems.push(cleanedItem);
           });
 
           console.log(`📝 ${capType} 類型: ${this.originalFareData[capType].length} 筆 (選中 ${selected.length} 筆)`);
@@ -960,13 +1013,14 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
       console.log(`💾 總共要儲存 ${totalItems} 筆資料，其中 ${selectedItems} 筆已選中`);
 
-      // ✅ 儲存陣列格式
+      // ✅ 儲存清理後的陣列格式
       this.contractFlowService.saveStep2Data(mergedFareItems);
       console.log('✅ 已成功暫存扣款資料到工作流程');
     } catch (error) {
       console.error('❌ 儲存暫存資料時發生錯誤:', error);
     }
   }
+
 
   selectAllByType(capType: string): void {
     console.log(`🔄 ${capType} 類型全部選擇`);
