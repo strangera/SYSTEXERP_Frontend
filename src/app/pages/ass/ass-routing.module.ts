@@ -1,7 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-
-import { NotfoundComponent } from '../base/notfound/notfound.component';
 import { ASS11010CRUComponent } from './ass11010-cru/ass11010-cru.component';
 import { ASS11010Component } from './ass11010/ass11010.component';
 import { ASS11020CRUComponent } from './ass11020-cru/ass11020-cru.component';
@@ -122,128 +120,125 @@ import { ASS23010Component } from './ass23010/ass23010.component';
 import { ASS23020Component } from './ass23020/ass23020.component';
 import { ASS23030Component } from './ass23030/ass23030.component';
 const routes: Routes = [
-  { path: '', redirectTo: '404', pathMatch: 'full' },
-  { path: 'ASS11010', component: ASS11010Component },  // 資產列管品及耗材分類管理作業-大分類維護作業
-  { path: 'ASS11010CRU', component: ASS11010CRUComponent },
-  { path: 'ASS11020', component: ASS11020Component },  // 資產列管品及耗材分類管理作業-中分類維護作業
-  { path: 'ASS11020CRU', component: ASS11020CRUComponent },
-  { path: 'ASS11030', component: ASS11030Component },  // 資產列管品及耗材分類管理作業-小分類維護作業
-  { path: 'ASS11030CRU', component: ASS11030CRUComponent },
-  { path: 'ASS11040', component: ASS11040Component },  // 資產列管品及耗材分類管理作業-品項資料維護作業
-  { path: 'ASS11040CRU', component: ASS11040CRUComponent },
-  { path: 'ASS11050', component: ASS11050Component },  // 資材分類樹狀圖
-  { path: 'ASS11060', component: ASS11060Component },  // 供應商資料維護作業
-  { path: 'ASS11060CRU', component: ASS11060CRUComponent },
-  { path: 'ASS11070', component: ASS11070Component },  // 備用供應商資料維護作業
-  { path: 'ASS11070CRU', component: ASS11070CRUComponent },
-  { path: 'ASS11080', component: ASS11080Component },  // 處分資產基本設定
-  { path: 'ASS11090', component: ASS11090Component },  // 資材中分類會計科目維護作業
-  { path: 'ASS11090CRU', component: ASS11090CRUComponent },
-  { path: 'ASS11100', component: ASS11100Component },  // 倉別設定作業
-  { path: 'ASS11100CRU', component: ASS11100CRUComponent },
-  { path: 'ASS12010', component: ASS12010Component },  // 請購申請作業
-  { path: 'ASS12010CRU', component: ASS12010CRUComponent },
-  { path: 'ASS12020', component: ASS12020Component },  // 詢價登錄作業
-  { path: 'ASS12020CRU', component: ASS12020CRUComponent },
-  { path: 'ASS12030', component: ASS12030Component },  // 採購申請作業
-  { path: 'ASS12030CRU', component: ASS12030CRUComponent },
-  { path: 'ASS12040', component: ASS12040Component },  // 採購單審核作業
-  { path: 'ASS12040CRU', component: ASS12040CRUComponent },
-  { path: 'ASS12050', component: ASS12050Component },  // 採購單驗收作業
-  { path: 'ASS12050CRU', component: ASS12050CRUComponent },
-  { path: 'ASS13010', component: ASS13010Component },  // 資產維護作業
-  { path: 'ASS13010CRU', component: ASS13010CRUComponent },
-  { path: 'ASS13020', component: ASS13020Component },  // 資產轉入
-  { path: 'ASS13020CRU', component: ASS13020CRUComponent },
-  { path: 'ASS13030', component: ASS13030Component },  // 資產報廢作業
-  { path: 'ASS13030CRU', component: ASS13030CRUComponent },
-  { path: 'ASS13040', component: ASS13040Component },  // 批次報廢作業
-  { path: 'ASS13040CRU', component: ASS13040CRUComponent },
-  { path: 'ASS13050', component: ASS13050Component },  // 移轉交接表
-  { path: 'ASS13060', component: ASS13060Component },  // 固定資產重估作業
-  { path: 'ASS13060CRU', component: ASS13060CRUComponent },
-  { path: 'ASS13070', component: ASS13070Component },  // 財產保管單位設定作業
-  { path: 'ASS13070CRU', component: ASS13070CRUComponent },
-  { path: 'ASS13080', component: ASS13080Component },  // 資產變賣作業
-  { path: 'ASS13080CRU', component: ASS13080CRUComponent },
-  { path: 'ASS13090', component: ASS13090Component },  // 資產攤提作業
-  { path: 'ASS13090CRU', component: ASS13090CRUComponent },
-  { path: 'ASS13100', component: ASS13100Component },  // 資產清點作業
-  { path: 'ASS13100CRU', component: ASS13100CRUComponent },
-  { path: 'ASS13110', component: ASS13110Component },  // 資產差異表
-  { path: 'ASS13120', component: ASS13120Component },  // 折舊攤提作業
-  { path: 'ASS13120CRU', component: ASS13120CRUComponent },
-  { path: 'ASS14010', component: ASS14010Component },  // 進貨發票建檔作業
-  { path: 'ASS14010CRU', component: ASS14010CRUComponent },
-  { path: 'ASS14020', component: ASS14020Component },  // 請款關帳作業
-  { path: 'ASS14020CRU', component: ASS14020CRUComponent },
-  { path: 'ASS14030', component: ASS14030Component },  // 傳票審核傳送作業
-  { path: 'ASS14030CRU', component: ASS14030CRUComponent },
-  { path: 'ASS14040', component: ASS14040Component },  // 庫存成本月結作業
-  { path: 'ASS14040CRU', component: ASS14040CRUComponent },
-  { path: 'ASS15010', component: ASS15010Component },  // 財產標籤列印作業
-  { path: 'ASS15010CRU', component: ASS15010CRUComponent },
-  { path: 'ASS15020', component: ASS15020Component },  // 財產保管清冊
-  { path: 'ASS15030', component: ASS15030Component },  // 財產目錄
-  { path: 'ASS15040', component: ASS15040Component },  // 財產目錄之會計科目報表
-  { path: 'ASS15050', component: ASS15050Component },  // 折舊攤提表
-  { path: 'ASS15060', component: ASS15060Component },  // 財產異動記錄查詢
-  { path: 'ASS15070', component: ASS15070Component },  // 財產進貨清單
-  { path: 'ASS15080', component: ASS15080Component },  // 資產重估異動明細表
-  { path: 'ASS16010', component: ASS16010Component },  // 盤點設定
-  { path: 'ASS16010CRU', component: ASS16010CRUComponent },
-  { path: 'ASS16020', component: ASS16020Component },  // 盤點維護
-  { path: 'ASS16020CRU', component: ASS16020CRUComponent },
-  { path: 'ASS16030', component: ASS16030Component },  // 領用申請作業
-  { path: 'ASS16030CRU', component: ASS16030CRUComponent },
-  { path: 'ASS16040', component: ASS16040Component },  // 領用審核作業
-  { path: 'ASS16040CRU', component: ASS16040CRUComponent },
-  { path: 'ASS16050', component: ASS16050Component },  // 領用發料作業
-  { path: 'ASS16050CRU', component: ASS16050CRUComponent },
-  { path: 'ASS16060', component: ASS16060Component },  // 領用退料作業
-  { path: 'ASS16060CRU', component: ASS16060CRUComponent },
-  { path: 'ASS16070', component: ASS16070Component },  // 調撥申請作業
-  { path: 'ASS16070CRU', component: ASS16070CRUComponent },
-  { path: 'ASS16080', component: ASS16080Component },  // 調撥出庫作業
-  { path: 'ASS16080CRU', component: ASS16080CRUComponent },
-  { path: 'ASS16090', component: ASS16090Component },  // 耗材報廢維護作業
-  { path: 'ASS16090CRU', component: ASS16090CRUComponent },
-  { path: 'ASS17010', component: ASS17010Component },  // 領用明細表
-  { path: 'ASS17020', component: ASS17020Component },  // 領用統計表
-  { path: 'ASS17030', component: ASS17030Component },  // 領用發料統計表
-  { path: 'ASS17040', component: ASS17040Component },  // 領用退料統計表
-  { path: 'ASS17050', component: ASS17050Component },  // 使用統計月報表
-  { path: 'ASS17060', component: ASS17060Component },  // 調撥明細表
-  { path: 'ASS17070', component: ASS17070Component },  // 報廢明細表
-  { path: 'ASS17080', component: ASS17080Component },  // 耗材庫存查詢作業(含金額)
-  { path: 'ASS17090', component: ASS17090Component },  // 耗材庫存查詢作業
-  { path: 'ASS17100', component: ASS17100Component },  // 耗材進耗存報表
-  { path: 'ASS17110', component: ASS17110Component },  // 耗材進耗存之會計科目報表
-  { path: 'ASS21010', component: ASS21010Component },  // 基本資料設定-能源錶號地點維護作業
-  { path: 'ASS21010CRU', component: ASS21010CRUComponent },
-  { path: 'ASS21020', component: ASS21020Component },  // 基本資料設定-能源錶號基本維護
-  { path: 'ASS21020CRU', component: ASS21020CRUComponent },
-  { path: 'ASS21030', component: ASS21030Component },  // 基本資料設定-水錶攤提設定
-  { path: 'ASS21030CRU', component: ASS21030CRUComponent },
-  { path: 'ASS21040', component: ASS21040Component },  // 基本資料設定-電錶攤提設定
-  { path: 'ASS21040CRU', component: ASS21040CRUComponent },
-  { path: 'ASS21050', component: ASS21050Component },  // 基本資料設定-瓦斯錶攤提設定
-  { path: 'ASS21050CRU', component: ASS21050CRUComponent },
-  { path: 'ASS21060', component: ASS21060Component },  // 基本資料設定-能源單價設定
-  { path: 'ASS21060CRU', component: ASS21060CRUComponent },
-  { path: 'ASS22010', component: ASS22010Component },  // 能源使用狀況作業-水錶抄錶作業
-  { path: 'ASS22010CRU', component: ASS22010CRUComponent },
-  { path: 'ASS22020', component: ASS22020Component },  // 能源使用狀況作業-電錶抄錶作業
-  { path: 'ASS22020CRU', component: ASS22020CRUComponent },
-  { path: 'ASS22030', component: ASS22030Component },  // 能源使用狀況作業-瓦斯錶抄錶作業
-  { path: 'ASS22030CRU', component: ASS22030CRUComponent },
-  { path: 'ASS22040', component: ASS22040Component },  // 能源使用狀況作業-電子錶匯入作業
-  { path: 'ASS22040CRU', component: ASS22040CRUComponent },
-  { path: 'ASS23010', component: ASS23010Component },  // 能源計費攤提作業-水錶攤提計算作業
-  { path: 'ASS23020', component: ASS23020Component },  // 能源計費攤提作業-電錶攤提計算作業
-  { path: 'ASS23030', component: ASS23030Component },  // 能源計費攤提作業-瓦斯攤提計算作業
-  { path: '404', component: NotfoundComponent },
-  { path: '**', redirectTo: '404' },
+  { path: 'ass11010', component: ASS11010Component },  // 資產列管品及耗材分類管理作業-大分類維護作業
+  { path: 'ass11010CRU', component: ASS11010CRUComponent },
+  { path: 'ass11020', component: ASS11020Component },  // 資產列管品及耗材分類管理作業-中分類維護作業
+  { path: 'ass11020CRU', component: ASS11020CRUComponent },
+  { path: 'ass11030', component: ASS11030Component },  // 資產列管品及耗材分類管理作業-小分類維護作業
+  { path: 'ass11030CRU', component: ASS11030CRUComponent },
+  { path: 'ass11040', component: ASS11040Component },  // 資產列管品及耗材分類管理作業-品項資料維護作業
+  { path: 'ass11040CRU', component: ASS11040CRUComponent },
+  { path: 'ass11050', component: ASS11050Component },  // 資材分類樹狀圖
+  { path: 'ass11060', component: ASS11060Component },  // 供應商資料維護作業
+  { path: 'ass11060CRU', component: ASS11060CRUComponent },
+  { path: 'ass11070', component: ASS11070Component },  // 備用供應商資料維護作業
+  { path: 'ass11070CRU', component: ASS11070CRUComponent },
+  { path: 'ass11080', component: ASS11080Component },  // 處分資產基本設定
+  { path: 'ass11090', component: ASS11090Component },  // 資材中分類會計科目維護作業
+  { path: 'ass11090CRU', component: ASS11090CRUComponent },
+  { path: 'ass11100', component: ASS11100Component },  // 倉別設定作業
+  { path: 'ass11100CRU', component: ASS11100CRUComponent },
+  { path: 'ass12010', component: ASS12010Component },  // 請購申請作業
+  { path: 'ass12010CRU', component: ASS12010CRUComponent },
+  { path: 'ass12020', component: ASS12020Component },  // 詢價登錄作業
+  { path: 'ass12020CRU', component: ASS12020CRUComponent },
+  { path: 'ass12030', component: ASS12030Component },  // 採購申請作業
+  { path: 'ass12030CRU', component: ASS12030CRUComponent },
+  { path: 'ass12040', component: ASS12040Component },  // 採購單審核作業
+  { path: 'ass12040CRU', component: ASS12040CRUComponent },
+  { path: 'ass12050', component: ASS12050Component },  // 採購單驗收作業
+  { path: 'ass12050CRU', component: ASS12050CRUComponent },
+  { path: 'ass13010', component: ASS13010Component },  // 資產維護作業
+  { path: 'ass13010CRU', component: ASS13010CRUComponent },
+  { path: 'ass13020', component: ASS13020Component },  // 資產轉入
+  { path: 'ass13020CRU', component: ASS13020CRUComponent },
+  { path: 'ass13030', component: ASS13030Component },  // 資產報廢作業
+  { path: 'ass13030CRU', component: ASS13030CRUComponent },
+  { path: 'ass13040', component: ASS13040Component },  // 批次報廢作業
+  { path: 'ass13040CRU', component: ASS13040CRUComponent },
+  { path: 'ass13050', component: ASS13050Component },  // 移轉交接表
+  { path: 'ass13060', component: ASS13060Component },  // 固定資產重估作業
+  { path: 'ass13060CRU', component: ASS13060CRUComponent },
+  { path: 'ass13070', component: ASS13070Component },  // 財產保管單位設定作業
+  { path: 'ass13070CRU', component: ASS13070CRUComponent },
+  { path: 'ass13080', component: ASS13080Component },  // 資產變賣作業
+  { path: 'ass13080CRU', component: ASS13080CRUComponent },
+  { path: 'ass13090', component: ASS13090Component },  // 資產攤提作業
+  { path: 'ass13090CRU', component: ASS13090CRUComponent },
+  { path: 'ass13100', component: ASS13100Component },  // 資產清點作業
+  { path: 'ass13100CRU', component: ASS13100CRUComponent },
+  { path: 'ass13110', component: ASS13110Component },  // 資產差異表
+  { path: 'ass13120', component: ASS13120Component },  // 折舊攤提作業
+  { path: 'ass13120CRU', component: ASS13120CRUComponent },
+  { path: 'ass14010', component: ASS14010Component },  // 進貨發票建檔作業
+  { path: 'ass14010CRU', component: ASS14010CRUComponent },
+  { path: 'ass14020', component: ASS14020Component },  // 請款關帳作業
+  { path: 'ass14020CRU', component: ASS14020CRUComponent },
+  { path: 'ass14030', component: ASS14030Component },  // 傳票審核傳送作業
+  { path: 'ass14030CRU', component: ASS14030CRUComponent },
+  { path: 'ass14040', component: ASS14040Component },  // 庫存成本月結作業
+  { path: 'ass14040CRU', component: ASS14040CRUComponent },
+  { path: 'ass15010', component: ASS15010Component },  // 財產標籤列印作業
+  { path: 'ass15010CRU', component: ASS15010CRUComponent },
+  { path: 'ass15020', component: ASS15020Component },  // 財產保管清冊
+  { path: 'ass15030', component: ASS15030Component },  // 財產目錄
+  { path: 'ass15040', component: ASS15040Component },  // 財產目錄之會計科目報表
+  { path: 'ass15050', component: ASS15050Component },  // 折舊攤提表
+  { path: 'ass15060', component: ASS15060Component },  // 財產異動記錄查詢
+  { path: 'ass15070', component: ASS15070Component },  // 財產進貨清單
+  { path: 'ass15080', component: ASS15080Component },  // 資產重估異動明細表
+  { path: 'ass16010', component: ASS16010Component },  // 盤點設定
+  { path: 'ass16010CRU', component: ASS16010CRUComponent },
+  { path: 'ass16020', component: ASS16020Component },  // 盤點維護
+  { path: 'ass16020CRU', component: ASS16020CRUComponent },
+  { path: 'ass16030', component: ASS16030Component },  // 領用申請作業
+  { path: 'ass16030CRU', component: ASS16030CRUComponent },
+  { path: 'ass16040', component: ASS16040Component },  // 領用審核作業
+  { path: 'ass16040CRU', component: ASS16040CRUComponent },
+  { path: 'ass16050', component: ASS16050Component },  // 領用發料作業
+  { path: 'ass16050CRU', component: ASS16050CRUComponent },
+  { path: 'ass16060', component: ASS16060Component },  // 領用退料作業
+  { path: 'ass16060CRU', component: ASS16060CRUComponent },
+  { path: 'ass16070', component: ASS16070Component },  // 調撥申請作業
+  { path: 'ass16070CRU', component: ASS16070CRUComponent },
+  { path: 'ass16080', component: ASS16080Component },  // 調撥出庫作業
+  { path: 'ass16080CRU', component: ASS16080CRUComponent },
+  { path: 'ass16090', component: ASS16090Component },  // 耗材報廢維護作業
+  { path: 'ass16090CRU', component: ASS16090CRUComponent },
+  { path: 'ass17010', component: ASS17010Component },  // 領用明細表
+  { path: 'ass17020', component: ASS17020Component },  // 領用統計表
+  { path: 'ass17030', component: ASS17030Component },  // 領用發料統計表
+  { path: 'ass17040', component: ASS17040Component },  // 領用退料統計表
+  { path: 'ass17050', component: ASS17050Component },  // 使用統計月報表
+  { path: 'ass17060', component: ASS17060Component },  // 調撥明細表
+  { path: 'ass17070', component: ASS17070Component },  // 報廢明細表
+  { path: 'ass17080', component: ASS17080Component },  // 耗材庫存查詢作業(含金額)
+  { path: 'ass17090', component: ASS17090Component },  // 耗材庫存查詢作業
+  { path: 'ass17100', component: ASS17100Component },  // 耗材進耗存報表
+  { path: 'ass17110', component: ASS17110Component },  // 耗材進耗存之會計科目報表
+  { path: 'ass21010', component: ASS21010Component },  // 基本資料設定-能源錶號地點維護作業
+  { path: 'ass21010CRU', component: ASS21010CRUComponent },
+  { path: 'ass21020', component: ASS21020Component },  // 基本資料設定-能源錶號基本維護
+  { path: 'ass21020CRU', component: ASS21020CRUComponent },
+  { path: 'ass21030', component: ASS21030Component },  // 基本資料設定-水錶攤提設定
+  { path: 'ass21030CRU', component: ASS21030CRUComponent },
+  { path: 'ass21040', component: ASS21040Component },  // 基本資料設定-電錶攤提設定
+  { path: 'ass21040CRU', component: ASS21040CRUComponent },
+  { path: 'ass21050', component: ASS21050Component },  // 基本資料設定-瓦斯錶攤提設定
+  { path: 'ass21050CRU', component: ASS21050CRUComponent },
+  { path: 'ass21060', component: ASS21060Component },  // 基本資料設定-能源單價設定
+  { path: 'ass21060CRU', component: ASS21060CRUComponent },
+  { path: 'ass22010', component: ASS22010Component },  // 能源使用狀況作業-水錶抄錶作業
+  { path: 'ass22010CRU', component: ASS22010CRUComponent },
+  { path: 'ass22020', component: ASS22020Component },  // 能源使用狀況作業-電錶抄錶作業
+  { path: 'ass22020CRU', component: ASS22020CRUComponent },
+  { path: 'ass22030', component: ASS22030Component },  // 能源使用狀況作業-瓦斯錶抄錶作業
+  { path: 'ass22030CRU', component: ASS22030CRUComponent },
+  { path: 'ass22040', component: ASS22040Component },  // 能源使用狀況作業-電子錶匯入作業
+  { path: 'ass22040CRU', component: ASS22040CRUComponent },
+  { path: 'ass23010', component: ASS23010Component },  // 能源計費攤提作業-水錶攤提計算作業
+  { path: 'ass23020', component: ASS23020Component },  // 能源計費攤提作業-電錶攤提計算作業
+  { path: 'ass23030', component: ASS23030Component },  // 能源計費攤提作業-瓦斯攤提計算作業
 ];
 
 @NgModule({

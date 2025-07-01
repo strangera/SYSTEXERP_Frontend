@@ -4,13 +4,8 @@ import { RouterModule, Routes } from '@angular/router';
 import { NotfoundComponent } from './notfound.component';
 
 const routes: Routes = [
-  {
-    path: '404',
-    component: NotfoundComponent,
-  }, {
-    path: '**',
-    redirectTo: '404',
-  }
+  { path: '', redirectTo: '404', pathMatch: 'full' },
+  { path: '404', component: NotfoundComponent }
 ];
 
 @NgModule({

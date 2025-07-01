@@ -82,6 +82,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() editDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
   @Output() edit = new EventEmitter<any>();  // 編輯事件
   @Input() addButton: AddButton[] = [];      // 自定義 管理按鈕
+  @Input() buttonsLoading = false;           // 按鈕們 loading
   @Input() showRowEdit = false;              // 是否顯示 Row編輯按鈕
   // body
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件

@@ -287,4 +287,14 @@ export class Tls52010Service {
   updateTLS52010(data: IUpdateTLS52010Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateTLS52010`, data);
   }
+
+
+  /**
+   * 取得標籤檔資料
+   * @param params 查詢條件 (PO_No)
+   * @returns API 響應
+   */
+  getLabelTLS52010(params: { PO_No: string }): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/getLabelTLS52010`, params);
+  }
 }

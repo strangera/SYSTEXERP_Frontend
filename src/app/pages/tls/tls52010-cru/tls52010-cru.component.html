@@ -92,6 +92,9 @@
   <hr />
   <app-table tableKey="fin11200DialogTable" dataKey="PLU_MagNo" [data]="dialogData" [columns]="dialogColumns"
     [showDelete]="false" [selectedItems]="selectedItemsDialog" (selectionChange)="selectedItemsDialog = $event"
-    [showHeader]="false" [showManage]="false" [showCheckBox]="true" [isRowSelectable]="isRowSelectable.bind(this)">
+    [showHeader]="false" [showManage]="false" [showCheckBox]="true" [isRowSelectable]="isRowSelectable.bind(this)"
+    [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)" [lazy]="true"
+    [loading]="dialogLoading">
   </app-table>
 </app-dialog>
