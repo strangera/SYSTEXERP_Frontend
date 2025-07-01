@@ -60,7 +60,7 @@ export class SYSB300Component
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSB300', 'SYS/SYSB300CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('SYSB300', 'SYS/SYSB300cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 

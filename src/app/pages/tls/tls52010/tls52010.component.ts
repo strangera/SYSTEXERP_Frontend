@@ -7,7 +7,6 @@ import { DropDownListService } from '../../../service/api/dropdownservice/dropDo
 import { finalize, map } from 'rxjs'; // 只需要 map 運算符，因為我們將直接訂閱
 import { ExportLabelService, IExportLabelRequest } from '../../../service/api/exportLabel/exportLabel.service';
 import { HttpResponse } from '@angular/common/http';
-
 export const enum POStatus {
   已申請 = '0',
   取消 = '1',
@@ -17,7 +16,6 @@ export const enum POStatus {
   強制結案 = '6',
   作廢 = '9',
 }
-
 // 2.5.2.1 採購單維護作業
 @Component({
   selector: 'app-tls52010',
@@ -42,11 +40,9 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     CLOS_Date_End: [null], // 強制結案日期 迄
     ...createPaginationConfig([{ field: 'APPLY_Date', order: -1 }, { field: 'PO_No', order: 1 }]), // 分頁和排序參數
   });
-
   totalRecords = 0;
   data: ITLS52010Data[] = [];
   selectedItems: ITLS52010Data[] = []; // 用於儲存選中的項目
-  // 管理：單據審核、反審核、產生標籤檔、作廢、取消單據功能
   addButton: AddButton[] = [
     { label: '單據審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.已審核); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已申請 }, // 審核
     { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.已申請); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已審核 }, // 反審核
@@ -54,8 +50,6 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     { label: '作廢', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.作廢); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已申請 }, // 作廢
     { label: '取消單據', icon: 'pi pi-times-circle text-gray-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.取消); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已申請 }, // 取消單據
   ];
-
-  // 表格欄位定義
   columns: Column[] = [
     { field: 'PO_No', header: '採購單號', visible: true }, // 採購單號
     { field: 'SYS_StoreNo', header: '門店編號', visible: true }, // 門店編號 (系統)
@@ -93,13 +87,11 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     { field: 'UPD_USR_No', header: '變更人員編號', visible: false }, // 變更人員編號
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
   ];
-  // 聲明用於儲存下拉選單選項的變數，直接為陣列型別
   warehouseOptions: { label: string, value: string }[] = []; // 倉別
   brandOptions: { label: string, value: string }[] = []; // 品牌代碼
   vendorOptions: { label: string, value: string }[] = []; // 廠商編號
   poStatusOptions: { label: string, value: string }[] = []; // 採購單狀態 (靜態資料)
   userOptions: { label: string, value: string }[] = []; // 申請人員、審核人員、結案人員
-
   constructor(
     private tls52010Service: Tls52010Service, // 注入 TLS52010Service
     private dropDownListService: DropDownListService, // 注入 DropDownListService
@@ -109,8 +101,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   }
 
   ngOnInit(): void {
-    // 初始化頁面，設定服務名稱、CRU 路徑和表單提交處理函數
-    this.initializePage('TLS52010', 'TLS/TLS52010CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS52010', 'TLS/TLS52010cru', this.queryForm, (form) => this.onSubmit(form));
     // 倉別 (HOS_No)
     this.dropDownListService.getPOS2034Options().pipe(
       map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
@@ -134,7 +125,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
       { label: '已審核', value: '2' },
       { label: '部分驗收', value: '3' },
       { label: '全部驗收', value: '4' },
-      { label: '作廢(審核後使用)', value: '5' },
+      { label: '作廢(審核後使用)', value: '9' },
       { label: '強制結案', value: '6' }
     ];
 

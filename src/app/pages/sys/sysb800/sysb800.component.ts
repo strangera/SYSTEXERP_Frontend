@@ -58,7 +58,7 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSB800', '/SYS/SYSB800CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('SYSB800', '/SYS/SYSB800cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup): void {

@@ -67,7 +67,7 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS51080', 'TLS/TLS51080CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS51080', 'TLS/TLS51080cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 

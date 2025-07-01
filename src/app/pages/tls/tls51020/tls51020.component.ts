@@ -65,7 +65,7 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS51020', '/TLS/TLS51020CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS51020', '/TLS/TLS51020cru', this.queryForm, (form) => this.onSubmit(form));
     // 獲取大分類代碼
     this.dropdownListService.getSystemTypes().subscribe({
       next: (response) => {

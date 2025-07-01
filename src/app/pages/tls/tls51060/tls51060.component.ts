@@ -56,7 +56,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS51060', 'TLS/TLS51060CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS51060', 'TLS/TLS51060cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 

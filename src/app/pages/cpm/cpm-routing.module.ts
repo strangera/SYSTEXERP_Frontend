@@ -89,11 +89,11 @@ import { CPM25050Component } from './cpm25050/cpm25050.component';
 import { CPM25060Component } from './cpm25060/cpm25060.component';
 const routes: Routes = [
   { path: 'cpm11010', component: CPM11010Component },  // 服務台位置維護作業
-  { path: 'cpm11010CRU', component: CPM11010CRUComponent },
+  { path: 'cpm11010cru', component: CPM11010CRUComponent },
   { path: 'cpm11020', component: CPM11020Component },  // 客服設備資料維護作業
-  { path: 'cpm11020CRU', component: CPM11020CRUComponent },
+  { path: 'cpm11020cru', component: CPM11020CRUComponent },
   { path: 'cpm11030', component: CPM11030Component },  // 設備出借作業
-  { path: 'cpm11030CRU', component: CPM11030CRUComponent },
+  { path: 'cpm11030cru', component: CPM11030CRUComponent },
   { path: 'cpm11040', component: CPM11040Component },  // 設備歸還作業
   { path: 'cpm11040HQ', component: Cpm11040HQComponent },
   { path: 'cpm11050', component: CPM11050Component },  // 遺失/拾獲管理作業
@@ -101,31 +101,31 @@ const routes: Routes = [
   { path: 'cpm11050LOST', component: Cpm11050LostComponent },
   { path: 'cpm11050UNCLAIMED', component: Cpm11050UnclaimedComponent },
   { path: 'cpm11060', component: CPM11060Component },  // 總機廣播服務
-  { path: 'cpm11060CRU', component: Cpm11060CRUComponent },  // 總機廣播服務  CRU
+  { path: 'cpm11060cru', component: Cpm11060CRUComponent },  // 總機廣播服務  CRU
   { path: 'cpm11070', component: CPM11070Component },  // 全館店櫃資訊查詢
   { path: 'cpm12010', component: CPM12010Component },  // 顧客意見類別維護
-  { path: 'cpm12010CRU', component: CPM12010CRUComponent },
+  { path: 'cpm12010cru', component: CPM12010CRUComponent },
   { path: 'cpm12020', component: CPM12020Component },  // 顧客意見責任單位維護
-  { path: 'cpm12020CRU', component: CPM12020CRUComponent },
+  { path: 'cpm12020cru', component: CPM12020CRUComponent },
   { path: 'cpm12030', component: CPM12030Component },  // 顧客意見子類別維護
-  { path: 'cpm12030CRU', component: CPM12030CRUComponent },
+  { path: 'cpm12030cru', component: CPM12030CRUComponent },
   { path: 'cpm12040', component: CPM12040Component },  // 顧客意見來源維護
-  { path: 'cpm12040CRU', component: CPM12040CRUComponent },
+  { path: 'cpm12040cru', component: CPM12040CRUComponent },
   { path: 'cpm12050', component: CPM12050Component },  // 顧客意見管理作業
-  { path: 'cpm12050CRU', component: CPM12050CRUComponent },
+  { path: 'cpm12050cru', component: CPM12050CRUComponent },
   { path: 'cpm12050HQ', component: Cpm12050HQComponent },
   { path: 'cpm12060', component: CPM12060Component },  // 顧客意見處理狀況表
   { path: 'cpm12070', component: CPM12070Component },  // 顧客意見類別統計表
   { path: 'cpm13010', component: CPM13010Component },  // 停車費折抵補登作業
-  { path: 'cpm13010CRU', component: CPM13010CRUComponent },
+  { path: 'cpm13010cru', component: CPM13010CRUComponent },
   { path: 'cpm13020', component: CPM13020Component },  // 停車費折抵補登作業(可讀停車車號)
-  { path: 'cpm13020CRU', component: CPM13020CRUComponent },
+  { path: 'cpm13020cru', component: CPM13020CRUComponent },
   { path: 'cpm13030', component: CPM13030Component },  // 非業主POS停車費折抵補登作業
-  { path: 'cpm13030CRU', component: CPM13030CRUComponent },
+  { path: 'cpm13030cru', component: CPM13030CRUComponent },
   { path: 'cpm13040', component: CPM13040Component },  // 非業主POS停車費折抵補登作業(可讀取車號)
-  { path: 'cpm13040CRU', component: CPM13040CRUComponent },
+  { path: 'cpm13040cru', component: CPM13040CRUComponent },
   { path: 'cpm13050', component: CPM13050Component },  // 專櫃停車費折抵設定作業
-  { path: 'cpm13050CRU', component: CPM13050CRUComponent },
+  { path: 'cpm13050cru', component: CPM13050CRUComponent },
   { path: 'cpmLostCode', component: CpmLostCodeComponent },  // 遺拾中分類維護_暫存頁_等代碼開出就會更改
   { path: 'cpmLostCodeCRU', component: CpmLostCodeCRUComponent },  // 遺拾中分類維護_暫存頁_等代碼開出就會更改
   { path: 'cpmLostPlace', component: CpmLostPlaceComponent },  // 遺拾商品地點維護 暫存頁_等代碼開出就會更改
@@ -133,39 +133,39 @@ const routes: Routes = [
   { path: 'cpmLostPerson', component: CpmLostPersonComponent },  // 尋人廣播服務 暫存頁_等代碼開出就會更改
   { path: 'cpmLostPersonCRU', component: CpmLostPersonCRUComponent },  // 尋人廣播服務 暫存頁_等代碼開出就會更改
   { path: 'cpm21010', component: CPM21010Component },  // 區域基本資料維護作業
-  { path: 'cpm21010CRU', component: CPM21010CRUComponent },
+  { path: 'cpm21010cru', component: CPM21010CRUComponent },
   { path: 'cpm21020', component: CPM21020Component },  // 廠商基本資料維護
-  { path: 'cpm21020CRU', component: CPM21020CRUComponent },
+  { path: 'cpm21020cru', component: CPM21020CRUComponent },
   { path: 'cpm21030', component: CPM21030Component },  // 活動場地資料維護
-  { path: 'cpm21030CRU', component: CPM21030CRUComponent },
+  { path: 'cpm21030cru', component: CPM21030CRUComponent },
   { path: 'cpm21040', component: CPM21040Component },  // 設備類別資料維護
-  { path: 'cpm21040CRU', component: CPM21040CRUComponent },
+  { path: 'cpm21040cru', component: CPM21040CRUComponent },
   { path: 'cpm21050', component: CPM21050Component },  // 活動用品資料維護
-  { path: 'cpm21050CRU', component: CPM21050CRUComponent },
+  { path: 'cpm21050cru', component: CPM21050CRUComponent },
   { path: 'cpm21060', component: CPM21060Component },  // 行銷活動類別及任務維護
-  { path: 'cpm21060CRU', component: CPM21060CRUComponent },
+  { path: 'cpm21060cru', component: CPM21060CRUComponent },
   { path: 'cpm22010', component: CPM22010Component },  // 行銷活動維護
-  { path: 'cpm22010CRU', component: CPM22010CRUComponent },
+  { path: 'cpm22010cru', component: CPM22010CRUComponent },
   { path: 'cpm22020', component: CPM22020Component },  // 檔期營業目標維護
-  { path: 'cpm22020CRU', component: CPM22020CRUComponent },
+  { path: 'cpm22020cru', component: CPM22020CRUComponent },
   { path: 'cpm22030', component: CPM22030Component },  // 活動工作進度維護
-  { path: 'cpm22030CRU', component: CPM22030CRUComponent },
+  { path: 'cpm22030cru', component: CPM22030CRUComponent },
   { path: 'cpm22040', component: CPM22040Component },  // 活動場地預約維護
-  { path: 'cpm22040CRU', component: CPM22040CRUComponent },
+  { path: 'cpm22040cru', component: CPM22040CRUComponent },
   { path: 'cpm22050', component: CPM22050Component },  // 活動用品預約維護
-  { path: 'cpm22050CRU', component: CPM22050CRUComponent },
+  { path: 'cpm22050cru', component: CPM22050CRUComponent },
   { path: 'cpm23010', component: CPM23010Component },  // 活動用品管理作業
-  { path: 'cpm23010CRU', component: CPM23010CRUComponent },
+  { path: 'cpm23010cru', component: CPM23010CRUComponent },
   { path: 'cpm23020', component: CPM23020Component },  // 活動用品入庫作業
-  { path: 'cpm23020CRU', component: CPM23020CRUComponent },
+  { path: 'cpm23020cru', component: CPM23020CRUComponent },
   { path: 'cpm23030', component: CPM23030Component },  // 活動用品領用作業
-  { path: 'cpm23030CRU', component: CPM23030CRUComponent },
+  { path: 'cpm23030cru', component: CPM23030CRUComponent },
   { path: 'cpm23040', component: CPM23040Component },  // 活動用品繳回作業
-  { path: 'cpm23040CRU', component: CPM23040CRUComponent },
+  { path: 'cpm23040cru', component: CPM23040CRUComponent },
   { path: 'cpm23050', component: CPM23050Component },  // 租賃活動用品歸還作業
-  { path: 'cpm23050CRU', component: CPM23050CRUComponent },
+  { path: 'cpm23050cru', component: CPM23050CRUComponent },
   { path: 'cpm24010', component: CPM24010Component },  // 活動預算維護
-  { path: 'cpm24010CRU', component: CPM24010CRUComponent },
+  { path: 'cpm24010cru', component: CPM24010CRUComponent },
   { path: 'cpm24020', component: CPM24020Component },  // 活動贊助金維護
   { path: 'cpm24030', component: CPM24030Component },  // 活動費用維護
   { path: 'cpm24040', component: CPM24040Component },  // 活動費用傳票報表

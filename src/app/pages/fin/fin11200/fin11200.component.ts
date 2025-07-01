@@ -38,7 +38,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN11200', '/FIN/FIN11200CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('FIN11200', '/FIN/FIN11200cru', this.queryForm, (form) => this.onSubmit(form));
     this.eCRNoService.getECRNo().subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.value} - ${item.label}` })));
   }
   onSubmit(frm: FormGroup) {

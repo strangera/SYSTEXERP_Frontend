@@ -58,8 +58,8 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN13010','FIN13010CRU', this.queryForm);
-    
+    this.initializePage('FIN13010', 'FIN13010cru', this.queryForm);
+
   }
 
   onSubmit(form: FormGroup): void {

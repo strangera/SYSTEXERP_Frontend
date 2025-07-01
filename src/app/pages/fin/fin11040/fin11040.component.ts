@@ -26,7 +26,7 @@ export class FIN11040Component extends BasicQueryPageComponent<TDS1008Data> impl
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN11040', '/FIN/FIN11040CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('FIN11040', '/FIN/FIN11040cru', this.queryForm, (form) => this.onSubmit(form));
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {

@@ -51,7 +51,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS41010', 'TLS/TLS41010CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS41010', 'TLS/TLS41010cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {

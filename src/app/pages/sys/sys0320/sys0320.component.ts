@@ -35,7 +35,7 @@ export class SYS0320Component extends BasicQueryPageComponent<UserData> implemen
   }
 
   ngOnInit(): void {
-    this.initializePage('SYS0320', '/SYS/SYS0320CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('SYS0320', '/SYS/SYS0320cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   // 表單提交邏輯

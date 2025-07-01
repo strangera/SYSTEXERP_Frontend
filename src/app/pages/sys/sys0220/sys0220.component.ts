@@ -54,7 +54,7 @@ export class SYS0220Component extends BasicQueryPageComponent<tblUser> implement
         this.SYS3100_Options.find((option) => option.No === value)?.Label ||
         value
     },
-    { field: 'str_dateStart', header: '帳號有效開始日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : ''},
+    { field: 'str_dateStart', header: '帳號有效開始日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
     { field: 'str_dateEnd', header: '帳號有效結束日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
     {
       field: 'user_type', header: '使用者型態', visible: true, format: (value: string) =>
@@ -82,7 +82,7 @@ export class SYS0220Component extends BasicQueryPageComponent<tblUser> implement
   }
 
   ngOnInit(): void {
-    this.initializePage('SYS0220', '/SYS/SYS0220CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('SYS0220', '/SYS/SYS0220cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
   // 初始化下拉選單選項

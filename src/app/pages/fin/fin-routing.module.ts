@@ -326,63 +326,63 @@ import { FIN11200CRUComponent } from './fin11200-cru/fin11200-cru.component';
 
 const routes: Routes = [
   { path: 'fin11010', component: FIN11010Component },  // 營業人申報設定
-  { path: 'fin11010CRU', component: FIN11010CRUComponent },
+  { path: 'fin11010cru', component: FIN11010CRUComponent },
   { path: 'fin11020', component: FIN11020Component },  // 發票基本資料維護
-  { path: 'fin11020CRU', component: FIN11020CRUComponent },
+  { path: 'fin11020cru', component: FIN11020CRUComponent },
   { path: 'fin11030', component: FIN11030Component },  // 銷項品項資料設定
-  { path: 'fin11030CRU', component: FIN11030CRUComponent },
+  { path: 'fin11030cru', component: FIN11030CRUComponent },
   { path: 'fin11040', component: FIN11040Component },  // 發票格式代號維護
-  { path: 'fin11040CRU', component: FIN11040CRUComponent },
+  { path: 'fin11040cru', component: FIN11040CRUComponent },
   { path: 'fin11050', component: FIN11050Component },  // 二聯式電子發票上送狀況表
   { path: 'fin11060', component: FIN11060Component },  // 產生二聯式電子未使用空白發票檔案
   { path: 'fin11070', component: FIN11070Component },  // 二聯式電子發票筆數核對表
   { path: 'fin11080', component: FIN11080Component },  // 二電退貨發票號碼清空重新上送作業
-  { path: 'fin11080CRU', component: FIN11080CRUComponent },
+  { path: 'fin11080cru', component: FIN11080CRUComponent },
   { path: 'fin11090', component: FIN11090Component },  // 非業主收銀機二聯式電子發票配號作業
-  { path: 'fin11090CRU', component: FIN11090CRUComponent },
+  { path: 'fin11090cru', component: FIN11090CRUComponent },
   { path: 'fin11200', component: FIN11200Component },  // 電子發票配號作業
-  { path: 'fin11200CRU', component: FIN11200CRUComponent },  // 電子發票配號作業
+  { path: 'fin11200cru', component: FIN11200CRUComponent },  // 電子發票配號作業
   { path: 'fin12010', component: FIN12010Component },  // 電子式發票各系統配號維護
-  { path: 'fin12010CRU', component: FIN12010CRUComponent },
+  { path: 'fin12010cru', component: FIN12010CRUComponent },
   { path: 'fin12020', component: FIN12020Component },  // 使用完/空白發票繳回作業
-  { path: 'fin12020CRU', component: FIN12020CRUComponent },
+  { path: 'fin12020cru', component: FIN12020CRUComponent },
   { path: 'fin12030', component: FIN12030Component },  // 發票狀況明細查詢
   { path: 'fin13010', component: FIN13010Component },  // 專櫃發票轉媒體作業
-  { path: 'fin13010CRU', component: FIN13010CRUComponent },
+  { path: 'fin13010cru', component: FIN13010CRUComponent },
   { path: 'fin13020', component: FIN13020Component },  // 二聯發票核對作業
-  { path: 'fin13020CRU', component: FIN13020CRUComponent },
+  { path: 'fin13020cru', component: FIN13020CRUComponent },
   { path: 'fin13030', component: FIN13030Component },  // 二收及二電發票表
-  { path: 'fin13030CRU', component: FIN13030CRUComponent },
+  { path: 'fin13030cru', component: FIN13030CRUComponent },
   { path: 'fin14010', component: FIN14010Component },  // 補登進項稅額
-  { path: 'fin14010CRU', component: FIN14010CRUComponent },
+  { path: 'fin14010cru', component: FIN14010CRUComponent },
   { path: 'fin14020', component: FIN14020Component },  // 進貨退出或折讓資料維護
-  { path: 'fin14020CRU', component: FIN14020CRUComponent },
+  { path: 'fin14020cru', component: FIN14020CRUComponent },
   { path: 'fin14030', component: FIN14030Component },  // 補登銷項稅額
-  { path: 'fin14030CRU', component: FIN14030CRUComponent },
+  { path: 'fin14030cru', component: FIN14030CRUComponent },
   { path: 'fin14040', component: FIN14040Component },  // 銷貨退回或折讓資料維護
-  { path: 'fin14040CRU', component: FIN14040CRUComponent },
+  { path: 'fin14040cru', component: FIN14040CRUComponent },
   { path: 'fin14050', component: FIN14050Component },  // 零稅率清單維護
-  { path: 'fin14050CRU', component: FIN14050CRUComponent },
+  { path: 'fin14050cru', component: FIN14050CRUComponent },
   { path: 'fin14060', component: FIN14060Component },  // 非二聯式收銀機發票調整作業
-  { path: 'fin14060CRU', component: FIN14060CRUComponent },
+  { path: 'fin14060cru', component: FIN14060CRUComponent },
   { path: 'fin14070', component: FIN14070Component },  // 二聯收銀機發票維護
-  { path: 'fin14070CRU', component: FIN14070CRUComponent },
+  { path: 'fin14070cru', component: FIN14070CRUComponent },
   { path: 'fin14080', component: FIN14080Component },  // 進項發票調整
-  { path: 'fin14080CRU', component: FIN14080CRUComponent },
+  { path: 'fin14080cru', component: FIN14080CRUComponent },
   { path: 'fin14090', component: FIN14090Component },  // 銷項發票調整
-  { path: 'fin14090CRU', component: FIN14090CRUComponent },
+  { path: 'fin14090cru', component: FIN14090CRUComponent },
   { path: 'fin14100', component: FIN14100Component },  // 刪除二聯收銀發票退回作業
-  { path: 'fin14100CRU', component: FIN14100CRUComponent },
+  { path: 'fin14100cru', component: FIN14100CRUComponent },
   { path: 'fin14110', component: FIN14110Component },  // 折讓資料刪除作業
-  { path: 'fin14110CRU', component: FIN14110CRUComponent },
+  { path: 'fin14110cru', component: FIN14110CRUComponent },
   { path: 'fin15010', component: FIN15010Component },  // 申報書維護
-  { path: 'fin15010CRU', component: FIN15010CRUComponent },
+  { path: 'fin15010cru', component: FIN15010CRUComponent },
   { path: 'fin15020', component: FIN15020Component },  // 資料結轉
-  { path: 'fin15020CRU', component: FIN15020CRUComponent },
+  { path: 'fin15020cru', component: FIN15020CRUComponent },
   { path: 'fin15030', component: FIN15030Component },  // 形成申報書
-  { path: 'fin15030CRU', component: FIN15030CRUComponent },
+  { path: 'fin15030cru', component: FIN15030CRUComponent },
   { path: 'fin15040', component: FIN15040Component },  // 形成媒體申報檔
-  { path: 'fin15040CRU', component: FIN15040CRUComponent },
+  { path: 'fin15040cru', component: FIN15040CRUComponent },
   { path: 'fin16010', component: FIN16010Component },  // 進項發票明細表
   { path: 'fin16020', component: FIN16020Component },  // 進貨退出或折讓明細表
   { path: 'fin16030', component: FIN16030Component },  // 銷貨退回或折讓明細表
@@ -395,253 +395,253 @@ const routes: Routes = [
   { path: 'fin16100', component: FIN16100Component },  // 營業人媒體檔案遞送單
   { path: 'fin16110', component: FIN16110Component },  // 銷貨退回或折讓單列印
   { path: 'fin21010', component: FIN21010Component },  // 公司銀行資料維護
-  { path: 'fin21010CRU', component: FIN21010CRUComponent },
+  { path: 'fin21010cru', component: FIN21010CRUComponent },
   { path: 'fin21020', component: FIN21020Component },  // 費率對照維護
-  { path: 'fin21020CRU', component: FIN21020CRUComponent },
+  { path: 'fin21020cru', component: FIN21020CRUComponent },
   { path: 'fin21030', component: FIN21030Component },  // 廠客資料維護
-  { path: 'fin21030CRU', component: FIN21030CRUComponent },
+  { path: 'fin21030cru', component: FIN21030CRUComponent },
   { path: 'fin22010', component: FIN22010Component },  // 請款單作業
-  { path: 'fin22010CRU', component: FIN22010CRUComponent },
+  { path: 'fin22010cru', component: FIN22010CRUComponent },
   { path: 'fin22020', component: FIN22020Component },  // 一般請款單
-  { path: 'fin22020CRU', component: FIN22020CRUComponent },
+  { path: 'fin22020cru', component: FIN22020CRUComponent },
   { path: 'fin22030', component: FIN22030Component },  // 請款傳票拋轉
-  { path: 'fin22030CRU', component: FIN22030CRUComponent },
+  { path: 'fin22030cru', component: FIN22030CRUComponent },
   { path: 'fin23010', component: FIN23010Component },  // 暫付款申請作業
-  { path: 'fin23010CRU', component: FIN23010CRUComponent },
+  { path: 'fin23010cru', component: FIN23010CRUComponent },
   { path: 'fin23020', component: FIN23020Component },  // 暫付款申請傳票拋轉作業
-  { path: 'fin23020CRU', component: FIN23020CRUComponent },
+  { path: 'fin23020cru', component: FIN23020CRUComponent },
   { path: 'fin23030', component: FIN23030Component },  // 暫付款申請單列印
-  { path: 'fin23030CRU', component: FIN23030CRUComponent },
+  { path: 'fin23030cru', component: FIN23030CRUComponent },
   { path: 'fin23040', component: FIN23040Component },  // 暫付款核銷作業
-  { path: 'fin23040CRU', component: FIN23040CRUComponent },
+  { path: 'fin23040cru', component: FIN23040CRUComponent },
   { path: 'fin23050', component: FIN23050Component },  // 暫付款核銷傳票拋轉作業
-  { path: 'fin23050CRU', component: FIN23050CRUComponent },
+  { path: 'fin23050cru', component: FIN23050CRUComponent },
   { path: 'fin23060', component: FIN23060Component },  // 暫付款申請結案作業
-  { path: 'fin23060CRU', component: FIN23060CRUComponent },
+  { path: 'fin23060cru', component: FIN23060CRUComponent },
   { path: 'fin23070', component: FIN23070Component },  // 暫付款核銷報表
   { path: 'fin24010', component: FIN24010Component },  // 應付帳款維護
-  { path: 'fin24010CRU', component: FIN24010CRUComponent },
+  { path: 'fin24010cru', component: FIN24010CRUComponent },
   { path: 'fin24020', component: FIN24020Component },  // 保留款沖款維護
-  { path: 'fin24020CRU', component: FIN24020CRUComponent },
+  { path: 'fin24020cru', component: FIN24020CRUComponent },
   { path: 'fin24030', component: FIN24030Component },  // 帳款貼現沖帳維護
-  { path: 'fin24030CRU', component: FIN24030CRUComponent },
+  { path: 'fin24030cru', component: FIN24030CRUComponent },
   { path: 'fin25010', component: FIN25010Component },  // 產生電匯付款資料
-  { path: 'fin25010CRU', component: FIN25010CRUComponent },
+  { path: 'fin25010cru', component: FIN25010CRUComponent },
   { path: 'fin25020', component: FIN25020Component },  // 形成電匯明細資料
-  { path: 'fin25020CRU', component: FIN25020CRUComponent },
+  { path: 'fin25020cru', component: FIN25020CRUComponent },
   { path: 'fin26010', component: FIN26010Component },  // 匯款銀行
-  { path: 'fin26010CRU', component: FIN26010CRUComponent },
+  { path: 'fin26010cru', component: FIN26010CRUComponent },
   { path: 'fin27010', component: FIN27010Component },  // 產生開票付款資料
-  { path: 'fin27010CRU', component: FIN27010CRUComponent },
+  { path: 'fin27010cru', component: FIN27010CRUComponent },
   { path: 'fin27020', component: FIN27020Component },  // 形成開票明細資料
-  { path: 'fin27020CRU', component: FIN27020CRUComponent },
+  { path: 'fin27020cru', component: FIN27020CRUComponent },
   { path: 'fin28010', component: FIN28010Component },  // 形成電匯付款傳票
-  { path: 'fin28010CRU', component: FIN28010CRUComponent },
+  { path: 'fin28010cru', component: FIN28010CRUComponent },
   { path: 'fin28020', component: FIN28020Component },  // 形成開票付款傳票
-  { path: 'fin28020CRU', component: FIN28020CRUComponent },
+  { path: 'fin28020cru', component: FIN28020CRUComponent },
   { path: 'fin29010', component: FIN29010Component },  // 保留款彙總表
-  { path: 'fin29010CRU', component: FIN29010CRUComponent },
+  { path: 'fin29010cru', component: FIN29010CRUComponent },
   { path: 'fin29020', component: FIN29020Component },  // 匯款明細表
-  { path: 'fin29020CRU', component: FIN29020CRUComponent },
+  { path: 'fin29020cru', component: FIN29020CRUComponent },
   { path: 'fin29030', component: FIN29030Component },  // 開票明細表
-  { path: 'fin29030CRU', component: FIN29030CRUComponent },
+  { path: 'fin29030cru', component: FIN29030CRUComponent },
   { path: 'fin29040', component: FIN29040Component },  // AP及ARNET之報表
-  { path: 'fin29040CRU', component: FIN29040CRUComponent },
+  { path: 'fin29040cru', component: FIN29040CRUComponent },
   { path: 'fin29050', component: FIN29050Component },  // 應付帳款明細表
-  { path: 'fin29050CRU', component: FIN29050CRUComponent },
+  { path: 'fin29050cru', component: FIN29050CRUComponent },
   { path: 'fin29060', component: FIN29060Component },  // 廠商付款明細表
-  { path: 'fin29060CRU', component: FIN29060CRUComponent },
+  { path: 'fin29060cru', component: FIN29060CRUComponent },
   { path: 'fin29070', component: FIN29070Component },  // 廠商應付對科目明細表
-  { path: 'fin29070CRU', component: FIN29070CRUComponent },
+  { path: 'fin29070cru', component: FIN29070CRUComponent },
   { path: 'fin29080', component: FIN29080Component },  // 應付帳款預估表
-  { path: 'fin29080CRU', component: FIN29080CRUComponent },
+  { path: 'fin29080cru', component: FIN29080CRUComponent },
   { path: 'fin29090', component: FIN29090Component },  // 貼現三聯式發票列印
-  { path: 'fin29090CRU', component: FIN29090CRUComponent },
+  { path: 'fin29090cru', component: FIN29090CRUComponent },
   { path: 'fin29100', component: FIN29100Component },  // 支出憑單明細表
-  { path: 'fin29100CRU', component: FIN29100CRUComponent },
+  { path: 'fin29100cru', component: FIN29100CRUComponent },
   { path: 'fin29110', component: FIN29110Component },  // 應付帳款帳齡分析表
-  { path: 'fin29110CRU', component: FIN29110CRUComponent },
+  { path: 'fin29110cru', component: FIN29110CRUComponent },
   { path: 'fin29120', component: FIN29120Component },  // 應付帳款進項發票對應表
-  { path: 'fin29120CRU', component: FIN29120CRUComponent },
+  { path: 'fin29120cru', component: FIN29120CRUComponent },
   { path: 'fin31010', component: FIN31010Component },  // 收款項目對照會計科目維護
-  { path: 'fin31010CRU', component: FIN31010CRUComponent },
+  { path: 'fin31010cru', component: FIN31010CRUComponent },
   { path: 'fin31020', component: FIN31020Component },  // 應收調整科目設定維護
-  { path: 'fin31020CRU', component: FIN31020CRUComponent },
+  { path: 'fin31020cru', component: FIN31020CRUComponent },
   { path: 'fin32010', component: FIN32010Component },  // 應收帳款維護
-  { path: 'fin32010CRU', component: FIN32010CRUComponent },
+  { path: 'fin32010cru', component: FIN32010CRUComponent },
   { path: 'fin32020', component: FIN32020Component },  // 應收帳款調整作業
-  { path: 'fin32020CRU', component: FIN32020CRUComponent },
+  { path: 'fin32020cru', component: FIN32020CRUComponent },
   { path: 'fin32030', component: FIN32030Component },  // 收款沖帳維護
-  { path: 'fin32030CRU', component: FIN32030CRUComponent },
+  { path: 'fin32030cru', component: FIN32030CRUComponent },
   { path: 'fin33010', component: FIN33010Component },  // 拋轉收款沖帳傳票
-  { path: 'fin33010CRU', component: FIN33010CRUComponent },
+  { path: 'fin33010cru', component: FIN33010CRUComponent },
   { path: 'fin34010', component: FIN34010Component },  // 應收帳款明細表
   { path: 'fin34020', component: FIN34020Component },  // 客戶收款明細表
   { path: 'fin34030', component: FIN34030Component },  // 廠客收/付款彙總表
-  { path: 'fin34030CRU', component: FIN34030CRUComponent },
+  { path: 'fin34030cru', component: FIN34030CRUComponent },
   { path: 'fin34040', component: FIN34040Component },  // 應收帳款帳齡分析表
-  { path: 'fin34040CRU', component: FIN34040CRUComponent },
+  { path: 'fin34040cru', component: FIN34040CRUComponent },
   { path: 'fin35010', component: FIN35010Component },  // 存入保證金維護作業
-  { path: 'fin35010CRU', component: FIN35010CRUComponent },
+  { path: 'fin35010cru', component: FIN35010CRUComponent },
   { path: 'fin35020', component: FIN35020Component },  // 存入保證金拋轉作業
-  { path: 'fin35020CRU', component: FIN35020CRUComponent },
+  { path: 'fin35020cru', component: FIN35020CRUComponent },
   { path: 'fin35030', component: FIN35030Component },  // 存入保證金保管聯列印作業
-  { path: 'fin35030CRU', component: FIN35030CRUComponent },
+  { path: 'fin35030cru', component: FIN35030CRUComponent },
   { path: 'fin35040', component: FIN35040Component },  // 存入保證金保管聯備註維護
-  { path: 'fin35040CRU', component: FIN35040CRUComponent },
+  { path: 'fin35040cru', component: FIN35040CRUComponent },
   { path: 'fin35050', component: FIN35050Component },  // 保證金會計科目設定
-  { path: 'fin35050CRU', component: FIN35050CRUComponent },
+  { path: 'fin35050cru', component: FIN35050CRUComponent },
   { path: 'fin35060', component: FIN35060Component },  // 存出保證金維護作業
-  { path: 'fin35060CRU', component: FIN35060CRUComponent },
+  { path: 'fin35060cru', component: FIN35060CRUComponent },
   { path: 'fin35070', component: FIN35070Component },  // 存出保證金拋轉作業
-  { path: 'fin35070CRU', component: FIN35070CRUComponent },
+  { path: 'fin35070cru', component: FIN35070CRUComponent },
   { path: 'fin41010', component: FIN41010Component },  // 部門預算匯出轉入作業
-  { path: 'fin41010CRU', component: FIN41010CRUComponent },
+  { path: 'fin41010cru', component: FIN41010CRUComponent },
   { path: 'fin41020', component: FIN41020Component },  // 部門預算編制維護
-  { path: 'fin41020CRU', component: FIN41020CRUComponent },
+  { path: 'fin41020cru', component: FIN41020CRUComponent },
   { path: 'fin41030', component: FIN41030Component },  // 預算審核作業
-  { path: 'fin41030CRU', component: FIN41030CRUComponent },
+  { path: 'fin41030cru', component: FIN41030CRUComponent },
   { path: 'fin41040', component: FIN41040Component },  // 產生年中版本作業
-  { path: 'fin41040CRU', component: FIN41040CRUComponent },
+  { path: 'fin41040cru', component: FIN41040CRUComponent },
   { path: 'fin42010', component: FIN42010Component },  // 預計損益表
-  { path: 'fin42010CRU', component: FIN42010CRUComponent },
+  { path: 'fin42010cru', component: FIN42010CRUComponent },
   { path: 'fin42020', component: FIN42020Component },  // 預算、實績比較表
-  { path: 'fin42020CRU', component: FIN42020CRUComponent },
+  { path: 'fin42020cru', component: FIN42020CRUComponent },
   { path: 'fin42030', component: FIN42030Component },  // 預算同期比較表
-  { path: 'fin42030CRU', component: FIN42030CRUComponent },
+  { path: 'fin42030cru', component: FIN42030CRUComponent },
   { path: 'fin42040', component: FIN42040Component },  // 去年同期比較表
-  { path: 'fin42040CRU', component: FIN42040CRUComponent },
+  { path: 'fin42040cru', component: FIN42040CRUComponent },
   { path: 'fin42050', component: FIN42050Component },  // 預算版本比較表
-  { path: 'fin42050CRU', component: FIN42050CRUComponent },
+  { path: 'fin42050cru', component: FIN42050CRUComponent },
   { path: 'fin51010', component: FIN51010Component },  // 資材系統
-  { path: 'fin51010CRU', component: FIN51010CRUComponent },
+  { path: 'fin51010cru', component: FIN51010CRUComponent },
   { path: 'fin51020', component: FIN51020Component },  // 人資系統
-  { path: 'fin51020CRU', component: FIN51020CRUComponent },
+  { path: 'fin51020cru', component: FIN51020CRUComponent },
   { path: 'fin51030', component: FIN51030Component },  // 禮券管理系統
-  { path: 'fin51030CRU', component: FIN51030CRUComponent },
+  { path: 'fin51030cru', component: FIN51030CRUComponent },
   { path: 'fin51040', component: FIN51040Component },  // 專櫃營運系統
-  { path: 'fin51040CRU', component: FIN51040CRUComponent },
+  { path: 'fin51040cru', component: FIN51040CRUComponent },
   { path: 'fin51050', component: FIN51050Component },  // 自營進銷存管理系統
-  { path: 'fin51050CRU', component: FIN51050CRUComponent },
+  { path: 'fin51050cru', component: FIN51050CRUComponent },
   { path: 'fin51060', component: FIN51060Component },  // 電子商務管理系統
-  { path: 'fin51060CRU', component: FIN51060CRUComponent },
+  { path: 'fin51060cru', component: FIN51060CRUComponent },
   { path: 'fin52010', component: FIN52010Component },  // 基本資料作業-總帳參數維謢
-  { path: 'fin52010CRU', component: FIN52010CRUComponent },
+  { path: 'fin52010cru', component: FIN52010CRUComponent },
   { path: 'fin52020', component: FIN52020Component },  // 基本資料作業-傳票型態設定維護
-  { path: 'fin52020CRU', component: FIN52020CRUComponent },
+  { path: 'fin52020cru', component: FIN52020CRUComponent },
   { path: 'fin52030', component: FIN52030Component },  // 基本資料作業-常用傳票維護
-  { path: 'fin52030CRU', component: FIN52030CRUComponent },
+  { path: 'fin52030cru', component: FIN52030CRUComponent },
   { path: 'fin52040', component: FIN52040Component },  // 基本資料作業-對象及對帳維護作業
-  { path: 'fin52040CRU', component: FIN52040CRUComponent },
+  { path: 'fin52040cru', component: FIN52040CRUComponent },
   { path: 'fin52050', component: FIN52050Component },  // 會計科目作業-科目大分類代號維護
-  { path: 'fin52050CRU', component: FIN52050CRUComponent },
+  { path: 'fin52050cru', component: FIN52050CRUComponent },
   { path: 'fin52060', component: FIN52060Component },  // 會計科目作業-科目中分類代號維謢
-  { path: 'fin52060CRU', component: FIN52060CRUComponent },
+  { path: 'fin52060cru', component: FIN52060CRUComponent },
   { path: 'fin52070', component: FIN52070Component },  // 會計科目作業-科目三碼代號維護
-  { path: 'fin52070CRU', component: FIN52070CRUComponent },
+  { path: 'fin52070cru', component: FIN52070CRUComponent },
   { path: 'fin52080', component: FIN52080Component },  // 會計科目作業-會計科目代號維護
-  { path: 'fin52080CRU', component: FIN52080CRUComponent },
+  { path: 'fin52080cru', component: FIN52080CRUComponent },
   { path: 'fin52090', component: FIN52090Component },  // 會計科目作業-會計科目摘要維護
-  { path: 'fin52090CRU', component: FIN52090CRUComponent },
+  { path: 'fin52090cru', component: FIN52090CRUComponent },
   { path: 'fin53010', component: FIN53010Component },  // 傳票登入作業-傳票資料維護
-  { path: 'fin53010CRU', component: FIN53010CRUComponent },
+  { path: 'fin53010cru', component: FIN53010CRUComponent },
   { path: 'fin54010', component: FIN54010Component },  // 傳票確認作業-傳票確認作業
-  { path: 'fin54010CRU', component: FIN54010CRUComponent },
+  { path: 'fin54010cru', component: FIN54010CRUComponent },
   { path: 'fin54015', component: FIN54015Component },  // 傳票確認作業-傳票反確認作業
   { path: 'fin54015CRU', component: FIN54015CRUComponent },
   { path: 'fin54020', component: FIN54020Component },  // 傳票過帳作業-傳票過帳
-  { path: 'fin54020CRU', component: FIN54020CRUComponent },
+  { path: 'fin54020cru', component: FIN54020CRUComponent },
   { path: 'fin54025', component: FIN54025Component },  // 傳票過帳作業-傳票反過帳
   { path: 'fin54025CRU', component: FIN54025CRUComponent },
   { path: 'fin54030', component: FIN54030Component },  // 傳票關帳作業-關帳作業
-  { path: 'fin54030CRU', component: FIN54030CRUComponent },
+  { path: 'fin54030cru', component: FIN54030CRUComponent },
   { path: 'fin54035', component: FIN54035Component },  // 傳票關帳作業-反關帳作業
   { path: 'fin54035CRU', component: FIN54035CRUComponent },
   { path: 'fin54040', component: FIN54040Component },  // 年結作業-過帳資料年結處理作業
-  { path: 'fin54040CRU', component: FIN54040CRUComponent },
+  { path: 'fin54040cru', component: FIN54040CRUComponent },
   { path: 'fin54045', component: FIN54045Component },  // 年結作業-反年結作業
   { path: 'fin54045CRU', component: FIN54045CRUComponent },
   { path: 'fin55010', component: FIN55010Component },  // 總帳報表-傳票列印
-  { path: 'fin55010CRU', component: FIN55010CRUComponent },
+  { path: 'fin55010cru', component: FIN55010CRUComponent },
   { path: 'fin55020', component: FIN55020Component },  // 總帳報表-日記帳表
-  { path: 'fin55020CRU', component: FIN55020CRUComponent },
+  { path: 'fin55020cru', component: FIN55020CRUComponent },
   { path: 'fin55030', component: FIN55030Component },  // 總帳報表-立沖科目餘額表
-  { path: 'fin55030CRU', component: FIN55030CRUComponent },
+  { path: 'fin55030cru', component: FIN55030CRUComponent },
   { path: 'fin55040', component: FIN55040Component },  // 總帳報表-立沖科目明細表
-  { path: 'fin55040CRU', component: FIN55040CRUComponent },
+  { path: 'fin55040cru', component: FIN55040CRUComponent },
   { path: 'fin55050', component: FIN55050Component },  // 總帳報表-分類帳
-  { path: 'fin55050CRU', component: FIN55050CRUComponent },
+  { path: 'fin55050cru', component: FIN55050CRUComponent },
   { path: 'fin55060', component: FIN55060Component },  // 總帳報表-分類帳彙總報表
-  { path: 'fin55060CRU', component: FIN55060CRUComponent },
+  { path: 'fin55060cru', component: FIN55060CRUComponent },
   { path: 'fin55070', component: FIN55070Component },  // 總帳報表-試算表
-  { path: 'fin55070CRU', component: FIN55070CRUComponent },
+  { path: 'fin55070cru', component: FIN55070CRUComponent },
   { path: 'fin55080', component: FIN55080Component },  // 總帳報表-損益表
-  { path: 'fin55080CRU', component: FIN55080CRUComponent },
+  { path: 'fin55080cru', component: FIN55080CRUComponent },
   { path: 'fin55090', component: FIN55090Component },  // 總帳報表-當期/累計損益表
-  { path: 'fin55090CRU', component: FIN55090CRUComponent },
+  { path: 'fin55090cru', component: FIN55090CRUComponent },
   { path: 'fin55100', component: FIN55100Component },  // 總帳報表-損益比較表
-  { path: 'fin55100CRU', component: FIN55100CRUComponent },
+  { path: 'fin55100cru', component: FIN55100CRUComponent },
   { path: 'fin55110', component: FIN55110Component },  // 總帳報表-部門科目明細表
-  { path: 'fin55110CRU', component: FIN55110CRUComponent },
+  { path: 'fin55110cru', component: FIN55110CRUComponent },
   { path: 'fin55120', component: FIN55120Component },  // 總帳報表-資產負債表
-  { path: 'fin55120CRU', component: FIN55120CRUComponent },
+  { path: 'fin55120cru', component: FIN55120CRUComponent },
   { path: 'fin55130', component: FIN55130Component },  // 總帳報表-資產負債比較表
-  { path: 'fin55130CRU', component: FIN55130CRUComponent },
+  { path: 'fin55130cru', component: FIN55130CRUComponent },
   { path: 'fin61010', component: FIN61010Component },  // 支票號碼維護
-  { path: 'fin61010CRU', component: FIN61010CRUComponent },
+  { path: 'fin61010cru', component: FIN61010CRUComponent },
   { path: 'fin61020', component: FIN61020Component },  // 業務員資料維護
-  { path: 'fin61020CRU', component: FIN61020CRUComponent },
+  { path: 'fin61020cru', component: FIN61020CRUComponent },
   { path: 'fin62010', component: FIN62010Component },  // 銀行調撥作業
-  { path: 'fin62010CRU', component: FIN62010CRUComponent },
+  { path: 'fin62010cru', component: FIN62010CRUComponent },
   { path: 'fin62020', component: FIN62020Component },  // 銀行資金調撥單
-  { path: 'fin62020CRU', component: FIN62020CRUComponent },
+  { path: 'fin62020cru', component: FIN62020CRUComponent },
   { path: 'fin62030', component: FIN62030Component },  // 銀行調撥傳票拋轉作業
-  { path: 'fin62030CRU', component: FIN62030CRUComponent },
+  { path: 'fin62030cru', component: FIN62030CRUComponent },
   { path: 'fin62040', component: FIN62040Component },  // 出納區間報表
-  { path: 'fin62040CRU', component: FIN62040CRUComponent },
+  { path: 'fin62040cru', component: FIN62040CRUComponent },
   { path: 'fin62050', component: FIN62050Component },  // 銀行往來調節表
-  { path: 'fin62050CRU', component: FIN62050CRUComponent },
+  { path: 'fin62050cru', component: FIN62050CRUComponent },
   { path: 'fin63010', component: FIN63010Component },  // 套印支票 - 票據套印
-  { path: 'fin63010CRU', component: FIN63010CRUComponent },
+  { path: 'fin63010cru', component: FIN63010CRUComponent },
   { path: 'fin63020', component: FIN63020Component },  // 應付票據維護作業
-  { path: 'fin63020CRU', component: FIN63020CRUComponent },
+  { path: 'fin63020cru', component: FIN63020CRUComponent },
   { path: 'fin63030', component: FIN63030Component },  // 應付票據到期作業
-  { path: 'fin63030CRU', component: FIN63030CRUComponent },
+  { path: 'fin63030cru', component: FIN63030CRUComponent },
   { path: 'fin63040', component: FIN63040Component },  // 應付票據兌現作業
-  { path: 'fin63040CRU', component: FIN63040CRUComponent },
+  { path: 'fin63040cru', component: FIN63040CRUComponent },
   { path: 'fin63050', component: FIN63050Component },  // 應付票據撤票作業
-  { path: 'fin63050CRU', component: FIN63050CRUComponent },
+  { path: 'fin63050cru', component: FIN63050CRUComponent },
   { path: 'fin63060', component: FIN63060Component },  // 應付票據退票作業
-  { path: 'fin63060CRU', component: FIN63060CRUComponent },
+  { path: 'fin63060cru', component: FIN63060CRUComponent },
   { path: 'fin64010', component: FIN64010Component },  // 應收票據維護作業
-  { path: 'fin64010CRU', component: FIN64010CRUComponent },
+  { path: 'fin64010cru', component: FIN64010CRUComponent },
   { path: 'fin64020', component: FIN64020Component },  // 應收票據託收作業
-  { path: 'fin64020CRU', component: FIN64020CRUComponent },
+  { path: 'fin64020cru', component: FIN64020CRUComponent },
   { path: 'fin64030', component: FIN64030Component },  // 應收票據兌現作業
-  { path: 'fin64030CRU', component: FIN64030CRUComponent },
+  { path: 'fin64030cru', component: FIN64030CRUComponent },
   { path: 'fin64040', component: FIN64040Component },  // 應收票據撤票作業
-  { path: 'fin64040CRU', component: FIN64040CRUComponent },
+  { path: 'fin64040cru', component: FIN64040CRUComponent },
   { path: 'fin64050', component: FIN64050Component },  // 應收票據退票作業
-  { path: 'fin64050CRU', component: FIN64050CRUComponent },
+  { path: 'fin64050cru', component: FIN64050CRUComponent },
   { path: 'fin65010', component: FIN65010Component },  // 應付票據簽回單
-  { path: 'fin65010CRU', component: FIN65010CRUComponent },
+  { path: 'fin65010cru', component: FIN65010CRUComponent },
   { path: 'fin71010', component: FIN71010Component },  // 零用金參數維護
-  { path: 'fin71010CRU', component: FIN71010CRUComponent },
+  { path: 'fin71010cru', component: FIN71010CRUComponent },
   { path: 'fin71020', component: FIN71020Component },  // 保管人及額度設定作業
-  { path: 'fin71020CRU', component: FIN71020CRUComponent },
+  { path: 'fin71020cru', component: FIN71020CRUComponent },
   { path: 'fin72010', component: FIN72010Component },  // 零用金維護作業
-  { path: 'fin72010CRU', component: FIN72010CRUComponent },
+  { path: 'fin72010cru', component: FIN72010CRUComponent },
   { path: 'fin72020', component: FIN72020Component },  // 零用金請款作業
-  { path: 'fin72020CRU', component: FIN72020CRUComponent },
+  { path: 'fin72020cru', component: FIN72020CRUComponent },
   { path: 'fin72030', component: FIN72030Component },  // 零用金拋轉作業
-  { path: 'fin72030CRU', component: FIN72030CRUComponent },
+  { path: 'fin72030cru', component: FIN72030CRUComponent },
   { path: 'fin72040', component: FIN72040Component },  // 零用金撥補作業
-  { path: 'fin72040CRU', component: FIN72040CRUComponent },
+  { path: 'fin72040cru', component: FIN72040CRUComponent },
   { path: 'fin72050', component: FIN72050Component },  // 零用金盤點作業
-  { path: 'fin72050CRU', component: FIN72050CRUComponent },
+  { path: 'fin72050cru', component: FIN72050CRUComponent },
   { path: 'fin73010', component: FIN73010Component },  // 零用金支付表
   { path: 'fin73020', component: FIN73020Component },  // 支出請款單表
-  { path: 'fin73020CRU', component: FIN73020CRUComponent },
+  { path: 'fin73020cru', component: FIN73020CRUComponent },
   { path: 'fin73030', component: FIN73030Component },  // 支付申請單
   { path: 'fin73040', component: FIN73040Component },  // 零用金撥補明細表
 ];

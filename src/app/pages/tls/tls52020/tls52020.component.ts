@@ -6,11 +6,11 @@ import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime
 import { DropDownListService, IPOS2013Request } from '../../../service/api/dropdownservice/dropDownList.service';
 import { finalize, map } from 'rxjs';
 export const enum POStatus {
-  已申請 = '1',
+  已申請 = '0',
   已審核 = '2',
   部分驗收 = '3',
   全部驗收 = '4',
-  強制結案 = '7',
+  強制結案 = '6',
   作廢 = '9',
 }
 // 2.5.2.2  退貨單維護作業
@@ -94,7 +94,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS52020', 'TLS/TLS52020CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS52020', 'TLS/TLS52020cru', this.queryForm, (form) => this.onSubmit(form));
     // 倉別 (HOS_No)
     this.dropDownListService.getPOS2034Options().pipe(
       map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))

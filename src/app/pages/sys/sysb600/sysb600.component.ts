@@ -41,7 +41,7 @@ export class SYSB600Component
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSB600', 'SYS/SYSB600CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('SYSB600', 'SYS/SYSB600cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {

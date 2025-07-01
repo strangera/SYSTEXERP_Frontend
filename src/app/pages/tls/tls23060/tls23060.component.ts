@@ -58,7 +58,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23060', 'TLS23060CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS23060', 'TLS23060cru', this.queryForm, (form) => this.onSubmit(form));
     this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
     this.typeService.getTypeOptions().subscribe(data => this.typeOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);

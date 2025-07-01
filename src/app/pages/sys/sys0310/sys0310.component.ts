@@ -36,7 +36,7 @@ export class SYS0310Component extends BasicQueryPageComponent<Role> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('SYS0310', '/SYS/SYS0310CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('SYS0310', '/SYS/SYS0310cru', this.queryForm, (form) => this.onSubmit(form));
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {

@@ -24,7 +24,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   customPageSize = 1000;
 
   queryForm = this.formBuilder.group({
-    
+
     TXN_DateStart: [new Date('2020-01-01'), [Validators.required]],
     TXN_DateEnd: [new Date('2020-01-02'), [Validators.required]],
     tlt_no: [],
@@ -103,7 +103,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23070', 'TLS23070CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS23070', 'TLS23070cru', this.queryForm, (form) => this.onSubmit(form));
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions = res?.map((x: any) => ({
         label: x.label,
@@ -121,7 +121,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
       })) || [];
     });
   }
- 
+
   onSubmit(form: FormGroup): void {
     this.submitted = true;
     if (this.loading || form.invalid) return;
@@ -158,7 +158,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
       });
     });
   }
-   goToReportMode(): void {
+  goToReportMode(): void {
     this.customPageSize = 1000;
     this.showPageSizeDialog = true;
   }

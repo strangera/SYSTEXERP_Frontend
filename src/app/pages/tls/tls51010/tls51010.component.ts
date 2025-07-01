@@ -46,7 +46,7 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS51010', '/TLS/TLS51010CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS51010', '/TLS/TLS51010cru', this.queryForm, (form) => this.onSubmit(form));
   }
   // 提交查詢：處理表單並呼叫查詢 API
   onSubmit(frm: FormGroup): void {

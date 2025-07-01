@@ -435,24 +435,24 @@ const routes: Routes = [
   { path: 'tls14020', component: TLS14020Component }, // 專櫃契約書列印
   { path: 'tls14030', component: Tls14030Component }, // 保證票維護作業
   { path: 'tls14040', component: Tls14040Component }, // 保證票彙總表
-  { path: 'tls11010CRU', component: TLS11010CRUComponent }, // 專櫃位置資料維護 CRU
-  { path: 'tls11020CRU', component: TLS11020CRUComponent }, // 扣款項目維護作業 CRU
-  { path: 'tls12010CRU', component: TLS12010CRUComponent }, // 潛在客戶資料維護 CRU
-  { path: 'tls12020CRU', component: TLS12020CRUComponent }, // 專櫃訪談記錄維護 CRU
-  { path: 'tls12030CRU', component: TLS12030CRUComponent }, // 專櫃意向書維護 CRU
-  { path: 'tls12040CRU', component: TLS12040CRUComponent }, // 專櫃要約書維護 CRU
-  { path: 'tls12050CRU', component: TLS12050CRUComponent }, // 專櫃位置圖 CRU
-  { path: 'tls13010CRU', component: TLS13010CRUComponent }, // 專櫃契約書維護 CRU
-  { path: 'tls13020CRU', component: TLS13020CRUComponent }, // 專櫃契約書續約維護作業 CRU
-  { path: 'tls13030CRU', component: TLS13030CRUComponent }, // 專櫃契約代扣款報表 CRU
-  { path: 'tls13040CRU', component: TLS13040CRUComponent }, // 專櫃契約抽成報表
-  { path: 'tls13050CRU', component: TLS13050CRUComponent }, // 年度目標營業額管制報表 CRU
-  { path: 'tls13060CRU', component: TLS13060CRUComponent }, // 櫃位營運事項明細查詢作業 CRU
-  { path: 'tls13070CRU', component: TLS13070CRUComponent }, // 調整櫃位合約一覽表 CRU
-  { path: 'tls14010CRU', component: TLS14010CRUComponent }, // 合約狀態清單 CRU
-  { path: 'tls14020CRU', component: TLS14020CRUComponent }, // 專櫃契約書列印 CRU
-  { path: 'tls14030CRU', component: Tls14030CRUComponent }, // 保證票維護作業 CRU
-  { path: 'tls14040CRU', component: Tls14040CRUComponent }, // 保證票彙總表 CRU
+  { path: 'tls11010cru', component: TLS11010CRUComponent }, // 專櫃位置資料維護 CRU
+  { path: 'tls11020cru', component: TLS11020CRUComponent }, // 扣款項目維護作業 CRU
+  { path: 'tls12010cru', component: TLS12010CRUComponent }, // 潛在客戶資料維護 CRU
+  { path: 'tls12020cru', component: TLS12020CRUComponent }, // 專櫃訪談記錄維護 CRU
+  { path: 'tls12030cru', component: TLS12030CRUComponent }, // 專櫃意向書維護 CRU
+  { path: 'tls12040cru', component: TLS12040CRUComponent }, // 專櫃要約書維護 CRU
+  { path: 'tls12050cru', component: TLS12050CRUComponent }, // 專櫃位置圖 CRU
+  { path: 'tls13010cru', component: TLS13010CRUComponent }, // 專櫃契約書維護 CRU
+  { path: 'tls13020cru', component: TLS13020CRUComponent }, // 專櫃契約書續約維護作業 CRU
+  { path: 'tls13030cru', component: TLS13030CRUComponent }, // 專櫃契約代扣款報表 CRU
+  { path: 'tls13040cru', component: TLS13040CRUComponent }, // 專櫃契約抽成報表
+  { path: 'tls13050cru', component: TLS13050CRUComponent }, // 年度目標營業額管制報表 CRU
+  { path: 'tls13060cru', component: TLS13060CRUComponent }, // 櫃位營運事項明細查詢作業 CRU
+  { path: 'tls13070cru', component: TLS13070CRUComponent }, // 調整櫃位合約一覽表 CRU
+  { path: 'tls14010cru', component: TLS14010CRUComponent }, // 合約狀態清單 CRU
+  { path: 'tls14020cru', component: TLS14020CRUComponent }, // 專櫃契約書列印 CRU
+  { path: 'tls14030cru', component: Tls14030CRUComponent }, // 保證票維護作業 CRU
+  { path: 'tls14040cru', component: Tls14040CRUComponent }, // 保證票彙總表 CRU
   { path: 'tls13010NEXT1', component: TLS13010Next1Component }, // 專櫃契約書維護 NEXT1
   { path: 'tls13010NEXT2', component: TLS13010Next2Component }, // 專櫃契約書維護 NEXT2
   { path: 'tls13010NEXT3', component: Tls13010Next3Component }, // 專櫃契約書維護 NEXT3
@@ -559,107 +559,107 @@ const routes: Routes = [
   { path: 'tls2k040', component: TLS2K040Component }, // 餘代卡交易補登作業
   { path: 'tls2k050', component: TLS2K050Component }, // 餘代卡換卡作業
   { path: 'tls2k060', component: TLS2K060Component }, // 餘代卡查詢報表
-  { path: 'tls21010CRU', component: TLS21010CRUComponent }, // 傳票項目之會計科目設定作業 CRU
-  { path: 'tls21020CRU', component: TLS21020CRUComponent }, // 傳票項目之會計科目設定作業_NEW CRU
-  { path: 'tls21030CRU', component: TLS21030CRUComponent }, // 對帳單備註維護作業 CRU
-  { path: 'tls21040CRU', component: TLS21040CRUComponent }, // 信用卡之卡種維護作業 CRU
-  { path: 'tls21050CRU', component: TLS21050CRUComponent }, // 專櫃營運前參數設定作業 CRU
-  { path: 'tls22010CRU', component: TLS22010CRUComponent }, // 收銀機對帳查詢作業 CRU
-  { path: 'tls22020CRU', component: TLS22020CRUComponent }, // 系統監控報表 CRU
-  { path: 'tls23010CRU', component: TLS23010CRUComponent }, // 型態別報表 CRU
-  { path: 'tls23010CRU', component: TLS23010CRUComponent }, // 型態別明細報表
-  { path: 'tls23020CRU', component: TLS23020CRUComponent }, // 折扣別報表
-  { path: 'tls23030CRU', component: TLS23030CRUComponent }, // 付款別報表
-  { path: 'tls23040CRU', component: TLS23040CRUComponent }, // 發票報表
-  { path: 'tls23050CRU', component: TLS23050CRUComponent }, // 收銀機日報表
-  { path: 'tls23060CRU', component: TLS23060CRUComponent }, // 收銀機區間報表
-  { path: 'tls23070CRU', component: TLS23070CRUComponent }, // 專櫃收銀機日報表
-  { path: 'tls23080CRU', component: TLS23080CRUComponent }, // 支付工具資料收報表
-  { path: 'tls23090CRU', component: TLS23090CRUComponent }, // 信用卡明細報表
-  { path: 'tls23100CRU', component: TLS23100CRUComponent }, // 付款別明細報表
-  { path: 'tls23110CRU', component: TLS23110CRUComponent }, // 折扣別明細報表
-  { path: 'tls23120CRU', component: TLS23120CRUComponent }, // 專櫃日對帳單
-  { path: 'tls23130CRU', component: TLS23130CRUComponent }, // 信用卡銷退日報表
-  { path: 'tls23140CRU', component: TLS23140CRUComponent }, // 有價券查詢報表
-  { path: 'tls24010CRU', component: TLS24010CRUComponent }, // 交易補登作業 CRU
-  { path: 'tls24020CRU', component: TLS24020CRUComponent }, // 專櫃編號修正作業 CRU
-  { path: 'tls24030CRU', component: TLS24030CRUComponent }, // 折扣別資料修正作業 CRU
-  { path: 'tls24040CRU', component: TLS24040CRUComponent }, // 付款別資料修正作業 CRU
-  { path: 'tls24050CRU', component: TLS24050CRUComponent }, // 中分類資料修正作業 CRU
-  { path: 'tls24060CRU', component: TLS24060CRUComponent }, // 交易資料作廢作業 CRU
-  { path: 'tls24070CRU', component: TLS24070CRUComponent }, // 發票修正作業 CRU
-  { path: 'tls24080CRU', component: TLS24080CRUComponent }, // 交易資料修正報表 CRU
-  { path: 'tls25010CRU', component: TLS25010CRUComponent }, // 商場違規類別維護作業 CRU
-  { path: 'tls25020CRU', component: TLS25020CRUComponent }, // 商場違規項目維護作業 CRU
-  { path: 'tls25030CRU', component: TLS25030CRUComponent }, // 商場違規扣款維護作業 CRU
-  { path: 'tls26010CRU', component: TLS26010CRUComponent }, // 預購活動檔期設定 CRU
-  { path: 'tls26020CRU', component: TLS26020CRUComponent }, // 預售總表 CRU
-  { path: 'tls26030CRU', component: TLS26030CRUComponent }, // 預售明細表 CRU
-  { path: 'tls26040CRU', component: TLS26040CRUComponent }, // 預售管理作業 CRU
-  { path: 'tls26080CRU', component: TLS26080CRUComponent }, // 專櫃活動作業 CRU
-  { path: 'tls27010CRU', component: TLS27010CRUComponent }, // 保全現金資料轉入作業 CRU
-  { path: 'tls27020CRU', component: TLS27020CRUComponent }, // 保全實收現金調整作業 CRU
-  { path: 'tls27030CRU', component: TLS27030CRUComponent }, // 信用卡資料轉入作業 CRU
-  { path: 'tls27040CRU', component: TLS27040CRUComponent }, // 實收信用卡調整作業 CRU
-  { path: 'tls27050CRU', component: TLS27050CRUComponent }, // 查詢無系統帳資料報表 CRU
-  { path: 'tls28010CRU', component: TLS28010CRUComponent }, // 總袋條碼分配作業 CRU
-  { path: 'tls28020CRU', component: TLS28020CRUComponent }, // 總袋作業 CRU
-  { path: 'tls28030CRU', component: TLS28030CRUComponent }, // 總袋狀況表 CRU
-  { path: 'tls28040CRU', component: TLS28040CRUComponent }, // 清機未總袋狀況表 CRU
-  { path: 'tls28050CRU', component: TLS28050CRUComponent }, // 收銀員領袋表 CRU
-  { path: 'tls29010CRU', component: TLS29010CRUComponent }, // 折扣開放維護作業 CRU
-  { path: 'tls2a010CRU', component: TLS2A010CRUComponent }, // 各支付工具審核作業 CRU
-  { path: 'tls2a030CRU', component: TLS2A030CRUComponent }, // 溢欠彙總表 CRU
-  { path: 'tls2a040CRU', component: TLS2A040CRUComponent }, // 缺單據/作廢發票報表 CRU
-  { path: 'tls2a050CRU', component: TLS2A050CRUComponent }, // 第三方支付帳差報表 CRU
-  { path: 'tls2b010CRU', component: TLS2B010CRUComponent }, // 收銀員溢欠表(日) CRU
-  { path: 'tls2b020CRU', component: TLS2B020CRUComponent }, // 收銀員溢欠表(月) CRU
-  { path: 'tls2b030CRU', component: TLS2B030CRUComponent }, // 專櫃收銀機台溢欠表 CRU
-  { path: 'tls2c010CRU', component: TLS2C010CRUComponent }, // 專櫃日暫存傳票報表 CRU
-  { path: 'tls2c020CRU', component: TLS2C020CRUComponent }, // 日結前檢查作業 CRU
-  { path: 'tls2c030CRU', component: TLS2C030CRUComponent }, // 日結關帳作業 CRU
-  { path: 'tls2c040CRU', component: TLS2C040CRUComponent }, // 專櫃暫存傳票查詢作業 CRU
-  { path: 'tls2c050CRU', component: TLS2C050CRUComponent }, // 發票匯總作業 CRU
-  { path: 'tls2d010CRU', component: TLS2D010CRUComponent }, // 代扣款補登作業 CRU
-  { path: 'tls2d020CRU', component: TLS2D020CRUComponent }, // 專櫃代扣款試算作業 CRU
-  { path: 'tls2d030CRU', component: TLS2D030CRUComponent }, // 專櫃代扣款結算作業 CRU
-  { path: 'tls2d040CRU', component: TLS2D040CRUComponent }, // 專櫃代扣款明細表 CRU
-  { path: 'tls2d050CRU', component: TLS2D050CRUComponent }, // 部門使用券類設定作業 CRU
-  { path: 'tls2d060CRU', component: TLS2D060CRUComponent }, // 專櫃活動設定暨審核作業 CRU
-  { path: 'tls2d070CRU', component: TLS2D070CRUComponent }, // 專櫃活動合約設定作業 CRU
-  { path: 'tls2e010CRU', component: TLS2E010CRUComponent }, // 專櫃租金結算作業 CRU
-  { path: 'tls2e020CRU', component: TLS2E020CRUComponent }, // 專櫃抽成金額結算作業 CRU
-  { path: 'tls2e030CRU', component: TLS2E030CRUComponent }, // 專櫃帳款試算作業 CRU
-  { path: 'tls2e040CRU', component: TLS2E040CRUComponent }, // 專櫃帳款試算表 CRU
-  { path: 'tls2e050CRU', component: TLS2E050CRUComponent }, // 專櫃帳款試算彙總表 CRU
-  { path: 'tls2e060CRU', component: TLS2E060CRUComponent }, // 專櫃結帳前調整作業 CRU
-  { path: 'tls2e070CRU', component: TLS2E070CRUComponent }, // 專櫃帳款結算作業 CRU
-  { path: 'tls2e080CRU', component: TLS2E080CRUComponent }, // 專櫃對帳單 CRU
-  { path: 'tls2e090CRU', component: TLS2E090CRUComponent }, // 專櫃帳款結算彙總表 CRU
-  { path: 'tls2e100CRU', component: TLS2E100CRUComponent }, // 年度對帳單 CRU
-  { path: 'tls2f010CRU', component: TLS2F010CRUComponent }, // 廠商發票請款登入暨維護作業 CRU
-  { path: 'tls2f020CRU', component: TLS2F020CRUComponent }, // 專櫃暫存應付帳款產生作業 CRU
-  { path: 'tls2f030CRU', component: TLS2F030CRUComponent }, // 專櫃進項發票未開立查詢作業 CRU
-  { path: 'tls2g010CRU', component: TLS2G010CRUComponent }, // 專櫃預估業績轉入作業 CRU
-  { path: 'tls2g020CRU', component: TLS2G020CRUComponent }, // 專櫃預估業績維護作業 CRU
-  { path: 'tls2g030CRU', component: TLS2G030CRUComponent }, // 專櫃預估業績報表 CRU
-  { path: 'tls2g040CRU', component: TLS2G040CRUComponent }, // 預算日報表 CRU
-  { path: 'tls2h010CRU', component: TLS2H010CRUComponent }, // 租金發票套印作業 CRU
-  { path: 'tls2h020CRU', component: TLS2H020CRUComponent }, // 專櫃代扣款發票套印作業 CRU
-  { path: 'tls2h030CRU', component: TLS2H030CRUComponent }, // 專櫃抽成發票套印作業 CRU
-  { path: 'tls2j010CRU', component: TLS2J010CRUComponent }, // 換開品項維護作業 CRU
-  { path: 'tls2j020CRU', component: TLS2J020CRUComponent }, // 大分類換開品項維護作業 CRU
-  { path: 'tls2j030CRU', component: TLS2J030CRUComponent }, // 後台發票換開補登作業 CRU
-  { path: 'tls2j040CRU', component: TLS2J040CRUComponent }, // 發票換開作業 CRU
-  { path: 'tls2j050CRU', component: TLS2J050CRUComponent }, // 三聯式發票查詢列印 CRU
-  { path: 'tls2j060CRU', component: TLS2J060CRUComponent }, // 發票換開查詢作業 CRU
-  { path: 'tls2j070CRU', component: TLS2J070CRUComponent }, // 發票換開補登作業 CRU
-  { path: 'tls2k010CRU', component: TLS2K010CRUComponent }, // 餘代卡產卡作業 CRU
-  { path: 'tls2k020CRU', component: TLS2K020CRUComponent }, // 餘代卡領卡作業 CRU
-  { path: 'tls2k030CRU', component: TLS2K030CRUComponent }, // 餘代卡資料維護作業 CRU
-  { path: 'tls2k040CRU', component: TLS2K040CRUComponent }, // 餘代卡交易補登作業 CRU
-  { path: 'tls2k050CRU', component: TLS2K050CRUComponent }, // 餘代卡換卡作業 CRU
-  { path: 'tls2k060CRU', component: TLS2K060CRUComponent }, // 餘代卡查詢報表 CRU
+  { path: 'tls21010cru', component: TLS21010CRUComponent }, // 傳票項目之會計科目設定作業 CRU
+  { path: 'tls21020cru', component: TLS21020CRUComponent }, // 傳票項目之會計科目設定作業_NEW CRU
+  { path: 'tls21030cru', component: TLS21030CRUComponent }, // 對帳單備註維護作業 CRU
+  { path: 'tls21040cru', component: TLS21040CRUComponent }, // 信用卡之卡種維護作業 CRU
+  { path: 'tls21050cru', component: TLS21050CRUComponent }, // 專櫃營運前參數設定作業 CRU
+  { path: 'tls22010cru', component: TLS22010CRUComponent }, // 收銀機對帳查詢作業 CRU
+  { path: 'tls22020cru', component: TLS22020CRUComponent }, // 系統監控報表 CRU
+  { path: 'tls23010cru', component: TLS23010CRUComponent }, // 型態別報表 CRU
+  { path: 'tls23010cru', component: TLS23010CRUComponent }, // 型態別明細報表
+  { path: 'tls23020cru', component: TLS23020CRUComponent }, // 折扣別報表
+  { path: 'tls23030cru', component: TLS23030CRUComponent }, // 付款別報表
+  { path: 'tls23040cru', component: TLS23040CRUComponent }, // 發票報表
+  { path: 'tls23050cru', component: TLS23050CRUComponent }, // 收銀機日報表
+  { path: 'tls23060cru', component: TLS23060CRUComponent }, // 收銀機區間報表
+  { path: 'tls23070cru', component: TLS23070CRUComponent }, // 專櫃收銀機日報表
+  { path: 'tls23080cru', component: TLS23080CRUComponent }, // 支付工具資料收報表
+  { path: 'tls23090cru', component: TLS23090CRUComponent }, // 信用卡明細報表
+  { path: 'tls23100cru', component: TLS23100CRUComponent }, // 付款別明細報表
+  { path: 'tls23110cru', component: TLS23110CRUComponent }, // 折扣別明細報表
+  { path: 'tls23120cru', component: TLS23120CRUComponent }, // 專櫃日對帳單
+  { path: 'tls23130cru', component: TLS23130CRUComponent }, // 信用卡銷退日報表
+  { path: 'tls23140cru', component: TLS23140CRUComponent }, // 有價券查詢報表
+  { path: 'tls24010cru', component: TLS24010CRUComponent }, // 交易補登作業 CRU
+  { path: 'tls24020cru', component: TLS24020CRUComponent }, // 專櫃編號修正作業 CRU
+  { path: 'tls24030cru', component: TLS24030CRUComponent }, // 折扣別資料修正作業 CRU
+  { path: 'tls24040cru', component: TLS24040CRUComponent }, // 付款別資料修正作業 CRU
+  { path: 'tls24050cru', component: TLS24050CRUComponent }, // 中分類資料修正作業 CRU
+  { path: 'tls24060cru', component: TLS24060CRUComponent }, // 交易資料作廢作業 CRU
+  { path: 'tls24070cru', component: TLS24070CRUComponent }, // 發票修正作業 CRU
+  { path: 'tls24080cru', component: TLS24080CRUComponent }, // 交易資料修正報表 CRU
+  { path: 'tls25010cru', component: TLS25010CRUComponent }, // 商場違規類別維護作業 CRU
+  { path: 'tls25020cru', component: TLS25020CRUComponent }, // 商場違規項目維護作業 CRU
+  { path: 'tls25030cru', component: TLS25030CRUComponent }, // 商場違規扣款維護作業 CRU
+  { path: 'tls26010cru', component: TLS26010CRUComponent }, // 預購活動檔期設定 CRU
+  { path: 'tls26020cru', component: TLS26020CRUComponent }, // 預售總表 CRU
+  { path: 'tls26030cru', component: TLS26030CRUComponent }, // 預售明細表 CRU
+  { path: 'tls26040cru', component: TLS26040CRUComponent }, // 預售管理作業 CRU
+  { path: 'tls26080cru', component: TLS26080CRUComponent }, // 專櫃活動作業 CRU
+  { path: 'tls27010cru', component: TLS27010CRUComponent }, // 保全現金資料轉入作業 CRU
+  { path: 'tls27020cru', component: TLS27020CRUComponent }, // 保全實收現金調整作業 CRU
+  { path: 'tls27030cru', component: TLS27030CRUComponent }, // 信用卡資料轉入作業 CRU
+  { path: 'tls27040cru', component: TLS27040CRUComponent }, // 實收信用卡調整作業 CRU
+  { path: 'tls27050cru', component: TLS27050CRUComponent }, // 查詢無系統帳資料報表 CRU
+  { path: 'tls28010cru', component: TLS28010CRUComponent }, // 總袋條碼分配作業 CRU
+  { path: 'tls28020cru', component: TLS28020CRUComponent }, // 總袋作業 CRU
+  { path: 'tls28030cru', component: TLS28030CRUComponent }, // 總袋狀況表 CRU
+  { path: 'tls28040cru', component: TLS28040CRUComponent }, // 清機未總袋狀況表 CRU
+  { path: 'tls28050cru', component: TLS28050CRUComponent }, // 收銀員領袋表 CRU
+  { path: 'tls29010cru', component: TLS29010CRUComponent }, // 折扣開放維護作業 CRU
+  { path: 'tls2a010cru', component: TLS2A010CRUComponent }, // 各支付工具審核作業 CRU
+  { path: 'tls2a030cru', component: TLS2A030CRUComponent }, // 溢欠彙總表 CRU
+  { path: 'tls2a040cru', component: TLS2A040CRUComponent }, // 缺單據/作廢發票報表 CRU
+  { path: 'tls2a050cru', component: TLS2A050CRUComponent }, // 第三方支付帳差報表 CRU
+  { path: 'tls2b010cru', component: TLS2B010CRUComponent }, // 收銀員溢欠表(日) CRU
+  { path: 'tls2b020cru', component: TLS2B020CRUComponent }, // 收銀員溢欠表(月) CRU
+  { path: 'tls2b030cru', component: TLS2B030CRUComponent }, // 專櫃收銀機台溢欠表 CRU
+  { path: 'tls2c010cru', component: TLS2C010CRUComponent }, // 專櫃日暫存傳票報表 CRU
+  { path: 'tls2c020cru', component: TLS2C020CRUComponent }, // 日結前檢查作業 CRU
+  { path: 'tls2c030cru', component: TLS2C030CRUComponent }, // 日結關帳作業 CRU
+  { path: 'tls2c040cru', component: TLS2C040CRUComponent }, // 專櫃暫存傳票查詢作業 CRU
+  { path: 'tls2c050cru', component: TLS2C050CRUComponent }, // 發票匯總作業 CRU
+  { path: 'tls2d010cru', component: TLS2D010CRUComponent }, // 代扣款補登作業 CRU
+  { path: 'tls2d020cru', component: TLS2D020CRUComponent }, // 專櫃代扣款試算作業 CRU
+  { path: 'tls2d030cru', component: TLS2D030CRUComponent }, // 專櫃代扣款結算作業 CRU
+  { path: 'tls2d040cru', component: TLS2D040CRUComponent }, // 專櫃代扣款明細表 CRU
+  { path: 'tls2d050cru', component: TLS2D050CRUComponent }, // 部門使用券類設定作業 CRU
+  { path: 'tls2d060cru', component: TLS2D060CRUComponent }, // 專櫃活動設定暨審核作業 CRU
+  { path: 'tls2d070cru', component: TLS2D070CRUComponent }, // 專櫃活動合約設定作業 CRU
+  { path: 'tls2e010cru', component: TLS2E010CRUComponent }, // 專櫃租金結算作業 CRU
+  { path: 'tls2e020cru', component: TLS2E020CRUComponent }, // 專櫃抽成金額結算作業 CRU
+  { path: 'tls2e030cru', component: TLS2E030CRUComponent }, // 專櫃帳款試算作業 CRU
+  { path: 'tls2e040cru', component: TLS2E040CRUComponent }, // 專櫃帳款試算表 CRU
+  { path: 'tls2e050cru', component: TLS2E050CRUComponent }, // 專櫃帳款試算彙總表 CRU
+  { path: 'tls2e060cru', component: TLS2E060CRUComponent }, // 專櫃結帳前調整作業 CRU
+  { path: 'tls2e070cru', component: TLS2E070CRUComponent }, // 專櫃帳款結算作業 CRU
+  { path: 'tls2e080cru', component: TLS2E080CRUComponent }, // 專櫃對帳單 CRU
+  { path: 'tls2e090cru', component: TLS2E090CRUComponent }, // 專櫃帳款結算彙總表 CRU
+  { path: 'tls2e100cru', component: TLS2E100CRUComponent }, // 年度對帳單 CRU
+  { path: 'tls2f010cru', component: TLS2F010CRUComponent }, // 廠商發票請款登入暨維護作業 CRU
+  { path: 'tls2f020cru', component: TLS2F020CRUComponent }, // 專櫃暫存應付帳款產生作業 CRU
+  { path: 'tls2f030cru', component: TLS2F030CRUComponent }, // 專櫃進項發票未開立查詢作業 CRU
+  { path: 'tls2g010cru', component: TLS2G010CRUComponent }, // 專櫃預估業績轉入作業 CRU
+  { path: 'tls2g020cru', component: TLS2G020CRUComponent }, // 專櫃預估業績維護作業 CRU
+  { path: 'tls2g030cru', component: TLS2G030CRUComponent }, // 專櫃預估業績報表 CRU
+  { path: 'tls2g040cru', component: TLS2G040CRUComponent }, // 預算日報表 CRU
+  { path: 'tls2h010cru', component: TLS2H010CRUComponent }, // 租金發票套印作業 CRU
+  { path: 'tls2h020cru', component: TLS2H020CRUComponent }, // 專櫃代扣款發票套印作業 CRU
+  { path: 'tls2h030cru', component: TLS2H030CRUComponent }, // 專櫃抽成發票套印作業 CRU
+  { path: 'tls2j010cru', component: TLS2J010CRUComponent }, // 換開品項維護作業 CRU
+  { path: 'tls2j020cru', component: TLS2J020CRUComponent }, // 大分類換開品項維護作業 CRU
+  { path: 'tls2j030cru', component: TLS2J030CRUComponent }, // 後台發票換開補登作業 CRU
+  { path: 'tls2j040cru', component: TLS2J040CRUComponent }, // 發票換開作業 CRU
+  { path: 'tls2j050cru', component: TLS2J050CRUComponent }, // 三聯式發票查詢列印 CRU
+  { path: 'tls2j060cru', component: TLS2J060CRUComponent }, // 發票換開查詢作業 CRU
+  { path: 'tls2j070cru', component: TLS2J070CRUComponent }, // 發票換開補登作業 CRU
+  { path: 'tls2k010cru', component: TLS2K010CRUComponent }, // 餘代卡產卡作業 CRU
+  { path: 'tls2k020cru', component: TLS2K020CRUComponent }, // 餘代卡領卡作業 CRU
+  { path: 'tls2k030cru', component: TLS2K030CRUComponent }, // 餘代卡資料維護作業 CRU
+  { path: 'tls2k040cru', component: TLS2K040CRUComponent }, // 餘代卡交易補登作業 CRU
+  { path: 'tls2k050cru', component: TLS2K050CRUComponent }, // 餘代卡換卡作業 CRU
+  { path: 'tls2k060cru', component: TLS2K060CRUComponent }, // 餘代卡查詢報表 CRU
   { path: 'tls21030MOD', component: Tls21030ModComponent }, // 對帳單備註維護作業 MOD
   { path: 'tls21040MOD', component: TLS21040ModComponent }, // 對帳單備註維護作業 MOD
   { path: 'tls24010MOD', component: TLS24010ModComponent }, // 對帳單備註維護作業 MOD
@@ -707,31 +707,31 @@ const routes: Routes = [
   { path: 'tls46050', component: TLS46050Component }, // TM監控報表
   { path: 'tls46060', component: TLS46060Component }, // 下傳設定
   { path: 'tls47010', component: TLS47010Component }, // 資料下傳收銀機作業
-  { path: 'tls41010CRU', component: TLS41010CRUComponent }, // 收銀機基本資料維護 CRU
-  { path: 'tls41020CRU', component: TLS41020CRUComponent }, // 收銀機EDC資料維護 CRU
-  { path: 'tls41030CRU', component: TLS41030CRUComponent }, // 收銀專櫃人員資料維護作業 CRU
-  { path: 'tls41040CRU', component: TLS41040CRUComponent }, // POS清機時間設定 CRU
-  { path: 'tls41050CRU', component: TLS41050CRUComponent }, // 發票訊息維護作業 CRU
-  { path: 'tls41060CRU', component: TLS41060CRUComponent }, // 收銀機發票安全量參數維護作業 CRU
-  { path: 'tls42010CRU', component: TLS42010CRUComponent }, // 快速鍵維護作業 CRU
-  { path: 'tls42020CRU', component: TLS42020CRUComponent }, // 快速鍵名稱維護作業 CRU
-  { path: 'tls43010CRU', component: TLS43010CRUComponent }, // 訊息登錄作業 CRU
-  { path: 'tls43020CRU', component: TLS43020CRUComponent }, // 訊息審核作業 CRU
-  { path: 'tls43030CRU', component: TLS43030CRUComponent }, // 常用訊息維護作業 CRU
-  { path: 'tls43040CRU', component: TLS43040CRUComponent }, // 訊息群組維護作業 CRU
-  { path: 'tls43050CRU', component: TLS43050CRUComponent }, // 訊息狀態查詢作業 CRU
-  { path: 'tls44010CRU', component: TLS44010CRUComponent }, // POS即時連線監看 CRU
-  { path: 'tls44020CRU', component: TLS44020CRUComponent }, // EDC即時連線監看 CRU
-  { path: 'tls45010CRU', component: TLS45010CRUComponent }, // 訊息群組報表 CRU
-  { path: 'tls45020CRU', component: TLS45020CRUComponent }, // 收銀機主檔異動查詢 CRU
-  { path: 'tls45030CRU', component: TLS45030CRUComponent }, // 收銀機開關機時間表 CRU
-  { path: 'tls46010CRU', component: TLS46010CRUComponent }, // 網路位置設定 CRU
-  { path: 'tls46020CRU', component: TLS46020CRUComponent }, // POS環境變數維護作業 CRU
-  { path: 'tls46030CRU', component: TLS46030CRUComponent }, // TOUCH功能按鈕開/關設定 CRU
-  { path: 'tls46040CRU', component: TLS46040CRUComponent }, // 設定檔群組維護 CRU
-  { path: 'tls46050CRU', component: TLS46050CRUComponent }, // TM監控報表 CRU
-  { path: 'tls46060CRU', component: TLS46060CRUComponent }, // 下傳設定 CRU
-  { path: 'tls47010CRU', component: TLS47010CRUComponent }, // 資料下傳收銀機作業 CRU
+  { path: 'tls41010cru', component: TLS41010CRUComponent }, // 收銀機基本資料維護 CRU
+  { path: 'tls41020cru', component: TLS41020CRUComponent }, // 收銀機EDC資料維護 CRU
+  { path: 'tls41030cru', component: TLS41030CRUComponent }, // 收銀專櫃人員資料維護作業 CRU
+  { path: 'tls41040cru', component: TLS41040CRUComponent }, // POS清機時間設定 CRU
+  { path: 'tls41050cru', component: TLS41050CRUComponent }, // 發票訊息維護作業 CRU
+  { path: 'tls41060cru', component: TLS41060CRUComponent }, // 收銀機發票安全量參數維護作業 CRU
+  { path: 'tls42010cru', component: TLS42010CRUComponent }, // 快速鍵維護作業 CRU
+  { path: 'tls42020cru', component: TLS42020CRUComponent }, // 快速鍵名稱維護作業 CRU
+  { path: 'tls43010cru', component: TLS43010CRUComponent }, // 訊息登錄作業 CRU
+  { path: 'tls43020cru', component: TLS43020CRUComponent }, // 訊息審核作業 CRU
+  { path: 'tls43030cru', component: TLS43030CRUComponent }, // 常用訊息維護作業 CRU
+  { path: 'tls43040cru', component: TLS43040CRUComponent }, // 訊息群組維護作業 CRU
+  { path: 'tls43050cru', component: TLS43050CRUComponent }, // 訊息狀態查詢作業 CRU
+  { path: 'tls44010cru', component: TLS44010CRUComponent }, // POS即時連線監看 CRU
+  { path: 'tls44020cru', component: TLS44020CRUComponent }, // EDC即時連線監看 CRU
+  { path: 'tls45010cru', component: TLS45010CRUComponent }, // 訊息群組報表 CRU
+  { path: 'tls45020cru', component: TLS45020CRUComponent }, // 收銀機主檔異動查詢 CRU
+  { path: 'tls45030cru', component: TLS45030CRUComponent }, // 收銀機開關機時間表 CRU
+  { path: 'tls46010cru', component: TLS46010CRUComponent }, // 網路位置設定 CRU
+  { path: 'tls46020cru', component: TLS46020CRUComponent }, // POS環境變數維護作業 CRU
+  { path: 'tls46030cru', component: TLS46030CRUComponent }, // TOUCH功能按鈕開/關設定 CRU
+  { path: 'tls46040cru', component: TLS46040CRUComponent }, // 設定檔群組維護 CRU
+  { path: 'tls46050cru', component: TLS46050CRUComponent }, // TM監控報表 CRU
+  { path: 'tls46060cru', component: TLS46060CRUComponent }, // 下傳設定 CRU
+  { path: 'tls47010cru', component: TLS47010CRUComponent }, // 資料下傳收銀機作業 CRU
   { path: 'tls51010', component: TLS51010Component }, // 大分類維護作業
   { path: 'tls51020', component: TLS51020Component }, // 中分類維護作業
   { path: 'tls51030', component: TLS51030Component }, // 小分類維護作業
@@ -788,46 +788,46 @@ const routes: Routes = [
   { path: 'tls57150', component: TLS57150Component }, // 盤點統計表
   { path: 'tls57160', component: TLS57160Component }, // 庫齡分析表
   { path: 'tls57170', component: TLS57170Component }, // 存貨評價分析表
-  { path: 'tls51010CRU', component: TLS51010CRUComponent }, // 大分類維護作業 CRU
-  { path: 'tls51020CRU', component: TLS51020CRUComponent }, // 中分類維護作業 CRU
-  { path: 'tls51030CRU', component: TLS51030CRUComponent }, // 小分類維護作業 CRU
-  { path: 'tls51040CRU', component: TLS51040CRUComponent }, // 傳票項目設定作業 CRU
-  { path: 'tls51050CRU', component: TLS51050CRUComponent }, // 商品單位設定 CRU
-  { path: 'tls51060CRU', component: TLS51060CRUComponent }, // 品牌設定作業 CRU
-  { path: 'tls51070CRU', component: TLS51070CRUComponent }, // 商品基本資料 CRU
+  { path: 'tls51010cru', component: TLS51010CRUComponent }, // 大分類維護作業 CRU
+  { path: 'tls51020cru', component: TLS51020CRUComponent }, // 中分類維護作業 CRU
+  { path: 'tls51030cru', component: TLS51030CRUComponent }, // 小分類維護作業 CRU
+  { path: 'tls51040cru', component: TLS51040CRUComponent }, // 傳票項目設定作業 CRU
+  { path: 'tls51050cru', component: TLS51050CRUComponent }, // 商品單位設定 CRU
+  { path: 'tls51060cru', component: TLS51060CRUComponent }, // 品牌設定作業 CRU
+  { path: 'tls51070cru', component: TLS51070CRUComponent }, // 商品基本資料 CRU
   { path: 'tls51070OS', component: Tls51070OsComponent }, // 商品基本資料 OS
-  { path: 'tls51080CRU', component: TLS51080CRUComponent }, // 分倉資料處理 CRU
-  { path: 'tls51090CRU', component: TLS51090CRUComponent }, // 自營收銀機維護作業 CRU
-  { path: 'tls51100CRU', component: TLS51100CRUComponent }, // 商品資料轉入 CRU
-  { path: 'tls51110CRU', component: TLS51110CRUComponent }, // 品牌每月可進貨限額維護作業 CRU
-  { path: 'tls51120CRU', component: TLS51120CRUComponent }, // 品牌每月可進貨限額轉入 CRU
-  { path: 'tls51130CRU', component: TLS51130CRUComponent }, // 品牌進貨折數設定作業 CRU
-  { path: 'tls52010CRU', component: TLS52010CRUComponent }, // 採購單維護作業 CRU
-  { path: 'tls52020CRU', component: TLS52020CRUComponent }, // 退貨單維護作業 CRU
-  { path: 'tls52030CRU', component: TLS52030CRUComponent }, // 進貨驗收作業 CRU
-  { path: 'tls52040CRU', component: TLS52040CRUComponent }, // 退貨驗收作業 CRU
-  { path: 'tls52050CRU', component: TLS52050CRUComponent }, // 進價/售價變價作業 CRU
-  { path: 'tls52060CRU', component: TLS52060CRUComponent }, // 進價/售價變價匯入作業 CRU
-  { path: 'tls52070CRU', component: TLS52070CRUComponent }, // 廠商進貨折數產生變價單作業 CRU
-  { path: 'tls53010CRU', component: TLS53010CRUComponent }, // 盤點單開立 CRU
-  { path: 'tls53020CRU', component: TLS53020CRUComponent }, // 盤點資料匯入作業 CRU
-  { path: 'tls53030CRU', component: TLS53030CRUComponent }, // 盤點資料維護作業 CRU
-  { path: 'tls53040CRU', component: TLS53040CRUComponent }, // 盤點結案處理 CRU
-  { path: 'tls54010CRU', component: TLS54010CRUComponent }, // 收銀資料處理作業 CRU
-  { path: 'tls55010CRU', component: TLS55010CRUComponent }, // 進貨日結作業 CRU
-  { path: 'tls55020CRU', component: TLS55020CRUComponent }, // 帳款月結管理作業 CRU
-  { path: 'tls55030CRU', component: TLS55030CRUComponent }, // 廠商發票折讓作業 CRU
-  { path: 'tls55040CRU', component: TLS55040CRUComponent }, // 廠商請款作業 CRU
-  { path: 'tls55050CRU', component: TLS55050CRUComponent }, // 月結帳作業 CRU
-  { path: 'tls55060CRU', component: TLS55060CRUComponent }, // 暫存傳票審核管理作業 CRU
-  { path: 'tls56010CRU', component: TLS56010CRUComponent }, // 商品庫存查詢作業 CRU
-  { path: 'tls56020CRU', component: TLS56020CRUComponent }, // 商品領用(內部)作業 CRU
-  { path: 'tls56030CRU', component: TLS56030CRUComponent }, // 商品退回(內部)作業 CRU
-  { path: 'tls56040CRU', component: TLS56040CRUComponent }, // 倉別調撥申請維護 CRU
-  { path: 'tls56050CRU', component: TLS56050CRUComponent }, // 倉別調撥發貨作業 CRU
-  { path: 'tls56060CRU', component: TLS56060CRUComponent }, // 倉別調撥驗收作業 CRU
-  { path: 'tls56070CRU', component: TLS56070CRUComponent }, // 商品報廢維護 CRU
-  { path: 'tls56080CRU', component: TLS56080CRUComponent }, // 同業調撥作業 CRU
+  { path: 'tls51080cru', component: TLS51080CRUComponent }, // 分倉資料處理 CRU
+  { path: 'tls51090cru', component: TLS51090CRUComponent }, // 自營收銀機維護作業 CRU
+  { path: 'tls51100cru', component: TLS51100CRUComponent }, // 商品資料轉入 CRU
+  { path: 'tls51110cru', component: TLS51110CRUComponent }, // 品牌每月可進貨限額維護作業 CRU
+  { path: 'tls51120cru', component: TLS51120CRUComponent }, // 品牌每月可進貨限額轉入 CRU
+  { path: 'tls51130cru', component: TLS51130CRUComponent }, // 品牌進貨折數設定作業 CRU
+  { path: 'tls52010cru', component: TLS52010CRUComponent }, // 採購單維護作業 CRU
+  { path: 'tls52020cru', component: TLS52020CRUComponent }, // 退貨單維護作業 CRU
+  { path: 'tls52030cru', component: TLS52030CRUComponent }, // 進貨驗收作業 CRU
+  { path: 'tls52040cru', component: TLS52040CRUComponent }, // 退貨驗收作業 CRU
+  { path: 'tls52050cru', component: TLS52050CRUComponent }, // 進價/售價變價作業 CRU
+  { path: 'tls52060cru', component: TLS52060CRUComponent }, // 進價/售價變價匯入作業 CRU
+  { path: 'tls52070cru', component: TLS52070CRUComponent }, // 廠商進貨折數產生變價單作業 CRU
+  { path: 'tls53010cru', component: TLS53010CRUComponent }, // 盤點單開立 CRU
+  { path: 'tls53020cru', component: TLS53020CRUComponent }, // 盤點資料匯入作業 CRU
+  { path: 'tls53030cru', component: TLS53030CRUComponent }, // 盤點資料維護作業 CRU
+  { path: 'tls53040cru', component: TLS53040CRUComponent }, // 盤點結案處理 CRU
+  { path: 'tls54010cru', component: TLS54010CRUComponent }, // 收銀資料處理作業 CRU
+  { path: 'tls55010cru', component: TLS55010CRUComponent }, // 進貨日結作業 CRU
+  { path: 'tls55020cru', component: TLS55020CRUComponent }, // 帳款月結管理作業 CRU
+  { path: 'tls55030cru', component: TLS55030CRUComponent }, // 廠商發票折讓作業 CRU
+  { path: 'tls55040cru', component: TLS55040CRUComponent }, // 廠商請款作業 CRU
+  { path: 'tls55050cru', component: TLS55050CRUComponent }, // 月結帳作業 CRU
+  { path: 'tls55060cru', component: TLS55060CRUComponent }, // 暫存傳票審核管理作業 CRU
+  { path: 'tls56010cru', component: TLS56010CRUComponent }, // 商品庫存查詢作業 CRU
+  { path: 'tls56020cru', component: TLS56020CRUComponent }, // 商品領用(內部)作業 CRU
+  { path: 'tls56030cru', component: TLS56030CRUComponent }, // 商品退回(內部)作業 CRU
+  { path: 'tls56040cru', component: TLS56040CRUComponent }, // 倉別調撥申請維護 CRU
+  { path: 'tls56050cru', component: TLS56050CRUComponent }, // 倉別調撥發貨作業 CRU
+  { path: 'tls56060cru', component: TLS56060CRUComponent }, // 倉別調撥驗收作業 CRU
+  { path: 'tls56070cru', component: TLS56070CRUComponent }, // 商品報廢維護 CRU
+  { path: 'tls56080cru', component: TLS56080CRUComponent }, // 同業調撥作業 CRU
 ];
 
 @NgModule({
