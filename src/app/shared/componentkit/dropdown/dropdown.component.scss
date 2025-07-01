@@ -1,0 +1,28 @@
+// WebKit (Chrome, Safari, Edge, Opera) 瀏覽器
+::ng-deep .p-scroller {
+  // 針對下拉面板內部滾動條的容器
+  &::-webkit-scrollbar {
+    width: 6px; /* 垂直滾動條寬度 */
+    height: 6px; /* 水平滾動條高度 */
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1; /* 滾動條軌道背景色 */
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #888; /* 滾動條把手背景色 */
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #555; /* 滾動條把手懸停背景色 */
+  }
+}
+
+// Firefox 瀏覽器
+.p-dropdown-panel .p-dropdown-items-wrapper {
+  scrollbar-width: thin; /* 'auto' | 'thin' | 'none' */
+  scrollbar-color: #888 #f1f1f1; /* thumb color | track color */
+}

@@ -1,41 +1,102 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-        <div *appHasPermission="addPermission">
-            <app-button btnType="create" label="發票區段轉檔" (click)="onCreate()" class="col"></app-button>
-        </div>
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-            [headerStyleClass]="'query-accordionTab'">
-            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-calendar calendarType="dateMonthOne" label="申報年月" [control]="queryForm.controls.onedatemm"
-                            [submitted]="submitted">
-                        </app-calendar>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-calendar-range calendarType="dateRange" label="銷售日期"
-                            [startControl]="queryForm.controls.startSalesDate"
-                            [endControl]="queryForm.controls.endSalesDate" [submitted]="submitted">
-                        </app-calendar-range>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-dropdown label="稅籍編號" controlName="taxNumber" [options]="taxNumberOptions"
-                            optionLabel="label" optionValue="value" [control]="queryForm.controls.taxNumber"
-                            [submitted]="submitted">
-                        </app-dropdown>
-                    </div>
-                </div>
-                <ul>
-                    <li>請注意 :</li>
-                    <li>1、最後專櫃發票匯總日期 : 2020/2/6 。</li>
-                    <li>2、最後轉檔日期 : 2024/8/20 。</li>
-                </ul>
-            </form>
-        </p-accordionTab>
-    </p-accordion>
+    <div *appHasPermission="addPermission">
+      <app-button
+        btnType="create"
+        label="發票區段轉檔"
+        class="col"
+      ></app-button>
+    </div>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text-range
+              label="退出/折讓單號"
+              
+              [startControl]="queryForm.controls.TXN_Ret_No_Start"
+              [endControl]="queryForm.controls.TXN_Ret_No_End"
+              [submitted]="submitted"
+            ></app-input-text-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="字軌"
+              [control]="queryForm.controls.PUR_GUINo"
+              [submitted]="submitted"
+             
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text-range
+              label="發票號碼起"
+             
+              [startControl]="queryForm.controls.PUR_GUINo_Start"
+              [endControl]="queryForm.controls.PUR_GUINo_End"
+              [submitted]="submitted"
+              
+            ></app-input-text-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="退出/折讓日期"
+              [startControl]="queryForm.controls.PUR_GUIDate_Start"
+              [endControl]="queryForm.controls.PUR_GUIDate_End"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-query-year-month
+              [label]="'申報年月'"
+              [yearControl]="queryForm.controls.Year"
+              [monthControl]="queryForm.controls.Month"
+              [submitted]="submitted"
+              [onlyOddMonths]="true"
+            ></app-query-year-month>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="銷售日期"
+              [startControl]="queryForm.controls.startSalesDate"
+              [endControl]="queryForm.controls.endSalesDate"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="稅籍編號"
+              controlName="taxNumber"
+              [options]="taxNumberOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.taxNumber"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+        <ul>
+          <li>請注意 :</li>
+          <li>1、最後專櫃發票匯總日期 : 2020/2/6 。</li>
+          <li>2、最後轉檔日期 : 2024/8/20 。</li>
+        </ul>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
 </div>

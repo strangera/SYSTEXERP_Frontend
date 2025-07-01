@@ -150,4 +150,9 @@ export class UserCodeService {
   changePassword(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/User/changePassword`, body);
   }
+
+  // 重製 使用者密碼
+  resetPassword(body: { SYS_StoreNo: string, User_No: string }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/User/resetPassword`, body);
+  }
 }

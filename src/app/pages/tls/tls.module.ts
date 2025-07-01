@@ -414,6 +414,7 @@ import { Tls14030CRUComponent } from './tls14030-cru/tls14030-cru.component';
 import { Tls14040CRUComponent } from './tls14040-cru/tls14040-cru.component';
 import { Tls14030Component } from './tls14030/tls14030.component';
 import { Tls14040Component } from './tls14040/tls14040.component';
+import { Tls51070OsComponent } from './tls51070-os/tls51070-os.component';
 
 @NgModule({
   declarations: [
@@ -797,6 +798,7 @@ import { Tls14040Component } from './tls14040/tls14040.component';
     TLS51050CRUComponent,
     TLS51060CRUComponent,
     TLS51070CRUComponent,
+    Tls51070OsComponent,
     TLS51080CRUComponent,
     TLS51090CRUComponent,
     TLS51100CRUComponent,

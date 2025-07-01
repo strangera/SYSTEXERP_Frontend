@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { catchError, Observable, of, tap } from 'rxjs';
+import { catchError, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../shared/service/error-handler.service';
 
@@ -8,18 +8,19 @@ import { ErrorHandlerService } from '../../../shared/service/error-handler.servi
   providedIn: 'root'
 })
 export class TLS23030Service {
-  apiUrl: string = environment.ApiUrl;
-
+  private apiUrl: string = environment.ApiUrl;
 
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
   ) { }
 
-  queryTLS23030(query: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS23030`, query).pipe(
-      tap(response => console.log('查詢結果:', response)),
-      catchError((error) => this.errorHandler.handleError(error))  // ✅ 正確
+  queryTLS23030(body: any, displayMode: 'Report' | 'SummaryReport' = 'Report'): Observable<any> {
+    const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23030`;
+
+    return this.http.post<any>(url, body).pipe(
+      tap(response => console.log(`🎯 TLS23030 ${displayMode} 查詢結果:`, response)),
+      catchError((error) => this.errorHandler.handleError(error))
     );
   }
 }

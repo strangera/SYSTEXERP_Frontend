@@ -14,6 +14,11 @@ export class Sys0210Service {
   constructor(private http: HttpClient) { }
 
   // 查詢 tblRole 資料表
+  queryAllRole(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryAllRole`, {});
+  }
+
+  // 查詢 tblRole 資料表
   queryRole(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryRole`, body);
   }

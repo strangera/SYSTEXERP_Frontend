@@ -52,6 +52,7 @@ export interface PluLogo {
   'LOGO_Remark': string;
   'PLU_OrderPrcRate': number; // 標準進貨折數 預設100
   'HOS_No': string;
+  'HOS_NAME': string;
   'VEN_No': string;
 
   'CRT_Date': Date;
@@ -206,6 +207,7 @@ export interface POS2034 {
   'HOS_No': string; // 倉庫代碼 STO_NO+HOS_NO唯一值 STO_NO+HOS_NO唯一值
   'HOS_NAME': string; // 倉庫名稱
   'org_id': string; // 組織代碼/所屬部門
+  'org_name': string; // 部門名稱
   'building_no': string; // 館別代碼
   'HOS_Remark'?: string; // 備註說明
 

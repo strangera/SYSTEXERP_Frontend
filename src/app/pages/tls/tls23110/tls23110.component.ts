@@ -223,7 +223,7 @@ this.tls23110Service.queryTLS23110(queryFormValue).subscribe({
   };
 });
 
-      this.router.navigate(['/TLS/TLS23110CRU'], {
+      this.router.navigate(['account/TLS/TLS23110CRU'], {
         state: {
           queryFormValue,
           pageSize: this.customPageSize,

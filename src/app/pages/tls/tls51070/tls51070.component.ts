@@ -30,7 +30,6 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     PLU_Reserve1: ['', [Validators.maxLength(400)]], // 說明
     PLU_Reserve3: ['', [Validators.maxLength(400)]], // 系列
 
-
     //分頁查詢
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
   });
@@ -351,5 +350,16 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
 
   isRowSelectable(rowData: POS2004): boolean {
     return rowData.CanDel
+  }
+
+  //移動到 歷史紀錄查詢/標籤檔案
+  gotoTls51070OS(destination: string){
+    console.log('導引到',destination);
+    //導引到sysb400.os
+    this.router.navigate(['account/TLS/TLS51070OS'],{
+      state: {
+        destination: destination,
+      }
+    });
   }
 }

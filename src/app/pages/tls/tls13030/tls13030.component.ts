@@ -17,6 +17,7 @@ import { NotificationService } from '../../../shared/component/notification-mess
   styleUrls: ['./tls13030.component.scss'],
 })
 export class TLS13030Component extends BasicQueryPageComponent<any> {
+  isPrint = true; // 或預設為 false，視需求切換
   queryForm = this.formBuilder.group({
     tlt_no: ['', [Validators.maxLength(10)]],
     tlt_name: ['', [Validators.maxLength(50)]],
@@ -73,25 +74,25 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
       field: 'bus_type',
       header: '大分類代碼',
       visible: true,
-      format: (value: string) => value?.split('/')?.[0] ?? ''
+      
     },
     {
-      field: 'bus_type',
+      field: 'bus_type_name',
       header: '大分類名稱',
       visible: true,
-      format: (value: string) => value?.split('/')?.[1] ?? ''
+      
     },
     {
       field: 'tlt_bdate',
       header: '合約起日',
       visible: true,
-      format: (value: string) => this.formatFullDate(value),
+     
     },
     {
       field: 'tlt_edate',
       header: '合約迄日',
       visible: true,
-      format: (value: string) => this.formatFullDate(value),
+     
     },
 
     { field: 'cap_type', header: '扣款類別', visible: true },
@@ -103,13 +104,13 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
       field: 'tpy_bdate',
       header: '扣款起日',
       visible: true,
-      // format: (value: string) => this.formatYYYYMM(value),
+      
     },
     {
       field: 'tpy_edate',
       header: '扣款迄日',
       visible: true,
-      // format: (value: string) => this.formatYYYYMM(value),
+     
     },
 
 
@@ -133,10 +134,6 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
       field: 'tpy_rate',
       header: '比率或元(月利率%)',
       visible: true,
-      format: (value: any) => {
-        const num = parseFloat(value);
-        return isNaN(num) ? '' : num.toFixed(2);
-      },
       style: 'text-right'
     },
 

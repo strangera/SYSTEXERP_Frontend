@@ -102,6 +102,6 @@ export class Sysb400OsComponent extends BasicCruPageComponent<Sysb400m> implemen
   }
 
   onBack() {
-    this.router.navigate(['/SYS/SYSB400']);
+    this.router.navigate(['account/SYS/SYSB400']);
   }
 }

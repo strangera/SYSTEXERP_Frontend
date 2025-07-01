@@ -36,12 +36,14 @@ export class ReportTableGroupComponent implements OnInit {
   @Input() defaultMergedView: boolean = true; // 預設就是合併模式
   @Input() enableGrouping: boolean = false;
   @Input() detailColumns: Column[] = []; // 自訂明細欄位
+ @Input() showGroupedBody: boolean = false;
 
   private _data: any[] = [];
 
   @Input()
   set data(value: any[]) {
     this._data = value;
+     this.groupBodyExpanded = {}; // ✅ 每次新資料清空展開狀態
 
     if (this.groupByField) {
       this._data = [...this._data].sort((a, b) => {
@@ -66,6 +68,8 @@ export class ReportTableGroupComponent implements OnInit {
 
 expandedRows: { [key: string]: boolean } = {};
 rowDetails: { [key: string]: any[] } = {};
+
+groupBodyExpanded: { [key: string]: boolean } = {};
 
 getRowKey(row: any): string {
   return row[this.dataKey] ?? JSON.stringify(row);
@@ -166,6 +170,11 @@ objectKeys(obj: any): string[] {
         this._data.slice(i * this.rowsPerTable, (i + 1) * this.rowsPerTable)
       );
     }
+ // ✅ 預設展開狀態與 showGroupedBody 同步
+  this.groupedData.forEach(group => {
+    const key = group[0]?.__groupKey ?? '';
+    this.groupBodyExpanded[key] = this.showGroupedBody;
+  });
   }
 
 
@@ -193,14 +202,27 @@ objectKeys(obj: any): string[] {
         this._data.slice(i * this.rowsPerTable, (i + 1) * this.rowsPerTable)
       );
     }
+    this.groupedData.forEach(group => {
+  const key = group[0]?.__groupKey ?? '';
+  if (key && !(key in this.groupBodyExpanded)) {
+    this.groupBodyExpanded[key] = this.showGroupedBody; // ✅ 根據全域切換
+  }
+});
   }
 
 
 
-  getSubtotal(group: any[], field: string): number | string {
-    const sum = group.reduce((acc, row) => acc + (parseFloat(row[field]) || 0), 0);
-    return sum.toLocaleString();
-  }
+getSubtotal(group: any[], field: string): string {
+  const sum = group.reduce((acc, row) => {
+    const raw = row[field];
+    if (raw == null) return acc;
+
+    const numeric = parseFloat(String(raw).replace(/,/g, '')); // 去掉逗號後轉數字
+    return acc + (isNaN(numeric) ? 0 : numeric);
+  }, 0);
+
+  return sum.toLocaleString();
+}
   get pagedData(): any[] {
     if (this.mergedView) {
       return this._data.slice(0, this.rowsPerTable);
@@ -467,6 +489,31 @@ objectKeys(obj: any): string[] {
   }, 0);
   return Math.max(80, fullWidth + 24); // 加上 padding 預留
 }
+collapseAllRows(): void {
+  this.showGroupedBody = false;
+}
 
+expandAllRows(): void {
+  this.showGroupedBody = true;
+}
+onToggleGroupedBody(): void {
+  for (const key of Object.keys(this.groupBodyExpanded)) {
+    this.groupBodyExpanded[key] = this.showGroupedBody;
+  }
+}
+toggleGroupBody(key: string): void {
+  this.groupBodyExpanded[key] = !this.groupBodyExpanded[key];
+}
+expandAllGroupBodies(): void {
+  for (const key of Object.keys(this.groupBodyExpanded)) {
+    this.groupBodyExpanded[key] = true;
+  }
+}
+
+collapseAllGroupBodies(): void {
+  for (const key of Object.keys(this.groupBodyExpanded)) {
+    this.groupBodyExpanded[key] = false;
+  }
+}
 
 }

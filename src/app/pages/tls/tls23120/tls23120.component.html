@@ -115,14 +115,14 @@
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
           <app-button btnType="clear"></app-button>
-          <app-button btnType="query" [loading]="loading"></app-button>
+          <!-- <app-button btnType="query" [loading]="loading"></app-button> -->
           <app-button btnType="report" label="報表模式" (clickEvent)="goToReportMode()"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
-<div class="card">
+<!-- <div class="card">
   <app-table
     tableKey="TLS23120"
     [data]="data"
@@ -137,9 +137,9 @@
     (detail)="onDetail($event)"
     [showManage]="false"
     [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); "
   ></app-table>
-</div>
+</div> -->
 <p-dialog header="限制筆數" [(visible)]="showPageSizeDialog" [modal]="true" [closable]="false" [style]="{ width: '300px' }">
   <div class="p-fluid">
     <div class="field">

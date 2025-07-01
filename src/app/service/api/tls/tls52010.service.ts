@@ -91,13 +91,16 @@ export interface IPOS2004DetailData {
   id: number;
   PLU_MagNo: string; // 商品管理編號
   PLU_Name: string; // 商品名稱
-  PLU_No: string; // 商品編號
+  PLU_No: string; // 國際條碼
   PLU_Unit: string; // 商品單位
   UNIT_NAME: string; // 單位名稱
-  PLU_BoxQty: number; // 箱入數
+  PLU_BoxQty: number; // 包裝入數
   PLU_StockTaxType: string; // 進貨稅別
-  PLU_SalePrc_UNI: number; // 統一價格
-  PLU_SalePrc: number; // 銷售價格
+  PLU_SalePrc_UNI: number; // 單價
+  PLU_SalePrc: number; // 售價
+  POD_SubQty?: number; // 採購數量
+  POD_BuyNet?: number; // 採購淨額
+  POD_SaleAmt?: number; // 銷售金額
 }
 
 /** 商品管理編號/國際條碼/廠商貨號查詢商品 (queryPOS2004Detail) 的請求介面 */
@@ -121,7 +124,7 @@ export interface IQueryPOS2004DetailByVenNoRequest {
 
 /** 採購單明細資料介面 (用於 insert/update TLS52010 的 Details 陣列) */
 export interface IPODetail {
-  POD_SeqNo: number; // 明細序號
+  POD_SeqNo?: number; // 明細序號
   SYS_StoreNo: string; // 門店編號
   PLU_MagNo: string; // 商品管理編號
   PLU_No: string; // 商品編號
@@ -146,10 +149,13 @@ export interface IInsertTLS52010Request {
   LOGO_No: string; // LOGO代碼
   HOS_No: string; // 醫院代號
   PO_TotalSubQty: number; // 採購總數量
-  PO_TotalSaleNet: number; // 售價未稅小計
-  PO_TotalSaleTax: number; // 售價稅額
+  PO_TotalSaleNet?: number; // 售價未稅小計
+  PO_TotalSaleTax?: number; // 售價稅額
   PO_TotalSaleAmt: number; // 售價總金額
-  APPLY_Date: string; // 申請日期 (ISO 格式字串)
+  PO_TotalBuyAmt: number; // 採購總金額
+  PO_TotalBuyTax: number; // 採購稅額
+  PO_TotalBuyNet: number; // 採購淨額
+  APPLY_Date: string | Date; // 申請日期 (ISO 格式字串)
   APPLY_USR_No: string; // 申請人員編號
   APPLY_USR_Name: string; // 申請人員姓名
   PO_Remark: string | null; // 採購單備註
@@ -232,7 +238,7 @@ export class Tls52010Service {
 
   /**
    * 根據商品管理編號/國際條碼/廠商貨號查詢商品 (POS2004 詳細資料)
-   * @param params 查詢條件 (VEN_No, queryNo, LOGO_No)
+   * @param params 查詢條件 (VEN_No, LOGO_No, queryNo)
    * @returns 包含 IPOS2004DetailData 陣列的 API 響應
    *///!!!未完成
   queryPOS2004Detail(params: IQueryPOS2004DetailRequest): Observable<ApiResponse<IPOS2004DetailData[]>> {
@@ -241,13 +247,29 @@ export class Tls52010Service {
 
   /**
    * 查詢廠商所有商品 (POS2004 詳細資料)
-   * @param params 查詢條件 (VEN_No, PLU_MagNo, PLU_Name, CAT_LNo, CAT_MNo, CAT_SNo, LOGO_No)
+   * @param params 查詢條件 (VEN_No, LOGO_No, PLU_MagNo, PLU_Name, CAT_LNo, CAT_MNo, CAT_SNo)
    * @returns 包含 IPOS2004DetailData 陣列的 API 響應
-   *///!!!未完成
+   */
   queryPOS2004DetailByVenNo(params: IQueryPOS2004DetailByVenNoRequest): Observable<ApiResponse<IPOS2004DetailData[]>> {
     return this.http.post<ApiResponse<IPOS2004DetailData[]>>(`${this.apiUrl}/queryPOS2004Detail_VEN_No`, params);
   }
+  /**
+   * 查詢 POS2017 (採購單明細) 資料表
+   * @param params 查詢條件 (PO_No)
+   * @returns 包含 IPOS2017Data 陣列的 API 響應
+   *///!!!未完成 (編輯)
+  queryPOS2017(params: IQueryPOS2017Request): Observable<ApiResponse<IPOS2017Data[]>> {
+    return this.http.post<ApiResponse<IPOS2017Data[]>>(`${this.apiUrl}/queryPOS2017`, params);
+  }
 
+  /**
+   * 根據狀態更新 POS2016 (採購單主檔) 資料 (結案或作廢)
+   * @param data 包含要更新的採購單 ID 列表及目標狀態
+   * @returns API 響應
+   *///!!!未完成
+  SetCloseTLS52010(data: ISetCloseTLS52010Request): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/SetCloseTLS52010`, data);
+  }
   /**
    * 新增 POS2016 (採購單主檔) 資料
    * @param data 要新增的採購單資料，包含主檔及明細
@@ -264,23 +286,5 @@ export class Tls52010Service {
    *///!!!未完成
   updateTLS52010(data: IUpdateTLS52010Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateTLS52010`, data);
-  }
-
-  /**
-   * 查詢 POS2017 (採購單明細) 資料表
-   * @param params 查詢條件 (PO_No)
-   * @returns 包含 IPOS2017Data 陣列的 API 響應
-   *///!!!未完成
-  queryPOS2017(params: IQueryPOS2017Request): Observable<ApiResponse<IPOS2017Data[]>> {
-    return this.http.post<ApiResponse<IPOS2017Data[]>>(`${this.apiUrl}/queryPOS2017`, params);
-  }
-
-  /**
-   * 根據狀態更新 POS2016 (採購單主檔) 資料 (結案或作廢)
-   * @param data 包含要更新的採購單 ID 列表及目標狀態
-   * @returns API 響應
-   *///!!!未完成
-  SetCloseTLS52010(data: ISetCloseTLS52010Request): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/SetCloseTLS52010`, data);
   }
 }

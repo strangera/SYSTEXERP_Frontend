@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { DropdownChangeEvent } from 'primeng/dropdown';
+import { DropdownChangeEvent, DropdownLazyLoadEvent } from 'primeng/dropdown';
 import { Subject, takeUntil } from 'rxjs';
 @Component({
   selector: 'app-dropdown',
@@ -9,7 +9,7 @@ import { Subject, takeUntil } from 'rxjs';
   styleUrl: './dropdown.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DropdownComponent extends BasicKitComponent implements OnInit {
+export class DropdownComponent extends BasicKitComponent implements OnInit, OnChanges {
   // 基本
   @Input() label = '';
   @Input() override placeholder = '';
@@ -20,6 +20,7 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   @Input() optionValue = ''; // 資料的 Value
   @Input() control = new FormControl();
   @Input() submitted = false; // 檢查欄位是否標準
+  @Input() loading = true; // 載入狀態
   destroy$ = new Subject<void>(); // 銷毀訂閱
   // 選項
   @Output() changeEvent = new EventEmitter<DropdownChangeEvent>();
@@ -32,6 +33,16 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
     this.control.statusChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.handleControlState();
     });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['options'] && changes['options'].currentValue.length > 0) {
+      this.loading = false;
+    }
+  }
+
+  onLazyLoad(event: DropdownLazyLoadEvent) {
+    console.log(event);
   }
 
   private ensureControl() {

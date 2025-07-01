@@ -1,14 +1,13 @@
-import { Component, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { MultiSelect } from 'primeng/multiselect';
+import { MultiSelect, MultiSelectLazyLoadEvent } from 'primeng/multiselect';
 
 @Component({
   selector: 'app-multi-select',
   templateUrl: './multi-select.component.html',
-  styleUrl: './multi-select.component.scss'
 })
-export class MultiSelectComponent extends BasicKitComponent implements OnInit {
+export class MultiSelectComponent extends BasicKitComponent implements OnInit, OnChanges {
   @ViewChild('multiSelect') multiSelect!: MultiSelect;
   @Input() label = '';
   @Input() controlName = '';
@@ -17,11 +16,27 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
   @Input() optionValue = ''; // 資料的 Value
   @Input() control = new FormControl;
   @Input() submitted = false; // 檢查欄位是否標準
+  @Input() loading = true; // 載入狀態
   @Input() variant: 'filled' | 'outlined' = 'outlined';
 
   ngOnInit(): void {
+    this.ensureControl();
     if (!this.control.disabled) {
       this.updateControlState(this.control);
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['options'] && changes['options'].currentValue.length > 0) {
+      this.loading = false;
+    }
+  }
+  onLazyLoad(event: MultiSelectLazyLoadEvent) {
+    console.log(event);
+  }
+  private ensureControl() {
+    if (!this.control) {
+      this.control = new FormControl();
     }
   }
 }

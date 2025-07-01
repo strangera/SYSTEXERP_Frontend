@@ -1,41 +1,40 @@
 <div class="card">
-  <!-- 上方功能列 -->
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
 
-  <!-- 報表區塊 -->
   <div class="card">
-    <!-- ⬇️ 明細表 (預設顯示) -->
-    <ng-container >
-      <app-report-table-group
-        [columns]="columns"
-        [data]="data"
-        [subtotalFields]="[
-          'TXN_TotSaleAmt',
-          'TXN_TotOver',
-          'TXN_TotPayAmt',
-          'TXN_TaxFreeCertNo'
-        ]"
-        [enableGrouping]="false"
-        [reportTitle]="'銷售統計報表'"
-        [currentPage]="1"
-        [dateStart]="dateStart"
-        [dateEnd]="dateEnd"
-        [printedAt]="printedAt"
-        [showTotalOnly]="true"
-        [pdfSummaryText]="pdfSummary"
-        [defaultMergedView]="true"
-        [showExpandColumn]="false"
-        [detailFieldKeys]="['TXN_Date']"
-      ></app-report-table-group>
-
-      <!-- 備註說明區 -->
-      <div class="mt-4 text-sm text-red-600 leading-6 font-semibold whitespace-pre-line">
-        <ng-container *ngFor="let line of pdfSummary">
-          {{ line }}<br />
-        </ng-container>
-      </div>
-    </ng-container>
-
+<app-report-table-group
+  [columns]="columns"
+  [data]="data"
+  [subtotalFields]="
+    displayMode === 'Detail'
+      ? ['TXN_TotGUI', 'TXN_TotSaleAmt', 'TXN_TotPayAmt']
+      : ['TXN_TotSaleAmt']
+  "
+  [groupByField]="displayMode === 'Summary' ? 'tlt_name' : null"
+  [groupByLabel]="'櫃位名稱'"
+  [enableGrouping]="displayMode === 'Summary'"
+  [defaultMergedView]="displayMode === 'Detail'"
   
+  [reportTitle]="
+    displayMode === 'Detail'
+      ? '型態別明細表'
+      : '型態別彙總表'
+  "
+  [currentPage]="1"
+  [dateStart]="dateStart"
+  [dateEnd]="dateEnd"
+  [printedAt]="printedAt"
+  [showTotalOnly]="true"
+  [pdfSummaryText]="pdfSummary"
+  [showExpandColumn]="false"
+  [allowMergeToggle]="false"
+></app-report-table-group>
+
+  </div>
+</div>
+<!-- ✅ 顯示 PDF 摘要文字 -->
+<div *ngIf="pdfSummary?.length" class="mt-4 border-t pt-3 text-sm text-red-700 font-medium">
+  <div *ngFor="let line of pdfSummary">{{ line }}</div>
+</div>

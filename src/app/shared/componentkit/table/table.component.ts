@@ -52,6 +52,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() showCaption = true;                                                  // 是否顯示 Caption
   // Header(左) 相關
   @Input() showHeader = true;                 // 是否顯示 Header
+  @Input() showReportMode = true;                 // 是否顯示 匯出按鈕
   @Input() showInsert = false;                // 是否顯示 Insert新增按鈕
   @Input() insertRowData = false;             // 預設新增模式 (關聯：需要加入dataKey, dataChange)
   @Input() defaultInsertData: any = {};       // 預設新增資料 (可選，預設為所有資料為null)
@@ -132,6 +133,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
         const dataLength = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
         if (dataLength > 0) {
           this.calculateTotalPages(); // 計算總頁數
+        } else {
+          this.dt.totalRecords = 0;
         }
         this.selectionChange.emit(this.selectedItems);
       });
