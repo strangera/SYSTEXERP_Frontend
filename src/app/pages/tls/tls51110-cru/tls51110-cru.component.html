@@ -1,1 +1,82 @@
-<p>tls51110-cru works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1" />
+    <app-button btnType="back" (click)="onCancel()" />
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            label="年月"
+            calendarType="dateMonthOne"
+            controlName="YYYYMM"
+            [control]="dataForm.controls.YYYYMM"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="品牌"
+            controlName="LOGO_No"
+            [options]="LOGO_No_Option"
+            optionLabel="label"
+            optionValue="No"
+            [control]="dataForm.controls.LOGO_No"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            [useGrouping]="false"
+            label="預算"
+            controlName="BUDGET"
+            [control]="dataForm.controls.BUDGET"
+            [submitted]="submitted"
+          ></app-input-number>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            [useGrouping]="false"
+            label="成本"
+            controlName="BUDGET_Cost"
+            [control]="dataForm.controls.BUDGET_Cost"
+            [submitted]="submitted"
+          ></app-input-number>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="審核狀態"
+            controlName="BUD_Status"
+            [options]="BUD_Status_Option"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.BUD_Status"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="備註"
+            controlName="BUD_Remark"
+            [control]="dataForm.controls.BUD_Remark"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+
+      <div
+        *ngIf="!isFormReadable"
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit"></app-button>
+      </div>
+    </form>
+  </p-panel>
+</div>
