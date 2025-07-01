@@ -233,6 +233,8 @@ export interface CommissionItem {
   annualPerformanceItems: AnnualPerformanceItem[];
   discountLevelItems: DiscountLevelItem[];
   detailItems: any[];
+
+  currentTab?: string; // 預設為 'discount'
   _status?: 'original' | 'modified' | 'new' | 'deleted';
 
   mainStartDate?: Date | string;  // 對應 TLTTALENT_CHARGEM.cag_bdate

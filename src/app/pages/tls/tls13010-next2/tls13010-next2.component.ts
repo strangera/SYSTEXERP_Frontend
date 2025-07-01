@@ -688,6 +688,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
           fullPointActivity: chargeSetting.cap_saletype2 === 'Y',
           thousandDiscount: chargeSetting.cap_saletype1 === 'Y',
           selectedSettingOption: 'discount',
+          currentTab: 'discount',
           discountSettingItems: this.convertChargeDetails(chargeSetting.ChargeDetails || []),
           annualPerformanceItems: this.convertYearChargeDetails(chargeSetting.YearChargeDetails || []),
           discountLevelItems: this.convertLevelChargeDetails(chargeSetting.LevelChargeDetails || []),
@@ -795,9 +796,56 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   // 切換設置選項卡
   changeSettingTab(tab: string): void {
+    console.log('🔄 切換標籤，從', this.selectedSettingTab, '到', tab);
+
+    // 🎯 重要：切換前先保存當前標籤的資料
+    this.saveCurrentTabDataBeforeSwitch();
+
     this.selectedSettingTab = tab;
     this.updateDetailColumns();
     this.updateDetailItemsForDisplay();
+  }
+
+  // 🎯 新增：切換標籤前保存當前資料
+  private saveCurrentTabDataBeforeSwitch(): void {
+    console.log('💾 切換標籤前保存資料，當前標籤:', this.selectedSettingTab);
+
+    this.commissionData.forEach((commissionItem, index) => {
+      if (commissionItem.detailItems && commissionItem.detailItems.length > 0) {
+        console.log(`💾 保存項目 ${index} 的 detailItems 到對應陣列`);
+
+        // 根據當前標籤類型，將 detailItems 同步回對應的陣列
+        switch (this.selectedSettingTab) {
+          case 'discount':
+            // 🎯 重要：完整替換，不是 push
+            commissionItem.discountSettingItems = commissionItem.detailItems.map(item => ({
+              ...item,
+              _status: item._status || (this.hasItemId(item) ? 'original' : 'new')
+            }));
+            console.log(`✅ 已保存折扣設定 ${commissionItem.discountSettingItems.length} 筆`);
+            break;
+
+          case 'annual':
+            commissionItem.annualPerformanceItems = commissionItem.detailItems.map(item => ({
+              ...item,
+              _status: item._status || (this.hasItemId(item) ? 'original' : 'new')
+            }));
+            console.log(`✅ 已保存年度業績 ${commissionItem.annualPerformanceItems.length} 筆`);
+            break;
+
+          case 'level':
+            commissionItem.discountLevelItems = commissionItem.detailItems.map(item => ({
+              ...item,
+              _status: item._status || (this.hasItemId(item) ? 'original' : 'new')
+            }));
+            console.log(`✅ 已保存層級抽成 ${commissionItem.discountLevelItems.length} 筆`);
+            break;
+        }
+      }
+    });
+
+    // 🎯 立即保存到 workflow
+    this.saveToWorkflow();
   }
 
   // 更新詳情列定義
@@ -819,7 +867,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   // 獲取當前設置類型下的數據項
   getCurrentItems(rowData: CommissionItem): any[] {
-    switch (this.selectedSettingTab) {
+    const currentTab = rowData.currentTab || 'discount';
+
+    switch (currentTab) {
       case 'discount':
         return rowData.discountSettingItems.filter(i => i._status !== 'deleted');
       case 'annual':
@@ -833,7 +883,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   // 添加新項目
   addDetailItem(rowData: CommissionItem): void {
-    switch (this.selectedSettingTab) {
+    const currentTab = rowData.currentTab || 'discount';
+
+    switch (currentTab) {
       case 'discount':
         this.addDiscountSettingItem(rowData);
         break;
@@ -844,7 +896,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         this.addDiscountLevelItem(rowData);
         break;
     }
-    this.updateDetailItemsForDisplay();
+
+    this.updateSingleItemDetailDisplay(rowData);
     this.saveCommissionDataToWorkflow();
   }
 
@@ -883,72 +936,101 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     console.log('🔄 更新顯示資料，當前選項卡:', this.selectedSettingTab);
 
     this.commissionData.forEach((item, index) => {
-      // 清空當前 detailItems
-      item.detailItems = [];
+      // 🎯 重要：不要直接清空，先檢查是否需要更新
+      const shouldUpdateFromSource = this.shouldUpdateDetailItemsFromSource(item);
 
-      // 根據當前選擇的選項卡類型複製對應的詳細數據
-      switch (this.selectedSettingTab) {
-        case 'discount':
-          if (item.discountSettingItems && item.discountSettingItems.length > 0) {
-            // 🎯 只顯示未刪除的項目，並確保所有欄位完整
-            item.discountSettingItems
-              .filter(discountItem => discountItem._status !== 'deleted')
-              .forEach(discountItem => {
-                const displayItem = {
-                  ...discountItem,
-                  cag_barcode: discountItem.cag_barcode || '',
-                  rate: discountItem.rate || 0,
-                  startDate: discountItem.startDate || new Date(),
-                  endDate: discountItem.endDate || new Date()
-                };
-                item.detailItems.push(displayItem);
-              });
-          }
-          break;
+      if (shouldUpdateFromSource) {
+        console.log(`🔄 項目 ${index} 需要從來源更新 detailItems`);
+        item.detailItems = [];
 
-        case 'annual':
-          if (item.annualPerformanceItems && item.annualPerformanceItems.length > 0) {
-            item.annualPerformanceItems
-              .filter(annualItem => annualItem._status !== 'deleted')
-              .forEach(annualItem => {
-                const displayItem = {
-                  ...annualItem,
-                  startDate: annualItem.startDate || new Date(),
-                  endDate: annualItem.endDate || new Date(),
-                  discountAmount: annualItem.discountAmount || 0,
-                  rate: annualItem.rate || 0
-                };
-                item.detailItems.push(displayItem);
-              });
-          }
-          break;
+        // 根據當前選擇的選項卡類型複製對應的詳細數據
+        switch (this.selectedSettingTab) {
+          case 'discount':
+            if (item.discountSettingItems && item.discountSettingItems.length > 0) {
+              item.discountSettingItems
+                .filter(discountItem => discountItem._status !== 'deleted')
+                .forEach(discountItem => {
+                  const displayItem = {
+                    ...discountItem,
+                    cag_barcode: discountItem.cag_barcode || '',
+                    rate: discountItem.rate || 0,
+                    startDate: discountItem.startDate || new Date(),
+                    endDate: discountItem.endDate || new Date()
+                  };
+                  item.detailItems.push(displayItem);
+                });
+            }
+            break;
 
-        case 'level':
-          if (item.discountLevelItems && item.discountLevelItems.length > 0) {
-            item.discountLevelItems
-              .filter(levelItem => levelItem._status !== 'deleted')
-              .forEach(levelItem => {
-                const displayItem = {
-                  ...levelItem,
-                  cag_barcode: levelItem.cag_barcode || '',
-                  startAmount: levelItem.startAmount || 0,
-                  endAmount: levelItem.endAmount || 0,
-                  rate: levelItem.rate || 0
-                };
-                item.detailItems.push(displayItem);
-              });
-          }
-          break;
-      }
+          case 'annual':
+            if (item.annualPerformanceItems && item.annualPerformanceItems.length > 0) {
+              item.annualPerformanceItems
+                .filter(annualItem => annualItem._status !== 'deleted')
+                .forEach(annualItem => {
+                  const displayItem = {
+                    ...annualItem,
+                    startDate: annualItem.startDate || new Date(),
+                    endDate: annualItem.endDate || new Date(),
+                    discountAmount: annualItem.discountAmount || 0,
+                    rate: annualItem.rate || 0
+                  };
+                  item.detailItems.push(displayItem);
+                });
+            }
+            break;
 
-      console.log(`✅ 項目 ${index} 的明細資料已更新，共 ${item.detailItems.length} 筆`);
-      if (item.detailItems.length > 0) {
-        console.log('✅ 明細資料內容:', item.detailItems);
+          case 'level':
+            if (item.discountLevelItems && item.discountLevelItems.length > 0) {
+              item.discountLevelItems
+                .filter(levelItem => levelItem._status !== 'deleted')
+                .forEach(levelItem => {
+                  const displayItem = {
+                    ...levelItem,
+                    cag_barcode: levelItem.cag_barcode || '',
+                    startAmount: levelItem.startAmount || 0,
+                    endAmount: levelItem.endAmount || 0,
+                    rate: levelItem.rate || 0
+                  };
+                  item.detailItems.push(displayItem);
+                });
+            }
+            break;
+        }
+
+        console.log(`✅ 項目 ${index} 的明細資料已更新，共 ${item.detailItems.length} 筆`);
+      } else {
+        console.log(`⚪ 項目 ${index} 的 detailItems 保持不變`);
       }
     });
 
     // 🎯 強制觸發變更檢測
     this.commissionData = [...this.commissionData];
+  }
+
+  // 🎯 新增：判斷是否需要從來源更新 detailItems
+  private shouldUpdateDetailItemsFromSource(commissionItem: CommissionItem): boolean {
+    // 如果 detailItems 為空，一定要更新
+    if (!commissionItem.detailItems || commissionItem.detailItems.length === 0) {
+      return true;
+    }
+
+    // 🎯 可以加入更多邏輯判斷何時需要更新
+    // 例如：檢查來源陣列的長度是否與 detailItems 不同
+    let sourceLength = 0;
+    switch (this.selectedSettingTab) {
+      case 'discount':
+        sourceLength = commissionItem.discountSettingItems?.filter(i => i._status !== 'deleted').length || 0;
+        break;
+      case 'annual':
+        sourceLength = commissionItem.annualPerformanceItems?.filter(i => i._status !== 'deleted').length || 0;
+        break;
+      case 'level':
+        sourceLength = commissionItem.discountLevelItems?.filter(i => i._status !== 'deleted').length || 0;
+        break;
+    }
+
+    // 如果長度不同，需要更新
+    return commissionItem.detailItems.length !== sourceLength;
   }
 
   // 創建折扣設置項目
@@ -1001,6 +1083,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       fullPointActivity: false,
       thousandDiscount: false,
       selectedSettingOption: 'discount',
+      currentTab: 'discount', // 🎯 新增：預設標籤
       discountSettingItems: discountSettingItems,
       annualPerformanceItems: annualPerformanceItems,
       discountLevelItems: discountLevelItems,
@@ -1261,10 +1344,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
 
   // 詳細內容保存
-  nDetailSave(event: { oldData: any, newData: any, parentData: any }): void {
+  onDetailSave(event: { oldData: any, newData: any, parentData: any }): void {
     console.log('💾 明細表格儲存事件:', event);
-    // console.log('💾 舊資料:', this.extractRelevantFields(event.oldData));
-    // console.log('💾 新資料:', this.extractRelevantFields(event.newData));
 
     const { oldData, newData, parentData } = event;
 
@@ -1296,16 +1377,23 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     // 🎯 重要：立即同步回主資料結構
     this.syncDetailBackToSource(newData, parentData);
 
-    // 🎯 強制更新顯示資料
-    this.updateDetailItemsForDisplay();
+    // 🎯 重要：也要同步更新 detailItems 中的對應項目
+    this.syncToDetailItems(newData, parentData);
 
     // 🎯 立即保存到暫存
     this.saveToWorkflow();
 
     console.log('💾 明細表格儲存完成，當前狀態:', newData._status);
-    // console.log('💾 明細表格儲存完成，最終資料:', this.extractRelevantFields(newData));
   }
 
+  // 🎯 新增：同步更新 detailItems
+  private syncToDetailItems(detailData: any, parentData: CommissionItem): void {
+    const detailIndex = parentData.detailItems.findIndex(item => item.id === detailData.id);
+    if (detailIndex > -1) {
+      parentData.detailItems[detailIndex] = { ...detailData };
+      console.log(`✅ 已同步更新 detailItems [${detailIndex}]`);
+    }
+  }
   private logFieldChanges(oldData: any, newData: any): void {
     let fieldsToCheck: string[] = [];
 
@@ -1577,9 +1665,129 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   onDetailTabChange(event: { rowData: any, tabId: string }) {
     const { rowData, tabId } = event;
-    this.selectedSettingTab = tabId;
-    this.updateDetailColumns();
-    this.updateDetailItemsForDisplay();
+
+    console.log('🔄 內層標籤變更:', {
+      itemId: rowData.id,
+      from: rowData.currentTab || 'discount',
+      to: tabId
+    });
+
+    // 🎯 重要：先保存當前項目當前標籤的資料
+    this.saveItemTabDataBeforeSwitch(rowData);
+
+    // 🎯 關鍵：只更新該項目的標籤狀態，不影響全域
+    rowData.currentTab = tabId;
+
+    // 🎯 更新該項目的顯示資料
+    this.updateSingleItemDetailDisplay(rowData);
+  }
+
+  // 🎯 新增：保存單一項目的標籤資料
+  private saveItemTabDataBeforeSwitch(commissionItem: CommissionItem): void {
+    const currentTab = commissionItem.currentTab || 'discount';
+    console.log('💾 保存項目標籤資料，項目ID:', commissionItem.id, '當前標籤:', currentTab);
+
+    if (commissionItem.detailItems && commissionItem.detailItems.length > 0) {
+      // 🎯 關鍵：只保存屬於當前類型的項目
+      const currentTypeItems = commissionItem.detailItems.filter(item =>
+        !item._originalType || item._originalType === currentTab
+      );
+
+      switch (currentTab) {
+        case 'discount':
+          commissionItem.discountSettingItems = currentTypeItems.map(item => ({
+            id: item.id,
+            selected: item.selected || false,
+            cag_barcode: item.cag_barcode || '',
+            startDate: item.startDate || new Date(),
+            endDate: item.endDate || new Date(),
+            rate: item.rate || 0,
+            _status: item._status || (this.hasItemId(item) ? 'original' : 'new')
+          }));
+          break;
+
+        case 'annual':
+          commissionItem.annualPerformanceItems = currentTypeItems.map(item => ({
+            id: item.id,
+            selected: item.selected || false,
+            startDate: item.startDate || new Date(),
+            endDate: item.endDate || new Date(),
+            discountAmount: item.discountAmount || 0,
+            rate: item.rate || 0,
+            _status: item._status || (this.hasItemId(item) ? 'original' : 'new')
+          }));
+          break;
+
+        case 'level':
+          commissionItem.discountLevelItems = currentTypeItems.map(item => ({
+            id: item.id,
+            selected: item.selected || false,
+            cag_barcode: item.cag_barcode || '',
+            startAmount: item.startAmount || 0,
+            endAmount: item.endAmount || 0,
+            rate: item.rate || 0,
+            _status: item._status || (this.hasItemId(item) ? 'original' : 'new')
+          }));
+          break;
+      }
+    }
+
+    // 🎯 立即保存到 workflow
+    this.saveToWorkflow();
+  }
+
+  // 🎯 新增：更新單一項目的顯示資料
+  private updateSingleItemDetailDisplay(commissionItem: CommissionItem): void {
+    const currentTab = commissionItem.currentTab || 'discount';
+    console.log('🔄 更新單一項目顯示資料，項目ID:', commissionItem.id, '標籤:', currentTab);
+
+    commissionItem.detailItems = [];
+
+    switch (currentTab) {
+      case 'discount':
+        if (commissionItem.discountSettingItems && commissionItem.discountSettingItems.length > 0) {
+          commissionItem.discountSettingItems
+            .filter(item => item._status !== 'deleted')
+            .forEach(item => {
+              const displayItem = {
+                ...item,
+                _originalType: 'discount'
+              };
+              commissionItem.detailItems.push(displayItem);
+            });
+        }
+        break;
+
+      case 'annual':
+        if (commissionItem.annualPerformanceItems && commissionItem.annualPerformanceItems.length > 0) {
+          commissionItem.annualPerformanceItems
+            .filter(item => item._status !== 'deleted')
+            .forEach(item => {
+              const displayItem = {
+                ...item,
+                _originalType: 'annual'
+              };
+              commissionItem.detailItems.push(displayItem);
+            });
+        }
+        break;
+
+      case 'level':
+        if (commissionItem.discountLevelItems && commissionItem.discountLevelItems.length > 0) {
+          commissionItem.discountLevelItems
+            .filter(item => item._status !== 'deleted')
+            .forEach(item => {
+              const displayItem = {
+                ...item,
+                _originalType: 'level'
+              };
+              commissionItem.detailItems.push(displayItem);
+            });
+        }
+        break;
+    }
+
+    console.log(`✅ 項目 ${commissionItem.id} 的明細資料已更新，共 ${commissionItem.detailItems.length} 筆`);
   }
 
   // 批次刪除處理
