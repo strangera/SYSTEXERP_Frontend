@@ -608,7 +608,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         this.dataLoaded = true;
         this.loading = false;
 
-        // 儲存到暫存
+        // 🎯 重要：載入完成後立即更新顯示並保存
+        this.updateDetailItemsForDisplay();
         this.saveCommissionDataToWorkflow();
       },
       error: (error) => {
@@ -879,6 +880,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   updateDetailItemsForDisplay(): void {
+    console.log('🔄 更新顯示資料，當前選項卡:', this.selectedSettingTab);
+
     this.commissionData.forEach((item, index) => {
       // 清空當前 detailItems
       item.detailItems = [];
@@ -887,27 +890,65 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       switch (this.selectedSettingTab) {
         case 'discount':
           if (item.discountSettingItems && item.discountSettingItems.length > 0) {
-            item.discountSettingItems.forEach(discountItem => {
-              item.detailItems.push({ ...discountItem });
-            });
+            // 🎯 只顯示未刪除的項目，並確保所有欄位完整
+            item.discountSettingItems
+              .filter(discountItem => discountItem._status !== 'deleted')
+              .forEach(discountItem => {
+                const displayItem = {
+                  ...discountItem,
+                  cag_barcode: discountItem.cag_barcode || '',
+                  rate: discountItem.rate || 0,
+                  startDate: discountItem.startDate || new Date(),
+                  endDate: discountItem.endDate || new Date()
+                };
+                item.detailItems.push(displayItem);
+              });
           }
           break;
+
         case 'annual':
           if (item.annualPerformanceItems && item.annualPerformanceItems.length > 0) {
-            item.annualPerformanceItems.forEach(annualItem => {
-              item.detailItems.push({ ...annualItem });
-            });
+            item.annualPerformanceItems
+              .filter(annualItem => annualItem._status !== 'deleted')
+              .forEach(annualItem => {
+                const displayItem = {
+                  ...annualItem,
+                  startDate: annualItem.startDate || new Date(),
+                  endDate: annualItem.endDate || new Date(),
+                  discountAmount: annualItem.discountAmount || 0,
+                  rate: annualItem.rate || 0
+                };
+                item.detailItems.push(displayItem);
+              });
           }
           break;
+
         case 'level':
           if (item.discountLevelItems && item.discountLevelItems.length > 0) {
-            item.discountLevelItems.forEach(levelItem => {
-              item.detailItems.push({ ...levelItem });
-            });
+            item.discountLevelItems
+              .filter(levelItem => levelItem._status !== 'deleted')
+              .forEach(levelItem => {
+                const displayItem = {
+                  ...levelItem,
+                  cag_barcode: levelItem.cag_barcode || '',
+                  startAmount: levelItem.startAmount || 0,
+                  endAmount: levelItem.endAmount || 0,
+                  rate: levelItem.rate || 0
+                };
+                item.detailItems.push(displayItem);
+              });
           }
           break;
       }
+
+      console.log(`✅ 項目 ${index} 的明細資料已更新，共 ${item.detailItems.length} 筆`);
+      if (item.detailItems.length > 0) {
+        console.log('✅ 明細資料內容:', item.detailItems);
+      }
     });
+
+    // 🎯 強制觸發變更檢測
+    this.commissionData = [...this.commissionData];
   }
 
   // 創建折扣設置項目
@@ -1142,6 +1183,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   private normalizeValue(value: any): string {
     if (value === null || value === undefined) return '';
     if (typeof value === 'boolean') return value.toString();
+    if (typeof value === 'number') return value.toString();
+    if (value instanceof Date) return value.getTime().toString();
     if (typeof value === 'string') return value.trim();
     return String(value);
   }
@@ -1177,55 +1220,292 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   onDropdownChange(event: { rowData: any, field: string, newValue: any, oldValue: any }): void {
     console.log('🔄 下拉選單變更:', event);
 
-    // 🎯 如果是明細項目的變更，直接更新該項目狀態
-    if (event.rowData._status === 'original') {
-      event.rowData._status = 'modified';
+    const { rowData, field, newValue, oldValue } = event;
+
+    // 🎯 更新資料
+    rowData[field] = newValue;
+
+    // 🎯 如果是明細項目的變更，標記狀態
+    if (rowData._status === 'original' && newValue !== oldValue) {
+      rowData._status = 'modified';
+      console.log(`📝 下拉選單變更，標記為 modified: ${field} = ${newValue}`);
+    } else if (!rowData._status) {
+      rowData._status = 'new';
     }
 
+    // 🎯 重要：如果是內層表格的下拉變更，需要找到父項目並同步
+    const parentData = this.findParentCommissionItem(rowData);
+    if (parentData) {
+      this.syncDetailBackToSource(rowData, parentData);
+    }
+
+    // 🎯 立即保存
     this.saveToWorkflow();
   }
 
+
+
+  private findParentCommissionItem(detailData: any): CommissionItem | null {
+    for (const commissionItem of this.commissionData) {
+      // 檢查各個明細陣列
+      const foundInDiscount = commissionItem.discountSettingItems.some(item => item.id === detailData.id);
+      const foundInAnnual = commissionItem.annualPerformanceItems.some(item => item.id === detailData.id);
+      const foundInLevel = commissionItem.discountLevelItems.some(item => item.id === detailData.id);
+
+      if (foundInDiscount || foundInAnnual || foundInLevel) {
+        return commissionItem;
+      }
+    }
+    return null;
+  }
+
+
   // 詳細內容保存
-  onDetailSave(event: { oldData: any, newData: any, parentData: any }): void {
+  nDetailSave(event: { oldData: any, newData: any, parentData: any }): void {
     console.log('💾 明細表格儲存事件:', event);
+    // console.log('💾 舊資料:', this.extractRelevantFields(event.oldData));
+    // console.log('💾 新資料:', this.extractRelevantFields(event.newData));
 
     const { oldData, newData, parentData } = event;
+
+    // 🎯 重要：確保 newData 有正確的 ID
+    if (!newData.id) {
+      newData.id = oldData.id || this.generateTempId();
+    }
+
+    // 🎯 詳細記錄每個欄位的變更
+    this.logFieldChanges(oldData, newData);
 
     // 🎯 檢查明細項目是否有變更
     const hasDetailChanges = this.hasDetailDataChanges(oldData, newData);
 
-    if (hasDetailChanges && oldData._status === 'original') {
-      newData._status = 'modified';
-      console.log(`📝 明細項目有變更，標記為 modified`);
-    } else if (!newData._status && !this.hasItemId(newData)) {
-      newData._status = 'new';
-      console.log(`🆕 明細項目是新項目，標記為 new`);
+    // 🎯 重要：即使沒有變更也要確保狀態正確
+    if (hasDetailChanges || !newData._status) {
+      if (oldData._status === 'original' && hasDetailChanges) {
+        newData._status = 'modified';
+        console.log(`📝 明細項目有變更，標記為 modified`);
+      } else if (!newData._status || newData._status === 'new') {
+        newData._status = newData._status || 'new';
+        console.log(`🆕 明細項目標記為 ${newData._status}`);
+      }
     }
 
-    // 🎯 同步回主資料結構
-    this.syncDetailItemsToSource(parentData);
+    // 🎯 確保所有必要欄位都有值
+    this.ensureDetailFieldValues(newData);
+
+    // 🎯 重要：立即同步回主資料結構
+    this.syncDetailBackToSource(newData, parentData);
+
+    // 🎯 強制更新顯示資料
     this.updateDetailItemsForDisplay();
+
+    // 🎯 立即保存到暫存
     this.saveToWorkflow();
+
+    console.log('💾 明細表格儲存完成，當前狀態:', newData._status);
+    // console.log('💾 明細表格儲存完成，最終資料:', this.extractRelevantFields(newData));
+  }
+
+  private logFieldChanges(oldData: any, newData: any): void {
+    let fieldsToCheck: string[] = [];
+
+    switch (this.selectedSettingTab) {
+      case 'discount':
+        fieldsToCheck = ['cag_barcode', 'startDate', 'endDate', 'rate'];
+        break;
+      case 'annual':
+        fieldsToCheck = ['startDate', 'endDate', 'discountAmount', 'rate'];
+        break;
+      case 'level':
+        fieldsToCheck = ['cag_barcode', 'startAmount', 'endAmount', 'rate'];
+        break;
+    }
+
+    console.log('🔍 欄位變更檢查:');
+    fieldsToCheck.forEach(field => {
+      const oldValue = oldData[field];
+      const newValue = newData[field];
+
+      if (this.normalizeValue(oldValue) !== this.normalizeValue(newValue)) {
+        console.log(`🔄 欄位變更 ${field}: "${oldValue}" → "${newValue}"`);
+      } else {
+        console.log(`⚪ 欄位無變更 ${field}: "${oldValue}"`);
+      }
+    });
+  }
+
+
+  private ensureDetailFieldValues(detailData: any): void {
+    // console.log('🔧 確保欄位完整性，處理前:', this.extractRelevantFields(detailData));
+
+    switch (this.selectedSettingTab) {
+      case 'discount':
+        // 確保折扣設定的所有欄位都有值
+        if (detailData.cag_barcode === undefined || detailData.cag_barcode === null) {
+          detailData.cag_barcode = '';
+        }
+        if (detailData.rate === undefined || detailData.rate === null || detailData.rate === '') {
+          detailData.rate = 0;
+        } else {
+          detailData.rate = Number(detailData.rate);
+        }
+        if (!detailData.startDate) {
+          detailData.startDate = this.contractInfoData[0]?.tlt_bdate
+            ? new Date(this.contractInfoData[0].tlt_bdate)
+            : new Date();
+        }
+        if (!detailData.endDate) {
+          detailData.endDate = this.contractInfoData[0]?.tlt_edate
+            ? new Date(this.contractInfoData[0].tlt_edate)
+            : new Date();
+        }
+        break;
+
+      case 'annual':
+        // 確保年度業績的所有欄位都有值
+        if (!detailData.startDate) {
+          detailData.startDate = new Date();
+        }
+        if (!detailData.endDate) {
+          detailData.endDate = new Date();
+        }
+        if (detailData.discountAmount === undefined || detailData.discountAmount === null || detailData.discountAmount === '') {
+          detailData.discountAmount = 0;
+        } else {
+          detailData.discountAmount = Number(detailData.discountAmount);
+        }
+        if (detailData.rate === undefined || detailData.rate === null || detailData.rate === '') {
+          detailData.rate = 0;
+        } else {
+          detailData.rate = Number(detailData.rate);
+        }
+        break;
+
+      case 'level':
+        // 確保層級抽成的所有欄位都有值
+        if (detailData.cag_barcode === undefined || detailData.cag_barcode === null) {
+          detailData.cag_barcode = '';
+        }
+        if (detailData.startAmount === undefined || detailData.startAmount === null || detailData.startAmount === '') {
+          detailData.startAmount = 0;
+        } else {
+          detailData.startAmount = Number(detailData.startAmount);
+        }
+        if (detailData.endAmount === undefined || detailData.endAmount === null || detailData.endAmount === '') {
+          detailData.endAmount = 0;
+        } else {
+          detailData.endAmount = Number(detailData.endAmount);
+        }
+        if (detailData.rate === undefined || detailData.rate === null || detailData.rate === '') {
+          detailData.rate = 0;
+        } else {
+          detailData.rate = Number(detailData.rate);
+        }
+        break;
+    }
+
+    // console.log('🔧 確保欄位完整性，處理後:', this.extractRelevantFields(detailData));
+  }
+
+  private syncDetailBackToSource(detailData: any, parentData: CommissionItem): void {
+    console.log('🔄 同步明細資料回主資料結構:', detailData);
+    console.log('🔄 當前選項卡:', this.selectedSettingTab);
+
+    switch (this.selectedSettingTab) {
+      case 'discount':
+        const discountIndex = parentData.discountSettingItems.findIndex(item => item.id === detailData.id);
+        if (discountIndex > -1) {
+          // 🎯 重要：完整複製所有欄位
+          parentData.discountSettingItems[discountIndex] = {
+            ...parentData.discountSettingItems[discountIndex],
+            ...detailData,
+            cag_barcode: detailData.cag_barcode || '',
+            rate: detailData.rate || 0,
+            startDate: detailData.startDate || new Date(),
+            endDate: detailData.endDate || new Date(),
+            _status: detailData._status || 'original'
+          };
+          console.log(`✅ 已更新折扣設定項目 [${discountIndex}]:`, parentData.discountSettingItems[discountIndex]);
+        }
+        break;
+
+      case 'annual':
+        const annualIndex = parentData.annualPerformanceItems.findIndex(item => item.id === detailData.id);
+        if (annualIndex > -1) {
+          // 🎯 重要：完整複製所有欄位
+          parentData.annualPerformanceItems[annualIndex] = {
+            ...parentData.annualPerformanceItems[annualIndex],
+            ...detailData,
+            startDate: detailData.startDate || new Date(),
+            endDate: detailData.endDate || new Date(),
+            discountAmount: detailData.discountAmount || 0,
+            rate: detailData.rate || 0,
+            _status: detailData._status || 'original'
+          };
+          console.log(`✅ 已更新年度業績項目 [${annualIndex}]:`, parentData.annualPerformanceItems[annualIndex]);
+        }
+        break;
+
+      case 'level':
+        const levelIndex = parentData.discountLevelItems.findIndex(item => item.id === detailData.id);
+        if (levelIndex > -1) {
+          // 🎯 重要：完整複製所有欄位
+          parentData.discountLevelItems[levelIndex] = {
+            ...parentData.discountLevelItems[levelIndex],
+            ...detailData,
+            cag_barcode: detailData.cag_barcode || '',
+            startAmount: detailData.startAmount || 0,
+            endAmount: detailData.endAmount || 0,
+            rate: detailData.rate || 0,
+            _status: detailData._status || 'original'
+          };
+          console.log(`✅ 已更新層級抽成項目 [${levelIndex}]:`, parentData.discountLevelItems[levelIndex]);
+        }
+        break;
+    }
+
+    // 🎯 重要：同步更新主資料陣列中的項目
+    const mainIndex = this.commissionData.findIndex(item => item.id === parentData.id);
+    if (mainIndex > -1) {
+      this.commissionData[mainIndex] = { ...parentData };
+      console.log(`✅ 已同步更新主資料陣列項目 [${mainIndex}]`);
+    }
   }
 
   private hasDetailDataChanges(oldData: any, newData: any): boolean {
+    console.log('🔍 檢查明細資料變更:', { oldData, newData, selectedTab: this.selectedSettingTab });
+
+    let fieldsToCheck: string[] = [];
+
     // 根據當前的設定類型檢查不同欄位
     switch (this.selectedSettingTab) {
       case 'discount':
-        return ['cag_barcode', 'startDate', 'endDate', 'rate'].some(field =>
-          this.normalizeValue(oldData[field]) !== this.normalizeValue(newData[field])
-        );
+        fieldsToCheck = ['cag_barcode', 'startDate', 'endDate', 'rate'];
+        break;
       case 'annual':
-        return ['startDate', 'endDate', 'discountAmount', 'rate'].some(field =>
-          this.normalizeValue(oldData[field]) !== this.normalizeValue(newData[field])
-        );
+        fieldsToCheck = ['startDate', 'endDate', 'discountAmount', 'rate'];
+        break;
       case 'level':
-        return ['cag_barcode', 'startAmount', 'endAmount', 'rate'].some(field =>
-          this.normalizeValue(oldData[field]) !== this.normalizeValue(newData[field])
-        );
+        fieldsToCheck = ['cag_barcode', 'startAmount', 'endAmount', 'rate'];
+        break;
       default:
         return false;
     }
+
+    const hasChanges = fieldsToCheck.some(field => {
+      const oldValue = this.normalizeValue(oldData[field]);
+      const newValue = this.normalizeValue(newData[field]);
+      const changed = oldValue !== newValue;
+
+      if (changed) {
+        console.log(`🔍 欄位 ${field} 有變更: "${oldValue}" → "${newValue}"`);
+      }
+
+      return changed;
+    });
+
+    console.log('🔍 檢查結果:', hasChanges ? '有變更' : '無變更');
+    return hasChanges;
   }
 
   // 詳細內容取消
