@@ -36,6 +36,34 @@ export class Tls51070Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLS51070_Detail`, body);
   }
 
+  // ---圖片處理---
+
+  //查詢圖片
+  queryImage(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/Image/queryImage`, body);
+  }
+
+  //上傳圖片
+  uploadImages(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/Image/uploadImages`, body);
+  }
+
+  //下載圖片
+  downloadImage(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/Image/downloadImage`, body);
+  }
+
+  //刪除圖片
+  deleteImage(body: any): Observable<any> {
+    return this.http.delete<any>(`${environment.ApiUrl}/Image/deleteImage`, body);
+  }
+
+  downloadImage2(path: string): Observable<Blob> {
+  return this.http.get(`${environment.ApiUrl}/${path}`, {
+    responseType: 'blob'
+  });
+}
+
   // --- 標籤檔 ---
 
   //取得標籤檔資料
