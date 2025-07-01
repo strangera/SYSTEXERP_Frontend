@@ -1408,107 +1408,107 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     return this.showOnlySelected ? '顯示全部項目' : '只顯示已勾選';
   }
 
-  debugCheckSavedData(): void {
-    console.log('=== 🔍 暫存資料檢查 ===');
+  // debugCheckSavedData(): void {
+  //   console.log('=== 🔍 暫存資料檢查 ===');
 
-    // 1. 檢查目前選中的項目
-    const selectedItems: any[] = [];
-    Object.keys(this.originalFareData).forEach(capType => {
-      const selected = this.originalFareData[capType].filter(item => item.is_selected);
-      if (selected.length > 0) {
-        selectedItems.push(...selected.map(item => ({
-          cap_type: capType,
-          cap_item: item.cap_item,
-          cap_name: item.cap_name,
-          is_selected: item.is_selected,
-          _status: item._status
-        })));
-      }
-    });
+  //   // 1. 檢查目前選中的項目
+  //   const selectedItems: any[] = [];
+  //   Object.keys(this.originalFareData).forEach(capType => {
+  //     const selected = this.originalFareData[capType].filter(item => item.is_selected);
+  //     if (selected.length > 0) {
+  //       selectedItems.push(...selected.map(item => ({
+  //         cap_type: capType,
+  //         cap_item: item.cap_item,
+  //         cap_name: item.cap_name,
+  //         is_selected: item.is_selected,
+  //         _status: item._status
+  //       })));
+  //     }
+  //   });
 
-    console.log('📋 目前選中項目:', selectedItems);
+  //   console.log('📋 目前選中項目:', selectedItems);
 
-    // 2. 檢查工作流程中的暫存
-    const savedData = this.contractFlowService.getStepData(WorkflowStep.DEDUCTION);
-    console.log('💾 工作流程暫存:', savedData);
-    console.log('💾 暫存資料類型:', Array.isArray(savedData) ? '陣列' : typeof savedData);
+  //   // 2. 檢查工作流程中的暫存
+  //   const savedData = this.contractFlowService.getStepData(WorkflowStep.DEDUCTION);
+  //   console.log('💾 工作流程暫存:', savedData);
+  //   console.log('💾 暫存資料類型:', Array.isArray(savedData) ? '陣列' : typeof savedData);
 
-    if (Array.isArray(savedData)) {
-      const savedSelected = savedData.filter(item => item.is_selected);
-      console.log('💾 暫存中選中的項目:', savedSelected);
-    }
+  //   if (Array.isArray(savedData)) {
+  //     const savedSelected = savedData.filter(item => item.is_selected);
+  //     console.log('💾 暫存中選中的項目:', savedSelected);
+  //   }
 
-    // 3. 檢查 sessionStorage
-    const sessionData = sessionStorage.getItem('TLS13010_CONTRACT_FLOW');
-    if (sessionData) {
-      const parsed = JSON.parse(sessionData);
-      console.log('🗄️ SessionStorage step2:', parsed.contractData?.step2);
-    }
+  //   // 3. 檢查 sessionStorage
+  //   const sessionData = sessionStorage.getItem('TLS13010_CONTRACT_FLOW');
+  //   if (sessionData) {
+  //     const parsed = JSON.parse(sessionData);
+  //     console.log('🗄️ SessionStorage step2:', parsed.contractData?.step2);
+  //   }
 
-    this.messageService.infoBubble(
-      `選中 ${selectedItems.length} 個項目，暫存${savedData ? '有資料' : '無資料'}`
-    );
-  }
+  //   this.messageService.infoBubble(
+  //     `選中 ${selectedItems.length} 個項目，暫存${savedData ? '有資料' : '無資料'}`
+  //   );
+  // }
 
-  debugStatusDistribution(): void {
-    console.log('=== 🔍 狀態分布檢查 ===');
+  // debugStatusDistribution(): void {
+  //   console.log('=== 🔍 狀態分布檢查 ===');
 
-    Object.keys(this.originalFareData).forEach(capType => {
-      const items = this.originalFareData[capType];
-      const statusCount = {
-        no_status: 0,
-        original: 0,
-        new: 0,
-        modified: 0,
-        deleted: 0
-      };
+  //   Object.keys(this.originalFareData).forEach(capType => {
+  //     const items = this.originalFareData[capType];
+  //     const statusCount = {
+  //       no_status: 0,
+  //       original: 0,
+  //       new: 0,
+  //       modified: 0,
+  //       deleted: 0
+  //     };
 
-      const selectedItems: any[] = [];
+  //     const selectedItems: any[] = [];
 
-      items.forEach(item => {
-        const status = item._status || 'no_status';
-        statusCount[status]++;
+  //     items.forEach(item => {
+  //       const status = item._status || 'no_status';
+  //       statusCount[status]++;
 
-        if (item.is_selected) {
-          selectedItems.push({
-            cap_item: item.cap_item,
-            status: item._status || 'no_status'
-          });
-        }
-      });
+  //       if (item.is_selected) {
+  //         selectedItems.push({
+  //           cap_item: item.cap_item,
+  //           status: item._status || 'no_status'
+  //         });
+  //       }
+  //     });
 
-      if (items.length > 0) {
-        console.log(`📊 ${capType} 類型狀態分布:`, statusCount);
-        console.log(`✅ ${capType} 選中項目:`, selectedItems);
-      }
-    });
+  //     if (items.length > 0) {
+  //       console.log(`📊 ${capType} 類型狀態分布:`, statusCount);
+  //       console.log(`✅ ${capType} 選中項目:`, selectedItems);
+  //     }
+  //   });
 
-    this.messageService.infoBubble('狀態分布已輸出到 console');
-  }
+  //   this.messageService.infoBubble('狀態分布已輸出到 console');
+  // }
 
-  debugCheckIds(): void {
-    console.log('=== 🔍 ID 檢查 ===');
+  // debugCheckIds(): void {
+  //   console.log('=== 🔍 ID 檢查 ===');
 
-    Object.keys(this.originalFareData).forEach(capType => {
-      const items = this.originalFareData[capType];
+  //   Object.keys(this.originalFareData).forEach(capType => {
+  //     const items = this.originalFareData[capType];
 
-      if (items.length > 0) {
-        console.log(`📊 ${capType} 類型 ID 檢查:`);
+  //     if (items.length > 0) {
+  //       console.log(`📊 ${capType} 類型 ID 檢查:`);
 
-        items.slice(0, 5).forEach((item, index) => {
-          console.log(`   ${index + 1}. ID: ${item.id} (${typeof item.id}) - ${item.cap_item}`);
-        });
+  //       items.slice(0, 5).forEach((item, index) => {
+  //         console.log(`   ${index + 1}. ID: ${item.id} (${typeof item.id}) - ${item.cap_item}`);
+  //       });
 
-        // 檢查是否有重複 ID
-        const ids = items.map(item => item.id);
-        const uniqueIds = new Set(ids);
+  //       // 檢查是否有重複 ID
+  //       const ids = items.map(item => item.id);
+  //       const uniqueIds = new Set(ids);
 
-        if (ids.length !== uniqueIds.size) {
-          console.warn(`⚠️ ${capType} 類型有重複 ID！總數: ${ids.length}, 唯一: ${uniqueIds.size}`);
-        } else {
-          console.log(`✅ ${capType} 類型 ID 唯一性檢查通過`);
-        }
-      }
-    });
-  }
+  //       if (ids.length !== uniqueIds.size) {
+  //         console.warn(`⚠️ ${capType} 類型有重複 ID！總數: ${ids.length}, 唯一: ${uniqueIds.size}`);
+  //       } else {
+  //         console.log(`✅ ${capType} 類型 ID 唯一性檢查通過`);
+  //       }
+  //     }
+  //   });
+  // }
 }

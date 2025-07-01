@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { BaseCommissionCondition, BaseRentHigherCondition, BaseTierCondition, CommissionItem, ConditionDataItem, ConditionItem, ContractInfo, FareItem, FinalData, FixedRentCondition, GraduatedCommissionCondition } from '../tls13010.model';
+import { BaseCommissionCondition, BaseRentHigherCondition, BaseTierCondition, CommissionItem, ConditionDataItem, ConditionItem, ContractInfo, FareItem, FinalData, FixedRentCondition, GraduatedCommissionCondition, Step3DataChangeTracker } from '../tls13010.model';
 import { DataChangeTracker, SubmitDataStructure } from '../tls13010.model';
 
 
@@ -613,14 +613,12 @@ export class ContractFlowService {
     const step2Data = this.getStep2Data();
     const step3Data = this.getStep3Data();
     const step4Data = this.getStep4Data();
-    const dataToDelete = this.getDataToDelete();
 
     console.log('🔍 生成提交資料 - 原始資料檢查:');
     console.log('Step1:', step1Data);
     console.log('Step2:', step2Data);
     console.log('Step3:', step3Data);
     console.log('Step4:', step4Data);
-    console.log('🗑️ DataToDelete:', dataToDelete);
 
     // Step 1: 合約基本資料 (單筆，判斷是新增還是修改)
     const step1Operation = step1Data?.talent_id ? 'UPDATE' : 'INSERT';
@@ -628,8 +626,10 @@ export class ContractFlowService {
     // Step 2: 代扣款資料 (多筆，追蹤變更)
     const step2Changes = DataChangeTracker.generateChangeSummary(step2Data || [], '代扣款設定');
 
-    // Step 3: 抽成設定資料 (多筆，追蹤變更)
-    const step3Changes = DataChangeTracker.generateChangeSummary(step3Data || [], '抽成設定');
+    // Step 3: 抽成設定資料 (多筆，特殊處理 - 4個資料表)
+    const step3Changes = Step3DataChangeTracker.generateStep3ChangeSummary(step3Data || []);
+
+    // Step 4: 條件設定資料 (多筆，追蹤變更)
     const step4Changes = DataChangeTracker.generateChangeSummary(step4Data || [], '條件設定');
 
     // 計算總操作數
@@ -652,14 +652,7 @@ export class ContractFlowService {
           toDelete: step2Changes.data.toDelete
         }
       },
-      step3: {
-        summary: step3Changes.summary,
-        operations: {
-          toInsert: step3Changes.data.toInsert,
-          toUpdate: step3Changes.data.toUpdate,
-          toDelete: step3Changes.data.toDelete
-        }
-      },
+      step3: step3Changes, // 🎯 使用新的 Step3 專用格式
       step4: {
         summary: step4Changes.summary,
         operations: {

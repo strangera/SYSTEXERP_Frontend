@@ -500,23 +500,73 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       // Step 3 資料
       console.log('📊 Step 3 - 抽成設定:');
       console.log('   摘要:', submitDataStructure.step3.summary);
-      if (submitDataStructure.step3.operations.toInsert.length > 0) {
-        console.log('   🟢 要新增的項目 (' + submitDataStructure.step3.operations.toInsert.length + ' 筆):');
-        submitDataStructure.step3.operations.toInsert.forEach((item, index) => {
+
+      // 顯示主表操作
+      if (submitDataStructure.step3.operations.commissionMaster.toInsert.length > 0) {
+        console.log('   🟢 主表要新增的項目 (' + submitDataStructure.step3.operations.commissionMaster.toInsert.length + ' 筆):');
+        submitDataStructure.step3.operations.commissionMaster.toInsert.forEach((item, index) => {
           console.log(`      ${index + 1}.`, item);
         });
       }
-      if (submitDataStructure.step3.operations.toUpdate.length > 0) {
-        console.log('   🟡 要修改的項目 (' + submitDataStructure.step3.operations.toUpdate.length + ' 筆):');
-        submitDataStructure.step3.operations.toUpdate.forEach((item, index) => {
+      if (submitDataStructure.step3.operations.commissionMaster.toUpdate.length > 0) {
+        console.log('   🟡 主表要修改的項目 (' + submitDataStructure.step3.operations.commissionMaster.toUpdate.length + ' 筆):');
+        submitDataStructure.step3.operations.commissionMaster.toUpdate.forEach((item, index) => {
           console.log(`      ${index + 1}.`, item);
         });
       }
-      if (submitDataStructure.step3.operations.toDelete.length > 0) {
-        console.log('   🔴 要刪除的項目 (' + submitDataStructure.step3.operations.toDelete.length + ' 筆):');
-        submitDataStructure.step3.operations.toDelete.forEach((item, index) => {
+      if (submitDataStructure.step3.operations.commissionMaster.toDelete.length > 0) {
+        console.log('   🔴 主表要刪除的項目 (' + submitDataStructure.step3.operations.commissionMaster.toDelete.length + ' 筆):');
+        submitDataStructure.step3.operations.commissionMaster.toDelete.forEach((item, index) => {
           console.log(`      ${index + 1}.`, item);
         });
+      }
+
+      // 顯示折扣設定明細
+      if (submitDataStructure.step3.operations.discountSettings.toInsert.length > 0 ||
+        submitDataStructure.step3.operations.discountSettings.toUpdate.length > 0 ||
+        submitDataStructure.step3.operations.discountSettings.toDelete.length > 0) {
+        console.log('   📋 折扣設定明細:');
+        if (submitDataStructure.step3.operations.discountSettings.toInsert.length > 0) {
+          console.log('      🟢 要新增:', submitDataStructure.step3.operations.discountSettings.toInsert.length, '筆');
+        }
+        if (submitDataStructure.step3.operations.discountSettings.toUpdate.length > 0) {
+          console.log('      🟡 要修改:', submitDataStructure.step3.operations.discountSettings.toUpdate.length, '筆');
+        }
+        if (submitDataStructure.step3.operations.discountSettings.toDelete.length > 0) {
+          console.log('      🔴 要刪除:', submitDataStructure.step3.operations.discountSettings.toDelete.length, '筆');
+        }
+      }
+
+      // 顯示年度業績明細
+      if (submitDataStructure.step3.operations.annualSettings.toInsert.length > 0 ||
+        submitDataStructure.step3.operations.annualSettings.toUpdate.length > 0 ||
+        submitDataStructure.step3.operations.annualSettings.toDelete.length > 0) {
+        console.log('   📈 年度業績明細:');
+        if (submitDataStructure.step3.operations.annualSettings.toInsert.length > 0) {
+          console.log('      🟢 要新增:', submitDataStructure.step3.operations.annualSettings.toInsert.length, '筆');
+        }
+        if (submitDataStructure.step3.operations.annualSettings.toUpdate.length > 0) {
+          console.log('      🟡 要修改:', submitDataStructure.step3.operations.annualSettings.toUpdate.length, '筆');
+        }
+        if (submitDataStructure.step3.operations.annualSettings.toDelete.length > 0) {
+          console.log('      🔴 要刪除:', submitDataStructure.step3.operations.annualSettings.toDelete.length, '筆');
+        }
+      }
+
+      // 顯示層級設定明細
+      if (submitDataStructure.step3.operations.levelSettings.toInsert.length > 0 ||
+        submitDataStructure.step3.operations.levelSettings.toUpdate.length > 0 ||
+        submitDataStructure.step3.operations.levelSettings.toDelete.length > 0) {
+        console.log('   🎯 層級設定明細:');
+        if (submitDataStructure.step3.operations.levelSettings.toInsert.length > 0) {
+          console.log('      🟢 要新增:', submitDataStructure.step3.operations.levelSettings.toInsert.length, '筆');
+        }
+        if (submitDataStructure.step3.operations.levelSettings.toUpdate.length > 0) {
+          console.log('      🟡 要修改:', submitDataStructure.step3.operations.levelSettings.toUpdate.length, '筆');
+        }
+        if (submitDataStructure.step3.operations.levelSettings.toDelete.length > 0) {
+          console.log('      🔴 要刪除:', submitDataStructure.step3.operations.levelSettings.toDelete.length, '筆');
+        }
       }
       console.log('');
 
