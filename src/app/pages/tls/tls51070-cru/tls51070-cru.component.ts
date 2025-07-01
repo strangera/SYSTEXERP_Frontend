@@ -183,6 +183,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   }
 
   // ------圖檔設定主檔 (IMG1001) 編輯表格----------------------------
+  //注意:
+  // POS2004, pluMagno, '' 圖片不可以中文
+  // ------
   files: File[] = [];        // 上傳的檔案
   img1001Data: IMG1001Detail[] = []; // 圖片List editable, readable
   confirmDeleteImages: string[] = []; // 確定刪除的圖片

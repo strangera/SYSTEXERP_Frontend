@@ -36,9 +36,18 @@ export class Tls51070Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLS51070_Detail`, body);
   }
 
+  // --- 標籤檔 ---
+
   //取得標籤檔資料
   getLabelTLS51070(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/getLabelTLS51070`, body);
+  }
+
+  //產生標籤檔資料
+  exportLabel(data: any[]): Observable<string> {
+      return this.http.post(`${environment.ApiUrl}/ExportLabel/ExportLabel`, data, {
+      responseType: 'text'  // 後端回傳的是純文字
+    });
   }
 
   // --- dropDown ---
