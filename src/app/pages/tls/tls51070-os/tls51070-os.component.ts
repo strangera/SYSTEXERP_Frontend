@@ -2,7 +2,6 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { PluLogo } from '../../../shared/models/tls/tls000.model';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 
@@ -194,10 +193,20 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
   deleteLabel(selectedItems: any[]): void {
     if (confirm(`確定要刪除 ${selectedItems.length} 個國際條碼項目嗎？`)) {
       const selectedIds = selectedItems.map(item => item.id);
+
+      // 移除勾選的資料
       this.labelData = this.labelData.filter(item => !selectedIds.includes(item.id));
 
-      console.log('刪除後的標籤資料', this.labelData);
+      // 清除已選項目（外部資料模型）
+      this.selectedItems = [];
+
+      // ✅ 清除 ExpandableEditTableComponent 的內部勾選狀態
+      if (this.labelTable) {
+        this.labelTable.selectedItems = [];
+      }
+
       this.messageService.successBubble(`已刪除標籤資料`);
+      console.log('刪除後的標籤資料', this.labelData);
     }
   }
 
