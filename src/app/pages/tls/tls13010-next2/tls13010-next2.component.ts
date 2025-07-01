@@ -253,6 +253,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   private saveToWorkflow(): void {
     if (this.hasCommissionChanges()) {
+      // 🔧 重要：確保 talent_id 正確設定
+      Step3DataChangeTracker.setCurrentTalentId(this.currentTalentId);
+
       const processedData = this.prepareCommissionDataForSubmit();
       this.contractFlowService.saveStep3Data(processedData);
       console.log('✅ 已暫存抽成資料到工作流程:', processedData);
@@ -524,6 +527,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     if (workflowData.queryRowData?.talent_id) {
       this.currentTalentId = workflowData.queryRowData.talent_id;
       this.currentContractData = workflowData.queryRowData;
+
+      Step3DataChangeTracker.setCurrentTalentId(this.currentTalentId);
 
       const step1Data = this.contractFlowService.getStep1Data();
 
@@ -1408,6 +1413,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       this.messageService.warnBubble('請至少設定一個抽成項目');
       return;
     }
+    Step3DataChangeTracker.setCurrentTalentId(this.currentTalentId);
+
+
     console.log('🧪 測試 Step3 變更追蹤...');
     const step3Changes = Step3DataChangeTracker.generateStep3ChangeSummary(this.commissionData);
     console.log('📊 Step3 變更追蹤結果:', step3Changes);

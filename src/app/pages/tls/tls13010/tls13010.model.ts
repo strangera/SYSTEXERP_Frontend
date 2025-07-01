@@ -992,12 +992,10 @@ export class Step3DataChangeTracker {
 
   // 🎯 輔助方法
   private static hasValidId(item: any): boolean {
-    return item.id &&
-      item.id !== 'temp_' &&
-      !item.id.toString().startsWith('temp_') &&
-      (typeof item.id === 'number' ||
-        (typeof item.id === 'string' && !item.id.startsWith('temp_')));
+    return item.id !== null && item.id !== undefined && item.id !== '';
+    // 移除對 temp_ 的限制，因為前端需要這些 ID 來追蹤狀態
   }
+
 
   private static formatDate(date: any): string {
     if (!date) return '';
