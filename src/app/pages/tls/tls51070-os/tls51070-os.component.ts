@@ -1,20 +1,31 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { PluLogo } from '../../../shared/models/tls/tls000.model';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 
 export interface Label{
   id: number,
-  PLU_MagNO: string, // 商品管理碼
+  PLU_MagNo: string, // 商品管理碼
   PLU_Name: string,// 商品名稱
   Label_Qty: number // 標籤數量
   PLU_SalePrc: number // 商品售價
   PLU_Unit: string,// 商品單位
   PLU_OrgPLUNo: string,// 廠商貨號
-  PLU_NO: string,// 國際條碼
+  PLU_No: string,// 國際條碼
+}
+
+// 標籤檔至少輸入其中一項 檢核
+export function atLeastOneFieldRequired(fields: string[]): ValidatorFn {
+  return (formGroup: AbstractControl): ValidationErrors | null => {
+    const hasAtLeastOne = fields.some(field => {
+      const value = formGroup.get(field)?.value;
+      return value !== null && value !== undefined && value.toString().trim() !== '';
+    });
+
+    return hasAtLeastOne ? null : { atLeastOneRequired: true };
+  };
 }
 
 @Component({
@@ -34,13 +45,15 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
   // 查詢
   queryForm = this.formBuilder.group({
     // PLULOGO  商品品牌設定檔
-    PLU_MagNo: ['', [Validators.required, Validators.maxLength(20)]], // 商品管理碼
-    PLU_No: ['', [Validators.required, Validators.maxLength(20)]], // 國際條碼
-    PLU_OrgPLUNo: ['', [Validators.required, Validators.maxLength(20)]], // 廠商貨號
-    Label_Qty: [], // 標籤數量
+    PLU_MagNo: ['', [Validators.maxLength(20)]], // 商品管理碼
+    PLU_No: ['', [Validators.maxLength(20)]], // 國際條碼
+    PLU_OrgPLUNo: ['', [Validators.maxLength(20)]], // 廠商貨號
+    Label_Qty: [1], // 標籤數量
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
+  }, {
+  validators: atLeastOneFieldRequired(['PLU_MagNo', 'PLU_No', 'PLU_OrgPLUNo']) //至少要填寫其中一項
   });
   // 表格
   // ----------------------------------------------------------------
@@ -51,24 +64,14 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     labelData: Label[] = [];
     // label 展開式表格的欄位定義
     labelColumn: ColumnDef[] = [
-      { field: 'PLU_MagNO', header: '商品管理碼', editable: false, type: 'text' },
+      { field: 'PLU_MagNo', header: '商品管理碼', editable: false, type: 'text' },
       { field: 'PLU_Name', header: '商品名稱', editable: false, type: 'text' },
       { field: 'Label_Qty', header: '標籤數量', editable: true, type: 'number' },
       { field: 'PLU_SalePrc', header: '商品售價', editable: false, type: 'number' },
       { field: 'PLU_Unit', header: '商品單位', editable: false, type: 'text' },
       { field: 'PLU_OrgPLUNo', header: '廠商貨號', editable: false, type: 'text' },
-      { field: 'PLU_NO', header: '國際條碼', editable: false, type: 'text' },
+      { field: 'PLU_No', header: '國際條碼', editable: false, type: 'text' },
     ];
-    // 預設新項目模板
-    defaultNewLabel = {
-      PLU_MagNO: '', // 商品管理碼
-      PLU_Name: '',
-      Label_Qty: 0,
-      PLU_SalePrc: 0,
-      PLU_Unit: '',
-      PLU_OrgPLUNo: '',
-      PLU_NO: ''
-    };
   
     // 展開式表格的載入狀態
     expandlabelLoading = false;
@@ -95,6 +98,13 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
   }
 
   onSubmit(frm: FormGroup) {
+    if (this.queryForm.invalid) {
+      if (this.queryForm.errors?.['atLeastOneRequired']) {
+        this.messageService.errorBubble('請至少填寫「商品管理碼」、「國際條碼」或「廠商貨號」其中一項');
+      }
+      return;
+    }
+
     this.handleSubmit(frm, () => {
       console.log('query condition', frm.value);
       this.loading = false;
@@ -106,15 +116,9 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
             console.log('標籤',apiData);
 
             // 賦值給 labelData（你想顯示的表格資料）
-            const newLabelData = apiData.map((item: any, index: number) => ({
+            const newLabelData = apiData.map((item: any) => ({
               id: this.baseId + 1, // 你原本的表格有使用 id 作為唯一值
-              PLU_MagNO: item.PLU_MagNO,
-              PLU_Name: item.PLU_Name,
-              Label_Qty: item.Label_Qty || 0, // 預設數量為 0
-              PLU_SalePrc: item.PLU_SalePrc,
-              PLU_Unit: item.PLU_Unit,
-              PLU_OrgPLUNo: item.PLU_OrgPLUNo,
-              PLU_NO: item.PLU_NO,
+              ...item
             }));
 
             this.baseId+=1;
@@ -140,12 +144,34 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     });
   }
 
-  isRowSelectable(rowData: PluLogo): boolean {
-    return rowData.CanDel
-  }
-
   onBack() {
     this.router.navigate(['account/TLS/TLS51070']);
+  }
+
+  // 匯出標籤檔
+  exportLabel(){
+    // 將 labelData 的每一筆物件複製一份，並移除 id 屬性
+    const exportData = this.labelData.map(({ id, ...rest }) => rest);
+    this.tls51070Service.exportLabel(exportData)
+      .subscribe((response) => {
+        // 處理匯出完成後的邏輯（如有需要）
+         const result = response;
+        // console.log('匯出標籤檔',result);
+
+        // 建立 blob 對象
+        const bom = '\uFEFF'; // UTF-8 BOM
+        const blob = new Blob([bom + result], { type: 'text/plain;charset=utf-8' });
+
+        // 建立下載連結
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'exportLabel.txt'; // 檔案名稱
+        a.click();
+
+        // 釋放資源
+        window.URL.revokeObjectURL(url);
+    });     
   }
 
   // label 明細檔案操作
@@ -163,35 +189,24 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     console.log('取消主表格編輯:', event);
   }
 
-  // 新增 label
-  addPOSLabel(): void {
-    const newPerson = {
-      ...this.defaultNewLabel,
-      id: this.generateLabelId(this.labelData),
-      details: [] // 確保明細陣列存在
-    };
-
-    this.labelData.push(newPerson);
-
-    // 自動進入編輯模式
-    setTimeout(() => {
-      const index = this.labelData.indexOf(newPerson);
-      if (index >= 0) {
-        this.labelTable.onRowEditInit(newPerson, index);
-      }
-    }, 0);
-  }
-
   //刪除label
-  deleteLabel(): void {
-    if (confirm(`確定要刪除 ${this.selectedItems.length} 個國際條碼項目嗎？`)) {
-      this.selectedItems.forEach(item => {
-        const index = this.labelData.findIndex(d => d.id === item.id);
-        if (index > -1) {
-            this.labelData.splice(index, 1);
-        }
-      });
-      this.messageService.successBubble(`已刪除 ${this.selectedItems.length} 國際條碼`);
+  deleteLabel(selectedItems: any[]): void {
+    if (confirm(`確定要刪除 ${selectedItems.length} 個國際條碼項目嗎？`)) {
+      const selectedIds = selectedItems.map(item => item.id);
+
+      // 移除勾選的資料
+      this.labelData = this.labelData.filter(item => !selectedIds.includes(item.id));
+
+      // 清除已選項目（外部資料模型）
+      this.selectedItems = [];
+
+      // ✅ 清除 ExpandableEditTableComponent 的內部勾選狀態
+      if (this.labelTable) {
+        this.labelTable.selectedItems = [];
+      }
+
+      this.messageService.successBubble(`已刪除標籤資料`);
+      console.log('刪除後的標籤資料', this.labelData);
     }
   }
 
