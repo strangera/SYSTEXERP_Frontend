@@ -73,19 +73,20 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     },
     { field: 'floor_desc', header: '樓層', visible: true },
     { field: 'area_no', header: '區域', visible: true },
-    { field: 'bus_type_name', header: '大分類', visible: true },
+     { field: 'bus_type', header: '大分類編號', visible: true },
+    { field: 'bus_type_name', header: '大分類名稱', visible: true },
     { field: 'bus_class_name', header: '商品類別', visible: true },
     {
       field: 'tlt_bdate',
       header: '合約起日',
       visible: true,
-      format: (value: string) => this.formatYYYYMMDD(value),
+      
     },
     {
       field: 'tlt_edate',
       header: '合約迄日',
       visible: true,
-      format: (value: string) => this.formatYYYYMMDD(value),
+      
     },
     { field: 'tlt_id_desc', header: '合約類型', visible: true },
     { field: 'cag_taxtype', header: '課稅別', visible: true },
@@ -100,7 +101,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     { field: 'cag_barcode_50', header: '5折', visible: true },
     { field: 'cag_barcode_sale', header: '特價', visible: true },
     {
-      field: 'org_id',
+      field: 'org_name',
       header: '組織代碼',
       visible: true,
       format: (value: any) => {
