@@ -1,1 +1,69 @@
-<p class="red-text">待開發</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              label="查詢年月"
+              calendarType="dateMonthOne"
+              [control]="queryForm.controls.YYYYMM2"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="品牌"
+              controlName="LOGO_No"
+              [options]="LOGO_No_Option"
+              optionLabel="label"
+              optionValue="No"
+              [control]="queryForm.controls.LOGO_No"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table
+    [data]="data"
+    [columns]="columns"
+    (edit)="onEdit($event)"
+    [showDelete]="false"
+    (detail)="onDetail($event)"
+    dataKey="id"
+    [multiSortMeta]="[{ field: 'id', order: 1 }]"
+    [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [lazy]="true"
+    [loading]="loading"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    [showExcel]="true"
+    (importExcel)="onImportExcel($event)"
+    [editDisabled]="editDisabled"
+  ></app-table>
+</div>
