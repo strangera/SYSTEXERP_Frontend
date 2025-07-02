@@ -223,7 +223,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
             };
           });
 
-          this.router.navigate(['account/TLS/TLS23110CRU'], {
+          this.router.navigate(['account/tls/tls23110cru'], {
             state: {
               queryFormValue,
               pageSize: this.customPageSize,

@@ -422,7 +422,7 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
 
 
   goToQueryPage(): void {
-    this.router.navigate(['account/TLS/TLS23020']);
+    this.router.navigate(['account/tls/tls23020']);
   }
   getGroupByLabel(field: string | null | undefined): string {
     const map: Record<string, string> = {
