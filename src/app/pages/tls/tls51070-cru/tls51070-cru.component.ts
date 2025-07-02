@@ -717,10 +717,10 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       // 從 img1001Data 中找出對應這個 fileName 的資料
       const match = this.img1001Data.find(img => img.IMG_File === fileName);
 
-      // if (!match) {
-      //   console.warn(`⚠️ 找不到檔名為 ${fileName} 的參考資料，略過`);
-      //   continue;
-      // }
+      if (!match) {
+        console.warn(`⚠️ 找不到檔名為 ${fileName} 的參考資料，略過`);
+        continue;
+      }
 
       const request = {
         IMG_Type: match.IMG_Type,
