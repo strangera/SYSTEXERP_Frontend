@@ -42,4 +42,7 @@ export interface IMG1001Detail {
     "UPD_Date": Date,
     "UPD_USR_No": string,
     "UPD_USR_Name": string,
+
+    // 額外欄位：圖片顯示用
+    "IMG_Url"?: string;
 }

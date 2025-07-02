@@ -43,9 +43,9 @@ export class Tls51070Service {
     return this.http.post<any>(`${environment.ApiUrl}/Image/queryImage`, body);
   }
 
-  //上傳圖片
-  uploadImages(body: any): Observable<any> {
-    return this.http.post<any>(`${environment.ApiUrl}/Image/uploadImages`, body);
+  // 上傳圖片
+  uploadImages(formData: FormData): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/Image/uploadImages`, formData);
   }
 
   //下載圖片
