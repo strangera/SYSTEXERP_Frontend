@@ -6,6 +6,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { TranslateService } from '@ngx-translate/core';
 import { Tls51110Service } from '../../../service/api/tls/tls51110.service';
 import { Subscription } from 'rxjs';
+import { ExcelImportService } from '../../../shared/service/excel-import.service';
 import { UserInfo } from '../../../shared/models/system/userInfo';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 export interface LogoBudget {
@@ -40,7 +41,8 @@ export class TLS51110CRUComponent
   dataForm = this.formBuilder.nonNullable.group({
     id: [0],
     LOGO_No: ['', Validators.required],
-    YYYYMM: ['', Validators.required],
+    YYYYMM: [''],
+    YYYYMM2: ['', Validators.required],
     BUDGET: [0, Validators.required],
     BUDGET_Cost: [0],
     BUD_Status: ['0'], // 預設未審核
@@ -54,6 +56,7 @@ export class TLS51110CRUComponent
   });
 
   LOGO_No_Option: any[] = [];
+
   BUD_Status_Option: any = [
     { value: '0', label: '未審核' },
     { value: '1', label: '已審核' },
@@ -63,6 +66,7 @@ export class TLS51110CRUComponent
   userInfo: UserInfo | null = null;
 
   constructor(
+    private excelImportService: ExcelImportService,
     private validationService: ValidationService,
     private translate: TranslateService,
     private apiService: Tls51110Service,
@@ -83,7 +87,7 @@ export class TLS51110CRUComponent
       next: (res) => {
         this.LOGO_No_Option = res.Data.map((item: LogoOption) => ({
           ...item,
-          label: item.Name,
+          label: `${item.No} - ${item.Name}`,
         }));
       },
       error: (err) => {
@@ -97,9 +101,9 @@ export class TLS51110CRUComponent
       const formValue = frm.getRawValue();
 
       let formattedYYYYMM = '';
-      if (formValue.YYYYMM instanceof Date) {
-        const year = formValue.YYYYMM.getFullYear();
-        const month = ('0' + (formValue.YYYYMM.getMonth() + 1)).slice(-2);
+      if (formValue.YYYYMM2 instanceof Date) {
+        const year = formValue.YYYYMM2.getFullYear();
+        const month = ('0' + (formValue.YYYYMM2.getMonth() + 1)).slice(-2);
         formattedYYYYMM = `${year}${month}`;
       } else if (typeof formValue.YYYYMM === 'string') {
         formattedYYYYMM = formValue.YYYYMM.replace('/', '');
@@ -150,5 +154,13 @@ export class TLS51110CRUComponent
   Read(rowdata: any) {
     this.dataForm.patchValue(rowdata);
     this.dataForm.disable();
+  }
+  onFileChange(event: any) {
+    const file = event.target.files[0];
+    const columns = ['品牌編號', '品牌名稱', '年月(YYYYMM)', '預算', '成本', '備註(100字元)'];
+    this.excelImportService.importExcel(file, columns).then((data) => {
+      console.log('匯入資料', data);
+      // 一筆一筆呼叫 API...
+    });
   }
 }

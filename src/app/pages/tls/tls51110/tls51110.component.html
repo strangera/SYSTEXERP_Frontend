@@ -20,7 +20,7 @@
             <app-calendar
               label="查詢年月"
               calendarType="dateMonthOne"
-              [control]="queryForm.controls.YYYYMM"
+              [control]="queryForm.controls.YYYYMM2"
               [submitted]="submitted"
             ></app-calendar>
           </div>
@@ -51,17 +51,19 @@
   <app-table
     [data]="data"
     [columns]="columns"
-    [showCheckBox]="true"
     (edit)="onEdit($event)"
+    [showDelete]="false"
     (detail)="onDetail($event)"
     dataKey="id"
     [multiSortMeta]="[{ field: 'id', order: 1 }]"
     [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [lazy]="true"
-    (delete)="onDelete($event)"
     [loading]="loading"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
+    [showExcel]="true"
+    (importExcel)="onImportExcel($event)"
+    [editDisabled]="editDisabled"
   ></app-table>
 </div>
