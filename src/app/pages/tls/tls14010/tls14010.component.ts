@@ -33,7 +33,7 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
   queryForm = this.formBuilder.group({
     // TLTTALENT_專櫃主檔+ TLTTALENT_LOCATION_專櫃店位明細檔
     tlt_noList: [[], [Validators.maxLength(12)]], // 專櫃編號
-    tlt_name: ['', [Validators.maxLength(100)]], // 專櫃名稱(品牌) 
+    tlt_name: ['', [Validators.maxLength(100)]], // 專櫃名稱(品牌)
     location_noList: [[], [Validators.maxLength(10)]], // 店位代碼 店位代碼-館別(1)+樓層(2)+區域(1)+流水編號(3)
     tlt_building: [''], // 館別 (SYS3800)
     tlt_floorList: [[]], // 樓層(SYS3900)
@@ -100,7 +100,7 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS14010', 'TLS/TLS14010CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS14010', 'TLS/TLS14010cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 

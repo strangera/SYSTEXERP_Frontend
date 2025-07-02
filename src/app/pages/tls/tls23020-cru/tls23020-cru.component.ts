@@ -16,8 +16,13 @@ import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { PdfService } from '../../../service/basic/pdf.service';
-
-
+type DisplayMode = 'Detail' | 'Summary';
+interface ReportColumn {
+  header: string;
+  field: string;
+  format?: (value: any) => string | number | null;
+  style?: string;
+}
 
 @Component({
   selector: 'app-tls23020-cru',
@@ -33,14 +38,41 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
   data: any[] = [];
   netTotalSum = 0;
   taxTotalSum = 0;
-  displayMode: 'SummaryReport' | 'Report' = 'SummaryReport';
+  displayMode: DisplayMode = 'Detail';
+
+
+  // 下拉選單選項
+  taxableOptions: any[] = [];
+  discountOptions: any[] = [];
+  deductionbigCategoryOptions: any[] = [];
+  floorOptions: any[] = [];
+  BUILDING_NO_Options: any[] = [];
+  commissionTypeOptions: any[] = [];
+  whetherOptions: any[] = [];
+  txnStatusOptions: any[] = [];
+  checkTotalAmount = [
+    { value: 1, label: '是' },
+    { value: 2, label: '否' },
+  ];
+  OrganizationCodeOptions: any[] = [];
+  ECRNoOptions: any[] = []; // 收銀機號下拉選單
+  CounterOptions: any[] = []; // 專櫃選項
+
+
+
   get columns() {
-  if (this.displayMode === 'SummaryReport') {
+  if (this.displayMode === 'Summary') {
     return [
       { field: 'tlt_no', header: '專櫃編號' },
       { field: 'tlt_name', header: '櫃位名稱' },
-      { field: 'TotalAmt', header: '總金額', style: 'text-right', format: this.moneyFormat },
-      { field: 'TotalTxn', header: '總交易筆數', style: 'text-right' }
+      { field: 'TXN_TotSaleAmt', header: '銷售金額', style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_TotNet', header: '未稅金額', style: 'text-right', format: this.moneyFormat },
+     
+
+      { field: 'TXN_TotTax', header: '預購金額', style: 'text-right', format: this.moneyFormat },
+      { field: 'Pre_TotSaleAmt', header: '預購未稅', style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_TotTax', header: '預購稅額', style: 'text-right', format: this.moneyFormat },
+      
     ];
   } else {
     return [
@@ -62,81 +94,64 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
 
 
-    {
-      field: 'PLU_SalePrc', header: '單項售價', visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0'
-    },
-    {
-      field: 'TXN_Net', header: '未稅(免稅)金額', visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0'
-    },
+        {
+          field: 'PLU_SalePrc', header: '單項售價', visible: true,
+          style: 'text-right',
+          format: (val: number) => val?.toLocaleString('en-US') || '0'
+        },
+        {
+          field: 'TXN_Net', header: '未稅(免稅)金額', visible: true,
+          style: 'text-right',
+          format: (val: number) => val?.toLocaleString('en-US') || '0'
+        },
 
 
-    {
-      field: 'TXN_Tax', header: '稅額', visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0'
-    },
-    {
-      field: 'TXN_Disc', header: '折扣金額', visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0'
-    },
+        {
+          field: 'TXN_Tax', header: '稅額', visible: true,
+          style: 'text-right',
+          format: (val: number) => val?.toLocaleString('en-US') || '0'
+        },
+        {
+          field: 'TXN_Disc', header: '折扣金額', visible: true,
+          style: 'text-right',
+          format: (val: number) => val?.toLocaleString('en-US') || '0'
+        },
 
-    {
-      field: 'tlt_id',
-      header: '商品抽成類別',
-      visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.deductionbigCategoryOptions)
-    },
-    {
-      field: 'ORG_TXN_DiscCode', header: '原折扣', visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.discountOptions)
-    }, // 查無該欄位，請確認是否有誤或應移除
-    {
-      field: 'TXN_DiscCode', header: '歸屬折扣', visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.discountOptions)
-    },
+        {
+          field: 'tlt_id',
+          header: '商品抽成類別',
+          visible: true,
+          format: (val: any) => this.getLabelFromOptions(val, this.deductionbigCategoryOptions)
+        },
+        {
+          field: 'ORG_TXN_DiscCode', header: '原折扣', visible: true,
+          format: (val: any) => this.getLabelFromOptions(val, this.discountOptions)
+        }, // 查無該欄位，請確認是否有誤或應移除
+        {
+          field: 'TXN_DiscCode', header: '歸屬折扣', visible: true,
+          format: (val: any) => this.getLabelFromOptions(val, this.discountOptions)
+        },
 
-    {
-      field: 'PLU_TaxType',
-      header: '稅別',
-      visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.taxableOptions)
-    },
-    { field: 'PLU_MagNo', header: '單品編號', visible: true },
+        {
+          field: 'PLU_TaxType',
+          header: '稅別',
+          visible: true,
+          format: (val: any) => this.getLabelFromOptions(val, this.taxableOptions)
+        },
+        { field: 'PLU_MagNo', header: '單品編號', visible: true },
 
-    {
-      field: 'TXN_Status',
-      header: '狀態',
-      visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions)
-    },
-    ];
+        {
+          field: 'TXN_Status',
+          header: '狀態',
+          visible: true,
+          format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions)
+        },
+      ];
+    }
   }
-}
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
   }
-
-  // 下拉選單選項
-  taxableOptions: any[] = [];
-  discountOptions: any[] = [];
-  deductionbigCategoryOptions: any[] = [];
-  floorOptions: any[] = [];
-  BUILDING_NO_Options: any[] = [];
-  commissionTypeOptions: any[] = [];
-  whetherOptions: any[] = [];
-  txnStatusOptions: any[] = [];
-  checkTotalAmount = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-  ];
-  OrganizationCodeOptions: any[] = [];
-  ECRNoOptions: any[] = []; // 收銀機號下拉選單
-  CounterOptions: any[] = []; // 專櫃選項
 
   constructor(
     private tls23020Service: TLS23020Service,
@@ -200,8 +215,11 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
     const state = history.state;
     const queryFormValue = state?.queryFormValue;
     const preloadedData = state?.data;
+    this.data = state?.data || [];
+    this.displayMode = state?.displayMode ?? 'Detail';
+    // this.displayMode = queryFormValue?.DisplayMode ?? state?.displayMode ?? 'Detail';
 
-    this.displayMode = queryFormValue?.DisplayMode || 'Report';
+
 
     if (queryFormValue) {
       Object.keys(queryFormValue).forEach((k) => {
@@ -404,7 +422,7 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
 
 
   goToQueryPage(): void {
-    this.router.navigate(['/TLS/TLS23020']);
+    this.router.navigate(['account/TLS/TLS23020']);
   }
   getGroupByLabel(field: string | null | undefined): string {
     const map: Record<string, string> = {

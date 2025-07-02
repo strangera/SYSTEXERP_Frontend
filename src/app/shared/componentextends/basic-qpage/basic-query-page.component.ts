@@ -10,7 +10,8 @@ import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { LazyLoadEvent } from '../../componentkit/table/table.model';
-
+import { UntilDestroy } from '@ngneat/until-destroy';
+@UntilDestroy()
 export class BasicQueryPageComponent<T> {
   ProgNo = '';
   cruPage = '';
@@ -49,7 +50,7 @@ export class BasicQueryPageComponent<T> {
   canPerformAction(action: string): boolean {
     return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: T, pageroute?: string) {
+  navigateWithState(crudstatus: CRUDStatus, rowdata?: T) {
     const extras: NavigationExtras = {
       state: {
         crudstatus: crudstatus,
@@ -57,7 +58,7 @@ export class BasicQueryPageComponent<T> {
         fromRoute: this.router.url, // 加入 fromRoute 並設定為目前頁面的 URL
       },
     };
-    this.router.navigate([pageroute || this.cruPage], extras);
+    this.router.navigate([`account/${this.cruPage.toLocaleLowerCase()}`], extras);
   }
   // 移動路由
   onCreate() {

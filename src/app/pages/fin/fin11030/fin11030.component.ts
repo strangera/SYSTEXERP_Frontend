@@ -30,7 +30,7 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
     super();
   }
   ngOnInit(): void {
-    this.initializePage('FIN11030', '/FIN/FIN11030CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('FIN11030', '/FIN/FIN11030cru', this.queryForm, (form) => this.onSubmit(form));
   }
   onDelete(selectedRows: APS2001Data[]) {
     const ids = selectedRows.map(row => row.id);

@@ -42,7 +42,7 @@ interface DetailSaveEvent {
 }
 
 export interface IMG1001 {
-  ID: number;             // 圖檔ID
+  id: number;             // 圖檔ID
   IMG_Type: string;       // 圖檔類別 - 'POS2004'
   IMG_SeqNo: string;      // 圖檔序號 - POS2004.PLU_MagNo
   IMG_Path: string;       // 圖檔路徑

@@ -3,7 +3,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core'; // 新增 OnDestro
 import { LayoutService } from '../../../layout/layout.service';
 import { ApiResponse, AuthService } from '../../../service/system/auth.service';
 import { UserInfo } from '../../../shared/models/system/userInfo';
-import { concatMap, finalize, Subscription, tap, throwError } from 'rxjs'; // 引入 tap
+import { concatMap, finalize, Subscription, throwError } from 'rxjs'; // 引入 tap
 import { MenuItem } from 'primeng/api';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -16,7 +16,6 @@ import { ValidationService } from '../../../shared/service/validation.service';
 @Component({
   selector: 'app-sso-dashboard',
   templateUrl: './sso-dashboard.component.html',
-  styleUrl: './sso-dashboard.component.scss',
 })
 export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDestroy
   logo = 'assets/layout/images/logo.png';
@@ -104,7 +103,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
       {
         System_Id: 'ERP',
         System_Name: '商場營運管理系統',
-        System_Url: '/dashboard',
+        System_Url: '/account/dashboard',
         System_ImgFile: 'EIP_Image',
       },
     ];
@@ -143,30 +142,16 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
           concatMap((innerResponse: ApiResponse<any>) => {
             if (innerResponse.Status === '0000') {
               console.log("Inner API 成功:", innerResponse);
-              // 不再設置 this.loading = true; 而是保持現有狀態，等待後續 API 完成
               return this.authService.getFunRightsInfo().pipe(
                 concatMap(() => this.authService.queryAllSystemCode()), // getFunRightsInfo 成功後，接著呼叫 queryAllSystemCode
-                tap(() => console.log('所有權限資料載入成功。')), // 僅用於日誌，不改變狀態
               );
             } else {
               console.error('Inner API 失敗:', innerResponse.Message);
-              this.messageService.errorBubble(innerResponse.Message || '內部系統登入失敗，請稍後再試。');
-              // 如果 Inner API 失敗，直接拋出錯誤，讓外層的 catchError 處理，並在 finalize 中將 loading 設為 false
               return throwError(() => new Error(innerResponse.Message || 'Inner API failed'));
             }
           }),
-          finalize(() => this.loading = false) // 無論哪個環節失敗或成功，最後都將 loading 設為 false
         ).subscribe({
-          next: () => {
-            // 所有串聯 API 都成功後才導航
-            console.log('所有 API 成功，即將導航。');
-            this.router.navigate([item.System_Url]);
-          },
-          error: (error) => {
-            console.error('載入權限資料或連線內部系統失敗:', error);
-            this.messageService.errorBubble('連線內部系統或載入權限資料失敗。');
-            // finalize 會自動處理 loading = false
-          },
+          next: () => { this.router.navigate([item.System_Url]); },
         })
       );
     } else {

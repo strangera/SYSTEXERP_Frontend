@@ -103,7 +103,7 @@ export class SYSB400Component
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSB400', 'SYS/SYSB400CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('SYSB400', 'SYS/SYSB400cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 
@@ -205,7 +205,7 @@ export class SYSB400Component
 
   gotoGraph() {
     //導引到sysb400.os
-    this.router.navigate(['/SYS/SYSB400OS']);
+    this.router.navigate(['account/SYS/SYSB400OS']);
   }
 
   isRowSelectable(rowData: Sysb400m): boolean {

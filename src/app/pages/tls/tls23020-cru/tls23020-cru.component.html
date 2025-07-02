@@ -5,32 +5,35 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
 
-<ng-container *ngIf="displayMode === 'Report'">
-  <!-- 明細表 -->
-  <app-report-table-group
-    [data]="data"
-    [columns]="columns"
-    [subtotalFields]="['PLU_SalePrc']"
-    [groupByField]="'TXN_GUINo'"
-    [groupByLabel]="'發票號碼'"
-    reportTitle="銷售統計報表"
-    [totalCount]="data.length"
-    [currentPage]="1"
-    [dateStart]="dateStart"
-    [dateEnd]="dateEnd"
-    [printedAt]="printedAt"
-    [showTotalOnly]="true"
-    [enableGrouping]="true"
-    [allowMergeToggle]="true" 
-    [pdfSummaryText]="pdfSummary"
-    [defaultMergedView]="false">
-  </app-report-table-group>
 
-  <div class="mt-4 text-sm text-red-600 leading-6 font-semibold whitespace-pre-line">
-    <ng-container *ngFor="let line of pdfSummary">
-      {{ line }}
-      <br />
-    </ng-container>
-  </div>
-</ng-container>
+  <!-- 明細表 -->
+<app-report-table-group
+  [columns]="columns"
+  [data]="data"
+  [subtotalFields]="
+    displayMode === 'Detail'
+      ? ['TXN_TotGUI', 'TXN_TotSaleAmt', 'TXN_TotPayAmt']
+      : ['TXN_TotSaleAmt', 'TXN_TotNet', 'TXN_TotTax', 'Pre_TotSaleAmt', 'TXN_TotTax']
+  "
+  [groupByField]="displayMode === 'Summary' ? 'tlt_name' : null"
+  [groupByLabel]="'櫃位名稱'"
+  [enableGrouping]="displayMode === 'Summary'"
+  [defaultMergedView]="displayMode === 'Detail'"
+  
+  [reportTitle]="
+    displayMode === 'Detail'
+      ? '折扣別明細表'
+      : '折扣別彙總表'
+  "
+  [currentPage]="1"
+  [dateStart]="dateStart"
+  [dateEnd]="dateEnd"
+  [printedAt]="printedAt"
+  [showTotalOnly]="true"
+ 
+  [showExpandColumn]="false"
+  [allowMergeToggle]="false"
+></app-report-table-group>
+
+
 

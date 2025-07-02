@@ -42,8 +42,8 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true, style: 'text-left' },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
-    { field: 'PAY_NO', header: '付款別', visible: true},
-    { field: 'PAY_NAME', header: '付款名稱', visible: true},
+    { field: 'PAY_NO', header: '付款別', visible: true },
+    { field: 'PAY_NAME', header: '付款名稱', visible: true },
     { field: 'CRD_Type', header: '信用卡卡別', visible: true },
     { field: 'CRD_Name', header: '信用卡', visible: true },
     { field: 'CRD_No', header: '信用卡卡號', visible: true },
@@ -69,7 +69,7 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23100', 'TLS23100CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS23100', 'TLS23100cru', this.queryForm, (form) => this.onSubmit(form));
 
     this.paymentTypeService.getPaymentTypes().subscribe(data => this.paymentTypeOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
@@ -156,7 +156,7 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
       next: (res) => {
         if (res.Status === '0000') {
           this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-          this.router.navigate(['/TLS/TLS23100CRU'], {
+          this.router.navigate(['account/TLS/TLS23100CRU'], {
             state: {
               queryFormValue,
               pageSize: this.customPageSize,

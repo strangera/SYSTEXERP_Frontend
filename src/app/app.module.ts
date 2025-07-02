@@ -19,6 +19,8 @@ import { DialogModule } from 'primeng/dialog';
 import { DateToISOStringInterceptor } from './interceptors/dateToISOStringInterceptor.interceptor';
 import { JwtModule } from '@auth0/angular-jwt';
 import { environment } from '../environments/environment';
+import { UrlSerializer } from '@angular/router';
+import { LowerCaseUrlSerializer } from './utils/LowerCaseUrlSerializer';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -84,6 +86,7 @@ export function tokenGetter() {
       useClass: ErrorinterceptorService,        // 最後處理錯誤
       multi: true
     },
+    { provide: UrlSerializer, useClass: LowerCaseUrlSerializer },
     // {
     //   provide: HTTP_INTERCEPTORS,
     //   useClass: SuccessInterceptor,        // 最後處理錯誤

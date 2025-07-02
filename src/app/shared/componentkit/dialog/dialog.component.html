@@ -1,12 +1,12 @@
-<p-dialog [(visible)]="visible" position="center" [style]="{ width: '100%', maxWidth: '900px' }" [header]="header"
-  [modal]="true" styleClass="p-fluid" (visibleChange)="visibleChange.emit($event)">
+<p-dialog [(visible)]="visible" position="center" [style]="{ width: '100%', maxWidth: '900px', height: '100%' }"
+  [header]="header" [modal]="true" styleClass="p-fluid" (visibleChange)="visibleChange.emit($event)">
   <ng-template pTemplate="content">
     <ng-content></ng-content>
   </ng-template>
   <ng-template pTemplate="footer">
     <div class="grid justify-content-end gap-2 m-0 border-top-1 surface-border pt-3">
-      <app-button btnType="cancel" (click)="visibleChange.emit(false)"></app-button>
-      <app-button label="確定" btnType="default" (click)="saveDialog()" [disabled]="disable"></app-button>
+      <app-button btnType="back" (click)="visibleChange.emit(false)"></app-button>
+      <app-button label="確定" btnType="submit" (click)="saveDialog()" [disabled]="disable"></app-button>
     </div>
   </ng-template>
 </p-dialog>

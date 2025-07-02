@@ -51,7 +51,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     {
       label: '個人資料',
       items: [
-        { label: '修改使用者密碼', icon: 'pi pi-pen-to-square', command: () => this.router.navigate(['/changepsw']) },
+        { label: '修改使用者密碼', icon: 'pi pi-pen-to-square', command: () => this.router.navigate(['/account/changepsw']) },
         { label: '登出', icon: 'pi pi-sign-out', command: () => this.authService.logout() }
       ]
     },
@@ -171,7 +171,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     }
     if (matchedItem) {
       console.log(matchedItem);
-      this.router.navigate([`/${matchedItem.prog_No.slice(0, 3)}/${matchedItem.prog_No}`]); // 導向到該頁面，並傳遞 prog_no 參數到該頁面路由matchedItem.]);
+      this.router.navigate([`/account/${matchedItem.prog_No.slice(0, 3)}/${matchedItem.prog_No}`]); // 導向到該頁面，並傳遞 prog_no 參數到該頁面路由matchedItem.]);
       this.queryForm.reset();
     } else {
       this.messageService.warnBubble('輸入的代碼不存在，或您目前無權限存取對應頁面。', '查無此快速碼');
@@ -197,7 +197,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
         this.Favorites = favoritesWithDetails.map(item => ({
           ...item,
           label: item.label,
-          path: `/${item.prog_No.slice(0, 3)}/${item.prog_No}`,
+          path: `/account/${item.prog_No.slice(0, 3)}/${item.prog_No}`,
         }));
       }, error: error => { console.error('Error fetching favorites:', error); }
     });
@@ -210,7 +210,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     }
     this.activeTopMenuItem = null; // 點擊已激活的項，將其取消激活
     this.topMenuClick.emit(null); // 發射 null 表示沒有激活的頂部菜單項
-    this.router.navigate([`/${item.prog_No.slice(0, 3)}/${item.prog_No}`]);
+    this.router.navigate([`/account/${item.prog_No.slice(0, 3).toLowerCase()}/${item.prog_No.toLowerCase()}`]);
     this.favorite.hide(); // 點擊後關閉最愛選單
   }
   editFavorites() {

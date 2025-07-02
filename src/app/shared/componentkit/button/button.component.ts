@@ -33,13 +33,14 @@ export class ButtonComponent implements OnInit, OnDestroy {
   @Input() text: boolean | undefined; // 是否為文字按鈕
   @Input() outlined: boolean | undefined; // 是否為輪廓按鈕
   @Input() form: FormGroup | undefined;
+  @Input() styleClass = '';
 
   private authService: AuthService = inject(AuthService);
   private currentPageService: CurrentPageService = inject(CurrentPageService);
   private ngUnsubscribe = new Subject<void>();
 
   private readonly buttonConfig: Record<string, ButtonConfig> = {
-    default: { label: '標籤', icon: 'pi pi-check', class: '', disabled: false, type: 'button', severity: 'info' },           // 預設
+    default: { label: '標籤', icon: undefined, class: '', disabled: false, type: 'button', severity: 'info' },           // 預設
     create: { label: '新增', icon: 'pi pi-plus', class: '', disabled: false, type: 'button', severity: 'info', permissionCode: '20' },   // 新增
     clear: { label: '清除', icon: undefined, class: 'button-clear', text: true, disabled: false, type: 'reset', severity: 'info' },                   // 清除
     cancel: { label: '清除', icon: 'pi pi-times', class: 'button-cancel', outlined: true, disabled: false, type: 'button', severity: 'secondary' },       // 取消

@@ -90,7 +90,7 @@ export class AuthService {
         if (response.Status === '0000') {
           this.userSubject.next(response.Data);
           localStorage.setItem('UserInfo', JSON.stringify(response.Data));
-          this.router.navigate(['/SSO/dashboard']);
+          this.router.navigate(['/sso/dashboard']);
           return response;
         } else {
           throw new Error(response.Message || 'Login failed');

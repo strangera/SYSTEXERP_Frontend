@@ -68,7 +68,7 @@ export class SYSB900Component extends BasicQueryPageComponent<CategoryItem> impl
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSB900', '/SYS/SYSB900CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('SYSB900', '/SYS/SYSB900cru', this.queryForm, (form) => this.onSubmit(form));
 
     this.Sysb800DropdownService.getSystemTypes().subscribe({
       next: (response) => {

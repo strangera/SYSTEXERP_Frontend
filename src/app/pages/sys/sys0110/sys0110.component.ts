@@ -85,7 +85,7 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
   }
 
   ngOnInit(): void {
-    this.initializePage('SYS0110', '/SYS/SYS0110CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('SYS0110', '/SYS/SYS0110cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 
@@ -133,17 +133,14 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
       this.sys0110Service.queryUser(frm.value).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
-            this.data = response.Data || [];
-            this.totalRecords = response.TotalCount || response.Data.length; // 排序需要
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
-            console.log('查詢結果', this.data);
           }
+          this.data = response.Data || [];
+          this.totalRecords = response.TotalCount || response.Data?.length; // 排序需要
           this.loading = false;
-          this.messageService.unblockUi();
         },
         error: () => {
           this.loading = false;
-          this.messageService.unblockUi();
         },
       });
     });

@@ -143,7 +143,7 @@ export class TLS46020Component extends BasicQueryPageComponent<TLS46020Item> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS46020', '/TLS/TLS46020CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS46020', '/TLS/TLS46020cru', this.queryForm, (form) => this.onSubmit(form));
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {

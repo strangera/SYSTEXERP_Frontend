@@ -129,6 +129,7 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
           this.data = [];
           this.totalRecords = 0;
           this.messageService.errorBubble('查詢錯誤');
+          this.loading = false;
         },
         complete: () => {
           this.loading = false;
@@ -164,7 +165,7 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
       next: (res) => {
         if (res.Status === '0000') {
           this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-          this.router.navigate(['/TLS/TLS23120CRU'], {
+          this.router.navigate(['account/TLS/TLS23120CRU'], {
             state: {
               queryFormValue,
               pageSize: this.customPageSize,

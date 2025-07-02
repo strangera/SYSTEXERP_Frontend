@@ -43,7 +43,7 @@ export class SYSBQ00Component extends BasicQueryPageComponent<Sysbq00Data> imple
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSBQ00', 'SYS/SYSBQ00CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('SYSBQ00', 'SYS/SYSBQ00cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {

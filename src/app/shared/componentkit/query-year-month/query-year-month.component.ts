@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, Input, OnInit, forwardRef } from '@angular/core';
 import { FormControl } from '@angular/forms';
 
 @Component({
@@ -6,15 +6,15 @@ import { FormControl } from '@angular/forms';
   templateUrl: './query-year-month.component.html',
   styleUrls: ['./query-year-month.component.scss']
 })
-export class QueryYearMonthComponent {
+export class QueryYearMonthComponent implements OnInit {
   @Input() label = '交易年月';
   @Input() submitted = false;
+  @Input() control!: FormControl;
 
-  @Input() yearControl!: FormControl;
-  @Input() monthControl!: FormControl;
-  @Input() onlyOddMonths: boolean = false;
+  yearControl = new FormControl('');
+  monthControl = new FormControl('');
 
-  @Output() valueChange = new EventEmitter<{ year: string; month: string }>();
+  @Input() onlyOddMonths = false;
 
   allMonths = [
     { label: '01 月', value: '01' },
@@ -37,10 +37,26 @@ export class QueryYearMonthComponent {
       : this.allMonths;
   }
 
-  onChange() {
-    this.valueChange.emit({
-      year: this.yearControl.value,
-      month: this.monthControl.value
-    });
+  ngOnInit(): void {
+    // ✅ 初始解析 YYYYMM → year + month
+    const yyyymm = this.control.value;
+    if (yyyymm?.length === 6) {
+      this.yearControl.setValue(yyyymm.substring(0, 4));
+      this.monthControl.setValue(yyyymm.substring(4, 6));
+    }
+
+    // ✅ 當年或月變動，自動組成 YYYYMM 並設回 control
+    this.yearControl.valueChanges.subscribe(() => this.syncControlValue());
+    this.monthControl.valueChanges.subscribe(() => this.syncControlValue());
+  }
+
+  private syncControlValue(): void {
+    const year = this.yearControl.value;
+    const month = this.monthControl.value;
+    const yyyymm = year && month ? `${year}${month}` : '';
+    this.control.setValue(yyyymm);
+  }
+    onChange(): void {
+    this.syncControlValue();
   }
 }

@@ -24,8 +24,8 @@ const now = new Date();
   styleUrls: ['./tls23020.component.scss']
 })
 export class TLS23020Component extends BasicQueryPageComponent<any> {
-   displayMode: 'Detail' | 'Summary' = 'Detail'; // 預設顯示明細報表
-  
+  displayMode: 'Detail' | 'Summary' = 'Detail'; // 預設顯示明細報表
+
 
   data: any[] = [];
   totalRecords: number = 0;
@@ -51,6 +51,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     tlt_building: [],                                     // 所屬大樓
     tlt_floor: [],                                        // 所屬樓層
     org_id: [],                                           // 組織代碼
+    isSummary: false,
     // DisplayMode: this.useSummaryMode ? 'SummaryReport' : 'Report', // 顯示模式
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }])
 
@@ -167,7 +168,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23020', 'TLS23020CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS23020', 'TLS23020cru', this.queryForm, (form) => this.onSubmit(form));
     this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
     this.taxableService.getSystemTypes().subscribe(data => this.taxableOptions = data);
     this.discountService.getLocalDiscountOptions().subscribe(data => this.discountOptions = data);
@@ -263,55 +264,56 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   }
 
   confirmPageSizeAndNavigate(): void {
-  this.submitted = true;
-  if (this.queryForm.invalid) {
-    this.messageService.warnBubble('請確認欄位資料是否完整');
-    this.queryForm.markAllAsTouched();
-    return;
-  }
-
-  const rawFormValue = { ...this.queryForm.value } as any;
-  for (const key in rawFormValue) {
-    if (rawFormValue[key] === '') rawFormValue[key] = null;
-  }
-
-  const queryFormValue = {
-    ...rawFormValue,
-    pageSize: this.customPageSize
-  };
-
-  this.loading = true;
-  this.messageService.blockUi();
-
-  this.tls23020Service.queryTLS23020(queryFormValue, this.displayMode).subscribe({
-    next: (res) => {
-      if (res.Status === '0000') {
-        this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-        this.router.navigate(['/TLS/TLS23020CRU'], {
-          state: {
-            queryFormValue,
-            pageSize: this.customPageSize,
-            data: res.Data || [],
-            displayMode: this.displayMode
-          }
-        });
-        this.messageService.successBubble('查詢成功');
-      } else {
-        this.messageService.errorBubble('查詢失敗');
-      }
-    },
-    error: () => {
-      this.messageService.errorBubble('查詢錯誤');
-      this.loading = false;
-      this.messageService.unblockUi();
-    },
-    complete: () => {
-      this.loading = false;
-      this.messageService.unblockUi();
-      this.showPageSizeDialog = false;
+    console.log('✅ displayMode 傳送前:', this.displayMode);
+    this.submitted = true;
+    if (this.queryForm.invalid) {
+      this.messageService.warnBubble('請確認欄位資料是否完整');
+      this.queryForm.markAllAsTouched();
+      return;
     }
-  });
-}
+
+    const rawFormValue = { ...this.queryForm.value } as any;
+    for (const key in rawFormValue) {
+      if (rawFormValue[key] === '') rawFormValue[key] = null;
+    }
+
+    const queryFormValue = {
+      ...rawFormValue,
+      pageSize: this.customPageSize
+    };
+
+    this.loading = true;
+    this.messageService.blockUi();
+
+    this.tls23020Service.queryTLS23020(queryFormValue, this.displayMode).subscribe({
+      next: (res) => {
+        if (res.Status === '0000') {
+          this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
+          this.router.navigate(['account/TLS/TLS23020CRU'], {
+            state: {
+              queryFormValue,
+              pageSize: this.customPageSize,
+              data: res.Data || [],
+              displayMode: this.displayMode
+            }
+          });
+          this.messageService.successBubble('查詢成功');
+        } else {
+          this.messageService.errorBubble('查詢失敗');
+        }
+      },
+      error: () => {
+        this.messageService.errorBubble('查詢錯誤');
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
+        this.showPageSizeDialog = false;
+      }
+    });
+  }
 
 
 

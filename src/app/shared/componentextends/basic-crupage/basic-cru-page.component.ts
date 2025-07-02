@@ -7,7 +7,9 @@ import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInf
 import { UserInfo } from '../../models/system/userInfo';
 import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
-
+import { LazyLoadEvent } from '../../componentkit/table/table.model';
+import { UntilDestroy } from '@ngneat/until-destroy';
+@UntilDestroy()
 export class BasicCruPageComponent<T> {
   // Page No
   ProgNo = '';
@@ -58,7 +60,7 @@ export class BasicCruPageComponent<T> {
     this.currentPageService.setCurrentProgNo(this.ProgNo);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     const state = this.router.lastSuccessfulNavigation?.extras.state;
-    this.previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/dashboard';
+    this.previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
     this.rowdata = state?.['rowdata'];
     switch (state?.['crudstatus']) {
       case CRUDStatus.Create:
@@ -109,5 +111,13 @@ export class BasicCruPageComponent<T> {
   }
   onCancel() {
     this.router.navigate([this.previousRoute]);
+  }
+
+  onLazyLoadData(event: LazyLoadEvent, dataForm: FormGroup) {
+    dataForm.patchValue({
+      pageSize: event.pageSize,
+      pageIndex: event.pageIndex,
+      SortBy: event.SortBy
+    });
   }
 }

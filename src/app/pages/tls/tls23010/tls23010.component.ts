@@ -13,6 +13,7 @@ import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CashierService } from '../../../service/basic/cashier.service';
+import { Subscription } from 'rxjs';
 interface MainData {
   SYS_StoreNo: string;
   TXN_Date: string;
@@ -35,6 +36,7 @@ const now = new Date();
 })
 export class TLS23010Component extends BasicQueryPageComponent<any> {
   displayMode: 'Detail' | 'Summary' = 'Detail'; // 預設顯示明細報表
+  querySubscription: Subscription | null = null;
 
   progressValue = 0;
   showPageSizeDialog = false;
@@ -410,7 +412,7 @@ confirmPageSizeAndNavigate(): void {
     next: (res) => {
       if (res.Status === '0000') {
         this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-        this.router.navigate(['/TLS/TLS23010CRU'], {
+        this.router.navigate(['account/TLS/TLS23010CRU'], {
           state: {
             queryFormValue,
             pageSize: this.customPageSize,
@@ -434,5 +436,14 @@ confirmPageSizeAndNavigate(): void {
       this.showPageSizeDialog = false;
     }
   });
+}
+
+  cancelQuery(): void {
+  if (this.querySubscription) {
+    this.querySubscription.unsubscribe();
+    this.querySubscription = null;
+  }
+  this.loading = false;
+  this.showPageSizeDialog = false;
 }
 }

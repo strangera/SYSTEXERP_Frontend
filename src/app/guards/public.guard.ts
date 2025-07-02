@@ -15,7 +15,7 @@ export class PublicGuard implements CanActivate {
 
     if (this.authService.isLoggedIn()) {
       // 已登入，導向主頁或其他已認證頁面
-      this.router.navigate(['/dashboard']); // 假設登入後去 dashboard
+      this.router.navigate(['/sso/dashboard']); // 假設登入後去 dashboard
       return false; // 阻止訪問
     } else {
       return true; // 允許訪問 (登入頁)

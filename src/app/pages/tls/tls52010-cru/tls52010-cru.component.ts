@@ -1,17 +1,19 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { debounceTime, finalize, Subject, takeUntil } from 'rxjs';
+import { debounceTime, finalize } from 'rxjs';
 import { DropDownListService, IDropdownItem } from '../../../service/api/dropdownservice/dropDownList.service';
-import { IGetBudgetAmountRequest, IInsertTLS52010Request, IPOS2004DetailData, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { IGetBudgetAmountRequest, IInsertTLS52010Request, IPODetail, IPOS2004DetailData, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
+import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
+import { validateMinNumber } from '../../../shared/models/system/validate-field.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 // 2.5.2.1  採購單維護作業 CRU
 @Component({
   selector: 'app-tls52010-cru',
   templateUrl: './tls52010-cru.component.html',
 })
-export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> implements OnInit, OnDestroy {
+export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> implements OnInit {
   // === 表單群組 (與 POS2016 欄位對應) ===
   dataForm = this.formBuilder.nonNullable.group({
     PO_No: [{ value: '系統自動產生', disabled: true }], // 採購單號 (與 POS2016.PO_No 對應)
@@ -19,11 +21,11 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     vendorShortName: [{ value: '', disabled: true }], // 廠商簡稱 (前端專用，不對應資料庫欄位，顯示在 VEN_No 下一欄)
     LOGO_No: [null, [Validators.required]], // 品牌編號 (與 POS2016.LOGO_No 對應)
     remainingBudgetAmount: [{ value: 0, disabled: true }], // 剩餘預算金額 (前端顯示用，不對應資料庫欄位)
-    HOS_No: [null, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
-    PO_TotalBuyAmt: [{ value: 0, disabled: true }], // 採購總金額 (含稅) (對應 POS2016.PO_TotalBuyAmt)
-    PO_TotalBuyTax: [{ value: 0, disabled: true }], // 採購總稅額 (對應 POS2016.PO_TotalBuyTax)
-    PO_TotalBuyNet: [{ value: 0, disabled: true }], // 採購總淨額 (對應 POS2016.PO_TotalBuyNet)
-    PO_TotalSaleAmt: [{ value: 0, disabled: true }], // 銷售總金額 (對應 POS2016.PO_TotalSaleAmt)
+    HOS_No: [{ value: null as string | null, disabled: true }, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
+    PO_TotalBuyNet: [{ value: 0, disabled: true }], // 採購金額
+    PO_TotalBuyTax: [{ value: 0, disabled: true }], //稅額
+    PO_TotalBuyAmt: [{ value: 0, disabled: true }], // 合計金額
+    PO_TotalSaleAmt: [{ value: 0, disabled: true }], //售價總計
     APPLY_USR_No: [{ value: '', disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
     APPLY_Date: [{ value: new Date(), disabled: true }], // 申請日期 (對應 POS2016.APPLY_Date)
     PO_Remark: [''], // 採購單備註 (對應 POS2016.PO_Remark)
@@ -34,8 +36,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   warehouseOptions: IDropdownItem[] = []; // 倉別下拉選單選項
   userOptions: { user_No: string; user_Name: string }[] = []; // 用戶選項
 
-  private destroy$ = new Subject<void>(); // 用於管理訂閱的生命週期
-
   columns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
@@ -44,12 +44,11 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     { field: 'UNIT_NAME', header: '單位名稱' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
     { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : '應稅' },
-    { field: '', header: '數量' },
+    { field: 'POD_SubQty', header: '數量', type: 'inputNumber', validate: [validateMinNumber(0)] },
     { field: 'PLU_SalePrc_UNI', header: '單價' },
-    { field: '', header: '小計' },
+    { field: 'POD_BuyNet', header: '小計' },
     { field: 'PLU_SalePrc', header: '售價' },
-    { field: '', header: '售價小計' },
-
+    { field: 'POD_SaleAmt', header: '售價小計' },
   ]
   data: IPOS2004DetailData[] = [];
   selectedItems: IPOS2004DetailData[] = [];
@@ -65,24 +64,32 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   ngOnInit(): void {
     this.initializePage('TLS52010', this.dataForm);
     this.loadDropdownOptions();
+    if (!this.isFormCreateable) {
+      this.tls52010Service.queryPOS2017({ PO_No: this.dataForm.controls.PO_No.value }).pipe(untilDestroyed(this)).subscribe(response => {
+        console.log('response', response);
+      });
+    }
     this.setInitialValuesAndWatchChanges();
     this.loadDialogData();
   }
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
   private loadDropdownOptions(): void {
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.vendorOptions = response.Data.map(vendor => ({
         ...vendor,
-        label: `${vendor.Name} - ${vendor.No}`,
+        label: `${vendor.VEN_No} - ${vendor.Name}`,
       }));
     });
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(takeUntil(this.destroy$)).subscribe(response => {
+    // 品牌
+    // 獲取品牌的倉別
+    this.dropDownListService.queryPLULOGO_HOS_No_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.brandOptions = response.Data;
       this.dataForm.controls.LOGO_No.setValue(null); // 清空品牌選擇
       this.dataForm.controls.remainingBudgetAmount.setValue(0); // 清空預算金額
+    });
+    // 倉別
+    this.dataForm.controls.HOS_No.enable();
+    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
+      this.warehouseOptions = response.Data;
     });
   }
   private setInitialValuesAndWatchChanges(): void {
@@ -90,22 +97,22 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     const userInfo = this.authService.currentUserValue;
     this.userOptions = [{ user_No: userInfo?.user_No || '', user_Name: userInfo?.user_Name || '' }];
     this.dataForm.controls.APPLY_USR_No.setValue(this.userOptions[0]?.user_No || ''); // 假設用戶對象有 userName 屬性
-    this.dataForm.controls.VEN_No.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(vendorNo => {
-      if (vendorNo) { // !!! 可以改成下拉觸發事件
-        const selectedVendor = this.vendorOptions.find(opt => opt.No === vendorNo);// 顯示廠商簡稱
+    this.dataForm.controls.VEN_No.valueChanges.pipe(untilDestroyed(this)).subscribe(vendorNo => {
+      if (vendorNo) {
+        const selectedVendor = this.vendorOptions.find(opt => opt.VEN_No === vendorNo);// 顯示廠商簡稱
         this.dataForm.controls.vendorShortName.setValue(selectedVendor?.ShortName ?? ''); // 假設 Name 是簡稱
       } else {
         this.dataForm.controls.vendorShortName.setValue('');
         this.brandOptions = []; // 清空品牌選項
-        this.dataForm.controls.LOGO_No.setValue(null); // 清空品牌選擇
-        this.dataForm.controls.remainingBudgetAmount.setValue(0); // 清空預算金額
         this.cdr.detectChanges();
       }
       this.data = [];
       this.selectedItems = [];
+      this.calculateTotals();
+      this.dialogData = [];
     });
     // 監聽品牌編號變化，用於顯示剩餘預算金額和建議倉別
-    this.dataForm.controls.LOGO_No.valueChanges.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(logoNo => {
+    this.dataForm.controls.LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(logoNo => {
       if (logoNo && this.dataForm.controls.APPLY_Date.value) {
         const applyDate = this.dataForm.controls.APPLY_Date.value;
         const applyYearMonth = `${applyDate.getFullYear()}${(applyDate.getMonth() + 1).toString().padStart(2, '0')}`;
@@ -114,105 +121,89 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           YYYYMM: applyYearMonth // 採購日期年月
         };
         // 獲取剩餘預算金額
-        this.tls52010Service.GetBudgetAmount(budgetRequest).pipe(takeUntil(this.destroy$)).subscribe(response => {
+        this.tls52010Service.GetBudgetAmount(budgetRequest).pipe(untilDestroyed(this)).subscribe(response => {
           if (response.Data !== undefined) { // 假設返回的是單個數字
             this.dataForm.controls.remainingBudgetAmount.setValue(response.Data);
           } else {
             this.dataForm.controls.remainingBudgetAmount.setValue(0);
           }
         });
-
-        // !!! 載入倉別下拉選單 (要有判斷 讀取品牌設定中所屬的建議倉別)
-        this.dropDownListService.getPOS2034Options().pipe(takeUntil(this.destroy$)).subscribe(response => {
-          this.warehouseOptions = response.Data;
-        });
-        // 設置建議倉別 (根據品牌設定中所屬的建議倉別)
-        // 這同樣需要一個API：例如 `queryWarehouseByBrand(params: { LOGO_No: string }): Observable<ApiResponse<IDropdownItem>>`
-        // 這裡假設品牌資料本身包含了建議倉別的資訊，或者需要另一個 API。
-        // 為了演示，暫時不處理這個自動設定，你需要根據實際後端API補齊。
-        // 例如: this.dropDownListService.getWarehouseByBrand(logoNo).subscribe(...)
+        const HOS_No = this.brandOptions.find(opt => opt.No === logoNo)?.HOS_No || null;
+        this.dataForm.controls.HOS_No.setValue(HOS_No);
       } else {
-        this.dataForm.controls.remainingBudgetAmount.setValue(0);// 清空倉別選擇，或取消建議值
+        this.warehouseOptions = [];
         this.cdr.detectChanges();
       }
       this.data = [];
       this.selectedItems = [];
-    });
-  }
-
-  onSubmit(frm: FormGroup) {
-    const formData = frm.getRawValue(); // 獲取所有表單值，包括 disabled 的
-    const submitData: IInsertTLS52010Request = {
-      SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '', // 需從其他地方獲取，例如登入用戶資訊或配置
-      VEN_No: formData.VEN_No,
-      LOGO_No: formData.LOGO_No,
-      HOS_No: formData.HOS_No,
-      APPLY_Date: formData.APPLY_Date.toISOString().split('T')[0], // 格式化為 ISO 日期字串
-      APPLY_USR_No: this.authService.currentUserValue?.user_No || '', // 假設有 userNo
-      APPLY_USR_Name: formData.APPLY_USR_Name,
-      PO_TotalSubQty: 0, // 採購數量總計，通常來自明細計算，如果沒有明細，預設為 0
-      PO_TotalSaleNet: 0, // 銷售淨額總計，通常來自明細計算
-      PO_TotalSaleTax: 0, // 銷售稅額總計，通常來自明細計算
-      PO_TotalSaleAmt: formData.PO_TotalSaleAmt,
-      PO_Remark: formData.PO_Remark,
-      BudgetAmount: formData.BudgetAmount,
-      YYYYMM: `${formData.APPLY_Date.getFullYear()}${(formData.APPLY_Date.getMonth() + 1).toString().padStart(2, '0')}`,
-      Details: [] // 採購單明細，這部分你目前沒有，但通常採購單會有明細
-    };
-    // 處理提交邏輯 (呼叫 insert 或 update)
-    // 這裡只是範例，你需要判斷是新增還是編輯模式
-    this.handleSubmit(frm, () => {
-      this.tls52010Service.insertTLS52010(submitData).subscribe({
-        next: (response) => {
-          this.messageService.successBubble(response.Message);
-        },
-      });
+      this.calculateTotals();
+      this.dialogData = [];
     });
   }
 
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
-    PLU_MagNo: [''], // 商品管理編號
-    PLU_Name: [''], // 商品名稱
+    PLU_MagNo: ['', [Validators.maxLength(20)]], // 商品管理編號
+    PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
     CAT_LNo: [null], // 大分類代碼
-    CAT_MNo: [null], // 中分類代碼
-    CAT_SNo: [null], // 小分類代碼
+    CAT_MNo: [{ value: null, disabled: true }], // 中分類代碼
+    CAT_SNo: [{ value: null, disabled: true }], // 小分類代碼
+    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
+
   });
+  totalRecords = 0;
   CAT_LNoOptions: IDropdownItem[] = [];
   CAT_MNoOptions: IDropdownItem[] = [];
   CAT_SNoOptions: IDropdownItem[] = [];
   dialogData: IPOS2004DetailData[] = [];
   selectedItemsDialog: IPOS2004DetailData[] = [];
+  dialogColumns: Column[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號' },
+    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_No', header: '國際條碼' },
+    { field: 'PLU_Unit', header: '單位編號' },
+    { field: 'UNIT_NAME', header: '單位名稱', sortField: 'UNIT_NAME' },
+    { field: 'PLU_BoxQty', header: '包裝入數' },
+    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : '應稅' },
+    { field: 'PLU_SalePrc_UNI', header: '單價', sortField: 'PLU_FixPrc' },
+    { field: 'PLU_SalePrc', header: '售價' },
+  ]
   dialogLoading = false;
   loadDialogData() {
-    this.dropDownListService.queryPOS2003_DropDownList().pipe(takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.CAT_LNoOptions = response.Data.map(item => ({
         ...item,
         label: `${item.No} - ${item.Name}`,
       }));
     });
-    this.dialogQueryForm.controls.CAT_LNo.valueChanges.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe((value) => {
+    this.dialogQueryForm.controls.CAT_LNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
       if (value) {
-        this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: [value] }).pipe(takeUntil(this.destroy$)).subscribe(response => {
+        this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
           this.CAT_MNoOptions = response.Data.map(item => ({
             ...item,
             label: `${item.No} - ${item.Name}`,
           }));
-          this.dialogQueryForm.controls.CAT_MNo.setValue(null); // 清空中分類選擇
-          this.dialogQueryForm.controls.CAT_SNo.setValue(null); // 清空中分類選擇
+          this.dialogQueryForm.controls.CAT_MNo.enable();
         });
+      } else {
+        this.dialogQueryForm.controls.CAT_MNo.disable();
       }
+      this.dialogQueryForm.controls.CAT_MNo.setValue(null); // 清空中分類選擇
+      this.dialogQueryForm.controls.CAT_SNo.setValue(null); // 清空中分類選擇
     });
-    this.dialogQueryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe((value) => {
+    this.dialogQueryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
       if (value) {
-        this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [this.dialogQueryForm.controls.CAT_LNo.value || ''], CAT_MNo: [value] }).pipe(takeUntil(this.destroy$)).subscribe(response => {
+        this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [this.dialogQueryForm.controls.CAT_LNo.value || ''], CAT_MNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
           this.CAT_SNoOptions = response.Data.map(item => ({
             ...item,
             label: `${item.No} - ${item.Name}`,
           }));
-          this.dialogQueryForm.controls.CAT_SNo.setValue(null); // 清空中分類選擇
         });
+        this.dialogQueryForm.controls.CAT_SNo.enable();
+      } else {
+        this.dialogQueryForm.controls.CAT_SNo.disable();
       }
+      this.dialogQueryForm.controls.CAT_SNo.setValue(null); // 清空中分類選擇
     });
   }
   onQuery(frm: FormGroup) {
@@ -223,20 +214,140 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       LOGO_No: this.dataForm.controls.LOGO_No.value,
     }
     this.tls52010Service.queryPOS2004DetailByVenNo(body).pipe(
-      finalize(() => this.dialogLoading = false), takeUntil(this.destroy$)).subscribe(response => {
+      finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
         this.dialogData = response.Data;
+        this.totalRecords = response.TotalCount;
       })
   }
   saveDialog() {
     this.dialogVisible = false;
-    this.data = [...this.data, ...this.selectedItemsDialog];
+    this.data = [
+      ...this.data,
+      ...this.selectedItemsDialog.map(item => ({ ...item, POD_SubQty: 0 }))
+    ];
     this.selectedItemsDialog = [];
+    this.selectedItems = [];
+    this.calculateTotals();
   }
   onDelete(selectedRows: IPOS2004DetailData[]) {
     this.data = this.data.filter(row => !selectedRows.includes(row));
     this.selectedItems = [];
+    this.calculateTotals();
   }
   isRowSelectable(event: IPOS2004DetailData): boolean {
     return !this.data || !this.data.some((item: IPOS2004DetailData) => item.PLU_MagNo === event.PLU_MagNo);
+  }
+  // { oldData: any;  newData: any;  ri: number;  data: any[];}
+  onRowEditSave(event: RowEditSaveEvent) {
+    const newData: IPOS2004DetailData = event.newData;
+    // 確保 POD_SubQty 是數字且不為負數，如果為 null 或 undefined 設為 0
+    const quantity = newData.POD_SubQty ? Math.max(0, newData.POD_SubQty) : 0;
+    // SA: "單價：未稅進價。自動帶入商品主檔的PLU_SalePrc售價/1.05 x進貨折數。"
+    const unitPriceNet = newData.PLU_SalePrc_UNI || 0;
+    // SA: "小計:未稅進價 X 數量，計算取到整數"
+    const subtotalNet = Math.round(unitPriceNet * quantity);
+    // SA: "售價: 含稅售價。自動帶入商品主檔的含稅售價。不可修改"
+    // SA: "售價小計" (在 columns 中為 totalPrice，但 SA 文件中沒有明確定義計算方式，
+    // 這裡依據邏輯假設為 含稅售價 * 數量，並取整數)
+    const salePrice = newData.PLU_SalePrc || 0;
+    const totalPrice = Math.round(salePrice * quantity);
+    // 更新 data 陣列中的對應項目
+    // PrimeNG 的 RowEditSaveEvent 通常會自動更新表格的底層數據，但為了更明確和確保不可變性
+    // 這裡直接使用 index 更新，並觸發變更檢測
+    const index = this.data.findIndex(item => item.PLU_MagNo === newData.PLU_MagNo);
+    if (index > -1) {
+      this.data[index] = {
+        ...this.data[index], // 保留原有數據
+        POD_SubQty: quantity, // 更新數量
+        POD_BuyNet: subtotalNet, // 更新小計 (未稅進價 * 數量，取整數)
+        POD_SaleAmt: totalPrice // 更新售價小計 (含稅售價 * 數量，取整數)
+      };
+      this.data = [...this.data];
+      this.cdr.detectChanges(); // 觸發變更檢測，確保 UI 更新
+    }
+    this.calculateTotals(); // 更新單行後重新計算總計
+  }
+
+  // 總計計算邏輯
+  private calculateTotals(): void {
+    let totalBuyNet = 0; // 採購金額(即所有明細的「小計」加總)
+    let totalBuyTax = 0; // 採購金額(即所有明細的「小計」加總)
+    let totalSaleAmt = 0; // 售價總計(即所有明細的「售價小計」加總)
+    this.data.forEach(item => {
+      totalBuyNet += item.POD_BuyNet || 0;
+      totalBuyTax += item.PLU_StockTaxType === '1' ? Math.round((item.POD_BuyNet || 0) * 0.05) : 0;
+      totalSaleAmt += item.POD_SaleAmt || 0;
+    });
+    const totalBuyAmt = totalBuyNet + totalBuyTax;
+    this.dataForm.controls.PO_TotalBuyNet.setValue(Math.round(totalBuyNet));
+    this.dataForm.controls.PO_TotalBuyTax.setValue(Math.round(totalBuyTax));
+    this.dataForm.controls.PO_TotalBuyAmt.setValue(Math.round(totalBuyAmt));
+    this.dataForm.controls.PO_TotalSaleAmt.setValue(Math.round(totalSaleAmt));
+  }
+
+  onSubmit(frm: FormGroup) {
+    // 首先檢查是否有任何明細的 POD_SubQty 不大於 0
+    const hasInvalidQuantity = this.data.some(item => (item.POD_SubQty || 0) <= 0);
+    if (hasInvalidQuantity) {
+      this.messageService.errorBubble('商品明細的「數量」必須大於 0。');
+      return; // 阻止表單提交
+    }
+    // 檢查明細列表是否為空
+    if (!this.data || this.data.length === 0) {
+      this.messageService.errorBubble('請至少選擇一個商品明細！');
+      return; // 阻止提交
+    }
+
+    const formData = frm.getRawValue(); // 獲取所有表單值，包括 disabled 的
+    // 映射 this.data 到 IPODetail 陣列
+    const details: IPODetail[] = this.data.map((item) => ({
+      SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
+      PLU_MagNo: item.PLU_MagNo,
+      PLU_No: item.PLU_No, // 國際條碼
+      PLU_Name: item.PLU_Name,
+      PLU_Unit: item.PLU_Unit,
+      PLU_BoxQty: item.PLU_BoxQty,
+      PLU_StockTaxType: item.PLU_StockTaxType,
+      POD_SubQty: item.POD_SubQty || 0, // 確保有值，使用之前計算好的 POD_SubQty
+      POD_BuyPrc: item.PLU_SalePrc_UNI || 0, // 採購單價 (未稅進價)
+      POD_BuyNet: item.POD_BuyNet || 0, // 採購淨額 (已計算過並取整數)
+      POD_SalePrc: item.PLU_SalePrc || 0, // 銷售單價 (含稅售價)
+      POD_SaleAmt: item.POD_SaleAmt || 0, // 銷售金額 (已計算過並取整數)
+      POD_Remark: null, // 如果有明細備註欄位，請從 item 中取值
+    }));
+    // 再次計算總數量，或者從 calculateTotals 中取得
+    const totalSubQty = details.reduce((sum, item) => sum + (item.POD_SubQty || 0), 0);
+    const submitData: IInsertTLS52010Request = {
+      SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
+      VEN_No: formData.VEN_No,
+      LOGO_No: formData.LOGO_No,
+      HOS_No: formData.HOS_No,
+      // 直接從 dataForm 中獲取已計算的總計值
+      PO_TotalBuyAmt: this.dataForm.controls.PO_TotalBuyAmt.value,
+      PO_TotalBuyTax: this.dataForm.controls.PO_TotalBuyTax.value,
+      PO_TotalBuyNet: this.dataForm.controls.PO_TotalBuyNet.value,
+      PO_TotalSubQty: totalSubQty, // 使用計算後的總數量
+      PO_TotalSaleAmt: this.dataForm.controls.PO_TotalSaleAmt.value,
+      // // 根據 IInsertTLS52010Request 介面，PO_TotalSaleNet 和 PO_TotalSaleTax 在新增時可能不需要或後端會自行處理
+      // // 如果後端需要，且沒有明確的計算規則，可以暫時設為 0 或考慮移除
+      // PO_TotalSaleNet: 0, // 需與後端確認如何處理，或移除此欄位 if not needed
+      // PO_TotalSaleTax: 0, // 需與後端確認如何處理，或移除此欄位 if not needed
+      APPLY_Date: this.dataForm.controls.APPLY_Date.value,
+      APPLY_USR_No: this.authService.currentUserValue?.user_No || '',
+      APPLY_USR_Name: this.authService.currentUserValue?.user_Name || '', // 確保取到用戶姓名
+      PO_Remark: formData.PO_Remark,
+      BudgetAmount: formData.remainingBudgetAmount, // 這裡應該是實際的預算金額，而不是剩餘預算金額。
+      YYYYMM: `${formData.APPLY_Date.getFullYear()}${(formData.APPLY_Date.getMonth() + 1).toString().padStart(2, '0')}`,
+      Details: details, // 帶入轉換後的明細資料陣列
+    };
+    // 處理提交邏輯 (呼叫 insert 或 update)
+    this.handleSubmit(frm, () => {
+      this.tls52010Service.insertTLS52010(submitData).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe({
+        next: (response) => {
+          this.messageService.successBubble(response.Message);
+          this.dataForm.reset();
+        },
+      });
+    });
   }
 }

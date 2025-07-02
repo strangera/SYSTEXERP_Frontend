@@ -48,7 +48,7 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS2A050', '/TLS/TLS2A050CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS2A050', '/TLS/TLS2A050cru', this.queryForm, (form) => this.onSubmit(form));
     // 初始化權限
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.queryForm.get('salesDate')?.valueChanges.subscribe((val) => {

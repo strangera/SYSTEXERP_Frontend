@@ -33,7 +33,7 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN11020', '/FIN/FIN11020CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('FIN11020', '/FIN/FIN11020cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {

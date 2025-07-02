@@ -20,7 +20,7 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
     HOS_No: ['', [Validators.maxLength(10)]], // 倉庫代碼 STO_NO+HOS_NO唯一值
     HOS_NAME: ['', [Validators.maxLength(50)]], // 倉庫名稱
     HOS_Remark: ['', [Validators.maxLength(100)]], // 備註說明
-    org_id: ['', [Validators.maxLength(20)]], // 組織代碼/所屬部門
+    org_id: ['', [Validators.maxLength(20)]], // 所屬部門
     // building_no: ['', [Validators.maxLength(1)]], // 館別代碼
 
     //分頁查詢
@@ -40,14 +40,20 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
     { field: 'HOS_No', header: '倉庫代碼', visible: true },
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
     {
-      field: 'org_id', header: '部門編號/分店', visible: true
+      field: 'org_id', header: '部門編號', visible: true
       , format: (value: string) =>
-        this.SYS3100_Options.find((option) => option.No === value)?.Label ||
+        this.SYS3100_Options.find((option) => option.No === value)?.No ||
         value,
     },
     {
-      field: 'building_no', header: '館別', visible: true, format: (value: string) =>
-        this.building_noOptions.find((option) => option.No === value)?.Label ||
+      field: 'org_name', header: '部門名稱', visible: true
+      , format: (value: string) =>
+        this.SYS3100_Options.find((option) => option.No === value)?.Name ||
+        value,
+    },
+    {
+      field: 'building_no', header: '館別', visible: true, format: (value: string) => // 館別只顯示名稱(不用編碼)
+        this.building_noOptions.find((option) => option.No === value)?.Name ||
         value,
     },
     { field: 'HOS_Remark', header: '備註說明', visible: true }
@@ -61,7 +67,7 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS51080', 'TLS/TLS51080CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS51080', 'TLS/TLS51080cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 

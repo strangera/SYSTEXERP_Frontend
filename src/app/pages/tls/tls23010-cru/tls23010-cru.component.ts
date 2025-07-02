@@ -29,13 +29,13 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
   queryFormValue: any;
   dataForm = this.formBuilder.nonNullable.group({});
   pdfSummary: string[] = [];
+  
 
   statusFlagOptions: any[] = [];
   txnStatusOptions: any[] = [];
   transactionSubTypeOptions: any[] = [];
   whetherOptions: any[] = [];
   carrierTypeOptions: any[] = [];
-
   constructor(
     private location: Location,
     private pdfService: PdfService,
@@ -52,12 +52,12 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
     this.queryFormValue = state?.queryFormValue;
     this.data = state?.data || [];
     this.pageSize = state?.pageSize ?? 1000;
-    this.displayMode = state?.displayMode ?? 'Detail'; // ✅ 從 state 取值
+    this.displayMode = state?.displayMode ?? 'Detail'; // 
     this.printedAt = new Date().toLocaleString('zh-TW', { hour12: false });
 
-      this.dateStart = state.queryFormValue?.TXN_DateStart || '';
-      this.dateEnd = state.queryFormValue?.TXN_DateEnd || '';
- console.log('✅ TLS23010CRUComponent displayMode:', this.displayMode); // 👈 加這行
+    this.dateStart = state.queryFormValue?.TXN_DateStart || '';
+    this.dateEnd = state.queryFormValue?.TXN_DateEnd || '';
+    console.log('✅ TLS23010CRUComponent displayMode:', this.displayMode); // 
     this.initializePage('TLS23010', this.dataForm);
 
     this.statusFlagService.getStatusFlags().subscribe(res => this.statusFlagOptions = res);
@@ -67,7 +67,100 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
     this.updatePdfSummary();
   }
 
-  get columns(): ReportColumn[] {
+ 
+  private _displayMode: 'Detail' | 'Summary' = 'Detail';
+
+get displayMode(): 'Detail' | 'Summary' {
+  return this._displayMode;
+}
+
+set displayMode(value: 'Detail' | 'Summary') {
+  this._displayMode = value;
+
+  if (value === 'Summary') {
+    this.mergedView = false; // ✅ Summary 模式不允許合併顯示
+  }
+
+  // ✅ 更新報表內容
+  this.updatePdfSummary(); // summary 重新運算
+}
+
+
+  formatDateToYMD(dateStr: string): string {
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? '' : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+  }
+  formatTimeToHHMM(timeStr: string): string {
+  const date = new Date(`1970-01-01T${timeStr}`);
+  if (isNaN(date.getTime())) return '';
+  return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+}
+
+
+  moneyFormat(value: number): string {
+    return value != null ? value.toLocaleString('en-US') : '0';
+  }
+
+  getLabelFromOptions(value: any, options: any[]): string {
+    const found = options?.find(opt => String(opt.value) === String(value));
+    return found ? found.label : value;
+  }
+
+  getYesNoLabel(value: any): string {
+    return value === 'Y' ? '是' : value === 'N' ? '否' : value;
+  }
+
+
+
+
+
+  
+
+  private getSum(field: string): number {
+    return this.data.reduce((sum, row) => sum + (parseFloat(row[field]) || 0), 0);
+  }
+
+private updatePdfSummary(): void {
+  if (this.displayMode === 'Detail') {
+    const A = this.getSum('TXN_TotSaleAmt');       // 發票金額
+    const B = this.getSum('TXN_TotPayAmt');        // 已開發票的支付工具
+    const C = this.getSum('TXN_TotOver');          // 已開發票的支付工具溢收
+    const D = this.getSum('TXN_Deposit');          // 訂金
+    const E = this.getSum('TXN_DepositSettle');    // 訂金結帳金額
+    const F = this.getSum('TXN_DepositUsed');      // 訂金結帳的訂金
+    const G = this.getSum('TXN_TotDisc');          // 預售 (使用折扣金額欄位)
+    const H = this.getSum('TXN_TaxFreeCertNo');    // 預售結帳金額
+
+    const discountValue = A + B - C + E - G + H;
+    const paymentValue = A + B + D - F;
+
+    this.pdfSummary = [
+      `(A)發票金額 =\t${A.toLocaleString()}`,
+      `(B)已開發票的支付工具 =\t${B.toLocaleString()}`,
+      `(C)已開發票的支付工具溢收 =\t${C.toLocaleString()}`,
+      `(D)訂金 =\t${D.toLocaleString()}`,
+      `(E)訂金結帳全額 =\t${E.toLocaleString()}`,
+      `(F)訂金結帳的訂金 =\t${F.toLocaleString()}`,
+      `(G)預售 =\t${G.toLocaleString()}`,
+      `(H)預售結帳金額 =\t${H.toLocaleString()}`,
+      '====================================================',
+      `折扣別(專櫃業績) = (A) + (B) - (C) + (E) - (G) + (H)=\t${discountValue.toLocaleString()}`,
+      `付款別(支付工具) = (A) + (B) + (D) - (F)=\t${paymentValue.toLocaleString()}`
+    ];
+  } else if (this.displayMode === 'Summary') {
+    const totalAmt = this.getSum('TXN_TotSaleAmt');
+    const totalTxn = this.getSum('TotalTxn');
+
+    this.pdfSummary = [
+      `總金額合計 = ${totalAmt.toLocaleString()}`,
+      `總交易筆數合計 = ${totalTxn.toLocaleString()}`,
+      '=============================',
+      `平均每筆金額 = ${totalTxn > 0 ? (totalAmt / totalTxn).toFixed(2) : '0.00'}`
+    ];
+  }
+}
+
+ get columns(): ReportColumn[] {
     switch (this.displayMode) {
       case 'Detail':
         return [{
@@ -81,30 +174,10 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
           : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
       }
     },
-    // {
-    //   field: 'TXN_Time',
-    //   header: '銷售時間',
-    // 
-    //   format: (val: string) => {
-    //     const date = new Date(val);
-    //     if (isNaN(date.getTime())) return val;
-
-    //     const yyyy = date.getFullYear();
-    //     const MM = (date.getMonth() + 1).toString().padStart(2, '0');
-    //     const dd = date.getDate().toString().padStart(2, '0');
-    //     const HH = date.getHours().toString().padStart(2, '0');
-    //     const mm = date.getMinutes().toString().padStart(2, '0');
-
-    //     return `${yyyy}/${MM}/${dd} ${HH}:${mm}`;
-    //   }
-    // },
     { field: 'ECR_No', header: '機號',  },
     { field: 'TXN_No', header: '交易序號', style: 'text-right' },
     { field: 'tlt_no', header: '專櫃編號'  },
     { field: 'tlt_name', header: '櫃位名稱', style: 'text-left' }, // 非 POS5006 欄位，UI 顯示用
-    // { field: 'SYS_StoreNo', header: '店號', visible: false },
-
-
     { field: 'TXN_Uniform', header: '統一編號',  },
     { field: 'gui_track', header: '字軌',  }, // 假設為字軌顯示
     { field: 'GUIBegNo', header: '起始發票號碼',  },
@@ -149,7 +222,8 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
       format: (val: number) => val?.toLocaleString('en-US') || '0'
     },
     { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號',  },
-    { field: 'TXN_Time', header: '起始時間',  }, { field: 'TXN_Time', header: '結束時間',  },
+    { field: 'TXN_Time', header: '起始時間', format: this.formatTimeToHHMM.bind(this) },
+{ field: 'TXN_Time', header: '結束時間', format: this.formatTimeToHHMM.bind(this) },
 
     { field: 'USR_No', header: '收銀員',  style: 'text-left' },
     { field: 'TXN_PreOrderNo', header: '預售/訂金單號',  },
@@ -239,85 +313,5 @@ case 'Summary':
         return [{ header: '錯誤', field: '', format: () => '未知模式' }];
     }
   }
-  private _displayMode: 'Detail' | 'Summary' = 'Detail';
 
-get displayMode(): 'Detail' | 'Summary' {
-  return this._displayMode;
-}
-
-set displayMode(value: 'Detail' | 'Summary') {
-  this._displayMode = value;
-
-  if (value === 'Summary') {
-    this.mergedView = false; // ✅ Summary 模式不允許合併顯示
-  }
-
-  // ✅ 更新報表內容
-  this.updatePdfSummary(); // summary 重新運算
-}
-
-
-  formatDateToYMD(dateStr: string): string {
-    const date = new Date(dateStr);
-    return isNaN(date.getTime()) ? '' : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-  }
-
-  moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0';
-  }
-
-  getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find(opt => String(opt.value) === String(value));
-    return found ? found.label : value;
-  }
-
-  getYesNoLabel(value: any): string {
-    return value === 'Y' ? '是' : value === 'N' ? '否' : value;
-  }
-
-
-
-
-
-  
-
-  private getSum(field: string): number {
-    return this.data.reduce((sum, row) => sum + (parseFloat(row[field]) || 0), 0);
-  }
-
- private updatePdfSummary(): void {
-  if (this.displayMode === 'Detail') {
-    const A = this.getSum('TXN_TotSaleAmt');
-    const B = this.getSum('TXN_TotPayAmt');
-    const C = this.getSum('TXN_TotOver');
-    const D = this.getSum('TXN_TotDisc');
-    const E = this.getSum('TXN_TaxFreeCertNo');
-
-    const discountValue = A + B - C - D;
-    const paymentValue = A + B;
-
-    this.pdfSummary = [
-      `(A) 發票金額 = ${A.toLocaleString()}`,
-      `(B) 訂金實收 = ${B.toLocaleString()}`,
-      `(C) 溢收金額 = ${C.toLocaleString()}`,
-      `(D) 折讓金額 = ${D.toLocaleString()}`,
-      `(E) 外交官免稅 = ${E.toLocaleString()}`,
-      '=============================',
-      `折扣別(專櫃業績) = (A + B - C - D) = ${discountValue.toLocaleString()}`,
-      `付款別(支付工具) = (A + B) = ${paymentValue.toLocaleString()}`
-    ];
-  } else if (this.displayMode === 'Summary') {
-    const totalAmt = this.getSum('TXN_TotSaleAmt');
-    const totalTxn = this.getSum('TotalTxn');
-
-    this.pdfSummary = [
-      `總金額合計 = ${totalAmt.toLocaleString()}`,
-      `總交易筆數合計 = ${totalTxn.toLocaleString()}`,
-      '=============================',
-      `平均每筆金額 = ${
-        totalTxn > 0 ? (totalAmt / totalTxn).toFixed(2) : '0.00'
-      }`
-    ];
-  }
-}
 }

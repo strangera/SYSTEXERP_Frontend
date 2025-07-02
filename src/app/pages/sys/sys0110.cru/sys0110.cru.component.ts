@@ -7,8 +7,9 @@ import { EncryptionService } from '../../../shared/service/encryption.service';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
-import { forkJoin, map } from 'rxjs';
+import { finalize, forkJoin, map } from 'rxjs';
 import { UserInfo, UserSys3700Detail } from '../sys0110/sys0110.model';
+import { UserCodeService } from '../../../service/basic/user-code.service';
 // 4-2-1-1使用者基本資料維護
 @Component({
   selector: 'app-sys0110-cru',
@@ -65,6 +66,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
     private sys0110Service: Sys0110Service,
     private encrypt: EncryptionService,
     private sysb800DropdownService: Sysb800DropdownService,
+    private userCodeService: UserCodeService,
   ) {
     super();
   }
@@ -192,12 +194,12 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      frm.value.user_Password = this.encrypt.getPassword(frm.value.user_No, frm.value.user_Password);
       const today = new Date();
       const expireDate = new Date(today);
       expireDate.setDate(today.getDate() + 90);
       const body = {
         ...frm.value,
+        user_Password: this.isFormCreateable ? this.encrypt.getPassword(frm.value.user_No, frm.value.user_Password) : undefined,
         user_No: frm.get('user_No')?.value,
         USER_PwdExpireDate: expireDate.toISOString(),
         sys3700: this.data.map((item: any) => ({
@@ -224,5 +226,19 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
   resetTable() {
     this.data = [];
     this.selectedRows = [];
+  }
+
+  resetLoading = false;
+  showStar = true;
+  resetPassword() {
+    const body = {
+      SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
+      User_No: this.dataForm.get('user_No')?.value || '',
+    }
+    this.userCodeService.resetPassword(body).pipe(finalize(() => this.resetLoading = false)).subscribe(response => {
+      this.messageService.successBubble(`${this.dataForm.get('user_No')?.value} 密碼重置成功，密碼為：${response.Data}`);
+      this.dataForm.get('user_Password')?.setValue(response.Data);
+      this.showStar = false;
+    });
   }
 }

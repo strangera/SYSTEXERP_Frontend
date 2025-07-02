@@ -28,7 +28,7 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
   data: IFin12010Data[] = [];
   selectedItems: IFin12010Data[] = [];
   columns: Column[] = [
-    { field: 'SAL_GUIYYYYMM', header: '發票年月', visible: true, format: formatYYYYMM },
+    { field: 'SAL_GUIYYYYMM_Date', header: '發票年月', visible: true, format: formatYYYYMM },
     { field: 'SAL_GUITrack', header: '字軌', visible: true },
     { field: 'SAL_GUIBegNo', header: '發票起號', visible: true },
     { field: 'SAL_GUIEndNo', header: '發票迄號', visible: true },
@@ -60,7 +60,7 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('FIN12010', '/FIN/FIN12010CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('FIN12010', '/FIN/FIN12010cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {

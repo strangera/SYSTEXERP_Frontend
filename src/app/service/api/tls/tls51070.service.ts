@@ -36,6 +36,50 @@ export class Tls51070Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLS51070_Detail`, body);
   }
 
+  // ---圖片處理---
+
+  //查詢圖片
+  queryImage(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/Image/queryImage`, body);
+  }
+
+  //上傳圖片
+  uploadImages(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/Image/uploadImages`, body);
+  }
+
+  //下載圖片
+  downloadImage(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/Image/downloadImage`, body);
+  }
+
+  //刪除圖片
+  deleteImage(body: any): Observable<any> {
+    return this.http.delete<any>(`${environment.ApiUrl}/Image/deleteImage`, body);
+  }
+
+  downloadImage2(path: string): Observable<Blob> {
+  return this.http.get(`${environment.ApiUrl}/${path}`, {
+    responseType: 'blob'
+  });
+}
+
+  // --- 標籤檔 ---
+
+  //取得標籤檔資料
+  getLabelTLS51070(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/getLabelTLS51070`, body);
+  }
+
+  //產生標籤檔資料
+  exportLabel(data: any[]): Observable<string> {
+      return this.http.post(`${environment.ApiUrl}/ExportLabel/ExportLabel`, data, {
+      responseType: 'text'  // 後端回傳的是純文字
+    });
+  }
+
+  // --- dropDown ---
+
   // 查詢 大分類(業種)設定檔
   queryCAT_LNo_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryPOS2003_DropDownList`, body);
