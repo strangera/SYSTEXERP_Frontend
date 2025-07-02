@@ -1,12 +1,13 @@
 import { Component, Input, OnInit, forwardRef } from '@angular/core';
 import { FormControl } from '@angular/forms';
+import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 
 @Component({
   selector: 'app-query-year-month',
   templateUrl: './query-year-month.component.html',
   styleUrls: ['./query-year-month.component.scss']
 })
-export class QueryYearMonthComponent implements OnInit {
+export class QueryYearMonthComponent extends BasicKitComponent implements OnInit {
   @Input() label = '交易年月';
   @Input() submitted = false;
   @Input() control!: FormControl;
@@ -37,18 +38,25 @@ export class QueryYearMonthComponent implements OnInit {
       : this.allMonths;
   }
 
-  ngOnInit(): void {
-    // ✅ 初始解析 YYYYMM → year + month
-    const yyyymm = this.control.value;
-    if (yyyymm?.length === 6) {
-      this.yearControl.setValue(yyyymm.substring(0, 4));
-      this.monthControl.setValue(yyyymm.substring(4, 6));
-    }
-
-    // ✅ 當年或月變動，自動組成 YYYYMM 並設回 control
-    this.yearControl.valueChanges.subscribe(() => this.syncControlValue());
-    this.monthControl.valueChanges.subscribe(() => this.syncControlValue());
+ngOnInit(): void {
+  // ✅ 初始解析 YYYYMM → year + month
+  const yyyymm = this.control.value;
+  if (yyyymm?.length === 6) {
+    this.yearControl.setValue(yyyymm.substring(0, 4));
+    this.monthControl.setValue(yyyymm.substring(4, 6));
   }
+
+  // ✅ 根據外部控制項狀態禁用欄位
+  if (this.control.disabled) {
+    this.yearControl.disable();
+    this.monthControl.disable();
+  }
+
+  // ✅ 當年或月變動，自動組成 YYYYMM 並設回 control
+  this.yearControl.valueChanges.subscribe(() => this.syncControlValue());
+  this.monthControl.valueChanges.subscribe(() => this.syncControlValue());
+}
+
 
   private syncControlValue(): void {
     const year = this.yearControl.value;

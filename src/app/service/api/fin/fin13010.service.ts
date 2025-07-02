@@ -3,6 +3,8 @@ import { Injectable } from '@angular/core';
 import { catchError, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../shared/service/error-handler.service';
+import { of } from 'rxjs';
+import { delay } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -90,5 +92,21 @@ export class FIN13010Service {
     observer.complete();
   });
 }
+// getInvoiceInfo(invoiceNo: string) {
+//   return this.http.post<any>('/api/FIN13010/GetInvoiceInfo', { invoiceNo });
+// }
+getInvoiceInfo(invoiceNo: string) {
+  const mockData = {
+    Status: '0000',
+    Data: {
+      PUR_VoucherType: 23,
+      PUR_TaxType: '1',
+      Inv_Net: 10000,
+      Inv_Tax: 500,
+      History_RetAmt: 3000
+    }
+  };
 
+  return of(mockData).pipe(delay(500)); // 模擬延遲 500ms
+}
 }

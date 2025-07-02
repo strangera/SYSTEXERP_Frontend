@@ -163,7 +163,7 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
           this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
 
           // ✅ 導向 CRU 頁面
-          this.router.navigate(['account/TLS/TLS23050CRU'], {
+          this.router.navigate(['account/tls/tls23050cru'], {
             state: {
               queryFormValue,
               pageSize: this.customPageSize,

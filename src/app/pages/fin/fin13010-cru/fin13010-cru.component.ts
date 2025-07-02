@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
@@ -27,25 +27,29 @@ creditTypeOptions = [
 ];
 
 
-  dataForm = this.formBuilder.nonNullable.group({
-    PUR_GUINo: [''],
-    PUR_GUIDate: ['', Validators.required],
-    PUR_VoucherType: [''],
-    PUR_RepYYYYMM: [''],
-    PUR_TaxType: [''],
-    PUR_Net: [],
-    PUR_Tax: [],
-    PUR_Amt: [],
-    Remain_Amt: [],
-    Inv_Date: [''],
-    Inv_Net: [],
-    Inv_Tax: [],
-    History_RetAmt: [],
-    Credit_Type: [''],
-    TXN_Ret_No: [''],
-    Source_Doc_No: [''],
-    Voucher_No: ['']
-  });
+
+
+dataForm = this.formBuilder.nonNullable.group({
+  PUR_GUINo: [''],
+  PUR_GUIDate: ['', Validators.required],
+  PUR_VoucherType: [''],
+  PUR_RepYYYYMM: [''],
+  PUR_TaxType: ['', Validators.required],
+  PUR_Net: [undefined as any],
+  PUR_Tax: [undefined as any],
+  PUR_Amt: [undefined as any],
+  Remain_Amt: [undefined as any],
+  Inv_Date: [''],
+  Inv_Net: [undefined as any],
+  Inv_Tax: [undefined as any],
+  History_RetAmt: [undefined as any],
+  Credit_Type: [''],
+  TXN_Ret_No: ['系統自動帶入', Validators.required], // ✅ 簡寫
+  Source_Doc_No: [''],
+  Voucher_No: ['']
+});
+
+
 
   constructor(private apiService: FIN13010Service) {
     super();
@@ -54,6 +58,9 @@ creditTypeOptions = [
   ngOnInit(): void {
     this.initializePage('FIN13010', this.dataForm);
     this.updateDisabledState();
+     this.setupAutoAmountCalculation(); // ⬅️ 新增這行
+     this.setupRemainAmountCalculation(); 
+       this.dataForm.get('TXN_Ret_No')?.disable();
   }
 
   // ✅ 僅允許特定欄位可編輯
@@ -120,4 +127,38 @@ creditTypeOptions = [
       }
     });
   }
+  private setupAutoAmountCalculation(): void {
+  const netControl = this.dataForm.get('PUR_Net');
+  const taxControl = this.dataForm.get('PUR_Tax');
+  const amtControl = this.dataForm.get('PUR_Amt');
+
+  if (netControl && taxControl && amtControl) {
+    netControl.valueChanges.subscribe(() => this.calculateTotalAmount());
+    taxControl.valueChanges.subscribe(() => this.calculateTotalAmount());
+  }
+}
+
+private calculateTotalAmount(): void {
+  const net = this.dataForm.get('PUR_Net')?.value || 0;
+  const tax = this.dataForm.get('PUR_Tax')?.value || 0;
+  this.dataForm.get('PUR_Amt')?.setValue(net + tax, { emitEvent: false });
+}
+private setupRemainAmountCalculation(): void {
+  const amtControl = this.dataForm.get('PUR_Amt');
+  const historyControl = this.dataForm.get('History_RetAmt');
+  const remainControl = this.dataForm.get('Remain_Amt');
+
+  if (amtControl && historyControl && remainControl) {
+    amtControl.valueChanges.subscribe(() => this.calculateRemainAmount());
+    historyControl.valueChanges.subscribe(() => this.calculateRemainAmount());
+  }
+}
+
+private calculateRemainAmount(): void {
+  const amt = this.dataForm.get('PUR_Amt')?.value || 0;
+  const history = this.dataForm.get('History_RetAmt')?.value || 0;
+  this.dataForm.get('Remain_Amt')?.setValue(amt - history, { emitEvent: false });
+}
+
+
 }
