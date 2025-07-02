@@ -223,8 +223,7 @@ private updatePdfSummary(): void {
     },
     { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號',  },
     { field: 'TXN_Time', header: '起始時間', format: this.formatTimeToHHMM.bind(this) },
-{ field: 'TXN_Time', header: '結束時間', format: this.formatTimeToHHMM.bind(this) },
-
+    { field: 'TXN_Time', header: '結束時間', format: this.formatTimeToHHMM.bind(this) },
     { field: 'USR_No', header: '收銀員',  style: 'text-left' },
     { field: 'TXN_PreOrderNo', header: '預售/訂金單號',  },
     { field: 'ORG_TXN_Date', header: '原交易日期',  },
@@ -269,25 +268,25 @@ private updatePdfSummary(): void {
       field: 'TXN_PrintGUI',
       header: '信用卡別',
     
-      format: (val: any) => this.getYesNoLabel(val)
+      
     },
     {
       field: 'TXN_PrintGUI',
       header: '號碼',
     
-      format: (val: any) => this.getYesNoLabel(val)
+      
     },
     {
       field: 'TXN_PrintGUI',
       header: '分期期數',
     
-      format: (val: any) => this.getYesNoLabel(val)
+     
     },
     {
       field: 'TXN_PrintGUI',
       header: '金額',
     
-      format: (val: any) => this.getYesNoLabel(val)
+      
     },
          ];
 
@@ -303,9 +302,9 @@ case 'Summary':
           ? val
           : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
       }},
-  { field: 'tlt_no', header: '專櫃編號' },
-  { field: 'tlt_name', header: '櫃位名稱' },
-  { field: 'TXN_TotSaleAmt', header: '發票總金額', style: 'text-right', format: this.moneyFormat },
+      { field: 'tlt_no', header: '專櫃編號' },
+      { field: 'tlt_name', header: '櫃位名稱' },
+      { field: 'TXN_TotSaleAmt', header: '發票總金額', style: 'text-right', format: this.moneyFormat },
   
  ];
 

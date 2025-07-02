@@ -12,6 +12,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
   styleUrls: ['./fin13010.component.scss']
 })
 export class FIN13010Component extends BasicQueryPageComponent<any> {
+
   taxNumberOptions: any[] = [
     { value: '701702007', label: '701702007' },
     { value: '703902223', label: '703902223' },
@@ -124,4 +125,7 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
   onClearForm(): void {
     this.queryForm.reset();
   }
+
+
+
 }
