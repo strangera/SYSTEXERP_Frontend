@@ -88,7 +88,7 @@ export class Tls52020Service {
    * @param data 包含要更新的採購單 ID 列表及目標狀態
    * @returns API 響應
    *///!!!未完成
-  SetCloseTLS52020(data: ISetCloseTLS52020Request): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/SetCloseTLS52020`, data);
+  updateStatusTLS52020(data: ISetCloseTLS52020Request): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateStatusTLS52020`, data);
   }
 }

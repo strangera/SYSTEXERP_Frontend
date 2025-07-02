@@ -278,7 +278,7 @@ export class Tls52030Service {
    * @param data 包含要更新的進貨單 ID 及目標狀態
    * @returns API 響應
    */
-  updateTLS52030Status(data: IUpdateTLS52030StatusRequest): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateTLS52030_Status`, data);
+  updateStatusTLS52030(data: IUpdateTLS52030StatusRequest): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateStatusTLS52030`, data);
   }
 }

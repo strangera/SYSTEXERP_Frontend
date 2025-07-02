@@ -158,7 +158,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
       idList: rowData.map(item => item.id),
       PO_Status: POStatus.強制結案
     }
-    this.tls52010Service.SetCloseTLS52010(body).pipe(finalize(() => this.loading = false)).subscribe(response => {
+    this.tls52010Service.updateStatusTLS52010(body).pipe(finalize(() => this.loading = false)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.selectedItems = [];
       this.onSubmit(this.queryForm);
@@ -217,7 +217,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
       idList: [rowData.id],
       PO_Status: status
     }
-    this.tls52010Service.SetCloseTLS52010(body).pipe(finalize(() => this.btnLoading = false)).subscribe(response => {
+    this.tls52010Service.updateStatusTLS52010(body).pipe(finalize(() => this.btnLoading = false)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.onSubmit(this.queryForm);
     });

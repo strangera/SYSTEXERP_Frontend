@@ -144,7 +144,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
       idList: [rowData.id],
       PO_Status: status
     }
-    this.tls52020Service.SetCloseTLS52020(body).pipe(finalize(() => this.loading = false)).subscribe(response => {
+    this.tls52020Service.updateStatusTLS52020(body).pipe(finalize(() => this.loading = false)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.onSubmit(this.queryForm);
     });
@@ -159,7 +159,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
       idList: rowData.map(item => item.id),
       PO_Status: POStatus.強制結案
     }
-    this.tls52020Service.SetCloseTLS52020(body).pipe(finalize(() => this.loading = false)).subscribe(response => {
+    this.tls52020Service.updateStatusTLS52020(body).pipe(finalize(() => this.loading = false)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.selectedItems = [];
       this.onSubmit(this.queryForm);

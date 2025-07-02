@@ -267,8 +267,8 @@ export class Tls52010Service {
    * @param data 包含要更新的採購單 ID 列表及目標狀態
    * @returns API 響應
    *///!!!未完成
-  SetCloseTLS52010(data: ISetCloseTLS52010Request): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/SetCloseTLS52010`, data);
+  updateStatusTLS52010(data: ISetCloseTLS52010Request): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateStatusTLS52010`, data);
   }
   /**
    * 新增 POS2016 (採購單主檔) 資料

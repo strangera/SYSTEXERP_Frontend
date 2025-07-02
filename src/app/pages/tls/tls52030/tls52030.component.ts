@@ -158,7 +158,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
       ODM_Status: status,
       ODM_Status_Ori: rowData.ODM_Status
     }
-    this.tls52030Service.updateTLS52030Status(body).pipe(finalize(() => this.loading = false)).subscribe(response => {
+    this.tls52030Service.updateStatusTLS52030(body).pipe(finalize(() => this.loading = false)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.onSubmit(this.queryForm);
     });

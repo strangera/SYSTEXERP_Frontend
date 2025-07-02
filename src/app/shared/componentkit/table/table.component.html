@@ -77,10 +77,11 @@
               ? col.sortField
               : col.field
             : undefined
-        " [pSortableColumnDisabled]="!showSort || rowEditing" class="text-center"
+        " [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" class="text-center"
         [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="IsPrint && col.frozen">
         {{ col.header }}
-        <p-sortIcon *ngIf="showSort && !rowEditing" [field]="col.sortField ? col.sortField : col.field"></p-sortIcon>
+        <p-sortIcon *ngIf="showSort && !rowEditing && col.showSort !== false"
+          [field]="col.sortField ? col.sortField : col.field"></p-sortIcon>
       </th>
       <th [hidden]="!IsPrint || !showManage" class="w-1rem text-center" alignFrozen="right" pFrozenColumn
         [frozen]="IsPrint">
