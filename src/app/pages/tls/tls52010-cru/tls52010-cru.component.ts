@@ -1,18 +1,19 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { debounceTime, finalize, Subject, takeUntil } from 'rxjs';
+import { debounceTime, finalize } from 'rxjs';
 import { DropDownListService, IDropdownItem } from '../../../service/api/dropdownservice/dropDownList.service';
 import { IGetBudgetAmountRequest, IInsertTLS52010Request, IPODetail, IPOS2004DetailData, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
 import { validateMinNumber } from '../../../shared/models/system/validate-field.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 // 2.5.2.1  採購單維護作業 CRU
 @Component({
   selector: 'app-tls52010-cru',
   templateUrl: './tls52010-cru.component.html',
 })
-export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> implements OnInit, OnDestroy {
+export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> implements OnInit {
   // === 表單群組 (與 POS2016 欄位對應) ===
   dataForm = this.formBuilder.nonNullable.group({
     PO_No: [{ value: '系統自動產生', disabled: true }], // 採購單號 (與 POS2016.PO_No 對應)
@@ -34,8 +35,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   brandOptions: IDropdownItem[] = []; // 品牌下拉選單選項
   warehouseOptions: IDropdownItem[] = []; // 倉別下拉選單選項
   userOptions: { user_No: string; user_Name: string }[] = []; // 用戶選項
-
-  private destroy$ = new Subject<void>(); // 用於管理訂閱的生命週期
 
   columns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
@@ -66,19 +65,15 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     this.initializePage('TLS52010', this.dataForm);
     this.loadDropdownOptions();
     if (!this.isFormCreateable) {
-      this.tls52010Service.queryPOS2017({ PO_No: this.dataForm.controls.PO_No.value }).pipe(takeUntil(this.destroy$)).subscribe(response => {
+      this.tls52010Service.queryPOS2017({ PO_No: this.dataForm.controls.PO_No.value }).pipe(untilDestroyed(this)).subscribe(response => {
         console.log('response', response);
       });
     }
     this.setInitialValuesAndWatchChanges();
     this.loadDialogData();
   }
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
   private loadDropdownOptions(): void {
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.vendorOptions = response.Data.map(vendor => ({
         ...vendor,
         label: `${vendor.VEN_No} - ${vendor.Name}`,
@@ -86,14 +81,14 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     });
     // 品牌
     // 獲取品牌的倉別
-    this.dropDownListService.queryPLULOGO_HOS_No_DropDownList().pipe(takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.queryPLULOGO_HOS_No_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.brandOptions = response.Data;
       this.dataForm.controls.LOGO_No.setValue(null); // 清空品牌選擇
       this.dataForm.controls.remainingBudgetAmount.setValue(0); // 清空預算金額
     });
     // 倉別
     this.dataForm.controls.HOS_No.enable();
-    this.dropDownListService.getPOS2034Options().pipe(takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
       this.warehouseOptions = response.Data;
     });
   }
@@ -102,7 +97,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     const userInfo = this.authService.currentUserValue;
     this.userOptions = [{ user_No: userInfo?.user_No || '', user_Name: userInfo?.user_Name || '' }];
     this.dataForm.controls.APPLY_USR_No.setValue(this.userOptions[0]?.user_No || ''); // 假設用戶對象有 userName 屬性
-    this.dataForm.controls.VEN_No.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(vendorNo => {
+    this.dataForm.controls.VEN_No.valueChanges.pipe(untilDestroyed(this)).subscribe(vendorNo => {
       if (vendorNo) {
         const selectedVendor = this.vendorOptions.find(opt => opt.VEN_No === vendorNo);// 顯示廠商簡稱
         this.dataForm.controls.vendorShortName.setValue(selectedVendor?.ShortName ?? ''); // 假設 Name 是簡稱
@@ -117,7 +112,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       this.dialogData = [];
     });
     // 監聽品牌編號變化，用於顯示剩餘預算金額和建議倉別
-    this.dataForm.controls.LOGO_No.valueChanges.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(logoNo => {
+    this.dataForm.controls.LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(logoNo => {
       if (logoNo && this.dataForm.controls.APPLY_Date.value) {
         const applyDate = this.dataForm.controls.APPLY_Date.value;
         const applyYearMonth = `${applyDate.getFullYear()}${(applyDate.getMonth() + 1).toString().padStart(2, '0')}`;
@@ -126,7 +121,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           YYYYMM: applyYearMonth // 採購日期年月
         };
         // 獲取剩餘預算金額
-        this.tls52010Service.GetBudgetAmount(budgetRequest).pipe(takeUntil(this.destroy$)).subscribe(response => {
+        this.tls52010Service.GetBudgetAmount(budgetRequest).pipe(untilDestroyed(this)).subscribe(response => {
           if (response.Data !== undefined) { // 假設返回的是單個數字
             this.dataForm.controls.remainingBudgetAmount.setValue(response.Data);
           } else {
@@ -175,15 +170,15 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   ]
   dialogLoading = false;
   loadDialogData() {
-    this.dropDownListService.queryPOS2003_DropDownList().pipe(takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.CAT_LNoOptions = response.Data.map(item => ({
         ...item,
         label: `${item.No} - ${item.Name}`,
       }));
     });
-    this.dialogQueryForm.controls.CAT_LNo.valueChanges.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe((value) => {
+    this.dialogQueryForm.controls.CAT_LNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
       if (value) {
-        this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: [value] }).pipe(takeUntil(this.destroy$)).subscribe(response => {
+        this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
           this.CAT_MNoOptions = response.Data.map(item => ({
             ...item,
             label: `${item.No} - ${item.Name}`,
@@ -196,9 +191,9 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       this.dialogQueryForm.controls.CAT_MNo.setValue(null); // 清空中分類選擇
       this.dialogQueryForm.controls.CAT_SNo.setValue(null); // 清空中分類選擇
     });
-    this.dialogQueryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe((value) => {
+    this.dialogQueryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
       if (value) {
-        this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [this.dialogQueryForm.controls.CAT_LNo.value || ''], CAT_MNo: [value] }).pipe(takeUntil(this.destroy$)).subscribe(response => {
+        this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [this.dialogQueryForm.controls.CAT_LNo.value || ''], CAT_MNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
           this.CAT_SNoOptions = response.Data.map(item => ({
             ...item,
             label: `${item.No} - ${item.Name}`,
@@ -219,7 +214,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       LOGO_No: this.dataForm.controls.LOGO_No.value,
     }
     this.tls52010Service.queryPOS2004DetailByVenNo(body).pipe(
-      finalize(() => this.dialogLoading = false), takeUntil(this.destroy$)).subscribe(response => {
+      finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
         this.dialogData = response.Data;
         this.totalRecords = response.TotalCount;
       })
@@ -347,7 +342,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     };
     // 處理提交邏輯 (呼叫 insert 或 update)
     this.handleSubmit(frm, () => {
-      this.tls52010Service.insertTLS52010(submitData).pipe(finalize(() => this.loading = false)).subscribe({
+      this.tls52010Service.insertTLS52010(submitData).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe({
         next: (response) => {
           this.messageService.successBubble(response.Message);
           this.dataForm.reset();

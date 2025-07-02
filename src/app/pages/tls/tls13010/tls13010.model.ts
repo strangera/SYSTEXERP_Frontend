@@ -106,6 +106,7 @@ export interface LocationItem {
   floor_desc: string;
   area_desc: string;
   _status?: 'new' | 'modified' | 'deleted' | 'original';
+  _isNew?: boolean; // 標記是否為新資料
 }
 
 // 合約主檔（CRU）
@@ -210,11 +211,15 @@ export interface FareItem {
   is_selected: boolean;
   is_new_item: boolean;
   _status?: 'new' | 'modified' | 'deleted' | 'original';
+
+  _originalSelected?: boolean;    // 追蹤初始選中狀態
+  _originalData?: Partial<FareItem>; // 追蹤原始資料用於比較
+  [key: string]: any;
 }
 
 // next2 - 抽成設定
 export interface CommissionItem {
-  id: number;
+  id: number | string;
   commissionType: string;
   commissionTypeName: string;
   taxType: number;
@@ -228,47 +233,40 @@ export interface CommissionItem {
   annualPerformanceItems: AnnualPerformanceItem[];
   discountLevelItems: DiscountLevelItem[];
   detailItems: any[];
+
+  currentTab?: string; // 預設為 'discount'
   _status?: 'original' | 'modified' | 'new' | 'deleted';
+
+  mainStartDate?: Date | string;  // 對應 TLTTALENT_CHARGEM.cag_bdate
+  mainEndDate?: Date | string;    // 對應 TLTTALENT_CHARGEM.cag_edate
 }
 export interface DiscountSettingItem {
+  id?: number | string;
   selected: boolean;
   cag_barcode: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: Date;      // 對應 TLTTALENT_CHARGED.tlt_bdate
+  endDate: Date;        // 對應 TLTTALENT_CHARGED.tlt_edate
   rate: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
 }
 export interface AnnualPerformanceItem {
+  id?: number | string;
   selected: boolean;
-  startDate: Date;
-  endDate: Date;
+  startDate: Date;       // 對應 TLTTALENT_YEARCHARGED.tlt_bdate
+  endDate: Date;         // 對應 TLTTALENT_YEARCHARGED.tlt_edate
   discountAmount: number;
   rate: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
 }
 export interface DiscountLevelItem {
+  id?: number | string;
   selected: boolean;
   cag_barcode: string;
-  startAmount: number;
-  endAmount: number;
+  startAmount: number;   // 對應 TLTTALENT_LEVEL_CHARGED.level_bmount
+  endAmount: number;     // 對應 TLTTALENT_LEVEL_CHARGED.level_eamount
   rate: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
 }
-
-// next3 - 條件設定
-export interface ConditionDataItem {
-  id?: number | string;
-  A: string;
-  B: string;
-  C: string;
-  D: string;
-  E: string;
-  F: string;
-  G: string;
-  _status?: 'original' | 'new' | 'modified' | 'deleted';
-  _isNew?: boolean;
-}
-
 
 export interface ChangeSummary {
   insert: number;
@@ -284,6 +282,17 @@ export interface BaseConditionItem {
   talent_id: string;
   _status?: 'original' | 'new' | 'modified' | 'deleted';
   _isNew?: boolean;
+}
+
+// 一般抽成條件
+export interface GeneralCommissionCondition extends BaseConditionItem {
+  tlt_id: string;           // 抽成類別
+  tlt_id_desc: string;      // 抽成類別名稱
+  cag_taxtype: string;      // 稅別
+  cag_bdate: string;        // 帳務起
+  cag_edate: string;        // 帳務迄
+  cag_barcode?: string;     // 折扣別
+  cag_charge_rate?: number; // 抽成率
 }
 
 // 固定租金條件 (對應 TLTTALENT_RENT)
@@ -361,16 +370,10 @@ export interface CommissionConditionData {
 export type ConditionItem =
   | FixedRentCondition
   | BaseRentHigherCondition
+  | GeneralCommissionCondition
   | BaseCommissionCondition
   | GraduatedCommissionCondition
   | BaseTierCondition;
-
-// 資料變更追蹤介面
-export interface BaseDataItem {
-  id?: string | number;
-  _status?: 'original' | 'new' | 'modified' | 'deleted';
-  _isNew?: boolean;
-}
 
 // 資料變更追蹤介面
 export interface BaseDataItem {
@@ -393,14 +396,7 @@ export interface SubmitDataStructure {
       toDelete: FareItem[];
     };
   };
-  step3: {
-    summary: ChangeSummary;
-    operations: {
-      toInsert: CommissionItem[];
-      toUpdate: CommissionItem[];
-      toDelete: CommissionItem[];
-    };
-  };
+  step3: Step3ChangeSummary;
   step4: {
     summary: ChangeSummary;
     operations: {
@@ -409,11 +405,19 @@ export interface SubmitDataStructure {
       toDelete: ConditionItem[];
     };
   };
+  legacyDataToDelete?: {
+    CommissionMasters?: CommissionMaster[];
+    ChargedDetails?: ChargedDetail[];
+    RentDetails?: RentDetail[];
+    LimitDetails?: LimitDetail[];
+    LevelDetails?: LevelDetail[];
+  } | null;
   metadata: {
     talentId: string;
     contractId: string;
     submittedAt: Date;
     totalOperations: number;
+    hasLegacyDataToDelete?: boolean; // 🎯 新增：標記是否有舊資料要刪除
   };
 }
 
@@ -444,6 +448,13 @@ export interface TLS13010CommissionResponse {
   TotalPage?: number;
 }
 
+export interface CommissionWarning {
+  Message: string;
+  ItemsToBeDeleted: string[];
+  TotalItemsCount: number;
+  HasCriticalData: boolean;
+}
+
 export interface CommissionResponseData {
   TalentId: string;
   TalentName: string;
@@ -451,13 +462,21 @@ export interface CommissionResponseData {
   CurrentTltTermType: string;
   IsTermTypeChanged: boolean;
   HasError: boolean;
-  ErrorMessage?: string;
-  DataToDelete?: CommissionDataStructure;
-  NewDataStructure?: {
+  ErrorMessage?: string | null;
+  ActionType?: string;        // 🎯 新增：如 "CLEAR_AND_INIT"
+  UserMessage?: string;       // 🎯 新增：給使用者的訊息
+  Warning?: CommissionWarning; // 🎯 新增：警告訊息結構
+  DataToDelete?: CommissionDataStructure; // 要刪除的舊資料
+  NewDataStructure?: {        // 新的資料結構
     TermType: string;
-  };
-  ExistingData?: CommissionDataStructure;
+    ChargedDetails?: any[];
+    RentDetails?: any[];
+    LimitDetails?: any[];
+    LevelDetails?: any[];
+  } | null;
+  ExistingData?: CommissionDataStructure | null; // 現有資料
 }
+
 
 export interface CommissionDataStructure {
   CommissionMasters?: CommissionMaster[];
@@ -528,6 +547,34 @@ export interface LevelDetail {
   start_number: number;     // 起始金額
   end_number: number;       // 終止金額
   charge_rate: number;      // 層級抽取比率
+}
+
+export interface Step3ChangeOperations {
+  commissionMaster: {
+    toInsert: any[];
+    toUpdate: any[];
+    toDelete: any[];
+  };
+  discountSettings: {
+    toInsert: any[];
+    toUpdate: any[];
+    toDelete: any[];
+  };
+  annualSettings: {
+    toInsert: any[];
+    toUpdate: any[];
+    toDelete: any[];
+  };
+  levelSettings: {
+    toInsert: any[];
+    toUpdate: any[];
+    toDelete: any[];
+  };
+}
+
+export interface Step3ChangeSummary {
+  summary: ChangeSummary;
+  operations: Step3ChangeOperations;
 }
 
 // 資料變更追蹤工具類
@@ -700,6 +747,282 @@ export class ConditionDataHelper {
       default:
         return '未知抽成類型';
     }
+  }
+}
+
+// 在 tls13010.model.ts 中修正 Step3DataChangeTracker
+
+export class Step3DataChangeTracker {
+
+  private static currentTalentId: string = '';
+
+  static setCurrentTalentId(talentId: string): void {
+    this.currentTalentId = talentId;
+  }
+
+  static generateStep3ChangeSummary(commissionItems: CommissionItem[], talentId?: string): Step3ChangeSummary {
+    console.log('🔄 開始處理 Step3 變更追蹤，輸入資料:', commissionItems);
+
+    if (talentId) {
+      this.currentTalentId = talentId;
+    }
+
+    // 1. 準備 4 個資料表的變更操作
+    const commissionMasterOps = this.processCommissionMasters(commissionItems);
+    const discountSettingsOps = this.processDiscountSettings(commissionItems);
+    const annualSettingsOps = this.processAnnualSettings(commissionItems);
+    const levelSettingsOps = this.processLevelSettings(commissionItems);
+
+    // 2. 計算總體統計
+    const totalInserts =
+      commissionMasterOps.toInsert.length +
+      discountSettingsOps.toInsert.length +
+      annualSettingsOps.toInsert.length +
+      levelSettingsOps.toInsert.length;
+
+    const totalUpdates =
+      commissionMasterOps.toUpdate.length +
+      discountSettingsOps.toUpdate.length +
+      annualSettingsOps.toUpdate.length +
+      levelSettingsOps.toUpdate.length;
+
+    const totalDeletes =
+      commissionMasterOps.toDelete.length +
+      discountSettingsOps.toDelete.length +
+      annualSettingsOps.toDelete.length +
+      levelSettingsOps.toDelete.length;
+
+    const totalUnchanged = commissionItems.filter(item =>
+      item._status === 'original' || !item._status
+    ).length;
+
+    const result: Step3ChangeSummary = {
+      summary: {
+        insert: totalInserts,
+        update: totalUpdates,
+        delete: totalDeletes,
+        unchanged: totalUnchanged,
+        total: totalInserts + totalUpdates + totalDeletes + totalUnchanged
+      },
+      operations: {
+        commissionMaster: commissionMasterOps,
+        discountSettings: discountSettingsOps,
+        annualSettings: annualSettingsOps,
+        levelSettings: levelSettingsOps
+      }
+    };
+
+    console.log('✅ Step3 變更追蹤完成:', result);
+    return result;
+  }
+
+  /**
+   * 🎯 修正：處理抽成主檔 (TLTTALENT_CHARGEM)
+   */
+  private static processCommissionMasters(commissionItems: CommissionItem[]): {
+    toInsert: any[], toUpdate: any[], toDelete: any[]
+  } {
+    const toInsert: any[] = [];
+    const toUpdate: any[] = [];
+    const toDelete: any[] = [];
+
+    commissionItems.forEach(item => {
+      // 🎯 只處理有狀態變更的項目
+      if (item._status) {
+        const masterData = {
+          // 🎯 修正：確保有 id，但新增項目不包含 id
+          ...(this.hasValidId(item) ? { id: item.id } : {}),
+          talent_id: this.currentTalentId,
+          tlt_id: item.commissionType,
+          tlt_id_desc: item.commissionTypeName,
+          cag_bdate: item.mainStartDate || this.getDefaultStartDate(),
+          cag_edate: item.mainEndDate || this.getDefaultEndDate(),
+          cag_taxtype: item.taxType === 1 ? '1' : '0',
+          sst_amount: item.transactionAmount,
+          sst_rate: item.specialCommission,
+          cap_saletype1: item.thousandDiscount ? 'Y' : 'N',
+          cap_saletype2: item.fullPointActivity ? 'Y' : 'N',
+          _status: item._status
+          // 🎯 移除 _operation
+        };
+
+        switch (item._status) {
+          case 'new':
+            toInsert.push(masterData);
+            break;
+          case 'modified':
+            toUpdate.push(masterData);
+            break;
+          case 'deleted':
+            toDelete.push(masterData);
+            break;
+        }
+      }
+    });
+
+    return { toInsert, toUpdate, toDelete };
+  }
+
+  /**
+   * 🎯 修正：處理折扣設定明細 (TLTTALENT_CHARGED)
+   */
+  private static processDiscountSettings(commissionItems: CommissionItem[]): {
+    toInsert: any[], toUpdate: any[], toDelete: any[]
+  } {
+    const toInsert: any[] = [];
+    const toUpdate: any[] = [];
+    const toDelete: any[] = [];
+
+    commissionItems.forEach(commission => {
+      commission.discountSettingItems.forEach(detail => {
+        if (detail._status) {
+          const detailData = {
+            // 🎯 修正：確保有 id，但新增項目不包含 id
+            ...(this.hasValidId(detail) ? { id: detail.id } : {}),
+            talent_id: this.currentTalentId,
+            tlt_id: commission.commissionType,
+            cag_barcode: detail.cag_barcode,
+            tlt_bdate: this.formatDate(detail.startDate),
+            tlt_edate: this.formatDate(detail.endDate),
+            cag_charge_rate: detail.rate,
+            _status: detail._status
+            // 🎯 移除 _operation 和 _parentId
+          };
+
+          switch (detail._status) {
+            case 'new':
+              toInsert.push(detailData);
+              break;
+            case 'modified':
+              toUpdate.push(detailData);
+              break;
+            case 'deleted':
+              toDelete.push(detailData);
+              break;
+          }
+        }
+      });
+    });
+
+    return { toInsert, toUpdate, toDelete };
+  }
+
+  /**
+   * 🎯 修正：處理年度業績明細 (TLTTALENT_YEARCHARGED)
+   */
+  private static processAnnualSettings(commissionItems: CommissionItem[]): {
+    toInsert: any[], toUpdate: any[], toDelete: any[]
+  } {
+    const toInsert: any[] = [];
+    const toUpdate: any[] = [];
+    const toDelete: any[] = [];
+
+    commissionItems.forEach(commission => {
+      commission.annualPerformanceItems.forEach(detail => {
+        if (detail._status) {
+          const detailData = {
+            ...(this.hasValidId(detail) ? { id: detail.id } : {}),
+            talent_id: this.currentTalentId,
+            tlt_id: commission.commissionType,
+            tlt_bdate: this.formatDate(detail.startDate),
+            tlt_edate: this.formatDate(detail.endDate),
+            year_amount: detail.discountAmount,
+            extra_rate: detail.rate,
+            _status: detail._status
+          };
+
+          switch (detail._status) {
+            case 'new':
+              toInsert.push(detailData);
+              break;
+            case 'modified':
+              toUpdate.push(detailData);
+              break;
+            case 'deleted':
+              toDelete.push(detailData);
+              break;
+          }
+        }
+      });
+    });
+
+    return { toInsert, toUpdate, toDelete };
+  }
+
+  /**
+   * 🎯 修正：處理層級抽成明細 (TLTTALENT_LEVEL_CHARGED)
+   */
+  private static processLevelSettings(commissionItems: CommissionItem[]): {
+    toInsert: any[], toUpdate: any[], toDelete: any[]
+  } {
+    const toInsert: any[] = [];
+    const toUpdate: any[] = [];
+    const toDelete: any[] = [];
+
+    commissionItems.forEach(commission => {
+      commission.discountLevelItems.forEach((detail, index) => {
+        if (detail._status) {
+          const detailData = {
+            ...(this.hasValidId(detail) ? { id: detail.id } : {}),
+            talent_id: this.currentTalentId,
+            tlt_id: commission.commissionType,
+            seq_no: index + 1, // 序號
+            cag_barcode: detail.cag_barcode,
+            level_bmount: detail.startAmount,
+            level_eamount: detail.endAmount,
+            level_charge_rate: detail.rate,
+            _status: detail._status
+          };
+
+          switch (detail._status) {
+            case 'new':
+              toInsert.push(detailData);
+              break;
+            case 'modified':
+              toUpdate.push(detailData);
+              break;
+            case 'deleted':
+              toDelete.push(detailData);
+              break;
+          }
+        }
+      });
+    });
+
+    return { toInsert, toUpdate, toDelete };
+  }
+
+  // 🎯 輔助方法
+  private static hasValidId(item: any): boolean {
+    return item.id !== null && item.id !== undefined && item.id !== '';
+    // 移除對 temp_ 的限制，因為前端需要這些 ID 來追蹤狀態
+  }
+
+
+  private static formatDate(date: any): string {
+    if (!date) return '';
+
+    try {
+      if (date instanceof Date) {
+        return date.toISOString().split('T')[0];
+      } else if (typeof date === 'string') {
+        return new Date(date).toISOString().split('T')[0];
+      }
+      return '';
+    } catch (error) {
+      console.warn('日期格式化失敗:', date, error);
+      return '';
+    }
+  }
+
+  private static getDefaultStartDate(): string {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  private static getDefaultEndDate(): string {
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    return nextYear.toISOString().split('T')[0];
   }
 }
 

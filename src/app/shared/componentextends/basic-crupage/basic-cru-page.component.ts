@@ -8,7 +8,8 @@ import { UserInfo } from '../../models/system/userInfo';
 import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { LazyLoadEvent } from '../../componentkit/table/table.model';
-
+import { UntilDestroy } from '@ngneat/until-destroy';
+@UntilDestroy()
 export class BasicCruPageComponent<T> {
   // Page No
   ProgNo = '';

@@ -1,15 +1,11 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div *appHasPermission="addPermission">
-      <app-button
-        btnType="create"
-        label="發票區段轉檔"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button
+      btnType="create"
+      (click)="onCreate()"
+      label="{{ 'create' | translate }}"
+    ></app-button>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -27,7 +23,6 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
               label="退出/折讓單號"
-              
               [startControl]="queryForm.controls.TXN_Ret_No_Start"
               [endControl]="queryForm.controls.TXN_Ret_No_End"
               [submitted]="submitted"
@@ -38,17 +33,14 @@
               label="字軌"
               [control]="queryForm.controls.PUR_GUINo"
               [submitted]="submitted"
-             
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
               label="發票號碼起"
-             
               [startControl]="queryForm.controls.PUR_GUINo_Start"
               [endControl]="queryForm.controls.PUR_GUINo_End"
               [submitted]="submitted"
-              
             ></app-input-text-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -62,41 +54,68 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="發票格式"
+              controlName="PUR_VoucherType"
+              [options]="PUR_VoucherTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.PUR_VoucherType"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
             <app-query-year-month
               [label]="'申報年月'"
-              [yearControl]="queryForm.controls.Year"
-              [monthControl]="queryForm.controls.Month"
+              [control]="queryForm.controls.PUR_RepYYYYMM"
               [submitted]="submitted"
               [onlyOddMonths]="true"
             ></app-query-year-month>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="銷售日期"
-              [startControl]="queryForm.controls.startSalesDate"
-              [endControl]="queryForm.controls.endSalesDate"
+            <app-input-text-range
+              label="憑證單號"
+              [startControl]="queryForm.controls.Source_Doc_No_Start"
+              [endControl]="queryForm.controls.Source_Doc_No_End"
               [submitted]="submitted"
-            ></app-calendar-range>
+            ></app-input-text-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="稅籍編號"
-              controlName="taxNumber"
-              [options]="taxNumberOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.taxNumber"
+            <app-input-text-range
+              label="傳票編號"
+              [startControl]="queryForm.controls.Voucher_No_Start"
+              [endControl]="queryForm.controls.Voucher_No_End"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-input-text-range>
           </div>
         </div>
-        <ul>
-          <li>請注意 :</li>
-          <li>1、最後專櫃發票匯總日期 : 2020/2/6 。</li>
-          <li>2、最後轉檔日期 : 2024/8/20 。</li>
-        </ul>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
       </form>
     </p-accordionTab>
   </p-accordion>
+</div>
+
+<div class="card">
+  <app-table
+    tableKey="FIN13010"
+    [data]="data"
+    [columns]="columns"
+    
+    dataKey="PUR_GUINo"
+    [multiSortMeta]="[{ field: 'PUR_GUINo', order: 1 }]"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [loading]="loading"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    [showManage]="true"
+    [showDelete]="true"
+    [showCheckBox]="true"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+  ></app-table>
 </div>

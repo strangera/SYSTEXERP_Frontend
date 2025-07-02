@@ -24,8 +24,6 @@ const routes: Routes = [
       { path: 'sys', loadChildren: () => import('./sys/sys.module').then(m => m.SysModule) },
       // 5. 客戶關係管理 (CPM)
       { path: 'cpm', loadChildren: () => import('./cpm/cpm.module').then(m => m.CpmModule) },
-      // 注意：這裡的 404 路由只會捕獲 PagesModule 內部未匹配的路由
-      { path: '**', loadChildren: () => import('./base/notfound/notfound.module').then(m => m.NotfoundModule) },
     ]
   },
 ];

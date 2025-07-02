@@ -16,9 +16,13 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
     { value: '701702007', label: '701702007' },
     { value: '703902223', label: '703902223' },
   ];
+    PUR_VoucherTypeOptions: any[] = [
+    { value: '23', label: '三聯式、電子計算機及三聯式收銀機統一發票之進貨退出或折讓證明單' },
+    { value: '24', label: '二聯式收銀機統一發票及載有稅額之其他憑證之進貨退出或折讓證明單' },
+  ];
 
   queryForm = this.formBuilder.group({
-    onedatemm: [null],        // 申報年月
+    
     startSalesDate: [null],   // 領用日期(起)
     endSalesDate: [null],     // 領用日期(迄)
     taxNumber: [null],        // 稅籍編號
@@ -31,6 +35,12 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
     PUR_GUINo_End: [null],
     PUR_GUIDate_Start: [null], // 領用日期(起)
     PUR_GUIDate_End: [null],   // 領用日期(迄)
+    PUR_VoucherType: [null], // 發票狀態
+    PUR_RepYYYYMM: [null], // 發票年月
+    Source_Doc_No_Start: [], // 憑證單號(起)
+    Source_Doc_No_End: [],   // 憑證單號(迄)
+    Voucher_No_Start: [], // 發票號碼(起)
+    Voucher_No_End: [],   // 發票號碼(迄)
     ...createPaginationConfig([{ field: 'startSalesDate', order: 1 }])
   });
 
@@ -38,19 +48,17 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
   totalRecords = 0;
 
   columns: any[] = [
-    { field: 'col1', header: '發票年月', visible: true },
-    { field: 'col2', header: '申報年月', visible: true },
-    { field: 'col3', header: '類別', visible: true },
-    { field: 'col4', header: '字軌', visible: true },
-    { field: 'col5', header: '發票號碼(起)', visible: true },
-    { field: 'col6', header: '發票號碼(迄)', visible: true },
-    { field: 'col7', header: '領用機號', visible: true },
-    { field: 'col8', header: '領用單位', visible: true },
-    { field: 'col9', header: '領用日期', visible: true },
-    { field: 'col10', header: '繳回機台', visible: true },
-    { field: 'col11', header: '繳回日期', visible: true },
-    { field: 'col12', header: '發票狀態', visible: true },
-    { field: 'col13', header: '裝箱箱號', visible: true }
+    { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },
+    { field: 'PUR_GUINo', header: '字軌', visible: true },
+    { field: 'PUR_GUINo_Start', header: '發票號碼', visible: true },
+    { field: 'PUR_GUIDate', header: '退出/折讓日期', visible: true },
+    { field: 'PUR_VoucherType', header: '發票格式', visible: true },
+    { field: 'Credit_Type', header: '區別', visible: true },  //折讓/退出
+    { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true },
+    { field: 'PUR_Net', header: '退回/折讓金額', visible: true },
+    { field: 'Source_Doc_No', header: '憑證單號', visible: true },
+    { field: 'Voucher_No', header: '傳票編號', visible: true },
+
   ];
 
   constructor(private fin13010Service: FIN13010Service) {
@@ -58,8 +66,8 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN13010', 'FIN13010cru', this.queryForm);
-
+    this.initializePage('FIN13010','/FIN/FIN13010CRU', this.queryForm);
+    
   }
 
   onSubmit(form: FormGroup): void {
@@ -82,17 +90,27 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
 
     this.fin13010Service.queryFIN13010(payload).subscribe({
       next: (res) => {
-        if (res.Status === '0000') {
+        
           this.data = res.Data || [];
           this.totalRecords = res.TotalCount || this.data.length;
           this.queryStateService.setQueryState(this.ProgNo, payload);
           this.messageService.successBubble('查詢成功');
-        } else {
-          this.messageService.errorBubble('查詢失敗');
-        }
+       
       },
+      //       next: (res) => {
+      //   if (res.Status === '0000') {
+      //     this.data = res.Data || [];
+      //     this.totalRecords = res.TotalCount || this.data.length;
+      //     this.queryStateService.setQueryState(this.ProgNo, payload);
+      //     this.messageService.successBubble('查詢成功');
+      //   } else {
+      //     this.messageService.errorBubble('查詢失敗');
+      //     this.loading = false;
+      //   }
+      // },
       error: () => {
         this.messageService.errorBubble('查詢錯誤');
+        this.loading = false;
       },
       complete: () => {
         this.loading = false;
