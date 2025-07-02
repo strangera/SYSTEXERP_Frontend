@@ -74,7 +74,7 @@
           <!-- 🎯 修改：抽成設定表格顯示條件 -->
           <div *ngIf="dataLoaded && hasCommissionData()">
             <app-expandable-edit-table
-              [data]="commissionItems"
+              [data]="commissionData"
               [mainColumns]="commissionColumns"
               [detailKey]="'detailItems'"
               [dataKey]="'id'"

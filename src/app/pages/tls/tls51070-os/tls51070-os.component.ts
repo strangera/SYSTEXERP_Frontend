@@ -145,7 +145,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
   }
 
   onBack() {
-    this.router.navigate(['account/TLS/TLS51070']);
+    this.router.navigate(['account/tls/tls51070']);
   }
 
   // 匯出標籤檔

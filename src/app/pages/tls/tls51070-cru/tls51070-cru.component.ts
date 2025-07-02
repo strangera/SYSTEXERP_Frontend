@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'; // 引入 uuidv4
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy } from '@ngneat/until-destroy';
 import { ChangeDetectorRef, Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -14,7 +14,6 @@ import { dropDown51070 } from './dropDown51070';
 import { Tls51060Service } from '../../../service/api/tls/tls51060.service';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { environment } from '../../../../environments/environment';
-import { IMG1001 } from '../../base/demo/input.table/input.table.component';
 import { firstValueFrom } from 'rxjs';
 
 @UntilDestroy()
@@ -70,7 +69,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     // 商品資訊 顯示畫面
     LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌編號 ---PLULOGO
     PLU_SalePrc: [0, [Validators.required, Validators.maxLength(10)]], // 商品售價
-    stock: [0, [Validators.maxLength(10)]], // 庫存量 讀POS2099 新增固定0 ---未確認---
+    stock: [0, [Validators.maxLength(10)]], // 庫存量 讀POS2099 新增固定0 ---後端直接提供---
     PLU_OrderPrc: [0, [Validators.required, Validators.maxLength(10)]], // 標準進價 商品售價＊進貨折數/1.05 ，計算到小數點以下2位，必填 (不可編輯 新增遵循此規則)
     PLU_SafeQty: [0, [Validators.maxLength(10)]], // 安全存量
 
@@ -203,7 +202,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // ----------------------------------------------------------------
 
   constructor(
-    private cdr: ChangeDetectorRef,
     private tls51060Service: Tls51060Service, //查詢品牌代碼檔
     private tls51070Service: Tls51070Service,
     private dropDown51070: dropDown51070, //下拉選單
@@ -381,7 +379,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           console.log('insert', requestBody);
 
           this.tls51070Service.insertTLS51070(requestBody).subscribe(() => {
-            this.messageService.successBubble('新增成功');
+            this.messageService.successBubble('POS2004主檔新增成功');
             this.onCancel(); // 儲存後，會返回列表
           });
         }
@@ -406,7 +404,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
           this.tls51070Service.updateTLS51070(requestBody).subscribe({
             next: () => {
-              this.messageService.successBubble('更新成功');
+              this.messageService.successBubble('POS2004主檔更新成功');
               this.onCancel(); // 儲存後，會返回列表
             }
           });
@@ -557,33 +555,16 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         // 圖片讀取時進行轉檔 將IMG1001Detail的IMG_File內容變更為_以後的內容
         // this.img1001Detail = response.Data[0].IMG1001Detail.map((item: { IMG_File: string; }) => {
         const downloadPromises = rawImages.map(async (item: any) => {
-          const cleanFileName = item.IMG_File.split('_').slice(1).join('_');
-          const cleanPath = item.IMG_Path.replace('~', '');
-          const fullPath = `${cleanPath}/${item.IMG_File}`;
-
-          try {
-            const blob = await firstValueFrom(this.tls51070Service.downloadImage2(fullPath));
-            const blobUrl = URL.createObjectURL(blob);
-
-            return {
-              ...item,
-              IMG_File: cleanFileName,
-              IMG_Url: blobUrl // 自訂欄位給 <img> 用
-            };
-          } catch (err) {
-            console.error('圖片讀取失敗', fullPath);
-            return {
-              ...item,
-              IMG_File: cleanFileName,
-              IMG_Url: '' // 留空避免爆掉
-            };
-          }
+        const path = item.IMG_Path.replace('~', '');
+        const url = `${environment.ApiUrl}/${path}/${item.IMG_File}`.replace(/\/{2,}/g, '/');
+          return {
+            ...item,
+            IMG_Path: url
+          };
         });
 
         this.img1001Detail = await Promise.all(downloadPromises);
         console.log(this.img1001Detail);
-        this.img1001Data = this.img1001Detail
-        
 
         this.POS2005Data = this.pos2005Detail;
         this.POS2020Data = this.pos2020Detail;
@@ -595,7 +576,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
         console.log('POS2005Data', this.POS2005Data);
         console.log('POS2020Data', this.POS2020Data);
-        console.log('img1001Detail', this.img1001Detail);
+        console.log('img1001Data', this.img1001Data);
       });
     }
   }
@@ -669,82 +650,57 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   }
 
   // ---圖片相關---
-  images: IMG1001[] = [{
-    "id": 101,
-    "IMG_Type": "POS2004",
-    "IMG_SeqNo": "0100000000014",
-    "IMG_Path": "https://localhost:7271/IMAGES/POS2004/2506/250627082102041_food_energy_bar.png",
-    "IMG_File": "250627082102041_food_energy_bar.png",
-    "IMG_Remark": "",
-    "CRT_Date": "0001-01-01T00:00:00",
-    "UPD_Date": "2025-06-27T16:21:01.99",
-    "UPD_USR_No": "admin",
-    "UPD_USR_Name": "管理員⭐"
-  }]
-
-  // 取得圖片資料
-  loadImages(IMG_Type: string, IMG_SeqNo: string) {
-    if (IMG_Type && IMG_SeqNo) {
-      const request = {
-        "IMG_Type": IMG_Type,
-        "IMG_SeqNo": IMG_SeqNo
-      }
-      this.tls51070Service.queryImage(request).pipe(untilDestroyed(this)).subscribe(data => {
-        this.img1001Data = data.Data.map((item: { IMG_Path: string; IMG_File: any; }) => {
-          // 處理圖片完整 URL
-          const imgPath = item.IMG_Path.replace('~', '');
-          const fullUrl = `${environment.ApiUrl}/${imgPath}/${item.IMG_File}`.replace(/\/{2,}/g, '/');
-          return {
-            ...item,
-            IMG_Path: fullUrl // 將原本的 IMG_Path 改成完整 URL
-          };
-        });
-
-        console.log('取得圖片資料', this.img1001Data);
-        this.cdr.markForCheck();
-      });
-    } else {
-
-      this.messageService.infoBubble('無圖片相關序號');
-    }
-  }
 
   //* 圖片相關
-  async createImage(pluMagNo: string, type: string) {
-    const promises: Promise<any>[] = [];
+  async createImage(IMG_Type: string, IMG_SeqNo: string, IMG_Remark: string) {
+   const tasks: Promise<any>[] = [];
+
+    // 若有選擇要刪除的圖片，加入刪除任務（這段你已備妥）
     if (this.confirmDeleteImages.length > 0) {
-      promises.push(this.deleteImages(pluMagNo));
+      tasks.push(this.deleteImages(IMG_SeqNo));
     }
+
+    // 若有新檔案，加入上傳任務
     if (this.files.length > 0) {
-      promises.push(this.uploadImages(pluMagNo, type));
+      // tasks.push(this.uploadImages(IMG_Type, IMG_SeqNo, IMG_Remark));
     }
-    if (promises.length > 0) {
-      const results = await Promise.allSettled(promises);
-      results.forEach((result, index) => {
-        if (result.status === 'fulfilled') {
-          console.log(`操作 ${index + 1} 成功:`, result.value);
+
+    if (tasks.length > 0) {
+      const results = await Promise.allSettled(tasks);
+      results.forEach((res, i) => {
+        if (res.status === 'fulfilled') {
+          console.log(`✅ 圖片操作 ${i + 1} 成功:`, res.value);
         } else {
-          console.error(`操作 ${index + 1} 失敗:`, result.reason);
+          console.error(`❌ 圖片操作 ${i + 1} 失敗:`, res.reason);
         }
       });
+
+      // 上傳後重新讀圖
+      // this.loadImages(IMG_Type, IMG_SeqNo);
     }
   }
-  private async uploadImages(pluMagNo: string, type: string) {
+  private async uploadImages(IMG_Type : string, IMG_SeqNo : string, IMG_Remark: string) {
     const formData = new FormData();
+
+    // 加入欄位資訊
+    formData.append('IMG_Type', IMG_Type);
+    formData.append('IMG_SeqNo', IMG_SeqNo);
+    formData.append('IMG_Remark', IMG_Remark);
+
+    // 加入檔案
     this.files.forEach(file => {
-      // 取得原始副檔名
       const originalName = file.name;
       const lastDotIndex = originalName.lastIndexOf('.');
       const extension = lastDotIndex === -1 ? '' : originalName.substring(lastDotIndex);
-      // 產生 UUID v4 作為新的檔名
       const uniqueId = uuidv4();
       const normalizedName = `${uniqueId}${extension}`;
-      // 創建一個新的 File 物件，使用規範化的檔名
       const newFile = new File([file], normalizedName, { type: file.type, lastModified: file.lastModified });
-      // 將新的 File 物件加入 FormData
-      formData.append('files', newFile, newFile.name);
+
+      formData.append('Files', newFile, newFile.name); // ✅ Key 要是 "Files"，與後端一致
     });
-    // await firstValueFrom(this.tls51070Service.uploadImages(pluMagNo, type, formData));
+
+    // 呼叫 Service
+    await firstValueFrom(this.tls51070Service.uploadImages(formData));
   }
   private async deleteImages(pluMagNo: string) {
     // await firstValueFrom(this.tls51070Service.deleteImage(this.confirmDeleteImages, pluMagNo, 'POS2004'));

@@ -9,6 +9,11 @@
       (click)="onSubmitNext()"
     ></app-button>
     <app-button btnType="back" (click)="onCancel()"></app-button>
+    <!-- <div class="debug-buttons">
+      <button (click)="debugLocationStatus()">查看狀態</button>
+      <button (click)="testAddLocation()">測試新增</button>
+      <button (click)="testSaveAndReload()">測試暫存</button>
+    </div> -->
   </div>
   <!-- 表單內容 -->
   <p-accordion [multiple]="true">
@@ -248,7 +253,7 @@
     >
       <div class="col-12">
         <app-expandable-edit-table
-          [data]="locationData"
+          [data]="getDisplayLocationData()"
           [mainColumns]="locationColumns"
           [showCheckBox]="true"
           [showPaginator]="false"

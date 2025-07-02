@@ -10,7 +10,7 @@ import { environment } from '../../../../../environments/environment';
 export class Tls46010Service {
   apiUrl: string = environment.ApiUrl + '/TLS0000/TLS4000';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // 查詢 POS10015 資料表
   queryTLS46010(body: any): Observable<any> {
