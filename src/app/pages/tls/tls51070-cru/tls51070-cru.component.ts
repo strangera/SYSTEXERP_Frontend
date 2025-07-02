@@ -409,6 +409,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
               this.messageService.successBubble('POS2004主檔更新成功');
               // 進行圖片檔更新
               await this.createImage();
+              // 刪除邏輯
+              await this.deleteImages();
+
               this.onCancel(); // 儲存後，會返回列表
             }
           });
@@ -657,7 +660,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   //* 圖片相關
   async createImage() {
-    console.log('現有資料', this.img1001Data);
+    console.log('參考資料', this.img1001Data);
     console.log('變更資料', this.files);
 
     if (!this.img1001Data || this.img1001Data.length === 0) {
@@ -702,16 +705,50 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     }
   }
 
-  private async deleteImages(img1001Data: IMG1001Detail[]) {
-    const requestList = img1001Data.map(item => ({
-      IMG_Type: item.IMG_Type,
-      IMG_SeqNo: item.IMG_SeqNo,
-      IMG_File: item.IMG_File
-    }));
+  private async deleteImages() {
+    if (!this.confirmDeleteImages || this.confirmDeleteImages.length === 0) {
+      console.log('❕ 無需刪除圖片');
+      return;
+    }
 
-    console.log('送出的刪除圖片內容',requestList);
-    //  await firstValueFrom(this.tls51070Service.deleteImage(request));
+    const tasks: Promise<any>[] = [];
+
+    for (const fileName of this.confirmDeleteImages) {
+      // 從 img1001Data 中找出對應這個 fileName 的資料
+      const match = this.img1001Data.find(img => img.IMG_File === fileName);
+
+      // if (!match) {
+      //   console.warn(`⚠️ 找不到檔名為 ${fileName} 的參考資料，略過`);
+      //   continue;
+      // }
+
+      const request = {
+        IMG_Type: match.IMG_Type,
+        IMG_SeqNo: match.IMG_SeqNo,
+        IMG_File: match.IMG_File,
+      };
+
+      console.log('📤 刪除圖片內容:', request);
+      // tasks.push(firstValueFrom(this.tls51070Service.deleteImage(request)));
+    }
+
+    try {
+      const results = await Promise.allSettled(tasks);
+      results.forEach((res, i) => {
+        if (res.status === 'fulfilled') {
+          console.log(`✅ 圖片刪除 ${i + 1} 成功`);
+        } else {
+          console.error(`❌ 圖片刪除 ${i + 1} 失敗:`, res.reason);
+        }
+      });
+
+      this.messageService.successBubble(`成功刪除 ${tasks.length} 張圖片`);
+    } catch (err) {
+      console.error('❌ 刪除圖片過程中發生錯誤:', err);
+      this.messageService.errorBubble('圖片刪除失敗');
+    }
   }
+
 }
 
 
