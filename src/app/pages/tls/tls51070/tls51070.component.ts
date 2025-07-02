@@ -356,7 +356,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   gotoTls51070OS(destination: string) {
     console.log('導引到', destination);
     //導引到sysb400.os
-    this.router.navigate(['account/TLS/TLS51070OS'], {
+    this.router.navigate(['account/tls/tls51070os'], {
       state: {
         destination: destination,
       }

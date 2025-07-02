@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'; // 引入 uuidv4
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy } from '@ngneat/until-destroy';
 import { ChangeDetectorRef, Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -69,7 +69,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     // 商品資訊 顯示畫面
     LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌編號 ---PLULOGO
     PLU_SalePrc: [0, [Validators.required, Validators.maxLength(10)]], // 商品售價
-    stock: [0, [Validators.maxLength(10)]], // 庫存量 讀POS2099 新增固定0 ---未確認---
+    stock: [0, [Validators.maxLength(10)]], // 庫存量 讀POS2099 新增固定0 ---後端直接提供---
     PLU_OrderPrc: [0, [Validators.required, Validators.maxLength(10)]], // 標準進價 商品售價＊進貨折數/1.05 ，計算到小數點以下2位，必填 (不可編輯 新增遵循此規則)
     PLU_SafeQty: [0, [Validators.maxLength(10)]], // 安全存量
 
@@ -202,7 +202,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // ----------------------------------------------------------------
 
   constructor(
-    private cdr: ChangeDetectorRef,
     private tls51060Service: Tls51060Service, //查詢品牌代碼檔
     private tls51070Service: Tls51070Service,
     private dropDown51070: dropDown51070, //下拉選單
@@ -556,34 +555,16 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         // 圖片讀取時進行轉檔 將IMG1001Detail的IMG_File內容變更為_以後的內容
         // this.img1001Detail = response.Data[0].IMG1001Detail.map((item: { IMG_File: string; }) => {
         const downloadPromises = rawImages.map(async (item: any) => {
-          //const cleanFileName = item.IMG_File.split('_').slice(1).join('_');
-          const cleanFileName = item.IMG_File
-          const cleanPath = item.IMG_Path.replace('~', '');
-          const fullPath = `${cleanPath}/${cleanFileName}`; // 改這裡！
-
-          try {
-            const blob = await firstValueFrom(this.tls51070Service.downloadImage2(fullPath));
-            const blobUrl = URL.createObjectURL(blob);
-
-            console.log('✅ 成功下載圖片：', {原始檔名: item.IMG_File,簡化檔名: cleanFileName,路徑: fullPath,blobUrl});
-
-            return {
-              ...item,
-              IMG_File: cleanFileName,
-              IMG_Url: blobUrl // 自訂欄位給 <img> 用
-            };
-          } catch (err) {
-            console.error('圖片讀取失敗', fullPath);
-            return {
-              ...item,
-              IMG_File: cleanFileName,
-              IMG_Url: '' // 留空避免爆掉
-            };
-          }
+        const path = item.IMG_Path.replace('~', '');
+        const url = `${environment.ApiUrl}/${path}/${item.IMG_File}`.replace(/\/{2,}/g, '/');
+          return {
+            ...item,
+            IMG_Path: url
+          };
         });
 
         this.img1001Detail = await Promise.all(downloadPromises);
-        console.log(this.img1001Detail);        
+        console.log(this.img1001Detail);
 
         this.POS2005Data = this.pos2005Detail;
         this.POS2020Data = this.pos2020Detail;
@@ -595,7 +576,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
         console.log('POS2005Data', this.POS2005Data);
         console.log('POS2020Data', this.POS2020Data);
-        console.log('img1001Detail', this.img1001Detail);
+        console.log('img1001Data', this.img1001Data);
       });
     }
   }
