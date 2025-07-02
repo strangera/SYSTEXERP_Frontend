@@ -71,7 +71,7 @@ export class TLS46010Component
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS46010', '/TLS/TLS46010CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS46010', '/TLS/TLS46010cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup): void {

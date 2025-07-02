@@ -48,7 +48,7 @@ export class TLS21030Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS21030', 'TLS/TLS21030CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS21030', 'TLS/TLS21030cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {

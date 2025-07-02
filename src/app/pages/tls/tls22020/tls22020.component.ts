@@ -143,7 +143,7 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS22020', '/TLS/TLS22020CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS22020', '/TLS/TLS22020cru', this.queryForm, (form) => this.onSubmit(form));
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.ECRNoService.getECRNo().subscribe((data) => {
       this.ECRNoOptions = data;

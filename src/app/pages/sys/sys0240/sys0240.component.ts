@@ -44,7 +44,7 @@ export class SYS0240Component extends BasicQueryPageComponent<tblRole>
   }
 
   ngOnInit(): void {
-    this.initializePage('SYS0240', 'SYS/SYS0240CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('SYS0240', 'SYS/SYS0240cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {

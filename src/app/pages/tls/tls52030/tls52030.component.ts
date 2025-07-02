@@ -110,7 +110,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS52030', 'TLS/TLS52030', this.queryForm, (f) => this.onSubmit(f));
+    this.initializePage('TLS52030', 'TLS/TLS52030cru', this.queryForm, (f) => this.onSubmit(f));
     // 倉別 (HOS_No)
     this.dropDownListService.getPOS2034Options().pipe(takeUntil(this.destroy$)).subscribe(response => {
       this.warehouseOptions = response.Data;

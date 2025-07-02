@@ -73,7 +73,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS22010', '/TLS/TLS22010CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS22010', '/TLS/TLS22010cru', this.queryForm, (form) => this.onSubmit(form));
     // 初始化權限
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 

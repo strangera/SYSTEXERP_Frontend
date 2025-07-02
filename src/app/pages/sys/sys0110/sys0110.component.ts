@@ -85,7 +85,7 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
   }
 
   ngOnInit(): void {
-    this.initializePage('SYS0110', '/SYS/SYS0110CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('SYS0110', '/SYS/SYS0110cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 

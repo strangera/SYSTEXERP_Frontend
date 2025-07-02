@@ -53,7 +53,7 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSBC00', 'SYS/SYSBC00CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('SYSBC00', 'SYS/SYSBC00cru', this.queryForm, (form) => this.onSubmit(form));
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {

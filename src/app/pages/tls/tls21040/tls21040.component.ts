@@ -55,7 +55,7 @@ export class TLS21040Component extends BasicQueryPageComponent<any> implements O
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS21040', 'TLS/TLS21040CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS21040', 'TLS/TLS21040cru', this.queryForm, (form) => this.onSubmit(form));
     this.sysbc00Service.querySYSBC00({}).subscribe((res) => {
       this.bankOptions = res.Data.map(item => ({
         ...item, label: item.BNK_No + ' - ' + item.BNK_Name

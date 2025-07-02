@@ -6,7 +6,7 @@
   <ng-template pTemplate="footer">
     <div class="grid justify-content-end gap-2 m-0 border-top-1 surface-border pt-3">
       <app-button btnType="back" (click)="visibleChange.emit(false)"></app-button>
-      <app-button label="確定" btnType="default" (click)="saveDialog()" [disabled]="disable"></app-button>
+      <app-button label="確定" btnType="submit" (click)="saveDialog()" [disabled]="disable"></app-button>
     </div>
   </ng-template>
 </p-dialog>

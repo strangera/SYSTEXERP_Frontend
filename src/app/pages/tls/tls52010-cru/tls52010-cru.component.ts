@@ -4,7 +4,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { debounceTime, finalize, Subject, takeUntil } from 'rxjs';
 import { DropDownListService, IDropdownItem } from '../../../service/api/dropdownservice/dropDownList.service';
 import { IGetBudgetAmountRequest, IInsertTLS52010Request, IPODetail, IPOS2004DetailData, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
-import { Column, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
 import { validateMinNumber } from '../../../shared/models/system/validate-field.model';
 
 // 2.5.2.1  採購單維護作業 CRU
@@ -20,7 +20,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     vendorShortName: [{ value: '', disabled: true }], // 廠商簡稱 (前端專用，不對應資料庫欄位，顯示在 VEN_No 下一欄)
     LOGO_No: [null, [Validators.required]], // 品牌編號 (與 POS2016.LOGO_No 對應)
     remainingBudgetAmount: [{ value: 0, disabled: true }], // 剩餘預算金額 (前端顯示用，不對應資料庫欄位)
-    HOS_No: [{ value: '', disabled: true }, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
+    HOS_No: [{ value: null as string | null, disabled: true }, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
     PO_TotalBuyNet: [{ value: 0, disabled: true }], // 採購金額
     PO_TotalBuyTax: [{ value: 0, disabled: true }], //稅額
     PO_TotalBuyAmt: [{ value: 0, disabled: true }], // 合計金額
@@ -84,10 +84,17 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         label: `${vendor.VEN_No} - ${vendor.Name}`,
       }));
     });
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(takeUntil(this.destroy$)).subscribe(response => {
+    // 品牌
+    // 獲取品牌的倉別
+    this.dropDownListService.queryPLULOGO_HOS_No_DropDownList().pipe(takeUntil(this.destroy$)).subscribe(response => {
       this.brandOptions = response.Data;
       this.dataForm.controls.LOGO_No.setValue(null); // 清空品牌選擇
       this.dataForm.controls.remainingBudgetAmount.setValue(0); // 清空預算金額
+    });
+    // 倉別
+    this.dataForm.controls.HOS_No.enable();
+    this.dropDownListService.getPOS2034Options().pipe(takeUntil(this.destroy$)).subscribe(response => {
+      this.warehouseOptions = response.Data;
     });
   }
   private setInitialValuesAndWatchChanges(): void {
@@ -102,8 +109,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       } else {
         this.dataForm.controls.vendorShortName.setValue('');
         this.brandOptions = []; // 清空品牌選項
-        this.dataForm.controls.LOGO_No.setValue(null); // 清空品牌選擇
-        this.dataForm.controls.remainingBudgetAmount.setValue(0); // 清空預算金額
         this.cdr.detectChanges();
       }
       this.data = [];
@@ -128,21 +133,9 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
             this.dataForm.controls.remainingBudgetAmount.setValue(0);
           }
         });
-
-        this.dataForm.controls.HOS_No.enable();
-        // !!! 載入倉別下拉選單 (要有判斷 讀取品牌設定中所屬的建議倉別)
-        this.dropDownListService.getPOS2034Options().pipe(takeUntil(this.destroy$)).subscribe(response => {
-          this.warehouseOptions = response.Data;
-        });
-        // 設置建議倉別 (根據品牌設定中所屬的建議倉別)
-        // 這同樣需要一個API：例如 `queryWarehouseByBrand(params: { LOGO_No: string }): Observable<ApiResponse<IDropdownItem>>`
-        // 這裡假設品牌資料本身包含了建議倉別的資訊，或者需要另一個 API。
-        // 為了演示，暫時不處理這個自動設定，你需要根據實際後端API補齊。
-        // 例如: this.dropDownListService.getWarehouseByBrand(logoNo).subscribe(...)
+        const HOS_No = this.brandOptions.find(opt => opt.No === logoNo)?.HOS_No || null;
+        this.dataForm.controls.HOS_No.setValue(HOS_No);
       } else {
-        this.dataForm.controls.HOS_No.disable();
-        this.dataForm.controls.remainingBudgetAmount.setValue(0);// 清空倉別選擇，或取消建議值
-        this.dataForm.controls.HOS_No.setValue('');
         this.warehouseOptions = [];
         this.cdr.detectChanges();
       }
@@ -160,7 +153,10 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     CAT_LNo: [null], // 大分類代碼
     CAT_MNo: [{ value: null, disabled: true }], // 中分類代碼
     CAT_SNo: [{ value: null, disabled: true }], // 小分類代碼
+    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
+
   });
+  totalRecords = 0;
   CAT_LNoOptions: IDropdownItem[] = [];
   CAT_MNoOptions: IDropdownItem[] = [];
   CAT_SNoOptions: IDropdownItem[] = [];
@@ -171,10 +167,10 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
     { field: 'PLU_Unit', header: '單位編號' },
-    { field: 'UNIT_NAME', header: '單位名稱' },
+    { field: 'UNIT_NAME', header: '單位名稱', sortField: 'UNIT_NAME' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
     { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : '應稅' },
-    { field: 'PLU_SalePrc_UNI', header: '單價' },
+    { field: 'PLU_SalePrc_UNI', header: '單價', sortField: 'PLU_FixPrc' },
     { field: 'PLU_SalePrc', header: '售價' },
   ]
   dialogLoading = false;
@@ -225,6 +221,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     this.tls52010Service.queryPOS2004DetailByVenNo(body).pipe(
       finalize(() => this.dialogLoading = false), takeUntil(this.destroy$)).subscribe(response => {
         this.dialogData = response.Data;
+        this.totalRecords = response.TotalCount;
       })
   }
   saveDialog() {

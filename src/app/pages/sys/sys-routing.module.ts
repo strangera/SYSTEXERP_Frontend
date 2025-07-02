@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { NotfoundComponent } from '../base/notfound/notfound.component';
 import { SYS0110Component } from './sys0110/sys0110.component';
 import { SYS0210Component } from './sys0210/sys0210.component';
 import { SYS0220Component } from './sys0220/sys0220.component';
@@ -58,65 +57,62 @@ import { SYSBR10CRUComponent } from './sysbr10.cru/sysbr10.cru.component';
 import { Sysb400OsComponent } from './sysb400.os/sysb400.os.component';
 
 const routes: Routes = [
-  { path: '', redirectTo: '404', pathMatch: 'full' },
-  { path: 'SYS0110', component: SYS0110Component }, // 使用者基本資料維護
-  { path: 'SYS0210', component: SYS0210Component }, // 角色基本資料維護
-  { path: 'SYS0220', component: SYS0220Component }, // 角色之使用者設定維護
-  { path: 'SYS0230', component: SYS0230Component }, // 角色複製
-  { path: 'SYS0240', component: SYS0240Component }, // 使用者之角色設定維護
-  { path: 'SYS0310', component: SYS0310Component }, // 角色系統權限設定
-  { path: 'SYS0320', component: SYS0320Component }, // 使用者系統權限設定
-  { path: 'SYS0620', component: SYS0620Component }, // 角色基本資料異動查詢
-  { path: 'SYS0710', component: SYS0710Component }, // 使用者系統權限列表
-  { path: 'SYS0730', component: SYS0730Component }, // 角色系統權限列表
-  { path: 'SYS0740', component: SYS0740Component }, // 作業權限之角色列表
-  { path: 'SYS0750', component: SYS0750Component }, // 角色之使用者列表
-  { path: 'SYS0760', component: SYS0760Component }, // 使用者異常登入報表
-  { path: 'SYS0770', component: SYS0770Component }, // 作業權限統計表
-  { path: 'SYS0780', component: SYS0780Component }, // 作業權限申請表
-  { path: 'SYS0790', component: SYS0790Component }, // 使用者作業按鈕歷程報表
-  { path: 'SYS0791', component: SYS0791Component }, // 作業使用率查詢
-  { path: 'SYS0792', component: SYS0792Component }, // 在線人員查詢作業
-  { path: 'SYS0110CRU', component: SYS0110CRUComponent },  // 使用者基本資料維護 CRU
-  { path: 'SYS0210CRU', component: SYS0210CRUComponent }, // 角色基本資料維護 CRU
-  { path: 'SYS0220CRU', component: SYS0220CRUComponent }, // 角色之使用者設定維護 CRU
-  { path: 'SYS0230CRU', component: SYS0230CRUComponent }, // 角色複製 CRU
-  { path: 'SYS0240CRU', component: SYS0240CRUComponent }, // 使用者之角色設定維護 CRU
-  { path: 'SYS0310CRU', component: SYS0310CRUComponent }, // 角色系統權限設定 CRU
-  { path: 'SYS0320CRU', component: SYS0320CRUComponent }, // 使用者系統權限設定 CRU
-  { path: 'SYS0620CRU', component: SYS0620CRUComponent }, // 角色基本資料異動查詢 CRU
-  { path: 'SYSB100', component: SYSB100Component }, // 公司基本資料維護作業
-  { path: 'SYSB200', component: SYSB200Component }, // 廠商基本資料維護作業
-  { path: 'SYSB300', component: SYSB300Component }, // 組織階層設定作業
-  { path: 'SYSB400', component: SYSB400Component }, // 組織碼設定作業
-  { path: 'SYSB500', component: SYSB500Component }, // 區域基本資料維護作業
-  { path: 'SYSB600', component: SYSB600Component }, // 樓層基本資料維護作業
-  { path: 'SYSB800', component: SYSB800Component }, // 大分類基本資料維護作業
-  { path: 'SYSB900', component: SYSB900Component }, // 中分類維護作業
-  { path: 'SYSB920', component: SYSB920Component }, // 小分類維護作業
-  { path: 'SYSBC00', component: SYSBC00Component }, // 銀行基本資料維護作業
-  { path: 'SYSBP00', component: SYSBP00Component }, // 參數資料設定維護
-  { path: 'SYSBQ00', component: SYSBQ00Component }, // 簽核權限設定維護
-  { path: 'SYSBR00', component: SYSBR00Component }, // 縣市區域資料維護作業
-  { path: 'SYSBR10', component: SYSBR10Component }, // 佈告欄管理作業
-  { path: 'SYSB100CRU', component: SYSB100CRUComponent }, // 公司基本資料維護作業 CRU
-  { path: 'SYSB200CRU', component: SYSB200CRUComponent }, // 廠商基本資料維護作業 CRU
-  { path: 'SYSB300CRU', component: SYSB300CRUComponent }, // 組織階層設定作業 CRU
-  { path: 'SYSB400CRU', component: SYSB400CRUComponent }, // 組織碼設定作業 CRU
-  { path: 'SYSB400OS', component: Sysb400OsComponent }, // 組織碼設定作業 OS
-  { path: 'SYSB500CRU', component: SYSB500CRUComponent }, // 區域基本資料維護作業 CRU
-  { path: 'SYSB600CRU', component: SYSB600CRUComponent }, // 樓層基本資料維護作業 CRU
-  { path: 'SYSB800CRU', component: SYSB800CRUComponent }, // 大分類基本資料維護作業 CRU
-  { path: 'SYSB900CRU', component: SYSB900CRUComponent }, // 中分類維護作業 CRU
-  { path: 'SYSB920CRU', component: SYSB920CRUComponent }, // 小分類維護作業 CRU
-  { path: 'SYSBC00CRU', component: SYSBC00CRUComponent }, // 銀行基本資料維護作業 CRU
-  { path: 'SYSBP00CRU', component: SYSBP00CRUComponent }, // 參數資料設定維護 CRU
-  { path: 'SYSBQ00CRU', component: SYSBQ00CRUComponent }, // 簽核權限設定維護 CRU
-  { path: 'SYSBR00CRU', component: SYSBR00CRUComponent }, // 縣市區域資料維護作業 CRU
-  { path: 'SYSBR10CRU', component: SYSBR10CRUComponent }, // 佈告欄管理作業 CRU
-  { path: 'SYSB400OS', component: Sysb400OsComponent }, // 組織碼設定作業 OS
-  { path: '404', component: NotfoundComponent },
-  { path: '**', redirectTo: '404' },
+  { path: 'sys0110', component: SYS0110Component }, // 使用者基本資料維護
+  { path: 'sys0210', component: SYS0210Component }, // 角色基本資料維護
+  { path: 'sys0220', component: SYS0220Component }, // 角色之使用者設定維護
+  { path: 'sys0230', component: SYS0230Component }, // 角色複製
+  { path: 'sys0240', component: SYS0240Component }, // 使用者之角色設定維護
+  { path: 'sys0310', component: SYS0310Component }, // 角色系統權限設定
+  { path: 'sys0320', component: SYS0320Component }, // 使用者系統權限設定
+  { path: 'sys0620', component: SYS0620Component }, // 角色基本資料異動查詢
+  { path: 'sys0710', component: SYS0710Component }, // 使用者系統權限列表
+  { path: 'sys0730', component: SYS0730Component }, // 角色系統權限列表
+  { path: 'sys0740', component: SYS0740Component }, // 作業權限之角色列表
+  { path: 'sys0750', component: SYS0750Component }, // 角色之使用者列表
+  { path: 'sys0760', component: SYS0760Component }, // 使用者異常登入報表
+  { path: 'sys0770', component: SYS0770Component }, // 作業權限統計表
+  { path: 'sys0780', component: SYS0780Component }, // 作業權限申請表
+  { path: 'sys0790', component: SYS0790Component }, // 使用者作業按鈕歷程報表
+  { path: 'sys0791', component: SYS0791Component }, // 作業使用率查詢
+  { path: 'sys0792', component: SYS0792Component }, // 在線人員查詢作業
+  { path: 'sys0110cru', component: SYS0110CRUComponent },  // 使用者基本資料維護 CRU
+  { path: 'sys0210cru', component: SYS0210CRUComponent }, // 角色基本資料維護 CRU
+  { path: 'sys0220cru', component: SYS0220CRUComponent }, // 角色之使用者設定維護 CRU
+  { path: 'sys0230cru', component: SYS0230CRUComponent }, // 角色複製 CRU
+  { path: 'sys0240cru', component: SYS0240CRUComponent }, // 使用者之角色設定維護 CRU
+  { path: 'sys0310cru', component: SYS0310CRUComponent }, // 角色系統權限設定 CRU
+  { path: 'sys0320cru', component: SYS0320CRUComponent }, // 使用者系統權限設定 CRU
+  { path: 'sys0620cru', component: SYS0620CRUComponent }, // 角色基本資料異動查詢 CRU
+  { path: 'sysb100', component: SYSB100Component }, // 公司基本資料維護作業
+  { path: 'sysb200', component: SYSB200Component }, // 廠商基本資料維護作業
+  { path: 'sysb300', component: SYSB300Component }, // 組織階層設定作業
+  { path: 'sysb400', component: SYSB400Component }, // 組織碼設定作業
+  { path: 'sysb500', component: SYSB500Component }, // 區域基本資料維護作業
+  { path: 'sysb600', component: SYSB600Component }, // 樓層基本資料維護作業
+  { path: 'sysb800', component: SYSB800Component }, // 大分類基本資料維護作業
+  { path: 'sysb900', component: SYSB900Component }, // 中分類維護作業
+  { path: 'sysb920', component: SYSB920Component }, // 小分類維護作業
+  { path: 'sysbC00', component: SYSBC00Component }, // 銀行基本資料維護作業
+  { path: 'sysbP00', component: SYSBP00Component }, // 參數資料設定維護
+  { path: 'sysbQ00', component: SYSBQ00Component }, // 簽核權限設定維護
+  { path: 'sysbR00', component: SYSBR00Component }, // 縣市區域資料維護作業
+  { path: 'sysbR10', component: SYSBR10Component }, // 佈告欄管理作業
+  { path: 'sysb100cru', component: SYSB100CRUComponent }, // 公司基本資料維護作業 CRU
+  { path: 'sysb200cru', component: SYSB200CRUComponent }, // 廠商基本資料維護作業 CRU
+  { path: 'sysb300cru', component: SYSB300CRUComponent }, // 組織階層設定作業 CRU
+  { path: 'sysb400cru', component: SYSB400CRUComponent }, // 組織碼設定作業 CRU
+  { path: 'sysb400os', component: Sysb400OsComponent }, // 組織碼設定作業 OS
+  { path: 'sysb500cru', component: SYSB500CRUComponent }, // 區域基本資料維護作業 CRU
+  { path: 'sysb600cru', component: SYSB600CRUComponent }, // 樓層基本資料維護作業 CRU
+  { path: 'sysb800cru', component: SYSB800CRUComponent }, // 大分類基本資料維護作業 CRU
+  { path: 'sysb900cru', component: SYSB900CRUComponent }, // 中分類維護作業 CRU
+  { path: 'sysb920cru', component: SYSB920CRUComponent }, // 小分類維護作業 CRU
+  { path: 'sysbc00cru', component: SYSBC00CRUComponent }, // 銀行基本資料維護作業 CRU
+  { path: 'sysbp00cru', component: SYSBP00CRUComponent }, // 參數資料設定維護 CRU
+  { path: 'sysbq00cru', component: SYSBQ00CRUComponent }, // 簽核權限設定維護 CRU
+  { path: 'sysbr00cru', component: SYSBR00CRUComponent }, // 縣市區域資料維護作業 CRU
+  { path: 'sysbr10cru', component: SYSBR10CRUComponent }, // 佈告欄管理作業 CRU
+  { path: 'sysb400os', component: Sysb400OsComponent }, // 組織碼設定作業 OS
 ];
 
 @NgModule({

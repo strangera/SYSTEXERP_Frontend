@@ -90,7 +90,7 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS11020', 'TLS/TLS11020CRU', this.queryForm, (f) => this.onSubmit(f));
+    this.initializePage('TLS11020', 'TLS/TLS11020cru', this.queryForm, (f) => this.onSubmit(f));
     this.deductionService.getDeductionCategories().subscribe((data) => {
       this.deductionCategoryOptions = data;
 

@@ -210,7 +210,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     }
     this.activeTopMenuItem = null; // 點擊已激活的項，將其取消激活
     this.topMenuClick.emit(null); // 發射 null 表示沒有激活的頂部菜單項
-    this.router.navigate([`/account/${item.prog_No.slice(0, 3)}/${item.prog_No}`]);
+    this.router.navigate([`/account/${item.prog_No.slice(0, 3).toLowerCase()}/${item.prog_No.toLowerCase()}`]);
     this.favorite.hide(); // 點擊後關閉最愛選單
   }
   editFavorites() {

@@ -61,7 +61,7 @@ export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseI
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS13060', '/TLS/TLS13060CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS13060', '/TLS/TLS13060cru', this.queryForm, (form) => this.onSubmit(form));
     this.vendorCategoryOptionsService.getVendorCategoryOptions('1').subscribe((res) => {
       this.vandorCategoryOptions = res;
     });

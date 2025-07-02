@@ -4,7 +4,6 @@ import { ChangepswComponent } from './changepsw.component';
 import { AuthGuard } from '../../../guards/auth.guard';
 
 const routes: Routes = [
-  { path: '', redirectTo: 'changepsw', pathMatch: 'full' },
   { path: '', component: ChangepswComponent, canActivate: [AuthGuard] },
 ];
 

@@ -87,7 +87,8 @@ export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> imp
       serviceCall
         .pipe(finalize(() => this.loading = false))
         .subscribe({
-          next: () => {
+          next: (res) => {
+            this.messageService.successBubble(res.Message);
             if (this.isFormCreateable) {
               this.dataForm.reset();
             } else {

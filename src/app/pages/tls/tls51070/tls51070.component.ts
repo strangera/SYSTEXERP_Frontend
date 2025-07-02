@@ -123,7 +123,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS51070', 'TLS/TLS51070CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS51070', 'TLS/TLS51070cru', this.queryForm, (form) => this.onSubmit(form));
     //導入下拉清單
     this.loadOptions();
 
@@ -353,10 +353,10 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   }
 
   //移動到 歷史紀錄查詢/標籤檔案
-  gotoTls51070OS(destination: string){
-    console.log('導引到',destination);
+  gotoTls51070OS(destination: string) {
+    console.log('導引到', destination);
     //導引到sysb400.os
-    this.router.navigate(['account/TLS/TLS51070OS'],{
+    this.router.navigate(['account/TLS/TLS51070OS'], {
       state: {
         destination: destination,
       }

@@ -63,7 +63,7 @@ export class AppMenulistService {
         prog_No: prog_No,
         label: prog_name,
         parent_id: prog_up,
-        routerLink: prog_ispage === 'Y' ? `/account/${prog_No.slice(0, 3)}/${prog_No}` : undefined,
+        routerLink: prog_ispage === 'Y' ? `/account/${prog_No.slice(0, 3).toLowerCase()}/${prog_No.toLowerCase()}` : undefined,
         items: undefined,
         expanded: false,
         icon: prog_ispage === 'Y' ? 'pi pi-bookmark' : sub_module_no === "" ? "pi pi-home" : 'pi pi-box',

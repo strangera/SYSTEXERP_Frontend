@@ -56,7 +56,7 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS22030', '/TLS/TLS22030CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS22030', '/TLS/TLS22030cru', this.queryForm, (form) => this.onSubmit(form));
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.whetherService.getWhetherOptions().subscribe((data) => {
       this.listZeroDifferenceOptions = data;

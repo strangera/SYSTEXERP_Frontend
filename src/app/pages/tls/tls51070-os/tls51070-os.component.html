@@ -57,6 +57,7 @@
         >
           <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
+          <app-button (click) = "exportLabel()" label = "確認產生標籤檔"></app-button>
         </div>
         <!-- </div> -->
       </form>
@@ -68,7 +69,7 @@
     <app-expandable-edit-table #labelTable title="產生標籤檔" [mainColumns]="labelColumn" [data]="labelData"
           [loading]="expandlabelLoading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
           [showAddButton]="false" [showDetailTabs]="false" [showDetailAddButton]="false"
-          [defaultNewItem]="defaultNewLabel" (save)="onRowSave($event)" (cancel)="onRowCancel($event)"
-          (batchDelete)="deleteLabel()" (addMainItem)="addPOSLabel()"></app-expandable-edit-table>
+          (save)="onRowSave($event)" (cancel)="onRowCancel($event)"
+          (batchDelete)="deleteLabel($event)"></app-expandable-edit-table>
   </div>
 </div>

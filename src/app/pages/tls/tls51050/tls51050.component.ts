@@ -59,7 +59,7 @@ export class TLS51050Component extends BasicQueryPageComponent<PluUnit>
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS51050', 'TLS/TLS51050CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS51050', 'TLS/TLS51050cru', this.queryForm, (form) => this.onSubmit(form));
     // this.loadOptions();
   }
 

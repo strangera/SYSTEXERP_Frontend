@@ -10,6 +10,7 @@ export interface IDropdownItem {
   Name: string;
   ShortName?: string;
   VEN_No?: string;
+  HOS_No?: string;
 }
 
 // 針對 querySYS3100_tree_DropDownList 的資料結構
@@ -95,6 +96,10 @@ export class DropDownListService {
   constructor(
     private http: HttpClient,
   ) { }
+
+  queryPLULOGO_HOS_No_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPLULOGO_HOS_No_DropDownList`, {});
+  }
 
   // 查詢倉別(POS2034)資料表下拉選單 (原先的 getBankOptions 已更名以符合API功能)
   getPOS2034Options(): Observable<ApiResponse<IDropdownItem[]>> {
