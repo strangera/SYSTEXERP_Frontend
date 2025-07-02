@@ -66,7 +66,6 @@ export function tokenGetter() {
     MessageService,
     ConfirmationService,
     PrimeNGConfig,
-    { provide: UrlSerializer, useClass: LowerCaseUrlSerializer },
     {
       provide: HTTP_INTERCEPTORS,
       useClass: CustomheaderinterceptorService, // 先添加自定義頭部
@@ -87,6 +86,7 @@ export function tokenGetter() {
       useClass: ErrorinterceptorService,        // 最後處理錯誤
       multi: true
     },
+    { provide: UrlSerializer, useClass: LowerCaseUrlSerializer },
     // {
     //   provide: HTTP_INTERCEPTORS,
     //   useClass: SuccessInterceptor,        // 最後處理錯誤
