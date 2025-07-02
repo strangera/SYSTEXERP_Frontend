@@ -15,8 +15,8 @@ export class ErrorinterceptorService implements HttpInterceptor {
   constructor(private errorHandler: ErrorHandlerService) { }
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const maxRetries = 1; // 定義最大重試次數，可根據需求調整
-    const retryDelayMs = 1000; // 重試之間的延遲時間 (毫秒)
+    const maxRetries = 0; // 定義最大重試次數，可根據需求調整
+    const retryDelayMs = 100000000; // 重試之間的延遲時間 (毫秒)
 
     return next.handle(req).pipe(
       // === 重試邏輯放在 catchError 之前 ===
