@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'; // 引入 uuidv4
 import { UntilDestroy } from '@ngneat/until-destroy';
-import { ChangeDetectorRef, Component, OnInit, ViewChild, } from '@angular/core';
+import { Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -378,8 +378,10 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           }
           console.log('insert', requestBody);
 
-          this.tls51070Service.insertTLS51070(requestBody).subscribe(() => {
+          this.tls51070Service.insertTLS51070(requestBody).subscribe(async () => {
             this.messageService.successBubble('POS2004主檔新增成功');
+            // 進行圖片檔更新
+            await this.createImage();
             this.onCancel(); // 儲存後，會返回列表
           });
         }
@@ -403,8 +405,13 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           console.log('update', requestBody);
 
           this.tls51070Service.updateTLS51070(requestBody).subscribe({
-            next: () => {
+            next: async () => {
               this.messageService.successBubble('POS2004主檔更新成功');
+              // 進行圖片檔更新
+              await this.createImage();
+              // 刪除邏輯
+              await this.deleteImages();
+
               this.onCancel(); // 儲存後，會返回列表
             }
           });
@@ -649,62 +656,99 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     this.detail2020Handler.deletePOS2020(selectedItems, this.POS2020Data, this.pos2020Table);
   }
 
-  // ---圖片相關---
+  // ---圖片更新相關---
 
   //* 圖片相關
-  async createImage(IMG_Type: string, IMG_SeqNo: string, IMG_Remark: string) {
-   const tasks: Promise<any>[] = [];
+  async createImage() {
+    console.log('參考資料', this.img1001Data);
+    console.log('變更資料', this.files);
 
-    // 若有選擇要刪除的圖片，加入刪除任務（這段你已備妥）
-    if (this.confirmDeleteImages.length > 0) {
-      tasks.push(this.deleteImages(IMG_SeqNo));
+    if (!this.img1001Data || this.img1001Data.length === 0) {
+      console.warn('⚠️ 缺少圖片參考資料 (img1001Data)，無法上傳');
+      return;
     }
 
-    // 若有新檔案，加入上傳任務
-    if (this.files.length > 0) {
-      // tasks.push(this.uploadImages(IMG_Type, IMG_SeqNo, IMG_Remark));
+    if (!this.files || this.files.length === 0) {
+      console.warn('⚠️ 沒有選擇要上傳的檔案');
+      return;
     }
 
-    if (tasks.length > 0) {
+    const formData = new FormData();
+
+    // 從第一筆參考資料取得必填欄位
+    const baseInfo = this.img1001Data[0];
+    formData.append('IMG_Type', baseInfo.IMG_Type);
+    formData.append('IMG_SeqNo', baseInfo.IMG_SeqNo);
+    formData.append('IMG_Remark', '測試圖片');
+
+    // 加入所有檔案（保留原始檔名）
+    this.files.forEach(file => {
+      formData.append('Files', file, file.name);
+    });
+
+    // 👉 檢查內容（只能用 FormData.entries() 迴圈看）
+    console.log('📤 寄出的 FormData：');
+    for (const [key, value] of (formData as any).entries()) {
+      if (value instanceof File) {
+        console.log(`🔹 ${key}: ${value.name} (${value.type}, ${value.size} bytes)`);
+      } else {
+        console.log(`🔸 ${key}: ${value}`);
+      }
+    }
+
+    try {
+      await firstValueFrom(this.tls51070Service.uploadImages(formData));
+      this.messageService.successBubble('圖片上傳成功');
+    } catch (error) {
+      console.error('❌ 圖片上傳失敗:', error);
+      this.messageService.errorBubble('圖片上傳失敗');
+    }
+  }
+
+  private async deleteImages() {
+    if (!this.confirmDeleteImages || this.confirmDeleteImages.length === 0) {
+      console.log('❕ 無需刪除圖片');
+      return;
+    }
+
+    const tasks: Promise<any>[] = [];
+
+    for (const fileName of this.confirmDeleteImages) {
+      // 從 img1001Data 中找出對應這個 fileName 的資料
+      const match = this.img1001Data.find(img => img.IMG_File === fileName);
+
+      if (!match) {
+        console.warn(`⚠️ 找不到檔名為 ${fileName} 的參考資料，略過`);
+        continue;
+      }
+
+      const request = {
+        IMG_Type: match.IMG_Type,
+        IMG_SeqNo: match.IMG_SeqNo,
+        IMG_File: match.IMG_File,
+      };
+
+      console.log('📤 刪除圖片內容:', request);
+      // tasks.push(firstValueFrom(this.tls51070Service.deleteImage(request)));
+    }
+
+    try {
       const results = await Promise.allSettled(tasks);
       results.forEach((res, i) => {
         if (res.status === 'fulfilled') {
-          console.log(`✅ 圖片操作 ${i + 1} 成功:`, res.value);
+          console.log(`✅ 圖片刪除 ${i + 1} 成功`);
         } else {
-          console.error(`❌ 圖片操作 ${i + 1} 失敗:`, res.reason);
+          console.error(`❌ 圖片刪除 ${i + 1} 失敗:`, res.reason);
         }
       });
 
-      // 上傳後重新讀圖
-      // this.loadImages(IMG_Type, IMG_SeqNo);
+      this.messageService.successBubble(`成功刪除 ${tasks.length} 張圖片`);
+    } catch (err) {
+      console.error('❌ 刪除圖片過程中發生錯誤:', err);
+      this.messageService.errorBubble('圖片刪除失敗');
     }
   }
-  private async uploadImages(IMG_Type : string, IMG_SeqNo : string, IMG_Remark: string) {
-    const formData = new FormData();
 
-    // 加入欄位資訊
-    formData.append('IMG_Type', IMG_Type);
-    formData.append('IMG_SeqNo', IMG_SeqNo);
-    formData.append('IMG_Remark', IMG_Remark);
-
-    // 加入檔案
-    this.files.forEach(file => {
-      const originalName = file.name;
-      const lastDotIndex = originalName.lastIndexOf('.');
-      const extension = lastDotIndex === -1 ? '' : originalName.substring(lastDotIndex);
-      const uniqueId = uuidv4();
-      const normalizedName = `${uniqueId}${extension}`;
-      const newFile = new File([file], normalizedName, { type: file.type, lastModified: file.lastModified });
-
-      formData.append('Files', newFile, newFile.name); // ✅ Key 要是 "Files"，與後端一致
-    });
-
-    // 呼叫 Service
-    await firstValueFrom(this.tls51070Service.uploadImages(formData));
-  }
-  private async deleteImages(pluMagNo: string) {
-    // await firstValueFrom(this.tls51070Service.deleteImage(this.confirmDeleteImages, pluMagNo, 'POS2004'));
-  }
 }
 
 
