@@ -37,8 +37,7 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
   whetherOptions: any[] = [];
   carrierTypeOptions: any[] = [];
   constructor(
-    private location: Location,
-    private pdfService: PdfService,
+
     private statusFlagService: StatusFlagService,
     private whetherService: WhetherService,
     private txnSubtypeService: TXN_SubtypeService,
@@ -111,7 +110,14 @@ set displayMode(value: 'Detail' | 'Summary') {
   }
 
 
-
+fetchDetailData = async (payload: any): Promise<any[]> => {
+  const match = this.data.find(row =>
+    row.TXN_Date === payload.TXN_Date &&
+    row.ECR_No === payload.ECR_No &&
+    row.TXN_No === payload.TXN_No
+  );
+  return match?.DetailList ?? [];
+};
 
 
   
@@ -312,5 +318,15 @@ case 'Summary':
         return [{ header: '錯誤', field: '', format: () => '未知模式' }];
     }
   }
-
+get detailColumns(): ReportColumn[] {
+  return [
+    { field: 'PAY_NO', header: '支付方式代號' },
+    { field: 'PAY_NAME', header: '支付方式名稱' },
+    { field: 'CRD_Type', header: '信用卡別' },
+    { field: 'CRD_Name', header: '卡別名稱' },
+    { field: 'CRD_No', header: '卡號' },
+    { field: 'TERM_No', header: '分期期數', style: 'text-right' },
+    { field: 'TXN_PayAmt', header: '金額', style: 'text-right', format: this.moneyFormat }
+  ];
+}
 }

@@ -386,6 +386,29 @@ goToReportMode(): void {
   this.customPageSize = 1000;
   this.showPageSizeDialog = true;
 }
+fetchDetailData = async (payload: any): Promise<any[]> => {
+  const { TXN_Date, ECR_No, TXN_No } = payload;
+
+  const body = {
+    TXN_DateStart: TXN_Date,
+    TXN_DateEnd: TXN_Date,
+    ECR_No: [ECR_No],
+    TXN_No_Start: TXN_No,
+    TXN_No_End: TXN_No
+    // ✅ 不需要 PageSize、PageIndex、Offset、OrderBy、SortBy
+  };
+
+  return new Promise((resolve) => {
+    this.tls23010Service.queryTLS23010(body, 'Detail').subscribe({
+      next: (res) => {
+        const detailList = res?.Data?.[0]?.DetailList ?? [];
+        resolve(detailList);
+      },
+      error: () => resolve([])
+    });
+  });
+};
+
 
 confirmPageSizeAndNavigate(): void {
   this.submitted = true;
@@ -409,14 +432,24 @@ confirmPageSizeAndNavigate(): void {
   this.messageService.blockUi();
 
   this.tls23010Service.queryTLS23010(queryFormValue, this.displayMode).subscribe({
-    next: (res) => {
+    next: async (res) => {
       if (res.Status === '0000') {
+        const mainData = res.Data || [];
+
+        // ✅ 一併查詢每筆明細
+        const enrichedData = await Promise.all(
+          mainData.map(async (row: any) => {
+            const detail = await this.fetchDetailData(row);
+            return { ...row, DetailList: detail };
+          })
+        );
+
         this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
         this.router.navigate(['account/tls/tls23010cru'], {
           state: {
             queryFormValue,
             pageSize: this.customPageSize,
-            data: res.Data || [],
+            data: enrichedData,
             displayMode: this.displayMode
           }
         });
@@ -437,6 +470,7 @@ confirmPageSizeAndNavigate(): void {
     }
   });
 }
+
 
   cancelQuery(): void {
   if (this.querySubscription) {
