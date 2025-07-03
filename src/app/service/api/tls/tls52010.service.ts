@@ -96,11 +96,13 @@ export interface IPOS2004DetailData {
   UNIT_NAME: string; // 單位名稱
   PLU_BoxQty: number; // 包裝入數
   PLU_StockTaxType: string; // 進貨稅別
+  PLU_TaxType: string; // 售價稅別
   PLU_SalePrc_UNI: number; // 單價
   PLU_SalePrc: number; // 售價
   POD_SubQty?: number; // 採購數量
   POD_BuyNet?: number; // 採購淨額
   POD_SaleAmt?: number; // 銷售金額
+  POD_Remark?: string; // 備註
 }
 
 /** 商品管理編號/國際條碼/廠商貨號查詢商品 (queryPOS2004Detail) 的請求介面 */
@@ -132,6 +134,7 @@ export interface IPODetail {
   PLU_Unit: string; // 商品單位
   PLU_BoxQty: number; // 箱入數
   PLU_StockTaxType: string; // 進貨稅別
+  PLU_TaxType: string; // 售價稅別
   POD_SubQty: number; // 採購數量
   POD_BuyPrc: number; // 採購單價
   POD_BuyNet: number; // 採購淨額

@@ -50,6 +50,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     { field: 'POD_BuyNet', header: '小計' },
     { field: 'PLU_SalePrc', header: '售價' },
     { field: 'POD_SaleAmt', header: '售價小計' },
+    { field: 'POD_Remark', header: '備註', type: 'input' },
   ]
   data: IPOS2004DetailData[] = [];
   selectedItems: IPOS2004DetailData[] = [];
@@ -68,7 +69,10 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     this.loadDropdownOptions();
     if (!this.isFormCreateable) {
       this.tls52010Service.queryPOS2017({ PO_No: this.dataForm.controls.PO_No.value }).pipe(untilDestroyed(this)).subscribe(response => {
-        console.log('response', response);
+        // this.dialogData = response.Data.map(item => ({
+        //   ...item,
+        //   POD_SubQty: item.POD_SubQty || 0,
+        // }));
       });
     }
     this.setInitialValuesAndWatchChanges();
@@ -101,18 +105,12 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       // 監聽品牌編號變化，用於顯示剩餘預算金額和建議倉別
       this.dataForm.controls.LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(logoNo => {
         if (logoNo && this.dataForm.controls.APPLY_Date.value) {
-          const applyDate = this.dataForm.controls.APPLY_Date.value;
-          const applyYearMonth = `${applyDate.getFullYear()}${(applyDate.getMonth() + 1).toString().padStart(2, '0')}`;
-          const budgetRequest: IGetBudgetAmountRequest = { LOGO_No: logoNo, YYYYMM: applyYearMonth };
-          // 獲取剩餘預算金額
-          this.tls52010Service.GetBudgetAmount(budgetRequest).pipe(untilDestroyed(this)).subscribe(response => {
-            this.dataForm.controls.remainingBudgetAmount.setValue(response.Data);
-          });
+          this.GetBudgetAmount(logoNo);
           const HOS_No = this.brandOptions.find(opt => opt.No === logoNo)?.HOS_No || null;
           this.dataForm.controls.HOS_No.setValue(HOS_No);
           this.dataForm.controls.HOS_No.enable();
         } else {
-          this.dataForm.controls.HOS_No.setValue('');
+          this.dataForm.controls.HOS_No.setValue(null);
           this.dataForm.controls.HOS_No.disable();
         }
         this.data = [];
@@ -120,10 +118,21 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         this.calculateTotals();
         this.dialogData = [];
       });
-      if (!this.isFormCreateable) { this.dataForm.controls.LOGO_No.setValue(this.rowdata?.LOGO_No || '') }
+      if (!this.isFormCreateable) {
+        this.GetBudgetAmount(this.dataForm.controls.LOGO_No.value);
+      }
     });
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
       this.warehouseOptions = response.Data;// 倉別
+    });
+  }
+  GetBudgetAmount(logoNo: string): void {
+    const applyDate = this.dataForm.controls.APPLY_Date.value;
+    const applyYearMonth = `${applyDate.getFullYear()}${(applyDate.getMonth() + 1).toString().padStart(2, '0')}`;
+    const budgetRequest: IGetBudgetAmountRequest = { LOGO_No: logoNo, YYYYMM: applyYearMonth };
+    // 獲取剩餘預算金額
+    this.tls52010Service.GetBudgetAmount(budgetRequest).pipe(untilDestroyed(this)).subscribe(response => {
+      this.dataForm.controls.remainingBudgetAmount.setValue(response.Data);
     });
   }
   private setInitialValuesAndWatchChanges(): void {
@@ -210,7 +219,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   }
   saveDialog() {
     this.dialogVisible = false;
-    this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({ ...item, POD_SubQty: 0 }))];
+    this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({ ...item, POD_SubQty: 0, POD_Remark: '' }))];
     this.selectedItemsDialog = [];
     this.selectedItems = [];
     this.calculateTotals();
@@ -292,12 +301,13 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       PLU_Unit: item.PLU_Unit,
       PLU_BoxQty: item.PLU_BoxQty,
       PLU_StockTaxType: item.PLU_StockTaxType,
+      PLU_TaxType: item.PLU_TaxType,
       POD_SubQty: item.POD_SubQty || 0, // 確保有值，使用之前計算好的 POD_SubQty
       POD_BuyPrc: item.PLU_SalePrc_UNI || 0, // 採購單價 (未稅進價)
       POD_BuyNet: item.POD_BuyNet || 0, // 採購淨額 (已計算過並取整數)
       POD_SalePrc: item.PLU_SalePrc || 0, // 銷售單價 (含稅售價)
       POD_SaleAmt: item.POD_SaleAmt || 0, // 銷售金額 (已計算過並取整數)
-      POD_Remark: null, // 如果有明細備註欄位，請從 item 中取值
+      POD_Remark: item.POD_Remark || '', // 如果有明細備註欄位，請從 item 中取值
     }));
     // 再次計算總數量，或者從 calculateTotals 中取得
     const totalSubQty = details.reduce((sum, item) => sum + (item.POD_SubQty || 0), 0);
