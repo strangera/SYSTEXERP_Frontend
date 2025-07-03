@@ -105,7 +105,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-                    <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="收單行"
               controlName="AcqBank"
@@ -116,7 +116,7 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-                              <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="連線狀態"
               controlName="ConnStatus"
@@ -127,7 +127,6 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-          
 
           <!-- 館別 -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -166,15 +165,30 @@
             ></app-multi-select>
           </div>
         </div>
-
-        <!-- 查詢按鈕區 -->
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
-          <app-button btnType="clear"></app-button>
-          <app-button btnType="report" label="報表模式" (clickEvent)="goToReportMode()"></app-button>
-        </div>
       </form>
+      <div class="col-12 md:col-6 lg:col-4">
+        <label for="pageSize">限制筆數</label>
+        <input
+          id="pageSize"
+          type="number"
+          pInputText
+          [(ngModel)]="customPageSize"
+          min="1"
+          style="width: 100%"
+        />
+      </div>
+
+      <!-- 查詢按鈕區 -->
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="clear"></app-button>
+        <app-button
+          btnType="report"
+          label="報表模式"
+          (clickEvent)="goToReportMode()"
+        ></app-button>
+      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
@@ -199,24 +213,33 @@
   ></app-table>
 </div> -->
 
-<p-dialog header="限制筆數" [(visible)]="showPageSizeDialog" [modal]="true" [closable]="false" [style]="{ width: '300px' }">
+<p-dialog
+  header="限制筆數"
+  [(visible)]="showPageSizeDialog"
+  [modal]="true"
+  [closable]="false"
+  [style]="{ width: '300px' }"
+>
   <div class="p-fluid">
-    <div class="field">
-      <label for="pageSize">限制筆數</label>
-      <input id="pageSize" type="number" pInputText [(ngModel)]="customPageSize" min="1" style="width: 100%" />
-    </div>
-
     <div class="field mt-3">
       <label>查詢模式</label>
       <div class="flex flex-column gap-2">
         <div class="flex align-items-center gap-2">
-          <p-radioButton name="displayMode" [value]="'CreditCardDetail'" [(ngModel)]="displayMode"
-            inputId="mode-credit-card"></p-radioButton>
+          <p-radioButton
+            name="displayMode"
+            [value]="'CreditCardDetail'"
+            [(ngModel)]="displayMode"
+            inputId="mode-credit-card"
+          ></p-radioButton>
           <label for="mode-credit-card">信用卡明細查詢</label>
         </div>
         <div class="flex align-items-center gap-2">
-          <p-radioButton name="displayMode" [value]="'CounterCardAnalysis'" [(ngModel)]="displayMode"
-            inputId="mode-counter-analysis"></p-radioButton>
+          <p-radioButton
+            name="displayMode"
+            [value]="'CounterCardAnalysis'"
+            [(ngModel)]="displayMode"
+            inputId="mode-counter-analysis"
+          ></p-radioButton>
           <label for="mode-counter-analysis">專櫃卡別分析查詢</label>
         </div>
       </div>
@@ -224,8 +247,19 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <button type="button" pButton label="取消" class="p-button-text" (click)="showPageSizeDialog = false"></button>
-    <button type="button" pButton label="確定" (click)="confirmPageSizeAndNavigate()" [loading]="loading"></button>
+    <button
+      type="button"
+      pButton
+      label="取消"
+      class="p-button-text"
+      (click)="showPageSizeDialog = false"
+    ></button>
+    <button
+      type="button"
+      pButton
+      label="確定"
+      (click)="confirmPageSizeAndNavigate()"
+      [loading]="loading"
+    ></button>
   </ng-template>
 </p-dialog>
-

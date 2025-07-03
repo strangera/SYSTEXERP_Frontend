@@ -31,7 +31,7 @@ export class ReportTableGroupComponent implements OnInit {
   @Input() pdfSummaryText: string[] = [];
   @Input() groupByField?: string | null = null;
   @Input() groupByLabel: string = '';
-
+@Input() rowExpandMode: 'single' | 'multiple' = 'multiple';
   @Input() allowMergeToggle: boolean = false; // 預設不顯示切換開關
   @Input() defaultMergedView: boolean = true; // 預設就是合併模式
   @Input() enableGrouping: boolean = false;
@@ -68,7 +68,6 @@ export class ReportTableGroupComponent implements OnInit {
 
 expandedRows: { [key: string]: boolean } = {};
 rowDetails: { [key: string]: any[] } = {};
-
 groupBodyExpanded: { [key: string]: boolean } = {};
 
 getRowKey(row: any): string {
@@ -85,11 +84,55 @@ async onRowExpand(event: any, rowData: any): Promise<void> {
     this.rowDetails[key] = await this.fetchDetailFn(payload);
   }
 }
+expandedRowKeys: { [key: string]: boolean } = {};
+
+onExpandedRowKeysChange(event: { [key: string]: boolean }) {
+  this.expandedRowKeys = event;
+}
+
+
+handleRowExpand(event: any) {
+  const key = event.data[this.dataKey];
+  this.expandedRowKeys = { [key]: true }; // 單筆展開
+}
+
+handleRowCollapse(event: any) {
+  const key = event.data[this.dataKey];
+  delete this.expandedRowKeys[key];
+}
+
+
+
+onExpandClick(event: MouseEvent, dt: any, rowData: any): void {
+  event.preventDefault();
+
+  const isExpanded = dt.isRowExpanded(rowData);
+  const key = this.getRowKey(rowData);
+
+  if (isExpanded) {
+    delete this.expandedRowKeys[key];
+    return;
+  }
+
+  // 收合其他、只展開一列
+  this.expandedRowKeys = { [key]: true };
+
+  // 若還沒載入明細就抓
+  if (!this.rowDetails[key]) {
+    const payload = this.detailFieldKeys.reduce((acc, k) => {
+      acc[k] = rowData[k];
+      return acc;
+    }, {} as any);
+    this.fetchDetailFn(payload).then(result => {
+      this.rowDetails[key] = result;
+    });
+  }
+}
+
 
 objectKeys(obj: any): string[] {
   return Object.keys(obj || {});
 }
-
 
   showRowsPerTableDialog = false;
   tempRowsPerTable = this.rowsPerTable;
@@ -515,5 +558,7 @@ collapseAllGroupBodies(): void {
     this.groupBodyExpanded[key] = false;
   }
 }
+
+
 
 }

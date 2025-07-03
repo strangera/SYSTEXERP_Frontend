@@ -37,8 +37,7 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
   whetherOptions: any[] = [];
   carrierTypeOptions: any[] = [];
   constructor(
-    private location: Location,
-    private pdfService: PdfService,
+
     private statusFlagService: StatusFlagService,
     private whetherService: WhetherService,
     private txnSubtypeService: TXN_SubtypeService,
@@ -50,7 +49,10 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
   async ngOnInit(): Promise<void> {
     const state = history.state;
     this.queryFormValue = state?.queryFormValue;
-    this.data = state?.data || [];
+    this.data = (state?.data || []).map((row: any) => ({
+  ...row,
+  TXN_Key: `${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`
+}));
     this.pageSize = state?.pageSize ?? 1000;
     this.displayMode = state?.displayMode ?? 'Detail'; // 
     this.printedAt = new Date().toLocaleString('zh-TW', { hour12: false });
@@ -111,7 +113,14 @@ set displayMode(value: 'Detail' | 'Summary') {
   }
 
 
-
+fetchDetailData = async (payload: any): Promise<any[]> => {
+  const match = this.data.find(row =>
+    row.TXN_Date === payload.TXN_Date &&
+    row.ECR_No === payload.ECR_No &&
+    row.TXN_No === payload.TXN_No
+  );
+  return match?.DetailList ?? [];
+};
 
 
   
@@ -174,7 +183,7 @@ private updatePdfSummary(): void {
           : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
       }
     },
-    { field: 'ECR_No', header: '機號',  },
+    { field: 'ECR_No', header: '收銀機代號',  },
     { field: 'TXN_No', header: '交易序號', style: 'text-right' },
     { field: 'tlt_no', header: '專櫃編號'  },
     { field: 'tlt_name', header: '櫃位名稱', style: 'text-left' }, // 非 POS5006 欄位，UI 顯示用
@@ -312,5 +321,28 @@ case 'Summary':
         return [{ header: '錯誤', field: '', format: () => '未知模式' }];
     }
   }
-
+get detailColumns(): ReportColumn[] {
+  return [
+        {
+      field: 'TXN_Date',
+      header: '銷售日期',
+    
+      format: (val: string) => {
+        const date = new Date(val);
+        return isNaN(date.getTime())
+          ? val
+          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+      }},
+       { field: 'ECR_No', header: '收銀機代號',  },
+       { field: 'TXN_No', header: '交易序號', style: 'text-right' },
+    { field: 'PAY_NO', header: '支付方式代號' },
+        { field: 'tlt_no', header: '專櫃編號'  },
+    { field: 'tlt_name', header: '櫃位名稱', style: 'text-left' }, // 非 POS5006 欄位，UI 顯示用
+    { field: 'PAY_NAME', header: '付款別' },
+    { field: 'CRD_Type', header: '卡別' },
+    { field: 'CRD_Name', header: '號碼' },
+    { field: 'TERM_No', header: '分期期數', style: 'text-right' },
+    { field: 'TXN_PayAmt', header: '金額', style: 'text-right', format: this.moneyFormat }
+  ];
+}
 }
