@@ -307,7 +307,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       this.loadConditionData();
     } else {
       console.warn('❌ 沒有 talent_id，重導向到前一步');
-      this.router.navigate(['/TLS/TLS13010CRU']);
+      this.router.navigate(['account/tls/tls13010cru']);
     }
   }
 
@@ -628,7 +628,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       this.loading = false;
       this.notificationService.successBubble('契約資料提交成功！');
       this.contractFlowService.clearAllData();
-      this.router.navigate(['/TLS/TLS13010']);
+      this.router.navigate(['account/tls/tls13010']);
     }, 2000);
 
     // 🎯 實際 API 呼叫應該像這樣（先註解掉）:
@@ -653,14 +653,14 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   override onCancel(): void {
     console.log('🔙 準備回到前一步...');
     this.saveConditionDataToWorkflow();
-    this.router.navigate(['/TLS/TLS13010NEXT2']);
+    this.router.navigate(['account/tls/tls13010next2']);
     // this.notificationService.infoBubble('已返回抽成設定頁面');
   }
 
   onRealCancel(): void {
     if (confirm('確定要離開契約編輯流程嗎？所有暫存資料將會保留。')) {
       this.saveConditionDataToWorkflow();
-      this.router.navigate(['/TLS/TLS13010']);
+      this.router.navigate(['account/tls/tls13010']);
       // this.notificationService.infoBubble('已離開契約編輯流程');
     }
   }

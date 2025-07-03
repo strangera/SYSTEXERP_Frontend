@@ -421,7 +421,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       }
     } else {
       console.warn('❌ 沒有工作流程資料，重導向到查詢頁面');
-      this.router.navigate(['/TLS/TLS13010']);
+      this.router.navigate(['account/tls/tls13010']);
     }
   }
 
@@ -769,7 +769,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // if (this.dataForm.valid && this.validateLocationData()) {
     if (this.dataForm.valid) {
       this.saveToWorkflow(); // 確保最新資料已暫存
-      this.router.navigate(['/TLS/TLS13010NEXT1']);
+      this.router.navigate(['account/tls/tls13010next1']);
       // this.messageService.infoBubble('進入下一步：代扣款設定');
     } else {
       this.submitted = true;
@@ -785,7 +785,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         this.messageService.infoBubble('已儲存草稿');
       }
     }
-    this.router.navigate(['/TLS/TLS13010']);
+    this.router.navigate(['account/tls/tls13010']);
   }
 
   onClearForm(): void {

@@ -555,7 +555,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
       this.loadCommissionData();
     } else {
-      this.router.navigate(['/TLS/TLS13010CRU']);
+      this.router.navigate(['account/tls/tls13010cru']);
     }
   }
 
@@ -1907,20 +1907,20 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     console.log('🧪 測試 Step3 變更追蹤...');
     const step3Changes = Step3DataChangeTracker.generateStep3ChangeSummary(this.commissionData);
     console.log('📊 Step3 變更追蹤結果:', step3Changes);
-    this.router.navigate(['TLS/TLS13010NEXT3']);
+    this.router.navigate(['account/tls/tls13010next3']);
     // this.messageService.infoBubble('進入下一步');
   }
 
   override onCancel(): void {
     this.saveCommissionDataToWorkflow();
-    this.router.navigate(['/TLS/TLS13010NEXT1']);
+    this.router.navigate(['account/tls/tls13010next1']);
     this.messageService.infoBubble('已返回扣款設定頁面');
   }
 
   onRealCancel(): void {
     if (confirm('確定要離開契約編輯流程嗎？所有暫存資料將會保留。')) {
       this.saveCommissionDataToWorkflow();
-      this.router.navigate(['/TLS/TLS13010']);
+      this.router.navigate(['account/tls/tls13010']);
       this.messageService.infoBubble('已離開契約編輯流程');
     }
   }
@@ -1928,7 +1928,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   onClearAndExit(): void {
     if (confirm('確定要清空所有暫存資料並離開嗎？此操作無法復原。')) {
       this.contractFlowService.clearTempData();
-      this.router.navigate(['/TLS/TLS13010']);
+      this.router.navigate(['account/tls/tls13010']);
       this.messageService.infoBubble('已清空暫存資料並離開');
     }
   }

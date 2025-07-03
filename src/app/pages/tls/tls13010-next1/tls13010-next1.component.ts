@@ -683,7 +683,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       }
     } else {
       console.warn('❌ 沒有 talent_id，重導向到前一步');
-      this.router.navigate(['/TLS/TLS13010CRU']);
+      this.router.navigate(['account/tls/tls13010cru']);
     }
   }
 
@@ -1264,21 +1264,21 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       return;
     }
 
-    this.router.navigate(['TLS/TLS13010NEXT2']);
+    this.router.navigate(['account/tls/tls13010next2']);
     // this.messageService.infoBubble('進入下一步：抽成設定');
   }
 
   override onCancel(): void {
     console.log('🔙 準備回到前一步...');
     this.saveFareDataToWorkflow();
-    this.router.navigate(['/TLS/TLS13010CRU']);
+    this.router.navigate(['account/tls/tls13010cru']);
     this.messageService.infoBubble('已返回合約資訊頁面');
   }
 
   onRealCancel(): void {
     if (confirm('確定要離開契約編輯流程嗎？所有暫存資料將會保留。')) {
       this.saveFareDataToWorkflow();
-      this.router.navigate(['/TLS/TLS13010']);
+      this.router.navigate(['account/tls/tls13010']);
       this.messageService.infoBubble('已離開契約編輯流程');
     }
   }
@@ -1286,7 +1286,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   onClearAndExit(): void {
     if (confirm('確定要清空所有暫存資料並離開嗎？此操作無法復原。')) {
       this.contractFlowService.clearTempData();
-      this.router.navigate(['/TLS/TLS13010']);
+      this.router.navigate(['account/tls/tls13010']);
       this.messageService.infoBubble('已清空暫存資料並離開');
     }
   }

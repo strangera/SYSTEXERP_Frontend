@@ -195,7 +195,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS13010', '/TLS/TLS13010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS13010', 'account/tls/tls13010cru', this.queryForm, (form) => this.onSubmit(form));
     this.checkExistingWorkflow();
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.loadDropdownOptions();
@@ -334,19 +334,19 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   private navigateToStep(step: WorkflowStep): void {
     switch (step) {
       case WorkflowStep.CONTRACT_INFO:
-        this.router.navigate(['/TLS/TLS13010CRU']);
+        this.router.navigate(['account/tls/tls13010cru']);
         break;
       case WorkflowStep.DEDUCTION:
-        this.router.navigate(['/TLS/TLS13010NEXT1']);
+        this.router.navigate(['account/tls/tls13010next1']);
         break;
       case WorkflowStep.COMMISSION:
-        this.router.navigate(['/TLS/TLS13010NEXT2']);
+        this.router.navigate(['account/tls/tls13010next2']);
         break;
       case WorkflowStep.CONDITION:
-        this.router.navigate(['/TLS/TLS13010NEXT3']);
+        this.router.navigate(['account/tls/tls13010next3']);
         break;
       default:
-        this.router.navigate(['/TLS/TLS13010CRU']);
+        this.router.navigate(['account/tls/tls13010cru']);
     }
   }
 
