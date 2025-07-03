@@ -160,7 +160,6 @@ export class TLS51110CRUComponent
     const columns = ['品牌編號', '品牌名稱', '年月(YYYYMM)', '預算', '成本', '備註(100字元)'];
     this.excelImportService.importExcel(file, columns).then((data) => {
       console.log('匯入資料', data);
-      // 一筆一筆呼叫 API...
     });
   }
 }

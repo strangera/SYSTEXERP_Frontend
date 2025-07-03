@@ -63,6 +63,7 @@
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
     [showExcel]="true"
+    (exportExcel)="onExportExcel()"
     (importExcel)="onImportExcel($event)"
     [editDisabled]="editDisabled"
   ></app-table>

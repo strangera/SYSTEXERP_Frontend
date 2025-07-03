@@ -7,9 +7,8 @@ import {
   createPaginationConfig,
 } from '../../../shared/componentkit/table/table.model';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
-// import * as XLSx from 'xlsx';
 import { FileSelectEvent } from 'primeng/fileupload';
-import { ExcelImportService } from '../../../shared/service/excel-import.service';
+import { saveAs } from 'file-saver';
 
 interface LogoOption {
   No: string;
@@ -51,8 +50,7 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
       header: '審校狀態',
       visible: true,
       format: (value: string) =>
-        this.BUD_Status_Option.find((item) => item.value === value)?.label ||
-        value,
+        this.BUD_Status_Option.find((item) => item.value === value)?.label || value,
     },
     { field: 'BUD_Remark', header: '備註說明', visible: true },
   ];
@@ -61,6 +59,7 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
   totalRecords = 0;
   data: LogoBudget[] = [];
   selectedItems: LogoBudget[] = [];
+
   editDisabled(rowData: LogoBudget) {
     return rowData.BUD_Status === '1';
   }
@@ -72,9 +71,7 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
 
   constructor(
     private apiService: Tls51110Service,
-    private tls51070Service: Tls51070Service,
-    private tls51110Service: Tls51110Service,
-    private excelImportService: ExcelImportService
+    private tls51070Service: Tls51070Service
   ) {
     super();
   }
@@ -93,6 +90,7 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
       },
     });
   }
+
   formatYYYYMM(dateStr: string): string {
     if (!dateStr) return '';
     if (/^\d{6}$/.test(dateStr)) {
@@ -111,7 +109,7 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
       frm.patchValue({
         ...frm.value,
         YYYYMM: formattedYYYYMM,
-      })
+      });
       this.apiService.queryTLS51110(frm.value).subscribe({
         next: (response) => {
           console.log('查詢成功', response);
@@ -119,7 +117,7 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
           this.data = response.Data.map((item: any) => ({
             ...item,
             YYYYMM2: frm.value.YYYYMM2
-          }))
+          }));
           this.totalRecords = response.TotalCount || this.data.length;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
         },
@@ -131,25 +129,33 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
     });
   }
 
-  // 匯出範本需要去打API
-  // onExportExcel() {
-
-  // }
-  // 匯入Excel
+  // 匯入 Excel
   onImportExcel(event: FileSelectEvent) {
     const file = event.files[0];
     if (!file) return;
-    const columns = [
-      'LOGO_No',
-      'YYYYMM',
-      'BUDGET',
-      'BUDGET_Cost',
-      'BUD_Remark',
-      'BUD_Status',
-    ]
-    this.excelImportService.importExcel(file, columns).then(data => {
-      console.log(data)
-    })
+
+    this.apiService.uploadTLS51110(file).subscribe({
+      next: (res) => {
+        console.log('匯入成功', res);
+        // 成功後可自動重新查詢
+        this.onSubmit(this.queryForm);
+      },
+      error: (err) => {
+        console.error('匯入失敗', err);
+      }
+    });
   }
 
+  // 下載範例檔案
+  onExportExcel() {
+    this.apiService.downloadTemplate().subscribe({
+      next: (res: Blob) => {
+        const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blob, 'TLS51110_Template.xlsx');
+      },
+      error: (err) => {
+        console.error('下載範例檔案失敗', err);
+      }
+    });
+  }
 }

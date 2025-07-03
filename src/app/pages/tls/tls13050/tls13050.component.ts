@@ -12,17 +12,11 @@ import { QueryTLS13050Request } from '../../../shared/models/tls/queryTLS13050-r
 export class TLS13050Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     tlt_floorList: [[]],
-    tlt_bdate_start: [''],
-    tlt_bdate_end: [''],
-    tlt_edate_start: [''],
-    tlt_edate_end: [''],
-    cag_bdate_start: [''],
-    cag_bdate_end: [''],
-    cag_edate_start: [''],
-    cag_edate_end: [''],
+    date_start: [''],
+    date_end: [''],
     check_day_start: [0],
     check_day_end: [0],
-    ...createPaginationConfig([{ field: 'recruitmentCode', order: 1 }])
+    ...createPaginationConfig([{ field: 'apply_no', order: 1 }])
   });
 
 
@@ -33,19 +27,20 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
   BUILDING_NO_Options: any[] = [];
 
   columns: any[] = [
-    { field: 'recruitmentCode', header: '專櫃招募編號', visible: true },
-    { field: 'counterCode', header: '專櫃編號', visible: true },
-    { field: 'buildingName', header: '館別', visible: true },
-    { field: 'floor', header: '樓層', visible: true },
-    { field: 'organizationName', header: '組織名稱', visible: true },
-    { field: 'locationCode', header: '位置編號', visible: true },
-    { field: 'counterName', header: '專櫃名稱', visible: true },
-    { field: 'startDate', header: '起始日期', visible: true },
-    { field: 'endDate', header: '結束日期', visible: true },
-    { field: 'salesActual', header: '(A)累積營業實績', visible: true },
-    { field: 'guaranteeAmount', header: '(B)年度包底金額', visible: true },
-    { field: 'difference', header: '(A-B)累積差額', visible: true },
+    { field: 'apply_no', header: '專櫃招募編號', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_building', header: '館別', visible: true },
+    { field: 'FloorText', header: '樓層', visible: true },
+    { field: 'org_name', header: '組織名稱', visible: true },
+    { field: 'LocationText', header: '位置編號', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'cag_bdate', header: '起始日期', visible: true },
+    { field: 'cag_edate', header: '結束日期', visible: true },
+    { field: 'sad_sale_amt_sum', header: '(A)累積營業實績', visible: true },
+    { field: 'limit_amt', header: '(B)年度包底金額', visible: true },
+    { field: 'finishedrate', header: '(A-B)累積差額', visible: true },
     { field: 'completionRate', header: '年度包底營業額完成率', visible: true },
+    { field: 'check_day', header: '月結天數', visible: true },
   ];
 
   constructor(
@@ -72,18 +67,26 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
     this.handleSubmit(form, () => {
       const formValue = form.getRawValue();
 
-      const body: QueryTLS13050Request = {
-        tlt_floorList: formValue.tlt_floor || [],
-        tlt_bdate_start: formValue.tlt_contract_bdate_from || '',
-        tlt_bdate_end: formValue.tlt_contract_bdate_to || '',
-        tlt_edate_start: formValue.tlt_contract_edate_from || '',
-        tlt_edate_end: formValue.tlt_contract_edate_to || '',
-        cag_bdate_start: '',
-        cag_bdate_end: '',
-        cag_edate_start: '',
-        cag_edate_end: '',
-        check_day_start: formValue.check_day || '',
-        check_day_end: formValue.check_day || ''
+      const formatYYYYMM = (dateStr: string): string => {
+        if (!dateStr) return '';
+        if (/^\d{6}$/.test(dateStr)) return dateStr; // 已經是 YYYYMM
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return '';
+        const year = date.getFullYear();
+        const month = ('0' + (date.getMonth() + 1)).slice(-2);
+        return `${year}${month}`;
+      };
+
+
+      const body = {
+          tlt_floorList: formValue.tlt_floorList || [],
+          date_start: formatYYYYMM(formValue.date_start),
+          date_end: formatYYYYMM(formValue.date_end),
+          check_day_start: formValue.check_day_start ?? 0,
+          check_day_end: formValue.check_day_end ?? 0,
+          SortBy: [
+            { field: 'apply_no', order: 1 }
+          ]
       };
 
       console.log('送出的查詢 body', body);
@@ -104,5 +107,8 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
       });
     });
   }
+
+
+
 
 }
