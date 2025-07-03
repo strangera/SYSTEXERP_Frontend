@@ -202,13 +202,13 @@
         <!-- 國際條碼 POS2005 -->
         <app-expandable-edit-table #pos2005Table title="多筆國際條碼" [mainColumns]="POS2005DataColumn" [data]="POS2005Data"
           [loading]="expand2005Loading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
-          [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false"
+          [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
           [defaultNewItem]="defaultNew2005" (save)="onRowSavePOS2005($event)" (cancel)="onRowCancelPOS2005($event)"
           (batchDelete)="onBatchDelete2005($event)" (addMainItem)="onAddPOS2005()"></app-expandable-edit-table>
         <!-- 商品採購廠商 POS2020 -->
         <app-expandable-edit-table #pos2020Table title="商品採購廠商" [mainColumns]="POS2020DataColumn" [data]="POS2020Data"
           [loading]="expand2020Loading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
-          [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false"
+          [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
           [defaultNewItem]="defaultNew2020" (save)="onRowSavePOS2020($event)" (cancel)="onRowCancelPOS2020($event)"
           (batchDelete)="onBatchDelete2020($event)" (addMainItem)="onAddPOS2020()"></app-expandable-edit-table>
       </ng-container>

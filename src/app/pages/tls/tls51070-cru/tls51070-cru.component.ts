@@ -733,11 +733,11 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       return;
     }
 
-    const { IMG_Type, IMG_SeqNo } = reference;
+    const { IMG_SeqNo } = reference;
 
     for (const fileName of this.confirmDeleteImages) {
       const request = {
-        'IMG_Type': IMG_Type,
+        'IMG_Type': 'POS2004',
         "IMG_SeqNo": IMG_SeqNo,
         IMG_File: fileName,
       };
