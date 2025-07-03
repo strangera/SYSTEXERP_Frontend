@@ -5,6 +5,7 @@ import { ITLS52020Data, Tls52020Service } from '../../../service/api/tls/tls5202
 import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IPOS2013Request } from '../../../service/api/dropdownservice/dropDownList.service';
 import { finalize, map } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
 export const enum POStatus {
   已申請 = '0',
   已審核 = '2',
@@ -20,12 +21,11 @@ export const enum POStatus {
 })
 export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    CRN_No: ['', [Validators.maxLength(16)]], // 採購單編號 input
-    HOS_No: [null], // 倉庫代碼 multi-select
-    LOGO_No: [null], // 品牌代碼 multi-select
+    CRN_No: ['', [Validators.maxLength(16)]], // 退貨單編號
+    HOS_NoList: [null], // 倉庫代碼 multi-select
+    LOGO_NoList: [null], // 品牌代碼 multi-select
     VEN_No: [null], // 廠商編號 multi-select
-    CRN_Status: [null], // 採購單狀態 multi-select // !!! 記得改成必填
-    // CRN_Status: [null, [Validators.required]], // 採購單狀態 multi-select
+    CRN_StatusList: [null, [Validators.required]], // 採購單狀態 multi-select
     APPLY_USR: [null], // 申請人員 multi-select
     APPLY_Date_Start: [null], // 申請日期 起 calendar-range
     APPLY_Date_End: [null], // 申請日期 迄
@@ -98,20 +98,20 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     // 倉別 (HOS_No)
     this.dropDownListService.getPOS2034Options().pipe(
       map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
-    ).subscribe(options => {
+    ).pipe(untilDestroyed(this)).subscribe(options => {
       this.warehouseOptions = options;
     });
     // 品牌代碼 (LOGO_No)
     this.dropDownListService.queryPLULOGO_DropDownList().pipe(
       map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
-    ).subscribe(options => {
+    ).pipe(untilDestroyed(this)).subscribe(options => {
       this.brandOptions = options.map(item => ({ label: `${item.value} - ${item.label}`, value: item.value }));
     });
     // 廠商編號 (VEN_No)
     const venFlagParams: IPOS2013Request = { VEN_Flag: '' }; // 根據實際需求設定 VEN_Flag
     this.dropDownListService.queryPOS2013_DropDownList(venFlagParams).pipe(
       map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
-    ).subscribe(options => { this.vendorOptions = options.map(item => ({ label: `${item.value} - ${item.label}`, value: item.value })); });
+    ).pipe(untilDestroyed(this)).subscribe(options => { this.vendorOptions = options.map(item => ({ label: `${item.value} - ${item.label}`, value: item.value })); });
     // 採購單狀態 (PO_Status) - 靜態資料，已更新為你提供的正確值
     this.poStatusOptions = [
       { label: '已申請', value: '1' },
@@ -125,14 +125,14 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     // 申請人員、審核人員、結案人員 (共用人員下拉選單)
     this.dropDownListService.queryUser_Name_DropDownList().pipe(
       map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
-    ).subscribe(options => {
+    ).pipe(untilDestroyed(this)).subscribe(options => {
       this.userOptions = options;
     });
   }
   // 表單提交處理方法
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tls52020Service.queryTLS52020(frm.value).pipe(finalize(() => this.loading = false)).subscribe(response => {
+      this.tls52020Service.queryTLS52020(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(response => {
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -142,9 +142,9 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   statusChange(rowData: ITLS52020Data, status: string) {
     const body = {
       idList: [rowData.id],
-      PO_Status: status
+      CRN_Status: status
     }
-    this.tls52020Service.SetCloseTLS52020(body).pipe(finalize(() => this.loading = false)).subscribe(response => {
+    this.tls52020Service.updateStatusTLS52020(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.onSubmit(this.queryForm);
     });
@@ -157,9 +157,9 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     console.log('關閉多筆事件:', rowData);
     const body = {
       idList: rowData.map(item => item.id),
-      PO_Status: POStatus.強制結案
+      CRN_Status: POStatus.強制結案
     }
-    this.tls52020Service.SetCloseTLS52020(body).pipe(finalize(() => this.loading = false)).subscribe(response => {
+    this.tls52020Service.updateStatusTLS52020(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.selectedItems = [];
       this.onSubmit(this.queryForm);

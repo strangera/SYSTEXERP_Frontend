@@ -103,7 +103,7 @@ export class BasicPrintDataComponent {
 
     const body = {
       query_condition: {
-        ServiceName: `${apiUrl}`,
+        ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
         Conditions: queryState
       },
       report_title: REPORT_TITLES[`query${ProgNo}`] || 'Report',

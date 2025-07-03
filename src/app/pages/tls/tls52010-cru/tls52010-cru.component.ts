@@ -7,6 +7,7 @@ import { IGetBudgetAmountRequest, IInsertTLS52010Request, IPODetail, IPOS2004Det
 import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
 import { validateMinNumber } from '../../../shared/models/system/validate-field.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 
 // 2.5.2.1  採購單維護作業 CRU
 @Component({
@@ -19,14 +20,14 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     PO_No: [{ value: '系統自動產生', disabled: true }], // 採購單號 (與 POS2016.PO_No 對應)
     VEN_No: [null, [Validators.required]], // 廠商編號 (與 POS2016.VEN_No 對應)
     vendorShortName: [{ value: '', disabled: true }], // 廠商簡稱 (前端專用，不對應資料庫欄位，顯示在 VEN_No 下一欄)
-    LOGO_No: [null, [Validators.required]], // 品牌編號 (與 POS2016.LOGO_No 對應)
+    LOGO_No: ['', [Validators.required]], // 品牌編號 (與 POS2016.LOGO_No 對應)
     remainingBudgetAmount: [{ value: 0, disabled: true }], // 剩餘預算金額 (前端顯示用，不對應資料庫欄位)
     HOS_No: [{ value: null as string | null, disabled: true }, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
     PO_TotalBuyNet: [{ value: 0, disabled: true }], // 採購金額
     PO_TotalBuyTax: [{ value: 0, disabled: true }], //稅額
     PO_TotalBuyAmt: [{ value: 0, disabled: true }], // 合計金額
     PO_TotalSaleAmt: [{ value: 0, disabled: true }], //售價總計
-    APPLY_USR_No: [{ value: '', disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
+    APPLY_USR_No: [{ value: null as string | null, disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
     APPLY_Date: [{ value: new Date(), disabled: true }], // 申請日期 (對應 POS2016.APPLY_Date)
     PO_Remark: [''], // 採購單備註 (對應 POS2016.PO_Remark)
   });
@@ -57,6 +58,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     private dropDownListService: DropDownListService,
     private tls52010Service: Tls52010Service,
     private cdr: ChangeDetectorRef,
+    private sys0110Service: Sys0110Service
   ) {
     super();  // 呼叫父類建構子
   }
@@ -74,71 +76,66 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   }
   private loadDropdownOptions(): void {
     this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.vendorOptions = response.Data.map(vendor => ({
-        ...vendor,
-        label: `${vendor.VEN_No} - ${vendor.Name}`,
-      }));
+      this.vendorOptions = response.Data.map(vendor => ({ ...vendor, label: `${vendor.VEN_No} - ${vendor.Name}` }));
+      if (!this.isFormCreateable) {
+        const selectedVendor = this.vendorOptions.find(opt => opt.VEN_No === this.dataForm.controls.VEN_No.value);
+        this.dataForm.controls.vendorShortName.setValue(selectedVendor?.ShortName ?? '');
+      }
+      // 監聽廠商編號變化
+      this.dataForm.controls.VEN_No.valueChanges.pipe(untilDestroyed(this)).subscribe(vendorNo => {
+        if (vendorNo) {
+          const selectedVendor = this.vendorOptions.find(opt => opt.VEN_No === vendorNo);// 顯示廠商簡稱
+          this.dataForm.controls.vendorShortName.setValue(selectedVendor?.ShortName ?? ''); // 假設 Name 是簡稱
+        } else {
+          this.dataForm.controls.vendorShortName.setValue('');
+          this.cdr.detectChanges();
+        }
+        this.data = [];
+        this.selectedItems = [];
+        this.calculateTotals();
+        this.dialogData = [];
+      });
     });
-    // 品牌
-    // 獲取品牌的倉別
     this.dropDownListService.queryPLULOGO_HOS_No_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.brandOptions = response.Data;
-      this.dataForm.controls.LOGO_No.setValue(null); // 清空品牌選擇
-      this.dataForm.controls.remainingBudgetAmount.setValue(0); // 清空預算金額
+      this.brandOptions = response.Data;// 品牌
+      // 監聽品牌編號變化，用於顯示剩餘預算金額和建議倉別
+      this.dataForm.controls.LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(logoNo => {
+        if (logoNo && this.dataForm.controls.APPLY_Date.value) {
+          const applyDate = this.dataForm.controls.APPLY_Date.value;
+          const applyYearMonth = `${applyDate.getFullYear()}${(applyDate.getMonth() + 1).toString().padStart(2, '0')}`;
+          const budgetRequest: IGetBudgetAmountRequest = { LOGO_No: logoNo, YYYYMM: applyYearMonth };
+          // 獲取剩餘預算金額
+          this.tls52010Service.GetBudgetAmount(budgetRequest).pipe(untilDestroyed(this)).subscribe(response => {
+            this.dataForm.controls.remainingBudgetAmount.setValue(response.Data);
+          });
+          const HOS_No = this.brandOptions.find(opt => opt.No === logoNo)?.HOS_No || null;
+          this.dataForm.controls.HOS_No.setValue(HOS_No);
+          this.dataForm.controls.HOS_No.enable();
+        } else {
+          this.dataForm.controls.HOS_No.setValue('');
+          this.dataForm.controls.HOS_No.disable();
+        }
+        this.data = [];
+        this.selectedItems = [];
+        this.calculateTotals();
+        this.dialogData = [];
+      });
+      if (!this.isFormCreateable) { this.dataForm.controls.LOGO_No.setValue(this.rowdata?.LOGO_No || '') }
     });
-    // 倉別
-    this.dataForm.controls.HOS_No.enable();
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
-      this.warehouseOptions = response.Data;
+      this.warehouseOptions = response.Data;// 倉別
     });
   }
   private setInitialValuesAndWatchChanges(): void {
-    this.dataForm.controls.APPLY_Date.setValue(new Date());
-    const userInfo = this.authService.currentUserValue;
-    this.userOptions = [{ user_No: userInfo?.user_No || '', user_Name: userInfo?.user_Name || '' }];
-    this.dataForm.controls.APPLY_USR_No.setValue(this.userOptions[0]?.user_No || ''); // 假設用戶對象有 userName 屬性
-    this.dataForm.controls.VEN_No.valueChanges.pipe(untilDestroyed(this)).subscribe(vendorNo => {
-      if (vendorNo) {
-        const selectedVendor = this.vendorOptions.find(opt => opt.VEN_No === vendorNo);// 顯示廠商簡稱
-        this.dataForm.controls.vendorShortName.setValue(selectedVendor?.ShortName ?? ''); // 假設 Name 是簡稱
-      } else {
-        this.dataForm.controls.vendorShortName.setValue('');
-        this.brandOptions = []; // 清空品牌選項
-        this.cdr.detectChanges();
-      }
-      this.data = [];
-      this.selectedItems = [];
-      this.calculateTotals();
-      this.dialogData = [];
-    });
-    // 監聽品牌編號變化，用於顯示剩餘預算金額和建議倉別
-    this.dataForm.controls.LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(logoNo => {
-      if (logoNo && this.dataForm.controls.APPLY_Date.value) {
-        const applyDate = this.dataForm.controls.APPLY_Date.value;
-        const applyYearMonth = `${applyDate.getFullYear()}${(applyDate.getMonth() + 1).toString().padStart(2, '0')}`;
-        const budgetRequest: IGetBudgetAmountRequest = {
-          LOGO_No: logoNo,
-          YYYYMM: applyYearMonth // 採購日期年月
-        };
-        // 獲取剩餘預算金額
-        this.tls52010Service.GetBudgetAmount(budgetRequest).pipe(untilDestroyed(this)).subscribe(response => {
-          if (response.Data !== undefined) { // 假設返回的是單個數字
-            this.dataForm.controls.remainingBudgetAmount.setValue(response.Data);
-          } else {
-            this.dataForm.controls.remainingBudgetAmount.setValue(0);
-          }
-        });
-        const HOS_No = this.brandOptions.find(opt => opt.No === logoNo)?.HOS_No || null;
-        this.dataForm.controls.HOS_No.setValue(HOS_No);
-      } else {
-        this.warehouseOptions = [];
-        this.cdr.detectChanges();
-      }
-      this.data = [];
-      this.selectedItems = [];
-      this.calculateTotals();
-      this.dialogData = [];
-    });
+    if (this.isFormCreateable) {
+      this.dataForm.controls.APPLY_Date.setValue(new Date());
+      this.userOptions = [{ user_No: this.user?.user_No || '', user_Name: this.user?.user_Name || '' }];
+      this.dataForm.controls.APPLY_USR_No.setValue(this.userOptions[0]?.user_No || ''); // 假設用戶對象有 userName 屬性
+    } else {
+      this.sys0110Service.queryUser({ user_No: this.rowdata?.APPLY_USR_No }).pipe(untilDestroyed(this)).subscribe(response => {
+        this.userOptions = response.Data.map(user => ({ user_No: user.user_No, user_Name: user.user_Name }));
+      })
+    }
   }
 
   dialogVisible = false;
@@ -149,7 +146,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     CAT_MNo: [{ value: null, disabled: true }], // 中分類代碼
     CAT_SNo: [{ value: null, disabled: true }], // 小分類代碼
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
-
   });
   totalRecords = 0;
   CAT_LNoOptions: IDropdownItem[] = [];
@@ -162,27 +158,23 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
     { field: 'PLU_Unit', header: '單位編號' },
-    { field: 'UNIT_NAME', header: '單位名稱', sortField: 'UNIT_NAME' },
+    { field: 'UNIT_NAME', header: '單位名稱' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
     { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : '應稅' },
-    { field: 'PLU_SalePrc_UNI', header: '單價', sortField: 'PLU_FixPrc' },
+    { field: 'PLU_SalePrc_UNI', header: '單價', showSort: false },
     { field: 'PLU_SalePrc', header: '售價' },
   ]
   dialogLoading = false;
   loadDialogData() {
+    // 獲取大分類下拉選項
     this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.CAT_LNoOptions = response.Data.map(item => ({
-        ...item,
-        label: `${item.No} - ${item.Name}`,
-      }));
+      this.CAT_LNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     });
+    // 監聽大分類變化
     this.dialogQueryForm.controls.CAT_LNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
       if (value) {
         this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
-          this.CAT_MNoOptions = response.Data.map(item => ({
-            ...item,
-            label: `${item.No} - ${item.Name}`,
-          }));
+          this.CAT_MNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
           this.dialogQueryForm.controls.CAT_MNo.enable();
         });
       } else {
@@ -191,13 +183,11 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       this.dialogQueryForm.controls.CAT_MNo.setValue(null); // 清空中分類選擇
       this.dialogQueryForm.controls.CAT_SNo.setValue(null); // 清空中分類選擇
     });
+    // 監聽中分類變化
     this.dialogQueryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
       if (value) {
         this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [this.dialogQueryForm.controls.CAT_LNo.value || ''], CAT_MNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
-          this.CAT_SNoOptions = response.Data.map(item => ({
-            ...item,
-            label: `${item.No} - ${item.Name}`,
-          }));
+          this.CAT_SNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
         });
         this.dialogQueryForm.controls.CAT_SNo.enable();
       } else {
@@ -213,31 +203,25 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       VEN_No: this.dataForm.controls.VEN_No.value,
       LOGO_No: this.dataForm.controls.LOGO_No.value,
     }
-    this.tls52010Service.queryPOS2004DetailByVenNo(body).pipe(
-      finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
-        this.dialogData = response.Data;
-        this.totalRecords = response.TotalCount;
-      })
+    this.tls52010Service.queryPOS2004DetailByVenNo(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
+      this.dialogData = response.Data;
+      this.totalRecords = response.TotalCount;
+    })
   }
   saveDialog() {
     this.dialogVisible = false;
-    this.data = [
-      ...this.data,
-      ...this.selectedItemsDialog.map(item => ({ ...item, POD_SubQty: 0 }))
-    ];
+    this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({ ...item, POD_SubQty: 0 }))];
     this.selectedItemsDialog = [];
     this.selectedItems = [];
     this.calculateTotals();
   }
   onDelete(selectedRows: IPOS2004DetailData[]) {
     this.data = this.data.filter(row => !selectedRows.includes(row));
-    this.selectedItems = [];
     this.calculateTotals();
   }
   isRowSelectable(event: IPOS2004DetailData): boolean {
     return !this.data || !this.data.some((item: IPOS2004DetailData) => item.PLU_MagNo === event.PLU_MagNo);
   }
-  // { oldData: any;  newData: any;  ri: number;  data: any[];}
   onRowEditSave(event: RowEditSaveEvent) {
     const newData: IPOS2004DetailData = event.newData;
     // 確保 POD_SubQty 是數字且不為負數，如果為 null 或 undefined 設為 0

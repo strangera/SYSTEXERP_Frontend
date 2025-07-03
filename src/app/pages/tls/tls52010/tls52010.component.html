@@ -77,9 +77,15 @@
     <header>
       <div class="flex align-items-center gap-2">
         <p-button label="列印採購單" [ngStyle]="{ height: '35px' }" [style]="{ height: '35px' }" pTooltip="列印採購單"
-          tooltipPosition="top" icon="pi pi-print" [rounded]="true" severity="success" (click)="print(selectedItems)" />
+          tooltipPosition="top" icon="pi pi-print" [rounded]="true" severity="success" (click)="print(selectedItems)"
+          [disabled]="selectedCount === 0" />
         <p-button label="結案" [ngStyle]="{ height: '35px' }" [style]="{ height: '35px' }" pTooltip="結案"
-          tooltipPosition="top" [rounded]="true" severity="danger" (click)="close(selectedItems)" />
+          tooltipPosition="top" [rounded]="true" severity="danger" (click)="close(selectedItems)"
+          [disabled]="disabledClose || selectedCount === 0" />
+        <!-- 只有部分驗收採購單可強制結案 -->
+        <span *ngIf="disabledClose && selectedCount > 0" @slideInFromLeft class="text-sm text-red-600">
+          採購單狀態為「部分驗收」可強制結案
+        </span>
       </div>
     </header>
   </app-table>

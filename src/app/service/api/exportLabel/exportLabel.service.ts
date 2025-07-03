@@ -2,7 +2,6 @@ import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../system/auth.service'; // 假設 ApiResponse 介面在此定義
 
 export interface IExportLabelRequest {
   PLU_MagNo: string;

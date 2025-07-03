@@ -17,6 +17,7 @@ const routes: Routes = [
       // 1. 財務會計系統 (FIN)
       { path: 'fin', loadChildren: () => import('./fin/fin.module').then(m => m.FinModule) },
       // 2. 銷售管理系統 (TLS)
+      { path: 'TLS', loadChildren: () => import('./tls/tls.module').then(m => m.TlsModule) },
       { path: 'tls', loadChildren: () => import('./tls/tls.module').then(m => m.TlsModule) },
       // 3. 資產管理系統 (ASS)
       { path: 'ass', loadChildren: () => import('./ass/ass.module').then(m => m.AssModule) },
@@ -24,6 +25,8 @@ const routes: Routes = [
       { path: 'sys', loadChildren: () => import('./sys/sys.module').then(m => m.SysModule) },
       // 5. 客戶關係管理 (CPM)
       { path: 'cpm', loadChildren: () => import('./cpm/cpm.module').then(m => m.CpmModule) },
+      // 注意：這裡的 404 路由只會捕獲 PagesModule 內部未匹配的路由
+      { path: '**', loadChildren: () => import('./base/notfound/notfound.module').then(m => m.NotfoundModule) },
     ]
   },
 ];

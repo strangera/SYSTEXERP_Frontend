@@ -55,7 +55,9 @@ export class BasicCruPageComponent<T> {
     return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
   initializePage(progNo: string, form?: FormGroup) {
-    this.user = this.authService.getUserInfo() as UserInfo;
+    if (this.authService.currentUserValue) {
+      this.user = this.authService.currentUserValue;
+    }
     this.ProgNo = progNo;
     this.currentPageService.setCurrentProgNo(this.ProgNo);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);

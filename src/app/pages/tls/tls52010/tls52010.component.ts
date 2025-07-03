@@ -7,6 +7,7 @@ import { DropDownListService } from '../../../service/api/dropdownservice/dropDo
 import { finalize, map } from 'rxjs'; // 只需要 map 運算符，因為我們將直接訂閱
 import { ExportLabelService, IExportLabelRequest } from '../../../service/api/exportLabel/exportLabel.service';
 import { HttpResponse } from '@angular/common/http';
+import { trigger, transition, style, animate } from '@angular/animations';
 export const enum POStatus {
   已申請 = '0',
   取消 = '1',
@@ -20,6 +21,14 @@ export const enum POStatus {
 @Component({
   selector: 'app-tls52010',
   templateUrl: './tls52010.component.html',
+  animations: [
+    trigger('slideInFromLeft', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateX(-20%)' }),
+        animate('400ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
+      ])
+    ])
+  ]
 })
 export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> implements OnInit {
   // 查詢表單定義
@@ -158,7 +167,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
       idList: rowData.map(item => item.id),
       PO_Status: POStatus.強制結案
     }
-    this.tls52010Service.SetCloseTLS52010(body).pipe(finalize(() => this.loading = false)).subscribe(response => {
+    this.tls52010Service.updateStatusTLS52010(body).pipe(finalize(() => this.loading = false)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.selectedItems = [];
       this.onSubmit(this.queryForm);
@@ -193,6 +202,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
                   filename = decodeURIComponent(filenameMatch[1]);
                 } catch (e) {
                   filename = filenameMatch[1]; // 解碼失敗則用原始值
+                  console.error(e);
                 }
               }
             }
@@ -217,9 +227,17 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
       idList: [rowData.id],
       PO_Status: status
     }
-    this.tls52010Service.SetCloseTLS52010(body).pipe(finalize(() => this.btnLoading = false)).subscribe(response => {
+    this.tls52010Service.updateStatusTLS52010(body).pipe(finalize(() => this.btnLoading = false)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.onSubmit(this.queryForm);
     });
+  }
+
+  get disabledClose() {
+    return this.selectedItems.some(item => item.PO_Status !== POStatus.部分驗收);
+  }
+
+  get selectedCount() {
+    return this.selectedItems.length;
   }
 }
