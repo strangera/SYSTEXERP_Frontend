@@ -9,12 +9,8 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
-        <div class="grid p-fluid">
+<form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+  <div class="grid p-fluid">
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="銷售日期"
@@ -243,6 +239,8 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+           </div> 
+           </form>
                 <div class="col-12 md:col-6 lg:col-4">
       <label for="pageSize">限制筆數</label>
       <input
@@ -254,7 +252,7 @@
         style="width: 100%"
       />
     </div>
-        </div>
+      
 
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
@@ -267,7 +265,7 @@
             (clickEvent)="goToReportMode()"
           ></app-button>
         </div>
-      </form>
+   
     </p-accordionTab>
   </p-accordion>
 </div>
