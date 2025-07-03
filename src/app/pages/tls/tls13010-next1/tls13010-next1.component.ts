@@ -1,5 +1,3 @@
-import { option } from './../../../shared/models/sys/sysb000.module';
-import { Column, formatDate } from './../../../shared/componentkit/table/table.model';
 import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
@@ -8,9 +6,9 @@ import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
-import { ContractFlowService, WorkflowStep } from '../tls13010/services/contract-flow.service';
+import { ContractFlowService } from '../tls13010/services/contract-flow.service';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
-import { FareItem, ContractInfo } from '../tls13010/tls13010.model';
+import { FareItem, ContractInfo, WorkflowStep } from '../tls13010/tls13010.model';
 
 // 介面定義
 interface CategoryItem {

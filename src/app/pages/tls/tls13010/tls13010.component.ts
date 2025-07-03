@@ -22,7 +22,7 @@ import {
 import { TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from './tls13010.dropdown';
 
 // 業務服務
-import { ContractFlowService, WorkflowStep } from './services/contract-flow.service';
+import { ContractFlowService } from './services/contract-flow.service';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 
 // API 服務
@@ -34,7 +34,7 @@ import { CooperationMethodService } from '../../../service/basic/cooperation-met
 import { CounterCategoryService } from '../../../service/basic/counter-category.service';
 
 // 資料模型
-import { ContractItem } from './tls13010.model';
+import { ContractItem, WorkflowStep } from './tls13010.model';
 
 @Component({
   selector: 'app-tls13010',

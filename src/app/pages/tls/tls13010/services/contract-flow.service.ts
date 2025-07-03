@@ -2,29 +2,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { BaseCommissionCondition, BaseRentHigherCondition, BaseTierCondition, CommissionItem, ConditionDataItem, ConditionItem, ContractInfo, FareItem, FinalData, FixedRentCondition, GraduatedCommissionCondition, Step3DataChangeTracker } from '../tls13010.model';
+import { CommissionItem, ConditionItem, ContractDataStructure, ContractInfo, FareItem, Step3DataChangeTracker, UnifiedCommissionResponse, WorkflowStatus, WorkflowStep } from '../tls13010.model';
 import { DataChangeTracker, SubmitDataStructure } from '../tls13010.model';
-
-
-
-// 工作流程步驟定義
-export enum WorkflowStep {
-  QUERY = 0,           // 查詢頁面
-  CONTRACT_INFO = 1,   // 契約基本資訊 (CRU)
-  DEDUCTION = 2,       // 代扣款設定 (NEXT1)
-  COMMISSION = 3,      // 抽成設定 (NEXT2)
-  CONDITION = 4,       // 條件設定 (NEXT3)
-  FINAL = 5            // 最終確認
-}
-
-// 工作流程狀態
-export interface WorkflowStatus {
-  currentStep: WorkflowStep;
-  completedSteps: WorkflowStep[];
-  canProceed: boolean;
-  contractId: string | null;
-  lastModified: Date;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -36,58 +15,30 @@ export class ContractFlowService {
   private memoryCache = new Map<string, any>();
 
   // 保留您原有的資料結構
-  private contractData: {
-    contractId: string | null,
-    queryRowData: ContractInfo | null,
-    step1: ContractInfo | null,
-    step2: FareItem[],
-    step3: CommissionItem[],
-    step4: ConditionItem[],
-    step5: FinalData | null,
-    dataToDelete: null, // 新增刪除資料的暫存
+  private contractData: ContractDataStructure = {
+    contractId: null,
+    queryRowData: null,
+    step1: null,
+    step2: [],
+    step3: [],
+    step4: [],
+    step5: null,
+    dataToDelete: null,
+    unifiedCommissionData: null, // 🎯 新增統一抽成設定資料
     metadata: {
-      createdAt: Date;
-      lastModified: Date;
-      version: number;
+      createdAt: new Date(),
+      lastModified: new Date(),
+      version: 1
     }
-  } = {
-      contractId: null,
-      queryRowData: null,
-      step1: null,
-      step2: [],
-      step3: [],
-      step4: [],
-      step5: null,
-      dataToDelete: null,
-      metadata: {
-        createdAt: new Date(),
-        lastModified: new Date(),
-        version: 1
-      }
-    };
+  };
 
   // 工作流程狀態管理
   private workflowStatusSubject = new BehaviorSubject<WorkflowStatus>(this.initializeStatus());
   public workflowStatus$ = this.workflowStatusSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    this.contractData = {
-      contractId: null,
-      queryRowData: null,
-      step1: null,
-      step2: [],
-      step3: [],
-      step4: [],
-      step5: null,
-      dataToDelete: null, // 🔧 確保包含這個欄位
-      metadata: {
-        createdAt: new Date(),
-        lastModified: new Date(),
-        version: 1
-      }
-    };
     this.loadFromStorage();
-    this.setupAutoSave(); // 新增自動儲存設定
+    this.setupAutoSave();
   }
 
   /**
@@ -109,26 +60,20 @@ export class ContractFlowService {
   startWorkflow(queryRowData: any): void {
     const contractId = queryRowData.talent_id || queryRowData.apply_no || Date.now().toString();
 
-    // 檢查是否有現有的暫存資料
     if (this.contractData.contractId === contractId) {
-      // 有暫存資料，統一從 CRU 開始，但保留已完成的步驟記錄
+      // 有暫存資料，從 CRU 重新開始
       console.log('發現現有暫存資料，從 CRU 重新開始編輯:', contractId);
-
       const newStatus: WorkflowStatus = {
-        currentStep: WorkflowStep.CONTRACT_INFO, // 固定從 CRU 開始
-        completedSteps: this.workflowStatusSubject.value.completedSteps, // 保留已完成步驟
+        currentStep: WorkflowStep.CONTRACT_INFO,
+        completedSteps: this.workflowStatusSubject.value.completedSteps,
         canProceed: true,
         contractId: contractId,
         lastModified: new Date()
       };
-
       this.workflowStatusSubject.next(newStatus);
-      this.saveToStorage();
-
     } else {
-      // 全新的資料，清空舊資料重新開始
+      // 全新的資料，清空舊資料
       console.log('開始新的工作流程:', contractId);
-
       this.contractData = {
         contractId: contractId,
         queryRowData: queryRowData,
@@ -137,7 +82,8 @@ export class ContractFlowService {
         step3: [],
         step4: [],
         step5: null,
-        dataToDelete: null, // 🔧 新增這個欄位
+        dataToDelete: null,
+        unifiedCommissionData: null,
         metadata: {
           createdAt: new Date(),
           lastModified: new Date(),
@@ -152,12 +98,10 @@ export class ContractFlowService {
         contractId: contractId,
         lastModified: new Date()
       };
-
       this.workflowStatusSubject.next(newStatus);
-      this.saveToStorage();
     }
+    this.saveToStorage();
   }
-
   /**
    * 儲存第1步資料
    */
@@ -168,7 +112,6 @@ export class ContractFlowService {
     this.contractData.metadata.lastModified = new Date();
     this.contractData.metadata.version += 1;
 
-    // 更新工作流程狀態
     this.updateWorkflowStatus(WorkflowStep.CONTRACT_INFO);
     this.saveToStorage();
 
@@ -186,7 +129,6 @@ export class ContractFlowService {
       }
       return null;
     }
-
     return this.contractData.step1;
   }
 
@@ -195,15 +137,13 @@ export class ContractFlowService {
    */
   saveStep2Data(data: FareItem[]): void {
     if (this.contractData.contractId) {
-      // 🔧 修正：直接儲存物件格式，不要包成陣列
-      this.contractData.step2 = data;  // 直接儲存，保持原格式
-
+      this.contractData.step2 = data;
       this.contractData.metadata.lastModified = new Date();
       this.contractData.metadata.version += 1;
       this.updateWorkflowStatus(WorkflowStep.DEDUCTION);
       this.saveToStorage();
 
-      console.log('儲存第2步資料 (修正版):', data);
+      console.log('儲存第2步資料:', data);
     }
   }
 
@@ -227,18 +167,19 @@ export class ContractFlowService {
    */
   saveStep4Data(data: ConditionItem[]): void {
     if (this.contractData.contractId) {
-      // 🎯 直接儲存，不需要任何轉換
       this.contractData.step4 = Array.isArray(data) ? data : [data];
-
       this.contractData.metadata.lastModified = new Date();
       this.contractData.metadata.version += 1;
       this.updateWorkflowStatus(WorkflowStep.CONDITION);
       this.saveToStorage();
 
-      console.log('儲存第4步資料 (純物件格式):', this.contractData.step4);
+      console.log('儲存第4步資料:', this.contractData.step4);
     }
   }
 
+  /**
+   * 設定要刪除的資料
+   */
   setDataToDelete(dataToDelete: any): void {
     this.contractData.dataToDelete = dataToDelete;
     this.contractData.metadata.lastModified = new Date();
@@ -248,10 +189,9 @@ export class ContractFlowService {
     console.log('🗑️ 已記錄要刪除的資料:', dataToDelete);
   }
 
-  getDataToDelete(): any {
-    return this.contractData.dataToDelete;
-  }
-
+  /**
+   * 清除要刪除的資料記錄
+   */
   clearDataToDelete(): void {
     this.contractData.dataToDelete = null;
     this.contractData.metadata.lastModified = new Date();
@@ -259,7 +199,81 @@ export class ContractFlowService {
 
     console.log('🗑️ 已清除要刪除的資料記錄');
   }
+  /**
+   * 🎯 儲存統一抽成設定資料
+   */
+  setUnifiedCommissionData(data: UnifiedCommissionResponse): void {
+    this.contractData.unifiedCommissionData = data;
+    this.contractData.metadata.lastModified = new Date();
+    this.saveToStorage();
 
+    console.log('💾 已儲存統一抽成設定資料:', data);
+  }
+
+  /**
+   * 🎯 取得統一抽成設定資料
+   */
+  getUnifiedCommissionData(): UnifiedCommissionResponse | null {
+    return this.contractData.unifiedCommissionData;
+  }
+
+  /**
+   * 🎯 取得 Next3 用的條件設定資料
+   */
+  getRentSettingDataForNext3(): any {
+    const unifiedData = this.getUnifiedCommissionData();
+    return unifiedData?.RentSettingData || null;
+  }
+
+  /**
+   * 🎯 檢查是否有要刪除的舊資料
+   */
+  hasDataToDelete(): boolean {
+    const unifiedData = this.getUnifiedCommissionData();
+    return !!(unifiedData?.DataToDelete && Object.keys(unifiedData.DataToDelete).length > 0);
+  }
+
+  /**
+   * 🎯 取得要刪除的舊資料（統一處理）
+   */
+  getDataToDelete(): any {
+    const unifiedData = this.getUnifiedCommissionData();
+
+    // 優先使用統一 API 的結果
+    if (unifiedData?.DataToDelete) {
+      return unifiedData.DataToDelete;
+    }
+
+    // 備援：使用原本的 dataToDelete
+    return this.contractData.dataToDelete;
+  }
+
+  /**
+   * 🎯 檢查抽成別是否有變更
+   */
+  isCommissionTypeChanged(): boolean {
+    const unifiedData = this.getUnifiedCommissionData();
+    return unifiedData?.IsTermTypeChanged === true;
+  }
+
+  /**
+  * 🎯 取得抽成別變更警告訊息
+  */
+  getCommissionChangeWarning(): any {
+    const unifiedData = this.getUnifiedCommissionData();
+    return unifiedData?.Warning || null;
+  }
+
+  /**
+   * 🎯 清除統一抽成設定資料
+   */
+  clearUnifiedCommissionData(): void {
+    this.contractData.unifiedCommissionData = null;
+    this.contractData.metadata.lastModified = new Date();
+    this.saveToStorage();
+
+    console.log('🗑️ 已清除統一抽成設定資料');
+  }
 
   /**
    * 取得步驟資料
@@ -373,6 +387,7 @@ export class ContractFlowService {
       step4: [],
       step5: null,
       dataToDelete: null,
+      unifiedCommissionData: null, // 加入缺少的 unifiedCommissionData 屬性
       metadata: {
         createdAt: new Date(),
         lastModified: new Date(),
@@ -608,36 +623,81 @@ export class ContractFlowService {
     this.clearTempData();
   }
 
+  /**
+     * 取得當前有效的抽成別（優先使用暫存資料）
+     */
+  getCurrentCommissionType(): string {
+    // 1. 優先從 Step1 暫存資料取得（最新的）
+    const step1Data = this.getStep1Data();
+    if (step1Data?.tlt_term_type) {
+      console.log('🎯 從 Step1 暫存取得抽成別:', step1Data.tlt_term_type);
+      return step1Data.tlt_term_type.toString().trim();
+    }
+
+    // 2. 備援：從查詢資料取得
+    const queryData = this.getQueryRowData();
+    if (queryData?.tlt_term_type) {
+      console.log('🎯 從查詢資料取得抽成別:', queryData.tlt_term_type);
+      return queryData.tlt_term_type.toString().trim();
+    }
+
+    console.warn('❌ 無法取得抽成別資訊');
+    return '';
+  }
+
+  /**
+   * 取得當前合約的 talent_id
+   */
+  getCurrentTalentId(): string {
+    // 1. 優先從暫存的 contractId
+    if (this.contractData.contractId) {
+      return this.contractData.contractId;
+    }
+
+    // 2. 從 Step1 資料取得
+    const step1Data = this.getStep1Data();
+    if (step1Data?.talent_id) {
+      return step1Data.talent_id.toString();
+    }
+
+    // 3. 從查詢資料取得
+    const queryData = this.getQueryRowData();
+    if (queryData?.talent_id) {
+      return queryData.talent_id.toString();
+    }
+
+    console.warn('❌ 無法取得 talent_id');
+    return '';
+  }
+
   generateSubmitData(): SubmitDataStructure {
     const step1Data = this.getStep1Data();
     const step2Data = this.getStep2Data();
     const step3Data = this.getStep3Data();
     const step4Data = this.getStep4Data();
 
-    console.log('🔍 生成提交資料 - 原始資料檢查:');
-    console.log('Step1:', step1Data);
-    console.log('Step2:', step2Data);
-    console.log('Step3:', step3Data);
-    console.log('Step4:', step4Data);
-
-    // Step 1: 合約基本資料 (單筆，判斷是新增還是修改)
+    // Step 1: 合約基本資料
     const step1Operation = step1Data?.talent_id ? 'UPDATE' : 'INSERT';
 
-    // Step 2: 代扣款資料 (多筆，追蹤變更)
+    // Step 2: 代扣款資料
     const step2Changes = DataChangeTracker.generateChangeSummary(step2Data || [], '代扣款設定');
 
-    // Step 3: 抽成設定資料 (多筆，特殊處理 - 4個資料表)
+    // Step 3: 抽成設定資料
     const step3Changes = Step3DataChangeTracker.generateStep3ChangeSummary(step3Data || []);
 
-    // Step 4: 條件設定資料 (多筆，追蹤變更)
+    // Step 4: 條件設定資料
     const step4Changes = DataChangeTracker.generateChangeSummary(step4Data || [], '條件設定');
 
     // 計算總操作數
     const totalOperations =
-      1 + // Step 1 一定有一個操作
+      1 +
       step2Changes.summary.insert + step2Changes.summary.update + step2Changes.summary.delete +
       step3Changes.summary.insert + step3Changes.summary.update + step3Changes.summary.delete +
       step4Changes.summary.insert + step4Changes.summary.update + step4Changes.summary.delete;
+
+    // 🎯 取得要刪除的舊資料（統一處理）
+    const dataToDelete = this.getDataToDelete();
+    const hasLegacyDataToDelete = this.hasDataToDelete();
 
     return {
       step1: {
@@ -652,7 +712,7 @@ export class ContractFlowService {
           toDelete: step2Changes.data.toDelete
         }
       },
-      step3: step3Changes, // 🎯 使用新的 Step3 專用格式
+      step3: step3Changes,
       step4: {
         summary: step4Changes.summary,
         operations: {
@@ -661,11 +721,13 @@ export class ContractFlowService {
           toDelete: step4Changes.data.toDelete
         }
       },
+      legacyDataToDelete: dataToDelete, // 🎯 統一的刪除資料
       metadata: {
         talentId: this.contractData.contractId || '',
         contractId: this.contractData.contractId || '',
         submittedAt: new Date(),
-        totalOperations
+        totalOperations,
+        hasLegacyDataToDelete // 🎯 標記是否有舊資料要刪除
       }
     };
   }
