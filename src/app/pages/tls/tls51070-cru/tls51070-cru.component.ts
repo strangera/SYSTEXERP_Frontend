@@ -69,7 +69,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     // 商品資訊 顯示畫面
     LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌編號 ---PLULOGO
     PLU_SalePrc: [0, [Validators.required, Validators.maxLength(10)]], // 商品售價
-    stock: [0, [Validators.maxLength(10)]], // 庫存量 讀POS2099 新增固定0 ---後端直接提供---
+    STK_CurrentQty: [0, [Validators.maxLength(10)]], // 庫存量 讀POS2099 新增固定0 ---後端直接提供---
     PLU_OrderPrc: [0, [Validators.required, Validators.maxLength(10)]], // 標準進價 商品售價＊進貨折數/1.05 ，計算到小數點以下2位，必填 (不可編輯 新增遵循此規則)
     PLU_SafeQty: [0, [Validators.maxLength(10)]], // 安全存量
 
