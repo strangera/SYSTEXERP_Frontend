@@ -96,11 +96,13 @@ export interface IPOS2004DetailData {
   UNIT_NAME: string; // 單位名稱
   PLU_BoxQty: number; // 包裝入數
   PLU_StockTaxType: string; // 進貨稅別
-  PLU_SalePrc_UNI: number; // 單價
-  PLU_SalePrc: number; // 售價
+  PLU_TaxType: string; // 售價稅別
+  PLU_SalePrc_UNI?: number; // 單價
+  PLU_SalePrc?: number; // 售價
   POD_SubQty?: number; // 採購數量
   POD_BuyNet?: number; // 採購淨額
   POD_SaleAmt?: number; // 銷售金額
+  POD_Remark?: string; // 備註
 }
 
 /** 商品管理編號/國際條碼/廠商貨號查詢商品 (queryPOS2004Detail) 的請求介面 */
@@ -132,6 +134,7 @@ export interface IPODetail {
   PLU_Unit: string; // 商品單位
   PLU_BoxQty: number; // 箱入數
   PLU_StockTaxType: string; // 進貨稅別
+  PLU_TaxType: string; // 售價稅別
   POD_SubQty: number; // 採購數量
   POD_BuyPrc: number; // 採購單價
   POD_BuyNet: number; // 採購淨額
@@ -192,13 +195,33 @@ export interface IQueryPOS2017Request {
 
 /** POS2017 資料表 (queryPOS2017) 的單筆響應資料介面 */
 export interface IPOS2017Data {
-  PLU_MagNo: string; // 商品管理編號
-  PLU_Name: string; // 商品名稱
-  PLU_BoxQty: number; // 箱入數
-  PLU_SalePrc: number; // 銷售價格
-  UNIT_NAME: string; // 單位名稱
-  PLU_OrgPLUNo: string; // 商品原編號
-  PLU_No: string; // 商品編號
+  id: number,
+  PO_No: string,
+  SYS_StoreNo: string,
+  POD_SeqNo: number,
+  PLU_MagNo: string,
+  PLU_No: string,
+  PLU_Unit: string,
+  PLU_BoxQty: number,
+  PLU_Name: string,
+  PLU_StockTaxType: string,
+  POD_SubQty: number,
+  POD_BuyPrc: number,
+  POD_BuyNet: number,
+  POD_BuyTax: number,
+  POD_BuyAmt: number,
+  PLU_TaxType: string,
+  POD_SalePrc: number,
+  POD_SaleTax: number,
+  POD_SaleAmt: number,
+  POD_Remark: string,
+  UNIT_NAME: string,
+  CRT_Date: string,
+  CRT_USR_No: string,
+  CRT_USR_Name: string,
+  UPD_Date: string,
+  UPD_USR_No: string,
+  UPD_USR_Name: string,
 }
 
 /** 更新 POS2016 資料狀態 (SetCloseTLS52010) 的請求介面 */
