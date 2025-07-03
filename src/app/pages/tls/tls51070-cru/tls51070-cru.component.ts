@@ -383,11 +383,15 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           }
           console.log('insert', requestBody);
 
-          this.tls51070Service.insertTLS51070(requestBody).subscribe(async () => {
+          this.tls51070Service.insertTLS51070(requestBody).subscribe(async (response) => {
             this.messageService.successBubble('POS2004主檔新增成功');
+
+            const newSeqNo = response?.Data; // 回傳的 IMG_SeqNo
+            console.log('新增取號:', newSeqNo);
+
             // 進行圖片檔更新
-            await this.createImage();
-            this.onCancel(); // 儲存後，會返回列表
+            await this.createImage(newSeqNo); // ✅ 傳入圖片
+            this.onCancel();
           });
         }
         break;
@@ -410,12 +414,14 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
           this.tls51070Service.updateTLS51070(requestBody).subscribe({
             next: async () => {
-              this.messageService.successBubble('POS2004主檔更新成功');
-              // 進行圖片檔案更新前會先抓取IMG1001Detail[]對應的 IMG_Type、 IMG_SeqNo 、 IMG_File
-
-              // 進行圖片檔更新
-              await this.createImage();
-              // 刪除邏輯
+              // 用 this.img1001Data 裡的 IMG_SeqNo 呼叫 createImage
+              const seqNo = this.dataForm.get('PLU_MagNo')?.value; //圖片編號抓商品管理碼
+              if (!seqNo) {
+                console.log('IMGData',this.img1001Data);
+                console.warn('⚠️ 商品管理碼(PLU_MagNo)為空，無法更新圖片');
+                return;
+              }
+              await this.createImage(seqNo);
               await this.deleteImages();
 
               this.onCancel(); // 儲存後，會返回列表
@@ -485,9 +491,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     this.tls51070Service
       .queryPOS2013_DropDownList({ "VEN_Flag": '1' })
       .subscribe((response) => {
-        this.vendorOptions = response.Data.map((item: apiOption) => ({
-          value: item.No,
-          label: item.No + '-' + item.Name,
+        this.vendorOptions = response.Data.map((item: any) => ({
+          value: item.VEN_No,
+          label: item.VEN_No + '-' + item.Name,
         }));
 
         console.log('廠商代碼:', this.vendorOptions);
@@ -665,12 +671,11 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // ---圖片更新相關---
 
   //* 圖片相關
-  async createImage() {
-    console.log('參考資料', this.img1001Data);
+  async createImage(IMG_SeqNo: string) {
     console.log('變更資料', this.files);
 
-    if (!this.img1001Data || this.img1001Data.length === 0) {
-      console.warn('⚠️ 缺少圖片參考資料 (img1001Data)，無法上傳');
+    if (!IMG_SeqNo) {
+      console.warn('⚠️ 缺少圖片編號 IMG_SeqNo，無法上傳');
       return;
     }
 
@@ -681,11 +686,10 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     const formData = new FormData();
 
-    // 從第一筆參考資料取得必填欄位
-    const baseInfo = this.img1001Data[0];
-    formData.append('IMG_Type', baseInfo.IMG_Type);
-    formData.append('IMG_SeqNo', baseInfo.IMG_SeqNo);
-    formData.append('IMG_Remark', 'test');  // 備註先下空
+    // 取得必填欄位
+    formData.append('IMG_Type', 'POS2004');
+    formData.append('IMG_SeqNo', IMG_SeqNo);
+    formData.append('IMG_Remark', 'test');  // 備註先下空test
 
     // 加入所有檔案（保留原始檔名）
     this.files.forEach(file => {

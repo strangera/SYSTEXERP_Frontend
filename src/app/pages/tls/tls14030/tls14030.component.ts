@@ -27,7 +27,7 @@ interface CategoryItem {
   styleUrl: './tls14030.component.scss'
 })
 export class Tls14030Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
-  // 查詢表單：包含大分類代碼和名稱
+  // 查詢表單：保證傳票
   queryForm = this.formBuilder.group({
     // id: [{ value: null, disabled: true }], // read only
     // talent_id: [{ value: '', disabled: true }], // 合約編號系統id read only
@@ -127,23 +127,23 @@ export class Tls14030Component extends BasicQueryPageComponent<CategoryItem> imp
       return;
     }
 
-    this.apiService.deleteTLS51010({ idList }).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-        }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm); // 刷新資料
-      },
-    });
+    // this.apiService.deleteTLS51010({ idList }).subscribe({
+    //   next: (response) => {
+    //     if (response.Status === '0000') {
+    //       this.messageService.successBubble('選中項目刪除成功');
+    //     } else {
+    //       console.error('API error:', response.Status, response.Message);
+    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+    //     }
+    //   },
+    //   error: (err: string) => {
+    //     console.error('API error:', err);
+    //     this.messageService.errorBubble('刪除失敗');
+    //   },
+    //   complete: () => {
+    //     this.onSubmit(this.queryForm); // 刷新資料
+    //   },
+    // });
 
     this.selectedItems = [];
   }
