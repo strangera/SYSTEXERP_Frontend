@@ -12,7 +12,7 @@
             <app-input-text label="專櫃編號" controlName="tlt_no" [control]="queryForm.controls.tlt_no"
               [submitted]="submitted"></app-input-text>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="保證票型態"
               [options]="ticket_typeOption"
@@ -25,59 +25,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="票據編號" controlName="ticket_no" [control]="queryForm.controls.ticket_no"
               [submitted]="submitted"></app-input-text>
-          </div>
-        </div>
-
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="票據種類"
-              [options]="ticket_kindOption"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ticket_kind"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="保證票金額" controlName="ticket_amount" [control]="queryForm.controls.ticket_amount"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="票據到期日期"
-            [control]="queryForm.controls.expiry_date" controlName="expiry_date" [submitted]="submitted" />
-          </div>
-        </div>
-
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="票據收票狀態"
-              [options]="get_ticket_statusOption"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.get_ticket_status"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="繳票日期"
-            [control]="queryForm.controls.get_date" controlName="get_date" [submitted]="submitted" />
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="退票日期"
-            [control]="queryForm.controls.return_date" controlName="return_date" [submitted]="submitted" />
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="封存日期"
-            [control]="queryForm.controls.close_date" controlName="close_date" [submitted]="submitted" />
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="保證票摘要-合約主檔" controlName="ticket_remarks" [control]="queryForm.controls.ticket_remarks"
-              [submitted]="submitted"></app-input-text>
-          </div>
+          </div> -->
         </div>
         
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
