@@ -54,10 +54,11 @@
       </div>
 
       <app-table dataKey="PLU_MagNo" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
-        [showCheckBox]="true" (selectionChange)="selectedItems = $event" [showEdit]="false" [showDetail]="false"
-        [showInsert]="true" (insert)="dialogVisible = true" [showRowEdit]="true" (delete)="onDelete($event)"
+        [showCheckBox]="isFormCreateable" (selectionChange)="selectedItems = $event" [showEdit]="false"
+        [showDetail]="false" [showInsert]="true" (insert)="dialogVisible = true" [showRowEdit]="true"
+        (delete)="onDelete($event)"
         [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true"
-        (rowEditSave)="onRowEditSave($event)" />
+        (rowEditSave)="onRowEditSave($event)" [showCaption]="isFormCreateable" />
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" />
