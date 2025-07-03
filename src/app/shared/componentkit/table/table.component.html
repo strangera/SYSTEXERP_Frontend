@@ -6,7 +6,7 @@
 <p-table #dt [value]="data" [columns]="selectedColumns" [(selection)]="selectedItems" sortMode="multiple"
   [selectionMode]="showCheckBox && IsPrint ? selectionMode : null" [dataKey]="dataKey" [rowTrackBy]="trackByRow"
   [resizableColumns]="true" [paginator]="showPaginator && IsPrint && !rowEditing && !loading" [scrollable]="scrollable"
-  [showCurrentPageReport]="IsPrint" [multiSortMeta]="multiSortMeta" [rowsPerPageOptions]="[100, 250, 500, 1000]"
+  [showCurrentPageReport]="IsPrint" [multiSortMeta]="multiSortMeta" [rowsPerPageOptions]="[10, 30, 50]"
   [scrollHeight]="IsPrint ? scrollHeight : '385px'" [rows]="rows" [(first)]="first" (onPage)="onPageChange($event)"
   (onLazyLoad)="loadDataLazy($event)" [lazy]="lazy || !IsPrint" [styleClass]="
     IsPrint
@@ -91,7 +91,7 @@
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-expanded="expanded"
     let-editing="editing" let-ri="rowIndex">
-    <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData"
+    <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" style="height:35px"
       [pSelectableRowDisabled]="!isRowSelectable(rowData)" [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }"
       [pEditableRow]="rowData" [pSelectableRow]="rowData" [pSelectableRowIndex]="rowIndex">
       <ng-container *ngIf="!loading; else loadingTemplate">

@@ -83,7 +83,7 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
         cag_edate_start: '',
         cag_edate_end: '',
         check_day_start: formValue.check_day || '',
-        chck_day_end: formValue.check_day || ''
+        check_day_end: formValue.check_day || ''
       };
 
       console.log('送出的查詢 body', body);
