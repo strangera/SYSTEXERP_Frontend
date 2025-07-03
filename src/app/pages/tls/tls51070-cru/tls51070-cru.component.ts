@@ -69,9 +69,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     // 商品資訊 顯示畫面
     LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌編號 ---PLULOGO
     PLU_SalePrc: [0, [Validators.required, Validators.maxLength(10)]], // 商品售價
-    STK_CurrentQty: [0, [Validators.maxLength(10)]], // 庫存量 讀POS2099 新增固定0 ---後端直接提供---
-    PLU_OrderPrc: [0, [Validators.required, Validators.maxLength(10)]], // 標準進價 商品售價＊進貨折數/1.05 ，計算到小數點以下2位，必填 (不可編輯 新增遵循此規則)
-    PLU_SafeQty: [0, [Validators.maxLength(10)]], // 安全存量
+    STK_CurrentQty: [{ value: 0, disabled: true }], // 庫存量 讀POS2099 新增固定0 ---後端直接提供(不允許編輯)---
+    PLU_OrderPrc: [{ value: 0, disabled: true }], // 標準進價 商品售價＊進貨折數/1.05 ，計算到小數點以下2位，必填 (不可編輯 新增遵循此規則)
+    PLU_SafeQty: [{ value: 0, disabled: true }], // 安全存量
 
     //---
     // 系統日期-建檔日期 > 365天, 去年整年度銷售量/12個月*2個月 🡪取整數
@@ -82,7 +82,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     //                    安全庫存量= 10(銷售量) / 0.5(計算月數) * 2個月= 40
 
     //---
-    PLU_OrderPrcRate: [0, [Validators.required, Validators.maxLength(10)]], // 進價折數 預設0 (依照品牌 PLULOGO)
+    PLU_OrderPrcRate: [{ value: 0, disabled: true }], // 進價折數 預設0 (依照品牌 PLULOGO)
     PLU_ECStatus: ['1', [Validators.maxLength(1)]], // EC商品狀態: 1.正常2.停用3.停進4,下架 For EC (備註: 原來的 商品狀態(PLU_Status) 改為 EC商品狀態(PLU_ECStatus))
     PLU_Status: ['0', [Validators.required, Validators.maxLength(1)]], // 商品狀態:0一般 不顯示
 
@@ -221,10 +221,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     } else {
       this.dataForm.get('PLU_SalePrc')?.disable();
     }
-    this.dataForm.get('PLU_SafeQty')?.disable();  // 安全存量
-    this.dataForm.get('PLU_OrderPrc')?.disable();  // 標準進價
-    this.dataForm.get('stock')?.disable();  // 庫存量
-    this.dataForm.get('PLU_OrderPrcRate')?.disable();  // 進價折數
 
     //國際條碼 新增可空白、其他狀況必填
     if (this.crudstatus !== CRUDStatus.Create) {
@@ -398,7 +394,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           const requestBody = {
             ...formValue,
             PLU_No: POS2005PLUs,
-            // 如果IMG_File也有資料，就合併進去IMG1001
             "POS2020_INFO": this.POS2020Data,
           };
 
@@ -407,6 +402,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           this.tls51070Service.updateTLS51070(requestBody).subscribe({
             next: async () => {
               this.messageService.successBubble('POS2004主檔更新成功');
+              // 進行圖片檔案更新前會先抓取IMG1001Detail[]對應的 IMG_Type、 IMG_SeqNo 、 IMG_File
+
               // 進行圖片檔更新
               await this.createImage();
               // 刪除邏輯
@@ -669,7 +666,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     }
 
     if (!this.files || this.files.length === 0) {
-      console.warn('⚠️ 沒有選擇要上傳的檔案');
+      console.info('⚠️ 沒有選擇要上傳的圖片');
       return;
     }
 
@@ -707,7 +704,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   private async deleteImages() {
     if (!this.confirmDeleteImages || this.confirmDeleteImages.length === 0) {
-      console.log('❕ 無需刪除圖片');
+      console.info('⚠️ 無需刪除圖片');
       return;
     }
 
