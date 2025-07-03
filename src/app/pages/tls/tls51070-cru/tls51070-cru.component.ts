@@ -340,6 +340,15 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       return;
     }
 
+    //---送出前的POS2005檢核---
+    // 檢查 POS2005明細檔 是否有任何一筆 PLU_No 為空
+    const hasEmptyPLUNo = this.POS2005Data.some(item => !item.PLU_No || item.PLU_No.trim() === '');
+    if (hasEmptyPLUNo) {
+      this.messageService.errorBubble('有商品的國際條碼（PLU_No）為空，請確認後再儲存');
+      this.messageService.unblockUi();
+      return;
+    }
+
     //--檢查--
     // 商品管理編號：鍵值，自動編號，大分類編號(2碼)+10碼流水號+1碼檢查碼，檢查碼為EAN 檢查碼計算規則，流水號給號讀SER1001商品管理編號序號檔
     // 國際條碼：必填，沒有輸入國際條碼時，國際條碼=商品管理編號 (bubble跳出提示)。
@@ -676,7 +685,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     const baseInfo = this.img1001Data[0];
     formData.append('IMG_Type', baseInfo.IMG_Type);
     formData.append('IMG_SeqNo', baseInfo.IMG_SeqNo);
-    formData.append('IMG_Remark', '測試圖片');
+    formData.append('IMG_Remark', 'test');  // 備註先下空
 
     // 加入所有檔案（保留原始檔名）
     this.files.forEach(file => {
@@ -710,27 +719,32 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     const tasks: Promise<any>[] = [];
 
+    // ✅ 從目前 img1001Data 中，找出任一筆作為參考值（前提是該批圖片屬性都相同）
+    const reference = this.img1001Data.find(img =>
+      img.IMG_Type && img.IMG_SeqNo
+    );
+
+    if (!reference) {
+      console.warn('⚠️ 找不到任何參考圖片資料，無法補齊 API 參數');
+      return;
+    }
+
+    const { IMG_Type, IMG_SeqNo } = reference;
+
     for (const fileName of this.confirmDeleteImages) {
-      // 從 img1001Data 中找出對應這個 fileName 的資料
-      const match = this.img1001Data.find(img => img.IMG_File === fileName);
-
-      if (!match) {
-        console.warn(`⚠️ 找不到檔名為 ${fileName} 的參考資料，略過`);
-        continue;
-      }
-
       const request = {
-        IMG_Type: match.IMG_Type,
-        IMG_SeqNo: match.IMG_SeqNo,
-        IMG_File: match.IMG_File,
+        'IMG_Type': IMG_Type,
+        "IMG_SeqNo": IMG_SeqNo,
+        IMG_File: fileName,
       };
 
       console.log('📤 刪除圖片內容:', request);
-      // tasks.push(firstValueFrom(this.tls51070Service.deleteImage(request)));
+      tasks.push(firstValueFrom(this.tls51070Service.deleteImage(request)));
     }
 
     try {
       const results = await Promise.allSettled(tasks);
+
       results.forEach((res, i) => {
         if (res.status === 'fulfilled') {
           console.log(`✅ 圖片刪除 ${i + 1} 成功`);
@@ -745,7 +759,4 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       this.messageService.errorBubble('圖片刪除失敗');
     }
   }
-
 }
-
-
