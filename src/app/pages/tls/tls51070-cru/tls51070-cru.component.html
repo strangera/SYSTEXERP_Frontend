@@ -160,7 +160,7 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="庫存量" controlName="stock" [control]="dataForm.controls.stock"
+            <app-input-number label="庫存量" controlName="STK_CurrentQty" [control]="dataForm.controls.STK_CurrentQty"
               [submitted]="submitted"></app-input-number>
           </div>
         </div>
@@ -185,8 +185,8 @@
           </div>
         </div>
       </ng-container>
-      <!-- 商品圖檔 顯示畫面 有管理號碼PLU_MagNo才能編輯IMG1001 -->
-      <ng-container *ngIf="buttonID === 5 && dataForm.get('PLU_MagNo')?.value !== ''">
+      <!-- 商品圖檔 顯示畫面 -->
+      <ng-container *ngIf="buttonID === 5">
         <p-divider align="left" type="solid">
           <b class="text-primary">上傳圖片</b>
         </p-divider>
@@ -198,17 +198,17 @@
       </ng-container>
 
       <!-- 有管理號碼PLU_MagNo才能編輯 -->
-      <ng-container *ngIf="dataForm && dataForm.get('PLU_MagNo')?.value !== ''">
+      <ng-container>
         <!-- 國際條碼 POS2005 -->
         <app-expandable-edit-table #pos2005Table title="多筆國際條碼" [mainColumns]="POS2005DataColumn" [data]="POS2005Data"
           [loading]="expand2005Loading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
-          [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false"
+          [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
           [defaultNewItem]="defaultNew2005" (save)="onRowSavePOS2005($event)" (cancel)="onRowCancelPOS2005($event)"
           (batchDelete)="onBatchDelete2005($event)" (addMainItem)="onAddPOS2005()"></app-expandable-edit-table>
         <!-- 商品採購廠商 POS2020 -->
         <app-expandable-edit-table #pos2020Table title="商品採購廠商" [mainColumns]="POS2020DataColumn" [data]="POS2020Data"
           [loading]="expand2020Loading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
-          [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false"
+          [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
           [defaultNewItem]="defaultNew2020" (save)="onRowSavePOS2020($event)" (cancel)="onRowCancelPOS2020($event)"
           (batchDelete)="onBatchDelete2020($event)" (addMainItem)="onAddPOS2020()"></app-expandable-edit-table>
       </ng-container>

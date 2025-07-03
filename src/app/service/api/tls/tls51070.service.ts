@@ -55,13 +55,10 @@ export class Tls51070Service {
 
   //刪除圖片
   deleteImage(body: any): Observable<any> {
-    return this.http.delete<any>(`${environment.ApiUrl}/Image/deleteImage`, body);
-  }
-
-  downloadImage2(path: string): Observable<Blob> {
-  return this.http.get(`${environment.ApiUrl}/${path}`, {
-    responseType: 'blob'
-  });
+    return this.http.delete<any>(`${environment.ApiUrl}/Image/deleteImage`, {
+      headers: { 'Content-Type': 'application/json' },
+      body: body
+    });
 }
 
   // --- 標籤檔 ---
