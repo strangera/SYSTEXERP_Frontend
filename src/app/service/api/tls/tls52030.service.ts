@@ -117,17 +117,8 @@ export interface IInsertTLS52030Request {
 /** 取得採購單資料 (GetPOS2016) 的請求介面 */
 export interface IGetPOS2016Request {
   LOGO_No?: string; // 品牌代碼
-  HOS_No?: string; // 倉庫代碼
+  HOS_No?: string | null; // 倉庫代碼
   VEN_No?: string; // 廠商代號
-}
-
-/** 取得採購單資料 (GetPOS2016) 的響應數據介面 */
-export interface IGetPOS2016Data {
-  PO_No: string; // 採購單號
-  APPLY_Date: string; // 申請日期
-  VEN_No: string; // 廠商代號
-  VEN_Name: string; // 廠商名稱
-  // 根據實際響應，這裡可能需要添加更多來自 POS2016 的字段
 }
 
 /** 取得採購單明細及驗收資料 (GetPOS2017AndPOS2019) 的請求介面 */
@@ -251,8 +242,8 @@ export class Tls52030Service {
    * @param params 查詢條件 (LOGO_No, HOS_No, VEN_No)
    * @returns 包含 IGetPOS2016Data 陣列的 API 響應
    */
-  getPOS2016(params: IGetPOS2016Request): Observable<ApiResponse<IGetPOS2016Data[]>> {
-    return this.http.post<ApiResponse<IGetPOS2016Data[]>>(`${this.apiUrl}/GetPOS2016`, params);
+  getPOS2016(params: IGetPOS2016Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/GetPOS2016`, params);
   }
 
   /**

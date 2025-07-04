@@ -9,6 +9,7 @@ export class DialogComponent {
   @Input() visible = false;
   @Input() header = 'header';
   @Input() disable = false;
+  @Input() height = '100%';
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() save = new EventEmitter();
 

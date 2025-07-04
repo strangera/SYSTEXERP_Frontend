@@ -29,7 +29,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     PO_TotalSaleAmt: [{ value: 0, disabled: true }], //售價總計
     APPLY_USR_No: [{ value: null as string | null, disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
     APPLY_Date: [{ value: new Date(), disabled: true }], // 申請日期 (對應 POS2016.APPLY_Date)
-    PO_Remark: [''], // 採購單備註 (對應 POS2016.PO_Remark)
+    PO_Remark: ['', [Validators.maxLength(200)]], // 採購單備註 (對應 POS2016.PO_Remark)
   });
   // === 下拉選單選項 ===
   vendorOptions: IDropdownItem[] = []; // 廠商下拉選單選項

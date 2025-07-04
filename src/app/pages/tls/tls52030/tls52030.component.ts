@@ -23,7 +23,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     LOGO_NoList: [null], // 品牌代碼
     HOS_NoList: [null], // 倉庫代碼
     VEN_No: [''], // 廠商代號
-    PLU_MagNo: [''], // 管理編號
+    PLU_MagNo: ['', [Validators.maxLength(20)]], // 管理編號
     ODM_StatusList: [null, [Validators.required]], // 驗收狀態
     ODM_USR: [''], // 申請人員
     ODM_Date_Start: [''], // 申請日期起
@@ -46,6 +46,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     { field: 'HOS_No', header: '倉庫代碼', visible: true },
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
     { field: 'org_id', header: '組織代碼/所屬部門', visible: true },
+    { field: 'ODM_Status', header: '驗收狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value },
     { field: 'ODM_Date', header: '申請日期', visible: true, format: formatDateTime },
     { field: 'ODM_USR_No', header: '申請人員', visible: true },
     { field: 'ODM_USR_Name', header: '申請人員姓名', visible: true },
@@ -55,7 +56,6 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     { field: 'ODM_TotalSaleNet', header: '未稅售價小計', visible: true, format: formatAmount },
     { field: 'ODM_TotalSaleTax', header: '售價稅額小計', visible: true, format: formatAmount },
     { field: 'ODM_TotalSaleAmt', header: '售價合計', visible: true, format: formatAmount },
-    { field: 'ODM_Status', header: '驗收狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value },
     { field: 'ODM_TaxType', header: '單據稅別', visible: true, format: value => value === '1' ? '應稅' : '免稅' },
     { field: 'APRV_Date', header: '審核(驗收)日期', visible: true, format: formatDateTime },
     { field: 'APRV_USR_No', header: '審核人員', visible: true },
