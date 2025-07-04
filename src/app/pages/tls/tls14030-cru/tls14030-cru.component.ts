@@ -25,7 +25,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
     // ----------------------------------------------------------------
       dataForm = this.formBuilder.nonNullable.group({
         id: [{ value: null, disabled: true }], // read only
-        talent_id: [[Validators.required]], // 合約編號 read only  讀取 TLTTALENT 專櫃主檔
+        talent_id: [,[Validators.required]], // 合約編號 read only  讀取 TLTTALENT 專櫃主檔
         tlt_no: [{ value: null as string | null, disabled: true }], // 專櫃編號 read only          讀取 TLTTALENT 專櫃主檔
         tlt_name: [{ value: null as string | null, disabled: true }], // 專櫃名稱
 
