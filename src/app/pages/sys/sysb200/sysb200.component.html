@@ -1,288 +1,126 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-        <!-- <div *appHasPermission="addPermission"> -->
-        <div>
-          <app-button
-            btnType="create"
-            (click)="onCreate()"
-            class="col"
-          ></app-button>
-        </div>
-        <!-- </div> -->
-      </div>
-      <p-accordion>
-        <p-accordionTab
-          header="{{ 'query-conditions' | translate }}"
-          [selected]="true"
-          class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'"
-        >
-          <form
-            [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)"
-          >
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <!-- <app-input-multi-dialog label="廠商編號" controlName="manufacturerID"
-                                        [control]="queryForm.controls.manufacturerID" [columns]="venderColumns"
-                                        [data]="venderOptions" [filterFields]="filterFields"
-                                        [searchplaceholder]="vendersearchplaceholder" [submitted]="submitted">
-                                    </app-input-multi-dialog> -->
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-multi-select
-                  label="審核狀態"
-                  controlName="industryType"
-                  [options]="approvalOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.approvalStatus"
-                  [submitted]="submitted"
-                ></app-multi-select>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="廠商統一編號或個人身份證字號"
-                  controlName="manufacturerUID"
-                  [control]="queryForm.controls.manufacturerUID"
-                  [submitted]="submitted"
-                >
-                  >
-                </app-input-text>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <!-- <div class="col-12 md:col-6 lg:col-4">
-                                    <app-input-text label="廠商名稱(中文)" controlName="manufacturerCName" [control]="queryForm.controls.manufacturerCName" [submitted]="submitted">>
-                                    </app-input-text>
-                                </div> -->
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="廠商名稱(英文)"
-                  controlName="manufacturerEName"
-                  [control]="queryForm.controls.manufacturerEName"
-                  [submitted]="submitted"
-                >
-                  >
-                </app-input-text>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="廠商簡稱"
-                  controlName="manufacturerSName"
-                  [control]="queryForm.controls.manufacturerSName"
-                  [submitted]="submitted"
-                >
-                  >
-                </app-input-text>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-6">
-                <app-input-number
-                  [useGrouping]="false"
-                  label="廠商匯款銀行代號"
-                  controlName="remittanceBankCode"
-                  [control]="queryForm.controls.remittanceBankCode"
-                  [submitted]="submitted"
-                ></app-input-number>
-              </div>
-              <div class="col-12 md:col-6 lg:col-6">
-                <app-input-text
-                  label="通訊地址"
-                  controlName="mailingAddress"
-                  [control]="queryForm.controls.mailingAddress"
-                  [submitted]="submitted"
-                >
-                  >
-                </app-input-text>
-              </div>
-            </div>
-            <hr />
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-3">
-                <app-input-text
-                  label="聯絡人"
-                  controlName="contactPerson"
-                  [control]="queryForm.controls.contactPerson"
-                  [submitted]="submitted"
-                >
-                  >
-                </app-input-text>
-              </div>
-              <div class="col-12 md:col-6 lg:col-3">
-                <app-input-text
-                  label="聯絡人職稱"
-                  controlName="contactPersonTitle"
-                  [control]="queryForm.controls.contactPersonTitle"
-                  [submitted]="submitted"
-                >
-                  >
-                </app-input-text>
-              </div>
-
-              <div class="col-12 md:col-6 lg:col-6">
-                <app-input-text
-                  label="聯絡人電子郵件"
-                  controlName="contactEmail"
-                  [control]="queryForm.controls.contactEmail"
-                  [submitted]="submitted"
-                >
-                  >
-                </app-input-text>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-3">
-                <app-input-text
-                  label="聯絡人電話"
-                  controlName="contactPersonPhone"
-                  [control]="queryForm.controls.contactPersonPhone"
-                  [submitted]="submitted"
-                >
-                  >
-                </app-input-text>
-              </div>
-              <div class="col-12 md:col-6 lg:col-3">
-                <app-input-text
-                  label="聯絡人身份証字號"
-                  controlName="contactPersonUID"
-                  [control]="queryForm.controls.contactPersonUID"
-                  [submitted]="submitted"
-                >
-                  >
-                </app-input-text>
-              </div>
-              <div class="col-12 md:col-6 lg:col-6">
-                <app-input-text
-                  label="聯絡人聯絡地址"
-                  controlName="contactAddress"
-                  [control]="queryForm.controls.contactAddress"
-                  [submitted]="submitted"
-                >
-                  >
-                </app-input-text>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-3">
-                <app-input-text
-                  label="公司登記電話"
-                  controlName="registeredPhone"
-                  [control]="queryForm.controls.registeredPhone"
-                  [submitted]="submitted"
-                >
-                  >
-                </app-input-text>
-              </div>
-              <div class="col-12 md:col-6 lg:col-3">
-                <app-input-text
-                  label="公司傳真"
-                  controlName="companyFax"
-                  [control]="queryForm.controls.companyFax"
-                  [submitted]="submitted"
-                >
-                  >
-                </app-input-text>
-              </div>
-              <div class="col-12 md:col-6 lg:col-6">
-                <app-input-text
-                  label="公司登記地址(中文)"
-                  controlName="registeredAddress"
-                  [control]="queryForm.controls.registeredAddress"
-                  [submitted]="submitted"
-                >
-                  >
-                </app-input-text>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-3">
-                <app-input-text
-                  label="公司網址"
-                  controlName="companyWebsite"
-                  [control]="queryForm.controls.companyWebsite"
-                  [submitted]="submitted"
-                >
-                  >
-                </app-input-text>
-              </div>
-            </div>
-            <hr />
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-3">
-                <app-multi-select
-                  label="系統別"
-                  controlName="systemtype"
-                  [options]="systemCodeOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.systemtype"
-                  [submitted]="submitted"
-                ></app-multi-select>
-              </div>
-              <div class="col-12 md:col-6 lg:col-3">
-                <app-dropdown
-                  label="付款期限(天數)"
-                  controlName="expirationDay"
-                  [options]="t111Options"
-                  optionLabel="SYS_Name"
-                  optionValue="id"
-                  [control]="queryForm.controls.expirationDay"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-6">
-                <app-input-text
-                  label="備註"
-                  controlName="remark"
-                  [control]="queryForm.controls.remark"
-                  [submitted]="submitted"
-                >
-                  >
-                </app-input-text>
-              </div>
-              <!-- <div> -->
-              <div class="grid justify-content-end">
-                <app-button btnType="clear"></app-button>
-                <app-button
-                  btnType="query"
-                  (onClick)="onSubmitQuery(queryForm)"
-                  [loading]="loading"
-                ></app-button>
-              </div>
-              <!-- </div> -->
-            </div>
-          </form>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
-    <div class="card">
-      <div class="col-13">
-        <app-table
-          [data]="data"
-          [columns]="columns"
-          (edit)="onEdit($event)"
-          (detail)="onDetail($event)"
-          [selectedItems]="selectedItems"
-          (selectionChange)="selectedItems = $event"
-          (delete)="onDelete($event)"
-          [showCheckBox]="true"
-          dataKey="id"
-          [multiSortMeta]="queryForm.controls.SortBy.value ?? []"
-          [totalRecords]="totalRecords"
-          [lazy]="true"
-          [loading]="loading"
-        ></app-table>
-      </div>
-    </div>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="廠商編號" controlName="VEN_No" [options]="venderOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VEN_No" [submitted]="submitted"></app-multi-select>
+          </div>
+
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="審核狀態" controlName="VEN_Status" [options]="approvalOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VEN_Status" [submitted]="submitted"></app-multi-select>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="廠商統一編號或個人身份證字號" controlName="VEN_Uniform" [control]="queryForm.controls.VEN_Uniform"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="廠商名稱(中文)" controlName="	VEN_CName" [control]="queryForm.controls.VEN_CName"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="廠商名稱(英文)" controlName="VEN_EName" [control]="queryForm.controls.VEN_EName"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="廠商簡稱" controlName="	VEN_SName" [control]="queryForm.controls.VEN_SName"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-dropdown label="廠商匯款銀行代號" controlName="VEN_BankNo" [control]="queryForm.controls.VEN_BankNo"
+              [submitted]="submitted"></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-input-text label="通訊地址" controlName="VEN_Address" [control]="queryForm.controls.VEN_Address"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-input-text label="聯絡人" controlName="VEN_Boss" [control]="queryForm.controls.VEN_Boss"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-input-text label="聯絡人職稱" controlName="VEN_BossTitle" [control]="queryForm.controls.VEN_BossTitle"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-input-text label="聯絡人電子郵件" controlName="VEN_GUEmail" [control]="queryForm.controls.VEN_GUEmail"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-input-text label="聯絡人電話" controlName="VEN_BossTel" [control]="queryForm.controls.VEN_BossTel"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-input-text label="聯絡人身份證字號" controlName="VEN_BossID" [control]="queryForm.controls.VEN_BossID"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-input-text label="聯絡人聯絡地址" controlName="VEN_BossAddr" [control]="queryForm.controls.VEN_BossAddr"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-input-text label="公司登記電話" controlName="VEN_Tel" [control]="queryForm.controls.VEN_Tel"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-input-text label="公司傳真" controlName="VEN_Fax" [control]="queryForm.controls.VEN_Fax"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-input-text label="公司登記地址(中文)" controlName="VEN_Address" [control]="queryForm.controls.VEN_Address"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
+
+
+          <div class="col-12 md:col-6 lg:col-3">
+            <app-dropdown label="付款期限(天數)" controlName="VEN_PayConditionDay" [options]="t111Options"
+              optionLabel="SYS_Name" optionValue="id" [control]="queryForm.controls.VEN_PayConditionDay"
+              [submitted]="submitted"></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-input-text label="備註" controlName="VEN_Remark" [control]="queryForm.controls.VEN_Remark"
+              [submitted]="submitted"></app-input-text>
+          </div>
+        </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <app-table tableKey="TLS2A020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+    (edit)="onEdit($event)" (selectionChange)="selectedItems = $event" [showCheckBox]="true" dataKey="id"
+    [multiSortMeta]="[{ field: 'pendingApprovalRegisterCode', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
+    [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [showManage]="true"></app-table>
 </div>

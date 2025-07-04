@@ -1,4 +1,4 @@
-<label>{{ label }}
+<label *ngIf="label !== ''">{{ label }}
   <span *ngIf="isRequired" class="required">*</span>
 </label>
 <div class="flex flex-wrap gap-3 py-2">
