@@ -25,7 +25,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
     // ----------------------------------------------------------------
       dataForm = this.formBuilder.nonNullable.group({
         id: [{ value: null, disabled: true }], // read only
-        talent_id: [], // 合約編號 read only  讀取 TLTTALENT 專櫃主檔
+        talent_id: [[Validators.required]], // 合約編號 read only  讀取 TLTTALENT 專櫃主檔
         tlt_no: [{ value: null as string | null, disabled: true }], // 專櫃編號 read only          讀取 TLTTALENT 專櫃主檔
         tlt_name: [{ value: null as string | null, disabled: true }], // 專櫃名稱
 
@@ -43,6 +43,9 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
 
         CanDel: [null],  //能否刪除(僅顯示) 卡控
       });
+
+      private skipTalentChange = false; //是否更新編號的旗標
+
       //
       storageOptions: apiOption[] = [];
       allquery: Garantee_Ticket[] = [];
@@ -86,6 +89,11 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
 
          // ⭐ 監聽 talent_id 變更
         this.dataForm.get('talent_id')?.valueChanges.subscribe((value) => { // 合約編號 變更時寫入相關資料
+          if (this.skipTalentChange) {
+            this.skipTalentChange = false; // 重置旗標
+            return;
+          }
+
           if (value) {
             this.loadTLTTALENTDetail(value);
           }
@@ -113,6 +121,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
               this.tls14030Service.insertTLS14030(formValue).subscribe(() => {
                 this.messageService.successBubble('新增成功');
                 // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+                this.skipTalentChange = true;
                 this.dataForm.reset(); // 重置表單
               });
             }
@@ -143,15 +152,14 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
       // 讀取dopropdown選項
       loadOptions(){
         this.tls14030Service
-            .queryTLTTALENT_DropDownList({})
+            .queryTLTTALENT_Status_DropDownList({"approve_status": '2'}) //這支作業都固定帶已審核 (能選擇的tltid都已經審核)
             .subscribe((response) => {
-              this.TLTTALENT_Option = response.Data.map((item: apiOption) => ({
-              No: item.No,
+              this.TLTTALENT_Option = response.Data.map((item: any) => ({
+              No: Number(item.No), // 確保是 number
               Name: item.Name,
-              Label: item.No + '-' + item.Name,
             }));
 
-            console.log('專櫃主檔明細:', this.TLTTALENT_Option);
+            console.log('專櫃主檔(合約編號)明細:', this.TLTTALENT_Option);
             });
       }
     
@@ -164,12 +172,15 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
             const data: TLTTALENT = response.Data;
 
             if (data) {
+              this.skipTalentChange = true;
               this.dataForm.patchValue({
-                // 注意：talent_id 不應該再設定，因為原本就是根據這個觸發的
                 ticket_remarks: data.ticket_remarks || '',
                 tlt_name: data.tlt_name || '',
                 tlt_no: data.tlt_no || '',
               });
+
+              this.messageService.infoBubble('已經依照合約編號進行變更');
+              console.log('偵測到合約編號變更',data);
             }
           });
           }

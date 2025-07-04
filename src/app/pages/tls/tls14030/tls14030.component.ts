@@ -247,7 +247,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
 
     // 組織 下拉
     this.tls14030Service
-          .querySYS3100_DropDownList({})
+          .queryTLTTALENT_Status_DropDownList({})
           .subscribe((response) => {
             this.orgOption = response.Data.map((item: apiOption) => ({
               No: item.No,
