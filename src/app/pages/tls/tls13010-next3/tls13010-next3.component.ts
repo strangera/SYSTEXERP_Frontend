@@ -142,24 +142,24 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     this.dataForm = this.formBuilder.group({});
   }
 
-  forceRegenerateData(): void {
-    console.log('🔄 強制重新生成資料');
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
+  // forceRegenerateData(): void {
+  //   console.log('🔄 強制重新生成資料');
+  //   const commissionType = this.contractInfoData[0]?.tlt_term_type;
 
-    if (this.hasNext2Data && this.shouldIntegrateNext2Data(commissionType || '')) {
-      this.generateConditionDataFromNext2(commissionType || '');
-      this.removeDuplicateItems();
+  //   if (this.hasNext2Data && this.shouldIntegrateNext2Data(commissionType || '')) {
+  //     this.generateConditionDataFromNext2(commissionType || '');
+  //     this.removeDuplicateItems();
 
-      const itemCount = this.getConditionItemCount();
-      const message = `已重新生成 ${itemCount} 個條件設定項目`;
-      console.log('✅', message);
-      this.notificationService.infoBubble(message);
+  //     const itemCount = this.getConditionItemCount();
+  //     const message = `已重新生成 ${itemCount} 個條件設定項目`;
+  //     console.log('✅', message);
+  //     this.notificationService.infoBubble(message);
 
-      this.cdr.detectChanges();
-    } else {
-      this.notificationService.warnBubble('沒有 Next2 資料或此抽成類型不需要整合');
-    }
-  }
+  //     this.cdr.detectChanges();
+  //   } else {
+  //     this.notificationService.warnBubble('沒有 Next2 資料或此抽成類型不需要整合');
+  //   }
+  // }
 
   private quickDiagnosis(): void {
     console.log('🔍 === 快速診斷 Next2 到 Next3 資料傳遞 ===');
@@ -230,10 +230,10 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
         conditionItemCount: this.getConditionItemCount()
       });
 
-      if (shouldHaveData && !hasData) {
-        console.log('⚠️ 檢測到應該有資料但沒有，執行補救措施');
-        this.forceRegenerateData();
-      }
+      // if (shouldHaveData && !hasData) {
+      //   console.log('⚠️ 檢測到應該有資料但沒有，執行補救措施');
+      //   this.forceRegenerateData();
+      // }
     }, 1000); // 延長等待時間
   }
 
