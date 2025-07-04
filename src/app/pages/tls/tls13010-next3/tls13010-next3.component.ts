@@ -1,5 +1,5 @@
-// tls13010-next3.component.ts - 完整修正版（修正所有 TypeScript 錯誤）
-import { Component, OnInit, OnDestroy } from '@angular/core';
+// tls13010-next3.component.ts - 方案二：唯讀整合 Next2 資料
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -17,17 +17,13 @@ import {
   GraduatedCommissionCondition,
   BaseTierCondition,
   SubmitDataStructure,
-  CommissionResponseData,
   CommissionDataStructure,
-  ChargedDetail,
-  LevelDetail,
-  RentDetail,
-  LimitDetail,
   GeneralCommissionCondition,
   ConditionItem,
   WorkflowStep,
   UnifiedCommissionResponse,
-  RentSettingApiData
+  RentSettingApiData,
+  CommissionItem
 } from '../tls13010/tls13010.model';
 
 @Component({
@@ -39,11 +35,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
   private subscriptions: Subscription[] = [];
   dataForm: FormGroup;
-
-  // 🎯 確認對話框控制
   showConfirmDialog = false;
-
-  // 🎯 新增：資料載入狀態
   dataLoaded = false;
   conditionDataLoaded = false;
 
@@ -52,7 +44,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   currentContractData: any = null;
   contractInfoData: ContractInfo[] = [];
 
-  // 🎯 修正：使用更明確的資料結構
+  // 🎯 Next2 整合資料
+  commissionDataFromNext2: CommissionItem[] = [];
+  hasNext2Data = false;
+
+  // 條件設定資料
   fixedRentItems: FixedRentCondition[] = [];
   baseRentHigherItems: BaseRentHigherCondition[] = [];
   generalCommissionItems: GeneralCommissionCondition[] = [];
@@ -75,7 +71,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     { field: 'tlt_contract_edate', header: '營運終止日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' }
   ];
 
-  // 各類型的欄位定義
+  // 🎯 各類型的欄位定義 - 根據是否來自 Next2 決定是否可編輯
   fixedRentColumns: ColumnDef[] = [
     { field: 'tlt_id', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
     { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
@@ -91,11 +87,12 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     { field: 'cag_charge_rate', header: '抽成率(%)', type: 'number', editable: true, autoWidth: true }
   ];
 
+  // 🎯 一般抽成欄位 - 三個欄位設為唯讀
   generalCommissionColumns: ColumnDef[] = [
-    { field: 'tlt_id', header: '抽成類別', type: 'text', editable: true, autoWidth: true },
-    { field: 'tlt_id_desc', header: '抽成類別名稱', type: 'text', editable: true, autoWidth: true },
+    { field: 'tlt_id', header: '抽成類別', type: 'text', editable: false, autoWidth: true, readonly: true },
+    { field: 'tlt_id_desc', header: '抽成類別名稱', type: 'text', editable: false, autoWidth: true, readonly: true },
     {
-      field: 'cag_taxtype', header: '稅別', type: 'dropdown', editable: true, autoWidth: true, options: [
+      field: 'cag_taxtype', header: '稅別', type: 'dropdown', editable: false, autoWidth: true, readonly: true, options: [
         { label: '應稅', value: '1' },
         { label: '免稅', value: '2' },
         { label: '零稅率', value: '3' }
@@ -139,37 +136,90 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     private contractFlowService: ContractFlowService,
     private tls13010Service: TLS13010Service,
     private notificationService: NotificationService,
+    private cdr: ChangeDetectorRef // 🎯 新增
   ) {
     super();
     this.dataForm = this.formBuilder.group({});
   }
 
+  forceRegenerateData(): void {
+    console.log('🔄 強制重新生成資料');
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
+    if (this.hasNext2Data && commissionType === '3') {
+      this.generateConditionDataFromNext2(commissionType);
+      this.notificationService.infoBubble(`已重新生成 ${this.generalCommissionItems.length} 個條件設定項目`);
+    }
+  }
+
+  private quickDiagnosis(): void {
+    console.log('🔍 === 快速診斷 Next2 到 Next3 資料傳遞 ===');
+
+    const workflowData = this.contractFlowService.getCurrentData();
+    const step3Data = this.contractFlowService.getStep3Data();
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
+
+    console.log('1️⃣ 工作流程資料:', workflowData);
+    console.log('2️⃣ Step3 資料:', step3Data);
+    console.log('3️⃣ 合約資訊:', this.contractInfoData);
+    console.log('4️⃣ 抽成別:', commissionType);
+    console.log('5️⃣ 是否應該整合:', this.shouldIntegrateNext2Data(commissionType || ''));
+    console.log('6️⃣ Next2 資料狀態:', {
+      hasNext2Data: this.hasNext2Data,
+      commissionDataFromNext2Length: this.commissionDataFromNext2.length,
+      generalCommissionItemsLength: this.generalCommissionItems.length
+    });
+
+    // 🎯 新增：詳細檢查每個 Next2 項目
+    if (this.hasNext2Data) {
+      console.log('🔍 詳細檢查 Next2 資料:');
+      this.commissionDataFromNext2.forEach((item, index) => {
+        console.log(`   項目 ${index + 1}:`, {
+          id: item.id,
+          commissionType: item.commissionType,
+          commissionTypeName: item.commissionTypeName,
+          taxType: item.taxType,
+          discountSettingItems: item.discountSettingItems?.length || 0,
+          annualPerformanceItems: item.annualPerformanceItems?.length || 0,
+          discountLevelItems: item.discountLevelItems?.length || 0
+        });
+      });
+    }
+
+    console.log('🔍 === 診斷完成 ===');
+  }
   ngOnInit(): void {
     console.log('TLS13010Next3Component 初始化開始');
     this.initializePage('TLS13010', this.dataForm);
+
+    // 🎯 載入工作流程資料
     this.loadWorkflowData();
+
+    // 🎯 延遲執行診斷，確保資料載入完成
+    setTimeout(() => {
+      this.quickDiagnosis();
+
+      // 🎯 如果沒有資料，嘗試強制生成
+      if (this.hasNext2Data && this.generalCommissionItems.length === 0) {
+        console.log('⚠️ 檢測到 Next2 資料但沒有條件設定，嘗試強制生成');
+        this.forceRegenerateData();
+      }
+    }, 500);
   }
+
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  // 🎯 載入工作流程資料
   private loadWorkflowData(): void {
     console.log('🚀 開始載入工作流程資料...');
 
     const workflowData = this.contractFlowService.getCurrentData();
-    console.log('📋 工作流程資料:', workflowData);
-
     if (workflowData.queryRowData?.talent_id) {
       this.currentTalentId = workflowData.queryRowData.talent_id;
       this.currentContractData = workflowData.queryRowData;
 
-      console.log('✅ 取得合約ID:', this.currentTalentId);
-
       const step1Data = this.contractFlowService.getStep1Data();
-      console.log('📝 Step1 編輯資料:', step1Data);
-
       const contractInfo = {
         talent_id: step1Data?.talent_id || this.currentContractData.talent_id || '-',
         apply_no: step1Data?.apply_no || this.currentContractData.apply_no || '-',
@@ -186,61 +236,296 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       };
 
       this.contractInfoData = [{ id: '1', ...contractInfo }];
+      console.log('📊 合約資訊設定完成');
 
-      console.log('📊 準備顯示的合約資訊:', this.contractInfoData);
-      console.log('🏷️ 抽成別:', contractInfo.tlt_term_type);
+      // 🎯 修正：確保按正確順序載入資料
+      this.loadNext2CommissionData(); // 這裡會自動生成條件設定
 
-      this.loadConditionData();
+      // 🎯 延遲載入其他條件設定，避免覆蓋 Next2 資料
+      setTimeout(() => {
+        this.loadConditionData();
+      }, 100);
+
     } else {
       console.warn('❌ 沒有 talent_id，重導向到前一步');
       this.router.navigate(['account/tls/tls13010cru']);
     }
   }
 
-  // 🎯 重新設計條件資料載入邏輯 - 優先使用 Next2 的資料
+  private removeDuplicateItems(): void {
+    console.log('🧹 開始清理重複資料...');
+
+    const uniqueItems: GeneralCommissionCondition[] = [];
+    const seenIds = new Set();
+
+    this.generalCommissionItems.forEach(item => {
+      const key = `${item.tlt_id}_${item.tlt_id_desc}_${item.cag_barcode}`;
+      if (!seenIds.has(key)) {
+        seenIds.add(key);
+        uniqueItems.push(item);
+      } else {
+        console.log('🗑️ 移除重複項目:', item);
+      }
+    });
+
+    const removedCount = this.generalCommissionItems.length - uniqueItems.length;
+    this.generalCommissionItems = uniqueItems;
+
+    console.log(`✅ 清理完成，移除 ${removedCount} 個重複項目`);
+  }
+
+  // 🎯 載入 Next2 的抽成設定資料
+  private loadNext2CommissionData(): void {
+    console.log('🔍 載入 Next2 抽成設定資料...');
+
+    const step3Data = this.contractFlowService.getStep3Data();
+    console.log('📋 Step3 原始資料:', step3Data);
+
+    if (step3Data && Array.isArray(step3Data) && step3Data.length > 0) {
+      this.commissionDataFromNext2 = step3Data;
+      this.hasNext2Data = true;
+
+      console.log('✅ 載入 Next2 抽成設定資料成功');
+      console.log('📋 資料數量:', this.commissionDataFromNext2.length);
+
+      // 🎯 重要：立即生成條件設定資料
+      const commissionType = this.contractInfoData[0]?.tlt_term_type;
+      console.log('🏷️ 當前抽成類型:', commissionType);
+
+      if (this.shouldIntegrateNext2Data(commissionType || '')) {
+        console.log('🔄 立即生成條件設定資料...');
+        this.generateConditionDataFromNext2(commissionType || '');
+
+        // 🎯 確保資料載入完成
+        if (this.generalCommissionItems.length > 0) {
+          this.conditionDataLoaded = true;
+          this.dataLoaded = true;
+          console.log('✅ 條件設定資料載入完成');
+        }
+      }
+    } else {
+      console.log('📭 沒有 Next2 抽成設定資料');
+      this.hasNext2Data = false;
+    }
+  }
   private loadConditionData(): void {
-    console.log('🔍 開始載入條件設定資料...');
+    console.log('🔍 === 開始載入其他條件設定資料 ===');
+
+    const commissionType = this.contractInfoData[0]?.tlt_term_type || '3';
+    console.log('🏷️ 當前抽成類型:', commissionType);
+
+    // 🎯 重要：如果已經有 Next2 資料，不要覆蓋
+    if (this.hasNext2Data && commissionType === '3' && this.generalCommissionItems.length > 0) {
+      console.log('✅ 已有 Next2 生成的條件設定資料，跳過載入');
+      this.conditionDataLoaded = true;
+      this.dataLoaded = true;
+      return;
+    }
 
     // 🎯 第一優先：檢查是否有 Step4 暫存資料
     const savedConditionData = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
-
     if (savedConditionData && Array.isArray(savedConditionData) && savedConditionData.length > 0) {
-      console.log('📦 發現 Step4 暫存條件資料，直接使用:', savedConditionData);
+      console.log('📦 使用 Step4 暫存條件資料');
       this.loadConditionDataFromCache(savedConditionData);
       this.conditionDataLoaded = true;
       this.dataLoaded = true;
       return;
     }
 
-    // 🎯 第二優先：使用 Next2 的統一 API 資料（主要路徑）
+    // 🎯 第二優先：使用統一 API 資料
     const unifiedCommissionData = this.contractFlowService.getUnifiedCommissionData();
-
-    if (unifiedCommissionData) {
-      console.log('🎯 發現 Next2 的統一 API 資料，開始處理條件設定部分:', unifiedCommissionData);
-
-      // 🎯 檢查是否有 RentSettingData（Next3 需要的部分）
-      if (unifiedCommissionData.RentSettingData) {
-        console.log('📋 發現條件設定資料，開始轉換:', unifiedCommissionData.RentSettingData);
-        this.loadConditionDataFromUnifiedAPI(unifiedCommissionData.RentSettingData);
-      } else {
-        console.log('📭 統一 API 資料中沒有條件設定部分，根據抽成別初始化空資料');
-        const commissionType = this.contractInfoData[0]?.tlt_term_type || '3';
-        this.initializeConditionDataByCommissionType(commissionType);
-      }
-
-      this.conditionDataLoaded = true;
-      this.dataLoaded = true;
-      return;
+    if (unifiedCommissionData?.RentSettingData) {
+      console.log('📋 使用統一 API 條件設定資料');
+      this.loadConditionDataFromUnifiedAPI(unifiedCommissionData.RentSettingData);
+    } else {
+      console.log('📭 根據抽成類型初始化條件設定');
+      this.initializeConditionDataByCommissionType(commissionType);
     }
 
-    // 🎯 第三優先：如果完全沒有資料，根據抽成別初始化（不應該發生）
-    console.warn('⚠️ 沒有找到任何 Next2 的資料，這不應該發生！');
-    console.log('🔄 降級處理：根據抽成別初始化空的條件設定');
-    const commissionType = this.contractInfoData[0]?.tlt_term_type || '3';
-    this.initializeConditionDataByCommissionType(commissionType);
     this.conditionDataLoaded = true;
     this.dataLoaded = true;
   }
+
+
+  // 🎯 檢查是否需要整合 Next2 資料
+  private shouldIntegrateNext2Data(commissionType: string): boolean {
+    return commissionType === '3'; // 只有一般抽成需要整合
+  }
+
+  // 🎯 從 Next2 資料生成條件設定
+  private generateConditionDataFromNext2(commissionType: string): void {
+    console.log('🔄 === 開始生成條件設定資料 ===');
+    console.log('📋 抽成別:', commissionType);
+    console.log('📋 Next2 資料:', this.commissionDataFromNext2);
+
+    if (commissionType !== '3') {
+      console.log('ℹ️ 非一般抽成類型，不進行整合');
+      return;
+    }
+
+    // 🎯 重要：確保清空現有資料
+    this.generalCommissionItems = [];
+    console.log('🧹 已清空現有的 generalCommissionItems');
+
+    // 🎯 過濾並處理 Next2 資料
+    const validCommissionData = this.commissionDataFromNext2.filter(commission => {
+      const isValid = commission &&
+        (commission.commissionType || commission.id) &&
+        commission._status !== 'deleted';
+
+      if (!isValid) {
+        console.log('⚠️ 跳過無效的抽成項目:', commission);
+      }
+
+      return isValid;
+    });
+
+    console.log('📋 有效的抽成項目數量:', validCommissionData.length);
+
+    validCommissionData.forEach((commission, index) => {
+      console.log(`🔄 處理抽成項目 ${index + 1}:`, {
+        id: commission.id,
+        commissionType: commission.commissionType,
+        commissionTypeName: commission.commissionTypeName,
+        taxType: commission.taxType,
+        discountSettingItems: commission.discountSettingItems?.length || 0,
+        annualPerformanceItems: commission.annualPerformanceItems?.length || 0,
+        discountLevelItems: commission.discountLevelItems?.length || 0
+      });
+
+      let hasDetails = false;
+
+      // 🎯 處理折扣設定明細
+      if (commission.discountSettingItems && Array.isArray(commission.discountSettingItems)) {
+        const validDiscountItems = commission.discountSettingItems.filter(item =>
+          item && item._status !== 'deleted'
+        );
+
+        if (validDiscountItems.length > 0) {
+          hasDetails = true;
+          console.log(`📋 處理 ${validDiscountItems.length} 個折扣設定明細`);
+
+          validDiscountItems.forEach((discount, discountIndex) => {
+            const detailItem: GeneralCommissionCondition = {
+              id: `from_next2_discount_${commission.id}_${discount.id || discountIndex}`,
+              talent_id: this.currentTalentId,
+              tlt_id: commission.commissionType || '0',
+              tlt_id_desc: commission.commissionTypeName || `抽成類別${index + 1}`,
+              cag_taxtype: commission.taxType === 1 ? '1' : '0',
+              cag_bdate: this.formatDate(discount.startDate) || this.getDefaultStartDate(),
+              cag_edate: this.formatDate(discount.endDate) || this.getDefaultEndDate(),
+              cag_barcode: discount.cag_barcode || '000',
+              cag_charge_rate: discount.rate || 0,
+              _status: 'original',
+              _fromNext2: true,
+              _readonly: true
+            };
+
+            this.generalCommissionItems.push(detailItem);
+            console.log(`✅ 新增折扣設定明細: ${detailItem.tlt_id_desc} - ${detailItem.cag_barcode}`);
+          });
+        }
+      }
+
+      // 🎯 處理年度業績明細
+      if (commission.annualPerformanceItems && Array.isArray(commission.annualPerformanceItems)) {
+        const validAnnualItems = commission.annualPerformanceItems.filter(item =>
+          item && item._status !== 'deleted'
+        );
+
+        if (validAnnualItems.length > 0) {
+          hasDetails = true;
+          console.log(`📋 處理 ${validAnnualItems.length} 個年度業績明細`);
+
+          validAnnualItems.forEach((annual, annualIndex) => {
+            const annualItem: GeneralCommissionCondition = {
+              id: `from_next2_annual_${commission.id}_${annual.id || annualIndex}`,
+              talent_id: this.currentTalentId,
+              tlt_id: commission.commissionType || '0',
+              tlt_id_desc: commission.commissionTypeName || `抽成類別${index + 1}`,
+              cag_taxtype: commission.taxType === 1 ? '1' : '0',
+              cag_bdate: this.formatDate(annual.startDate) || this.getDefaultStartDate(),
+              cag_edate: this.formatDate(annual.endDate) || this.getDefaultEndDate(),
+              cag_barcode: '年度業績',
+              cag_charge_rate: annual.rate || 0,
+              _status: 'original',
+              _fromNext2: true,
+              _readonly: true
+            };
+
+            this.generalCommissionItems.push(annualItem);
+            console.log(`✅ 新增年度業績明細: ${annualItem.tlt_id_desc} - 年度業績`);
+          });
+        }
+      }
+
+      // 🎯 處理層級抽成明細
+      if (commission.discountLevelItems && Array.isArray(commission.discountLevelItems)) {
+        const validLevelItems = commission.discountLevelItems.filter(item =>
+          item && item._status !== 'deleted'
+        );
+
+        if (validLevelItems.length > 0) {
+          hasDetails = true;
+          console.log(`📋 處理 ${validLevelItems.length} 個層級抽成明細`);
+
+          validLevelItems.forEach((level, levelIndex) => {
+            const levelItem: GeneralCommissionCondition = {
+              id: `from_next2_level_${commission.id}_${level.id || levelIndex}`,
+              talent_id: this.currentTalentId,
+              tlt_id: commission.commissionType || '0',
+              tlt_id_desc: commission.commissionTypeName || `抽成類別${index + 1}`,
+              cag_taxtype: commission.taxType === 1 ? '1' : '0',
+              cag_bdate: this.getDefaultStartDate(),
+              cag_edate: this.getDefaultEndDate(),
+              cag_barcode: level.cag_barcode || '層級',
+              cag_charge_rate: level.rate || 0,
+              _status: 'original',
+              _fromNext2: true,
+              _readonly: true
+            };
+
+            this.generalCommissionItems.push(levelItem);
+            console.log(`✅ 新增層級抽成明細: ${levelItem.tlt_id_desc} - ${levelItem.cag_barcode}`);
+          });
+        }
+      }
+
+      // 🎯 如果沒有任何明細，建立一個主要項目
+      if (!hasDetails) {
+        const mainItem: GeneralCommissionCondition = {
+          id: `from_next2_main_${commission.id}`,
+          talent_id: this.currentTalentId,
+          tlt_id: commission.commissionType || '0',
+          tlt_id_desc: commission.commissionTypeName || `抽成類別${index + 1}`,
+          cag_taxtype: commission.taxType === 1 ? '1' : '0',
+          cag_bdate: this.getDefaultStartDate(),
+          cag_edate: this.getDefaultEndDate(),
+          cag_barcode: '000',
+          cag_charge_rate: 0,
+          _status: 'original',
+          _fromNext2: true,
+          _readonly: true
+        };
+
+        this.generalCommissionItems.push(mainItem);
+        console.log(`✅ 新增主要抽成項目: ${mainItem.tlt_id_desc}`);
+      }
+    });
+
+    console.log('✅ 條件設定資料生成完成');
+    console.log('📋 最終 generalCommissionItems 數量:', this.generalCommissionItems.length);
+
+    // 🎯 重要：確保 UI 更新
+    this.conditionDataLoaded = true;
+    this.dataLoaded = true;
+
+    // 🎯 強制 Angular 檢測變更
+    if (this.cdr) {
+      this.cdr.detectChanges();
+    }
+  }
+
 
   // 🎯 從 Step4 暫存載入條件資料
   private loadConditionDataFromCache(savedData: ConditionItem[]): void {
@@ -254,145 +539,33 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     }
   }
 
-  // 🎯 從統一 API 的 RentSettingData 載入條件資料（主要邏輯）
+  // 🎯 從統一 API 載入條件資料
   private loadConditionDataFromUnifiedAPI(rentSettingData: RentSettingApiData): void {
     try {
-      console.log('🔄 從 Next2 的統一 API 資料載入條件設定:', rentSettingData);
-
+      console.log('🔄 從統一 API 載入條件設定:', rentSettingData);
       const commissionType = this.contractInfoData[0]?.tlt_term_type || '3';
-      console.log('🏷️ 當前抽成類型:', commissionType);
 
-      // 🎯 檢查是否有任何條件設定資料
-      const hasRentData = rentSettingData.RentDetails && rentSettingData.RentDetails.length > 0;
-      const hasLimitData = rentSettingData.LimitDetails && rentSettingData.LimitDetails.length > 0;
-      const hasLevelData = rentSettingData.LevelDetails && rentSettingData.LevelDetails.length > 0;
-      const hasCommissionData = rentSettingData.CommissionMasters && rentSettingData.CommissionMasters.length > 0;
+      const convertedData: CommissionDataStructure = {
+        CommissionMasters: (rentSettingData.CommissionMasters || []).map((item: any) => ({
+          ...item,
+          sst_amount: item.sst_amount ?? 0
+        })),
+        ChargedDetails: rentSettingData.ChargedDetails || [],
+        RentDetails: rentSettingData.RentDetails || [],
+        LimitDetails: rentSettingData.LimitDetails || [],
+        LevelDetails: rentSettingData.LevelDetails || []
+      };
 
-      console.log('📊 API 資料檢查結果:', {
-        hasRentData,
-        hasLimitData,
-        hasLevelData,
-        hasCommissionData,
-        commissionType
-      });
-
-      if (!hasRentData && !hasLimitData && !hasLevelData && !hasCommissionData) {
-        console.log('📭 API 沒有任何條件設定資料，根據抽成別初始化空資料');
-        this.initializeConditionDataByCommissionType(commissionType);
-        return;
-      }
-
-      // 🎯 轉換 API 資料格式
-      const convertedData: CommissionDataStructure = {};
-
-      // 處理各個資料表
-      if (rentSettingData.CommissionMasters) {
-        convertedData.CommissionMasters = rentSettingData.CommissionMasters.map(item => ({
-          id: item.id,
-          talent_id: item.talent_id,
-          tlt_id: item.tlt_id,
-          tlt_id_desc: item.tlt_id_desc,
-          cag_bdate: item.cag_bdate,
-          cag_edate: item.cag_edate,
-          cag_taxtype: item.cag_taxtype,
-          sst_amount: item.sst_amount ?? 0,
-          sst_rate: item.sst_rate ?? 0,
-          cap_saletype1: item.cap_saletype1 ?? '',
-          cap_saletype2: item.cap_saletype2 ?? '',
-          cag_remark: item.cag_remark ?? ''
-        }));
-      } else {
-        convertedData.CommissionMasters = [];
-      }
-
-      if (rentSettingData.ChargedDetails) {
-        convertedData.ChargedDetails = rentSettingData.ChargedDetails.map(item => ({
-          id: item.id,
-          talent_id: item.talent_id,
-          tlt_id: item.tlt_id,
-          cag_barcode: item.cag_barcode,
-          tlt_bdate: item.tlt_bdate,
-          tlt_edate: item.tlt_edate,
-          cag_charge_rate: item.cag_charge_rate
-        }));
-      } else {
-        convertedData.ChargedDetails = [];
-      }
-
-      if (rentSettingData.RentDetails) {
-        convertedData.RentDetails = rentSettingData.RentDetails.map(item => ({
-          id: item.id,
-          talent_id: item.talent_id,
-          tlt_id: item.tlt_id,
-          cag_bdate: item.cag_bdate,
-          cag_edate: item.cag_edate,
-          base_rent: item.base_rent
-        }));
-      } else {
-        convertedData.RentDetails = [];
-      }
-
-      if (rentSettingData.LimitDetails) {
-        convertedData.LimitDetails = rentSettingData.LimitDetails.map(item => ({
-          id: item.id,
-          talent_id: item.talent_id,
-          tlt_id: item.tlt_id,
-          cag_bdate: item.cag_bdate,
-          cag_edate: item.cag_edate,
-          limit_amt: item.limit_amt,
-          limit_charge_rate: item.limit_charge_rate
-        }));
-      } else {
-        convertedData.LimitDetails = [];
-      }
-
-      if (rentSettingData.LevelDetails) {
-        convertedData.LevelDetails = rentSettingData.LevelDetails.map(item => ({
-          id: item.id,
-          talent_id: item.talent_id,
-          seq_no: item.seq_no,
-          cag_bdate: item.cag_bdate,
-          cag_edate: item.cag_edate,
-          limit_amt: item.limit_amt ?? 0,
-          start_number: item.start_number,
-          end_number: item.end_number,
-          charge_rate: item.charge_rate
-        }));
-      } else {
-        convertedData.LevelDetails = [];
-      }
-
-      console.log('✅ API 資料轉換完成，開始對應到前端模型');
       this.mapBackendDataToFrontend(convertedData, commissionType);
-      console.log('✅ Next2 統一 API 條件資料載入完成');
-
+      console.log('✅ 統一 API 條件資料載入完成');
     } catch (error) {
-      console.error('❌ 處理 Next2 統一 API 條件資料時發生錯誤:', error);
+      console.error('❌ 處理統一 API 條件資料時發生錯誤:', error);
       const safeCommissionType = this.contractInfoData[0]?.tlt_term_type || '3';
       this.initializeConditionDataByCommissionType(safeCommissionType);
     }
   }
 
-  // 🎯 移除直接 API 呼叫方法，因為 Next3 應該使用 Next2 的資料
-  // 如果真的需要重新載入資料，應該回到 Next2 重新處理
-  private handleMissingData(): void {
-    console.warn('❌ 沒有找到 Next2 的統一 API 資料');
-    console.log('💡 建議：請回到 Next2 重新載入抽成設定');
-
-    this.notificationService.warnBubble('沒有找到抽成設定資料，請回到上一步重新載入');
-
-    // 🎯 提供選項：回到 Next2 或初始化空資料
-    if (confirm('沒有找到抽成設定資料，是否回到上一步重新載入？')) {
-      this.router.navigate(['account/tls/tls13010next2']);
-    } else {
-      // 用戶選擇繼續，初始化空資料
-      const commissionType = this.contractInfoData[0]?.tlt_term_type || '3';
-      this.initializeConditionDataByCommissionType(commissionType);
-      this.conditionDataLoaded = true;
-      this.dataLoaded = true;
-    }
-  }
-
+  // 🎯 分類條件項目
   private categorizeConditionItems(conditionItems: ConditionItem[]): void {
     console.log('🏷️ 分類條件項目:', conditionItems);
     this.initializeEmptyConditionData();
@@ -412,19 +585,10 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
         this.graduatedItems.push(item as GraduatedCommissionCondition);
       }
     });
-
-    console.log('📊 分類結果:');
-    console.log('   - 固定租金:', this.fixedRentItems.length);
-    console.log('   - 底租抽成取高者:', this.baseRentHigherItems.length);
-    console.log('   - 一般抽成:', this.generalCommissionItems.length);
-    console.log('   - 包底抽成:', this.baseCommissionItems.length);
-    console.log('   - 階梯式抽成:', this.graduatedItems.length);
-    console.log('   - 包底加階梯:', this.baseTierItems.length);
   }
 
   // 🎯 初始化空的條件資料
   private initializeEmptyConditionData(): void {
-    console.log('📝 初始化空的條件設定資料');
     this.fixedRentItems = [];
     this.baseRentHigherItems = [];
     this.baseCommissionItems = [];
@@ -433,57 +597,44 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     this.generalCommissionItems = [];
   }
 
-  // 🎯 儲存條件設定到工作流程
-  private saveConditionDataToWorkflow(): void {
-    console.log('💾 儲存條件設定資料到工作流程');
-
-    const allConditionItems: ConditionItem[] = [
-      ...this.fixedRentItems,
-      ...this.baseRentHigherItems,
-      ...this.generalCommissionItems,
-      ...this.baseCommissionItems,
-      ...this.graduatedItems,
-      ...this.baseTierItems
-    ];
-
-    try {
-      this.contractFlowService.saveStep4Data(allConditionItems);
-      console.log('✅ 已成功暫存條件設定資料到工作流程');
-    } catch (error) {
-      console.error('❌ 儲存條件設定資料時發生錯誤:', error);
-    }
-  }
-
-  // 🎯 根據抽成類型初始化空資料
+  // 🎯 根據抽成類型初始化條件資料
   private initializeConditionDataByCommissionType(commissionType: string): void {
     console.log('📝 根據抽成類型初始化條件資料:', commissionType);
+
+    // 🎯 重要：確保先清空
     this.initializeEmptyConditionData();
 
     const safeCommissionType = commissionType || '3';
 
     switch (safeCommissionType) {
-      case '1': // 固定租金
+      case '1':
         this.fixedRentItems = [this.createFixedRentItem()];
-        console.log('✅ 初始化固定租金空項目');
+        console.log('✅ 初始化固定租金項目');
         break;
-      case '2': // 底租抽成取高者
+      case '2':
         this.baseRentHigherItems = [this.createBaseRentHigherItem()];
-        console.log('✅ 初始化底租抽成取高者空項目');
+        console.log('✅ 初始化底租抽成取高者項目');
         break;
-      case '3': // 一般抽成
-        console.log('ℹ️ 一般抽成無需額外條件設定');
+      case '3':
+        // 🎯 一般抽成：如果沒有 Next2 資料才建立空項目
+        if (!this.hasNext2Data) {
+          this.generalCommissionItems = [this.createGeneralCommissionItem()];
+          console.log('✅ 初始化一般抽成項目');
+        } else {
+          console.log('ℹ️ 已有 Next2 資料，不建立空的一般抽成項目');
+        }
         break;
-      case '4': // 包底抽成
+      case '4':
         this.baseCommissionItems = [this.createBaseCommissionItem()];
-        console.log('✅ 初始化包底抽成空項目');
+        console.log('✅ 初始化包底抽成項目');
         break;
-      case '5': // 階梯式抽成
+      case '5':
         this.graduatedItems = [this.createGraduatedItem()];
-        console.log('✅ 初始化階梯式抽成空項目');
+        console.log('✅ 初始化階梯式抽成項目');
         break;
-      case '6': // 包底加階梯
+      case '6':
         this.baseTierItems = [this.createBaseTierItem()];
-        console.log('✅ 初始化包底加階梯空項目');
+        console.log('✅ 初始化包底加階梯項目');
         break;
       default:
         console.warn('❌ 不支援的抽成類型:', safeCommissionType);
@@ -495,37 +646,32 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     console.log('🗺️ 對應後端資料到前端模型:', { existingData, commissionType });
     this.initializeEmptyConditionData();
 
-    const safeCommissionType = commissionType || '3';
-
-    switch (safeCommissionType) {
-      case '1': // 固定租金
+    switch (commissionType) {
+      case '1':
         this.mapRentData(existingData);
         break;
-      case '2': // 底租抽成取高者
+      case '2':
         this.mapBaseRentHigherData(existingData);
         break;
-      case '3': // 一般抽成
+      case '3':
         this.mapGeneralCommissionData(existingData);
         break;
-      case '4': // 包底抽成
+      case '4':
         this.mapBaseCommissionData(existingData);
         break;
-      case '5': // 階梯式抽成
+      case '5':
         this.mapGraduatedCommissionData(existingData);
         break;
-      case '6': // 包底加階梯
+      case '6':
         this.mapBaseTierData(existingData);
         break;
-      default:
-        console.warn('❌ 不支援的抽成類型:', safeCommissionType);
-        this.initializeConditionDataByCommissionType(safeCommissionType);
     }
   }
 
-  // 🎯 對應固定租金資料 (TLTTALENT_RENT)
+  // 各種對應方法的實現...
   private mapRentData(data: CommissionDataStructure): void {
     if (data.RentDetails && data.RentDetails.length > 0) {
-      this.fixedRentItems = data.RentDetails.map((item): FixedRentCondition => ({
+      this.fixedRentItems = data.RentDetails.map(item => ({
         id: item.id,
         talent_id: item.talent_id.toString(),
         tlt_id: item.tlt_id || '',
@@ -534,45 +680,26 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
         base_rent: item.base_rent || 0,
         _status: 'original'
       }));
-      console.log('✅ 載入固定租金資料:', this.fixedRentItems.length, '筆');
-    } else {
-      const safeCommissionType = this.contractInfoData[0]?.tlt_term_type || '1';
-      this.initializeConditionDataByCommissionType(safeCommissionType);
     }
   }
 
-  // 🎯 對應底租抽成取高者資料 (TLTTALENT_RENT + TLTTALENT_CHARGED)
   private mapBaseRentHigherData(data: CommissionDataStructure): void {
     if (data.RentDetails && data.ChargedDetails) {
-      this.baseRentHigherItems = data.RentDetails.map((rentItem: RentDetail, index: number): BaseRentHigherCondition => {
-        const chargedItem = data.ChargedDetails?.[index] || {} as ChargedDetail;
-        return {
-          id: rentItem.id,
-          talent_id: rentItem.talent_id.toString(),
-          tlt_id: rentItem.tlt_id || chargedItem.tlt_id || '',
-          cag_bdate: this.formatDate(rentItem.cag_bdate) || this.formatDate(chargedItem.tlt_bdate),
-          cag_edate: this.formatDate(rentItem.cag_edate) || this.formatDate(chargedItem.tlt_edate),
-          base_rent: rentItem.base_rent || 0,
-          cag_charge_rate: chargedItem.cag_charge_rate || 0,
-          _status: 'original'
-        };
-      });
-      console.log('✅ 載入底租抽成取高者資料:', this.baseRentHigherItems.length, '筆');
-    } else {
-      const safeCommissionType = this.contractInfoData[0]?.tlt_term_type || '2';
-      this.initializeConditionDataByCommissionType(safeCommissionType);
+      this.baseRentHigherItems = data.RentDetails.map((rentItem, index) => ({
+        id: rentItem.id,
+        talent_id: rentItem.talent_id.toString(),
+        tlt_id: rentItem.tlt_id || '',
+        cag_bdate: this.formatDate(rentItem.cag_bdate),
+        cag_edate: this.formatDate(rentItem.cag_edate),
+        base_rent: rentItem.base_rent || 0,
+        cag_charge_rate: data.ChargedDetails?.[index]?.cag_charge_rate || 0,
+        _status: 'original'
+      }));
     }
   }
 
-  // 🎯 一般抽成
   private mapGeneralCommissionData(data: CommissionDataStructure): void {
-    console.log('🔄 載入一般抽成資料:', data);
-
     if (data.CommissionMasters && data.ChargedDetails) {
-      console.log('📋 發現一般抽成設定資料:');
-      console.log('   - CommissionMasters:', data.CommissionMasters.length, '筆');
-      console.log('   - ChargedDetails:', data.ChargedDetails.length, '筆');
-
       const generalCommissionItems: GeneralCommissionCondition[] = [];
 
       data.CommissionMasters.forEach(master => {
@@ -595,35 +722,16 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
               _status: 'original'
             });
           });
-        } else {
-          generalCommissionItems.push({
-            id: master.id,
-            talent_id: master.talent_id.toString(),
-            tlt_id: master.tlt_id,
-            tlt_id_desc: master.tlt_id_desc,
-            cag_taxtype: master.cag_taxtype,
-            cag_bdate: this.formatDate(master.cag_bdate),
-            cag_edate: this.formatDate(master.cag_edate),
-            cag_barcode: '',
-            cag_charge_rate: 0,
-            _status: 'original'
-          });
         }
       });
 
       this.generalCommissionItems = generalCommissionItems;
-      console.log('✅ 載入一般抽成資料:', this.generalCommissionItems.length, '筆');
-    } else {
-      console.log('📭 沒有一般抽成資料，初始化空資料供新增');
-      this.generalCommissionItems = [this.createGeneralCommissionItem()];
     }
   }
 
   private mapBaseCommissionData(data: CommissionDataStructure): void {
-    console.log('🔄 載入包底抽成資料:', data);
-
     if (data.LimitDetails && data.LimitDetails.length > 0) {
-      this.baseCommissionItems = data.LimitDetails.map((item: LimitDetail): BaseCommissionCondition => ({
+      this.baseCommissionItems = data.LimitDetails.map(item => ({
         id: item.id,
         talent_id: item.talent_id.toString(),
         tlt_id: item.tlt_id || '',
@@ -633,18 +741,12 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
         limit_charge_rate: item.limit_charge_rate || 0,
         _status: 'original'
       }));
-      console.log('✅ 載入包底抽成資料:', this.baseCommissionItems.length, '筆');
-    } else {
-      console.log('📭 沒有包底抽成資料，初始化空資料供新增');
-      const safeCommissionType = this.contractInfoData[0]?.tlt_term_type || '4';
-      this.initializeConditionDataByCommissionType(safeCommissionType);
     }
   }
 
-  // 🎯 對應階梯式抽成資料 (TLTTALENT_LEVEL + TLTTALENT_LEVELD)
   private mapGraduatedCommissionData(data: CommissionDataStructure): void {
     if (data.LevelDetails && data.LevelDetails.length > 0) {
-      this.graduatedItems = data.LevelDetails.map((item: LevelDetail): GraduatedCommissionCondition => ({
+      this.graduatedItems = data.LevelDetails.map(item => ({
         id: item.id,
         talent_id: item.talent_id.toString(),
         seq_no: item.seq_no || 0,
@@ -655,17 +757,12 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
         charge_rate: item.charge_rate || 0,
         _status: 'original'
       }));
-      console.log('✅ 載入階梯式抽成資料:', this.graduatedItems.length, '筆');
-    } else {
-      const safeCommissionType = this.contractInfoData[0]?.tlt_term_type || '5';
-      this.initializeConditionDataByCommissionType(safeCommissionType);
     }
   }
 
-  // 🎯 對應包底加階梯資料
   private mapBaseTierData(data: CommissionDataStructure): void {
     if (data.LimitDetails && data.LevelDetails) {
-      this.baseTierItems = data.LevelDetails.map((levelItem: LevelDetail): BaseTierCondition => ({
+      this.baseTierItems = data.LevelDetails.map(levelItem => ({
         id: levelItem.id,
         talent_id: levelItem.talent_id.toString(),
         seq_no: levelItem.seq_no || 0,
@@ -678,142 +775,17 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
         charge_rate: levelItem.charge_rate || 0,
         _status: 'original'
       }));
-      console.log('✅ 載入包底加階梯資料:', this.baseTierItems.length, '筆');
-    } else {
-      const safeCommissionType = this.contractInfoData[0]?.tlt_term_type || '6';
-      this.initializeConditionDataByCommissionType(safeCommissionType);
     }
   }
 
-  // 🎯 判斷是否顯示特定抽成類型的條件設定
-  shouldShowCommissionType(commissionTypeCode: string): boolean {
-    const currentCommissionType = this.contractInfoData[0]?.tlt_term_type;
-    return currentCommissionType === commissionTypeCode;
-  }
-
-  get existingCommissionTypes(): string[] {
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-    return commissionType ? [commissionType] : [];
-  }
-
-  // 🎯 修改：顯示確認對話框而非直接跳轉
-  onSubmitNext(): void {
-    console.log('🎯 準備顯示確認對話框');
-    this.saveConditionDataToWorkflow();
-    this.showConfirmDialog = true;
-  }
-
-  // 🎯 新增：處理確認對話框結果
-  onConfirmDialogResult(confirmed: boolean): void {
-    console.log('🔔 確認對話框結果:', confirmed);
-    this.showConfirmDialog = false;
-
-    if (confirmed) {
-      console.log('✅ 使用者確認送出，開始提交流程');
-      this.submitContractData();
-    } else {
-      console.log('❌ 使用者取消送出');
-    }
-  }
-
-  // 🔧 修正：實際提交契約資料的方法
-  private submitContractData(): void {
-    console.log('🚀 開始提交契約資料...');
-    this.loading = true;
-
-    try {
-      const submitDataStructure = this.contractFlowService.generateSubmitData();
-      console.log('📋 完整提交資料結構:', submitDataStructure);
-      this.callSubmitAPI(submitDataStructure);
-    } catch (error) {
-      console.error('❌ 準備提交資料時發生錯誤:', error);
-      this.loading = false;
-      this.notificationService.errorBubble('準備提交資料時發生錯誤');
-    }
-  }
-
-  private callSubmitAPI(submitData: SubmitDataStructure): void {
-    console.log('📡 準備呼叫後端 API...');
-    console.log('📤 實際要送給後端的完整 JSON:', JSON.stringify(submitData, null, 2));
-
-    setTimeout(() => {
-      this.loading = false;
-      this.notificationService.successBubble('契約資料提交成功！');
-      this.contractFlowService.clearAllData();
-      this.router.navigate(['account/tls/tls13010']);
-    }, 2000);
-  }
-
-  override onCancel(): void {
-    console.log('🔙 準備回到前一步...');
-    this.saveConditionDataToWorkflow();
-    this.router.navigate(['account/tls/tls13010next2']);
-  }
-
-  onRealCancel(): void {
-    if (confirm('確定要離開契約編輯流程嗎？所有暫存資料將會保留。')) {
-      this.saveConditionDataToWorkflow();
-      this.router.navigate(['account/tls/tls13010']);
-    }
-  }
-
-  // 🎯 新增：各類型條件項目的新增功能
-  onAddFixedRentItem(): void {
-    console.log('➕ 新增固定租金項目');
-    const newItem: FixedRentCondition = this.createFixedRentItem();
-    this.fixedRentItems.push(newItem);
-    this.saveConditionDataToWorkflow();
-    this.notificationService.successBubble('已新增固定租金項目');
-  }
-
-  onAddBaseRentHigherItem(): void {
-    console.log('➕ 新增底租抽成取高者項目');
-    const newItem: BaseRentHigherCondition = this.createBaseRentHigherItem();
-    this.baseRentHigherItems.push(newItem);
-    this.saveConditionDataToWorkflow();
-    this.notificationService.successBubble('已新增底租抽成取高者項目');
-  }
-
-  onAddBaseCommissionItem(): void {
-    console.log('➕ 新增包底抽成項目');
-    const newItem: BaseCommissionCondition = this.createBaseCommissionItem();
-    this.baseCommissionItems.push(newItem);
-    this.saveConditionDataToWorkflow();
-    this.notificationService.successBubble('已新增包底抽成項目');
-  }
-
-  onAddGraduatedItem(): void {
-    console.log('➕ 新增階梯式抽成項目');
-    const newItem: GraduatedCommissionCondition = this.createGraduatedItem();
-    this.graduatedItems.push(newItem);
-    this.saveConditionDataToWorkflow();
-    this.notificationService.successBubble('已新增階梯式抽成項目');
-  }
-
-  onAddBaseTierItem(): void {
-    console.log('➕ 新增包底加階梯項目');
-    const newItem: BaseTierCondition = this.createBaseTierItem();
-    this.baseTierItems.push(newItem);
-    this.saveConditionDataToWorkflow();
-    this.notificationService.successBubble('已新增包底加階梯項目');
-  }
-
-  onAddGeneralCommissionItem(): void {
-    console.log('➕ 新增一般抽成項目');
-    const newItem: GeneralCommissionCondition = this.createGeneralCommissionItem();
-    this.generalCommissionItems.push(newItem);
-    this.saveConditionDataToWorkflow();
-    this.notificationService.successBubble('已新增一般抽成項目');
-  }
-
-  // 🎯 建立各類型條件項目的工廠方法
+  // 🎯 建立條件項目的工廠方法
   private createFixedRentItem(): FixedRentCondition {
     return {
       id: Date.now() + Math.random(),
       talent_id: this.currentTalentId,
       tlt_id: '',
-      cag_bdate: this.contractInfoData[0]?.tlt_bdate || new Date().toISOString().split('T')[0],
-      cag_edate: this.contractInfoData[0]?.tlt_edate || new Date().toISOString().split('T')[0],
+      cag_bdate: this.getDefaultStartDate(),
+      cag_edate: this.getDefaultEndDate(),
       base_rent: 0,
       _status: 'new',
       _isNew: true
@@ -825,58 +797,10 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       id: Date.now() + Math.random(),
       talent_id: this.currentTalentId,
       tlt_id: '',
-      cag_bdate: this.contractInfoData[0]?.tlt_bdate || new Date().toISOString().split('T')[0],
-      cag_edate: this.contractInfoData[0]?.tlt_edate || new Date().toISOString().split('T')[0],
+      cag_bdate: this.getDefaultStartDate(),
+      cag_edate: this.getDefaultEndDate(),
       base_rent: 0,
       cag_charge_rate: 0,
-      _status: 'new',
-      _isNew: true
-    };
-  }
-
-  private createBaseCommissionItem(): BaseCommissionCondition {
-    return {
-      id: Date.now() + Math.random(),
-      talent_id: this.currentTalentId,
-      tlt_id: '',
-      cag_bdate: this.contractInfoData[0]?.tlt_bdate || new Date().toISOString().split('T')[0],
-      cag_edate: this.contractInfoData[0]?.tlt_edate || new Date().toISOString().split('T')[0],
-      limit_amt: 0,
-      limit_charge_rate: 0,
-      _status: 'new',
-      _isNew: true
-    };
-  }
-
-  private createGraduatedItem(): GraduatedCommissionCondition {
-    const nextSeqNo = this.graduatedItems.length + 1;
-    return {
-      id: Date.now() + Math.random(),
-      talent_id: this.currentTalentId,
-      seq_no: nextSeqNo,
-      cag_bdate: this.contractInfoData[0]?.tlt_bdate || new Date().toISOString().split('T')[0],
-      cag_edate: this.contractInfoData[0]?.tlt_edate || new Date().toISOString().split('T')[0],
-      start_number: 0,
-      end_number: 0,
-      charge_rate: 0,
-      _status: 'new',
-      _isNew: true
-    };
-  }
-
-  private createBaseTierItem(): BaseTierCondition {
-    const nextSeqNo = this.baseTierItems.length + 1;
-    return {
-      id: Date.now() + Math.random(),
-      talent_id: this.currentTalentId,
-      seq_no: nextSeqNo,
-      tlt_id: '',
-      cag_bdate: this.contractInfoData[0]?.tlt_bdate || new Date().toISOString().split('T')[0],
-      cag_edate: this.contractInfoData[0]?.tlt_edate || new Date().toISOString().split('T')[0],
-      limit_amt: 0,
-      start_number: 0,
-      end_number: 0,
-      charge_rate: 0,
       _status: 'new',
       _isNew: true
     };
@@ -889,8 +813,8 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       tlt_id: '0',
       tlt_id_desc: '',
       cag_taxtype: '1',
-      cag_bdate: this.contractInfoData[0]?.tlt_bdate || new Date().toISOString().split('T')[0],
-      cag_edate: this.contractInfoData[0]?.tlt_edate || new Date().toISOString().split('T')[0],
+      cag_bdate: this.getDefaultStartDate(),
+      cag_edate: this.getDefaultEndDate(),
       cag_barcode: '000',
       cag_charge_rate: 0,
       _status: 'new',
@@ -898,18 +822,196 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     };
   }
 
+  private createBaseCommissionItem(): BaseCommissionCondition {
+    return {
+      id: Date.now() + Math.random(),
+      talent_id: this.currentTalentId,
+      tlt_id: '',
+      cag_bdate: this.getDefaultStartDate(),
+      cag_edate: this.getDefaultEndDate(),
+      limit_amt: 0,
+      limit_charge_rate: 0,
+      _status: 'new',
+      _isNew: true
+    };
+  }
+
+  private createGraduatedItem(): GraduatedCommissionCondition {
+    return {
+      id: Date.now() + Math.random(),
+      talent_id: this.currentTalentId,
+      seq_no: this.graduatedItems.length + 1,
+      cag_bdate: this.getDefaultStartDate(),
+      cag_edate: this.getDefaultEndDate(),
+      start_number: 0,
+      end_number: 0,
+      charge_rate: 0,
+      _status: 'new',
+      _isNew: true
+    };
+  }
+
+  private createBaseTierItem(): BaseTierCondition {
+    return {
+      id: Date.now() + Math.random(),
+      talent_id: this.currentTalentId,
+      seq_no: this.baseTierItems.length + 1,
+      tlt_id: '',
+      cag_bdate: this.getDefaultStartDate(),
+      cag_edate: this.getDefaultEndDate(),
+      limit_amt: 0,
+      start_number: 0,
+      end_number: 0,
+      charge_rate: 0,
+      _status: 'new',
+      _isNew: true
+    };
+  }
+
+  // 🎯 判斷是否顯示特定抽成類型的條件設定
+  shouldShowCommissionType(commissionTypeCode: string): boolean {
+    const currentCommissionType = this.contractInfoData[0]?.tlt_term_type;
+    return currentCommissionType === commissionTypeCode;
+  }
+
+  // 🎯 檢查是否有來自 Next2 的資料
+  hasNext2IntegrationData(): boolean {
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
+    return commissionType === '3' && this.hasNext2Data;
+  }
+
+  // 🎯 取得來自 Next2 的項目數量
+  getNext2ItemCount(): number {
+    return this.generalCommissionItems.filter(item => item._fromNext2).length;
+  }
+
+  // 🎯 取得新增的項目數量
+  getNewItemCount(): number {
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
+    switch (commissionType) {
+      case '1':
+        return this.fixedRentItems.filter(item => item._status === 'new').length;
+      case '2':
+        return this.baseRentHigherItems.filter(item => item._status === 'new').length;
+      case '3':
+        return this.generalCommissionItems.filter(item => item._status === 'new').length;
+      case '4':
+        return this.baseCommissionItems.filter(item => item._status === 'new').length;
+      case '5':
+        return this.graduatedItems.filter(item => item._status === 'new').length;
+      case '6':
+        return this.baseTierItems.filter(item => item._status === 'new').length;
+      default:
+        return 0;
+    }
+  }
+
+  // 🎯 取得總項目數量
+  getConditionItemCount(): number {
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
+    switch (commissionType) {
+      case '1':
+        return this.fixedRentItems.filter(item => item._status !== 'deleted').length;
+      case '2':
+        return this.baseRentHigherItems.filter(item => item._status !== 'deleted').length;
+      case '3':
+        return this.generalCommissionItems.filter(item => item._status !== 'deleted').length;
+      case '4':
+        return this.baseCommissionItems.filter(item => item._status !== 'deleted').length;
+      case '5':
+        return this.graduatedItems.filter(item => item._status !== 'deleted').length;
+      case '6':
+        return this.baseTierItems.filter(item => item._status !== 'deleted').length;
+      default:
+        return 0;
+    }
+  }
+
+  // 🎯 檢查是否有條件資料
+  hasConditionData(): boolean {
+    return this.getConditionItemCount() > 0;
+  }
+
+  // 🎯 取得當前抽成類型名稱
+  getCurrentCommissionTypeName(): string {
+    const code = this.contractInfoData[0]?.tlt_term_type;
+    const option = TLS13010_DROPDOWN_OPTIONS.tltTermType.find(opt => opt.value === code);
+    return option ? option.label : code || '未載入';
+  }
+
+  // 🎯 新增項目的方法
+  onAddFixedRentItem(): void {
+    const newItem = this.createFixedRentItem();
+    this.fixedRentItems.push(newItem);
+    this.saveConditionDataToWorkflow();
+    this.notificationService.successBubble('已新增固定租金項目');
+  }
+
+  onAddBaseRentHigherItem(): void {
+    const newItem = this.createBaseRentHigherItem();
+    this.baseRentHigherItems.push(newItem);
+    this.saveConditionDataToWorkflow();
+    this.notificationService.successBubble('已新增底租抽成取高者項目');
+  }
+
+  onAddGeneralCommissionItem(): void {
+    const newItem = this.createGeneralCommissionItem();
+    this.generalCommissionItems.push(newItem);
+    this.saveConditionDataToWorkflow();
+    this.notificationService.successBubble('已新增一般抽成項目');
+  }
+
+  onAddBaseCommissionItem(): void {
+    const newItem = this.createBaseCommissionItem();
+    this.baseCommissionItems.push(newItem);
+    this.saveConditionDataToWorkflow();
+    this.notificationService.successBubble('已新增包底抽成項目');
+  }
+
+  onAddGraduatedItem(): void {
+    const newItem = this.createGraduatedItem();
+    this.graduatedItems.push(newItem);
+    this.saveConditionDataToWorkflow();
+    this.notificationService.successBubble('已新增階梯式抽成項目');
+  }
+
+  onAddBaseTierItem(): void {
+    const newItem = this.createBaseTierItem();
+    this.baseTierItems.push(newItem);
+    this.saveConditionDataToWorkflow();
+    this.notificationService.successBubble('已新增包底加階梯項目');
+  }
+
   // 🎯 表格事件處理
   onTableSave(event: any, type: string): void {
     console.log(`${type} 表格儲存:`, event);
-    if (event.newData && event.newData._status !== 'new') {
-      event.newData._status = 'modified';
+
+    if (event.newData) {
+      // 🎯 檢查是否為來自 Next2 的唯讀資料
+      if (event.newData._fromNext2 && event.newData._readonly) {
+        this.notificationService.warnBubble('來自抽成設定的資料不可編輯');
+        return;
+      }
+
+      if (event.newData._status !== 'new') {
+        event.newData._status = 'modified';
+      }
     }
+
     this.saveConditionDataToWorkflow();
     this.notificationService.successBubble('條件設定已儲存');
   }
 
-  onTableEdit(event: any, type: string): void {
+  onTableEdit(event: any, type: string): boolean {
     console.log(`${type} 表格編輯:`, event);
+
+    // 🎯 檢查是否為來自 Next2 的唯讀資料
+    if (event._fromNext2 && event._readonly) {
+      this.notificationService.warnBubble('來自抽成設定的資料不可編輯');
+      return false;
+    }
+
+    return true;
   }
 
   onTableCancel(event: any, type: string): void {
@@ -920,6 +1022,13 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   onBatchDelete(selectedItems: any[], type: string): void {
     if (!selectedItems || selectedItems.length === 0) {
       this.notificationService.warnBubble('請選擇要刪除的項目');
+      return;
+    }
+
+    // 🎯 檢查是否包含來自 Next2 的唯讀資料
+    const hasReadonlyItems = selectedItems.some(item => item._fromNext2 && item._readonly);
+    if (hasReadonlyItems) {
+      this.notificationService.warnBubble('無法刪除來自抽成設定的資料');
       return;
     }
 
@@ -941,103 +1050,150 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     switch (type) {
       case 'fixedRent':
         const fixedIndex = this.fixedRentItems.findIndex(x => x.id === item.id);
-        if (fixedIndex > -1) {
-          this.fixedRentItems.splice(fixedIndex, 1);
-        }
+        if (fixedIndex > -1) this.fixedRentItems.splice(fixedIndex, 1);
         break;
       case 'baseRentHigher':
         const baseRentIndex = this.baseRentHigherItems.findIndex(x => x.id === item.id);
-        if (baseRentIndex > -1) {
-          this.baseRentHigherItems.splice(baseRentIndex, 1);
-        }
+        if (baseRentIndex > -1) this.baseRentHigherItems.splice(baseRentIndex, 1);
         break;
       case 'generalCommission':
         const generalIndex = this.generalCommissionItems.findIndex(x => x.id === item.id);
-        if (generalIndex > -1) {
-          this.generalCommissionItems.splice(generalIndex, 1);
-        }
+        if (generalIndex > -1) this.generalCommissionItems.splice(generalIndex, 1);
         break;
       case 'baseCommission':
         const baseCommIndex = this.baseCommissionItems.findIndex(x => x.id === item.id);
-        if (baseCommIndex > -1) {
-          this.baseCommissionItems.splice(baseCommIndex, 1);
-        }
+        if (baseCommIndex > -1) this.baseCommissionItems.splice(baseCommIndex, 1);
         break;
       case 'graduated':
         const gradIndex = this.graduatedItems.findIndex(x => x.id === item.id);
-        if (gradIndex > -1) {
-          this.graduatedItems.splice(gradIndex, 1);
-        }
+        if (gradIndex > -1) this.graduatedItems.splice(gradIndex, 1);
         break;
       case 'baseTier':
         const tierIndex = this.baseTierItems.findIndex(x => x.id === item.id);
-        if (tierIndex > -1) {
-          this.baseTierItems.splice(tierIndex, 1);
-        }
+        if (tierIndex > -1) this.baseTierItems.splice(tierIndex, 1);
         break;
+    }
+  }
+
+  // 🎯 儲存條件設定到工作流程
+  private saveConditionDataToWorkflow(): void {
+    const allConditionItems: ConditionItem[] = [
+      ...this.fixedRentItems,
+      ...this.baseRentHigherItems,
+      ...this.generalCommissionItems,
+      ...this.baseCommissionItems,
+      ...this.graduatedItems,
+      ...this.baseTierItems
+    ];
+
+    this.contractFlowService.saveStep4Data(allConditionItems);
+    console.log('✅ 已儲存條件設定資料到工作流程');
+  }
+
+  // 🎯 提交相關方法
+  onSubmitNext(): void {
+    this.saveConditionDataToWorkflow();
+    this.showConfirmDialog = true;
+  }
+
+  onConfirmDialogResult(confirmed: boolean): void {
+    this.showConfirmDialog = false;
+    if (confirmed) {
+      this.submitContractData();
+    }
+  }
+
+  private submitContractData(): void {
+    this.loading = true;
+    try {
+      const submitDataStructure = this.contractFlowService.generateSubmitData();
+      console.log('📋 完整提交資料結構:', submitDataStructure);
+      this.callSubmitAPI(submitDataStructure);
+    } catch (error) {
+      console.error('❌ 準備提交資料時發生錯誤:', error);
+      this.loading = false;
+      this.notificationService.errorBubble('準備提交資料時發生錯誤');
+    }
+  }
+
+  private callSubmitAPI(submitData: SubmitDataStructure): void {
+    setTimeout(() => {
+      this.loading = false;
+      this.notificationService.successBubble('契約資料提交成功！');
+      this.contractFlowService.clearAllData();
+      this.router.navigate(['account/tls/tls13010']);
+    }, 2000);
+  }
+
+  // 🎯 導航方法
+  override onCancel(): void {
+    this.saveConditionDataToWorkflow();
+    this.router.navigate(['account/tls/tls13010next2']);
+  }
+
+  onRealCancel(): void {
+    if (confirm('確定要離開契約編輯流程嗎？所有暫存資料將會保留。')) {
+      this.saveConditionDataToWorkflow();
+      this.router.navigate(['account/tls/tls13010']);
     }
   }
 
   // 🎯 工具方法
-  private getCommissionTypeName(code: string): string {
-    const option = TLS13010_DROPDOWN_OPTIONS.tltTermType.find(opt => opt.value === code);
-    return option ? option.label : `代碼 ${code}`;
-  }
-
-  getCurrentCommissionTypeName(): string {
-    const code = this.contractInfoData[0]?.tlt_term_type;
-    const option = TLS13010_DROPDOWN_OPTIONS.tltTermType.find(opt => opt.value === code);
-    return option ? option.label : code || '未載入';
-  }
-
-  hasConditionData(): boolean {
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-
-    switch (commissionType) {
-      case '1':
-        return this.fixedRentItems.length > 0;
-      case '2':
-        return this.baseRentHigherItems.length > 0;
-      case '3':
-        return this.generalCommissionItems && this.generalCommissionItems.length > 0;
-      case '4':
-        return this.baseCommissionItems.length > 0;
-      case '5':
-        return this.graduatedItems.length > 0;
-      case '6':
-        return this.baseTierItems.length > 0;
-      default:
-        return false;
-    }
-  }
-
-  getConditionItemCount(): number {
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-
-    switch (commissionType) {
-      case '1':
-        return this.fixedRentItems.filter(item => item._status !== 'deleted').length;
-      case '2':
-        return this.baseRentHigherItems.filter(item => item._status !== 'deleted').length;
-      case '3':
-        return this.generalCommissionItems ? this.generalCommissionItems.filter(item => item._status !== 'deleted').length : 0;
-      case '4':
-        return this.baseCommissionItems.filter(item => item._status !== 'deleted').length;
-      case '5':
-        return this.graduatedItems.filter(item => item._status !== 'deleted').length;
-      case '6':
-        return this.baseTierItems.filter(item => item._status !== 'deleted').length;
-      default:
-        return 0;
-    }
-  }
-
   private formatDate(date: any): string {
     if (!date) return '';
     try {
+      if (date instanceof Date) {
+        return date.toISOString().split('T')[0];
+      }
       return new Date(date).toISOString().split('T')[0];
     } catch {
       return String(date).split('T')[0] || '';
     }
+  }
+
+  private getDefaultStartDate(): string {
+    return this.contractInfoData[0]?.tlt_bdate || new Date().toISOString().split('T')[0];
+  }
+
+  private getDefaultEndDate(): string {
+    return this.contractInfoData[0]?.tlt_edate || new Date().toISOString().split('T')[0];
+  }
+
+  // 🎯 取得欄位值的輔助方法
+  getFieldValue(rowData: any, field: string): string {
+    if (!rowData || !field) return '';
+
+    const value = rowData[field];
+    if (value === null || value === undefined) return '';
+
+    if (field.includes('date') && value instanceof Date) {
+      return value.toISOString().split('T')[0];
+    }
+
+    return value.toString();
+  }
+
+  // 🎯 檢查欄位是否為唯讀
+  isFieldReadonly(rowData: any, field: string): boolean {
+    if (!rowData._fromNext2) return false;
+
+    // 🎯 來自 Next2 的資料，三個欄位設為唯讀
+    const readonlyFields = ['tlt_id', 'tlt_id_desc', 'cag_taxtype'];
+    return readonlyFields.includes(field);
+  }
+
+  // 🎯 取得欄位樣式
+  getFieldClass(rowData: any, field: string): string {
+    let classes = '';
+
+    if (rowData._fromNext2) {
+      classes += 'from-next2 ';
+    }
+
+    if (this.isFieldReadonly(rowData, field)) {
+      classes += 'readonly-field ';
+    }
+
+    return classes.trim();
   }
 }

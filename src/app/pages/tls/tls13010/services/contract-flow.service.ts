@@ -151,14 +151,28 @@ export class ContractFlowService {
    * 儲存第3步資料（抽成設定）
    */
   saveStep3Data(data: CommissionItem[]): void {
+    console.log('💾 儲存 Step3 資料到工作流程...');
+    console.log('📋 輸入資料:', data);
+    console.log('📋 輸入資料類型:', typeof data);
+    console.log('📋 是否為陣列:', Array.isArray(data));
+
     if (this.contractData.contractId) {
       this.contractData.step3 = Array.isArray(data) ? data : [data];
       this.contractData.metadata.lastModified = new Date();
       this.contractData.metadata.version += 1;
+
+      console.log('✅ 已儲存 Step3 資料:');
+      console.log('   - 項目數量:', this.contractData.step3.length);
+      console.log('   - 儲存的資料:', this.contractData.step3);
+
       this.updateWorkflowStatus(WorkflowStep.COMMISSION);
       this.saveToStorage();
 
-      console.log('儲存第3步資料:', data);
+      // 🔍 Debug: 驗證儲存結果
+      const savedData = this.getStep3Data();
+      console.log('🔍 驗證儲存結果:', savedData);
+    } else {
+      console.error('❌ 沒有 contractId，無法儲存 Step3 資料');
     }
   }
 
@@ -606,9 +620,19 @@ export class ContractFlowService {
    * 取得第3步資料（抽成設定）
    */
   getStep3Data(): CommissionItem[] {
-    return this.contractData.step3;
-  }
+    console.log('🔍 取得 Step3 資料...');
+    console.log('📋 contractData.step3:', this.contractData.step3);
+    console.log('📋 資料類型:', typeof this.contractData.step3);
+    console.log('📋 是否為陣列:', Array.isArray(this.contractData.step3));
 
+    if (this.contractData.step3) {
+      console.log('✅ 找到 Step3 資料，項目數量:', this.contractData.step3.length);
+      return this.contractData.step3;
+    } else {
+      console.warn('❌ 沒有找到 Step3 資料');
+      return [];
+    }
+  }
   /**
    * 取得第4步資料（條件設定） - 新增別名方法
    */

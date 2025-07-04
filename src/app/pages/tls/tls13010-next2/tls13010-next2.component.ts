@@ -753,8 +753,39 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   private saveCommissionDataToWorkflow(): void {
-    this.contractFlowService.saveStep3Data(this.commissionData);
+    console.log('💾 儲存抽成資料到工作流程...');
+
+    // 🔍 Debug: 處理前的資料
+    console.log('📋 處理前的抽成資料:', this.commissionData);
+
+    // 確保所有資料都有正確的狀態標記
+    const processedData = this.commissionData.map(item => ({
+      ...item,
+      _status: item._status || 'original',
+      discountSettingItems: item.discountSettingItems.map(detail => ({
+        ...detail,
+        _status: detail._status || 'original'
+      })),
+      annualPerformanceItems: item.annualPerformanceItems.map(detail => ({
+        ...detail,
+        _status: detail._status || 'original'
+      })),
+      discountLevelItems: item.discountLevelItems.map(detail => ({
+        ...detail,
+        _status: detail._status || 'original'
+      }))
+    }));
+
+    console.log('📋 處理後的抽成資料:', processedData);
+
+    // 儲存到工作流程服務
+    this.contractFlowService.saveStep3Data(processedData);
+
+    // 🔍 Debug: 驗證儲存結果
+    const savedData = this.contractFlowService.getStep3Data();
+    console.log('✅ 驗證儲存結果:', savedData);
   }
+
 
   changeSettingTab(tab: string): void {
     console.log('🔄 切換標籤，從', this.selectedSettingTab, '到', tab);
@@ -1735,21 +1766,40 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   // 導航方法
   onSubmitNext(): void {
+    console.log('🚀 Next2 提交，開始儲存資料...');
+
+    // 🔍 Debug: 檢查目前的抽成資料
+    console.log('📋 目前抽成資料:', this.commissionData);
+    console.log('📋 抽成資料數量:', this.commissionData.length);
+
+    // 確保資料格式正確
+    this.commissionData.forEach((item, index) => {
+      console.log(`📋 抽成項目 ${index + 1}:`, {
+        id: item.id,
+        commissionType: item.commissionType,
+        commissionTypeName: item.commissionTypeName,
+        taxType: item.taxType,
+        discountSettingItems: item.discountSettingItems.length,
+        annualPerformanceItems: item.annualPerformanceItems.length,
+        discountLevelItems: item.discountLevelItems.length,
+        _status: item._status
+      });
+    });
+
+    // 🎯 重要：確保正確儲存到工作流程
     this.saveCommissionDataToWorkflow();
 
     const hasCommissionItems = this.commissionData.length > 0;
-
     if (!hasCommissionItems) {
       this.notificationService.warnBubble('請至少設定一個抽成項目');
       return;
     }
 
-    Step3DataChangeTracker.setCurrentTalentId(this.currentTalentId);
+    // 🔍 Debug: 檢查儲存後的資料
+    const savedData = this.contractFlowService.getStep3Data();
+    console.log('✅ 已儲存的 Step3 資料:', savedData);
 
-    console.log('🧪 測試 Step3 變更追蹤...');
-    const step3Changes = Step3DataChangeTracker.generateStep3ChangeSummary(this.commissionData);
-    console.log('📊 Step3 變更追蹤結果:', step3Changes);
-
+    // 導航到 Next3
     this.router.navigate(['account/tls/tls13010next3']);
   }
 

@@ -280,7 +280,7 @@ export interface DiscountSettingItem {
   cag_barcode: string;
   startDate: Date;      // 對應 TLTTALENT_CHARGED.tlt_bdate
   endDate: Date;        // 對應 TLTTALENT_CHARGED.tlt_edate
-  rate: number;
+  rate?: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
 }
 export interface AnnualPerformanceItem {
@@ -316,6 +316,10 @@ export interface BaseConditionItem {
   talent_id: string;
   _status?: 'original' | 'new' | 'modified' | 'deleted';
   _isNew?: boolean;
+
+  _fromNext2?: boolean; // 🎯 新增：標記是否來自 Next2
+
+  _readonly?: boolean;  // 🎯 新增：標記是否唯讀
 }
 
 // 一般抽成條件
@@ -343,7 +347,9 @@ export interface BaseRentHigherCondition extends BaseConditionItem {
   cag_bdate: string;        // 帳務起始日
   cag_edate: string;        // 帳務結束日
   base_rent: number;        // 租金金額
-  cag_charge_rate: number;  // 抽成率
+  cag_charge_rate?: number;  // 抽成率
+
+  _fromNext2?: boolean; // 標記是否來自 Next2 的抽成設定
 }
 
 // 包底抽成條件 (對應 TLTTALENT_LIMIT)
@@ -1341,6 +1347,67 @@ export class Step3DataChangeTracker {
     return nextYear.toISOString().split('T')[0];
   }
 }
+
+export class Next3ComponentHelper {
+
+  /**
+   * 安全地取得 ID 字串
+   */
+  static safeGetIdString(id: number | string | undefined): string {
+    if (id === undefined || id === null) {
+      return '';
+    }
+    return id.toString();
+  }
+
+  /**
+   * 安全地分割 ID 字串
+   */
+  static safeSpiltId(id: number | string | undefined): string[] {
+    const idStr = this.safeGetIdString(id);
+    return idStr ? idStr.split('_') : [];
+  }
+
+  /**
+   * 檢查是否為來自 Next2 的有效 ID
+   */
+  static isValidNext2Id(id: number | string | undefined): boolean {
+    const parts = this.safeSpiltId(id);
+    return parts.length >= 3 && parts[0] === 'next2';
+  }
+
+  /**
+   * 從 Next2 ID 取得原始 commission ID
+   */
+  static extractCommissionIdFromNext2(id: number | string | undefined): string {
+    const parts = this.safeSpiltId(id);
+    return parts.length >= 2 ? parts[1] : '';
+  }
+
+  /**
+   * 從 Next2 ID 取得明細 ID
+   */
+  static extractDetailIdFromNext2(id: number | string | undefined): string {
+    const parts = this.safeSpiltId(id);
+    return parts.length >= 3 ? parts[2] : '';
+  }
+
+  /**
+   * 安全地取得數值
+   */
+  static safeGetNumber(value: number | undefined): number {
+    return value !== undefined ? value : 0;
+  }
+
+  /**
+   * 檢查抽成類型是否需要整合 Next2 資料
+   */
+  static shouldIntegrateNext2Data(commissionType: string | undefined): boolean {
+    return commissionType === '2' || commissionType === '3';
+  }
+}
+
+
 
 export type BaseRentHigherItem = BaseRentHigherCondition;
 export type BaseCommissionItem = BaseCommissionCondition;
