@@ -9,8 +9,132 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="專櫃編號" controlName="tlt_no" [control]="queryForm.controls.tlt_no"
+            <app-multi-select
+              label="專櫃編號"
+              [options]="tlt_noListOption"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_noList"
+              [submitted]="submitted"
+            ></app-multi-select>  
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="專櫃名稱" controlName="tlt_name" [control]="queryForm.controls.tlt_name"
               [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="位置編號"
+              [options]="locationOption"
+              optionLabel="Name"
+              optionValue="No"
+              [control]="queryForm.controls.location_noList"
+              [submitted]="submitted"
+            ></app-multi-select>  
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="區域"
+              [options]="areaOption"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.area_noList"
+              [submitted]="submitted"
+            ></app-multi-select>  
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="樓層"
+              [options]="floorOption"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.tlt_floorList"
+              [submitted]="submitted"
+            ></app-multi-select>  
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="大分類編號"
+              [options]="bus_typeOption"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.bus_typeList"
+              [submitted]="submitted"
+            ></app-multi-select>  
+          </div>
+        </div>
+
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range-quick label="合約日期"
+            [startControl]="queryForm.controls.tlt_bdate" [endControl]="queryForm.controls.tlt_edate"
+            [submitted]="submitted" />
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="組織編號"
+              [options]="orgOption"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.org_idList"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="營業狀態"
+              [options]="tlt_openflagOption"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_openflagList"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+        </div>
+
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="合約附號_起始" controlName="contract_subno_start" [control]="queryForm.controls.contract_subno_start"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="合約附號_終止" controlName="contract_subno_end" [control]="queryForm.controls.contract_subno_end"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="申請案件狀態"
+              [options]="apply_statusOption"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.apply_statusList"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>    
+        </div>
+
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="申請狀態"
+              [options]="approveOption"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.approve_statusList"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="票據收票狀態"
+              [options]="get_ticket_statusOption"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.approve_statusList"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
@@ -18,13 +142,9 @@
               [options]="ticket_typeOption"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.ticket_type"
+              [control]="queryForm.controls.ticket_type_List"
               [submitted]="submitted"
             ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="票據編號" controlName="ticket_no" [control]="queryForm.controls.ticket_no"
-              [submitted]="submitted"></app-input-text>
           </div>
         </div>
 
@@ -35,48 +155,9 @@
               [options]="ticket_kindOption"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.ticket_kind"
+              [control]="queryForm.controls.ticket_kind_List"
               [submitted]="submitted"
             ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="保證票金額" controlName="ticket_amount" [control]="queryForm.controls.ticket_amount"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="票據到期日期"
-            [control]="queryForm.controls.expiry_date" controlName="expiry_date" [submitted]="submitted" />
-          </div>
-        </div>
-
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="票據收票狀態"
-              [options]="get_ticket_statusOption"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.get_ticket_status"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="繳票日期"
-            [control]="queryForm.controls.get_date" controlName="get_date" [submitted]="submitted" />
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="退票日期"
-            [control]="queryForm.controls.return_date" controlName="return_date" [submitted]="submitted" />
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="封存日期"
-            [control]="queryForm.controls.close_date" controlName="close_date" [submitted]="submitted" />
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="保證票摘要-合約主檔" controlName="ticket_remarks" [control]="queryForm.controls.ticket_remarks"
-              [submitted]="submitted"></app-input-text>
           </div>
         </div>
         
