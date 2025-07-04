@@ -3,7 +3,6 @@ import { FormGroup } from '@angular/forms';
 import { TLS51130Service } from '../../../service/api/tls/tls51130.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
 import { DropDownListService } from '../../../service/api/dropdownservice/dropDownList.service';
 
 @Component({
