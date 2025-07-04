@@ -1,9 +1,7 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { FormGroup } from '@angular/forms';
 import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
 @Component({

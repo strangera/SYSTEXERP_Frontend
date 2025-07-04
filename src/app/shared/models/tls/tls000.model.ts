@@ -197,6 +197,8 @@ export interface POS2004 {
   'UPD_USR_No': string;
   'UPD_USR_Name': string;
 
+  'STK_CurrentQty': number; //庫存量(僅顯示)
+
   'CanDel': boolean;  //能否刪除(僅顯示)
 }
 

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
@@ -61,6 +61,10 @@ dataForm = this.formBuilder.nonNullable.group({
      this.setupAutoAmountCalculation(); // ⬅️ 新增這行
      this.setupRemainAmountCalculation(); 
        this.dataForm.get('TXN_Ret_No')?.disable();
+       this.dataForm.get('PUR_VoucherType')?.disable();
+       this.dataForm.get('PUR_TaxType')?.disable();
+       this.dataForm.get('Inv_Tax')?.disable();
+        this.dataForm.get('History_RetAmt')?.disable();
   }
 
   // ✅ 僅允許特定欄位可編輯
