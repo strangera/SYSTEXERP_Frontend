@@ -145,9 +145,19 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   forceRegenerateData(): void {
     console.log('🔄 強制重新生成資料');
     const commissionType = this.contractInfoData[0]?.tlt_term_type;
-    if (this.hasNext2Data && commissionType === '3') {
-      this.generateConditionDataFromNext2(commissionType);
-      this.notificationService.infoBubble(`已重新生成 ${this.generalCommissionItems.length} 個條件設定項目`);
+
+    if (this.hasNext2Data && this.shouldIntegrateNext2Data(commissionType || '')) {
+      this.generateConditionDataFromNext2(commissionType || '');
+      this.removeDuplicateItems();
+
+      const itemCount = this.getConditionItemCount();
+      const message = `已重新生成 ${itemCount} 個條件設定項目`;
+      console.log('✅', message);
+      this.notificationService.infoBubble(message);
+
+      this.cdr.detectChanges();
+    } else {
+      this.notificationService.warnBubble('沒有 Next2 資料或此抽成類型不需要整合');
     }
   }
 
@@ -163,47 +173,68 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     console.log('3️⃣ 合約資訊:', this.contractInfoData);
     console.log('4️⃣ 抽成別:', commissionType);
     console.log('5️⃣ 是否應該整合:', this.shouldIntegrateNext2Data(commissionType || ''));
+
     console.log('6️⃣ Next2 資料狀態:', {
       hasNext2Data: this.hasNext2Data,
       commissionDataFromNext2Length: this.commissionDataFromNext2.length,
+      baseRentHigherItemsLength: this.baseRentHigherItems.length,
       generalCommissionItemsLength: this.generalCommissionItems.length
     });
 
-    // 🎯 新增：詳細檢查每個 Next2 項目
-    if (this.hasNext2Data) {
-      console.log('🔍 詳細檢查 Next2 資料:');
-      this.commissionDataFromNext2.forEach((item, index) => {
-        console.log(`   項目 ${index + 1}:`, {
-          id: item.id,
-          commissionType: item.commissionType,
-          commissionTypeName: item.commissionTypeName,
-          taxType: item.taxType,
-          discountSettingItems: item.discountSettingItems?.length || 0,
-          annualPerformanceItems: item.annualPerformanceItems?.length || 0,
-          discountLevelItems: item.discountLevelItems?.length || 0
+    // 🎯 針對底租抽成取高者的特殊診斷
+    if (commissionType === '2') {
+      console.log('🔍 === 底租抽成取高者特殊診斷 ===');
+      console.log('📋 baseRentHigherItems:', this.baseRentHigherItems);
+      console.log('📋 hasNext2Data:', this.hasNext2Data);
+      console.log('📋 commissionDataFromNext2:', this.commissionDataFromNext2);
+
+      if (this.hasNext2Data && this.commissionDataFromNext2.length > 0) {
+        console.log('🔍 詳細檢查每個 Next2 項目:');
+        this.commissionDataFromNext2.forEach((item, index) => {
+          console.log(`   項目 ${index + 1}:`, {
+            id: item.id,
+            commissionType: item.commissionType,
+            commissionTypeName: item.commissionTypeName,
+            discountSettingItems: item.discountSettingItems?.length || 0,
+            discountSettingItemsContent: item.discountSettingItems
+          });
         });
-      });
+      }
     }
 
     console.log('🔍 === 診斷完成 ===');
   }
+
   ngOnInit(): void {
-    console.log('TLS13010Next3Component 初始化開始');
+    console.log('🚀 TLS13010Next3Component 初始化開始');
     this.initializePage('TLS13010', this.dataForm);
 
     // 🎯 載入工作流程資料
     this.loadWorkflowData();
 
-    // 🎯 延遲執行診斷，確保資料載入完成
+    // 🎯 延遲執行診斷和補救措施
     setTimeout(() => {
+      console.log('🔍 延遲執行診斷...');
       this.quickDiagnosis();
 
-      // 🎯 如果沒有資料，嘗試強制生成
-      if (this.hasNext2Data && this.generalCommissionItems.length === 0) {
-        console.log('⚠️ 檢測到 Next2 資料但沒有條件設定，嘗試強制生成');
+      // 🎯 檢查是否需要補救
+      const commissionType = this.contractInfoData[0]?.tlt_term_type;
+      const shouldHaveData = this.hasNext2Data && this.shouldIntegrateNext2Data(commissionType || '');
+      const hasData = this.getConditionItemCount() > 0;
+
+      console.log('🔍 補救檢查:', {
+        commissionType: commissionType,
+        hasNext2Data: this.hasNext2Data,
+        shouldHaveData: shouldHaveData,
+        hasData: hasData,
+        conditionItemCount: this.getConditionItemCount()
+      });
+
+      if (shouldHaveData && !hasData) {
+        console.log('⚠️ 檢測到應該有資料但沒有，執行補救措施');
         this.forceRegenerateData();
       }
-    }, 500);
+    }, 1000); // 延長等待時間
   }
 
 
@@ -253,25 +284,47 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   }
 
   private removeDuplicateItems(): void {
-    console.log('🧹 開始清理重複資料...');
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
 
-    const uniqueItems: GeneralCommissionCondition[] = [];
-    const seenIds = new Set();
+    if (commissionType === '2') {
+      // 清理底租抽成取高者重複項目
+      const uniqueItems: BaseRentHigherCondition[] = [];
+      const seenKeys = new Set();
 
-    this.generalCommissionItems.forEach(item => {
-      const key = `${item.tlt_id}_${item.tlt_id_desc}_${item.cag_barcode}`;
-      if (!seenIds.has(key)) {
-        seenIds.add(key);
-        uniqueItems.push(item);
-      } else {
-        console.log('🗑️ 移除重複項目:', item);
+      this.baseRentHigherItems.forEach(item => {
+        const key = `${item.tlt_id}_${item.cag_bdate}_${item.cag_edate}`;
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key);
+          uniqueItems.push(item);
+        }
+      });
+
+      const removedCount = this.baseRentHigherItems.length - uniqueItems.length;
+      this.baseRentHigherItems = uniqueItems;
+
+      if (removedCount > 0) {
+        console.log(`🧹 底租抽成取高者：清理了 ${removedCount} 個重複項目`);
       }
-    });
+    } else if (commissionType === '3') {
+      // 清理一般抽成重複項目
+      const uniqueItems: GeneralCommissionCondition[] = [];
+      const seenKeys = new Set();
 
-    const removedCount = this.generalCommissionItems.length - uniqueItems.length;
-    this.generalCommissionItems = uniqueItems;
+      this.generalCommissionItems.forEach(item => {
+        const key = `${item.tlt_id}_${item.tlt_id_desc}_${item.cag_barcode}_${item.cag_bdate}`;
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key);
+          uniqueItems.push(item);
+        }
+      });
 
-    console.log(`✅ 清理完成，移除 ${removedCount} 個重複項目`);
+      const removedCount = this.generalCommissionItems.length - uniqueItems.length;
+      this.generalCommissionItems = uniqueItems;
+
+      if (removedCount > 0) {
+        console.log(`🧹 一般抽成：清理了 ${removedCount} 個重複項目`);
+      }
+    }
   }
 
   // 🎯 載入 Next2 的抽成設定資料
@@ -288,26 +341,68 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       console.log('✅ 載入 Next2 抽成設定資料成功');
       console.log('📋 資料數量:', this.commissionDataFromNext2.length);
 
-      // 🎯 重要：立即生成條件設定資料
-      const commissionType = this.contractInfoData[0]?.tlt_term_type;
-      console.log('🏷️ 當前抽成類型:', commissionType);
+      // 🎯 重要：立即檢查合約資訊是否已載入
+      if (this.contractInfoData && this.contractInfoData.length > 0) {
+        const commissionType = this.contractInfoData[0]?.tlt_term_type;
+        console.log('🏷️ 當前抽成類型:', commissionType);
 
-      if (this.shouldIntegrateNext2Data(commissionType || '')) {
-        console.log('🔄 立即生成條件設定資料...');
-        this.generateConditionDataFromNext2(commissionType || '');
+        if (this.shouldIntegrateNext2Data(commissionType || '')) {
+          console.log('🔄 立即生成條件設定資料...');
+          this.generateConditionDataFromNext2(commissionType || '');
 
-        // 🎯 確保資料載入完成
-        if (this.generalCommissionItems.length > 0) {
-          this.conditionDataLoaded = true;
-          this.dataLoaded = true;
-          console.log('✅ 條件設定資料載入完成');
+          // 🎯 檢查生成結果
+          const itemCount = this.getConditionItemCount();
+          console.log('📊 生成的條件設定數量:', itemCount);
+
+          if (itemCount > 0) {
+            this.conditionDataLoaded = true;
+            this.dataLoaded = true;
+            console.log('✅ 條件設定資料載入完成');
+          } else {
+            console.warn('⚠️ 沒有生成任何條件設定資料');
+          }
+        } else {
+          console.log('ℹ️ 此抽成類型不需要整合 Next2 資料');
         }
+      } else {
+        console.warn('⚠️ 合約資訊尚未載入，延遲生成條件設定');
+        // 🎯 延遲生成，等待合約資訊載入
+        setTimeout(() => {
+          this.generateConditionDataFromNext2AfterContractLoad();
+        }, 200);
       }
     } else {
       console.log('📭 沒有 Next2 抽成設定資料');
       this.hasNext2Data = false;
     }
   }
+
+  private generateConditionDataFromNext2AfterContractLoad(): void {
+    console.log('🔄 合約資訊載入後生成條件設定...');
+
+    if (this.contractInfoData && this.contractInfoData.length > 0) {
+      const commissionType = this.contractInfoData[0]?.tlt_term_type;
+      console.log('🏷️ 延遲取得的抽成類型:', commissionType);
+
+      if (this.shouldIntegrateNext2Data(commissionType || '')) {
+        console.log('🔄 延遲生成條件設定資料...');
+        this.generateConditionDataFromNext2(commissionType || '');
+
+        const itemCount = this.getConditionItemCount();
+        console.log('📊 延遲生成的條件設定數量:', itemCount);
+
+        if (itemCount > 0) {
+          this.conditionDataLoaded = true;
+          this.dataLoaded = true;
+          this.cdr.detectChanges();
+          console.log('✅ 延遲條件設定資料載入完成');
+        }
+      }
+    } else {
+      console.error('❌ 合約資訊仍未載入');
+    }
+  }
+
   private loadConditionData(): void {
     console.log('🔍 === 開始載入其他條件設定資料 ===');
 
@@ -315,11 +410,18 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     console.log('🏷️ 當前抽成類型:', commissionType);
 
     // 🎯 重要：如果已經有 Next2 資料，不要覆蓋
-    if (this.hasNext2Data && commissionType === '3' && this.generalCommissionItems.length > 0) {
-      console.log('✅ 已有 Next2 生成的條件設定資料，跳過載入');
-      this.conditionDataLoaded = true;
-      this.dataLoaded = true;
-      return;
+    if (this.hasNext2Data) {
+      if (commissionType === '2' && this.baseRentHigherItems.length > 0) {
+        console.log('✅ 已有 Next2 生成的底租抽成取高者資料，跳過載入');
+        this.conditionDataLoaded = true;
+        this.dataLoaded = true;
+        return;
+      } else if (commissionType === '3' && this.generalCommissionItems.length > 0) {
+        console.log('✅ 已有 Next2 生成的一般抽成資料，跳過載入');
+        this.conditionDataLoaded = true;
+        this.dataLoaded = true;
+        return;
+      }
     }
 
     // 🎯 第一優先：檢查是否有 Step4 暫存資料
@@ -346,10 +448,15 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     this.dataLoaded = true;
   }
 
-
   // 🎯 檢查是否需要整合 Next2 資料
   private shouldIntegrateNext2Data(commissionType: string): boolean {
-    return commissionType === '3'; // 只有一般抽成需要整合
+    // 🎯 重要：底租抽成取高者 (類型 2) 和一般抽成 (類型 3) 都需要整合
+    const shouldIntegrate = commissionType === '2' || commissionType === '3';
+    console.log('🔍 檢查是否需要整合 Next2 資料:', {
+      commissionType: commissionType,
+      shouldIntegrate: shouldIntegrate
+    });
+    return shouldIntegrate;
   }
 
   // 🎯 從 Next2 資料生成條件設定
@@ -358,29 +465,152 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     console.log('📋 抽成別:', commissionType);
     console.log('📋 Next2 資料:', this.commissionDataFromNext2);
 
-    if (commissionType !== '3') {
-      console.log('ℹ️ 非一般抽成類型，不進行整合');
+    if (!this.shouldIntegrateNext2Data(commissionType)) {
+      console.log('ℹ️ 此抽成類型不需要整合 Next2 資料');
       return;
     }
 
-    // 🎯 重要：確保清空現有資料
-    this.generalCommissionItems = [];
-    console.log('🧹 已清空現有的 generalCommissionItems');
+    // 🎯 根據抽成類型清空對應的資料
+    if (commissionType === '2') {
+      this.baseRentHigherItems = [];
+      console.log('🧹 已清空 baseRentHigherItems');
+    } else if (commissionType === '3') {
+      this.generalCommissionItems = [];
+      console.log('🧹 已清空 generalCommissionItems');
+    }
 
-    // 🎯 過濾並處理 Next2 資料
+    // 🎯 過濾有效的抽成資料
     const validCommissionData = this.commissionDataFromNext2.filter(commission => {
       const isValid = commission &&
         (commission.commissionType || commission.id) &&
         commission._status !== 'deleted';
 
-      if (!isValid) {
-        console.log('⚠️ 跳過無效的抽成項目:', commission);
-      }
+      console.log('📋 抽成資料有效性檢查:', {
+        commission: commission,
+        hasCommissionType: !!(commission.commissionType || commission.id),
+        status: commission._status,
+        isValid: isValid
+      });
 
       return isValid;
     });
 
     console.log('📋 有效的抽成項目數量:', validCommissionData.length);
+    console.log('📋 有效的抽成項目內容:', validCommissionData);
+
+    // 🎯 根據抽成類型生成對應的條件設定
+    if (commissionType === '2') {
+      console.log('🔄 開始生成底租抽成取高者條件設定');
+      this.generateBaseRentHigherConditions(validCommissionData);
+    } else if (commissionType === '3') {
+      console.log('🔄 開始生成一般抽成條件設定');
+      this.generateGeneralCommissionConditions(validCommissionData);
+    }
+
+    // 🎯 檢查生成結果
+    const finalItemCount = this.getConditionItemCount();
+    console.log('📊 最終生成的條件設定數量:', finalItemCount);
+
+    if (commissionType === '2') {
+      console.log('📋 底租抽成取高者最終項目:', this.baseRentHigherItems);
+    } else if (commissionType === '3') {
+      console.log('📋 一般抽成最終項目:', this.generalCommissionItems);
+    }
+
+    console.log('✅ 條件設定資料生成完成');
+
+    // 🎯 確保 UI 更新
+    this.conditionDataLoaded = true;
+    this.dataLoaded = true;
+    this.cdr.detectChanges();
+  }
+
+  // 🎯 新增：生成底租抽成取高者條件設定
+  private generateBaseRentHigherConditions(validCommissionData: CommissionItem[]): void {
+    console.log('🔄 === 生成底租抽成取高者條件設定 ===');
+    console.log('📋 輸入的有效抽成資料:', validCommissionData);
+
+    // 🎯 確保清空現有資料
+    this.baseRentHigherItems = [];
+    console.log('🧹 已清空 baseRentHigherItems');
+
+    validCommissionData.forEach((commission, index) => {
+      console.log(`🔄 處理抽成項目 ${index + 1}:`, {
+        id: commission.id,
+        commissionType: commission.commissionType,
+        commissionTypeName: commission.commissionTypeName,
+        discountSettingItems: commission.discountSettingItems?.length || 0,
+        discountSettingItemsDetail: commission.discountSettingItems
+      });
+
+      // 🎯 處理折扣設定明細
+      if (commission.discountSettingItems && Array.isArray(commission.discountSettingItems)) {
+        const validDiscountItems = commission.discountSettingItems.filter(item => {
+          const isValid = item && item._status !== 'deleted';
+          console.log(`   - 折扣項目檢查:`, {
+            item: item,
+            isValid: isValid,
+            status: item?._status
+          });
+          return isValid;
+        });
+
+        console.log(`📋 有效的折扣設定項目數量: ${validDiscountItems.length}`);
+
+        if (validDiscountItems.length > 0) {
+          validDiscountItems.forEach((discount, discountIndex) => {
+            console.log(`   🔄 處理折扣項目 ${discountIndex + 1}:`, discount);
+
+            const baseRentHigherItem: BaseRentHigherCondition = {
+              id: `from_next2_base_rent_${commission.id}_${discount.id || discountIndex}`,
+              talent_id: this.currentTalentId,
+              tlt_id: commission.commissionType || '0',
+              cag_bdate: this.formatDate(discount.startDate) || this.getDefaultStartDate(),
+              cag_edate: this.formatDate(discount.endDate) || this.getDefaultEndDate(),
+              base_rent: 0, // 預設租金，可編輯
+              cag_charge_rate: discount.rate || 0, // 來自 Next2 的抽成率
+              _status: 'original',
+              _fromNext2: true,
+              _readonly: false // 租金部分可以編輯
+            };
+
+            this.baseRentHigherItems.push(baseRentHigherItem);
+            console.log(`   ✅ 已新增底租抽成取高者項目:`, baseRentHigherItem);
+          });
+        } else {
+          console.log(`   📭 抽成項目 ${index + 1} 沒有有效的折扣設定明細`);
+        }
+      } else {
+        console.log(`   📭 抽成項目 ${index + 1} 沒有折扣設定明細陣列`);
+      }
+
+      // 🎯 如果沒有折扣設定明細，建立一個基本項目
+      if (!commission.discountSettingItems || commission.discountSettingItems.length === 0) {
+        const baseRentHigherItem: BaseRentHigherCondition = {
+          id: `from_next2_base_rent_main_${commission.id}`,
+          talent_id: this.currentTalentId,
+          tlt_id: commission.commissionType || '0',
+          cag_bdate: this.getDefaultStartDate(),
+          cag_edate: this.getDefaultEndDate(),
+          base_rent: 0,
+          cag_charge_rate: 0,
+          _status: 'original',
+          _fromNext2: true,
+          _readonly: false
+        };
+
+        this.baseRentHigherItems.push(baseRentHigherItem);
+        console.log(`   ✅ 已新增基本底租抽成取高者項目:`, baseRentHigherItem);
+      }
+    });
+
+    console.log('📋 最終底租抽成取高者條件設定數量:', this.baseRentHigherItems.length);
+    console.log('📋 最終底租抽成取高者條件設定內容:', this.baseRentHigherItems);
+  }
+
+  // 🎯 修正：生成一般抽成條件設定
+  private generateGeneralCommissionConditions(validCommissionData: CommissionItem[]): void {
+    console.log('🔄 生成一般抽成條件設定');
 
     validCommissionData.forEach((commission, index) => {
       console.log(`🔄 處理抽成項目 ${index + 1}:`, {
@@ -418,11 +648,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
               cag_charge_rate: discount.rate || 0,
               _status: 'original',
               _fromNext2: true,
-              _readonly: true
+              _readonly: true // 🎯 三個欄位唯讀
             };
 
             this.generalCommissionItems.push(detailItem);
-            console.log(`✅ 新增折扣設定明細: ${detailItem.tlt_id_desc} - ${detailItem.cag_barcode}`);
+            console.log(`✅ 新增一般抽成明細: ${detailItem.tlt_id_desc} - ${detailItem.cag_barcode}`);
           });
         }
       }
@@ -509,22 +739,13 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
         };
 
         this.generalCommissionItems.push(mainItem);
-        console.log(`✅ 新增主要抽成項目: ${mainItem.tlt_id_desc}`);
+        console.log(`✅ 新增主要一般抽成項目: ${mainItem.tlt_id_desc}`);
       }
     });
 
-    console.log('✅ 條件設定資料生成完成');
-    console.log('📋 最終 generalCommissionItems 數量:', this.generalCommissionItems.length);
-
-    // 🎯 重要：確保 UI 更新
-    this.conditionDataLoaded = true;
-    this.dataLoaded = true;
-
-    // 🎯 強制 Angular 檢測變更
-    if (this.cdr) {
-      this.cdr.detectChanges();
-    }
+    console.log('📋 一般抽成條件設定數量:', this.generalCommissionItems.length);
   }
+
 
 
   // 🎯 從 Step4 暫存載入條件資料
@@ -612,8 +833,13 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
         console.log('✅ 初始化固定租金項目');
         break;
       case '2':
-        this.baseRentHigherItems = [this.createBaseRentHigherItem()];
-        console.log('✅ 初始化底租抽成取高者項目');
+        // 🎯 底租抽成取高者：如果沒有 Next2 資料才建立空項目
+        if (!this.hasNext2Data) {
+          this.baseRentHigherItems = [this.createBaseRentHigherItem()];
+          console.log('✅ 初始化底租抽成取高者項目');
+        } else {
+          console.log('ℹ️ 已有 Next2 資料，不建立空的底租抽成取高者項目');
+        }
         break;
       case '3':
         // 🎯 一般抽成：如果沒有 Next2 資料才建立空項目
@@ -877,17 +1103,38 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   // 🎯 檢查是否有來自 Next2 的資料
   hasNext2IntegrationData(): boolean {
     const commissionType = this.contractInfoData[0]?.tlt_term_type;
-    return commissionType === '3' && this.hasNext2Data;
+    return this.shouldIntegrateNext2Data(commissionType || '') && this.hasNext2Data;
   }
 
-  // 🎯 取得來自 Next2 的項目數量
+  getNext2IntegrationMessage(): string {
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
+    const commissionName = this.getCurrentCommissionTypeName();
+
+    if (commissionType === '2') {
+      return `已整合來自「抽成設定」的折扣資料到「${commissionName}」，抽成率唯讀（來自Next2），租金可編輯`;
+    } else if (commissionType === '3') {
+      return `已整合來自「抽成設定」的抽成資料到「${commissionName}」，抽成類別、名稱、稅別為唯讀`;
+    }
+    return '';
+  }
+
+  // 🎯 修正：取得來自 Next2 的項目數量
   getNext2ItemCount(): number {
-    return this.generalCommissionItems.filter(item => item._fromNext2).length;
-  }
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
 
+    switch (commissionType) {
+      case '2':
+        return this.baseRentHigherItems.filter(item => item._fromNext2).length;
+      case '3':
+        return this.generalCommissionItems.filter(item => item._fromNext2).length;
+      default:
+        return 0;
+    }
+  }
   // 🎯 取得新增的項目數量
   getNewItemCount(): number {
     const commissionType = this.contractInfoData[0]?.tlt_term_type;
+
     switch (commissionType) {
       case '1':
         return this.fixedRentItems.filter(item => item._status === 'new').length;
@@ -909,6 +1156,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   // 🎯 取得總項目數量
   getConditionItemCount(): number {
     const commissionType = this.contractInfoData[0]?.tlt_term_type;
+
     switch (commissionType) {
       case '1':
         return this.fixedRentItems.filter(item => item._status !== 'deleted').length;
@@ -927,11 +1175,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     }
   }
 
+
   // 🎯 檢查是否有條件資料
   hasConditionData(): boolean {
     return this.getConditionItemCount() > 0;
   }
-
   // 🎯 取得當前抽成類型名稱
   getCurrentCommissionTypeName(): string {
     const code = this.contractInfoData[0]?.tlt_term_type;
@@ -987,10 +1235,33 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     console.log(`${type} 表格儲存:`, event);
 
     if (event.newData) {
-      // 🎯 檢查是否為來自 Next2 的唯讀資料
-      if (event.newData._fromNext2 && event.newData._readonly) {
-        this.notificationService.warnBubble('來自抽成設定的資料不可編輯');
-        return;
+      // 🎯 檢查是否為來自 Next2 的資料
+      if (event.newData._fromNext2) {
+        // 🎯 底租抽成取高者：只有租金可編輯
+        if (type === 'baseRentHigher') {
+          console.log('💡 底租抽成取高者資料，租金可編輯，抽成率來自 Next2');
+
+          // 🎯 檢查是否有人試圖修改抽成率
+          if (event.oldData.cag_charge_rate !== event.newData.cag_charge_rate) {
+            this.notificationService.warnBubble('抽成率來自抽成設定，無法編輯');
+            event.newData.cag_charge_rate = event.oldData.cag_charge_rate; // 還原
+          }
+        }
+        // 🎯 一般抽成：三個欄位唯讀
+        else if (type === 'generalCommission') {
+          const readonlyFields = ['tlt_id', 'tlt_id_desc', 'cag_taxtype'];
+          const changedReadonlyFields = readonlyFields.filter(field =>
+            event.oldData[field] !== event.newData[field]
+          );
+
+          if (changedReadonlyFields.length > 0) {
+            this.notificationService.warnBubble(`欄位 ${changedReadonlyFields.join(', ')} 來自抽成設定，無法編輯`);
+            // 還原唯讀欄位的值
+            changedReadonlyFields.forEach(field => {
+              event.newData[field] = event.oldData[field];
+            });
+          }
+        }
       }
 
       if (event.newData._status !== 'new') {
@@ -1196,4 +1467,30 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
     return classes.trim();
   }
+
+  checkLoadingStatus(): void {
+    console.log('🔍 === 檢查載入狀態 ===');
+
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
+    console.log('📋 抽成類型:', commissionType);
+    console.log('📋 資料載入狀態:', {
+      dataLoaded: this.dataLoaded,
+      conditionDataLoaded: this.conditionDataLoaded,
+      hasNext2Data: this.hasNext2Data,
+      commissionDataFromNext2Count: this.commissionDataFromNext2.length
+    });
+
+    console.log('📋 條件設定資料狀態:', {
+      fixedRentItemsCount: this.fixedRentItems.length,
+      baseRentHigherItemsCount: this.baseRentHigherItems.length,
+      generalCommissionItemsCount: this.generalCommissionItems.length,
+      baseCommissionItemsCount: this.baseCommissionItems.length,
+      graduatedItemsCount: this.graduatedItems.length,
+      baseTierItemsCount: this.baseTierItems.length
+    });
+
+    console.log('📋 當前應該顯示的資料類型:', this.getCurrentCommissionTypeName());
+    console.log('📋 實際條件設定項目數量:', this.getConditionItemCount());
+  }
+
 }
