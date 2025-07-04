@@ -1,11 +1,12 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { catchError, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { catchError, tap } from 'rxjs/operators';
-import { Observable } from 'rxjs';
 import { ErrorHandlerService } from '../../../shared/service/error-handler.service';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class TLS51130Service {
   private apiUrl = environment.ApiUrl;
 
@@ -14,43 +15,35 @@ export class TLS51130Service {
     private errorHandler: ErrorHandlerService
   ) {}
 
-  /**
-   * 查詢 TLS51130 主資料
-   */
-  queryTLS51130(payload: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/TLS0000/TLS5000/queryTLS51130`, payload).pipe(
+  // ✅ 查詢
+  queryTLS51130(query: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS5000/queryTLS51130`, query).pipe(
       tap(res => console.log('查詢結果:', res)),
-      catchError(this.errorHandler.handleError)
+      catchError(error => this.errorHandler.handleError(error))
     );
   }
 
-  /**
-   * 新增 TLS51130 資料
-   */
+  // ✅ 新增
   insertTLS51130(data: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/TLS0000/TLS5000/insertTLS51130`, data).pipe(
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS5000/insertTLS51130`, data).pipe(
       tap(res => console.log('新增結果:', res)),
-      catchError(this.errorHandler.handleError)
+      catchError(error => this.errorHandler.handleError(error))
     );
   }
 
-  /**
-   * 更新 TLS51130 資料
-   */
+  // ✅ 更新
   updateTLS51130(data: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/TLS0000/TLS5000/updateTLS51130`, data).pipe(
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS5000/updateTLS51130`, data).pipe(
       tap(res => console.log('更新結果:', res)),
-      catchError(this.errorHandler.handleError)
+      catchError(error => this.errorHandler.handleError(error))
     );
   }
 
-  /**
-   * 刪除 TLS51130 資料
-   */
+  // ✅ 刪除
   deleteTLS51130(idList: number[]): Observable<any> {
-    return this.http.post(`${this.apiUrl}/TLS0000/TLS5000/deleteTLS51130`, { idList }).pipe(
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS5000/deleteTLS51130`, { idList }).pipe(
       tap(res => console.log('刪除結果:', res)),
-      catchError(this.errorHandler.handleError)
+      catchError(error => this.errorHandler.handleError(error))
     );
   }
 }

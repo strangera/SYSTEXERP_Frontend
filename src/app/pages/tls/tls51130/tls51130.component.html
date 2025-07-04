@@ -1,6 +1,11 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button
+      btnType="create"
+      (click)="onCreate()"
+      label="{{ 'create' | translate }}"
+    ></app-button>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -21,7 +26,7 @@
               controlName="LOGO_No"
               [options]="LOGOOptions"
               [control]="queryForm.controls.LOGO_No"
-               optionLabel="label"
+              optionLabel="label"
               optionValue="value"
               [submitted]="submitted"
             ></app-dropdown>
@@ -30,7 +35,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="大分類"
-              [options]="bus_typeOptions"
+              [options]="CAT_LOptions"
               [control]="queryForm.controls.CAT_LNo"
               optionLabel="label"
               optionValue="value"
@@ -59,14 +64,16 @@
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
     (delete)="onDelete($event)"
-    dataKey="tlt_no"
-    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]"
+    dataKey="LOGO_No"
+    [multiSortMeta]="[{ field: 'LOGO_No', order: 1 }]"
     [totalRecords]="totalRecords"
     [lazy]="true"
-    [showManage]="false"
+    [showManage]="true"
+    (detail)="onDetail($event)"
     [loading]="loading"
-    [showCheckBox]="false"
-    [showDelete]="false"
+    [showCheckBox]="true"
+    [showDelete]="true"
+    (edit)="onEdit($event)"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
   ></app-table>
 </div>
