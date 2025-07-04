@@ -3,7 +3,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { debounceTime, finalize } from 'rxjs';
 import { DropDownListService, IDropdownItem } from '../../../service/api/dropdownservice/dropDownList.service';
-import { IGetBudgetAmountRequest, IInsertTLS52010Request, IPODetail, IPOS2004DetailData, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
+import { IGetBudgetAmountRequest, IPODetail, IPOS2004DetailData, ITLS52010Data, ITLS52010Request, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
 import { validateMinNumber } from '../../../shared/models/system/validate-field.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -74,6 +74,11 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           PLU_SalePrc_UNI: item.POD_BuyPrc || 0,
           PLU_SalePrc: item.POD_SalePrc || 0
         }));
+        let totalSaleAmt = 0; // 售價總計(即所有明細的「售價小計」加總)
+        this.data.forEach(item => {
+          totalSaleAmt += item.POD_SaleAmt || 0;
+        });
+        this.dataForm.controls.PO_TotalSaleAmt.setValue(Math.round(totalSaleAmt));
       });
     }
     this.setInitialValuesAndWatchChanges();
@@ -280,21 +285,12 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   }
 
   onSubmit(frm: FormGroup) {
-    // 首先檢查是否有任何明細的 POD_SubQty 不大於 0
-    const hasInvalidQuantity = this.data.some(item => (item.POD_SubQty || 0) <= 0);
-    if (hasInvalidQuantity) {
-      this.messageService.errorBubble('商品明細的「數量」必須大於 0。');
-      return; // 阻止表單提交
-    }
-    // 檢查明細列表是否為空
-    if (!this.data || this.data.length === 0) {
-      this.messageService.errorBubble('請至少選擇一個商品明細！');
-      return; // 阻止提交
-    }
-
+    this.validate();
     const formData = frm.getRawValue(); // 獲取所有表單值，包括 disabled 的
-    // 映射 this.data 到 IPODetail 陣列
     const details: IPODetail[] = this.data.map((item) => ({
+      id: item.id,
+      PO_No: item.PO_No,
+      POD_SeqNo: item.POD_SeqNo,
       SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
       PLU_MagNo: item.PLU_MagNo,
       PLU_No: item.PLU_No, // 國際條碼
@@ -312,21 +308,19 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     }));
     // 再次計算總數量，或者從 calculateTotals 中取得
     const totalSubQty = details.reduce((sum, item) => sum + (item.POD_SubQty || 0), 0);
-    const submitData: IInsertTLS52010Request = {
+    const submitData: ITLS52010Request = {
+      id: this.isFormCreateable ? undefined : this.rowdata?.id,
+      PO_No: formData.PO_No,
+      PO_Status: this.rowdata?.PO_Status || '0',
       SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
       VEN_No: formData.VEN_No,
       LOGO_No: formData.LOGO_No,
       HOS_No: formData.HOS_No,
-      // 直接從 dataForm 中獲取已計算的總計值
       PO_TotalBuyAmt: this.dataForm.controls.PO_TotalBuyAmt.value,
       PO_TotalBuyTax: this.dataForm.controls.PO_TotalBuyTax.value,
       PO_TotalBuyNet: this.dataForm.controls.PO_TotalBuyNet.value,
       PO_TotalSubQty: totalSubQty, // 使用計算後的總數量
       PO_TotalSaleAmt: this.dataForm.controls.PO_TotalSaleAmt.value,
-      // // 根據 IInsertTLS52010Request 介面，PO_TotalSaleNet 和 PO_TotalSaleTax 在新增時可能不需要或後端會自行處理
-      // // 如果後端需要，且沒有明確的計算規則，可以暫時設為 0 或考慮移除
-      // PO_TotalSaleNet: 0, // 需與後端確認如何處理，或移除此欄位 if not needed
-      // PO_TotalSaleTax: 0, // 需與後端確認如何處理，或移除此欄位 if not needed
       APPLY_Date: this.dataForm.controls.APPLY_Date.value,
       APPLY_USR_No: this.authService.currentUserValue?.user_No || '',
       APPLY_USR_Name: this.authService.currentUserValue?.user_Name || '', // 確保取到用戶姓名
@@ -337,12 +331,36 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     };
     // 處理提交邏輯 (呼叫 insert 或 update)
     this.handleSubmit(frm, () => {
-      this.tls52010Service.insertTLS52010(submitData).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe({
-        next: (response) => {
-          this.messageService.successBubble(response.Message);
-          this.dataForm.reset();
-        },
-      });
+      const request$ = this.isFormCreateable
+        ? this.tls52010Service.insertTLS52010(submitData)
+        : this.tls52010Service.updateTLS52010(submitData);
+
+      request$
+        .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+        .subscribe({
+          next: () => {
+            this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '修改成功');
+            if (this.isFormCreateable) {
+              this.dataForm.reset();
+            } else {
+              this.onCancel();
+            }
+          }
+        });
     });
+  }
+
+  validate() {
+    // 首先檢查是否有任何明細的 POD_SubQty 不大於 0
+    const hasInvalidQuantity = this.data.some(item => (item.POD_SubQty || 0) <= 0);
+    if (hasInvalidQuantity) {
+      this.messageService.errorBubble('商品明細的「數量」必須大於 0。');
+      return; // 阻止表單提交
+    }
+    // 檢查明細列表是否為空
+    if (!this.data || this.data.length === 0) {
+      this.messageService.errorBubble('請至少選擇一個商品明細！');
+      return; // 阻止提交
+    }
   }
 }

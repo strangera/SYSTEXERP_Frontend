@@ -20,9 +20,10 @@ export const enum POStatus {
 export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> implements OnInit {
   queryForm = this.formBuilder.group({
     ODM_No: ['', [Validators.maxLength(16)]], // 驗收編號
-    HOS_NoList: [null], // 倉庫代碼
     LOGO_NoList: [null], // 品牌代碼
+    HOS_NoList: [null], // 倉庫代碼
     VEN_No: [''], // 廠商代號
+    PLU_MagNo: [''], // 管理編號
     ODM_StatusList: [null, [Validators.required]], // 驗收狀態
     ODM_USR: [''], // 申請人員
     ODM_Date_Start: [''], // 申請日期起
@@ -37,7 +38,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   data: ITLS52030Data[] = [];
   selectedItems: ITLS52030Data[] = [];
   columns: Column[] = [
-    { field: 'ODM_No', header: '驗收編號', visible: true },
+    { field: 'ODM_No', header: '進貨驗收編號', visible: true },
     { field: 'SYS_StoreNo', header: '公司編號/店號', visible: false },
     { field: 'VEN_No', header: '廠商代號', visible: true },
     { field: 'LOGO_No', header: '品牌代碼', visible: true },

@@ -88,7 +88,9 @@ export interface IBudgetAmountResponse {
 
 /** POS2004 資料表的詳細商品數據介面 (queryPOS2004Detail & queryPOS2004Detail_VEN_No 響應) */
 export interface IPOS2004DetailData {
-  id: number;
+  id?: number;
+  PO_No: string;
+  POD_SeqNo?: number;
   PLU_MagNo: string; // 商品管理編號
   PLU_Name: string; // 商品名稱
   PLU_No: string; // 國際條碼
@@ -146,11 +148,14 @@ export interface IPODetail {
 
 
 /** 新增 POS2016 資料表 (insertTLS52010) 的請求介面 */
-export interface IInsertTLS52010Request {
+export interface ITLS52010Request {
+  id?: number;
+  PO_No: string; // 採購單號
   SYS_StoreNo: string; // 門店編號 (系統)
   VEN_No: string; // 廠商代號
   LOGO_No: string; // LOGO代碼
   HOS_No: string; // 醫院代號
+  PO_Status: string; // 資料狀態
   PO_TotalSubQty: number; // 採購總數量
   PO_TotalSaleNet?: number; // 售價未稅小計
   PO_TotalSaleTax?: number; // 售價稅額
@@ -165,27 +170,6 @@ export interface IInsertTLS52010Request {
   BudgetAmount: number | null; // 預算金額 (可選，但範例有)
   YYYYMM: string; // 年月 (YYYYMM 格式字串)
   Details: IPODetail[]; // 明細資料陣列
-}
-
-/** 更新 POS2016、POS2017 資料 (updateTLS52010) 的請求介面 */
-export interface IUpdateTLS52010Request {
-  id: number; // 採購單 ID (用於識別要更新的採購單)
-  SYS_StoreNo: string; // 門店編號 (系統)
-  VEN_No: string; // 廠商代號
-  LOGO_No: string; // LOGO代碼
-  HOS_No: string; // 醫院代號
-  PO_TotalSubQty: number; // 採購總數量
-  PO_TotalBuyNet: number; // 採購總淨額
-  PO_TotalBuyTax: number; // 採購總稅額
-  PO_TotalBuyAmt: number; // 採購總金額
-  APPLY_Date: string; // 申請日期 (ISO 格式字串)
-  APPLY_USR_No: string; // 申請人員編號
-  APPLY_USR_Name: string; // 申請人員姓名
-  PO_Status: string; // 採購單狀態
-  PO_Remark: string | null; // 採購單備註
-  BudgetAmount: number | null; // 預算金額
-  YYYYMM: string; // 年月 (YYYYMM 格式字串)
-  Details: IPODetail[]; // 明細資料陣列 (更新時可能包含 id)
 }
 
 /** 查詢 POS2017 資料表 (queryPOS2017) 的請求介面 */
@@ -298,7 +282,7 @@ export class Tls52010Service {
    * @param data 要新增的採購單資料，包含主檔及明細
    * @returns API 響應
    *///!!!未完成
-  insertTLS52010(data: IInsertTLS52010Request): Observable<ApiResponse<any>> {
+  insertTLS52010(data: ITLS52010Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertTLS52010`, data);
   }
 
@@ -307,7 +291,7 @@ export class Tls52010Service {
    * @param data 要更新的採購單資料，包含主檔及明細
    * @returns API 響應
    *///!!!未完成
-  updateTLS52010(data: IUpdateTLS52010Request): Observable<ApiResponse<any>> {
+  updateTLS52010(data: ITLS52010Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateTLS52010`, data);
   }
 
