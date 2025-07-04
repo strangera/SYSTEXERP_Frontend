@@ -18,19 +18,19 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
     // id: [{ value: null, disabled: true }], // read only
     tlt_noList: [[]], // 專櫃編號
     tlt_name: [''], // 專櫃名稱
-    location_noList: [[]], // 位置編號
+    location_noList: [[]], // 位置
 
-    area_noList: [[]], // 區域編號
-    tlt_floorList: [[]], // 樓層編號
-    bus_typeList: [[]], // 大分類編號
+    area_noList: [[]], // 區域
+    tlt_floorList: [[]], // 樓層
+    bus_typeList: [[]], // 大分類
 
-    tlt_bdate: [''], // 合約起始日期
-    tlt_edate: [''], // 合約終止日期
-    org_idList: [[]], // 組織編號
-    tlt_openflagList: [[]], // 營業狀態 0閉店/撤櫃, 1=營業中, 2=合約結束, 9=核准時合約尚未開始
+    tlt_bdate: [''], // 合約期間_起
+    tlt_edate: [''], // 合約期間_迄
+    org_idList: [[]], // 組織別
+    tlt_openflagList: [[]], // 營運狀況 0閉店/撤櫃, 1=營業中, 2=合約結束, 9=核准時合約尚未開始
 
-    contract_subno_start: [''], // 合約附號_起始
-    contract_subno_end: [''], // 合約附號_終止
+    contract_subno_start: [''], // 合約附號_起
+    contract_subno_end: [''], // 合約附號_迄
     apply_statusList: [[]], // 申請案件狀態(1=洽談中 2=簽約中  5=已作廢)
     
     approve_statusList: [[]], // 申請狀態 1=未審核  2=已審核

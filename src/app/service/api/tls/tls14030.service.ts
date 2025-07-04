@@ -65,4 +65,8 @@ export class Tls14030Service {
       return this.http.post<any>(`${environment.ApiUrl}/querySYS3100_DropDownList`, body);
     }
 
+    //查詢 專櫃主檔 下拉
+    queryTLTTALENT_DropDownList(body: any): Observable<any> {
+      return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_DropDownList`, body);
+    }
 }
