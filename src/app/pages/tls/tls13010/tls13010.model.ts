@@ -739,7 +739,8 @@ export interface SubmitDataStructure {
     contractId: string;
     submittedAt: Date;
     totalOperations: number;
-    hasLegacyDataToDelete?: boolean; // 🎯 新增：標記是否有舊資料要刪除
+    hasLegacyDataToDelete?: boolean; // 標記是否有舊資料要刪除
+    isNewContract?: boolean;
     dataVersions?: Record<string, number>;
   };
 }

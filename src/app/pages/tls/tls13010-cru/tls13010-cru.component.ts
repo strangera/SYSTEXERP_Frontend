@@ -92,12 +92,12 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   dataForm = this.formBuilder.group({
     // 基本資訊
     talent_id: [''],
-    apply_no: ['', [Validators.required]],
-    tlt_name: ['', [Validators.required, Validators.maxLength(100)]],
-    tlt_no: [{ value: '契約書審核後才給號', disabled: true }],
-    ven_uniform: ['', [Validators.required]],
+    apply_no: [''],
+    tlt_name: [''],
+    tlt_no: [''],
+    ven_uniform: [''],
     VEN_Name: [''],
-    paper_type: ['', [Validators.required]],
+    paper_type: [''],
     bus_type: [''],
     bus_class: [''],
     bus_sclass: [''],
@@ -382,48 +382,98 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     console.log('🚀 載入工作流程資料:', workflowData);
 
     if (workflowData.contractId) {
-      const savedFormData = this.contractFlowService.getStep1Data();
-      console.log('💾 暫存表單資料:', savedFormData);
+      // 檢查是否為新增模式
+      const isNewContract = workflowData.queryRowData?._isNewContract;
 
-      if (savedFormData && Object.keys(savedFormData).length > 0) {
-        // ✅ 載入表單資料
-        console.log('📝 載入暫存表單資料');
-        this.dataForm.patchValue(savedFormData);
-        this.loadBusinessClassifications(savedFormData.bus_type);
+      if (isNewContract) {
+        console.log('🆕 新增模式：初始化空表單');
+        this.initializeEmptyForm();
+      } else {
+        // 原有的編輯模式邏輯
+        const savedFormData = this.contractFlowService.getStep1Data();
+        console.log('💾 暫存表單資料:', savedFormData);
 
-        // ✅ 載入暫存的位置資料 - 改善邏輯
-        if (savedFormData.locationInfo && Array.isArray(savedFormData.locationInfo)) {
-          console.log('📍 發現暫存位置資料:', savedFormData.locationInfo);
+        if (savedFormData && Object.keys(savedFormData).length > 0) {
+          console.log('📝 載入暫存表單資料');
+          this.dataForm.patchValue(savedFormData);
+          this.loadBusinessClassifications(savedFormData.bus_type);
 
-          // 確保位置資料的狀態完整性
-          this.locationData = savedFormData.locationInfo.map(item => ({
-            ...item,
-            _status: item._status || 'original',
-            _isNew: item._isNew || false
-          }));
-
-          console.log('✅ 載入暫存位置資料完成:', this.locationData);
-          console.log('👁️ 可顯示的位置資料:', this.getDisplayLocationData());
-        } else {
-          console.log('📭 沒有暫存位置資料');
-          this.locationData = [];
+          // 載入暫存的位置資料
+          if (savedFormData.locationInfo && Array.isArray(savedFormData.locationInfo)) {
+            console.log('📍 發現暫存位置資料:', savedFormData.locationInfo);
+            this.locationData = savedFormData.locationInfo.map(item => ({
+              ...item,
+              _status: item._status || 'original',
+              _isNew: item._isNew || false
+            }));
+            console.log('✅ 載入暫存位置資料完成:', this.locationData);
+          } else {
+            this.locationData = [];
+          }
+        } else if (workflowData.queryRowData) {
+          console.log('📋 載入查詢結果資料');
+          this.loadDataFromQueryResult(workflowData.queryRowData);
         }
-      } else if (workflowData.queryRowData) {
-        console.log('📋 載入查詢結果資料');
-        this.loadDataFromQueryResult(workflowData.queryRowData);
-      }
 
-      // ⚠️ 注意：只有在沒有暫存位置資料時才載入既有位置資料
-      if (workflowData.queryRowData?.talent_id &&
-        (!savedFormData?.locationInfo || savedFormData.locationInfo.length === 0)) {
-        console.log('🔄 載入既有位置資料 (因為沒有暫存資料)');
-        this.loadExistingLocationData(workflowData.queryRowData.talent_id);
+        // 載入既有位置資料（如果有 talent_id）
+        if (workflowData.queryRowData?.talent_id &&
+          (!savedFormData?.locationInfo || savedFormData.locationInfo.length === 0)) {
+          console.log('🔄 載入既有位置資料');
+          this.loadExistingLocationData(workflowData.queryRowData.talent_id);
+        }
       }
     } else {
       console.warn('❌ 沒有工作流程資料，重導向到查詢頁面');
       this.router.navigate(['account/tls/tls13010']);
     }
   }
+
+  private initializeEmptyForm(): void {
+    console.log('🆕 初始化空表單');
+
+    // 設定預設值
+    this.dataForm.patchValue({
+      talent_id: '',
+      apply_no: '',
+      tlt_name: '',
+      tlt_no: '',
+      ven_uniform: '',
+      VEN_Name: '',
+      paper_type: '',
+      bus_type: '',
+      bus_class: '',
+      bus_sclass: '',
+      contract_subno: '',
+
+      // 預設值
+      tlt_term_type: '3', // 一般抽成
+      comm_comp_type: '2', // 除稅
+
+      // 其他預設值
+      org_id: '',
+      tlt_kind: '',
+      deco_type: '',
+      edc_yn: '',
+      tlt_ctype_mtotal: '',
+      overall_status: '',
+
+      // Y/N 欄位預設值
+      rece_yn: '',
+      pos_yn: '',
+      cash_yn: '',
+      vip_yn: '',
+      credit_card: '',
+
+      // 清空位置資料
+      selectedBankInfo: null
+    });
+
+    // 清空位置資料
+    this.locationData = [];
+
+    console.log('✅ 空表單初始化完成');
+  }
+
 
 
   private loadDataFromQueryResult(queryData: Record<string, unknown>): void {
@@ -583,7 +633,13 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     if (this.dataForm.dirty || this.hasLocationChanges()) {
       const formData = this.dataForm.getRawValue();
 
-      // ✅ 使用處理過的位置資料
+      // 🎯 新增模式：自動生成臨時 ID
+      if (this.isNewContractMode()) {
+        // 新增模式：talent_id 設為空字串，讓後端處理
+        formData.talent_id = '';
+        console.log('🆕 新增模式：talent_id 設為空，由後端自動產生');
+      }
+
       const workflowData = {
         ...formData,
         locationInfo: this.prepareLocationDataForSubmit()
@@ -600,6 +656,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.contractFlowService.saveStep1Data(contractInfo);
       console.log('已暫存到工作流程:', contractInfo);
     }
+  }
+
+  private generateTempTalentId(): string {
+    return 'new_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
 
   // 檢查位置資料是否有變更
@@ -762,21 +822,33 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       return;
     }
     this.saveToWorkflow();
-    this.messageService.successBubble('Step 1 完成，可以進入下一步');
+    // this.messageService.successBubble('Step 1 完成，可以進入下一步');
   }
 
   onSubmitNext(): void {
-    // if (this.dataForm.valid && this.validateLocationData()) {
+    console.log('🔍 onSubmitNext 開始執行');
+    console.log('表單是否 valid:', this.dataForm.valid);
+
     if (this.dataForm.valid) {
-      this.saveToWorkflow(); // 確保最新資料已暫存
+      const formData = this.dataForm.getRawValue();
+      console.log('📋 表單資料:', {
+        talent_id: formData.talent_id,
+        apply_no: formData.apply_no,
+        tlt_name: formData.tlt_name
+      });
+
+      this.saveToWorkflow();
+
+      // 檢查工作流程狀態
+      const workflowStatus = this.contractFlowService.getCurrentStatus();
+      console.log('🚀 工作流程狀態:', workflowStatus);
+
+      // 嘗試跳轉
+      console.log('🔄 嘗試跳轉到 next1');
       this.router.navigate(['account/tls/tls13010next1']);
-      // this.messageService.infoBubble('進入下一步：代扣款設定');
-    } else {
-      this.submitted = true;
-      this.markFormGroupTouched(this.dataForm);
-      this.messageService.warnBubble('請完成必填欄位後再進入下一步');
     }
   }
+
 
   override onCancel(): void {
     if (this.dataForm.dirty) {
@@ -828,6 +900,22 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.saveToWorkflow();
     this.messageService.infoBubble('已新增位置項目，請選擇位置編號');
   }
+
+  /**
+   * 🎯 新增：檢查是否為新增模式
+   */
+  isNewContractMode(): boolean {
+    const workflowData = this.contractFlowService.getCurrentData();
+    return workflowData.queryRowData?._isNewContract === true;
+  }
+
+  /**
+   * 🎯 新增：取得頁面標題
+   */
+  getPageTitle(): string {
+    return this.isNewContractMode() ? '新增契約資料' : '編輯契約資料';
+  }
+
 
   private generateTempId(): string {
     return 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);

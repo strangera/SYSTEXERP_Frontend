@@ -302,6 +302,73 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   }
 
   /**
+    * 🎯 覆寫父類的 onCreate 方法，實作新增功能
+    */
+  override onCreate(): void {
+    console.log('🆕 開始新增流程，清空所有暫存資料');
+
+    // 1. 清空工作流程服務的所有暫存資料
+    this.contractFlowService.clearTempData();
+    console.log('✅ 已清空所有工作流程暫存資料');
+
+    // 2. 初始化一個新的工作流程，使用空的查詢資料
+    const emptyQueryData = this.createEmptyQueryData();
+    this.contractFlowService.startWorkflow(emptyQueryData);
+    console.log('✅ 已初始化新的工作流程');
+
+    // 3. 導向 CRU 頁面
+    this.router.navigate(['account/tls/tls13010cru']);
+    this.messageService.infoBubble('開始新增契約資料');
+  }
+
+
+  private createEmptyQueryData(): any {
+    return {
+      talent_id: '', // 空的，表示新增
+      apply_no: '',
+      tlt_name: '',
+      ven_uniform: '',
+      VEN_Name: '',
+      paper_type: '',
+      bus_type: '',
+      bus_class: '',
+      bus_sclass: '',
+      contract_subno: '',
+
+      // 日期欄位使用預設值
+      feedback_date: '',
+      due_date: '',
+      tlt_bdate: '',
+      tlt_edate: '',
+      contact_Date: '',
+      tlt_contract_bdate: '',
+      tlt_contract_edate: '',
+
+      // 商務條件預設值
+      tlt_kind: '',
+      deco_type: '',
+      tlt_term_type: '3', // 預設為一般抽成
+      comm_comp_type: '2', // 預設為除稅
+      edc_yn: '',
+      tlt_ctype_mtotal: '',
+      overall_status: '',
+
+      // 其他欄位
+      org_id: '',
+      money_type: '',
+      store_way: '',
+      check_type: '',
+      paytype: '',
+      rece_yn: '',
+      pos_yn: '',
+      cash_yn: '',
+
+      // 標記為新增模式
+      _isNewContract: true
+    };
+  }
+
+  /**
    * 編輯功能
    */
   override onEdit(rowData: ContractItem): void {
@@ -313,12 +380,6 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
 
     // 檢查是否有暫存資料來顯示不同訊息
     const hasExistingData = this.contractFlowService.getStep1Data(rowData);
-
-    // if (hasExistingData) {
-    //   this.messageService.infoBubble('繼續編輯暫存資料（從契約資訊開始）');
-    // } else {
-    //   this.messageService.infoBubble('開始新的編輯工作流程');
-    // }
   }
 
   /**
