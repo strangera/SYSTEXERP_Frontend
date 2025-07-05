@@ -361,46 +361,104 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   private loadWorkflowData(): void {
-    const workflowData = this.contractFlowService.getCurrentData();
+    console.log('🚀 Next2 開始載入工作流程資料...');
 
-    if (workflowData.queryRowData?.talent_id) {
-      this.currentTalentId = workflowData.queryRowData.talent_id;
-      this.currentContractData = workflowData.queryRowData;
+    const workflowData = this.contractFlowService.getCurrentData();
+    console.log('📋 工作流程資料:', workflowData);
+
+    // 🎯 詳細檢查工作流程資料結構
+    console.log('🔍 詳細檢查工作流程資料:');
+    console.log('  - workflowData:', workflowData);
+    console.log('  - workflowData.queryRowData:', workflowData?.queryRowData);
+    console.log('  - workflowData.queryRowData?._isNewContract:', workflowData?.queryRowData?._isNewContract);
+    console.log('  - workflowData.contractId:', workflowData?.contractId);
+
+    // 🎯 修正：檢查是否有工作流程資料（支援新增和編輯模式）
+    const isNewContract = workflowData?.queryRowData?._isNewContract;
+    const hasContractId = workflowData?.contractId;
+    const hasQueryRowData = !!workflowData?.queryRowData;
+
+    console.log('🔍 模式判定結果:');
+    console.log('  - isNewContract:', isNewContract);
+    console.log('  - hasContractId:', hasContractId);
+    console.log('  - hasQueryRowData:', hasQueryRowData);
+    console.log('  - typeof isNewContract:', typeof isNewContract);
+
+    // 🎯 關鍵修正：新增模式或有工作流程資料就可以繼續
+    if (hasContractId || isNewContract || hasQueryRowData) {
+      // 🎯 修正：新增模式使用空字串，編輯模式使用原有 ID
+      this.currentTalentId = workflowData?.queryRowData?.talent_id || '';
+      this.currentContractData = workflowData?.queryRowData;
+
+      console.log('✅ 工作流程狀態確認:', {
+        isNewContract: isNewContract,
+        currentTalentId: this.currentTalentId,
+        contractId: workflowData?.contractId,
+        hasContractId: hasContractId,
+        mode: isNewContract ? '新增模式' : '編輯模式'
+      });
+
+      // 🎯 新增模式下設定 currentTalentId 用於追蹤
+      if (isNewContract && !this.currentTalentId) {
+        this.currentTalentId = 'NEW_CONTRACT'; // 設定一個識別符
+        console.log('🆕 新增模式：設定臨時 talent_id =', this.currentTalentId);
+      }
 
       Step3DataChangeTracker.setCurrentTalentId(this.currentTalentId);
 
+      // 優先使用 CRU 頁面編輯後的資料
       const step1Data = this.contractFlowService.getStep1Data();
+      console.log('📝 Step1 編輯資料:', step1Data);
 
+      // 🎯 修正：準備合約資訊，新增模式下某些欄位可能為空
       const contractInfo = {
-        talent_id: step1Data?.talent_id || this.currentContractData.talent_id || '-',
-        apply_no: step1Data?.apply_no || this.currentContractData.apply_no || '-',
-        tlt_name: step1Data?.tlt_name || this.currentContractData.tlt_name || '-',
-        VEN_Name: step1Data?.VEN_Name || this.currentContractData.VEN_Name || '-',
-        ven_uniform: step1Data?.ven_uniform || this.currentContractData.ven_uniform || '-',
-        contract_subno: step1Data?.contract_subno || this.currentContractData.contract_subno || '-',
-        comm_comp_type: step1Data?.comm_comp_type || this.currentContractData.comm_comp_type || '-',
-        tlt_bdate: step1Data?.tlt_bdate || this.currentContractData.tlt_bdate || '',
-        tlt_edate: step1Data?.tlt_edate || this.currentContractData.tlt_edate || '',
-        tlt_contract_bdate: step1Data?.tlt_contract_bdate || this.currentContractData.tlt_contract_bdate || '',
-        tlt_contract_edate: step1Data?.tlt_contract_edate || this.currentContractData.tlt_contract_edate || '',
-        tlt_term_type: (step1Data?.tlt_term_type || this.currentContractData.tlt_term_type || '').toString().trim() || '-',
+        talent_id: step1Data?.talent_id || this.currentContractData?.talent_id || '', // 🎯 新增模式可能為空
+        apply_no: step1Data?.apply_no || this.currentContractData?.apply_no || '',
+        tlt_name: step1Data?.tlt_name || this.currentContractData?.tlt_name || '',
+        VEN_Name: step1Data?.VEN_Name || this.currentContractData?.VEN_Name || '',
+        ven_uniform: step1Data?.ven_uniform || this.currentContractData?.ven_uniform || '',
+        contract_subno: step1Data?.contract_subno || this.currentContractData?.contract_subno || '',
+        comm_comp_type: step1Data?.comm_comp_type || this.currentContractData?.comm_comp_type || '',
+        tlt_bdate: step1Data?.tlt_bdate || this.currentContractData?.tlt_bdate || '',
+        tlt_edate: step1Data?.tlt_edate || this.currentContractData?.tlt_edate || '',
+        tlt_contract_bdate: step1Data?.tlt_contract_bdate || this.currentContractData?.tlt_contract_bdate || '',
+        tlt_contract_edate: step1Data?.tlt_contract_edate || this.currentContractData?.tlt_contract_edate || '',
+        tlt_term_type: (step1Data?.tlt_term_type || this.currentContractData?.tlt_term_type || '3').toString().trim(),
       };
 
+      console.log('📊 準備顯示的合約資訊:', contractInfo);
+
       this.contractInfoData = [{
-        id: '1',
+        id: contractInfo.talent_id || 'new', // 🎯 新增模式顯示 'new'
         ...contractInfo
       }];
 
+      console.log('📊 最終合約資訊陣列:', this.contractInfoData);
+
+      // 🎯 載入抽成資料
       this.loadCommissionData();
     } else {
+      console.warn('❌ 沒有有效的工作流程資料，重導向到前一步');
+      console.warn('   - 缺少 contractId, isNewContract 標記或 queryRowData');
       this.router.navigate(['account/tls/tls13010cru']);
     }
   }
+
 
   private loadCommissionData(): void {
     this.loading = true;
     this.commissionDataLoaded = false;
 
+    // 🎯 首先檢查是否為新增模式
+    const workflowData = this.contractFlowService.getCurrentData();
+    const isNewContract = workflowData?.queryRowData?._isNewContract;
+
+    console.log('🔍 載入抽成資料，模式判定:', {
+      isNewContract: isNewContract,
+      currentTalentId: this.currentTalentId
+    });
+
+    // 🎯 檢查暫存資料
     const savedCommissionData = this.contractFlowService.getStepData(WorkflowStep.COMMISSION);
 
     if (savedCommissionData && Array.isArray(savedCommissionData) && savedCommissionData.length > 0) {
@@ -413,15 +471,28 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       this.dataLoaded = true;
       this.loading = false;
       this.updateDetailItemsForDisplay();
+    } else if (isNewContract) {
+      // 🎯 新增模式：初始化空的抽成資料
+      console.log('🆕 新增模式：初始化空的抽成設定');
+      this.initializeEmptyCommissionData();
+      this.loading = false;
     } else {
-      console.log('📭 沒有暫存抽成資料，呼叫統一 API 載入');
+      // 🎯 編輯模式：從 API 載入
+      console.log('📝 編輯模式：從 API 載入抽成資料');
       this.loadUnifiedCommissionData();
     }
   }
 
+
+
   // 🎯 修正：使用統一 API 載入資料
   private loadUnifiedCommissionData(): void {
-    if (!this.currentTalentId) {
+    // 🎯 檢查是否為新增模式
+    const workflowData = this.contractFlowService.getCurrentData();
+    const isNewContract = workflowData?.queryRowData?._isNewContract;
+
+    if (isNewContract || !this.currentTalentId || this.currentTalentId === 'NEW_CONTRACT') {
+      console.log('🆕 新增模式或無 talent_id，初始化空的抽成設定');
       this.initializeEmptyCommissionData();
       return;
     }
@@ -460,6 +531,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       }
     });
   }
+
 
   // 🎯 修正：處理統一 API 回應
   private handleUnifiedCommissionResponse(data: UnifiedCommissionResponse): void {
@@ -552,7 +624,12 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   private loadCommissionDataFromAPI(): void {
-    if (!this.currentTalentId) {
+    // 🎯 檢查是否為新增模式
+    const workflowData = this.contractFlowService.getCurrentData();
+    const isNewContract = workflowData?.queryRowData?._isNewContract;
+
+    if (isNewContract || !this.currentTalentId || this.currentTalentId === 'NEW_CONTRACT') {
+      console.log('🆕 新增模式或無 talent_id，初始化空的抽成設定');
       this.initializeEmptyCommissionData();
       return;
     }
@@ -586,7 +663,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       }
     });
   }
-
   // 工具方法
   private generateTempId(): string {
     return 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
