@@ -65,7 +65,7 @@
 </div>
 <div class="card">
   <app-table tableKey="TLS52030" dataKey="ODM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [showCheckBox]="true" [editDisabled]="editDisabled"
+    (detail)="onDetail($event)" [editDisabled]="editDisabled"
     [multiSortMeta]="[{ field: 'ODM_Date', order: -1 }, { field: 'ODM_No', order: 1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"

@@ -16,11 +16,11 @@
             [options]="warehouseOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.HOS_NoList" [submitted]="submitted"></app-multi-select>
           <!-- 品牌代碼 (對應 LOGO_No) -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌代碼" controlName="LOGO_No" [options]="brandOptions"
-            optionLabel="label" optionValue="value" [control]="queryForm.controls.LOGO_NoList"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No"
+            [options]="brandOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.LOGO_NoList"
             [submitted]="submitted"></app-multi-select>
           <!-- 廠商編號 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號" controlName="VEN_No" [options]="vendorOptions"
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號/名稱" controlName="VEN_No" [options]="vendorOptions"
             optionLabel="label" optionValue="value" [control]="queryForm.controls.VEN_No"
             [submitted]="submitted"></app-dropdown>
           <!-- 單據狀態 (採購單狀態) -->
