@@ -740,6 +740,7 @@ export interface SubmitDataStructure {
     submittedAt: Date;
     totalOperations: number;
     hasLegacyDataToDelete?: boolean; // 🎯 新增：標記是否有舊資料要刪除
+    dataVersions?: Record<string, number>;
   };
 }
 

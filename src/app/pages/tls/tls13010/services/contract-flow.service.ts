@@ -1,4 +1,4 @@
-// contract-flow.service.ts (修改後版本)
+// contract-flow.service.ts - 增強版：支援資料版本控制和同步
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -11,7 +11,11 @@ import { DataChangeTracker, SubmitDataStructure } from '../tls13010.model';
 export class ContractFlowService {
   private readonly STORAGE_KEY = 'TLS13010_CONTRACT_FLOW';
 
-  // ========== 新增：記憶體快取層 ==========
+  // ========== 新增：資料版本控制 ==========
+  private dataVersions = new Map<string, number>();
+  private readonly VERSION_KEY_PREFIX = 'version_';
+
+  // 記憶體快取層
   private memoryCache = new Map<string, any>();
 
   // 保留您原有的資料結構
@@ -24,7 +28,7 @@ export class ContractFlowService {
     step4: [],
     step5: null,
     dataToDelete: null,
-    unifiedCommissionData: null, // 🎯 新增統一抽成設定資料
+    unifiedCommissionData: null,
     metadata: {
       createdAt: new Date(),
       lastModified: new Date(),
@@ -39,6 +43,44 @@ export class ContractFlowService {
   constructor(private http: HttpClient) {
     this.loadFromStorage();
     this.setupAutoSave();
+    this.initializeDataVersions();
+  }
+
+  /**
+   * 🎯 新增：初始化資料版本控制
+   */
+  private initializeDataVersions(): void {
+    // 初始化各步驟的版本號
+    this.dataVersions.set('step1', 0);
+    this.dataVersions.set('step2', 0);
+    this.dataVersions.set('step3', 0);
+    this.dataVersions.set('step4', 0);
+    this.dataVersions.set('unified', 0);
+    console.log('📊 資料版本控制初始化完成');
+  }
+
+  /**
+   * 🎯 新增：取得資料版本號
+   */
+  getDataVersion(stepKey: string): number {
+    return this.dataVersions.get(stepKey) || 0;
+  }
+
+  /**
+   * 🎯 新增：增加資料版本號
+   */
+  private incrementDataVersion(stepKey: string): void {
+    const currentVersion = this.dataVersions.get(stepKey) || 0;
+    this.dataVersions.set(stepKey, currentVersion + 1);
+    console.log(`📈 ${stepKey} 版本號更新為:`, currentVersion + 1);
+  }
+
+  /**
+   * 🎯 新增：檢查版本是否有變更
+   */
+  hasVersionChanged(stepKey: string, lastKnownVersion: number): boolean {
+    const currentVersion = this.getDataVersion(stepKey);
+    return currentVersion > lastKnownVersion;
   }
 
   /**
@@ -91,6 +133,9 @@ export class ContractFlowService {
         }
       };
 
+      // 🎯 重置版本號
+      this.initializeDataVersions();
+
       const newStatus: WorkflowStatus = {
         currentStep: WorkflowStep.CONTRACT_INFO,
         completedSteps: [],
@@ -102,8 +147,9 @@ export class ContractFlowService {
     }
     this.saveToStorage();
   }
+
   /**
-   * 儲存第1步資料
+   * 🎯 修正：儲存第1步資料
    */
   saveStep1Data(formData: ContractInfo): void {
     const contractId = formData.talent_id || formData.apply_no;
@@ -111,6 +157,9 @@ export class ContractFlowService {
     this.contractData.step1 = formData;
     this.contractData.metadata.lastModified = new Date();
     this.contractData.metadata.version += 1;
+
+    // 🎯 更新版本號
+    this.incrementDataVersion('step1');
 
     this.updateWorkflowStatus(WorkflowStep.CONTRACT_INFO);
     this.saveToStorage();
@@ -133,13 +182,17 @@ export class ContractFlowService {
   }
 
   /**
-   * 儲存第2步資料（代扣款）
+   * 🎯 修正：儲存第2步資料（代扣款）
    */
   saveStep2Data(data: FareItem[]): void {
     if (this.contractData.contractId) {
       this.contractData.step2 = data;
       this.contractData.metadata.lastModified = new Date();
       this.contractData.metadata.version += 1;
+
+      // 🎯 更新版本號
+      this.incrementDataVersion('step2');
+
       this.updateWorkflowStatus(WorkflowStep.DEDUCTION);
       this.saveToStorage();
 
@@ -148,7 +201,7 @@ export class ContractFlowService {
   }
 
   /**
-   * 儲存第3步資料（抽成設定）
+   * 🎯 修正：儲存第3步資料（抽成設定）
    */
   saveStep3Data(data: CommissionItem[]): void {
     console.log('💾 儲存 Step3 資料到工作流程...');
@@ -157,18 +210,24 @@ export class ContractFlowService {
     console.log('📋 是否為陣列:', Array.isArray(data));
 
     if (this.contractData.contractId) {
+      const previousVersion = this.getDataVersion('step3');
+
       this.contractData.step3 = Array.isArray(data) ? data : [data];
       this.contractData.metadata.lastModified = new Date();
       this.contractData.metadata.version += 1;
 
+      // 🎯 更新版本號
+      this.incrementDataVersion('step3');
+
       console.log('✅ 已儲存 Step3 資料:');
       console.log('   - 項目數量:', this.contractData.step3.length);
+      console.log('   - 版本號從', previousVersion, '更新為', this.getDataVersion('step3'));
       console.log('   - 儲存的資料:', this.contractData.step3);
 
       this.updateWorkflowStatus(WorkflowStep.COMMISSION);
       this.saveToStorage();
 
-      // 🔍 Debug: 驗證儲存結果
+      // 🎯 Debug: 驗證儲存結果
       const savedData = this.getStep3Data();
       console.log('🔍 驗證儲存結果:', savedData);
     } else {
@@ -177,17 +236,25 @@ export class ContractFlowService {
   }
 
   /**
-   * 儲存第4步資料（條件設定）
+   * 🎯 修正：儲存第4步資料（條件設定）
    */
   saveStep4Data(data: ConditionItem[]): void {
     if (this.contractData.contractId) {
+      const previousVersion = this.getDataVersion('step4');
+
       this.contractData.step4 = Array.isArray(data) ? data : [data];
       this.contractData.metadata.lastModified = new Date();
       this.contractData.metadata.version += 1;
+
+      // 🎯 更新版本號
+      this.incrementDataVersion('step4');
+
+      console.log('儲存第4步資料:');
+      console.log('   - 項目數量:', this.contractData.step4.length);
+      console.log('   - 版本號從', previousVersion, '更新為', this.getDataVersion('step4'));
+
       this.updateWorkflowStatus(WorkflowStep.CONDITION);
       this.saveToStorage();
-
-      console.log('儲存第4步資料:', this.contractData.step4);
     }
   }
 
@@ -213,15 +280,24 @@ export class ContractFlowService {
 
     console.log('🗑️ 已清除要刪除的資料記錄');
   }
+
   /**
-   * 🎯 儲存統一抽成設定資料
+   * 🎯 修正：儲存統一抽成設定資料
    */
   setUnifiedCommissionData(data: UnifiedCommissionResponse): void {
+    const previousVersion = this.getDataVersion('unified');
+
     this.contractData.unifiedCommissionData = data;
     this.contractData.metadata.lastModified = new Date();
+
+    // 🎯 更新版本號
+    this.incrementDataVersion('unified');
+
     this.saveToStorage();
 
-    console.log('💾 已儲存統一抽成設定資料:', data);
+    console.log('💾 已儲存統一抽成設定資料:');
+    console.log('   - 版本號從', previousVersion, '更新為', this.getDataVersion('unified'));
+    console.log('   - 資料:', data);
   }
 
   /**
@@ -271,8 +347,8 @@ export class ContractFlowService {
   }
 
   /**
-  * 🎯 取得抽成別變更警告訊息
-  */
+   * 🎯 取得抽成別變更警告訊息
+   */
   getCommissionChangeWarning(): any {
     const unifiedData = this.getUnifiedCommissionData();
     return unifiedData?.Warning || null;
@@ -401,13 +477,16 @@ export class ContractFlowService {
       step4: [],
       step5: null,
       dataToDelete: null,
-      unifiedCommissionData: null, // 加入缺少的 unifiedCommissionData 屬性
+      unifiedCommissionData: null,
       metadata: {
         createdAt: new Date(),
         lastModified: new Date(),
         version: 1
       }
     };
+
+    // 🎯 重置版本號
+    this.initializeDataVersions();
 
     this.workflowStatusSubject.next(this.initializeStatus());
     this.clearStorage();
@@ -457,16 +536,17 @@ export class ContractFlowService {
     });
   }
 
-  // ========== 修改：儲存相關方法 (localStorage → sessionStorage + Memory) ==========
+  // ========== 修改：儲存相關方法 (加強版本控制) ==========
 
   /**
-   * 混合儲存：Memory + SessionStorage
+   * 混合儲存：Memory + SessionStorage + 版本控制
    */
   private saveToStorage(): void {
     try {
       const saveData = {
         contractData: this.contractData,
         workflowStatus: this.workflowStatusSubject.value,
+        dataVersions: Object.fromEntries(this.dataVersions.entries()), // 🎯 新增版本號儲存
         timestamp: new Date().getTime()
       };
 
@@ -512,11 +592,23 @@ export class ContractFlowService {
   }
 
   /**
-   * 套用載入的資料
+   * 🎯 修正：套用載入的資料（包含版本號）
    */
   private applyLoadedData(data: any): void {
     this.contractData = data.contractData;
     this.workflowStatusSubject.next(data.workflowStatus);
+
+    // 🎯 恢復版本號
+    if (data.dataVersions) {
+      this.dataVersions.clear();
+      Object.entries(data.dataVersions).forEach(([key, value]) => {
+        this.dataVersions.set(key, value as number);
+      });
+      console.log('📊 已恢復資料版本號:', data.dataVersions);
+    } else {
+      // 舊版本相容性
+      this.initializeDataVersions();
+    }
   }
 
   /**
@@ -617,13 +709,14 @@ export class ContractFlowService {
   }
 
   /**
-   * 取得第3步資料（抽成設定）
+   * 🎯 修正：取得第3步資料（抽成設定）
    */
   getStep3Data(): CommissionItem[] {
     console.log('🔍 取得 Step3 資料...');
     console.log('📋 contractData.step3:', this.contractData.step3);
     console.log('📋 資料類型:', typeof this.contractData.step3);
     console.log('📋 是否為陣列:', Array.isArray(this.contractData.step3));
+    console.log('📋 Step3 版本號:', this.getDataVersion('step3'));
 
     if (this.contractData.step3) {
       console.log('✅ 找到 Step3 資料，項目數量:', this.contractData.step3.length);
@@ -633,10 +726,12 @@ export class ContractFlowService {
       return [];
     }
   }
+
   /**
    * 取得第4步資料（條件設定） - 新增別名方法
    */
   getStep4Data(): ConditionItem[] {
+    console.log('🔍 取得 Step4 資料，版本號:', this.getDataVersion('step4'));
     return this.contractData.step4;
   }
 
@@ -648,8 +743,8 @@ export class ContractFlowService {
   }
 
   /**
-     * 取得當前有效的抽成別（優先使用暫存資料）
-     */
+   * 取得當前有效的抽成別（優先使用暫存資料）
+   */
   getCurrentCommissionType(): string {
     // 1. 優先從 Step1 暫存資料取得（最新的）
     const step1Data = this.getStep1Data();
@@ -692,6 +787,59 @@ export class ContractFlowService {
 
     console.warn('❌ 無法取得 talent_id');
     return '';
+  }
+
+  /**
+   * 🎯 新增：監聽資料變更的方法
+   */
+  watchDataChanges(stepKey: string, callback: (version: number) => void): () => void {
+    let lastKnownVersion = this.getDataVersion(stepKey);
+
+    const intervalId = setInterval(() => {
+      const currentVersion = this.getDataVersion(stepKey);
+      if (currentVersion > lastKnownVersion) {
+        lastKnownVersion = currentVersion;
+        callback(currentVersion);
+      }
+    }, 500); // 每 500ms 檢查一次
+
+    // 返回清理函數
+    return () => clearInterval(intervalId);
+  }
+
+  /**
+   * 🎯 新增：取得資料變更摘要
+   */
+  getDataChangeSummary(): any {
+    return {
+      versions: Object.fromEntries(this.dataVersions.entries()),
+      lastModified: this.contractData.metadata.lastModified,
+      totalVersion: this.contractData.metadata.version,
+      hasStep1: !!this.contractData.step1,
+      step2Count: this.contractData.step2.length,
+      step3Count: this.contractData.step3.length,
+      step4Count: this.contractData.step4.length,
+      hasUnifiedData: !!this.contractData.unifiedCommissionData
+    };
+  }
+
+  /**
+   * 🎯 新增：強制同步所有資料
+   */
+  forceSyncAllData(): void {
+    console.log('🔄 強制同步所有資料...');
+
+    // 更新所有步驟的版本號
+    this.incrementDataVersion('step1');
+    this.incrementDataVersion('step2');
+    this.incrementDataVersion('step3');
+    this.incrementDataVersion('step4');
+    this.incrementDataVersion('unified');
+
+    // 立即儲存
+    this.saveToStorage();
+
+    console.log('✅ 強制同步完成，最新版本號:', Object.fromEntries(this.dataVersions.entries()));
   }
 
   generateSubmitData(): SubmitDataStructure {
@@ -751,7 +899,8 @@ export class ContractFlowService {
         contractId: this.contractData.contractId || '',
         submittedAt: new Date(),
         totalOperations,
-        hasLegacyDataToDelete // 🎯 標記是否有舊資料要刪除
+        hasLegacyDataToDelete, // 🎯 標記是否有舊資料要刪除
+        dataVersions: Object.fromEntries(this.dataVersions.entries()) // 🎯 包含版本資訊
       }
     };
   }
