@@ -90,6 +90,7 @@ export interface IBudgetAmountResponse {
 export interface IPOS2004DetailData {
   id?: number;
   PO_No: string;
+  HOS_No: string;
   POD_SeqNo?: number;
   PLU_MagNo: string; // 商品管理編號
   PLU_Name: string; // 商品名稱
@@ -150,7 +151,9 @@ export interface IPODetail {
 /** 新增 POS2016 資料表 (insertTLS52010) 的請求介面 */
 export interface ITLS52010Request {
   id?: number;
+  org_id: string | null;
   PO_No: string; // 採購單號
+  ODM_TaxType: string;
   SYS_StoreNo: string; // 門店編號 (系統)
   VEN_No: string; // 廠商代號
   LOGO_No: string; // LOGO代碼
@@ -181,6 +184,7 @@ export interface IQueryPOS2017Request {
 export interface IPOS2017Data {
   id: number,
   PO_No: string,
+  HOS_No: string,
   SYS_StoreNo: string,
   POD_SeqNo: number,
   PLU_MagNo: string,

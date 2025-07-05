@@ -69,7 +69,7 @@
 </div>
 <div class="card">
   <app-table tableKey="TLS52010" dataKey="PO_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [showCheckBox]="true"
+    (detail)="onDetail($event)" [showCheckBox]="true" [editDisabled]="editDisabled"
     [multiSortMeta]="[{ field: 'APPLY_Date', order: -1 }, { field: 'PO_No', order: 1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
@@ -82,7 +82,6 @@
         <p-button label="結案" [ngStyle]="{ height: '35px' }" [style]="{ height: '35px' }" pTooltip="結案"
           tooltipPosition="top" [rounded]="true" severity="danger" (click)="close(selectedItems)"
           [disabled]="disabledClose || selectedCount === 0" />
-        <!-- 只有部分驗收採購單可強制結案 -->
         <span *ngIf="disabledClose && selectedCount > 0" @slideInFromLeft class="text-sm text-red-600">
           採購單狀態為「部分驗收」可強制結案
         </span>

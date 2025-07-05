@@ -221,6 +221,10 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     });
   }
 
+  editDisabled(rowData: ITLS52010Data) {
+    return rowData.PO_Status !== POStatus.已申請;
+  }
+
   statusChange(rowData: ITLS52010Data, status: string) {
     this.btnLoading = true;
     const body = {

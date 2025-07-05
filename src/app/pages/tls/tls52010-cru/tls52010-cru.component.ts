@@ -285,12 +285,22 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   }
 
   onSubmit(frm: FormGroup) {
-    this.validate();
+    // 首先檢查是否有任何明細的 POD_SubQty 不大於 0
+    const hasInvalidQuantity = this.data.some(item => (item.POD_SubQty || 0) <= 0);
+    if (hasInvalidQuantity) {
+      this.messageService.errorBubble('商品明細的「數量」必須大於 0。');
+      return; // 阻止表單提交
+    }
+    if (!this.data || this.data.length === 0) {
+      this.messageService.errorBubble('請至少選擇一個商品明細！');
+      return; // 阻止提交
+    }
     const formData = frm.getRawValue(); // 獲取所有表單值，包括 disabled 的
     const details: IPODetail[] = this.data.map((item) => ({
       id: item.id,
       PO_No: item.PO_No,
       POD_SeqNo: item.POD_SeqNo,
+      HOS_No: this.dataForm.controls.HOS_No.value,
       SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
       PLU_MagNo: item.PLU_MagNo,
       PLU_No: item.PLU_No, // 國際條碼
@@ -310,6 +320,8 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     const totalSubQty = details.reduce((sum, item) => sum + (item.POD_SubQty || 0), 0);
     const submitData: ITLS52010Request = {
       id: this.isFormCreateable ? undefined : this.rowdata?.id,
+      org_id: this.rowdata?.org_id || null,
+      ODM_TaxType: this.rowdata?.ODM_TaxType || '1',
       PO_No: formData.PO_No,
       PO_Status: this.rowdata?.PO_Status || '0',
       SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
@@ -348,19 +360,5 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           }
         });
     });
-  }
-
-  validate() {
-    // 首先檢查是否有任何明細的 POD_SubQty 不大於 0
-    const hasInvalidQuantity = this.data.some(item => (item.POD_SubQty || 0) <= 0);
-    if (hasInvalidQuantity) {
-      this.messageService.errorBubble('商品明細的「數量」必須大於 0。');
-      return; // 阻止表單提交
-    }
-    // 檢查明細列表是否為空
-    if (!this.data || this.data.length === 0) {
-      this.messageService.errorBubble('請至少選擇一個商品明細！');
-      return; // 阻止提交
-    }
   }
 }

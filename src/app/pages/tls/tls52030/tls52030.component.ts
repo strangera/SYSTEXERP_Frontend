@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { finalize, map, Subject, takeUntil } from 'rxjs';
 import { ITLS52030Data, Tls52030Service } from '../../../service/api/tls/tls52030.service';
 import { DropDownListService, IDropdownItem } from '../../../service/api/dropdownservice/dropDownList.service';
@@ -47,7 +47,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
     { field: 'org_id', header: '組織代碼/所屬部門', visible: true },
     { field: 'ODM_Status', header: '驗收狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value },
-    { field: 'ODM_Date', header: '申請日期', visible: true, format: formatDateTime },
+    { field: 'ODM_Date', header: '申請日期', visible: true, format: formatDate },
     { field: 'ODM_USR_No', header: '申請人員', visible: true },
     { field: 'ODM_USR_Name', header: '申請人員姓名', visible: true },
     { field: 'ODM_TotalBuyNet', header: '未稅進價小計', visible: true, format: formatAmount },
@@ -57,13 +57,13 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     { field: 'ODM_TotalSaleTax', header: '售價稅額小計', visible: true, format: formatAmount },
     { field: 'ODM_TotalSaleAmt', header: '售價合計', visible: true, format: formatAmount },
     { field: 'ODM_TaxType', header: '單據稅別', visible: true, format: value => value === '1' ? '應稅' : '免稅' },
-    { field: 'APRV_Date', header: '審核(驗收)日期', visible: true, format: formatDateTime },
+    { field: 'APRV_Date', header: '審核(驗收)日期', visible: true, format: formatDate },
     { field: 'APRV_USR_No', header: '審核人員', visible: true },
     { field: 'APRV_USR_Name', header: '審核人員姓名', visible: true },
-    { field: 'ReAPRV_Date', header: '反審核日期', visible: true, format: formatDateTime },
+    { field: 'ReAPRV_Date', header: '反審核日期', visible: true, format: formatDate },
     { field: 'ReAPRV_USR_No', header: '反審核人員', visible: true },
     { field: 'ReAPRV_USR_Name', header: '反審核人員姓名', visible: true },
-    { field: 'Void_Date', header: '作廢日期', visible: true, format: formatDateTime },
+    { field: 'Void_Date', header: '作廢日期', visible: true, format: formatDate },
     { field: 'Void_USR_No', header: '作廢人員', visible: true },
     { field: 'Void_USR_Name', header: '作廢人員姓名', visible: true },
     { field: 'ODM_Remark', header: '備註', visible: true },
@@ -163,5 +163,8 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
       this.messageService.successBubble(response.Message);
       this.onSubmit(this.queryForm);
     });
+  }
+  editDisabled(rowData: ITLS52030Data) {
+    return rowData.ODM_Status !== POStatus.已確認;
   }
 }

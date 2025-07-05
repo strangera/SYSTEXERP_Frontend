@@ -91,8 +91,8 @@
     </div>
   </form>
   <hr />
-  <app-table tableKey="fin11200DialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
-    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog"
+  <app-table tableKey="tls52010CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
+    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
     (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
     [isRowSelectable]="isRowSelectable.bind(this)" [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)"
