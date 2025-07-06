@@ -98,7 +98,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSB200', 'SYS/SYSB200CRU');
+    this.initializePage('SYSB200', 'sys/sysb200cru');
 
     this.loadOptions();
 
@@ -158,16 +158,6 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
       this.totalRecords = this.data.length;
       this.loading = false;
       this.messageService.unblockUi();
-    });
-  }
-
-  override onEdit(rowData: any): void {
-    this.router.navigate(['./cru'], {
-      relativeTo: this.activatedRoute,
-      state: {
-        crudstatus: CRUDStatus.Edit,
-        rowdata: rowData,
-      },
     });
   }
 }
