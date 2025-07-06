@@ -22,7 +22,7 @@ export class BankOptionsService {
     };
 
     return this.http
-      .post<any>(`${this.apiUrl}/queryBank_DropDownList`, requestBody)
+      .post<any>(`${this.apiUrl}/queryAPS1001_DropDownList`, requestBody)
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? [])
       );
