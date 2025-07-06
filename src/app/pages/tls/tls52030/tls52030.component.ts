@@ -5,10 +5,13 @@ import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, fo
 import { finalize, map, Subject, takeUntil } from 'rxjs';
 import { ITLS52030Data, Tls52030Service } from '../../../service/api/tls/tls52030.service';
 import { DropDownListService, IDropdownItem } from '../../../service/api/dropdownservice/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 export const enum POStatus {
   已確認 = '1',
   已審核 = '2',
+  部分驗收 = '3',
+  全部驗收 = '4',
   作廢 = '9',
 }
 
@@ -56,7 +59,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     { field: 'ODM_TotalSaleNet', header: '未稅售價小計', visible: true, format: formatAmount },
     { field: 'ODM_TotalSaleTax', header: '售價稅額小計', visible: true, format: formatAmount },
     { field: 'ODM_TotalSaleAmt', header: '售價合計', visible: true, format: formatAmount },
-    { field: 'ODM_TaxType', header: '單據稅別', visible: true, format: value => value === '1' ? '應稅' : '免稅' },
+    // { field: 'ODM_TaxType', header: '單據稅別', visible: true, format: value => value === '1' ? '應稅' : value === '0' ? '免稅' : '' },
     { field: 'APRV_Date', header: '審核(驗收)日期', visible: true, format: formatDate },
     { field: 'APRV_USR_No', header: '審核人員', visible: true },
     { field: 'APRV_USR_Name', header: '審核人員姓名', visible: true },
@@ -81,14 +84,16 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     {
       label: '單據審核',
       icon: 'pi pi-check-circle text-green-500',
-      action: (rowData: ITLS52030Data) => { this.statusChange(rowData, POStatus.已審核); },
+      action: (rowData: ITLS52030Data) => {
+        this.statusChange(rowData, POStatus.已審核);
+      },
       disabled: (rowData: ITLS52030Data) => rowData.ODM_Status !== POStatus.已確認
     },
     {
       label: '反審核',
       icon: 'pi pi-undo text-orange-500',
       action: (rowData: ITLS52030Data) => { this.statusChange(rowData, POStatus.已確認); },
-      disabled: (rowData: ITLS52030Data) => rowData.Request_No !== null
+      disabled: (rowData: ITLS52030Data) => rowData.Request_No !== null || rowData.ODM_Status !== POStatus.已審核
     },
     {
       label: '作廢單據',
@@ -113,18 +118,18 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   ngOnInit(): void {
     this.initializePage('TLS52030', 'TLS/TLS52030cru', this.queryForm, (f) => this.onSubmit(f));
     // 倉別 (HOS_No)
-    this.dropDownListService.getPOS2034Options().pipe(takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this), takeUntil(this.destroy$)).subscribe(response => {
       this.warehouseOptions = response.Data;
     });
     // 品牌代碼 (LOGO_No)
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this), takeUntil(this.destroy$)).subscribe(response => {
       this.brandOptions = response.Data.map(brand => ({
         ...brand,
         label: `${brand.No} - ${brand.Name}`,
       }));
     });
     // 廠商編號 (VEN_No)
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this), takeUntil(this.destroy$)).subscribe(response => {
       this.vendorOptions = response.Data.map(vendor => ({
         ...vendor,
         label: `${vendor.VEN_No} - ${vendor.Name}`,
@@ -138,7 +143,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     ];
 
     // 申請人員、審核人員、結案人員 (共用人員下拉選單)
-    this.dropDownListService.queryUser_Name_DropDownList().pipe(
+    this.dropDownListService.queryUser_Name_DropDownList().pipe(untilDestroyed(this),
       map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
     ).subscribe(options => {
       this.userOptions = options;
@@ -146,7 +151,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tls52030Service.queryTLS52030(frm.value).pipe(finalize(() => this.loading = false)).subscribe(response => {
+      this.tls52030Service.queryTLS52030(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -156,10 +161,12 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   statusChange(rowData: ITLS52030Data, status: string) {
     const body = {
       id: rowData.id,
+      ODM_No: rowData.ODM_No,
       ODM_Status: status,
-      ODM_Status_Ori: rowData.ODM_Status
+      ODM_Status_Ori: rowData.ODM_Status,
+      Request_No: rowData.Request_No
     }
-    this.tls52030Service.updateStatusTLS52030(body).pipe(finalize(() => this.loading = false)).subscribe(response => {
+    this.tls52030Service.updateStatusTLS52030(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.onSubmit(this.queryForm);
     });

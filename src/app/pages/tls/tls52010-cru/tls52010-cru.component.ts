@@ -66,6 +66,10 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
 
   ngOnInit(): void {
     this.initializePage('TLS52010', this.dataForm);
+    if (this.isFormEditable) {
+      this.dataForm.controls.VEN_No.disable();
+      this.dataForm.controls.LOGO_No.disable();
+    }
     this.loadDropdownOptions();
     if (!this.isFormCreateable) {
       this.tls52010Service.queryPOS2017({ PO_No: this.dataForm.controls.PO_No.value }).pipe(untilDestroyed(this)).subscribe(response => {

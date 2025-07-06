@@ -20,7 +20,6 @@ export interface IQueryTLS52020Request {
   CLOS_Date_End?: string; // 結案日期迄 (YYYY-MM-DD 或 ISO 格式)
   CLOS_USR?: string; // 結案人員編號
 }
-
 /** POS2031P 資料表 (queryTLS52020) 的單筆響應資料介面 */
 export interface ITLS52020Data {
   id: number;
@@ -30,6 +29,7 @@ export interface ITLS52020Data {
   LOGO_No: string; // 品牌代碼
   HOS_No: string; // 醫院代號
   HOS_NAME: string; // 醫院名稱
+  CRN_TaxType: string;
   org_id: string; // 組織代碼
   CRN_Status: string; // 退貨單狀態
   CRN_TotalSubQty: number; // 退貨數量合計
@@ -61,25 +61,16 @@ export interface ITLS52020Data {
   UPD_USR_Name: string; // 變更人員姓名
   CanClos: boolean; // 是否可結案
 }
-
-/** 商品管理編號/國際條碼/廠商貨號查詢商品 (queryPOS2004Detail_TLS52020) 的請求介面 */
-export interface IQueryPOS2004DetailTLS52020Request {
-  VEN_No?: string; // 廠商代號
-  queryNo?: string; // 查詢號碼 (商品管理編號/國際條碼/廠商貨號)
-  LOGO_No?: string; // 品牌代碼
-}
-
 /** 查詢廠商所有商品 (queryPOS2004Detail_VEN_No_TLS52020) 的請求介面 */
 export interface IQueryPOS2004DetailVENNoTLS52020Request {
   VEN_No?: string; // 廠商代號
+  LOGO_No?: string; // 品牌代碼
   PLU_MagNo?: string; // 商品管理編號
   PLU_Name?: string; // 商品名稱
   CAT_LNo?: string; // 大分類代碼
   CAT_MNo?: string; // 中分類代碼
   CAT_SNo?: string; // 小分類代碼
-  LOGO_No?: string; // 品牌代碼
 }
-
 /** POS2004 商品資料的響應介面 (用於多個查詢) */
 export interface IPOS2004DetailData {
   id: number;
@@ -93,109 +84,85 @@ export interface IPOS2004DetailData {
   PLU_SalePrc_UNI: number; // 未稅進價
   PLU_SalePrc: number; // 含稅售價
 }
-
-/** 新增 POS2031P 資料表 (insertTLS52020) 的明細介面 */
-export interface IInsertTLS52020Detail {
-  CRN_SeqNo?: number; // 退貨單明細序號
-  SYS_StoreNo?: string; // 門店編號 (系統)
-  PLU_MagNo?: string; // 商品管理編號
-  PLU_No?: string; // 國際條碼
-  PLU_Name?: string; // 商品名稱
-  PLU_Unit?: string; // 單位編號
-  PLU_BoxQty?: number; // 包裝入數
-  PLU_StockTaxType?: string; // 進貨稅別
-  CRN_SubQty?: number; // 退貨數量
-  CRN_BuyPrc?: number; // 退貨單價 (未稅進價)
-  CRN_BuyNet?: number; // 退貨淨額 (未稅進價小計)
-  CRN_SalePrc?: number; // 銷售單價 (含稅售價)
-  CRN_SaleAmt?: number; // 銷售金額 (售價小計)
-  CRN_Remark?: string | null; // 明細備註
-}
-
-/** 新增 POS2031P 資料表 (insertTLS52020) 的請求介面 */
-export interface IInsertTLS52020Request {
-  SYS_StoreNo?: string; // 門店編號 (系統)
-  VEN_No?: string; // 廠商代號
-  LOGO_No?: string; // 品牌代碼
-  HOS_No?: string; // 醫院代號
-  CRN_TotalSubQty?: number; // 退貨數量合計
-  CRN_TotalBuyNet?: number; // 未稅進價小計
-  CRN_TotalBuyTax?: number; // 進價稅額小計
-  CRN_TotalBuyAmt?: number; // 進價合計
-  APPLY_Date?: string; // 申請日期 (ISO 格式字串)
-  APPLY_USR_No?: string; // 申請人員編號
-  APPLY_USR_Name?: string; // 申請人員姓名
-  CRN_Remark?: string | null; // 退貨單備註
-  YYYYMM?: string; // 年月 (例如 "202507")
-  Details?: IInsertTLS52020Detail[]; // 退貨單明細列表
-}
-
-/** 更新 POS2031P、POS2032P 資料 (updateTLS52020) 的明細介面 */
-export interface IUpdateTLS52020Detail {
-  id?: number; // 明細 ID (用於更新時識別)
-  CRN_SeqNo?: number; // 退貨單明細序號
-  SYS_StoreNo?: string; // 門店編號 (系統)
-  PLU_MagNo?: string; // 商品管理編號
-  PLU_No?: string; // 國際條碼
-  PLU_Name?: string; // 商品名稱
-  PLU_Unit?: string; // 單位編號
-  PLU_BoxQty?: number; // 包裝入數
-  PLU_StockTaxType?: string; // 進貨稅別
-  CRN_SubQty?: number; // 退貨數量
-  CRN_BuyPrc?: number; // 退貨單價 (未稅進價)
-  CRN_BuyNet?: number; // 退貨淨額 (未稅進價小計)
-  CRN_SalePrc?: number; // 銷售單價 (含稅售價)
-  CRN_SaleAmt?: number; // 銷售金額 (售價小計)
-  CRN_Remark?: string | null; // 明細備註
-}
-
-/** 更新 POS2031P、POS2032P 資料 (updateTLS52020) 的請求介面 */
-export interface IUpdateTLS52020Request {
+/** 新增更新 請求 */
+export interface TLS52020Request {
   id?: number; // 主檔 ID (用於更新時識別)
+  CRN_No?: string; // 退貨單編號
+  org_id?: string;
   SYS_StoreNo?: string; // 門店編號 (系統)
   VEN_No?: string; // 廠商代號
   LOGO_No?: string; // 品牌代碼
   HOS_No?: string; // 醫院代號
+  CRN_TaxType?: string; // 退貨稅別
   CRN_TotalSubQty?: number; // 退貨數量合計
   CRN_TotalBuyNet?: number; // 未稅進價小計
   CRN_TotalBuyTax?: number; // 進價稅額小計
   CRN_TotalBuyAmt?: number; // 進價合計
-  APPLY_Date?: string; // 申請日期 (ISO 格式字串)
+  CRN_TotalSaleAmt?: number; // 售價總計
+  APPLY_Date?: Date; // 申請日期 (ISO 格式字串)
   APPLY_USR_No?: string; // 申請人員編號
   APPLY_USR_Name?: string; // 申請人員姓名
   CRN_Status?: string; // 退貨單狀態
   CRN_Remark?: string | null; // 退貨單備註
   YYYYMM?: string; // 年月 (例如 "202507")
-  Details?: IUpdateTLS52020Detail[]; // 退貨單明細列表
+  Details?: TLS52020Detail[]; // 退貨單明細列表
 }
-
-/** 查詢 POS2032P 資料表 (queryPOS2032P) 的請求介面 */
-export interface IQueryPOS2032PRequest {
-  CRN_No?: string; // 退貨單編號
+/** 新增更新明細 */
+export interface TLS52020Detail {
+  id?: number,
+  CRN_No?: string
+  SYS_StoreNo?: string,
+  HOS_No?: string | null,
+  PLU_MagNo: string,
+  PLU_No: string,
+  PLU_Name: string,
+  PLU_Unit: string,
+  PLU_BoxQty: number,
+  PLU_StockTaxType: string,
+  PLU_TaxType?: string,
+  CRN_SubQty: number,
+  CRN_BuyPrc: number,
+  CRN_BuyNet?: number,
+  CRN_BuyTax?: number,
+  CRN_BuyAmt?: number,
+  CRN_SalePrc: number,
+  CRN_SaleTax?: number,
+  CRN_SaleAmt?: number,
+  CRN_Remark: string,
 }
-
 /** POS2032P 資料表 (queryPOS2032P) 的單筆響應資料介面 */
 export interface IPOS2032PData {
-  PLU_MagNo: string; // 商品管理編號
-  PLU_Name: string; // 商品名稱
-  PLU_BoxQty: number; // 包裝入數
-  CRN_SalePrc: number; // 退貨售價
-  UNIT_NAME: string; // 單位名稱
-  PLU_OrgPLUNo: string; // 原始商品編號
-  PLU_No: string; // 國際條碼
+  id: number,
+  CRN_No: string,
+  SYS_StoreNo: string,
+  HOS_No: string,
+  CRN_SeqNo: number,
+  PLU_MagNo: string,
+  PLU_No: string,
+  PLU_Unit: string,
+  PLU_BoxQty: number,
+  PLU_Name: string,
+  CRN_SubQty: number,
+  PLU_StockTaxType: string,
+  CRN_BuyPrc: number,
+  CRN_BuyNet: number,
+  CRN_BuyTax: number,
+  CRN_BuyAmt: number,
+  PLU_TaxType: string,
+  CRN_SalePrc: number,
+  CRN_SaleTax: number,
+  CRN_SaleAmt: number,
+  CRN_Remark: string,
+  UNIT_NAME: string
+  CRT_Date: string,
+  CRT_USR_No: string,
+  CRT_USR_Name: string,
+  UPD_Date: string,
+  UPD_USR_No: string,
+  UPD_USR_Name: string,
+  PLU_SalePrc_UNI: number,
+  PLU_SalePrc: number
 }
-
-/** 取得標籤檔資料 (getLabelTLS52020) 的請求介面 */
-export interface IGetLabelTLS52020Request {
-  CRN_No?: string; // 退貨單編號
-}
-
-/** 更新 POS2031P 資料狀態 (updateStatusTLS52020) 的請求介面 (已提供，僅重新列出) */
-export interface IUpdateStatusTLS52020Request {
-  idList: number[]; // 要設定狀態的退貨單 ID 列表
-  CRN_Status: string; // 要設定的狀態 (例如 "結案", "作廢" 等)
-}
-
 @Injectable({
   providedIn: 'root',
 })
@@ -212,16 +179,14 @@ export class Tls52020Service {
   queryTLS52020(params: IQueryTLS52020Request): Observable<ApiResponse<ITLS52020Data[]>> {
     return this.http.post<ApiResponse<ITLS52020Data[]>>(`${this.apiUrl}/queryTLS52020`, params);
   }
-
   /**
-   * 商品管理編號/國際條碼/廠商貨號查詢商品 (POS2004 資料)
-   * @param params 查詢條件
-   * @returns 包含 IPOS2004DetailData 陣列的 API 響應
+   * 查詢 POS2032P (退貨單明細) 資料表
+   * @param params 查詢條件 (退貨單編號)
+   * @returns 包含 IPOS2032PData 陣列的 API 響應
    */
-  queryPOS2004DetailTLS52020(params: IQueryPOS2004DetailTLS52020Request): Observable<ApiResponse<IPOS2004DetailData[]>> {
-    return this.http.post<ApiResponse<IPOS2004DetailData[]>>(`${this.apiUrl}/queryPOS2004Detail_TLS52020`, params);
+  queryPOS2032P(params: { CRN_No?: string; }): Observable<ApiResponse<IPOS2032PData[]>> {
+    return this.http.post<ApiResponse<IPOS2032PData[]>>(`${this.apiUrl}/queryPOS2032P`, params);
   }
-
   /**
    * 查詢廠商所有商品 (POS2004 資料)
    * @param params 查詢條件
@@ -230,49 +195,36 @@ export class Tls52020Service {
   queryPOS2004DetailVENNoTLS52020(params: IQueryPOS2004DetailVENNoTLS52020Request): Observable<ApiResponse<IPOS2004DetailData[]>> {
     return this.http.post<ApiResponse<IPOS2004DetailData[]>>(`${this.apiUrl}/queryPOS2004Detail_VEN_No_TLS52020`, params);
   }
-
-  /**
-   * 新增 POS2031P (退貨單主檔) 資料表
-   * @param data 包含退貨單主檔及明細資料
-   * @returns API 響應 (通常為成功訊息或 ID)
-   */
-  insertTLS52020(data: IInsertTLS52020Request): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertTLS52020`, data);
-  }
-
-  /**
-   * 更新 POS2031P (退貨單主檔) 及 POS2032P (退貨單明細) 資料
-   * @param data 包含退貨單主檔及明細資料
-   * @returns API 響應 (通常為成功訊息)
-   */
-  updateTLS52020(data: IUpdateTLS52020Request): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateTLS52020`, data);
-  }
-
-  /**
-   * 查詢 POS2032P (退貨單明細) 資料表
-   * @param params 查詢條件 (退貨單編號)
-   * @returns 包含 IPOS2032PData 陣列的 API 響應
-   */
-  queryPOS2032P(params: IQueryPOS2032PRequest): Observable<ApiResponse<IPOS2032PData[]>> {
-    return this.http.post<ApiResponse<IPOS2032PData[]>>(`${this.apiUrl}/queryPOS2032P`, params);
-  }
-
-  /**
-   * 根據狀態更新 POS2031P (退貨單主檔) 資料 (例如：結案、作廢、審核等)
-   * @param data 包含要更新的退貨單 ID 列表及目標狀態
-   * @returns API 響應
-   */
-  updateStatusTLS52020(data: IUpdateStatusTLS52020Request): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateStatusTLS52020`, data);
-  }
-
   /**
    * 取得標籤檔資料
    * @param params 查詢條件 (退貨單編號)
    * @returns API 響應 (通常包含標籤資料)
    */
-  getLabelTLS52020(params: IGetLabelTLS52020Request): Observable<ApiResponse<any>> {
+  getLabelTLS52020(params: { CRN_No?: string; }): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/getLabelTLS52020`, params);
+  }
+  /**
+   * 根據狀態更新 POS2031P (退貨單主檔) 資料 (例如：結案、作廢、審核等)
+   * @param data 包含要更新的退貨單 ID 列表及目標狀態
+   * @returns API 響應
+   */
+  updateStatusTLS52020(data: { idList: number[]; CRN_Status: string; }): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateStatusTLS52020`, data);
+  }
+  /**
+   * 新增 POS2031P (退貨單主檔) 資料表
+   * @param data 包含退貨單主檔及明細資料
+   * @returns API 響應 (通常為成功訊息或 ID)
+   */
+  insertTLS52020(data: TLS52020Request): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertTLS52020`, data);
+  }
+  /**
+   * 更新 POS2031P (退貨單主檔) 及 POS2032P (退貨單明細) 資料
+   * @param data 包含退貨單主檔及明細資料
+   * @returns API 響應 (通常為成功訊息)
+   */
+  updateTLS52020(data: TLS52020Request): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateTLS52020`, data);
   }
 }

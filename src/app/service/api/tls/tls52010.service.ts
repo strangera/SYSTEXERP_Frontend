@@ -246,16 +246,6 @@ export class Tls52010Service {
   GetBudgetAmount(params: IGetBudgetAmountRequest): Observable<ApiResponse<number>> { // 假設返回的 Data 是數字
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/GetBudgetAmount`, params);
   }
-
-  /**
-   * 根據商品管理編號/國際條碼/廠商貨號查詢商品 (POS2004 詳細資料)
-   * @param params 查詢條件 (VEN_No, LOGO_No, queryNo)
-   * @returns 包含 IPOS2004DetailData 陣列的 API 響應
-   *///!!!未完成
-  queryPOS2004Detail(params: IQueryPOS2004DetailRequest): Observable<ApiResponse<IPOS2004DetailData[]>> {
-    return this.http.post<ApiResponse<IPOS2004DetailData[]>>(`${this.apiUrl}/queryPOS2004Detail`, params);
-  }
-
   /**
    * 查詢廠商所有商品 (POS2004 詳細資料)
    * @param params 查詢條件 (VEN_No, LOGO_No, PLU_MagNo, PLU_Name, CAT_LNo, CAT_MNo, CAT_SNo)
@@ -268,7 +258,7 @@ export class Tls52010Service {
    * 查詢 POS2017 (採購單明細) 資料表
    * @param params 查詢條件 (PO_No)
    * @returns 包含 IPOS2017Data 陣列的 API 響應
-   *///!!!未完成 (編輯)
+   */
   queryPOS2017(params: IQueryPOS2017Request): Observable<ApiResponse<IPOS2017Data[]>> {
     return this.http.post<ApiResponse<IPOS2017Data[]>>(`${this.apiUrl}/queryPOS2017`, params);
   }
@@ -277,7 +267,7 @@ export class Tls52010Service {
    * 根據狀態更新 POS2016 (採購單主檔) 資料 (結案或作廢)
    * @param data 包含要更新的採購單 ID 列表及目標狀態
    * @returns API 響應
-   *///!!!未完成
+   */
   updateStatusTLS52010(data: ISetCloseTLS52010Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateStatusTLS52010`, data);
   }
@@ -285,7 +275,7 @@ export class Tls52010Service {
    * 新增 POS2016 (採購單主檔) 資料
    * @param data 要新增的採購單資料，包含主檔及明細
    * @returns API 響應
-   *///!!!未完成
+   */
   insertTLS52010(data: ITLS52010Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertTLS52010`, data);
   }
@@ -294,7 +284,7 @@ export class Tls52010Service {
    * 更新 POS2016、POS2017 (採購單主檔及明細) 資料
    * @param data 要更新的採購單資料，包含主檔及明細
    * @returns API 響應
-   *///!!!未完成
+   */
   updateTLS52010(data: ITLS52010Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateTLS52010`, data);
   }

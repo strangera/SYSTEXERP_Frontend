@@ -95,6 +95,7 @@ export interface IODDetail {
 /** 新增 POS2018 資料表 (insertTLS52030) 的請求介面 */
 export interface ITLS52030Request {
   id?: number; // ID
+  ODM_No?: string; // 進貨單號
   SYS_StoreNo: string; // 公司編號/店號
   VEN_No: string; // 廠商代號
   LOGO_No: string; // 品牌代碼
@@ -174,7 +175,7 @@ export interface IGetPOS2017AndPOS2019Response {
 
 /** 更新 POS2018 資料狀態 (updateTLS52030_Status) 的請求介面 */
 export interface IUpdateTLS52030StatusRequest {
-  id: number; // ID
+  ODM_No: string; // 驗收編號
   ODM_Status: string; // 驗收狀態 (例如 "審核", "作廢", "反審核")
   ODM_Status_Ori: string; // 原始狀態
   Request_No?: string | null; // 請款單號 (如果相關)
@@ -231,6 +232,15 @@ export class Tls52030Service {
    */
   getPOS2017AndPOS2019(params: IGetPOS2017AndPOS2019Request): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/GetPOS2017AndPOS2019`, params);
+  }
+
+  /**
+   * 取得進貨驗收明細資料 (POS2019)
+   * @param params 查詢條件 (ODM_No)
+   * @returns 包含 POS2019 資料的 API 響應
+   */
+  GetPOS2019(params: { ODM_No?: string }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/GetPOS2019`, params);
   }
 
   /**

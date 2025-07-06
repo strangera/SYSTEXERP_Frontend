@@ -101,7 +101,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     private dropDownListService: DropDownListService
   ) { super(); }
   ngOnInit(): void {
-    this.initializePage('TLS52020', 'TLS/TLS52020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS52020', 'tls/tls52020cru', this.queryForm, (form) => this.onSubmit(form));
     // 倉別 (HOS_No)
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this), map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
     ).subscribe(options => { this.warehouseOptions = options; });

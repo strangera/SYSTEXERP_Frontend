@@ -8,7 +8,7 @@ import { debounceTime, finalize } from 'rxjs';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
 import { POStatus } from '../tls52030/tls52030.component';
-import { validateNumber } from '../../../shared/models/system/validate-field.model';
+import { validateMinNumber } from '../../../shared/models/system/validate-field.model';
 // 2.5.2.3  進貨驗收作業CRU
 @Component({
   selector: 'app-tls52030-cru',
@@ -23,9 +23,9 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     ODM_TotalBuyNet: [{ value: 0, disabled: true }], // 進貨驗收金額
     ODM_TotalBuyTax: [{ value: 0, disabled: true }], // 稅額
     ODM_TotalBuyAmt: [{ value: 0, disabled: true }], // 合計金額
+    ODM_TotalSaleAmt: [{ value: 0, disabled: true }], // 售價總計
     ODM_USR_No: [{ value: null as string | null, disabled: true }], // 申請人
     ODM_Date: [{ value: new Date(), disabled: true }], // 申請日期
-    ODM_TotalSaleAmt: [{ value: 0, disabled: true }], // 售價總計
     ODM_Remark: ['', [Validators.maxLength(200)]],// 進貨驗收單說明
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
   });
@@ -40,9 +40,10 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
     { field: 'POD_SubQty', header: '應驗數量', format: formatAmount },
-    { field: 'ODD_ConfirmQty', header: '驗收數量', type: 'inputNumber', validate: [validateConfirmQtySumNotExceedSubQty(), validateNumber] },
+    { field: 'ODD_ConfirmQty', header: '驗收數量', type: 'inputNumber', validate: [validateConfirmQtySumNotExceedSubQty(), validateMinNumber(0)] },
     { field: 'ODD_ConfirmQty_Finished', header: '已驗收數量', format: formatAmount },
-    { field: 'PLU_Unit', header: '商品單位' },
+    { field: 'PLU_Unit', header: '單位編號' },
+    { field: 'UNIT_NAME', header: '單位名稱' },
     { field: 'ODD_BuyPrc', header: '採購單價', format: formatAmount },
     { field: 'ODD_BuyPrc', header: '驗收單價', format: formatAmount },
     { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : '應稅' },
@@ -64,12 +65,19 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
 
   ngOnInit(): void {
     this.initializePage('TLS52030', this.dataForm);
+    if (this.isFormEditable) {
+      this.dataForm.controls.VEN_No.disable();
+      this.dataForm.controls.LOGO_No.disable();
+    }
     this.loadDropdownOptions();
     if (this.isFormCreateable) {
       this.dataForm.controls.ODM_Date.setValue(new Date());
       this.userOptions = [{ user_No: this.user?.user_No || '', user_Name: this.user?.user_Name || '' }];
       this.dataForm.controls.ODM_USR_No.setValue(this.userOptions[0]?.user_No || ''); // 假設用戶對象有 userName 屬性
     } else {
+      this.tls52030Service.GetPOS2019({ ODM_No: this.rowdata?.ODM_No }).pipe(untilDestroyed(this)).subscribe(response => {
+        this.data = response.Data.Data;
+      });
       this.sys0110Service.queryUser({ user_No: this.rowdata?.ODM_USR_No }).pipe(untilDestroyed(this)).subscribe(response => {
         this.userOptions = response.Data.map(user => ({ user_No: user.user_No, user_Name: user.user_Name }));
       })
@@ -102,13 +110,15 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-
       if (!this.data || this.data.length === 0) {
         return this.messageService.errorBubble('請至少選擇一個驗收項目！');
       }
       const formData = frm.getRawValue();
+      console.log(this.data);
+
       const details: IODDetail[] = this.data.map((item) => ({
         id: item.id,
+        ODM_No: formData.ODM_No,
         SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
         PLU_MagNo: item.PLU_MagNo,
         PLU_No: item.PLU_No,
@@ -122,7 +132,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
         ODD_BuyAmt: item.ODD_BuyAmt || 0, // 採購金額 (已計算過並取整數)
         PLU_TaxType: item.PLU_TaxType,
         ODD_SalePrc: item.ODD_SalePrc || 0, // 確保有值，使用之前計算好的 POD_SubQty
-        ODD_SaleTax: item.ODD_SaleTax || 0, // 銷售單價 (含稅售價)
+        ODD_SaleTax: item.ODD_SaleTax || 0, // 銷售稅額 (已計算過並取整數)
         ODD_SaleAmt: item.ODD_SaleAmt || 0, // 銷售金額 (已計算過並取整數)
         POD_SubQty: item.POD_SubQty || 0, // 確保有值，使用之前計算好的 POD_SubQty
         ODD_ConfirmQty: item.ODD_ConfirmQty || 0, // 確保有值，使用之前計算好的 POD_SubQty
@@ -130,25 +140,27 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
         ODD_Remark: item.ODD_Remark || '',
         PO_No: item.PO_No,
       }));
+      const totalSaleTax = details.reduce((sum, item) => sum + (item.ODD_SaleTax || 0), 0);
       const submitData: ITLS52030Request = {
         id: this.isFormCreateable ? undefined : this.rowdata?.id,
+        ODM_No: formData.ODM_No,
         SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
         VEN_No: formData.VEN_No,
         LOGO_No: formData.LOGO_No,
         HOS_No: formData.HOS_No,
         org_id: this.rowdata?.org_id || null,
-        ODM_Date: this.dataForm.controls.ODM_Date.value,
+        ODM_Date: formData.ODM_Date,
         ODM_USR_No: this.authService.currentUserValue?.user_No || '',
         ODM_USR_Name: this.authService.currentUserValue?.user_Name || '',
-        ODM_TotalBuyNet: this.dataForm.controls.ODM_TotalBuyNet.value,
-        ODM_TotalBuyTax: this.dataForm.controls.ODM_TotalBuyTax.value,
-        ODM_TotalBuyAmt: this.dataForm.controls.ODM_TotalBuyAmt.value,
-        ODM_TotalSaleNet: this.rowdata?.ODM_TotalSaleNet,
-        ODM_TotalSaleTax: this.rowdata?.ODM_TotalSaleTax,
-        ODM_TotalSaleAmt: this.dataForm.controls.ODM_TotalSaleAmt.value,
+        ODM_TotalBuyNet: formData.ODM_TotalBuyNet, // 進貨驗收金額
+        ODM_TotalBuyTax: formData.ODM_TotalBuyTax, // 稅額
+        ODM_TotalBuyAmt: formData.ODM_TotalBuyAmt, // 總金額
+        ODM_TotalSaleNet: formData.ODM_TotalSaleAmt - totalSaleTax,
+        ODM_TotalSaleTax: totalSaleTax,
+        ODM_TotalSaleAmt: formData.ODM_TotalSaleAmt, // 總金額
         ODM_Status: this.isFormCreateable ? POStatus.已確認 : this.rowdata?.ODM_Status,
         ODM_TaxType: this.rowdata?.ODM_TaxType,
-        ODM_Remark: this.rowdata?.ODM_Remark || '',
+        ODM_Remark: formData.ODM_Remark || '',
         Details: details, // 帶入轉換後的明細資料陣列
       };
       // 處理提交邏輯 (呼叫 insert 或 update)
@@ -176,7 +188,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
   dialogData: IODDetail[] = [];
   selectedItemsDialog: IODDetail[] = [];
   dialogColumns: Column[] = [
-    { field: 'PO_No', header: '商品管理編號' },
+    { field: 'PO_No', header: '採購單編號' },
     { field: 'APPLY_Date', header: '申請日期', format: formatDate },
     { field: 'APRV_Date', header: '審核日期', format: formatDate },
   ]
@@ -200,7 +212,13 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
       PO_NoList: this.selectedItemsDialog.map(item => item.PO_No).filter(poNo => poNo != null)
     };
     this.tls52030Service.getPOS2017AndPOS2019(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
-      this.data = [...this.data, ...response.Data.Data];
+      this.data = [
+        ...this.data,
+        ...response.Data.Data.map((item: IODDetail) => ({
+          ...item,
+          ODD_ConfirmQty: 0
+        }))
+      ];
     })
     this.dialogVisible = false;
     this.selectedItemsDialog = [];

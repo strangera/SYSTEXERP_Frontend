@@ -33,12 +33,13 @@
         <app-input-textarea class="col-12" label="進貨驗收單說明" controlName="ODM_Remark"
           [control]="dataForm.controls.ODM_Remark" [submitted]="submitted" />
       </div>
-      <app-table dataKey="PLU_MagNo" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
-        [showCheckBox]="isFormCreateable" (selectionChange)="selectedItems = $event" [showEdit]="false"
+      <app-table dataKey="PO_No" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
+        [showCheckBox]="!isFormReadable" (selectionChange)="selectedItems = $event" [showEdit]="false"
         [showDetail]="false" [showInsert]="true" (insert)="onShowDialog()" [showRowEdit]="true"
         (delete)="onDelete($event)" (rowEditSave)="onRowEditSave($event)" [showCaption]="isFormCreateable"
-        [showReportMode]="false" [showDelete]="false"
-        [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value && dataForm.controls.HOS_No.value ? false : true" />
+        [showReportMode]="false" [showManage]="!isFormReadable" [multiSortMeta]="[{ field: 'PO_No', order: 1 }]"
+        [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value &&
+        dataForm.controls.HOS_No.value ? false : true" />
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" />
         <app-button btnType="submit" [loading]="loading" />
@@ -48,7 +49,7 @@
 </div>
 
 <app-dialog [visible]="dialogVisible" header="選擇採購單" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
-  [disable]="selectedItemsDialog.length === 0" [height]="dialogData.length ? '100%' : '400px'">
+  [disable]="selectedItemsDialog.length === 0" [height]="'500px'">
   <app-table tableKey="tls52030DialogTable" dataKey="PO_No" [showReportMode]="false" [data]="dialogData"
     [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
     (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
