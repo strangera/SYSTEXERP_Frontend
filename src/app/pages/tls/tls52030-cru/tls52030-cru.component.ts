@@ -230,7 +230,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     this.calculateTotals();
   }
   isRowSelectable(event: IODDetail): boolean {
-    return !this.data || !this.data.some((item: IODDetail) => item.PLU_MagNo === event.PLU_MagNo);
+    return !this.data || !this.data.some((item: IODDetail) => item.PO_No === event.PO_No);
   }
 
   onRowEditSave(event: RowEditSaveEvent): void {
