@@ -31,7 +31,7 @@ export class ReportTableGroupComponent implements OnInit {
   @Input() pdfSummaryText: string[] = [];
   @Input() groupByField?: string | null = null;
   @Input() groupByLabel: string = '';
-
+@Input() rowExpandMode: 'single' | 'multiple' = 'multiple';
   @Input() allowMergeToggle: boolean = false; // 預設不顯示切換開關
   @Input() defaultMergedView: boolean = true; // 預設就是合併模式
   @Input() enableGrouping: boolean = false;
@@ -558,5 +558,7 @@ collapseAllGroupBodies(): void {
     this.groupBodyExpanded[key] = false;
   }
 }
+
+
 
 }

@@ -171,7 +171,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     }
     if (matchedItem) {
       console.log(matchedItem);
-      this.router.navigate([`/account/${matchedItem.prog_No.slice(0, 3)}/${matchedItem.prog_No}`]); // 導向到該頁面，並傳遞 prog_no 參數到該頁面路由matchedItem.]);
+      this.router.navigate([`/account/${matchedItem.prog_No.slice(0, 3).toLowerCase()}/${matchedItem.prog_No.toLowerCase()}`]); // 導向到該頁面，並傳遞 prog_no 參數到該頁面路由matchedItem.]);
       this.queryForm.reset();
     } else {
       this.messageService.warnBubble('輸入的代碼不存在，或您目前無權限存取對應頁面。', '查無此快速碼');
@@ -197,7 +197,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
         this.Favorites = favoritesWithDetails.map(item => ({
           ...item,
           label: item.label,
-          path: `/account/${item.prog_No.slice(0, 3)}/${item.prog_No}`,
+          path: `/account/${item.prog_No.slice(0, 3).toLowerCase()}/${item.prog_No.toLowerCase()}`,
         }));
       }, error: error => { console.error('Error fetching favorites:', error); }
     });

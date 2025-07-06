@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ITLS52020Data, Tls52020Service } from '../../../service/api/tls/tls52020.service';
-import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { DropDownListService, IPOS2013Request } from '../../../service/api/dropdownservice/dropDownList.service';
+import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { DropDownListService } from '../../../service/api/dropdownservice/dropDownList.service';
 import { finalize, map } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
-export const enum POStatus {
+import { trigger, transition, style, animate } from '@angular/animations';
+export const enum CRNtatus {
   已申請 = '0',
   已審核 = '2',
   部分驗收 = '3',
@@ -18,6 +19,14 @@ export const enum POStatus {
 @Component({
   selector: 'app-tls52020',
   templateUrl: './tls52020.component.html',
+  animations: [
+    trigger('slideInFromLeft', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateX(-20%)' }),
+        animate('400ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
+      ])
+    ])
+  ]
 })
 export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -48,26 +57,26 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     { field: 'HOS_No', header: '倉庫代碼', visible: true }, // 倉庫代碼
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true }, // 倉庫名稱
     { field: 'org_id', header: '組織代碼', visible: true }, // 組織代碼
-    { field: 'CRN_Status', header: '採購單狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value }, // 採購單狀態
+    { field: 'CRN_Status', header: '採購單狀態', visible: true, format: value => this.crnstatusOptions.find(x => x.value === value)?.label || value }, // 採購單狀態
+    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDate }, // 申請日期 (ISO 格式字串)
+    { field: 'APPLY_USR_No', header: '申請人員編號', visible: true }, // 申請人員編號
+    { field: 'APPLY_USR_Name', header: '申請人員姓名', visible: true }, // 申請人員姓名
     { field: 'CRN_TotalSubQty', header: '退貨數量合計', visible: true, format: formatAmount }, // 退貨數量合計
     { field: 'CRN_TotalBuyNet', header: '未稅進價小計', visible: true, format: formatAmount }, // 未稅進價小計
     { field: 'CRN_TotalBuyTax', header: '進價稅額小計', visible: true, format: formatAmount }, // 進價稅額小計
     { field: 'CRN_TotalBuyAmt', header: '進價合計', visible: true, format: formatAmount }, // 進價合計
     { field: 'CRN_TotalSaleAmt', header: '售價合計', visible: true, format: formatAmount }, // 售價合計
     { field: 'CRN_Remark', header: '備註', visible: true }, // 備註
-    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime }, // 申請日期 (ISO 格式字串)
-    { field: 'APPLY_USR_No', header: '申請人員編號', visible: true }, // 申請人員編號
-    { field: 'APPLY_USR_Name', header: '申請人員姓名', visible: true }, // 申請人員姓名
-    { field: 'APRV_Date', header: '核准日期', visible: true, format: formatDateTime }, // 核准日期 (ISO 格式字串)
+    { field: 'APRV_Date', header: '核准日期', visible: true, format: formatDate }, // 核准日期 (ISO 格式字串)
     { field: 'APRV_USR_No', header: '核准人員編號', visible: true }, // 核准人員編號
     { field: 'APRV_USR_Name', header: '核准人員姓名', visible: true }, // 核准人員姓名
-    { field: 'ReAPRV_Date', header: '反審核日期', visible: true, format: formatDateTime }, // 反審核日期 (ISO 格式字串)
+    { field: 'ReAPRV_Date', header: '反審核日期', visible: true, format: formatDate }, // 反審核日期 (ISO 格式字串)
     { field: 'ReAPRV_USR_No', header: '反審核人員編號', visible: true }, // 反審核人員編號
     { field: 'ReAPRV_USR_Name', header: '反審核人員姓名', visible: true }, // 反審核人員姓名
-    { field: 'VOID_Date', header: '作廢日期', visible: true, format: formatDateTime }, // 作廢日期 (ISO 格式字串)
+    { field: 'VOID_Date', header: '作廢日期', visible: true, format: formatDate }, // 作廢日期 (ISO 格式字串)
     { field: 'VOID_USR_No', header: '作廢人員編號', visible: true }, // 作廢人員編號
     { field: 'VOID_USR_Name', header: '作廢人員姓名', visible: true }, // 作廢人員姓名
-    { field: 'CLOS_Date', header: '結案日期', visible: true, format: formatDateTime }, // 結案日期 (ISO 格式字串)
+    { field: 'CLOS_Date', header: '結案日期', visible: true, format: formatDate }, // 結案日期 (ISO 格式字串)
     { field: 'CLOS_USR_No', header: '結案人員編號', visible: true }, // 結案人員編號
     { field: 'CLOS_USR_Name', header: '結案人員姓名', visible: true }, // 結案人員姓名
     { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期 (ISO 格式字串)
@@ -80,51 +89,39 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   warehouseOptions: { label: string, value: string }[] = []; // 倉別
   brandOptions: { label: string, value: string }[] = []; // 品牌代碼
   vendorOptions: { label: string, value: string }[] = []; // 廠商編號
-  poStatusOptions: { label: string, value: string }[] = []; // 採購單狀態 (靜態資料)
+  crnstatusOptions: { label: string, value: string }[] = []; // 採購單狀態 (靜態資料)
   userOptions: { label: string, value: string }[] = []; // 申請人員、審核人員、結案人員
   addButton: AddButton[] = [
-    { label: '單據審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, POStatus.已審核); }, disabled: (rowData: ITLS52020Data) => rowData.CRN_Status !== '1' }, // 審核
-    { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, POStatus.已申請); }, disabled: (rowData: ITLS52020Data) => rowData.CRN_Status !== '2' }, // 反審核
-    { label: '作廢單據', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, POStatus.作廢); }, disabled: (rowData: ITLS52020Data) => rowData.CRN_Status !== '2' }, // 作廢
+    { label: '單據審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, CRNtatus.已審核); }, disabled: (rowData: ITLS52020Data) => rowData.CRN_Status !== CRNtatus.已申請 }, // 審核
+    { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, CRNtatus.已申請); }, disabled: (rowData: ITLS52020Data) => rowData.CRN_Status !== CRNtatus.已審核 }, // 反審核
+    { label: '作廢單據', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, CRNtatus.作廢); }, disabled: (rowData: ITLS52020Data) => rowData.CRN_Status !== CRNtatus.已審核 }, // 作廢
   ];
-
   constructor(
     private tls52020Service: Tls52020Service,
     private dropDownListService: DropDownListService
   ) { super(); }
-
   ngOnInit(): void {
-    this.initializePage('TLS52020', 'TLS/TLS52020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS52020', 'tls/tls52020cru', this.queryForm, (form) => this.onSubmit(form));
     // 倉別 (HOS_No)
-    this.dropDownListService.getPOS2034Options().pipe(
-      map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
-    ).pipe(untilDestroyed(this)).subscribe(options => {
-      this.warehouseOptions = options;
-    });
+    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this), map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
+    ).subscribe(options => { this.warehouseOptions = options; });
     // 品牌代碼 (LOGO_No)
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(
-      map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
-    ).pipe(untilDestroyed(this)).subscribe(options => {
-      this.brandOptions = options.map(item => ({ label: `${item.value} - ${item.label}`, value: item.value }));
-    });
+    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this), map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
+    ).subscribe(options => { this.brandOptions = options.map(item => ({ label: `${item.value} - ${item.label}`, value: item.value })); });
     // 廠商編號 (VEN_No)
-    const venFlagParams: IPOS2013Request = { VEN_Flag: '' }; // 根據實際需求設定 VEN_Flag
-    this.dropDownListService.queryPOS2013_DropDownList(venFlagParams).pipe(
-      map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
-    ).pipe(untilDestroyed(this)).subscribe(options => { this.vendorOptions = options.map(item => ({ label: `${item.value} - ${item.label}`, value: item.value })); });
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this), map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
+    ).subscribe(options => { this.vendorOptions = options.map(item => ({ label: `${item.value} - ${item.label}`, value: item.value })); });
     // 採購單狀態 (PO_Status) - 靜態資料，已更新為你提供的正確值
-    this.poStatusOptions = [
-      { label: '已申請', value: '1' },
+    this.crnstatusOptions = [
+      { label: '已申請', value: '0' },
       { label: '已審核', value: '2' },
       { label: '部分驗收', value: '3' },
       { label: '全部驗收', value: '4' },
-      { label: '強制結案', value: '7' },
+      { label: '強制結案', value: '6' },
       { label: '作廢', value: '9' },
     ];
-
     // 申請人員、審核人員、結案人員 (共用人員下拉選單)
-    this.dropDownListService.queryUser_Name_DropDownList().pipe(
-      map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
+    this.dropDownListService.queryUser_Name_DropDownList().pipe(map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
     ).pipe(untilDestroyed(this)).subscribe(options => {
       this.userOptions = options;
     });
@@ -139,30 +136,40 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
       });
     })
   }
+  print(rowData: ITLS52020Data[]) {
+    console.log('列印多筆事件:', rowData);
+  }
+  btnLoading = false;
   statusChange(rowData: ITLS52020Data, status: string) {
+    this.btnLoading = true;
     const body = {
       idList: [rowData.id],
       CRN_Status: status
     }
-    this.tls52020Service.updateStatusTLS52020(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(response => {
+    this.tls52020Service.updateStatusTLS52020(body).pipe(finalize(() => this.btnLoading = false)).pipe(untilDestroyed(this)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.onSubmit(this.queryForm);
     });
   }
-  print(rowData: ITLS52020Data[]) {
-    console.log('列印多筆事件:', rowData);
-  }
-
   close(rowData: ITLS52020Data[]) {
-    console.log('關閉多筆事件:', rowData);
     const body = {
       idList: rowData.map(item => item.id),
-      CRN_Status: POStatus.強制結案
+      CRN_Status: CRNtatus.強制結案
     }
     this.tls52020Service.updateStatusTLS52020(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.selectedItems = [];
       this.onSubmit(this.queryForm);
     });
+  }
+  editDisabled(rowData: ITLS52020Data) {
+    return rowData.CRN_Status !== CRNtatus.已申請;
+  }
+  get disabledClose() {
+    return this.selectedItems.some(item => (item.CRN_Status !== CRNtatus.已審核) && (item.CRN_Status !== CRNtatus.部分驗收));
+  }
+
+  get selectedCount() {
+    return this.selectedItems.length;
   }
 }

@@ -9,12 +9,15 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-
           <!-- 銷售日期 -->
 
-         <app-calendar-range-quick
+          <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="銷售日期"
             [startControl]="queryForm.controls.TXN_DateStart"
@@ -24,13 +27,18 @@
 
           <!-- 是否收銀 -->
 
-          
-           <div class="col-12 md:col-6 lg:col-4">
-                    <app-radiobutton class="col-12" label="類型" groupname="rece_yn" [control]="queryForm.controls.rece_yn"
-            [options]="WhetherOptions" [submitted]="submitted"></app-radiobutton>  
-</div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton
+              class="col-12"
+              label="類型"
+              groupname="rece_yn"
+              [control]="queryForm.controls.rece_yn"
+              [options]="WhetherOptions"
+              [submitted]="submitted"
+            ></app-radiobutton>
+          </div>
           <!-- 收銀機號 -->
-   
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="收銀機代號"
@@ -42,8 +50,6 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-
- 
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -79,48 +85,31 @@
             ></app-multi-select>
           </div>
         </div>
-
-       
-
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear"></app-button>
-          <!-- <app-button btnType="query" [loading]="loading"></app-button> -->
-          <app-button btnType="report" label="報表模式" (clickEvent)="goToReportMode()"></app-button>
-        </div>
       </form>
+      <div class="col-12 md:col-6 lg:col-4">
+        <label for="pageSize">限制筆數</label>
+        <input
+          id="pageSize"
+          type="number"
+          pInputText
+          [(ngModel)]="customPageSize"
+          min="1"
+          style="width: 100%"
+        />
+      </div>
+
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="clear"></app-button>
+        <!-- <app-button btnType="query" [loading]="loading"></app-button> -->
+        <app-button
+          btnType="report"
+          label="報表模式"
+          (clickEvent)="confirmPageSizeAndNavigate()"
+          [loading]="loading"
+        ></app-button>
+      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
-
-<!-- <div class="card">
-  <app-table
-    tableKey="TLS23050"
-    [data]="data"
-    [columns]="columns"
-    [showCheckBox]="false"
-    dataKey="ECR_No"
-    [multiSortMeta]="[{ field: 'TXN_DateStart', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showManage]="false"
-    [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)">
-  </app-table>
-</div> -->
-<p-dialog header="限制筆數" [(visible)]="showPageSizeDialog" [modal]="true" [closable]="false" [style]="{ width: '300px' }">
-  <div class="p-fluid">
-    <div class="field">
-      <label for="pageSize">限制筆數</label>
-      <input id="pageSize" type="number" pInputText [(ngModel)]="customPageSize" min="1" style="width: 100%" />
-    </div>
-
-    </div>
-    <ng-template pTemplate="footer">
-      <button type="button" pButton label="取消" class="p-button-text" (click)="showPageSizeDialog = false"></button>
-      <button type="button" pButton label="確定" (click)="confirmPageSizeAndNavigate()" [loading]="loading"></button>
-    </ng-template>
-
-</p-dialog>

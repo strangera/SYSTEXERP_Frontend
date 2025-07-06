@@ -92,11 +92,11 @@ const routes: Routes = [
   { path: 'sysb800', component: SYSB800Component }, // 大分類基本資料維護作業
   { path: 'sysb900', component: SYSB900Component }, // 中分類維護作業
   { path: 'sysb920', component: SYSB920Component }, // 小分類維護作業
-  { path: 'sysbC00', component: SYSBC00Component }, // 銀行基本資料維護作業
-  { path: 'sysbP00', component: SYSBP00Component }, // 參數資料設定維護
-  { path: 'sysbQ00', component: SYSBQ00Component }, // 簽核權限設定維護
-  { path: 'sysbR00', component: SYSBR00Component }, // 縣市區域資料維護作業
-  { path: 'sysbR10', component: SYSBR10Component }, // 佈告欄管理作業
+  { path: 'sysbc00', component: SYSBC00Component }, // 銀行基本資料維護作業
+  { path: 'sysbp00', component: SYSBP00Component }, // 參數資料設定維護
+  { path: 'sysbq00', component: SYSBQ00Component }, // 簽核權限設定維護
+  { path: 'sysbr00', component: SYSBR00Component }, // 縣市區域資料維護作業
+  { path: 'sysbr10', component: SYSBR10Component }, // 佈告欄管理作業
   { path: 'sysb100cru', component: SYSB100CRUComponent }, // 公司基本資料維護作業 CRU
   { path: 'sysb200cru', component: SYSB200CRUComponent }, // 廠商基本資料維護作業 CRU
   { path: 'sysb300cru', component: SYSB300CRUComponent }, // 組織階層設定作業 CRU

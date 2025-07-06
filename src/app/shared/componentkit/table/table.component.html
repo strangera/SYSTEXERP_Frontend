@@ -193,14 +193,8 @@
               <span [innerHTML]="rowData[col.field]"></span>
             </div>
           </ng-container>
-          <span *ngIf="
-              rowData[col.field] !== undefined &&
-              rowData[col.field] !== null &&
-              !col.type
-            ">
-            {{
-            col.format ? col.format(rowData[col.field]) : rowData[col.field]
-            }}
+          <span *ngIf="!col.type">
+            {{col.format ? col.format(rowData[col.field]) : rowData[col.field]}}
           </span>
         </td>
         <td [hidden]="!IsPrint || !showManage" [ngClass]="{

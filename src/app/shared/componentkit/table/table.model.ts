@@ -154,9 +154,9 @@ export const formatTimeHHMM = (value: string | number): string => {
 };
 
 // 000,000,000
-export const formatAmount = (number: number | string): string => {
-  if (!number) return '0';
-  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+export const formatAmount = (number: number | string): number => {
+  if (number === null || number === undefined || isNaN(Number(number))) return 0;
+  return Number(number); // 或維持原本 regex 寫法
 };
 
 export const formatYN = (value: string): string => {
