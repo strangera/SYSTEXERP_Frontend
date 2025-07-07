@@ -156,7 +156,9 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
       });
     })
   }
+  btnLoading = false;
   statusChange(rowData: ITLS52030Data, status: string) {
+    this.btnLoading = true;
     const body = {
       id: rowData.id,
       ODM_No: rowData.ODM_No,
@@ -164,7 +166,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
       ODM_Status_Ori: rowData.ODM_Status,
       Request_No: rowData.Request_No
     }
-    this.tls52030Service.updateStatusTLS52030(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+    this.tls52030Service.updateStatusTLS52030(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.onSubmit(this.queryForm);
     });

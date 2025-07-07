@@ -54,7 +54,7 @@
       <app-table dataKey="PLU_MagNo" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
         [showCheckBox]="isFormCreateable" (selectionChange)="selectedItems = $event" [showEdit]="false"
         [showDetail]="false" [showInsert]="true" (insert)="dialogVisible = true" [showRowEdit]="true"
-        (delete)="onDelete($event)" [showManage]="!isFormReadable"
+        (delete)="onDelete($event)" [showManage]="!isFormReadable" [showReportMode]="false"
         [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true"
         (rowEditSave)="onRowEditSave($event)" [showCaption]="isFormCreateable" />
 
@@ -94,6 +94,6 @@
     (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
     [isRowSelectable]="isRowSelectable.bind(this)" [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)"
-    [lazy]="true" [loading]="dialogLoading" [showReportMode]="false">
+    [lazy]="true" [loading]="dialogLoading">
   </app-table>
 </app-dialog>
