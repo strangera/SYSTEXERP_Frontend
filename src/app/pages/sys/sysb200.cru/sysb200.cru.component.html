@@ -6,8 +6,8 @@
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-      <h5>基 本 資 料</h5>
       <div class="grid p-fluid">
+        <div class="col-12"><h5>基 本 資 料</h5></div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="廠商編號"
@@ -81,8 +81,9 @@
           </app-input-text>
         </div>
       </div>
-      <h5>公 司 資 料</h5>
+
       <div class="grid p-fluid">
+        <div class="col-12 mt-5"><h5>公 司 資 料</h5></div>
         <div class="col-12 flex flex-row gap-4">
           <div class="flex-1">
             <app-input-text
@@ -145,51 +146,86 @@
           ></app-input-text>
         </div>
       </div>
-      <h5>聯 絡 人</h5>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="聯絡人"
-            controlName="VEN_Boss"
-            [control]="dataForm.controls.VEN_Boss"
-            [submitted]="submitted"
-          ></app-input-text>
+
+      <div class="grid p-fluid" formArrayName="contacts">
+        <div
+          *ngFor="let contact of contacts.controls; let i = index"
+          [formGroupName]="i"
+          class="col-12 border p-3 mb-3 relative"
+        >
+          <div class="flex justify-content-between align-items-center mb-2">
+            <h5 class="mt-5">聯 絡 人 資 料 {{ i + 1 }}</h5>
+            <app-button
+              btnType="textclear"
+              label="清除"
+              styleClass="text-sm text-color-secondary"
+              (clickEvent)="removeContact(i)"
+            ></app-button>
+          </div>
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="聯絡人"
+                [control]="getFormControl(contact.get('VEN_Boss'))"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="聯絡人職稱"
+                [control]="getFormControl(contact.get('VEN_BossTitle'))"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="聯絡人身份證字號"
+                [control]="getFormControl(contact.get('VEN_BossID'))"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="聯絡人電話"
+                [control]="getFormControl(contact.get('VEN_BossTel'))"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="聯絡人地址"
+                [control]="getFormControl(contact.get('VEN_BossAddr'))"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="聯絡人電子郵件"
+                [control]="getFormControl(contact.get('VEN_BossEmail'))"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+          </div>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="聯絡人職稱"
-            controlName="VEN_BossTitle"
-            [control]="dataForm.controls.VEN_BossTitle"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="聯絡人身份證字號"
-            controlName="VEN_BossID"
-            [control]="dataForm.controls.VEN_BossID"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="聯絡人地址"
-            controlName="VEN_BossAddr"
-            [control]="dataForm.controls.VEN_BossAddr"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="聯絡人電子郵件"
-            controlName="VEN_BossEmail"
-            [control]="dataForm.controls.VEN_BossEmail"
-            [submitted]="submitted"
-          ></app-input-text>
+
+        <!-- 新增按鈕獨立一列 -->
+        <div class="col-12 flex justify-content-center">
+          <app-button
+            label="新增"
+            icon="pi pi-plus"
+            severity="info"
+            (clickEvent)="addContact()"
+          ></app-button>
         </div>
       </div>
-      <h5>付 款 資 料</h5>
+
       <div class="grid p-fluid">
+        <div class="col-12 mt-5"><h5>付 款 資 料</h5></div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="付款方式"
@@ -237,8 +273,9 @@
           ></app-input-text>
         </div>
       </div>
-      <h5>其 他 資 料</h5>
+
       <div class="grid p-fluid">
+        <div class="col-12 mt-5"><h5>其 他 資 料</h5></div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="票據抬頭"
