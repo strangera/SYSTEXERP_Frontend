@@ -103,7 +103,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     },
     { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
     { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
-    { field: 'cag_barcode', header: '折扣別', type: 'text', editable: true, autoWidth: true },
+    { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: true, autoWidth: true, options: TLS13010_DROPDOWN_OPTIONS.tltTermType },
     { field: 'cag_charge_rate', header: '抽成率(%)', type: 'number', editable: true, autoWidth: true }
   ];
 
