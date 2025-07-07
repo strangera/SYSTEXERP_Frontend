@@ -366,82 +366,155 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     const workflowData = this.contractFlowService.getCurrentData();
     console.log('📋 工作流程資料:', workflowData);
 
-    // 🎯 詳細檢查工作流程資料結構
-    console.log('🔍 詳細檢查工作流程資料:');
-    console.log('  - workflowData:', workflowData);
-    console.log('  - workflowData.queryRowData:', workflowData?.queryRowData);
-    console.log('  - workflowData.queryRowData?._isNewContract:', workflowData?.queryRowData?._isNewContract);
-    console.log('  - workflowData.contractId:', workflowData?.contractId);
-
-    // 🎯 修正：檢查是否有工作流程資料（支援新增和編輯模式）
-    const isNewContract = workflowData?.queryRowData?._isNewContract;
-    const hasContractId = workflowData?.contractId;
-    const hasQueryRowData = !!workflowData?.queryRowData;
-
-    console.log('🔍 模式判定結果:');
-    console.log('  - isNewContract:', isNewContract);
-    console.log('  - hasContractId:', hasContractId);
-    console.log('  - hasQueryRowData:', hasQueryRowData);
-    console.log('  - typeof isNewContract:', typeof isNewContract);
-
-    // 🎯 關鍵修正：新增模式或有工作流程資料就可以繼續
-    if (hasContractId || isNewContract || hasQueryRowData) {
-      // 🎯 修正：新增模式使用空字串，編輯模式使用原有 ID
-      this.currentTalentId = workflowData?.queryRowData?.talent_id || '';
+    // 🎯 統一使用 ContractFlowService 的模式判定
+    if (workflowData.contractId || this.contractFlowService.isNewContractMode()) {
+      // 🎯 統一獲取模式資訊和 talent_id
+      const modeInfo = this.contractFlowService.getWorkflowModeInfo();
+      this.currentTalentId = modeInfo.talentId;
       this.currentContractData = workflowData?.queryRowData;
 
       console.log('✅ 工作流程狀態確認:', {
-        isNewContract: isNewContract,
+        mode: modeInfo.modeName,
         currentTalentId: this.currentTalentId,
-        contractId: workflowData?.contractId,
-        hasContractId: hasContractId,
-        mode: isNewContract ? '新增模式' : '編輯模式'
+        contractId: modeInfo.contractId
       });
 
-      // 🎯 新增模式下設定 currentTalentId 用於追蹤
-      if (isNewContract && !this.currentTalentId) {
-        this.currentTalentId = 'NEW_CONTRACT'; // 設定一個識別符
-        console.log('🆕 新增模式：設定臨時 talent_id =', this.currentTalentId);
-      }
+      // 🎯 設定追蹤 ID（新增模式使用特殊標識）
+      Step3DataChangeTracker.setCurrentTalentId(this.currentTalentId || 'NEW_CONTRACT');
 
-      Step3DataChangeTracker.setCurrentTalentId(this.currentTalentId);
-
-      // 優先使用 CRU 頁面編輯後的資料
-      const step1Data = this.contractFlowService.getStep1Data();
-      console.log('📝 Step1 編輯資料:', step1Data);
-
-      // 🎯 修正：準備合約資訊，新增模式下某些欄位可能為空
-      const contractInfo = {
-        talent_id: step1Data?.talent_id || this.currentContractData?.talent_id || '', // 🎯 新增模式可能為空
-        apply_no: step1Data?.apply_no || this.currentContractData?.apply_no || '',
-        tlt_name: step1Data?.tlt_name || this.currentContractData?.tlt_name || '',
-        VEN_Name: step1Data?.VEN_Name || this.currentContractData?.VEN_Name || '',
-        ven_uniform: step1Data?.ven_uniform || this.currentContractData?.ven_uniform || '',
-        contract_subno: step1Data?.contract_subno || this.currentContractData?.contract_subno || '',
-        comm_comp_type: step1Data?.comm_comp_type || this.currentContractData?.comm_comp_type || '',
-        tlt_bdate: step1Data?.tlt_bdate || this.currentContractData?.tlt_bdate || '',
-        tlt_edate: step1Data?.tlt_edate || this.currentContractData?.tlt_edate || '',
-        tlt_contract_bdate: step1Data?.tlt_contract_bdate || this.currentContractData?.tlt_contract_bdate || '',
-        tlt_contract_edate: step1Data?.tlt_contract_edate || this.currentContractData?.tlt_contract_edate || '',
-        tlt_term_type: (step1Data?.tlt_term_type || this.currentContractData?.tlt_term_type || '3').toString().trim(),
-      };
-
-      console.log('📊 準備顯示的合約資訊:', contractInfo);
-
-      this.contractInfoData = [{
-        id: contractInfo.talent_id || 'new', // 🎯 新增模式顯示 'new'
-        ...contractInfo
-      }];
-
-      console.log('📊 最終合約資訊陣列:', this.contractInfoData);
+      // 🎯 準備合約資訊顯示
+      this.prepareContractInfoDisplay();
 
       // 🎯 載入抽成資料
-      this.loadCommissionData();
+      this.loadCommissionDataWithPriority();
     } else {
       console.warn('❌ 沒有有效的工作流程資料，重導向到前一步');
-      console.warn('   - 缺少 contractId, isNewContract 標記或 queryRowData');
       this.router.navigate(['account/tls/tls13010cru']);
     }
+  }
+
+  private prepareContractInfoDisplay(): void {
+    console.log('📊 準備合約資訊顯示...');
+
+    // 🎯 優先使用 CRU 頁面編輯後的資料
+    const step1Data = this.contractFlowService.getStep1Data();
+    console.log('📝 Step1 編輯資料:', step1Data);
+
+    // 🎯 準備合約資訊
+    const contractInfo = {
+      talent_id: step1Data?.talent_id || this.currentContractData?.talent_id || '',
+      apply_no: step1Data?.apply_no || this.currentContractData?.apply_no || '',
+      tlt_name: step1Data?.tlt_name || this.currentContractData?.tlt_name || '',
+      VEN_Name: step1Data?.VEN_Name || this.currentContractData?.VEN_Name || '',
+      ven_uniform: step1Data?.ven_uniform || this.currentContractData?.ven_uniform || '',
+      contract_subno: step1Data?.contract_subno || this.currentContractData?.contract_subno || '',
+      comm_comp_type: step1Data?.comm_comp_type || this.currentContractData?.comm_comp_type || '',
+      tlt_bdate: step1Data?.tlt_bdate || this.currentContractData?.tlt_bdate || '',
+      tlt_edate: step1Data?.tlt_edate || this.currentContractData?.tlt_edate || '',
+      tlt_contract_bdate: step1Data?.tlt_contract_bdate || this.currentContractData?.tlt_contract_bdate || '',
+      tlt_contract_edate: step1Data?.tlt_contract_edate || this.currentContractData?.tlt_contract_edate || '',
+      tlt_term_type: (step1Data?.tlt_term_type || this.currentContractData?.tlt_term_type || '3').toString().trim(),
+    };
+
+    console.log('📊 準備顯示的合約資訊:', contractInfo);
+
+    this.contractInfoData = [{
+      id: contractInfo.talent_id || 'new', // 🎯 新增模式顯示 'new'
+      ...contractInfo
+    }];
+
+    console.log('📊 最終合約資訊陣列:', this.contractInfoData);
+  }
+
+
+  private loadCommissionDataWithPriority(): void {
+    this.loading = true;
+    this.commissionDataLoaded = false;
+
+    console.log('🔍 載入抽成資料優先順序判定...');
+
+    // 🎯 第一優先：檢查是否有暫存資料
+    const savedCommissionData = this.contractFlowService.getStepData(WorkflowStep.COMMISSION);
+
+    if (savedCommissionData && Array.isArray(savedCommissionData) && savedCommissionData.length > 0) {
+      console.log('📦 找到暫存抽成資料，使用暫存資料');
+      this.loadSavedCommissionData(savedCommissionData);
+      return;
+    }
+
+    // 🎯 第二優先：根據模式載入
+    if (this.contractFlowService.isNewContractMode()) {
+      console.log('🆕 新增模式：初始化空的抽成設定');
+      this.initializeEmptyCommissionData();
+    } else {
+      console.log('📝 編輯模式：載入抽成資料');
+      this.loadUnifiedCommissionData();
+    }
+  }
+
+  private loadSavedCommissionData(savedData: CommissionItem[]): void {
+    console.log('📦 載入暫存抽成資料:', savedData);
+
+    try {
+      this.commissionData = savedData.map(item => ({
+        ...item,
+        _status: item._status || 'original'
+      }));
+
+      this.commissionDataLoaded = true;
+      this.dataLoaded = true;
+      this.loading = false;
+      this.updateDetailItemsForDisplay();
+
+      console.log('✅ 暫存抽成資料載入完成');
+      console.log('📊 載入的抽成項目數量:', this.commissionData.length);
+
+      // 🎯 驗證載入結果
+      this.validateLoadedCommissionData();
+
+    } catch (error) {
+      console.error('❌ 暫存抽成資料處理失敗:', error);
+      this.loading = false;
+      this.notificationService.errorBubble('載入暫存抽成資料失敗');
+
+      // 🎯 降級處理
+      if (this.contractFlowService.isNewContractMode()) {
+        this.initializeEmptyCommissionData();
+      } else {
+        this.loadUnifiedCommissionData();
+      }
+    }
+  }
+
+  private validateLoadedCommissionData(): void {
+    console.log('🔍 驗證載入的抽成資料...');
+
+    const totalItems = this.commissionData.length;
+    const newItems = this.commissionData.filter(item => item._status === 'new').length;
+    const modifiedItems = this.commissionData.filter(item => item._status === 'modified').length;
+    const originalItems = this.commissionData.filter(item => item._status === 'original' || !item._status).length;
+
+    console.log('📊 抽成資料統計:', {
+      totalItems: totalItems,
+      newItems: newItems,
+      modifiedItems: modifiedItems,
+      originalItems: originalItems,
+      mode: this.contractFlowService.isNewContractMode() ? '新增' : '編輯'
+    });
+
+    // 🎯 檢查每個抽成項目的明細數量
+    this.commissionData.forEach((item, index) => {
+      const discountCount = item.discountSettingItems?.length || 0;
+      const annualCount = item.annualPerformanceItems?.length || 0;
+      const levelCount = item.discountLevelItems?.length || 0;
+
+      console.log(`📋 抽成項目 ${index + 1} (${item.commissionTypeName}):`, {
+        discountSettings: discountCount,
+        annualPerformance: annualCount,
+        discountLevel: levelCount,
+        status: item._status || 'none'
+      });
+    });
   }
 
 
@@ -488,15 +561,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   // 🎯 修正：使用統一 API 載入資料
   private loadUnifiedCommissionData(): void {
     // 🎯 檢查是否為新增模式
-    const workflowData = this.contractFlowService.getCurrentData();
-    const isNewContract = workflowData?.queryRowData?._isNewContract;
-
-    if (isNewContract || !this.currentTalentId || this.currentTalentId === 'NEW_CONTRACT') {
-      console.log('🆕 新增模式或無 talent_id，初始化空的抽成設定');
+    if (this.contractFlowService.isNewContractMode()) {
+      console.log('🆕 新增模式，初始化空的抽成設定');
       this.initializeEmptyCommissionData();
       return;
     }
 
+    // 🎯 編輯模式：獲取當前抽成別
     const currentCommissionType = this.contractFlowService.getCurrentCommissionType();
     if (!currentCommissionType) {
       console.warn('❌ 無法取得抽成別，降級到原本的 API');
@@ -531,6 +602,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       }
     });
   }
+
 
 
   // 🎯 修正：處理統一 API 回應
@@ -802,10 +874,16 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   private initializeEmptyCommissionData(): void {
+    console.log('🆕 初始化空的抽成資料');
+
     this.commissionData = [];
     this.commissionDataLoaded = true;
     this.dataLoaded = true;
+    this.loading = false;
+
+    console.log('✅ 空的抽成資料初始化完成');
   }
+
 
   private updateCommissionItemDetails(commissionItem: CommissionItem): void {
     switch (this.selectedSettingTab) {
@@ -829,39 +907,58 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   private saveCommissionDataToWorkflow(): void {
-    console.log('💾 儲存抽成資料到工作流程...');
+    console.log('💾 Next2 儲存抽成資料到工作流程...');
 
-    // 🔍 Debug: 處理前的資料
-    console.log('📋 處理前的抽成資料:', this.commissionData);
+    try {
+      // 🎯 確保所有資料都有正確的狀態標記
+      const processedData = this.commissionData.map(item => ({
+        ...item,
+        _status: item._status || 'original',
+        discountSettingItems: item.discountSettingItems.map(detail => ({
+          ...detail,
+          _status: detail._status || 'original'
+        })),
+        annualPerformanceItems: item.annualPerformanceItems.map(detail => ({
+          ...detail,
+          _status: detail._status || 'original'
+        })),
+        discountLevelItems: item.discountLevelItems.map(detail => ({
+          ...detail,
+          _status: detail._status || 'original'
+        }))
+      }));
 
-    // 確保所有資料都有正確的狀態標記
-    const processedData = this.commissionData.map(item => ({
-      ...item,
-      _status: item._status || 'original',
-      discountSettingItems: item.discountSettingItems.map(detail => ({
-        ...detail,
-        _status: detail._status || 'original'
-      })),
-      annualPerformanceItems: item.annualPerformanceItems.map(detail => ({
-        ...detail,
-        _status: detail._status || 'original'
-      })),
-      discountLevelItems: item.discountLevelItems.map(detail => ({
-        ...detail,
-        _status: detail._status || 'original'
-      }))
-    }));
+      console.log('📋 處理後的抽成資料:', processedData);
 
-    console.log('📋 處理後的抽成資料:', processedData);
+      // 🎯 儲存到工作流程服務
+      this.contractFlowService.saveStep3Data(processedData);
 
-    // 儲存到工作流程服務
-    this.contractFlowService.saveStep3Data(processedData);
+      // 🎯 驗證儲存結果
+      this.verifyStoredCommissionData();
 
-    // 🔍 Debug: 驗證儲存結果
-    const savedData = this.contractFlowService.getStep3Data();
-    console.log('✅ 驗證儲存結果:', savedData);
+      console.log('✅ Next2 抽成資料儲存完成');
+
+    } catch (error) {
+      console.error('❌ Next2 儲存抽成資料失敗:', error);
+      this.notificationService.errorBubble('儲存抽成資料失敗');
+    }
   }
 
+  private verifyStoredCommissionData(): void {
+    const savedData = this.contractFlowService.getStep3Data();
+    console.log('🔍 驗證 Next2 儲存結果:', {
+      savedDataType: Array.isArray(savedData) ? '陣列' : typeof savedData,
+      savedDataLength: Array.isArray(savedData) ? savedData.length : 0,
+      originalDataLength: this.commissionData.length
+    });
+
+    if (Array.isArray(savedData) && savedData.length !== this.commissionData.length) {
+      console.warn('⚠️ 儲存後的抽成項目數量不匹配:', {
+        saved: savedData.length,
+        original: this.commissionData.length
+      });
+    }
+  }
 
   changeSettingTab(tab: string): void {
     console.log('🔄 切換標籤，從', this.selectedSettingTab, '到', tab);

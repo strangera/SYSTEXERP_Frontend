@@ -601,137 +601,120 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private loadWorkflowData(): void {
-    console.log('🚀 開始載入工作流程資料...');
+    console.log('🚀 Next1 開始載入工作流程資料...');
 
     const workflowData = this.contractFlowService.getCurrentData();
     console.log('📋 工作流程資料:', workflowData);
 
-    // 🔍 詳細檢查工作流程資料結構
-    console.log('🔍 詳細檢查工作流程資料:');
-    console.log('  - workflowData:', workflowData);
-    console.log('  - workflowData.queryRowData:', workflowData?.queryRowData);
-    console.log('  - workflowData.queryRowData?._isNewContract:', workflowData?.queryRowData?._isNewContract);
-    console.log('  - workflowData.contractId:', workflowData?.contractId);
-
-    // 🎯 修改：檢查是否有工作流程資料（支援新增和編輯模式）
-    const isNewContract = workflowData?.queryRowData?._isNewContract;
-    const hasContractId = workflowData?.contractId;
-
-    console.log('🔍 模式判定結果:');
-    console.log('  - isNewContract:', isNewContract);
-    console.log('  - hasContractId:', hasContractId);
-    console.log('  - typeof isNewContract:', typeof isNewContract);
-
-    if (hasContractId || isNewContract) {
-      // 🎯 修改：新增模式使用空字串，編輯模式使用原有 ID
-      this.currentTalentId = workflowData?.queryRowData?.talent_id || '';
+    // 🎯 統一使用 ContractFlowService 的模式判定
+    if (workflowData.contractId || this.contractFlowService.isNewContractMode()) {
+      // 🎯 統一獲取 talent_id 和模式資訊
+      const modeInfo = this.contractFlowService.getWorkflowModeInfo();
+      this.currentTalentId = modeInfo.talentId;
       this.currentContractData = workflowData?.queryRowData;
 
-      console.log('✅ 工作流程狀態:', {
-        isNewContract: isNewContract,
+      console.log('✅ 工作流程狀態確認:', {
+        mode: modeInfo.modeName,
         currentTalentId: this.currentTalentId,
-        contractId: workflowData?.contractId,
-        hasContractId: hasContractId
+        contractId: modeInfo.contractId
       });
 
-      // 優先使用 CRU 頁面編輯後的資料
-      const step1Data = this.contractFlowService.getStep1Data();
-      console.log('📝 Step1 編輯資料:', step1Data);
+      // 🎯 準備合約資訊顯示
+      this.prepareContractInfoDisplay();
 
-      // 準備合約資訊
-      const contractInfo = {
-        talent_id: step1Data?.talent_id || '', // 🎯 新增模式為空
-        apply_no: step1Data?.apply_no || this.currentContractData?.apply_no || '',
-        tlt_name: step1Data?.tlt_name || this.currentContractData?.tlt_name || '',
-        VEN_Name: step1Data?.VEN_Name || this.currentContractData?.VEN_Name || '',
-        ven_uniform: step1Data?.ven_uniform || this.currentContractData?.ven_uniform || '',
-        contract_subno: step1Data?.contract_subno || this.currentContractData?.contract_subno || '',
-        tlt_term_type: (step1Data?.tlt_term_type || this.currentContractData?.tlt_term_type || '3').toString().trim(),
-        comm_comp_type: step1Data?.comm_comp_type || this.currentContractData?.comm_comp_type || '2',
-        tlt_bdate: step1Data?.tlt_bdate || this.currentContractData?.tlt_bdate || '',
-        tlt_edate: step1Data?.tlt_edate || this.currentContractData?.tlt_edate || '',
-        tlt_contract_bdate: step1Data?.tlt_contract_bdate || this.currentContractData?.tlt_contract_bdate || '',
-        tlt_contract_edate: step1Data?.tlt_contract_edate || this.currentContractData?.tlt_contract_edate || ''
-      };
-
-      this.contractInfoData = [{
-        id: step1Data?.talent_id || 'new', // 顯示用的 ID
-        ...contractInfo
-      }];
-
-      console.log('📊 準備顯示的合約資訊:', this.contractInfoData);
-
+      // 🎯 初始化資料結構
       this.initializeDataStructure();
 
-      // 🎯 關鍵修改：更精確的新增模式判定
-      console.log('🔍 開始判定載入模式...');
-
-      // 方法1：檢查是否明確標記為新增
-      if (isNewContract === true) {
-        console.log('🆕 方法1：明確標記為新增模式');
-        this.loadAvailableFareData();
-        return;
-      }
-
-      // 方法2：檢查 talent_id 是否為空
-      if (!this.currentTalentId || this.currentTalentId.trim() === '') {
-        console.log('🆕 方法2：talent_id 為空，判定為新增模式');
-        this.loadAvailableFareData();
-        return;
-      }
-
-      // 方法3：檢查 contractId 是否為空但有 queryRowData
-      if (!hasContractId && workflowData?.queryRowData) {
-        console.log('🆕 方法3：無 contractId 但有 queryRowData，判定為新增模式');
-        this.loadAvailableFareData();
-        return;
-      }
-
-      // 其他情況：編輯模式
-      console.log('📝 判定為編輯模式，檢查暫存資料...');
-      const savedFareData = this.contractFlowService.getStepData(WorkflowStep.DEDUCTION);
-      console.log('📦 取得的暫存資料:', savedFareData);
-
-      // ✅ 修復：正確判斷陣列格式的資料是否為空
-      let isAllEmpty = false;
-
-      if (!savedFareData) {
-        isAllEmpty = true;
-        console.log('❌ 沒有暫存資料');
-      } else if (Array.isArray(savedFareData)) {
-        isAllEmpty = savedFareData.length === 0;
-        console.log(`📊 暫存資料是陣列格式，長度: ${savedFareData.length}`);
-      } else if (typeof savedFareData === 'object') {
-        // 物件格式的向下相容
-        isAllEmpty = Object.values(savedFareData).every(arr => !Array.isArray(arr) || arr.length === 0);
-        console.log('📊 暫存資料是物件格式');
-      } else {
-        isAllEmpty = true;
-        console.log('❌ 暫存資料格式不正確');
-      }
-
-      if (isAllEmpty) {
-        console.log('📭 沒有暫存資料，從 API 載入');
-        this.loadFareDataFromAPI();
-      } else {
-        console.log('📦 發現暫存資料，載入暫存資料');
-        try {
-          this.originalFareData = this.validateAndFixData(savedFareData);
-          this.filterData();
-          console.log('✅ 暫存資料載入完成');
-          console.log('📊 載入的資料詳情:', this.originalFareData);
-        } catch (error) {
-          console.error('❌ 暫存資料處理失敗，重新載入:', error);
-          this.loadFareDataFromAPI();
-        }
-      }
+      // 🎯 統一的資料載入邏輯
+      this.loadFareDataWithPriority();
     } else {
       console.warn('❌ 沒有工作流程資料，重導向到前一步');
       this.router.navigate(['account/tls/tls13010cru']);
     }
   }
 
-  // 🆕 新增：專門為新增模式載入可用的扣款項目
+  private prepareContractInfoDisplay(): void {
+    console.log('📊 準備合約資訊顯示...');
+
+    // 🎯 優先使用 Step1 編輯後的資料
+    const step1Data = this.contractFlowService.getStep1Data();
+    console.log('📝 Step1 編輯資料:', step1Data);
+
+    // 🎯 準備合約資訊
+    const contractInfo = {
+      talent_id: step1Data?.talent_id || this.currentContractData?.talent_id || '',
+      apply_no: step1Data?.apply_no || this.currentContractData?.apply_no || '',
+      tlt_name: step1Data?.tlt_name || this.currentContractData?.tlt_name || '',
+      VEN_Name: step1Data?.VEN_Name || this.currentContractData?.VEN_Name || '',
+      ven_uniform: step1Data?.ven_uniform || this.currentContractData?.ven_uniform || '',
+      contract_subno: step1Data?.contract_subno || this.currentContractData?.contract_subno || '',
+      tlt_term_type: (step1Data?.tlt_term_type || this.currentContractData?.tlt_term_type || '3').toString().trim(),
+      comm_comp_type: step1Data?.comm_comp_type || this.currentContractData?.comm_comp_type || '2',
+      tlt_bdate: step1Data?.tlt_bdate || this.currentContractData?.tlt_bdate || '',
+      tlt_edate: step1Data?.tlt_edate || this.currentContractData?.tlt_edate || '',
+      tlt_contract_bdate: step1Data?.tlt_contract_bdate || this.currentContractData?.tlt_contract_bdate || '',
+      tlt_contract_edate: step1Data?.tlt_contract_edate || this.currentContractData?.tlt_contract_edate || ''
+    };
+
+    this.contractInfoData = [{
+      id: contractInfo.talent_id || 'new',
+      ...contractInfo
+    }];
+
+    console.log('📊 合約資訊顯示準備完成:', this.contractInfoData);
+  }
+
+
+  private loadFareDataWithPriority(): void {
+    console.log('🔍 載入扣款資料優先順序判定...');
+
+    // 🎯 第一優先：檢查暫存資料
+    const savedFareData = this.contractFlowService.getStepData(WorkflowStep.DEDUCTION);
+    console.log('📦 檢查 Step2 暫存資料:', savedFareData);
+
+    if (savedFareData && Array.isArray(savedFareData) && savedFareData.length > 0) {
+      console.log('📦 使用暫存扣款資料');
+      this.loadSavedFareData(savedFareData);
+      return;
+    }
+
+    // 🎯 第二優先：根據模式載入
+    if (this.contractFlowService.isNewContractMode()) {
+      console.log('🆕 新增模式：載入可用扣款項目');
+      this.loadAvailableFareData();
+    } else {
+      console.log('📝 編輯模式：從 API 載入');
+      this.loadFareDataFromAPI();
+    }
+  }
+
+  private loadSavedFareData(savedData: FareItem[]): void {
+    console.log('📦 載入暫存扣款資料:', savedData);
+
+    try {
+      // 🎯 驗證和修復資料格式
+      this.originalFareData = this.validateAndFixData(savedData);
+      this.filterData();
+
+      console.log('✅ 暫存扣款資料載入完成');
+      console.log('📊 載入的資料詳情:', this.originalFareData);
+
+      // 🎯 檢查資料完整性
+      this.verifyStoredData();
+
+    } catch (error) {
+      console.error('❌ 暫存扣款資料處理失敗，重新載入:', error);
+
+      // 🎯 暫存資料有問題時的降級處理
+      if (this.contractFlowService.isNewContractMode()) {
+        this.loadAvailableFareData();
+      } else {
+        this.loadFareDataFromAPI();
+      }
+    }
+  }
+
+
   private loadAvailableFareData(): void {
     console.log('🔄 新增模式：載入可用扣款項目...');
 
@@ -746,7 +729,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         console.log('🆕 新增模式 API 回傳資料:', response);
 
         if (response && response.Data && response.Data.FaresByType) {
-          // 🎯 處理 API 資料，但新增模式下所有項目都是未選中狀態
+          // 🎯 處理 API 資料，新增模式下所有項目都是未選中狀態
           this.originalFareData = this.processNewContractAPIData(response.Data.FaresByType);
           this.isShowingAll = true;
           this.filterData();
@@ -774,6 +757,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     this.subscriptions.push(subscription);
   }
+
+
 
   // 🆕 新增：處理新增模式的 API 資料
   private processNewContractAPIData(faresByType: any): Record<string, FareItem[]> {
@@ -1106,7 +1091,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     return cleanedItem as FareItem;
   }
 
-  // ✅ 修改現有的 saveFareDataToWorkflow 方法
+
   private saveFareDataToWorkflow(): void {
     try {
       console.log('💾 準備儲存暫存資料...');
@@ -1114,7 +1099,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       let totalItems = 0;
       let selectedItems = 0;
 
-      // ✅ 合併成陣列格式，但保留 cap_type 資訊
+      // 🎯 合併成陣列格式，但保留 cap_type 資訊
       const mergedFareItems: FareItem[] = [];
       Object.keys(this.originalFareData).forEach(capType => {
         if (!Array.isArray(this.originalFareData[capType])) {
@@ -1125,13 +1110,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
           const selected = this.originalFareData[capType].filter(item => item.is_selected);
           selectedItems += selected.length;
 
-          // ✅ 確保每個項目都有 cap_type 並清理前端欄位
+          // 🎯 確保每個項目都有 cap_type 並清理前端欄位
           this.originalFareData[capType].forEach(item => {
             if (!item.cap_type) {
               item.cap_type = capType;
             }
 
-            // ✅ 清理前端專用欄位和空 key
+            // 🎯 清理前端專用欄位和空 key
             const cleanedItem = this.cleanFareItemForStorage(item);
             mergedFareItems.push(cleanedItem);
           });
@@ -1142,11 +1127,38 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
       console.log(`💾 總共要儲存 ${totalItems} 筆資料，其中 ${selectedItems} 筆已選中`);
 
-      // ✅ 儲存清理後的陣列格式
+      // 🎯 儲存清理後的陣列格式
       this.contractFlowService.saveStep2Data(mergedFareItems);
       console.log('✅ 已成功暫存扣款資料到工作流程');
+
+      // 🎯 驗證儲存結果
+      this.verifyStoredData();
+
     } catch (error) {
       console.error('❌ 儲存暫存資料時發生錯誤:', error);
+      this.messageService.warnBubble('儲存暫存資料失敗');
+    }
+  }
+
+
+  private verifyStoredData(): void {
+    const savedData = this.contractFlowService.getStepData(WorkflowStep.DEDUCTION);
+    console.log('🔍 驗證儲存結果:', {
+      savedDataType: Array.isArray(savedData) ? '陣列' : typeof savedData,
+      savedDataLength: Array.isArray(savedData) ? savedData.length : 0,
+      originalDataLength: this.getTotalItemCount()
+    });
+
+    if (Array.isArray(savedData)) {
+      const selectedInSaved = savedData.filter(item => item.is_selected).length;
+      const selectedInOriginal = this.getTotalSelectedCount();
+
+      if (selectedInSaved !== selectedInOriginal) {
+        console.warn('⚠️ 儲存後的選中項目數量不匹配:', {
+          saved: selectedInSaved,
+          original: selectedInOriginal
+        });
+      }
     }
   }
 
@@ -1536,108 +1548,4 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   getSelectedModeText(): string {
     return this.showOnlySelected ? '顯示全部項目' : '只顯示已勾選';
   }
-
-  // debugCheckSavedData(): void {
-  //   console.log('=== 🔍 暫存資料檢查 ===');
-
-  //   // 1. 檢查目前選中的項目
-  //   const selectedItems: any[] = [];
-  //   Object.keys(this.originalFareData).forEach(capType => {
-  //     const selected = this.originalFareData[capType].filter(item => item.is_selected);
-  //     if (selected.length > 0) {
-  //       selectedItems.push(...selected.map(item => ({
-  //         cap_type: capType,
-  //         cap_item: item.cap_item,
-  //         cap_name: item.cap_name,
-  //         is_selected: item.is_selected,
-  //         _status: item._status
-  //       })));
-  //     }
-  //   });
-
-  //   console.log('📋 目前選中項目:', selectedItems);
-
-  //   // 2. 檢查工作流程中的暫存
-  //   const savedData = this.contractFlowService.getStepData(WorkflowStep.DEDUCTION);
-  //   console.log('💾 工作流程暫存:', savedData);
-  //   console.log('💾 暫存資料類型:', Array.isArray(savedData) ? '陣列' : typeof savedData);
-
-  //   if (Array.isArray(savedData)) {
-  //     const savedSelected = savedData.filter(item => item.is_selected);
-  //     console.log('💾 暫存中選中的項目:', savedSelected);
-  //   }
-
-  //   // 3. 檢查 sessionStorage
-  //   const sessionData = sessionStorage.getItem('TLS13010_CONTRACT_FLOW');
-  //   if (sessionData) {
-  //     const parsed = JSON.parse(sessionData);
-  //     console.log('🗄️ SessionStorage step2:', parsed.contractData?.step2);
-  //   }
-
-  //   this.messageService.infoBubble(
-  //     `選中 ${selectedItems.length} 個項目，暫存${savedData ? '有資料' : '無資料'}`
-  //   );
-  // }
-
-  // debugStatusDistribution(): void {
-  //   console.log('=== 🔍 狀態分布檢查 ===');
-
-  //   Object.keys(this.originalFareData).forEach(capType => {
-  //     const items = this.originalFareData[capType];
-  //     const statusCount = {
-  //       no_status: 0,
-  //       original: 0,
-  //       new: 0,
-  //       modified: 0,
-  //       deleted: 0
-  //     };
-
-  //     const selectedItems: any[] = [];
-
-  //     items.forEach(item => {
-  //       const status = item._status || 'no_status';
-  //       statusCount[status]++;
-
-  //       if (item.is_selected) {
-  //         selectedItems.push({
-  //           cap_item: item.cap_item,
-  //           status: item._status || 'no_status'
-  //         });
-  //       }
-  //     });
-
-  //     if (items.length > 0) {
-  //       console.log(`📊 ${capType} 類型狀態分布:`, statusCount);
-  //       console.log(`✅ ${capType} 選中項目:`, selectedItems);
-  //     }
-  //   });
-
-  //   this.messageService.infoBubble('狀態分布已輸出到 console');
-  // }
-
-  // debugCheckIds(): void {
-  //   console.log('=== 🔍 ID 檢查 ===');
-
-  //   Object.keys(this.originalFareData).forEach(capType => {
-  //     const items = this.originalFareData[capType];
-
-  //     if (items.length > 0) {
-  //       console.log(`📊 ${capType} 類型 ID 檢查:`);
-
-  //       items.slice(0, 5).forEach((item, index) => {
-  //         console.log(`   ${index + 1}. ID: ${item.id} (${typeof item.id}) - ${item.cap_item}`);
-  //       });
-
-  //       // 檢查是否有重複 ID
-  //       const ids = items.map(item => item.id);
-  //       const uniqueIds = new Set(ids);
-
-  //       if (ids.length !== uniqueIds.size) {
-  //         console.warn(`⚠️ ${capType} 類型有重複 ID！總數: ${ids.length}, 唯一: ${uniqueIds.size}`);
-  //       } else {
-  //         console.log(`✅ ${capType} 類型 ID 唯一性檢查通過`);
-  //       }
-  //     }
-  //   });
-  // }
 }

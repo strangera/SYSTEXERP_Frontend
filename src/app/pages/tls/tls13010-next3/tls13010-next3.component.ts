@@ -24,6 +24,7 @@ import {
   RentSettingApiData,
   CommissionItem
 } from '../tls13010/tls13010.model';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 
 @Component({
   selector: 'app-tls13010-next3',
@@ -32,6 +33,7 @@ import {
 })
 export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataItem> implements OnInit, OnDestroy {
 
+  private discountOptions: any[] = [];
   private subscriptions: Subscription[] = [];
   dataForm: FormGroup;
   showConfirmDialog = false;
@@ -103,7 +105,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     },
     { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
     { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
-    { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: true, autoWidth: true, options: TLS13010_DROPDOWN_OPTIONS.tltTermType },
+    { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: true, autoWidth: true, options: [] },
     { field: 'cag_charge_rate', header: '抽成率(%)', type: 'number', editable: true, autoWidth: true }
   ];
 
@@ -139,7 +141,8 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     private contractFlowService: ContractFlowService,
     private tls13010Service: TLS13010Service,
     private notificationService: NotificationService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private paperTypeService: LocationOptionsService
   ) {
     super();
     this.dataForm = this.formBuilder.group({});
@@ -149,11 +152,10 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     console.log('🚀 TLS13010Next3Component 初始化開始');
     this.initializePage('TLS13010', this.dataForm);
 
-    // 🎯 載入工作流程資料
-    this.loadWorkflowData();
-
-    // 🎯 設定定時檢查 Next2 資料變更
-    this.setupNext2DataWatcher();
+    this.loadDiscountOptions().then(() => {
+      this.loadWorkflowData();
+      this.setupNext2DataWatcher();
+    });
   }
 
   ngOnDestroy(): void {
@@ -258,104 +260,84 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     const workflowData = this.contractFlowService.getCurrentData();
     console.log('📋 工作流程資料:', workflowData);
 
-    // 🎯 詳細檢查工作流程資料結構
-    console.log('🔍 詳細檢查工作流程資料:');
-    console.log('  - workflowData:', workflowData);
-    console.log('  - workflowData.queryRowData:', workflowData?.queryRowData);
-    console.log('  - workflowData.queryRowData?._isNewContract:', workflowData?.queryRowData?._isNewContract);
-    console.log('  - workflowData.contractId:', workflowData?.contractId);
-
-    // 🎯 修正：檢查是否有工作流程資料（支援新增和編輯模式）
-    const isNewContract = workflowData?.queryRowData?._isNewContract;
-    const hasContractId = workflowData?.contractId;
-    const hasQueryRowData = !!workflowData?.queryRowData;
-
-    console.log('🔍 模式判定結果:');
-    console.log('  - isNewContract:', isNewContract);
-    console.log('  - hasContractId:', hasContractId);
-    console.log('  - hasQueryRowData:', hasQueryRowData);
-    console.log('  - typeof isNewContract:', typeof isNewContract);
-
-    // 🎯 關鍵修正：新增模式或有工作流程資料就可以繼續
-    if (hasContractId || isNewContract || hasQueryRowData) {
-      // 🎯 修正：新增模式使用空字串，編輯模式使用原有 ID
-      this.currentTalentId = workflowData?.queryRowData?.talent_id || '';
+    // 🎯 統一使用 ContractFlowService 的模式判定
+    if (workflowData.contractId || this.contractFlowService.isNewContractMode()) {
+      // 🎯 統一獲取模式資訊和 talent_id
+      const modeInfo = this.contractFlowService.getWorkflowModeInfo();
+      this.currentTalentId = modeInfo.talentId;
       this.currentContractData = workflowData?.queryRowData;
 
       console.log('✅ 工作流程狀態確認:', {
-        isNewContract: isNewContract,
+        mode: modeInfo.modeName,
         currentTalentId: this.currentTalentId,
-        contractId: workflowData?.contractId,
-        hasContractId: hasContractId,
-        mode: isNewContract ? '新增模式' : '編輯模式'
+        contractId: modeInfo.contractId
       });
 
-      // 🎯 新增模式下設定 currentTalentId 用於追蹤
-      if (isNewContract && !this.currentTalentId) {
-        this.currentTalentId = 'NEW_CONTRACT'; // 設定一個識別符
-        console.log('🆕 新增模式：設定臨時 talent_id =', this.currentTalentId);
-      }
-
-      // 優先使用 CRU 頁面編輯後的資料
-      const step1Data = this.contractFlowService.getStep1Data();
-      console.log('📝 Step1 編輯資料:', step1Data);
-
-      // 🎯 修正：準備合約資訊，新增模式下某些欄位可能為空
-      const contractInfo = {
-        talent_id: step1Data?.talent_id || this.currentContractData?.talent_id || '', // 🎯 新增模式可能為空
-        apply_no: step1Data?.apply_no || this.currentContractData?.apply_no || '',
-        tlt_name: step1Data?.tlt_name || this.currentContractData?.tlt_name || '',
-        VEN_Name: step1Data?.VEN_Name || this.currentContractData?.VEN_Name || '',
-        ven_uniform: step1Data?.ven_uniform || this.currentContractData?.ven_uniform || '',
-        contract_subno: step1Data?.contract_subno || this.currentContractData?.contract_subno || '',
-        comm_comp_type: step1Data?.comm_comp_type || this.currentContractData?.comm_comp_type || '',
-        tlt_bdate: step1Data?.tlt_bdate || this.currentContractData?.tlt_bdate || '',
-        tlt_edate: step1Data?.tlt_edate || this.currentContractData?.tlt_edate || '',
-        tlt_contract_bdate: step1Data?.tlt_contract_bdate || this.currentContractData?.tlt_contract_bdate || '',
-        tlt_contract_edate: step1Data?.tlt_contract_edate || this.currentContractData?.tlt_contract_edate || '',
-        tlt_term_type: (step1Data?.tlt_term_type || this.currentContractData?.tlt_term_type || '3').toString().trim(),
-      };
-
-      console.log('📊 準備顯示的合約資訊:', contractInfo);
-
-      this.contractInfoData = [{
-        id: contractInfo.talent_id || 'new', // 🎯 新增模式顯示 'new'
-        ...contractInfo
-      }];
-
-      console.log('📊 最終合約資訊陣列:', this.contractInfoData);
-      console.log('📊 合約資訊設定完成');
+      // 🎯 準備合約資訊顯示
+      this.prepareContractInfoDisplay();
 
       // 🎯 載入資料的優先順序
       this.loadDataWithPriority();
 
+      // 🎯 設定定時檢查 Next2 資料變更
+      this.setupNext2DataWatcher();
     } else {
       console.warn('❌ 沒有有效的工作流程資料，重導向到前一步');
-      console.warn('   - 缺少 contractId, isNewContract 標記或 queryRowData');
+      console.warn('   - 缺少 contractId 或新增模式標記');
       this.router.navigate(['account/tls/tls13010cru']);
     }
+  }
+
+  private prepareContractInfoDisplay(): void {
+    console.log('📊 準備合約資訊顯示...');
+
+    // 🎯 優先使用 CRU 頁面編輯後的資料
+    const step1Data = this.contractFlowService.getStep1Data();
+    console.log('📝 Step1 編輯資料:', step1Data);
+
+    // 🎯 準備合約資訊
+    const contractInfo = {
+      talent_id: step1Data?.talent_id || this.currentContractData?.talent_id || '',
+      apply_no: step1Data?.apply_no || this.currentContractData?.apply_no || '',
+      tlt_name: step1Data?.tlt_name || this.currentContractData?.tlt_name || '',
+      VEN_Name: step1Data?.VEN_Name || this.currentContractData?.VEN_Name || '',
+      ven_uniform: step1Data?.ven_uniform || this.currentContractData?.ven_uniform || '',
+      contract_subno: step1Data?.contract_subno || this.currentContractData?.contract_subno || '',
+      comm_comp_type: step1Data?.comm_comp_type || this.currentContractData?.comm_comp_type || '',
+      tlt_bdate: step1Data?.tlt_bdate || this.currentContractData?.tlt_bdate || '',
+      tlt_edate: step1Data?.tlt_edate || this.currentContractData?.tlt_edate || '',
+      tlt_contract_bdate: step1Data?.tlt_contract_bdate || this.currentContractData?.tlt_contract_bdate || '',
+      tlt_contract_edate: step1Data?.tlt_contract_edate || this.currentContractData?.tlt_contract_edate || '',
+      tlt_term_type: (step1Data?.tlt_term_type || this.currentContractData?.tlt_term_type || '3').toString().trim(),
+    };
+
+    console.log('📊 準備顯示的合約資訊:', contractInfo);
+
+    this.contractInfoData = [{
+      id: contractInfo.talent_id || 'new', // 🎯 新增模式顯示 'new'
+      ...contractInfo
+    }];
+
+    console.log('📊 最終合約資訊陣列:', this.contractInfoData);
+    console.log('📊 合約資訊設定完成');
   }
 
   // 🎯 新增：按優先順序載入資料
   private loadDataWithPriority(): void {
     const commissionType = this.contractInfoData[0]?.tlt_term_type;
 
-    // 🎯 檢查是否為新增模式
-    const workflowData = this.contractFlowService.getCurrentData();
-    const isNewContract = workflowData?.queryRowData?._isNewContract;
-
     console.log('🔍 載入資料優先順序判定:', {
       commissionType: commissionType,
-      isNewContract: isNewContract,
+      isNewContract: this.contractFlowService.isNewContractMode(),
       currentTalentId: this.currentTalentId
     });
 
-    // 🎯 第一優先：檢查是否有 Next4 暫存資料
-    const savedNext4Data = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
+    // 🎯 第一優先：檢查是否有 Next3 暫存資料
+    const savedNext3Data = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
 
-    if (savedNext4Data && Array.isArray(savedNext4Data) && savedNext4Data.length > 0) {
-      console.log('📦 使用 Next4 暫存資料');
-      this.loadConditionDataFromCache(savedNext4Data);
+    if (savedNext3Data && Array.isArray(savedNext3Data) && savedNext3Data.length > 0) {
+      console.log('📦 使用 Next3 暫存資料');
+      this.loadConditionDataFromCache(savedNext3Data);
       this.loadNext2CommissionData(); // 同時載入 Next2 資料以便監聽
       this.conditionDataLoaded = true;
       this.dataLoaded = true;
@@ -367,7 +349,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
     // 🎯 第三優先：根據模式載入其他條件設定
     setTimeout(() => {
-      if (isNewContract) {
+      if (this.contractFlowService.isNewContractMode()) {
         // 🎯 新增模式：初始化空的條件設定
         console.log('🆕 新增模式：初始化空的條件設定');
         this.initializeNewContractConditionData(commissionType || '3');
@@ -406,17 +388,13 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     const step3Data = this.contractFlowService.getStep3Data();
     console.log('📋 Step3 原始資料:', step3Data);
 
-    // 🎯 檢查是否為新增模式
-    const workflowData = this.contractFlowService.getCurrentData();
-    const isNewContract = workflowData?.queryRowData?._isNewContract;
-
     if (step3Data && Array.isArray(step3Data) && step3Data.length > 0) {
       this.commissionDataFromNext2 = step3Data;
       this.hasNext2Data = true;
 
       console.log('✅ 載入 Next2 抽成設定資料成功');
       console.log('📋 資料數量:', this.commissionDataFromNext2.length);
-      console.log('📋 模式:', isNewContract ? '新增模式' : '編輯模式');
+      console.log('📋 模式:', this.contractFlowService.isNewContractMode() ? '新增模式' : '編輯模式');
 
       // 🎯 立即檢查是否需要生成條件設定
       const commissionType = this.contractInfoData[0]?.tlt_term_type;
@@ -430,7 +408,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       this.hasNext2Data = false;
 
       // 🎯 新增模式下，沒有 Next2 資料是正常的
-      if (isNewContract) {
+      if (this.contractFlowService.isNewContractMode()) {
         console.log('🆕 新增模式：沒有 Next2 資料是正常情況');
       }
     }
@@ -442,10 +420,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     console.log('🔍 載入其他條件設定資料，抽成類型:', commissionType);
 
     // 🎯 檢查是否為新增模式
-    const workflowData = this.contractFlowService.getCurrentData();
-    const isNewContract = workflowData?.queryRowData?._isNewContract;
-
-    if (isNewContract) {
+    if (this.contractFlowService.isNewContractMode()) {
       console.log('🆕 新增模式：跳過 API 載入，使用空的條件設定');
       this.initializeConditionDataByCommissionType(commissionType);
       this.conditionDataLoaded = true;
@@ -1341,10 +1316,51 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       ...this.baseTierItems
     ];
 
-    console.log('💾 儲存條件設定資料到工作流程，項目數量:', allConditionItems.length);
-    this.contractFlowService.saveStep4Data(allConditionItems);
-    console.log('✅ 已儲存條件設定資料到工作流程');
+    console.log('💾 Next3 儲存條件設定資料到工作流程，項目數量:', allConditionItems.length);
+
+    try {
+      this.contractFlowService.saveStep4Data(allConditionItems);
+      console.log('✅ 已儲存條件設定資料到工作流程');
+
+      // 🎯 驗證儲存結果
+      this.verifyStoredConditionData();
+
+    } catch (error) {
+      console.error('❌ Next3 儲存條件設定資料失敗:', error);
+      this.notificationService.errorBubble('儲存條件設定資料失敗');
+    }
   }
+
+  private verifyStoredConditionData(): void {
+    const savedData = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
+    const currentItemCount = this.getConditionItemCount();
+
+    console.log('🔍 驗證 Next3 儲存結果:', {
+      savedDataType: Array.isArray(savedData) ? '陣列' : typeof savedData,
+      savedDataLength: Array.isArray(savedData) ? savedData.length : 0,
+      currentItemCount: currentItemCount
+    });
+
+    if (Array.isArray(savedData) && savedData.length !== currentItemCount) {
+      console.warn('⚠️ 儲存後的條件項目數量不匹配:', {
+        saved: savedData.length,
+        current: currentItemCount
+      });
+    }
+
+    // 🎯 統計各類型項目數量
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
+    console.log('📊 條件設定統計:', {
+      commissionType: commissionType,
+      fixedRent: this.fixedRentItems.filter(item => item._status !== 'deleted').length,
+      baseRentHigher: this.baseRentHigherItems.filter(item => item._status !== 'deleted').length,
+      generalCommission: this.generalCommissionItems.filter(item => item._status !== 'deleted').length,
+      baseCommission: this.baseCommissionItems.filter(item => item._status !== 'deleted').length,
+      graduated: this.graduatedItems.filter(item => item._status !== 'deleted').length,
+      baseTier: this.baseTierItems.filter(item => item._status !== 'deleted').length
+    });
+  }
+
 
   // 🎯 提交相關方法
   onSubmitNext(): void {
@@ -1499,4 +1515,37 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     }
   }
 
+  private loadDiscountOptions(): Promise<void> {
+    return new Promise((resolve) => {
+      console.log('🔽 Next3 開始載入折數選項...');
+      this.paperTypeService.getPaperTypeOptions('T102').subscribe({
+        next: (options: any[]) => {
+          console.log('📥 Next3 API 回傳的折扣選項:', options);
+          this.discountOptions = options;
+          console.log('🔄 Next3 設定折扣選項:', this.discountOptions);
+          this.updateGeneralCommissionColumnOptions();
+          resolve();
+        },
+        error: (error: any) => {
+          console.error('❌ Next3 載入折數選項失敗:', error);
+          this.discountOptions = [];
+          this.updateGeneralCommissionColumnOptions();
+          resolve();
+        }
+      });
+    });
+  }
+
+  private updateGeneralCommissionColumnOptions(): void {
+    console.log('🟢 Next3 更新折扣選項:', this.discountOptions);
+
+    this.generalCommissionColumns = this.generalCommissionColumns.map(col => {
+      if (col.field === 'cag_barcode') {
+        return { ...col, options: [...this.discountOptions] };
+      }
+      return col;
+    });
+
+    console.log('✅ Next3 一般抽成欄位選項已更新');
+  }
 }

@@ -379,48 +379,16 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // 載入工作流程資料（修改，正確載入位置資料）
   private loadWorkflowData(): void {
     const workflowData = this.contractFlowService.getCurrentData();
-    console.log('🚀 載入工作流程資料:', workflowData);
+    console.log('🚀 CRU 載入工作流程資料:', workflowData);
 
     if (workflowData.contractId) {
-      // 檢查是否為新增模式
-      const isNewContract = workflowData.queryRowData?._isNewContract;
-
-      if (isNewContract) {
-        console.log('🆕 新增模式：初始化空表單');
-        this.initializeEmptyForm();
+      // 🎯 統一使用 ContractFlowService 的模式判定
+      if (this.contractFlowService.isNewContractMode()) {
+        console.log('🆕 新增模式：檢查是否有暫存資料');
+        this.loadNewModeData();
       } else {
-        // 原有的編輯模式邏輯
-        const savedFormData = this.contractFlowService.getStep1Data();
-        console.log('💾 暫存表單資料:', savedFormData);
-
-        if (savedFormData && Object.keys(savedFormData).length > 0) {
-          console.log('📝 載入暫存表單資料');
-          this.dataForm.patchValue(savedFormData);
-          this.loadBusinessClassifications(savedFormData.bus_type);
-
-          // 載入暫存的位置資料
-          if (savedFormData.locationInfo && Array.isArray(savedFormData.locationInfo)) {
-            console.log('📍 發現暫存位置資料:', savedFormData.locationInfo);
-            this.locationData = savedFormData.locationInfo.map(item => ({
-              ...item,
-              _status: item._status || 'original',
-              _isNew: item._isNew || false
-            }));
-            console.log('✅ 載入暫存位置資料完成:', this.locationData);
-          } else {
-            this.locationData = [];
-          }
-        } else if (workflowData.queryRowData) {
-          console.log('📋 載入查詢結果資料');
-          this.loadDataFromQueryResult(workflowData.queryRowData);
-        }
-
-        // 載入既有位置資料（如果有 talent_id）
-        if (workflowData.queryRowData?.talent_id &&
-          (!savedFormData?.locationInfo || savedFormData.locationInfo.length === 0)) {
-          console.log('🔄 載入既有位置資料');
-          this.loadExistingLocationData(workflowData.queryRowData.talent_id);
-        }
+        console.log('📝 編輯模式：載入資料');
+        this.loadEditModeData(workflowData);
       }
     } else {
       console.warn('❌ 沒有工作流程資料，重導向到查詢頁面');
@@ -428,12 +396,80 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }
   }
 
+  private loadNewModeData(): void {
+    console.log('🆕 載入新增模式資料');
+
+    // 🎯 檢查是否有暫存的 Step1 資料
+    const savedFormData = this.contractFlowService.getStep1Data();
+    console.log('📦 檢查 Step1 暫存資料:', savedFormData);
+
+    if (savedFormData && Object.keys(savedFormData).length > 0) {
+      console.log('📝 載入新增模式暫存表單資料');
+      this.loadSavedFormData(savedFormData);
+    } else {
+      console.log('🆕 新增模式：初始化空表單');
+      this.initializeEmptyForm();
+    }
+  }
+
+
+  private loadEditModeData(workflowData: any): void {
+    console.log('📝 載入編輯模式資料');
+
+    // 🎯 優先使用 CRU 頁面編輯後的暫存資料
+    const savedFormData = this.contractFlowService.getStep1Data();
+    console.log('📦 檢查 Step1 暫存資料:', savedFormData);
+
+    if (savedFormData && Object.keys(savedFormData).length > 0) {
+      console.log('📝 載入編輯模式暫存表單資料');
+      this.loadSavedFormData(savedFormData);
+    } else if (workflowData.queryRowData) {
+      console.log('📋 載入查詢結果資料');
+      this.loadDataFromQueryResult(workflowData.queryRowData);
+    }
+
+    // 🎯 載入既有位置資料（如果有 talent_id 且沒有暫存位置資料）
+    const currentTalentId = this.contractFlowService.getCurrentTalentId();
+    if (currentTalentId && (!savedFormData?.locationInfo || savedFormData.locationInfo.length === 0)) {
+      console.log('🔄 載入既有位置資料');
+      this.loadExistingLocationData(currentTalentId);
+    }
+  }
+
+
+  private loadSavedFormData(savedFormData: any): void {
+    console.log('📝 載入暫存表單資料:', savedFormData);
+
+    // 🎯 載入表單資料
+    this.dataForm.patchValue(savedFormData);
+
+    // 🎯 載入分類資料
+    if (savedFormData.bus_type) {
+      this.loadBusinessClassifications(savedFormData.bus_type);
+    }
+
+    // 🎯 載入位置資料
+    if (savedFormData.locationInfo && Array.isArray(savedFormData.locationInfo)) {
+      console.log('📍 發現暫存位置資料:', savedFormData.locationInfo);
+      this.locationData = savedFormData.locationInfo.map((item: { _status: any; _isNew: any; }) => ({
+        ...item,
+        _status: item._status || 'original',
+        _isNew: item._isNew || false
+      }));
+      console.log('✅ 載入暫存位置資料完成:', this.locationData);
+    } else {
+      this.locationData = [];
+    }
+
+    console.log('✅ 暫存表單資料載入完成');
+  }
+
   private initializeEmptyForm(): void {
     console.log('🆕 初始化空表單');
 
-    // 設定預設值
+    // 🎯 設定預設值
     this.dataForm.patchValue({
-      talent_id: '',
+      talent_id: '', // 🎯 新增模式 talent_id 為空
       apply_no: '',
       tlt_name: '',
       tlt_no: '',
@@ -445,11 +481,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       bus_sclass: '',
       contract_subno: '',
 
-      // 預設值
+      // 🎯 預設值
       tlt_term_type: '3', // 一般抽成
       comm_comp_type: '2', // 除稅
 
-      // 其他預設值
+      // 🎯 其他預設值
       org_id: '',
       tlt_kind: '',
       deco_type: '',
@@ -457,18 +493,18 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       tlt_ctype_mtotal: '',
       overall_status: '',
 
-      // Y/N 欄位預設值
+      // 🎯 Y/N 欄位預設值
       rece_yn: '',
       pos_yn: '',
       cash_yn: '',
       vip_yn: '',
       credit_card: '',
 
-      // 清空位置資料
+      // 🎯 清空銀行資訊
       selectedBankInfo: null
     });
 
-    // 清空位置資料
+    // 🎯 清空位置資料
     this.locationData = [];
 
     console.log('✅ 空表單初始化完成');
@@ -633,13 +669,15 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     if (this.dataForm.dirty || this.hasLocationChanges()) {
       const formData = this.dataForm.getRawValue();
 
-      // 🎯 新增模式：自動生成臨時 ID
-      if (this.isNewContractMode()) {
-        // 新增模式：talent_id 設為空字串，讓後端處理
-        formData.talent_id = '';
-        console.log('🆕 新增模式：talent_id 設為空，由後端自動產生');
-      }
+      console.log('💾 準備儲存工作流程資料...');
+      console.log('📋 表單資料:', {
+        talent_id: formData.talent_id,
+        apply_no: formData.apply_no,
+        tlt_name: formData.tlt_name,
+        isNewMode: this.contractFlowService.isNewContractMode()
+      });
 
+      // 🎯 準備位置資料
       const workflowData = {
         ...formData,
         locationInfo: this.prepareLocationDataForSubmit()
@@ -650,11 +688,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         ...workflowData
       } as ContractInfo;
 
-      // 處理 null 值
-      if (contractInfo.VEN_Name === null) contractInfo.VEN_Name = '';
-
+      // 🎯 移除自訂處理，讓 ContractFlowService 統一處理 talent_id
       this.contractFlowService.saveStep1Data(contractInfo);
-      console.log('已暫存到工作流程:', contractInfo);
+
+      console.log('✅ 已暫存到工作流程');
     }
   }
 
@@ -826,8 +863,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   onSubmitNext(): void {
-    console.log('🔍 onSubmitNext 開始執行');
-    console.log('表單是否 valid:', this.dataForm.valid);
+    console.log('🔍 CRU onSubmitNext 開始執行');
+    console.log('📋 表單狀態:', {
+      valid: this.dataForm.valid,
+      mode: this.contractFlowService.isNewContractMode() ? '新增' : '編輯'
+    });
 
     if (this.dataForm.valid) {
       const formData = this.dataForm.getRawValue();
@@ -837,18 +877,22 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         tlt_name: formData.tlt_name
       });
 
+      // 🎯 儲存到工作流程
       this.saveToWorkflow();
 
-      // 檢查工作流程狀態
+      // 🎯 檢查工作流程狀態
       const workflowStatus = this.contractFlowService.getCurrentStatus();
       console.log('🚀 工作流程狀態:', workflowStatus);
 
-      // 嘗試跳轉
-      console.log('🔄 嘗試跳轉到 next1');
+      // 🎯 導向下一步
+      console.log('🔄 導向 Next1');
       this.router.navigate(['account/tls/tls13010next1']);
+    } else {
+      console.warn('❌ 表單驗證失敗');
+      this.messageService.warnBubble('請檢查必填欄位');
+      this.markFormGroupTouched(this.dataForm);
     }
   }
-
 
   override onCancel(): void {
     if (this.dataForm.dirty) {
@@ -905,8 +949,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
    * 🎯 新增：檢查是否為新增模式
    */
   isNewContractMode(): boolean {
-    const workflowData = this.contractFlowService.getCurrentData();
-    return workflowData.queryRowData?._isNewContract === true;
+    return this.contractFlowService.isNewContractMode();
   }
 
   /**
@@ -1262,77 +1305,4 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       console.log('📭 沒有位置暫存資料');
     }
   }
-
-  // 檢查暫存功能
-  // testSaveAndReload(): void {
-  //   console.log('🧪 測試儲存和重新載入');
-
-  //   // 先儲存
-  //   this.saveToWorkflow();
-  //   console.log('💾 已儲存到暫存');
-
-  //   // 清空當前資料
-  //   this.locationData = [];
-  //   console.log('🗑️ 已清空當前資料');
-
-  //   // 重新載入
-  //   setTimeout(() => {
-  //     this.loadWorkflowData();
-  //     console.log('🔄 已重新載入');
-
-  //     setTimeout(() => {
-  //       // this.debugLocationStatus();
-  //     }, 100);
-  //   }, 100);
-  // }
-
-
-  // testAddLocation(): void {
-  //   console.log('🧪 測試新增位置');
-  //   this.onAddLocationItem();
-  //   setTimeout(() => {
-  //     this.debugLocationStatus();
-  //   }, 100);
-  // }
-
-  // testDeleteAll(): void {
-  //   console.log('🧪 測試刪除全部可見項目');
-  //   const displayData = this.getDisplayLocationData();
-  //   if (displayData.length > 0) {
-  //     this.onBatchDeleteLocation(displayData);
-  //     setTimeout(() => {
-  //       this.debugLocationStatus();
-  //     }, 100);
-  //   }
-  // }
-
-  // ✅ 新增狀態調試方法：
-  // debugLocationStatus(): void {
-  //   console.log('=== 📊 位置資料狀態報告 ===');
-  //   console.log('總數:', this.locationData.length);
-  //   console.log('可顯示數量:', this.getDisplayLocationData().length);
-
-  //   const statusCount = {
-  //     new: 0,
-  //     modified: 0,
-  //     original: 0,
-  //     deleted: 0,
-  //     undefined: 0
-  //   };
-
-  //   this.locationData.forEach((item, index) => {
-  //     const status = item._status || 'undefined';
-  //     statusCount[status]++;
-
-  //     console.log(`${index + 1}. ID: ${item.id}`);
-  //     console.log(`   位置: ${item.location_no || '未設定'}`);
-  //     console.log(`   狀態: ${item._status || '無狀態'}`);
-  //     console.log(`   新增: ${item._isNew ? '是' : '否'}`);
-  //     console.log('---');
-  //   });
-
-  //   console.log('📈 狀態統計:', statusCount);
-  //   console.log('========================');
-  // }
-
 }

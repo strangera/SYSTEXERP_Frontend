@@ -16,6 +16,7 @@ export interface WorkflowStatus {
   canProceed: boolean;
   contractId: string | null;
   lastModified: Date;
+  isNewContract?: boolean;
 }
 
 export interface ContractDataStructure {
@@ -32,6 +33,7 @@ export interface ContractDataStructure {
     createdAt: Date;
     lastModified: Date;
     version: number;
+    _isNewContract: boolean;
   };
 }
 
@@ -169,6 +171,7 @@ export interface ContractInfo {
   bus_type?: string;
   bus_class?: string;
   tlt_term_type?: string;
+  _isNewContract?: boolean;
 }
 
 // 代扣款設定（next1）
