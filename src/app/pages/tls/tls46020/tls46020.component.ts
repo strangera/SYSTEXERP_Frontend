@@ -5,6 +5,7 @@ import { TLS46020Item, TLS46020Service } from '../../../service/api/tls/tls46020
 import { Column, createPaginationConfig, formatAmount, formatDate, formatDateTime, formatTimeHHMM, formatYN } from '../../../shared/componentkit/table/table.model';
 import { finalize } from 'rxjs';
 import { ECR_GUI_Type_Option, ECR_SernoType_Option } from './tls46020.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 // 2.4.6.2  POS環境變數維護作業
 @Component({
@@ -147,7 +148,7 @@ export class TLS46020Component extends BasicQueryPageComponent<TLS46020Item> imp
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tls46020Service.queryTLS46020(frm.value).pipe(finalize(() => this.loading = false)).subscribe(res => {
+      this.tls46020Service.queryTLS46020(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);

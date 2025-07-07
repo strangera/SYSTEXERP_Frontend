@@ -4,6 +4,7 @@ import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { tblRole } from '../../../shared/models/sys/sysb000.module';
+import { untilDestroyed } from '@ngneat/until-destroy';
 // Permissions
 // Shared
 // 4-2-2-3角色複製
@@ -50,7 +51,7 @@ export class SYS0240Component extends BasicQueryPageComponent<tblRole>
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       console.log('query condition', frm.value);
-      this.sys0210Service.queryRole(frm.value).subscribe({
+      this.sys0210Service.queryRole(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           console.log('回傳Role:', response.Data);
           if (response.Status === '0000') {
@@ -93,7 +94,7 @@ export class SYS0240Component extends BasicQueryPageComponent<tblRole>
     };
 
     console.log('Delete body:', JSON.stringify(deleteBody, null, 2));
-    // this.sys0210Service.deleteRole(deleteBody).subscribe({
+    // this.sys0210Service.deleteRole(deleteBody).pipe(untilDestroyed(this)).subscribe({
     //   next: (response) => {
     //     if (response.Status === '0000') {
     //       this.messageService.successBubble('選中項目刪除成功');
