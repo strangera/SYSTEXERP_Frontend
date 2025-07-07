@@ -73,6 +73,10 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   ) {
     super();
   }
+  copyAddress() {
+    this.dataForm.controls['VEN_GUIAddr'].setValue(this.dataForm.controls['VEN_Address'].value);
+  }
+
 
   ngOnInit(): void {
     this.initializePage('SYSB200', this.dataForm);
