@@ -179,15 +179,6 @@ export interface IUpdateTLS52030StatusRequest {
   ODM_Status: string; // 驗收狀態 (例如 "審核", "作廢", "反審核")
   ODM_Status_Ori: string; // 原始狀態
   Request_No?: string | null; // 請款單號 (如果相關)
-  APRV_Date?: string | Date | null; // 審核(驗收)日期
-  APRV_USR_No?: string | null; // 審核人員
-  APRV_USR_Name?: string | null; // 審核人員姓名
-  ReAPRV_Date?: string | Date | null; // 反審核日期
-  ReAPRV_USR_No?: string | null; // 反審核人員
-  ReAPRV_USR_Name?: string | null; // 反審核人員姓名
-  Void_Date?: string | Date | null; // 作廢日期
-  Void_USR_No?: string | null; // 作廢人員
-  Void_USR_Name?: string | null; // 作廢人員姓名
 }
 
 @Injectable({

@@ -7,6 +7,7 @@ import { Column } from '../../../shared/componentkit/table/table.model';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
 import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-fin11200-cru',
@@ -38,7 +39,7 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
   ngOnInit(): void {
     this.initializePage('FIN11200', this.dataForm);
     this.setMinDate();
-    this.eCRNoService.getPOS1002BillDropDownList().subscribe(data => {
+    this.eCRNoService.getPOS1002BillDropDownList().pipe(untilDestroyed(this)).subscribe(data => {
       const mappedData = data.Data.map((item: { No: string; Name: string }) => ({
         ECR_No: item.No,
         ECR_Name: item.Name
@@ -70,7 +71,7 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
           ECR_No: item.ECR_No
         })),
       };
-      this.fin11200Service.execProcNumber(body).pipe(finalize(() => this.loading = false)).subscribe((response) => {
+      this.fin11200Service.execProcNumber(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response) => {
         if (response.Status === '0000') {
           this.messageService.successBubble(response.Message);
           this.dataForm.reset();

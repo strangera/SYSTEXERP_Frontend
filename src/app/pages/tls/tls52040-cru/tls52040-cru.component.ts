@@ -1,118 +1,38 @@
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { VendorService } from '../../../service/basic/vendor.service';
-import { PaperStatusService } from '../../../service/basic/paper-status.service';
-import { WarehouseService } from '../../../service/basic/warehouse.service';
-import { BrandCodeService } from '../../../service/basic/brand-code.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { ManagementIDService } from '../../../service/basic/management-id.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { SystemTypeService } from '../../../service/basic/system-type.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-
+import { FormGroup, Validators } from '@angular/forms';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
+import { DropDownListService, IDropdownItem } from '../../../service/api/dropdownservice/dropDownList.service';
+import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { debounceTime } from 'rxjs';
+import { ITLS52040Data, Tls52040Service } from '../../../service/api/tls/tls52040.service';
 @Component({
   selector: 'app-tls52040-cru',
   templateUrl: './tls52040-cru.component.html',
-  styleUrl: './tls52040-cru.component.scss'
 })
-export class TLS52040CRUComponent extends BasicCrupageComponent implements OnInit {
-
-  // ProgNo: string = '250017';
-  // funInfo?: FunsrightInfo;
-
-  // // Permissions
-  // a
-  // 
-  // 
-
-  // loading: boolean = false;
-  // submitted: boolean = false;
-
-
-  dataForm = this.formBuilder.group({
-    managementId: [{ value: '自動編號', disabled: true }],
-    vendorId: [],
-    paperStatus: [],
-    warehouseId: [, Validators.required],
-    brandId: [],
-    vendorCode: [, Validators.required],
-    applicantId: [],
-    approverId: [],
-    returnId: [],
-    applicationDateFrom: [],
-    applicationDateTo: [],
-    approvalDateFrom: [],
-    approvalDateTo: [],
-    name: [], // Input Text
-    systemtypemulti: [[] as number[], [Validators.required]], // MultiSelect
-    returnAcceptanceNumber: [{ value: '自動編號', disabled: true }], // 退貨驗收單號
-    returnAcceptanceAmount: [], // 退貨驗收金額
-    taxAmount: [], // 稅額
-    totalAmount: [], // 合計金額
-    totalSaleAmount: [], // 售價總計
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> implements OnInit {
+  dataForm = this.formBuilder.nonNullable.group({
+    ODM_No: [{ value: '系統自動產生', disabled: true }], // 進貨驗收單號
+    VEN_No: ['', [Validators.required]], // 廠商編號
+    LOGO_No: ['', [Validators.required]], // 品牌編號 (與 POS2016.LOGO_No 對應)
+    HOS_No: [{ value: null as string | null, disabled: true }, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
+    ODM_TotalBuyNet: [{ value: 0, disabled: true }], // 進貨驗收金額
+    ODM_TotalBuyTax: [{ value: 0, disabled: true }], // 稅額
+    ODM_TotalBuyAmt: [{ value: 0, disabled: true }], // 合計金額
+    ODM_TotalSaleAmt: [{ value: 0, disabled: true }], // 售價總計
+    ODM_USR_No: [{ value: null as string | null, disabled: true }], // 申請人
+    ODM_Date: [{ value: new Date(), disabled: true }], // 申請日期
+    ODM_Remark: ['', [Validators.maxLength(200)]],// 進貨驗收單說明
+    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
   });
-
-  // Dropdown options
-  vendorOptions: any[] = [];
-  paperStatusOptions: any[] = [];
-  warehouseOptions: any[] = [];
-  brandCodeOptions: any[] = [];
-  userCodeOptions: any[] = [];
-  managementIdOptions: any[] = [];
-  // formTitle: string = '';   //CRU
-  // showConfirm: boolean = false;//CRU
-  // crudstatus: CRUDStatus = CRUDStatus.Read;//CRU
-
-  // Table data
-  data: any[] = [
-    {
-      sequence: 1,
-      isNew: true,
-      aboveNew: true,
-      productManagementCodeName: 'Product A',
-      returnableQuantity: 100,
-      returnQuantity: 10,
-      productUnit: 'PCS',
-      unitPrice: 20.0,
-      tax: 5.0,
-      untaxedAmount: 190.0,
-      salePrice: 200.0,
-      saleSubtotal: 4000.0,
-      returnInvoiceNumber: 'INV12345',
-      itemRemarks: 'Some remarks',
-    },
-    {
-      sequence: 2,
-      isNew: false,
-      aboveNew: false,
-      productManagementCodeName: 'Product B',
-      returnableQuantity: 200,
-      returnQuantity: 20,
-      productUnit: 'PCS',
-      unitPrice: 15.0,
-      tax: 3.0,
-      untaxedAmount: 297.0,
-      salePrice: 300.0,
-      saleSubtotal: 6000.0,
-      returnInvoiceNumber: 'INV54321',
-      itemRemarks: 'Other remarks',
-    },
-    // Add other data as needed
-  ];
-
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
+  vendorOptions: IDropdownItem[] = []; // 廠商下拉選單選項
+  brandOptions: IDropdownItem[] = []; // 品牌下拉選單選項
+  warehouseOptions: IDropdownItem[] = []; // 倉別下拉選單選項
+  userOptions: { user_No: string; user_Name: string }[] = []; // 用戶選項
+  data: ITLS52040Data[] = [];
+  selectedItems: ITLS52040Data[] = [];
+  columns: Column[] = [
     { field: 'sequence', header: '序號', visible: true },
     { field: 'isNew', header: '是否新貨', visible: true },
     { field: 'aboveNew', header: '以上新貨', visible: true },
@@ -128,190 +48,90 @@ export class TLS52040CRUComponent extends BasicCrupageComponent implements OnIni
     { field: 'returnInvoiceNumber', header: '退貨單號碼', visible: true },
     { field: 'itemRemarks', header: '單項備註', visible: true },
   ];
-
-  systemTypeOptions: any[] = [];
-
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private vendorService: VendorService,
-    private paperStatusService: PaperStatusService,
-    private warehouseService: WarehouseService,
-    private brandCodeService: BrandCodeService,
-    private userCodeService: UserCodeService,
-    private managementIdService: ManagementIDService,
-    private systemTypeService: SystemTypeService,
-    private authService: AuthService,
-
-  ) {
-    super();  // 呼叫父類建構子
-  }
-
+    private tls52030Service: Tls52040Service,
+    private dropDownListService: DropDownListService,
+    private sys0110Service: Sys0110Service
+  ) { super(); }
   ngOnInit(): void {
-    this.ProgNo = '250017';
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    // ----------------------------------------------------------------
-    this.systemTypeService.getSystemTypes().subscribe(data => {
-      this.systemTypeOptions = data;
-
-      // 全選填入
-      let allSystemValues = this.systemTypeOptions.map(system => system.value);
-      this.dataForm.patchValue({
-        systemtypemulti: allSystemValues
+    this.initializePage('TLS52040', this.dataForm);
+    if (this.isFormEditable) {
+      this.dataForm.controls.VEN_No.disable();
+      this.dataForm.controls.LOGO_No.disable();
+    }
+    this.loadDropdownOptions();
+    if (this.isFormCreateable) {
+      this.dataForm.controls.ODM_Date.setValue(new Date());
+      this.userOptions = [{ user_No: this.user?.user_No || '', user_Name: this.user?.user_Name || '' }];
+      this.dataForm.controls.ODM_USR_No.setValue(this.userOptions[0]?.user_No || ''); // 假設用戶對象有 userName 屬性
+    } else {
+      this.sys0110Service.queryUser({ user_No: this.rowdata?.ODM_USR_No }).pipe(untilDestroyed(this)).subscribe(response => {
+        this.userOptions = response.Data.map(user => ({ user_No: user.user_No, user_Name: user.user_Name }));
+      })
+    }
+  }
+  loadDropdownOptions() {
+    // 專門清空資料的共用方法
+    const resetFormData = () => {
+      this.data = [];
+      // this.selectedItems = [];
+      // this.dialogData = [];
+      this.calculateTotals();
+    };
+    // 1. 供應商下拉選單
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
+      this.vendorOptions = response.Data.map(vendor => ({ ...vendor, label: `${vendor.VEN_No} - ${vendor.Name}` }));
+      this.dataForm.controls.VEN_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
+    });
+    // 2. 品牌下拉選單
+    this.dropDownListService.queryPLULOGO_HOS_No_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
+      this.brandOptions = response.Data;
+      this.dataForm.controls.LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(logoNo => {
+        const HOS_No = this.brandOptions.find(opt => opt.No === logoNo)?.HOS_No || null;
+        this.dataForm.controls.HOS_No.setValue(HOS_No);
+        this.dataForm.controls.HOS_No.enable();
+        resetFormData();
       });
     });
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    // Initialize dropdown options
-    this.vendorService.getVendors().subscribe(data => this.vendorOptions = data);
-    this.paperStatusService.getSystemTypes().subscribe(data => this.paperStatusOptions = data);
-    this.warehouseService.getWarehouseOptions().subscribe(data => this.warehouseOptions = data);
-    this.brandCodeService.getSystemTypes().subscribe(data => this.brandCodeOptions = data);
-    this.userCodeService.getUserCode().subscribe(data => this.userCodeOptions = data);
-    this.managementIdService.getSystemTypes().subscribe(data => this.managementIdOptions = data);
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };//CRU
-
-    switch (state.crudstatus) {
-      case CRUDStatus.Create:
-        this.formTitle = '新增資料';
-        this.showConfirm = this.canAdd();
-        break;
-      case CRUDStatus.Edit:
-        console.log(state.rowdata);
-        this.formTitle = '編輯資料';
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      case CRUDStatus.Read:
-        this.formTitle = '顯示資料';
-        this.Read(state.rowdata);
-        break;
-    }//CRU
+    // 3. 倉別下拉選單
+    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
+      this.warehouseOptions = response.Data;
+      this.dataForm.controls.HOS_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
+    });
   }
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
+  // 總計計算邏輯
+  private calculateTotals(): void {
+    // let totalBuyNet = 0; // 進貨驗收金額：加總驗收明細的ODD_BuyNet 進價未稅小計
+    // let totalBuyTax = 0; // 稅額：單據稅別 ODM_TaxType=1應稅，則ODM_TotalBuyNet * 0.05，四捨五入取整數，若免稅，稅額0
+    // let totalSaleAmt = 0; // 售價總計：加總驗收明細的ODD_SaleAmt
+
+    // for (const item of this.data) {
+    //   const net = Number(item.ODD_BuyNet ?? 0);
+    //   const tax = Number(item.ODD_BuyTax ?? 0);
+    //   const saleAmt = Number(item.ODD_SaleAmt ?? 0);
+    //   totalBuyNet += net;
+    //   totalBuyTax += tax;
+    //   totalSaleAmt += saleAmt;
+    // }
+
+    // const totalBuyAmt = totalBuyNet + totalBuyTax; // 合計金額：等於ODM_TotalBuyNet + ODM_TotalBuyTax
+
+    // this.dataForm.patchValue({
+    //   ODM_TotalBuyNet: Math.round(totalBuyNet),
+    //   ODM_TotalBuyTax: Math.round(totalBuyTax),
+    //   ODM_TotalBuyAmt: Math.round(totalBuyAmt),
+    //   ODM_TotalSaleAmt: Math.round(totalSaleAmt),
+    // });
   }
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
+  onShowDialog() {
   }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
+  onDelete(rowData: ITLS52040Data) {
   }
-
-  canQuery(): boolean {
-    return true;
+  onRowEditSave(event: RowEditSaveEvent): void {
   }
-
-  // canAdd(): boolean {
-  //   return true;
-  // }
-
-  // canEdit(): boolean {
-  //   return true;
-  // }
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.dataForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
-
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
-      },
-    };
-    this.router.navigate(['TLS5000/TLS52040'], extras);
-  }
-
-  // get isFormEditable(): boolean {
-  //   return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());
-  // }
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-  onCancel() {
-    this.router.navigate(['TLS5000/TLS52040']);
-  }
-  // 初始化CRU表單
-  cruForm = this.formBuilder.group({
-    items: this.formBuilder.array([this.createItem()]), // 項目列表
-  });
-
-
-  //
-
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-
-  //
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-
-      mgname: [{ value: '自動帶入', disabled: true }],
-      renum: [],
-      arenum: [{ value: '自動帶入', disabled: true }],
-      unit: [{ value: '自動帶入', disabled: true }],
-      unitprice: [{ value: '自動帶入', disabled: true }],
-      tax: [{ value: '自動帶入', disabled: true }],
-      untax: [{ value: '自動帶入', disabled: true }],
-      price: [],
-      sumprice: [{ value: '自動帶入', disabled: true }],
-      recode: [{ value: '自動帶入', disabled: true }],
-      remark: [],
+    this.handleSubmit(frm, () => {
 
     });
   }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-
 }

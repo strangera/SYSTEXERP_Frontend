@@ -6,6 +6,7 @@ import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
 import { columns, monthOptions, Pos1018 } from './fin11200.model';
 import { AddButton, Column } from '../../../shared/componentkit/table/table.model';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-fin11200',
@@ -39,7 +40,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
 
   ngOnInit(): void {
     this.initializePage('FIN11200', '/FIN/FIN11200cru', this.queryForm, (form) => this.onSubmit(form));
-    this.eCRNoService.getECRNo().subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.value} - ${item.label}` })));
+    this.eCRNoService.getECRNo().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.value} - ${item.label}` })));
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -48,7 +49,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
         ECR_NoList: frm.get('ECR_No')?.value
       }
       console.log(body);
-      this.fin11200Service.queryFIN11200(body).pipe(finalize(() => this.loading = false)).subscribe((response) => {
+      this.fin11200Service.queryFIN11200(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe((response) => {
         this.data = response.Data.map((item: Pos1018) => ({
           ...item,
           guiYymm: this.convertYYYYMMToDate(item.GUI_YYMM)
@@ -83,7 +84,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
         SER_NOS: rowData.SER_NOS
       }
     }
-    this.fin11200Service.execProcClosed(params).pipe(finalize(() => this.loading = false)).subscribe((response) => {
+    this.fin11200Service.execProcClosed(params).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe((response) => {
       if (response.Status === "0000") {
         this.messageService.successBubble(response.Message);
         this.onSubmit(this.queryForm);
@@ -102,7 +103,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
         SER_NOS: item.SER_NOS
       }))
     }
-    this.fin11200Service.execProcExport(params).pipe(finalize(() => this.loading = false)).subscribe((response) => {
+    this.fin11200Service.execProcExport(params).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe((response) => {
       if (response.Status === "0000") {
         this.messageService.successBubble(response.Message);
         this.onSubmit(this.queryForm);

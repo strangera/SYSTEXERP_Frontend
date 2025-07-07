@@ -38,6 +38,13 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     ...createPaginationConfig([{ field: 'ODM_Date', order: -1 }, { field: 'ODM_No', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
+  warehouseOptions: IDropdownItem[] = []; // 倉別
+  pluMagNoOptions: { label: string, value: string }[] = []; // 商品管理編號
+  brandOptions: IDropdownItem[] = []; // 品牌代碼
+  vendorOptions: IDropdownItem[] = []; // 廠商編號
+  poStatusOptions: { label: string, value: string }[] = []; // 採購單狀態 (靜態資料)
+  userOptions: { label: string, value: string }[] = []; // 申請人員、審核人員、結案人員
+  private destroy$ = new Subject<void>(); // 用於管理訂閱的生命週期
   data: ITLS52030Data[] = [];
   selectedItems: ITLS52030Data[] = [];
   columns: Column[] = [
@@ -84,9 +91,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     {
       label: '單據審核',
       icon: 'pi pi-check-circle text-green-500',
-      action: (rowData: ITLS52030Data) => {
-        this.statusChange(rowData, POStatus.已審核);
-      },
+      action: (rowData: ITLS52030Data) => { this.statusChange(rowData, POStatus.已審核); },
       disabled: (rowData: ITLS52030Data) => rowData.ODM_Status !== POStatus.已確認
     },
     {
@@ -102,13 +107,6 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
       disabled: (rowData: ITLS52030Data) => rowData.ODM_Status !== POStatus.已確認
     },
   ];
-  warehouseOptions: IDropdownItem[] = []; // 倉別
-  pluMagNoOptions: { label: string, value: string }[] = []; // 商品管理編號
-  brandOptions: IDropdownItem[] = []; // 品牌代碼
-  vendorOptions: IDropdownItem[] = []; // 廠商編號
-  poStatusOptions: { label: string, value: string }[] = []; // 採購單狀態 (靜態資料)
-  userOptions: { label: string, value: string }[] = []; // 申請人員、審核人員、結案人員
-  private destroy$ = new Subject<void>(); // 用於管理訂閱的生命週期
 
   constructor(
     private tls52030Service: Tls52030Service,
@@ -158,7 +156,9 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
       });
     })
   }
+  btnLoading = false;
   statusChange(rowData: ITLS52030Data, status: string) {
+    this.btnLoading = true;
     const body = {
       id: rowData.id,
       ODM_No: rowData.ODM_No,
@@ -166,7 +166,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
       ODM_Status_Ori: rowData.ODM_Status,
       Request_No: rowData.Request_No
     }
-    this.tls52030Service.updateStatusTLS52030(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+    this.tls52030Service.updateStatusTLS52030(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.onSubmit(this.queryForm);
     });

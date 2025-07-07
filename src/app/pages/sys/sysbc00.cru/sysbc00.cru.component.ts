@@ -55,22 +55,13 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
         : this.sysbc00Service.updateSYSBC00(frm.getRawValue());
 
       saveMain$
-        .pipe(
-          // 儲存主檔完成 → 儲存子表
-          concatMap(() => {
-            const saveChildren$ = this.getSys1004SaveObservables(this.data);
-            return saveChildren$.length > 0 ? forkJoin(saveChildren$) : of(null);
-          }),
-          // 子表完成 → 判斷是否有要刪除的
-          concatMap(() => {
-            const idList = this.deleteRows
-              .map(item => item.id)
-              .filter((id): id is number => id !== undefined);
-            return idList.length > 0
-              ? this.sys1004Service.deleteAPS1004(idList)
-              : of(null);
-          }),
-          finalize(() => (this.loading = false))
+        .pipe(concatMap(() => {
+          const saveChildren$ = this.getSys1004SaveObservables(this.data);
+          return saveChildren$.length > 0 ? forkJoin(saveChildren$) : of(null);
+        }), concatMap(() => {
+          const idList = this.deleteRows.map(item => item.id).filter((id): id is number => id !== undefined);
+          return idList.length > 0 ? this.sys1004Service.deleteAPS1004(idList) : of(null);
+        }), finalize(() => (this.loading = false))
         )
         .subscribe(() => {
           this.messageService.successBubble(isCreate ? '新增成功' : '修改成功');
@@ -110,12 +101,8 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
   onDelete(rows: Aps1004Request[]) {
     // 將畫面資料中刪除這些 row
     this.data = this.data.filter(item => !rows.includes(item));
-
     // 將有 id 的項目（表示是資料庫已存在的）加進 deleteRows，避免重複
-    rows
-      .filter(item => item.id !== undefined && !this.deleteRows.some(d => d.id === item.id))
-      .forEach(item => this.deleteRows.push(item));
-
+    rows.filter(item => item.id !== undefined && !this.deleteRows.some(d => d.id === item.id)).forEach(item => this.deleteRows.push(item));
     // 清空選取列
     this.selectedRows = [];
   }

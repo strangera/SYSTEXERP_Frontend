@@ -75,19 +75,26 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
   }
 
   onDelete(rows: ISysbc00Data[]) {
-    const idsToDelete = rows.map(item => item.id);
-    this.loading = true; // 設置載入狀態
-    this.sysbc00Service.deleteSYSBC00(idsToDelete).pipe(
-      finalize(() => this.loading = false) // 無論成功失敗，都要關閉載入狀態
-    ).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') { // 假設 '0000' 為成功狀態碼
-          this.messageService.successBubble('刪除成功');
-          this.selectedRows = []; // 清空選取狀態
-          this.onSubmit(this.queryForm);
-        } else {
-          console.error('刪除失敗響應:', response);
-        }
+    this.confirmationService.confirm({
+      message: `是否確認刪除此銀行?`,
+      header: `確認刪除銀行`,
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        const idsToDelete = rows.map(item => item.id);
+        this.loading = true; // 設置載入狀態
+        this.sysbc00Service.deleteSYSBC00(idsToDelete).pipe(
+          finalize(() => this.loading = false) // 無論成功失敗，都要關閉載入狀態
+        ).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') { // 假設 '0000' 為成功狀態碼
+              this.messageService.successBubble('刪除成功');
+              this.selectedRows = []; // 清空選取狀態
+              this.onSubmit(this.queryForm);
+            } else {
+              console.error('刪除失敗響應:', response);
+            }
+          }
+        });
       }
     });
   }

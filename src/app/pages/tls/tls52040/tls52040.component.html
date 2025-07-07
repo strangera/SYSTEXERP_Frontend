@@ -19,14 +19,17 @@
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="退貨驗收單狀態" controlName="ODM_Status"
             [options]="poStatusOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.ODM_StatusList" [submitted]="submitted"></app-multi-select>
-          <!-- 倉別 (對應 HOS_No) -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉別" controlName="HOS_No"
-            [options]="warehouseOptions" optionLabel="Name" optionValue="No" [control]="queryForm.controls.HOS_NoList"
-            [submitted]="submitted"></app-multi-select>
           <!-- 品牌代碼 (對應 LOGO_No) -->
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌編號" controlName="LOGO_No" [options]="brandOptions"
             optionLabel="label" optionValue="No" [control]="queryForm.controls.LOGO_NoList"
             [submitted]="submitted"></app-multi-select>
+          <!-- 倉別 (對應 HOS_No) -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉別" controlName="HOS_No"
+            [options]="warehouseOptions" optionLabel="Name" optionValue="No" [control]="queryForm.controls.HOS_NoList"
+            [submitted]="submitted"></app-multi-select>
+          <!-- 管理編號 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="管理編號" controlName="PLU_MagNo"
+            [control]="queryForm.controls.PLU_MagNo" [submitted]="submitted"></app-input-text>
         </div>
         <hr />
         <div class="grid p-fluid">
@@ -38,8 +41,9 @@
           <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
             [startControl]="queryForm.controls.ODM_Date_Start" [endControl]="queryForm.controls.ODM_Date_End"
             [submitted]="submitted"></app-calendar-range>
-        </div>
-        <div class="grid p-fluid">
+          <!-- 採購單號 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="採購單號" controlName="PO_No"
+            [control]="queryForm.controls.PO_No" [submitted]="submitted"></app-input-text>
           <!-- 審核人員 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="審核人" controlName="APRV_USR" [options]="userOptions"
             optionLabel="label" optionValue="value" [control]="queryForm.controls.APRV_USR"
@@ -59,7 +63,7 @@
 </div>
 <div class="card">
   <app-table tableKey="TLS52030" dataKey="ODM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [showCheckBox]="true"
+    (detail)="onDetail($event)" [editDisabled]="editDisabled"
     [multiSortMeta]="[{ field: 'ODM_Date', order: -1 }, { field: 'ODM_No', order: 1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
