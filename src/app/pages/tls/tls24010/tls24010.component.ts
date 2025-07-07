@@ -1,47 +1,34 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-import {
-  FunsrightInfo,
-} from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { FormGroup, Validators } from '@angular/forms';
 import { SupplementCategoryService } from '../../../service/basic/supplement-category.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
-
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
 // 交易補登作業
 @Component({
   selector: 'app-tls24010',
   templateUrl: './tls24010.component.html',
-  styleUrls: ['./tls24010.component.scss']
 })
-export class TLS24010Component implements OnInit {
-  ProgNo: string = '220024';
-
-  // 權限變數
-  funInfo?: FunsrightInfo;
-
-
-
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
-
-
-  // 下拉選單選項
+export class TLS24010Component extends BasicQueryPageComponent<any> implements OnInit {
+  queryForm = this.formBuilder.group({
+    supplementCategory: [, [Validators.required]],  // 補登類別
+    saleDateStart: [, [Validators.required]],  // 銷售日期起
+    saleDateEnd: [, [Validators.required]],  // 銷售日期迄
+    cashierCode: [],  // 收銀機號
+    counterCode: [, [Validators.required]],  // 專櫃編號
+    transactionSerial: [],  // 交易序號
+    invoiceCarrierType: [],  // 電子發票載具種類
+    visitorCount: [],  // 來客數
+    cashierNumber: [88888888]  // 收銀員編號
+  });
   supplementCategoryOptions: any[] = [];
   cashierOptions: any[] = [];
   counterCodeOptions: any[] = [];
   invoiceCarrierTypeOptions: any[] = [];  // 電子發票載具種類選項
-
-  // 表格資料
   data: any[] = [];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'salesDate', header: '銷售日期', visible: true },
     { field: 'cashRegisterStatus', header: '收銀機代號', visible: true },
     { field: 'transactionFlow', header: '交易流水號', visible: true },
@@ -57,51 +44,22 @@ export class TLS24010Component implements OnInit {
     { field: 'repairDate', header: '補登日期', visible: true },
     { field: 'remark', header: '備註', visible: true }
   ];
-  // 初始化表單
-  queryForm = this.formBuilder.group({
-    supplementCategory: [, [Validators.required]],  // 補登類別
-    saleDateStart: [, [Validators.required]],  // 銷售日期起
-    saleDateEnd: [, [Validators.required]],  // 銷售日期迄
-    cashierCode: [],  // 收銀機號
-    counterCode: [, [Validators.required]],  // 專櫃編號
-    transactionSerial: [],  // 交易序號
-    invoiceCarrierType: [],  // 電子發票載具種類
-    visitorCount: [],  // 來客數
-    cashierNumber: [88888888]  // 收銀員編號
-  });
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private supplementCategoryService: SupplementCategoryService,
     private floorService: FloorService,  // 收銀機號
     private counterCodeService: CounterCodeService,  // 專櫃編號
-  ) {
-
-  }
-
+  ) { super(); }
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    // 取得下拉選單選項
+    this.initializePage('TLS24010', 'TLS/TLS24010CRU', this.queryForm, (form) => this.onSubmit(form));
     this.supplementCategoryService.getSupplementCategories().subscribe((data) => {
       this.supplementCategoryOptions = data;
     });
-
     this.floorService.getFloors().subscribe((data) => {
       this.cashierOptions = data;
     });
-
     this.counterCodeService.getCounterCodes().subscribe((data) => {
       this.counterCodeOptions = data;
     });
-
-    // 假設有一個服務獲取電子發票載具種類選項
-    this.getInvoiceCarrierTypeOptions();
-  }
-
-  getInvoiceCarrierTypeOptions(): void {
     // 假設有一個服務來獲取電子發票載具種類選項
     this.invoiceCarrierTypeOptions = [
       { label: '載具1', value: 1 },
@@ -110,76 +68,9 @@ export class TLS24010Component implements OnInit {
     ];
   }
 
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
   onSubmit(frm: FormGroup): void {
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 查詢邏輯
-      console.log(frm.value);
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup): void {
-    this.onSubmit(frm);
-  }
-
-  onClearForm(): void {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate(): void {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm.value,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS2000/TLS24010CRU'], extras);
-    }
-  }
-
-  onEdit(data: any): void {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm.value,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onDetail(data: any): void {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm.value,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+    this.handleSubmit(frm, () => {
+      this.queryStateService.setQueryState(this.ProgNo, frm.value);
+    });
   }
 }
