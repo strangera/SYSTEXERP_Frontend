@@ -5,6 +5,7 @@ import { ITLS52040Data, Tls52040Service } from '../../../service/api/tls/tls5204
 import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { finalize, map, Subject, takeUntil } from 'rxjs';
 import { DropDownListService, IDropdownItem } from '../../../service/api/dropdownservice/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 export const enum POStatus {
   已確認 = '1',
@@ -18,13 +19,15 @@ export const enum POStatus {
 export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> implements OnInit {
   queryForm = this.formBuilder.group({
     ODM_No: ['', [Validators.maxLength(16)]], // 驗收編號
-    HOS_NoList: [null], // 倉庫代碼
     LOGO_NoList: [null], // 品牌代碼
+    HOS_NoList: [null], // 倉庫代碼
     VEN_No: [''], // 廠商代號
+    PLU_MagNo: ['', [Validators.maxLength(20)]], // 管理編號
     ODM_StatusList: [null, [Validators.required]], // 驗收狀態
     ODM_USR: [''], // 申請人員
     ODM_Date_Start: [''], // 申請日期起
     ODM_Date_End: [''], // 申請日期迄
+    PO_No: ['', [Validators.maxLength(16)]], // 採購單號
     APRV_USR: [''], // 審核人員
     APRV_Date_Start: [''], // 審核(驗收)日期起
     APRV_Date_End: [''], // 審核(驗收)日期迄
@@ -59,7 +62,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
     { field: 'ODM_TotalSaleTax', header: '售價稅額小計', visible: true, format: formatAmount },
     { field: 'ODM_TotalSaleAmt', header: '售價合計', visible: true, format: formatAmount },
     { field: 'ODM_Status', header: '驗收狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value },
-    { field: 'ODM_TaxType', header: '單據稅別', visible: true, format: value => value === '1' ? '應稅' : '免稅' },
+    // { field: 'ODM_TaxType', header: '單據稅別', visible: true, format: value => value === '1' ? '應稅' : '免稅' },
     { field: 'APRV_Date', header: '審核(驗收)日期', visible: true, format: formatDateTime },
     { field: 'APRV_USR_No', header: '審核人員', visible: true },
     { field: 'APRV_USR_Name', header: '審核人員姓名', visible: true },
@@ -91,7 +94,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       label: '反審核',
       icon: 'pi pi-undo text-orange-500',
       action: (rowData: ITLS52040Data) => { this.statusChange(rowData, POStatus.已確認); },
-      disabled: (rowData: ITLS52040Data) => rowData.Request_No !== null
+      disabled: (rowData: ITLS52040Data) => rowData.Request_No !== null || rowData.ODM_Status !== POStatus.已審核
     },
     {
       label: '作廢單據',
@@ -108,18 +111,18 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
   ngOnInit(): void {
     this.initializePage('TLS52040', 'TLS/TLS52040cru', this.queryForm, (f) => this.onSubmit(f));
     // 倉別 (HOS_No)
-    this.dropDownListService.getPOS2034Options().pipe(takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this), takeUntil(this.destroy$)).subscribe(response => {
       this.warehouseOptions = response.Data;
     });
     // 品牌代碼 (LOGO_No)
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this), takeUntil(this.destroy$)).subscribe(response => {
       this.brandOptions = response.Data.map(brand => ({
         ...brand,
         label: `${brand.No} - ${brand.Name}`,
       }));
     });
     // 廠商編號 (VEN_No)
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this), takeUntil(this.destroy$)).subscribe(response => {
       this.vendorOptions = response.Data.map(vendor => ({
         ...vendor,
         label: `${vendor.VEN_No} - ${vendor.Name}`,
@@ -132,7 +135,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       { label: '作廢', value: '9' },
     ];
     // 申請人員、審核人員、結案人員 (共用人員下拉選單)
-    this.dropDownListService.queryUser_Name_DropDownList().pipe(
+    this.dropDownListService.queryUser_Name_DropDownList().pipe(untilDestroyed(this),
       map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
     ).subscribe(options => {
       this.userOptions = options;
@@ -141,7 +144,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tls52040Service.queryTLS52040(frm.value).pipe(finalize(() => this.loading = false)).subscribe(response => {
+      this.tls52040Service.queryTLS52040(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -151,12 +154,17 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
   statusChange(rowData: ITLS52040Data, status: string) {
     const body = {
       id: rowData.id,
+      ODM_No: rowData.ODM_No,
       ODM_Status: status,
-      ODM_Status_Ori: rowData.ODM_Status
+      ODM_Status_Ori: rowData.ODM_Status,
+      Request_No: rowData.Request_No
     }
-    // this.tls52040Service.updateTLS52030Status(body).pipe(finalize(() => this.loading = false)).subscribe(response => {
-    //   this.messageService.successBubble(response.Message);
-    //   this.onSubmit(this.queryForm);
-    // });
+    this.tls52040Service.updateStatusTLS52040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+      this.messageService.successBubble(response.Message);
+      this.onSubmit(this.queryForm);
+    });
+  }
+  editDisabled(rowData: ITLS52040Data) {
+    return rowData.ODM_Status !== POStatus.已確認;
   }
 }
