@@ -5,6 +5,7 @@ import { Fin11030Service } from '../../../service/api/fin/fin11030.service';
 import { APS2001Data, SAL_GUIPaperOptions2 } from '../fin11030/fin11030.model';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
 // 1.1.3 銷項品項資料設定 CRU
 @Component({
   selector: 'app-fin11030-cru',
@@ -31,7 +32,7 @@ export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> imp
 
   ngOnInit(): void {
     this.initializePage('FIN11030', this.dataForm);
-    this.dataForm.get('SAL_GUIEndNo')?.valueChanges.subscribe(endNoValue => {
+    this.dataForm.get('SAL_GUIEndNo')?.valueChanges.pipe(untilDestroyed(this)).subscribe(endNoValue => {
       const begNoValue = this.dataForm.get('SAL_GUIBegNo')?.value;
       if (begNoValue !== null && begNoValue !== '' && endNoValue !== null && endNoValue !== '') {
         const beg = Number(begNoValue);
@@ -50,7 +51,7 @@ export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> imp
       }
     });
     // 監聽「券數」變更，自動計算 GUI_TotQty
-    this.dataForm.get('GUI_Qty')?.valueChanges.subscribe(value => {
+    this.dataForm.get('GUI_Qty')?.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
       const qty = Number(value);
       if (!isNaN(qty)) {
         const totalQty = qty * 50;
@@ -85,7 +86,7 @@ export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> imp
         ? this.fin11030Service.insertFIN11030(this.buildInsertBody(frm))
         : this.fin11030Service.updateFIN11030(this.buildUpdateBody(frm));
       serviceCall
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe({
           next: (res) => {
             this.messageService.successBubble(res.Message);

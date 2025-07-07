@@ -4,6 +4,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { INV_UsageTypeOptions, TDS1008Data } from '../fin11040/fin11040.model';
 import { Fin11040Service } from '../../../service/api/fin/fin11040.service';
 import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
 //1.1.1.4 發票格式代號維護 CRU
 @Component({
   selector: 'app-fin11040-cru',
@@ -41,7 +42,7 @@ export class FIN11040CRUComponent extends BasicCruPageComponent<TDS1008Data> imp
       if (this.isFormCreateable) {
         const payload = this.buildInsertBody(frm);
         this.fin11040Service.insertFIN11040(payload)
-          .pipe(finalize(() => this.loading = false))
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
           .subscribe({
             next: (res) => {
               this.dataForm.reset();
@@ -51,7 +52,7 @@ export class FIN11040CRUComponent extends BasicCruPageComponent<TDS1008Data> imp
       } else if (this.isFormEditable) {
         const payload = this.buildUpdateBody(frm);
         this.fin11040Service.updateFIN11040(payload)
-          .pipe(finalize(() => this.loading = false))
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
           .subscribe({
             next: (res) => {
               this.onCancel();

@@ -1,9 +1,23 @@
-::ng-deep label {
-  margin-bottom: 0.0rem;
-  font-weight: 500;
-  display: inline-block;
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-::ng-deep .input-group {
-  margin-top: 0;
+input {
+  width: 100%;
+  padding-right: 30px;
+}
+
+.copy-button {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666666;
+}
+
+.copy-button:hover {
+  color: #333333;
 }

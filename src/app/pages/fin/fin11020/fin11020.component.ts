@@ -5,6 +5,7 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
 import { columns, MainInvoiceData, subColumns } from './fin11020.model';
 import { Fin11020Service } from '../../../service/api/fin/fin11020.service';
 import { FileSelectEvent } from 'primeng/fileupload';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 //1.1.1.2 發票基本資料維護
 @Component({
@@ -38,7 +39,7 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.fin11020Service.queryFIN11020(frm.value).subscribe({
+      this.fin11020Service.queryFIN11020(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           this.data = response.Data.map((item: MainInvoiceData) => ({
             ...item,
@@ -63,7 +64,7 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
 
   onDelete(selectedRows: MainInvoiceData[]) {
     const ids = selectedRows.map(row => row.ID);
-    this.fin11020Service.deleteFIN11020(ids).subscribe({
+    this.fin11020Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
       next: () => {
         this.onSubmit(this.queryForm);
         this.selectedRows = [];
@@ -74,7 +75,7 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
 
   onFileUpload(event: FileSelectEvent) {
     const file = event.files[0];
-    this.fin11020Service.uploadFIN11020(file).subscribe({
+    this.fin11020Service.uploadFIN11020(file).pipe(untilDestroyed(this)).subscribe({
       next: (res) => {
         if (res.Data) {
           this.onSubmit(this.queryForm);

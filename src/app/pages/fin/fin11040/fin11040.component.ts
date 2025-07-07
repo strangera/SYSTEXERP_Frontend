@@ -4,6 +4,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { Fin11040Service } from '../../../service/api/fin/fin11040.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { columns, TDS1008Data } from './fin11040.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
 @Component({
   selector: 'app-fin11040',
   templateUrl: './fin11040.component.html',
@@ -31,7 +32,7 @@ export class FIN11040Component extends BasicQueryPageComponent<TDS1008Data> impl
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
-      this.fin11040Service.queryFIN11040(frm.value).subscribe({
+      this.fin11040Service.queryFIN11040(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           this.data = response.Data
           this.totalRecords = response.TotalCount;
@@ -45,7 +46,7 @@ export class FIN11040Component extends BasicQueryPageComponent<TDS1008Data> impl
 
   onDelete(selectedRows: TDS1008Data[]) {
     const idList = selectedRows.map(row => row.ID);
-    this.fin11040Service.deleteFIN11040({ idList }).subscribe({
+    this.fin11040Service.deleteFIN11040({ idList }).pipe(untilDestroyed(this)).subscribe({
       next: () => {
         this.onSubmit(this.queryForm);
         this.selectedRows = [];

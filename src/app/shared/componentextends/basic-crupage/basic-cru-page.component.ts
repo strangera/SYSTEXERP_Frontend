@@ -9,6 +9,7 @@ import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { LazyLoadEvent } from '../../componentkit/table/table.model';
 import { UntilDestroy } from '@ngneat/until-destroy';
+import { ConfirmationService } from 'primeng/api';
 @UntilDestroy()
 export class BasicCruPageComponent<T> {
   // Page No
@@ -31,6 +32,7 @@ export class BasicCruPageComponent<T> {
   messageService = inject(NotificationService);
   formBuilder = inject(FormBuilder);
   currentPageService: CurrentPageService = inject(CurrentPageService);
+  confirmationService: ConfirmationService = inject(ConfirmationService);
   activatedRoute = inject(ActivatedRoute);
   previousRoute: string | null = null; // 新增用於儲存前一個路由的屬性
   // 判斷目前頁面是新增、修改、明細--------------------------------
