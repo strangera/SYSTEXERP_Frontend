@@ -453,9 +453,9 @@ const routes: Routes = [
   { path: 'tls14020cru', component: TLS14020CRUComponent }, // 專櫃契約書列印 CRU
   { path: 'tls14030cru', component: Tls14030CRUComponent }, // 保證票維護作業 CRU
   { path: 'tls14040cru', component: Tls14040CRUComponent }, // 保證票彙總表 CRU
-  { path: 'tls13010NEXT1', component: TLS13010Next1Component }, // 專櫃契約書維護 NEXT1
-  { path: 'tls13010NEXT2', component: TLS13010Next2Component }, // 專櫃契約書維護 NEXT2
-  { path: 'tls13010NEXT3', component: Tls13010Next3Component }, // 專櫃契約書維護 NEXT3
+  { path: 'tls13010next1', component: TLS13010Next1Component }, // 專櫃契約書維護 NEXT1
+  { path: 'tls13010next2', component: TLS13010Next2Component }, // 專櫃契約書維護 NEXT2
+  { path: 'tls13010next3', component: Tls13010Next3Component }, // 專櫃契約書維護 NEXT3
   { path: 'tls21010', component: TLS21010Component }, // 傳票項目之會計科目設定作業
   { path: 'tls21020', component: TLS21020Component }, // 傳票項目之會計科目設定作業_NEW
   { path: 'tls21030', component: TLS21030Component }, // 對帳單備註維護作業

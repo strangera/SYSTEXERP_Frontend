@@ -2,6 +2,11 @@
   <!-- 操作按鈕區域 -->
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button
+      btnType="create"
+      (click)="onCreate()"
+      label="{{ 'create' | translate }}"
+    ></app-button>
   </div>
 
   <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">

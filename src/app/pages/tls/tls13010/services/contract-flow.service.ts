@@ -1,30 +1,9 @@
-// contract-flow.service.ts (修改後版本)
+// contract-flow.service.ts - 增強版：支援資料版本控制和同步
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { BaseCommissionCondition, BaseRentHigherCondition, BaseTierCondition, CommissionItem, ConditionDataItem, ConditionItem, ContractInfo, FareItem, FinalData, FixedRentCondition, GraduatedCommissionCondition, Step3DataChangeTracker } from '../tls13010.model';
+import { CommissionItem, ConditionItem, ContractDataStructure, ContractInfo, FareItem, Step3DataChangeTracker, UnifiedCommissionResponse, WorkflowStatus, WorkflowStep } from '../tls13010.model';
 import { DataChangeTracker, SubmitDataStructure } from '../tls13010.model';
-
-
-
-// 工作流程步驟定義
-export enum WorkflowStep {
-  QUERY = 0,           // 查詢頁面
-  CONTRACT_INFO = 1,   // 契約基本資訊 (CRU)
-  DEDUCTION = 2,       // 代扣款設定 (NEXT1)
-  COMMISSION = 3,      // 抽成設定 (NEXT2)
-  CONDITION = 4,       // 條件設定 (NEXT3)
-  FINAL = 5            // 最終確認
-}
-
-// 工作流程狀態
-export interface WorkflowStatus {
-  currentStep: WorkflowStep;
-  completedSteps: WorkflowStep[];
-  canProceed: boolean;
-  contractId: string | null;
-  lastModified: Date;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -32,62 +11,77 @@ export interface WorkflowStatus {
 export class ContractFlowService {
   private readonly STORAGE_KEY = 'TLS13010_CONTRACT_FLOW';
 
-  // ========== 新增：記憶體快取層 ==========
+  // ========== 新增：資料版本控制 ==========
+  private dataVersions = new Map<string, number>();
+  private readonly VERSION_KEY_PREFIX = 'version_';
+
+  // 記憶體快取層
   private memoryCache = new Map<string, any>();
 
   // 保留您原有的資料結構
-  private contractData: {
-    contractId: string | null,
-    queryRowData: ContractInfo | null,
-    step1: ContractInfo | null,
-    step2: FareItem[],
-    step3: CommissionItem[],
-    step4: ConditionItem[],
-    step5: FinalData | null,
-    dataToDelete: null, // 新增刪除資料的暫存
+  private contractData: ContractDataStructure = {
+    contractId: null,
+    queryRowData: null,
+    step1: null,
+    step2: [],
+    step3: [],
+    step4: [],
+    step5: null,
+    dataToDelete: null,
+    unifiedCommissionData: null,
     metadata: {
-      createdAt: Date;
-      lastModified: Date;
-      version: number;
+      createdAt: new Date(),
+      lastModified: new Date(),
+      version: 1,
+      _isNewContract: true // 🎯 新增模式需要標記
     }
-  } = {
-      contractId: null,
-      queryRowData: null,
-      step1: null,
-      step2: [],
-      step3: [],
-      step4: [],
-      step5: null,
-      dataToDelete: null,
-      metadata: {
-        createdAt: new Date(),
-        lastModified: new Date(),
-        version: 1
-      }
-    };
+  };
 
   // 工作流程狀態管理
   private workflowStatusSubject = new BehaviorSubject<WorkflowStatus>(this.initializeStatus());
   public workflowStatus$ = this.workflowStatusSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    this.contractData = {
-      contractId: null,
-      queryRowData: null,
-      step1: null,
-      step2: [],
-      step3: [],
-      step4: [],
-      step5: null,
-      dataToDelete: null, // 🔧 確保包含這個欄位
-      metadata: {
-        createdAt: new Date(),
-        lastModified: new Date(),
-        version: 1
-      }
-    };
     this.loadFromStorage();
-    this.setupAutoSave(); // 新增自動儲存設定
+    this.setupAutoSave();
+    this.initializeDataVersions();
+  }
+
+  /**
+   * 🎯 新增：初始化資料版本控制
+   */
+  private initializeDataVersions(): void {
+    // 初始化各步驟的版本號
+    this.dataVersions.set('step1', 0);
+    this.dataVersions.set('step2', 0);
+    this.dataVersions.set('step3', 0);
+    this.dataVersions.set('step4', 0);
+    this.dataVersions.set('unified', 0);
+    console.log('📊 資料版本控制初始化完成');
+  }
+
+  /**
+   * 🎯 新增：取得資料版本號
+   */
+  getDataVersion(stepKey: string): number {
+    return this.dataVersions.get(stepKey) || 0;
+  }
+
+  /**
+   * 🎯 新增：增加資料版本號
+   */
+  private incrementDataVersion(stepKey: string): void {
+    const currentVersion = this.dataVersions.get(stepKey) || 0;
+    this.dataVersions.set(stepKey, currentVersion + 1);
+    console.log(`📈 ${stepKey} 版本號更新為:`, currentVersion + 1);
+  }
+
+  /**
+   * 🎯 新增：檢查版本是否有變更
+   */
+  hasVersionChanged(stepKey: string, lastKnownVersion: number): boolean {
+    const currentVersion = this.getDataVersion(stepKey);
+    return currentVersion > lastKnownVersion;
   }
 
   /**
@@ -107,28 +101,90 @@ export class ContractFlowService {
    * 開始新的工作流程 (從查詢頁面進入)
    */
   startWorkflow(queryRowData: any): void {
+    const isNewMode = queryRowData._isNewContract === true;
+
+    console.log('🚀 開始工作流程:', {
+      isNewMode: isNewMode,
+      queryData: queryRowData
+    });
+
+    if (isNewMode) {
+      console.log('🆕 初始化新增工作流程');
+      this.initializeNewContractWorkflow(queryRowData);
+    } else {
+      console.log('📝 初始化編輯工作流程');
+      this.initializeEditContractWorkflow(queryRowData);
+    }
+
+    this.saveToStorage();
+  }
+
+  /**
+   * 🎯 新增：初始化新增模式工作流程
+   */
+  private initializeNewContractWorkflow(queryRowData: any): void {
+    // 🎯 新增模式：生成新的 contractId，但 talent_id 保持空
+    const contractId = 'new_contract_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+    this.contractData = {
+      contractId: contractId,
+      queryRowData: {
+        ...queryRowData,
+        talent_id: '', // 🎯 新增模式 talent_id 統一為空
+        _isNewContract: true // 🎯 確保標記存在
+      },
+      step1: null,
+      step2: [],
+      step3: [],
+      step4: [],
+      step5: null,
+      dataToDelete: null,
+      unifiedCommissionData: null,
+      metadata: {
+        createdAt: new Date(),
+        lastModified: new Date(),
+        version: 1,
+        _isNewContract: true // 🎯 新增模式需要標記
+      }
+    };
+
+    this.initializeDataVersions();
+
+    const newStatus: WorkflowStatus = {
+      currentStep: WorkflowStep.CONTRACT_INFO,
+      completedSteps: [],
+      canProceed: true,
+      contractId: contractId,
+      lastModified: new Date()
+    };
+
+    this.workflowStatusSubject.next(newStatus);
+
+    console.log('✅ 新增模式工作流程初始化完成:', {
+      contractId: contractId,
+      talentId: ''
+    });
+  }
+
+  /**
+   * 🎯 新增：初始化編輯模式工作流程
+   */
+  private initializeEditContractWorkflow(queryRowData: any): void {
     const contractId = queryRowData.talent_id || queryRowData.apply_no || Date.now().toString();
 
-    // 檢查是否有現有的暫存資料
+    // 🎯 檢查是否有現有暫存資料
     if (this.contractData.contractId === contractId) {
-      // 有暫存資料，統一從 CRU 開始，但保留已完成的步驟記錄
-      console.log('發現現有暫存資料，從 CRU 重新開始編輯:', contractId);
-
+      console.log('📦 發現現有暫存資料，從暫存重新開始編輯:', contractId);
       const newStatus: WorkflowStatus = {
-        currentStep: WorkflowStep.CONTRACT_INFO, // 固定從 CRU 開始
-        completedSteps: this.workflowStatusSubject.value.completedSteps, // 保留已完成步驟
+        currentStep: WorkflowStep.CONTRACT_INFO,
+        completedSteps: this.workflowStatusSubject.value.completedSteps,
         canProceed: true,
         contractId: contractId,
         lastModified: new Date()
       };
-
       this.workflowStatusSubject.next(newStatus);
-      this.saveToStorage();
-
     } else {
-      // 全新的資料，清空舊資料重新開始
-      console.log('開始新的工作流程:', contractId);
-
+      console.log('📝 開始新的編輯工作流程:', contractId);
       this.contractData = {
         contractId: contractId,
         queryRowData: queryRowData,
@@ -137,13 +193,17 @@ export class ContractFlowService {
         step3: [],
         step4: [],
         step5: null,
-        dataToDelete: null, // 🔧 新增這個欄位
+        dataToDelete: null,
+        unifiedCommissionData: null,
         metadata: {
           createdAt: new Date(),
           lastModified: new Date(),
-          version: 1
+          version: 1,
+          _isNewContract: false // 🎯 編輯模式不需要 _isNewContract
         }
       };
+
+      this.initializeDataVersions();
 
       const newStatus: WorkflowStatus = {
         currentStep: WorkflowStep.CONTRACT_INFO,
@@ -154,91 +214,183 @@ export class ContractFlowService {
       };
 
       this.workflowStatusSubject.next(newStatus);
-      this.saveToStorage();
     }
+
+    console.log('✅ 編輯模式工作流程初始化完成:', {
+      contractId: contractId,
+      talentId: queryRowData.talent_id
+    });
   }
 
+
   /**
-   * 儲存第1步資料
+   * 🎯 修正：儲存第1步資料
    */
   saveStep1Data(formData: ContractInfo): void {
-    const contractId = formData.talent_id || formData.apply_no;
-    this.contractData.contractId = contractId;
+    console.log('💾 儲存 Step1 資料...');
+
+    const modeInfo = this.getWorkflowModeInfo();
+    console.log('📋 當前模式:', modeInfo);
+
+    if (modeInfo.isNewMode) {
+      // 🎯 新增模式：talent_id 保持空，使用 contractId 追蹤
+      console.log('🆕 新增模式：保持 talent_id 為空');
+      formData.talent_id = '';
+
+      // 🎯 確保 contractId 存在
+      if (!this.contractData.contractId || !this.contractData.contractId.startsWith('new_contract_')) {
+        this.contractData.contractId = 'new_contract_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        console.log('🆕 重新生成 contractId:', this.contractData.contractId);
+      }
+    } else {
+      // 🎯 編輯模式：使用表單中的 talent_id 或從現有資料取得
+      const targetTalentId = formData.talent_id || formData.apply_no || this.contractData.contractId;
+      console.log('📝 編輯模式：使用 talent_id:', targetTalentId);
+
+      this.contractData.contractId = targetTalentId;
+      formData.talent_id = targetTalentId as string;
+    }
+
+    // 🎯 儲存 Step1 資料
     this.contractData.step1 = formData;
     this.contractData.metadata.lastModified = new Date();
     this.contractData.metadata.version += 1;
 
-    // 更新工作流程狀態
+    // 🎯 更新版本號
+    this.incrementDataVersion('step1');
+
     this.updateWorkflowStatus(WorkflowStep.CONTRACT_INFO);
     this.saveToStorage();
 
-    console.log('儲存第1步資料:', contractId, formData);
+    console.log('✅ Step1 資料儲存完成:', {
+      mode: modeInfo.modeName,
+      contractId: this.contractData.contractId,
+      talentId: formData.talent_id
+    });
   }
+
 
   /**
    * 取得第1步資料
    */
   getStep1Data(queryData?: any): ContractInfo | null {
+    console.log('🔍 取得 Step1 資料...');
+
+    // 🎯 如果有 queryData，檢查是否匹配當前工作流程
     if (queryData) {
-      const contractId = queryData.talent_id || queryData.apply_no;
-      if (this.contractData.contractId === contractId) {
+      const queryTalentId = queryData.talent_id || queryData.apply_no;
+      const isQueryForNewMode = queryData._isNewContract === true;
+      const currentModeInfo = this.getWorkflowModeInfo();
+
+      console.log('📋 查詢參數:', {
+        queryTalentId: queryTalentId,
+        isQueryForNewMode: isQueryForNewMode,
+        currentMode: currentModeInfo.modeName,
+        currentContractId: this.contractData.contractId
+      });
+
+      // 🎯 新增模式匹配檢查
+      if (isQueryForNewMode && currentModeInfo.isNewMode) {
+        console.log('✅ 新增模式匹配，回傳 Step1 資料');
         return this.contractData.step1;
       }
+
+      // 🎯 編輯模式匹配檢查
+      if (!isQueryForNewMode && !currentModeInfo.isNewMode && this.contractData.contractId === queryTalentId) {
+        console.log('✅ 編輯模式匹配，回傳 Step1 資料');
+        return this.contractData.step1;
+      }
+
+      console.log('❌ 查詢參數與當前工作流程不匹配');
       return null;
     }
 
+    // 🎯 沒有 queryData，直接回傳當前 Step1 資料
+    console.log('📋 直接回傳當前 Step1 資料');
     return this.contractData.step1;
   }
 
+
   /**
-   * 儲存第2步資料（代扣款）
+   * 🎯 修正：儲存第2步資料（代扣款）
    */
   saveStep2Data(data: FareItem[]): void {
     if (this.contractData.contractId) {
-      // 🔧 修正：直接儲存物件格式，不要包成陣列
-      this.contractData.step2 = data;  // 直接儲存，保持原格式
-
+      this.contractData.step2 = data;
       this.contractData.metadata.lastModified = new Date();
       this.contractData.metadata.version += 1;
+
+      // 🎯 更新版本號
+      this.incrementDataVersion('step2');
+
       this.updateWorkflowStatus(WorkflowStep.DEDUCTION);
       this.saveToStorage();
 
-      console.log('儲存第2步資料 (修正版):', data);
+      console.log('儲存第2步資料:', data);
     }
   }
 
   /**
-   * 儲存第3步資料（抽成設定）
+   * 🎯 修正：儲存第3步資料（抽成設定）
    */
   saveStep3Data(data: CommissionItem[]): void {
+    console.log('💾 儲存 Step3 資料到工作流程...');
+    console.log('📋 輸入資料:', data);
+    console.log('📋 輸入資料類型:', typeof data);
+    console.log('📋 是否為陣列:', Array.isArray(data));
+
     if (this.contractData.contractId) {
+      const previousVersion = this.getDataVersion('step3');
+
       this.contractData.step3 = Array.isArray(data) ? data : [data];
       this.contractData.metadata.lastModified = new Date();
       this.contractData.metadata.version += 1;
+
+      // 🎯 更新版本號
+      this.incrementDataVersion('step3');
+
+      console.log('✅ 已儲存 Step3 資料:');
+      console.log('   - 項目數量:', this.contractData.step3.length);
+      console.log('   - 版本號從', previousVersion, '更新為', this.getDataVersion('step3'));
+      console.log('   - 儲存的資料:', this.contractData.step3);
+
       this.updateWorkflowStatus(WorkflowStep.COMMISSION);
       this.saveToStorage();
 
-      console.log('儲存第3步資料:', data);
+      // 🎯 Debug: 驗證儲存結果
+      const savedData = this.getStep3Data();
+      console.log('🔍 驗證儲存結果:', savedData);
+    } else {
+      console.error('❌ 沒有 contractId，無法儲存 Step3 資料');
     }
   }
 
   /**
-   * 儲存第4步資料（條件設定）
+   * 🎯 修正：儲存第4步資料（條件設定）
    */
   saveStep4Data(data: ConditionItem[]): void {
     if (this.contractData.contractId) {
-      // 🎯 直接儲存，不需要任何轉換
-      this.contractData.step4 = Array.isArray(data) ? data : [data];
+      const previousVersion = this.getDataVersion('step4');
 
+      this.contractData.step4 = Array.isArray(data) ? data : [data];
       this.contractData.metadata.lastModified = new Date();
       this.contractData.metadata.version += 1;
+
+      // 🎯 更新版本號
+      this.incrementDataVersion('step4');
+
+      console.log('儲存第4步資料:');
+      console.log('   - 項目數量:', this.contractData.step4.length);
+      console.log('   - 版本號從', previousVersion, '更新為', this.getDataVersion('step4'));
+
       this.updateWorkflowStatus(WorkflowStep.CONDITION);
       this.saveToStorage();
-
-      console.log('儲存第4步資料 (純物件格式):', this.contractData.step4);
     }
   }
 
+  /**
+   * 設定要刪除的資料
+   */
   setDataToDelete(dataToDelete: any): void {
     this.contractData.dataToDelete = dataToDelete;
     this.contractData.metadata.lastModified = new Date();
@@ -248,10 +400,9 @@ export class ContractFlowService {
     console.log('🗑️ 已記錄要刪除的資料:', dataToDelete);
   }
 
-  getDataToDelete(): any {
-    return this.contractData.dataToDelete;
-  }
-
+  /**
+   * 清除要刪除的資料記錄
+   */
   clearDataToDelete(): void {
     this.contractData.dataToDelete = null;
     this.contractData.metadata.lastModified = new Date();
@@ -260,6 +411,89 @@ export class ContractFlowService {
     console.log('🗑️ 已清除要刪除的資料記錄');
   }
 
+  /**
+   * 🎯 修正：儲存統一抽成設定資料
+   */
+  setUnifiedCommissionData(data: UnifiedCommissionResponse): void {
+    const previousVersion = this.getDataVersion('unified');
+
+    this.contractData.unifiedCommissionData = data;
+    this.contractData.metadata.lastModified = new Date();
+
+    // 🎯 更新版本號
+    this.incrementDataVersion('unified');
+
+    this.saveToStorage();
+
+    console.log('💾 已儲存統一抽成設定資料:');
+    console.log('   - 版本號從', previousVersion, '更新為', this.getDataVersion('unified'));
+    console.log('   - 資料:', data);
+  }
+
+  /**
+   * 🎯 取得統一抽成設定資料
+   */
+  getUnifiedCommissionData(): UnifiedCommissionResponse | null {
+    return this.contractData.unifiedCommissionData;
+  }
+
+  /**
+   * 🎯 取得 Next3 用的條件設定資料
+   */
+  getRentSettingDataForNext3(): any {
+    const unifiedData = this.getUnifiedCommissionData();
+    return unifiedData?.RentSettingData || null;
+  }
+
+  /**
+   * 🎯 檢查是否有要刪除的舊資料
+   */
+  hasDataToDelete(): boolean {
+    const unifiedData = this.getUnifiedCommissionData();
+    return !!(unifiedData?.DataToDelete && Object.keys(unifiedData.DataToDelete).length > 0);
+  }
+
+  /**
+   * 🎯 取得要刪除的舊資料（統一處理）
+   */
+  getDataToDelete(): any {
+    const unifiedData = this.getUnifiedCommissionData();
+
+    // 優先使用統一 API 的結果
+    if (unifiedData?.DataToDelete) {
+      return unifiedData.DataToDelete;
+    }
+
+    // 備援：使用原本的 dataToDelete
+    return this.contractData.dataToDelete;
+  }
+
+  /**
+   * 🎯 檢查抽成別是否有變更
+   */
+  isCommissionTypeChanged(): boolean {
+    const unifiedData = this.getUnifiedCommissionData();
+    return unifiedData?.IsTermTypeChanged === true;
+  }
+
+  /**
+   * 🎯 取得抽成別變更警告訊息
+   */
+  getCommissionChangeWarning(): any {
+    const unifiedData = this.getUnifiedCommissionData();
+    return unifiedData?.Warning || null;
+  }
+
+  /**
+   * 🎯 清除統一抽成設定資料
+   */
+  clearUnifiedCommissionData(): void {
+    this.contractData.unifiedCommissionData = null;
+    this.contractData.metadata.lastModified = new Date();
+    this.saveToStorage();
+
+    console.log('🗑️ 已清除統一抽成設定資料');
+  }
 
   /**
    * 取得步驟資料
@@ -373,12 +607,17 @@ export class ContractFlowService {
       step4: [],
       step5: null,
       dataToDelete: null,
+      unifiedCommissionData: null,
       metadata: {
         createdAt: new Date(),
         lastModified: new Date(),
-        version: 1
+        version: 1,
+        _isNewContract: false
       }
     };
+
+    // 🎯 重置版本號
+    this.initializeDataVersions();
 
     this.workflowStatusSubject.next(this.initializeStatus());
     this.clearStorage();
@@ -428,16 +667,17 @@ export class ContractFlowService {
     });
   }
 
-  // ========== 修改：儲存相關方法 (localStorage → sessionStorage + Memory) ==========
+  // ========== 修改：儲存相關方法 (加強版本控制) ==========
 
   /**
-   * 混合儲存：Memory + SessionStorage
+   * 混合儲存：Memory + SessionStorage + 版本控制
    */
   private saveToStorage(): void {
     try {
       const saveData = {
         contractData: this.contractData,
         workflowStatus: this.workflowStatusSubject.value,
+        dataVersions: Object.fromEntries(this.dataVersions.entries()), // 🎯 新增版本號儲存
         timestamp: new Date().getTime()
       };
 
@@ -483,11 +723,23 @@ export class ContractFlowService {
   }
 
   /**
-   * 套用載入的資料
+   * 🎯 修正：套用載入的資料（包含版本號）
    */
   private applyLoadedData(data: any): void {
     this.contractData = data.contractData;
     this.workflowStatusSubject.next(data.workflowStatus);
+
+    // 🎯 恢復版本號
+    if (data.dataVersions) {
+      this.dataVersions.clear();
+      Object.entries(data.dataVersions).forEach(([key, value]) => {
+        this.dataVersions.set(key, value as number);
+      });
+      console.log('📊 已恢復資料版本號:', data.dataVersions);
+    } else {
+      // 舊版本相容性
+      this.initializeDataVersions();
+    }
   }
 
   /**
@@ -588,16 +840,29 @@ export class ContractFlowService {
   }
 
   /**
-   * 取得第3步資料（抽成設定）
+   * 🎯 修正：取得第3步資料（抽成設定）
    */
   getStep3Data(): CommissionItem[] {
-    return this.contractData.step3;
+    console.log('🔍 取得 Step3 資料...');
+    console.log('📋 contractData.step3:', this.contractData.step3);
+    console.log('📋 資料類型:', typeof this.contractData.step3);
+    console.log('📋 是否為陣列:', Array.isArray(this.contractData.step3));
+    console.log('📋 Step3 版本號:', this.getDataVersion('step3'));
+
+    if (this.contractData.step3) {
+      console.log('✅ 找到 Step3 資料，項目數量:', this.contractData.step3.length);
+      return this.contractData.step3;
+    } else {
+      console.warn('❌ 沒有找到 Step3 資料');
+      return [];
+    }
   }
 
   /**
    * 取得第4步資料（條件設定） - 新增別名方法
    */
   getStep4Data(): ConditionItem[] {
+    console.log('🔍 取得 Step4 資料，版本號:', this.getDataVersion('step4'));
     return this.contractData.step4;
   }
 
@@ -608,41 +873,177 @@ export class ContractFlowService {
     this.clearTempData();
   }
 
+  /**
+   * 取得當前有效的抽成別（優先使用暫存資料）
+   */
+  getCurrentCommissionType(): string {
+    console.log('🔍 取得當前抽成別...');
+
+    // 1. 優先從 Step1 暫存資料取得（最新的）
+    const step1Data = this.getStep1Data();
+    if (step1Data?.tlt_term_type) {
+      console.log('🎯 從 Step1 暫存取得抽成別:', step1Data.tlt_term_type);
+      return step1Data.tlt_term_type.toString().trim();
+    }
+
+    // 2. 備援：從查詢資料取得（編輯模式）
+    if (!this.isNewContractMode()) {
+      const queryData = this.getQueryRowData();
+      if (queryData?.tlt_term_type) {
+        console.log('🎯 從查詢資料取得抽成別:', queryData.tlt_term_type);
+        return queryData.tlt_term_type.toString().trim();
+      }
+    }
+
+    // 3. 預設值（新增模式或無資料）
+    console.log('🎯 使用預設抽成別: 3');
+    return '3'; // 預設為一般抽成
+  }
+
+  /**
+   * 取得當前合約的 talent_id
+   */
+  getCurrentTalentId(): string {
+    // 🎯 新增模式統一回傳空字串
+    if (this.isNewContractMode()) {
+      console.log('🆕 新增模式：talent_id 回傳空字串');
+      return '';
+    }
+
+    // 🎯 編輯模式：優先從 Step1 資料取得
+    const step1Data = this.getStep1Data();
+    if (step1Data?.talent_id) {
+      console.log('📝 編輯模式：從 Step1 取得 talent_id:', step1Data.talent_id);
+      return step1Data.talent_id.toString();
+    }
+
+    // 🎯 編輯模式：備援從查詢資料取得
+    const queryData = this.getQueryRowData();
+    if (queryData?.talent_id) {
+      console.log('📝 編輯模式：從查詢資料取得 talent_id:', queryData.talent_id);
+      return queryData.talent_id.toString();
+    }
+
+    console.warn('⚠️ 無法取得 talent_id');
+    return '';
+  }
+
+
+  /**
+ * 🎯 新增：統一的模式資訊獲取
+ */
+  getWorkflowModeInfo(): {
+    isNewMode: boolean;
+    talentId: string;
+    contractId: string;
+    modeName: string;
+  } {
+    const isNewMode = this.isNewContractMode();
+    const talentId = this.getCurrentTalentId();
+    const currentData = this.getCurrentData();
+
+    return {
+      isNewMode,
+      talentId,
+      contractId: currentData.contractId || '',
+      modeName: isNewMode ? '新增模式' : '編輯模式'
+    };
+  }
+
+
+
+  /**
+   * 🎯 新增：監聽資料變更的方法
+   */
+  watchDataChanges(stepKey: string, callback: (version: number) => void): () => void {
+    let lastKnownVersion = this.getDataVersion(stepKey);
+
+    const intervalId = setInterval(() => {
+      const currentVersion = this.getDataVersion(stepKey);
+      if (currentVersion > lastKnownVersion) {
+        lastKnownVersion = currentVersion;
+        callback(currentVersion);
+      }
+    }, 500); // 每 500ms 檢查一次
+
+    // 返回清理函數
+    return () => clearInterval(intervalId);
+  }
+
+  /**
+   * 🎯 新增：取得資料變更摘要
+   */
+  getDataChangeSummary(): any {
+    return {
+      versions: Object.fromEntries(this.dataVersions.entries()),
+      lastModified: this.contractData.metadata.lastModified,
+      totalVersion: this.contractData.metadata.version,
+      hasStep1: !!this.contractData.step1,
+      step2Count: this.contractData.step2.length,
+      step3Count: this.contractData.step3.length,
+      step4Count: this.contractData.step4.length,
+      hasUnifiedData: !!this.contractData.unifiedCommissionData
+    };
+  }
+
+  /**
+   * 🎯 新增：強制同步所有資料
+   */
+  forceSyncAllData(): void {
+    console.log('🔄 強制同步所有資料...');
+
+    // 更新所有步驟的版本號
+    this.incrementDataVersion('step1');
+    this.incrementDataVersion('step2');
+    this.incrementDataVersion('step3');
+    this.incrementDataVersion('step4');
+    this.incrementDataVersion('unified');
+
+    // 立即儲存
+    this.saveToStorage();
+
+    console.log('✅ 強制同步完成，最新版本號:', Object.fromEntries(this.dataVersions.entries()));
+  }
+
   generateSubmitData(): SubmitDataStructure {
     const step1Data = this.getStep1Data();
+    // 🎯 檢查是否為新增模式
+    const isNewContract = !step1Data?.talent_id || step1Data.talent_id === '';
+
     const step2Data = this.getStep2Data();
     const step3Data = this.getStep3Data();
     const step4Data = this.getStep4Data();
 
-    console.log('🔍 生成提交資料 - 原始資料檢查:');
-    console.log('Step1:', step1Data);
-    console.log('Step2:', step2Data);
-    console.log('Step3:', step3Data);
-    console.log('Step4:', step4Data);
+    // Step 1: 合約基本資料
+    const step1Operation = isNewContract ? 'INSERT' : 'UPDATE';
 
-    // Step 1: 合約基本資料 (單筆，判斷是新增還是修改)
-    const step1Operation = step1Data?.talent_id ? 'UPDATE' : 'INSERT';
-
-    // Step 2: 代扣款資料 (多筆，追蹤變更)
+    // Step 2: 代扣款資料
     const step2Changes = DataChangeTracker.generateChangeSummary(step2Data || [], '代扣款設定');
 
-    // Step 3: 抽成設定資料 (多筆，特殊處理 - 4個資料表)
+    // Step 3: 抽成設定資料
     const step3Changes = Step3DataChangeTracker.generateStep3ChangeSummary(step3Data || []);
 
-    // Step 4: 條件設定資料 (多筆，追蹤變更)
+    // Step 4: 條件設定資料
     const step4Changes = DataChangeTracker.generateChangeSummary(step4Data || [], '條件設定');
 
     // 計算總操作數
     const totalOperations =
-      1 + // Step 1 一定有一個操作
+      1 +
       step2Changes.summary.insert + step2Changes.summary.update + step2Changes.summary.delete +
       step3Changes.summary.insert + step3Changes.summary.update + step3Changes.summary.delete +
       step4Changes.summary.insert + step4Changes.summary.update + step4Changes.summary.delete;
 
+    // 🎯 取得要刪除的舊資料（統一處理）
+    const dataToDelete = this.getDataToDelete();
+    const hasLegacyDataToDelete = this.hasDataToDelete();
+
     return {
       step1: {
         operation: step1Operation,
-        data: step1Data!
+        data: {
+          ...step1Data!,
+          talent_id: step1Data?.talent_id || ''
+        }
       },
       step2: {
         summary: step2Changes.summary,
@@ -652,7 +1053,7 @@ export class ContractFlowService {
           toDelete: step2Changes.data.toDelete
         }
       },
-      step3: step3Changes, // 🎯 使用新的 Step3 專用格式
+      step3: step3Changes,
       step4: {
         summary: step4Changes.summary,
         operations: {
@@ -661,12 +1062,164 @@ export class ContractFlowService {
           toDelete: step4Changes.data.toDelete
         }
       },
+      legacyDataToDelete: dataToDelete, // 🎯 統一的刪除資料
       metadata: {
         talentId: this.contractData.contractId || '',
         contractId: this.contractData.contractId || '',
+        isNewContract: isNewContract,
         submittedAt: new Date(),
-        totalOperations
+        totalOperations,
+        hasLegacyDataToDelete, // 🎯 標記是否有舊資料要刪除
+        dataVersions: Object.fromEntries(this.dataVersions.entries()) // 🎯 包含版本資訊
       }
     };
+  }
+
+  /**
+  * 🎯 新增：完全清空並重新開始（新增模式專用）
+  */
+  clearAndStartNew(): void {
+    console.log('🆕 清空所有資料並開始新增模式');
+
+    // 1. 清空所有暫存資料
+    this.clearTempData();
+
+    // 2. 重置版本號
+    this.initializeDataVersions();
+
+    // 3. 設定為新增模式狀態
+    const newStatus: WorkflowStatus = {
+      currentStep: WorkflowStep.CONTRACT_INFO,
+      completedSteps: [],
+      canProceed: true,
+      contractId: 'new_contract_' + Date.now(),
+      lastModified: new Date()
+    };
+
+    this.workflowStatusSubject.next(newStatus);
+
+    console.log('✅ 新增模式初始化完成');
+  }
+
+  /**
+   * 🎯 新增：檢查是否為新增模式
+   */
+  isNewContractMode(): boolean {
+    const currentData = this.getCurrentData();
+
+    // 方法1：明確標記為新增
+    if (currentData.queryRowData?._isNewContract === true) {
+      return true;
+    }
+
+    // 方法2：contractId 是新增格式
+    if (currentData.contractId?.startsWith('new_contract_')) {
+      return true;
+    }
+
+    // 方法3：沒有 contractId 或 talent_id
+    if (!currentData.contractId) {
+      return true;
+    }
+
+    // 方法4：Step1 資料中 talent_id 為空
+    const step1Data = this.getStep1Data();
+    if (step1Data && (!step1Data.talent_id || step1Data.talent_id === '')) {
+      return true;
+    }
+
+    return false;
+  }
+
+  validateWorkflowData(): {
+    isValid: boolean;
+    errors: string[];
+    warnings: string[];
+  } {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    const modeInfo = this.getWorkflowModeInfo();
+
+    // 🎯 基本工作流程檢查
+    if (!this.contractData.contractId) {
+      errors.push('缺少 contractId');
+    }
+
+    // 🎯 新增模式特定檢查
+    if (modeInfo.isNewMode) {
+      if (this.contractData.queryRowData?._isNewContract !== true) {
+        warnings.push('新增模式標記不明確');
+      }
+
+      if (this.contractData.contractId && !this.contractData.contractId.startsWith('new_contract_')) {
+        warnings.push('新增模式 contractId 格式異常');
+      }
+    }
+
+    // 🎯 編輯模式特定檢查
+    if (!modeInfo.isNewMode) {
+      if (!modeInfo.talentId) {
+        errors.push('編輯模式缺少 talent_id');
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
+  }
+
+  // ========== 🎯 新增：除錯工具方法 ==========
+
+  /**
+   * 🎯 新增：取得工作流程狀態摘要（除錯用）
+   */
+  getWorkflowStatusSummary(): any {
+    const modeInfo = this.getWorkflowModeInfo();
+    const validation = this.validateWorkflowData();
+
+    return {
+      // 基本資訊
+      mode: modeInfo,
+      validation: validation,
+
+      // 資料狀態
+      hasStep1: !!this.contractData.step1,
+      step2Count: this.contractData.step2?.length || 0,
+      step3Count: this.contractData.step3?.length || 0,
+      step4Count: this.contractData.step4?.length || 0,
+
+      // 版本資訊
+      dataVersions: Object.fromEntries(this.dataVersions.entries()),
+      lastModified: this.contractData.metadata?.lastModified,
+
+      // 工作流程狀態
+      currentStep: this.workflowStatusSubject.value.currentStep,
+      completedSteps: this.workflowStatusSubject.value.completedSteps
+    };
+  }
+
+  /**
+   * 🎯 新增：重置為新增模式（清空並重新開始）
+   */
+  resetToNewMode(): void {
+    console.log('🔄 重置為新增模式');
+
+    // 1. 清空所有資料
+    this.clearTempData();
+
+    // 2. 初始化新增模式
+    const emptyQueryData = {
+      talent_id: '',
+      apply_no: '',
+      tlt_name: '',
+      _isNewContract: true
+    };
+
+    this.startWorkflow(emptyQueryData);
+
+    console.log('✅ 已重置為新增模式');
   }
 }

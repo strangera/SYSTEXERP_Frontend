@@ -30,7 +30,7 @@ export class TLS13010StepGuard implements CanActivate {
     if (!currentStatus.contractId) {
       console.log('沒有進行中的工作流程，重導向到查詢頁面');
       this.messageService.warnBubble('請先從查詢頁面選擇要編輯的項目');
-      this.router.navigate(['/TLS/TLS13010']);
+      this.router.navigate(['account/tls/tls13010']);
       return false;
     }
 
@@ -63,13 +63,13 @@ export class TLS13010StepGuard implements CanActivate {
     const path = route.routeConfig?.path || '';
 
     switch (path) {
-      case 'TLS13010CRU':
+      case 'tls13010cru':
         return WorkflowStep.CONTRACT_INFO;
-      case 'TLS13010NEXT1':
+      case 'tls13010next1':
         return WorkflowStep.DEDUCTION;
-      case 'TLS13010NEXT2':
+      case 'tls13010next2':
         return WorkflowStep.COMMISSION;
-      case 'TLS13010NEXT3':
+      case 'tls13010next3':
         return WorkflowStep.CONDITION;
       default:
         return WorkflowStep.QUERY;
@@ -82,19 +82,19 @@ export class TLS13010StepGuard implements CanActivate {
   private redirectToCorrectStep(currentStep: WorkflowStep): void {
     switch (currentStep) {
       case WorkflowStep.CONTRACT_INFO:
-        this.router.navigate(['/TLS/TLS13010CRU']);
+        this.router.navigate(['account/tls/tls13010cru']);
         break;
       case WorkflowStep.DEDUCTION:
-        this.router.navigate(['/TLS/TLS13010NEXT1']);
+        this.router.navigate(['account/tls/tls13010next1']);
         break;
       case WorkflowStep.COMMISSION:
-        this.router.navigate(['/TLS/TLS13010NEXT2']);
+        this.router.navigate(['account/tls/tls13010next2']);
         break;
       case WorkflowStep.CONDITION:
-        this.router.navigate(['/TLS/TLS13010NEXT3']);
+        this.router.navigate(['account/tls/tls13010next3']);
         break;
       default:
-        this.router.navigate(['/TLS/TLS13010']);
+        this.router.navigate(['account/tls/tls13010']);
     }
   }
 }
