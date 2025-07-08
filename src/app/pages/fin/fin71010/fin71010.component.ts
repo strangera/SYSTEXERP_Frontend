@@ -171,7 +171,7 @@ export class FIN71010Component extends BasicQpageComponent implements OnInit {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -184,7 +184,7 @@ export class FIN71010Component extends BasicQpageComponent implements OnInit {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
   onClearForm() {
     this.queryForm.reset(); // 重置表單

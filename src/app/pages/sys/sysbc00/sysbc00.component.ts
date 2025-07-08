@@ -5,6 +5,7 @@ import { ISysbc00Data, Sysbc00Service } from '../../../service/api/sys/sysbc00.s
 import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { finalize } from 'rxjs';
 import { Sys1004Service } from '../../../service/api/sys/sys1004.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-sysbc00',
@@ -57,7 +58,7 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.sysbc00Service.querySYSBC00(frm.value).pipe(finalize(() => this.loading = false)).subscribe(response => {
+      this.sysbc00Service.querySYSBC00(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.data = response.Data;
         this.addSys1004Data(this.data);
         this.totalRecords = response.TotalCount;
@@ -68,7 +69,7 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
 
   addSys1004Data(data: ISysbc00Data[]) {
     data.forEach(item => {
-      this.sys1004Service.queryAPS1004({ BNK_No: item.BNK_No }).subscribe(response => {
+      this.sys1004Service.queryAPS1004({ BNK_No: item.BNK_No }).pipe(untilDestroyed(this)).subscribe(response => {
         item.details = response.Data;
       });
     });
@@ -83,6 +84,7 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
         const idsToDelete = rows.map(item => item.id);
         this.loading = true; // 設置載入狀態
         this.sysbc00Service.deleteSYSBC00(idsToDelete).pipe(
+          untilDestroyed(this), // 確保在組件銷毀時取消訂閱
           finalize(() => this.loading = false) // 無論成功失敗，都要關閉載入狀態
         ).subscribe({
           next: (response) => {

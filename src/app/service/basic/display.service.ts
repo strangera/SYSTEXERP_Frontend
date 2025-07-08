@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../system/error-handler.service';
 import { catchError, Observable, of, tap } from 'rxjs';
 
 @Injectable({
@@ -21,7 +21,7 @@ export class DisplayService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getDisplay(): Observable<any[]> {
     return of(this.options).pipe(

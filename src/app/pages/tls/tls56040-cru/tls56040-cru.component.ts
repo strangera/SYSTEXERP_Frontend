@@ -215,7 +215,7 @@ export class TLS56040CRUComponent {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -228,7 +228,7 @@ export class TLS56040CRUComponent {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
   get isFormEditable(): boolean {
     return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());

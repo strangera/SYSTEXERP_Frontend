@@ -33,8 +33,8 @@ export class TLS31080Component {
   // 權限變數
   funInfo?: FunsrightInfo;
 
-  
-  
+
+
 
   // 查詢表單
   loading: boolean = false;
@@ -194,7 +194,7 @@ export class TLS31080Component {
         },
         skipLocationChange: true
       };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -208,7 +208,7 @@ export class TLS31080Component {
         },
         skipLocationChange: true
       };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -221,7 +221,7 @@ export class TLS31080Component {
       },
       skipLocationChange: true
     };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../system/error-handler.service';
 import { catchError, Observable, of, tap } from 'rxjs';
 
 @Injectable({
@@ -25,7 +25,7 @@ export class QueryFilterService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   // 獲取所有查詢篩選選項（本地數據）
   getQueryFilters(): Observable<any[]> {

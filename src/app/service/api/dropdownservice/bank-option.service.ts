@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ErrorHandlerService } from '../../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../../system/error-handler.service';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -22,7 +22,7 @@ export class BankOptionsService {
     };
 
     return this.http
-      .post<any>(`${this.apiUrl}/queryBank_DropDownList`, requestBody)
+      .post<any>(`${this.apiUrl}/queryAPS1001_DropDownList`, requestBody)
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? [])
       );

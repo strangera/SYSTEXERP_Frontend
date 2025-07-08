@@ -104,6 +104,7 @@ export interface ColumnDef {
     mobile?: string;
   };
   autoWidth?: boolean;
+  readonly?: boolean;
 }
 
 @Component({

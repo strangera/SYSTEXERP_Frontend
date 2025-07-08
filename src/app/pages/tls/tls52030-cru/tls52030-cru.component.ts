@@ -1,7 +1,7 @@
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { DropDownListService, IDropdownItem } from '../../../service/api/dropdownservice/dropDownList.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { IODDetail, ITLS52030Data, ITLS52030Request, Tls52030Service } from '../../../service/api/tls/tls52030.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime, finalize } from 'rxjs';

@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable } from 'rxjs';
-import { ErrorHandlerService } from '../../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../../../service/system/error-handler.service';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -10,7 +10,7 @@ import { environment } from '../../../../environments/environment';
 export class MultiLocationFilterService {
   apiUrl: string = environment.ApiUrl;
 
-  constructor(private http: HttpClient, private errorHandler: ErrorHandlerService) {}
+  constructor(private http: HttpClient, private errorHandler: ErrorHandlerService) { }
 
   /** 取得館別選項 */
   getBuildingOptions(): Observable<any[]> {

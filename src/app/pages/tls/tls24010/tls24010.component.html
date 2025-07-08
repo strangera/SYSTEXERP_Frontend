@@ -11,38 +11,38 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 補登類別 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="補登類別" controlName="supplementCategory"
-            [options]="supplementCategoryOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.supplementCategory" [submitted]="submitted" />
-          <!-- 銷售日期 -->
+          <!-- 補登類別：若無對應欄位，請視需求加入 -->
+          <!-- <app-dropdown class="col-12 md:col-6 lg:col-4" label="補登類別" [control]="queryForm.controls.supplementCategory"
+            [submitted]="submitted" [options]="supplementCategoryOptions" optionLabel="label" optionValue="value" /> -->
+
+          <!-- 銷售日期 → POS5006.ORG_TXN_Date -->
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="銷售日期"
-            [control]="queryForm.controls.saleDateStart" [submitted]="submitted"></app-calendar>
-          <!-- 收銀機號 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="cashierCode"
-            [options]="cashierOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.cashierCode" [submitted]="submitted"></app-dropdown>
-          <!-- 專櫃編號 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="counterCode"
-            [options]="counterCodeOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.counterCode" [submitted]="submitted"></app-dropdown>
-          <!-- 交易序號 -->
+            [control]="queryForm.controls.ORG_TXN_Date" [submitted]="submitted"></app-calendar>
+
+          <!-- 收銀機號 → POS5006.ECR_No -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" [control]="queryForm.controls.ECR_No"
+            [submitted]="submitted" [options]="cashierOptions" optionLabel="label" optionValue="value" />
+
+          <!-- 專櫃編號 → POS5006.TLT_No -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號" [control]="queryForm.controls.TLT_No"
+            [submitted]="submitted" [options]="counterCodeOptions" optionLabel="label" optionValue="value" />
+
+          <!-- 交易序號 → POS5006.TXN_No -->
           <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="交易序號"
-            controlName="transactionSerial" [control]="queryForm.controls.transactionSerial"
-            [submitted]="submitted"></app-input-number>
-          <!-- 電子發票載具種類 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="電子發票載具種類" controlName="invoiceCarrierType"
-            [options]="invoiceCarrierTypeOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.TXN_No" [submitted]="submitted"></app-input-number>
+
+          <!-- 電子發票載具種類：若無對應欄位，請視需求加入 -->
+          <!-- <app-dropdown class="col-12 md:col-6 lg:col-4" label="電子發票載具種類"
             [control]="queryForm.controls.invoiceCarrierType" [submitted]="submitted"
-            labelStyle="color: red;"></app-dropdown>
-          <!-- 來客數 -->
+            [options]="invoiceCarrierTypeOptions" optionLabel="label" optionValue="value" labelStyle="color: red;" /> -->
+
+          <!-- 來客數 → POS5006.TXN_CustCnt -->
           <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="來客數"
-            controlName="visitorCount" [control]="queryForm.controls.visitorCount" [submitted]="submitted"
-            labelStyle="color: red;"></app-input-number>
-          <!-- 收銀員編號 -->
+            [control]="queryForm.controls.TXN_CustCnt" [submitted]="submitted" labelStyle="color: red;" />
+
+          <!-- 收銀員編號 → POS5006.TXN_Sales -->
           <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="收銀員編號"
-            controlName="cashierNumber" [control]="queryForm.controls.cashierNumber" [submitted]="submitted"
-            labelStyle="color: red;"></app-input-number>
+            [control]="queryForm.controls.TXN_Sales" [submitted]="submitted" labelStyle="color: red;" />
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>

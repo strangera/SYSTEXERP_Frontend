@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../system/error-handler.service';
 import { catchError, Observable, of, tap } from 'rxjs';
 
 @Injectable({
@@ -18,14 +18,14 @@ export class PayMachineAttributeService {
     { value: 3, label: '有開機未清機機台' },
     { value: 4, label: '有開機未繳袋機台' },
     { value: 5, label: '專櫃自打未繳袋機台' },
-    
+
     // 可以繼續添加其他選項
   ];
 
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   // 獲取所有機台屬性（本地數據）
   getMachineAttributes(): Observable<any[]> {

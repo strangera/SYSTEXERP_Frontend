@@ -159,7 +159,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            // this.sysb400Service.insertSYSB400(frm.value).subscribe(() => {
+            // this.sysb400Service.insertSYSB400(frm.value).pipe(untilDestroyed(this)).subscribe(() => {
             //   this.messageService.successBubble('新增成功');
             //   this.onCancel(); // 新增成功後返回查詢頁面
             // });
@@ -168,7 +168,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             console.log('frm.value', frm.value);
-            // this.sysb400Service.updateSYSB400(frm.value).subscribe(() => {
+            // this.sysb400Service.updateSYSB400(frm.value).pipe(untilDestroyed(this)).subscribe(() => {
             //   this.messageService.successBubble('更新成功');
             //   this.onCancel(); // 更新成功後返回查詢頁面
             // });

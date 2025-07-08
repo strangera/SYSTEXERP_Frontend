@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ErrorHandlerService } from '../../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../../system/error-handler.service';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -18,7 +18,7 @@ export class NegotiatorOptionsService {
   // 洽談者
   getNegotiatorOptions(): Observable<any[]> {
     return this.http
-      .post<any>(`${this.apiUrl}/queryUser_Name_DropDownList`, {}) // 傳空物件
+      .post<any>(`${this.apiUrl}/queryTBLUSER_DropDownList`, {}) // 傳空物件
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({
           label: `${x.No} - ${x.Name}`,

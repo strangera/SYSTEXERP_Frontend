@@ -164,7 +164,7 @@ export class TLS25010CRUComponent extends BasicCrupageComponent implements OnIni
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -177,7 +177,7 @@ export class TLS25010CRUComponent extends BasicCrupageComponent implements OnIni
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
   submitForm(frm: FormGroup) {
     // 查詢邏輯

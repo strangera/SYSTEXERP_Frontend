@@ -1,4 +1,3 @@
-import { Tls46010Service } from './../../../service/api/TLS0000/tls46000/tls46010.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -8,6 +7,7 @@ import {
   formatDateTime,
 } from '../../../shared/componentkit/table/table.model';
 import { Pos10015 } from '../../../shared/models/tls/tls000.model';
+import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
 
 @Component({
   selector: 'app-tls46010',
@@ -90,7 +90,7 @@ export class TLS46010Component
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      this.tls46010Service.queryTLS46010(frm.value).subscribe({
+      this.tls46010Service.queryTLS0000(frm.value).subscribe({
         next: (response) => {
           console.log('API response:', response);
           if (response.Status === '0000') {

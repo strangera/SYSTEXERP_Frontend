@@ -1,6 +1,10 @@
+<label *ngIf="label !== ''" for="input-text-range" class="flex gap-1">
+  {{ label + '(起迄)' }}
+  <span *ngIf="isRequired" class="required">*</span>
+</label>
 <div class="grid p-fluid">
   <div class="col pb-0">
-    <label for="input-text-range">{{ startLabel ? startLabel : label }}
+    <label *ngIf="startLabel" for="input-text-range">{{ startLabel }}
       <span *ngIf="isRequired" class="required">*</span>
     </label>
     <p-inputGroup id="input-text-start">
@@ -11,9 +15,11 @@
     <app-control-messages [onerror]="submitted || (startControl.touched && startControl.invalid)"
       [control]="startControl"></app-control-messages>
   </div>
-  <span class="align-self-center text-center">~</span>
+  <div class="flex" [ngClass]="startLabel ?'pt-4':''">
+    <span class="align-self-center text-center " [ngClass]="startLabel ?'pt-1':''">~</span>
+  </div>
   <div class="col pb-0">
-    <label for="input-text-range">{{ endLabel ? endLabel : label }}
+    <label *ngIf="endLabel" for="input-text-range">{{ endLabel }}
       <span *ngIf="isRequired" class="required">*</span>
     </label>
     <p-inputGroup id="input-text-end">

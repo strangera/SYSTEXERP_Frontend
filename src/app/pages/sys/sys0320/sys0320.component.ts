@@ -4,6 +4,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { UserData } from '../../../shared/models/sys/user.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-sys0320',
@@ -41,7 +42,7 @@ export class SYS0320Component extends BasicQueryPageComponent<UserData> implemen
   // 表單提交邏輯
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.sys0110Service.queryUser(frm.value).subscribe({
+      this.sys0110Service.queryUser(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           this.data = response.Data
           this.totalRecords = response.TotalCount || response.Data.length;

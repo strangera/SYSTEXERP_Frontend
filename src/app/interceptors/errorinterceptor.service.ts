@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, timer } from 'rxjs'; // <-- 導入 timer
 import { catchError, retry, tap } from 'rxjs/operators'; // 移除 delay，因為我們會手動用 timer
-import { ErrorHandlerService } from '../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../service/system/error-handler.service';
 
 /**
  * HTTP 錯誤攔截器。

@@ -3,7 +3,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ITLS52020Data, Tls52020Service } from '../../../service/api/tls/tls52020.service';
 import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { DropDownListService } from '../../../service/api/dropdownservice/dropDownList.service';
+import { DropDownListService } from '../../../service/utility/dropDownList.service';
 import { finalize, map } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { trigger, transition, style, animate } from '@angular/animations';

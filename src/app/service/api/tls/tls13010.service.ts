@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ErrorHandlerService } from '../../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../../system/error-handler.service';
 
 interface TLS13010FareRequest {
   talentId: string;
@@ -85,6 +85,12 @@ export class TLS13010Service {
   queryTLS13010Commission(request: { TalentId: string; CurrentTltTermType: string }) {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010Commission`, request).pipe(
       tap((res) => console.log('處理抽成設定資料結果:', res)),
+      catchError(this.errorHandler.handleError)
+    );
+  }
+  queryTLS13010ChargeUnified(request: { TalentId: string; CurrentTltTermType: string }) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010ChargeUnified`, request).pipe(
+      tap((res) => console.log('統一抽成設定查詢結果:', res)),
       catchError(this.errorHandler.handleError)
     );
   }

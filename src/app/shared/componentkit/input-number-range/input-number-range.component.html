@@ -1,6 +1,10 @@
+<label *ngIf="label !== ''" for="input-text-range" class="flex gap-1">
+  {{ label + '(起迄)' }}
+  <span *ngIf="isRequired" class="required">*</span>
+</label>
 <div class="grid p-fluid">
   <div class="col pb-0">
-    <label for="input-number-range">{{ startLabel ? startLabel : label }}
+    <label *ngIf="startLabel" for="input-number-range">{{ startLabel }}
       <span *ngIf="isRequired" class="required">*</span>
     </label>
     <p-inputGroup id="input-number-start">
@@ -13,9 +17,11 @@
       <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
     </p-inputGroup>
   </div>
-  <span class="align-self-center text-center">~</span>
+  <div class="flex" [ngClass]="startLabel ?'pt-4':''">
+    <span class="align-self-center text-center " [ngClass]="startLabel ?'pt-1':''">~</span>
+  </div>
   <div class="col pb-0">
-    <label for="input-number-range">{{ endLabel ? endLabel : label }}
+    <label *ngIf="endLabel" for="input-text-range">{{ endLabel }}
       <span *ngIf="isRequired" class="required">*</span>
     </label>
     <p-inputGroup id="input-number-end">

@@ -6,6 +6,7 @@ import { Aps1004Request, Sys1004Service } from '../../../service/api/sys/sys1004
 import { ISysbc00Data, Sysbc00Service } from '../../../service/api/sys/sysbc00.service';
 import { concatMap, finalize, forkJoin, Observable, of } from 'rxjs';
 import { validateDuplicate, validateMaxLength, validateMaxNumber, validateRequired } from '../../../shared/models/system/validate-field.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-sysbc00.cru',
@@ -39,7 +40,7 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
     if (!this.isFormCreateable && this.dataForm.value.BNK_No) {
       this.dataForm.get('BNK_No')?.disable();
       const body = { BNK_No: this.dataForm.getRawValue().BNK_No };
-      this.sys1004Service.queryAPS1004(body).subscribe(data => {
+      this.sys1004Service.queryAPS1004(body).pipe(untilDestroyed(this)).subscribe(data => {
         this.data = data.Data.map(item => ({ ...item, ID: item.id }));
       });
     }
@@ -55,13 +56,15 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
         : this.sysbc00Service.updateSYSBC00(frm.getRawValue());
 
       saveMain$
-        .pipe(concatMap(() => {
-          const saveChildren$ = this.getSys1004SaveObservables(this.data);
-          return saveChildren$.length > 0 ? forkJoin(saveChildren$) : of(null);
-        }), concatMap(() => {
-          const idList = this.deleteRows.map(item => item.id).filter((id): id is number => id !== undefined);
-          return idList.length > 0 ? this.sys1004Service.deleteAPS1004(idList) : of(null);
-        }), finalize(() => (this.loading = false))
+        .pipe(
+          untilDestroyed(this),
+          concatMap(() => {
+            const saveChildren$ = this.getSys1004SaveObservables(this.data);
+            return saveChildren$.length > 0 ? forkJoin(saveChildren$) : of(null);
+          }), concatMap(() => {
+            const idList = this.deleteRows.map(item => item.id).filter((id): id is number => id !== undefined);
+            return idList.length > 0 ? this.sys1004Service.deleteAPS1004(idList) : of(null);
+          }), finalize(() => (this.loading = false))
         )
         .subscribe(() => {
           this.messageService.successBubble(isCreate ? '新增成功' : '修改成功');
