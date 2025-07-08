@@ -19,19 +19,19 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="字軌"
-            controlName="PUR_GUINo"
-            [control]="dataForm.controls.PUR_GUINo"
+            controlName="GUI_Track"
+            [control]="dataForm.controls.GUI_Track"
             [submitted]="submitted"
           ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="發票號碼"
-            controlName="PUR_GUINo"
+            controlName="GUI_No"
             [control]="dataForm.controls.PUR_GUINo"
             optionLabel="label"
             optionValue="value"
-            [options]="voucherTypeOptions"
+            [options]="guiNumberOptions"
             [submitted]="submitted"
           ></app-dropdown>
         </div>
@@ -137,16 +137,16 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="已退出/折讓歷史總金額"
-            controlName="History_RetAmt"
-            [control]="dataForm.controls.History_RetAmt"
+            controlName="Total_hitory_PUR_Amt"
+            [control]="dataForm.controls.Total_hitory_PUR_Amt"
             [submitted]="submitted"
           ></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="剩餘總金額"
-            controlName="Remain_Amt"
-            [control]="dataForm.controls.Remain_Amt"
+            controlName="Total_Amt"
+            [control]="dataForm.controls.Total_Amt"
             [submitted]="submitted"
           ></app-input-number>
         </div>
@@ -179,4 +179,27 @@
       </div>
     </form>
   </p-panel>
+</div>
+<div class="card">
+  <app-table
+    tableKey="FIN13020"  
+    [columns]="columns"
+    dataKey="PUR_RepYYYYMM"
+    [multiSortMeta]="[{ field: 'PUR_RepYYYYMM', order: 1 }]"
+    [lazy]="true"
+    [loading]="loading"
+    (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit(dataForm)"
+    [insertRowData]="true"
+      [defaultInsertData]="{
+    ProductName: '',
+    Quantity: 0,
+    UnitPrice: 0,
+    TotalAmount: 0
+  }"
+   [showInsert]="true"
+   [showRowEdit]="true"
+    [showEdit]="false"      
+  [showDetail]="false"    
+   (fieldChange)="onFieldChange($event)" 
+  ></app-table>
 </div>

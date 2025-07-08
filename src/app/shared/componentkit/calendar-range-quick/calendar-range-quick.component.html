@@ -1,61 +1,61 @@
-<div class="datetime-range">
-  <label *ngIf="label" [for]="endControl" class="flex align-content-center gap-1">{{ label }}(起迄)
-    <span *ngIf="isRequired" class="required">*</span>
-    <p-button icon="pi pi-cog" [rounded]="true" [raised]="true" size="small" styleClass="p-0"
-      [style]="{'width': '1.3rem','height':'1.3rem'}" (onClick)="op.toggle($event)"
-      [disabled]="startControl.disabled || endControl.disabled" />
-  </label>
-  <p-overlayPanel #op styleClass="p-0">
-    <div class="flex flex-column gap-3">
-      <div class="flex justify-content-between align-item-center">
-        <span class="font-medium text-900 block mb-2">快速選擇</span>
-        <div class="font-medium text-900 block mb-2 cursor-pointer border-circle">
-          <i class="pi pi-times text-sm" tabindex="0" (click)="op.toggle($event)" (keyup.enter)="op.toggle($event)"
-            (keydown.space)="op.toggle($event)"></i>
-        </div>
-      </div>
-      <div class="flex flex-column gap-2">
-        <p-selectButton [options]="timeUnitOptions" [(ngModel)]="timeUnit" (ngModelChange)="onTimeUnitChange($event)"
-          optionLabel="label" optionValue="value" />
-        <p-selectButton [options]="filteredTimeRangeOptions" [(ngModel)]="timeRange"
-          (onChange)="onTimeRangeChange($event)" optionLabel="label" />
+<label *ngIf="label" [for]="endControl" class="flex align-content-center gap-1">{{ label }}(起迄)
+  <span *ngIf="isRequired" class="required">*</span>
+  <p-button icon="pi pi-cog" [rounded]="true" [raised]="true" size="small" styleClass="p-0"
+    [style]="{'width': '1.3rem','height':'1.3rem'}" (onClick)="op.toggle($event)"
+    [disabled]="startControl.disabled || endControl.disabled" />
+</label>
+<p-overlayPanel #op styleClass="p-0">
+  <div class="flex flex-column gap-3">
+    <div class="flex justify-content-between align-item-center">
+      <span class="font-medium text-900 block mb-2">快速選擇</span>
+      <div class="font-medium text-900 block mb-2 cursor-pointer border-circle">
+        <i class="pi pi-times text-sm" tabindex="0" (click)="op.toggle($event)" (keyup.enter)="op.toggle($event)"
+          (keydown.space)="op.toggle($event)"></i>
       </div>
     </div>
-  </p-overlayPanel>
-  <div class="datetime-inputs flex justify-content-center align-items-start" [ngClass]="{'gap-3': !label}">
-    <div class="input-group w-full">
-      <label *ngIf="startLabel" [for]="startControl">{{ startLabel }}
-        <span *ngIf="isRequired" class="required">*</span>
-      </label>
-      <p-calendar [formControl]="startControl" [placeholder]="startControl.disabled ? '' : placeholder"
-        [timeOnly]="timeOnly" [showTime]="showTime" hourFormat="24" [dateFormat]="dateFormat" [view]="view"
-        [ngClass]="{'ng-invalid ng-dirty': submitted && startControl.errors}" [showIcon]="!startControl.disabled"
-        [iconDisplay]="'input'" [appendTo]="'body'" [maxDate]="endControl.value">
-        <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
-          <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
-          <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>
-        </ng-template>
-      </p-calendar>
-      <app-control-messages [onerror]="submitted || (startControl.touched && startControl.invalid)"
-        [control]="startControl">
-      </app-control-messages>
+    <div class="flex flex-column gap-2">
+      <p-selectButton [options]="timeUnitOptions" [(ngModel)]="timeUnit" (ngModelChange)="onTimeUnitChange($event)"
+        optionLabel="label" optionValue="value" />
+      <p-selectButton [options]="filteredTimeRangeOptions" [(ngModel)]="timeRange"
+        (onChange)="onTimeRangeChange($event)" optionLabel="label" />
     </div>
-    <span *ngIf="label" class="mx-2">~</span>
-    <div class="input-group w-full">
-      <label *ngIf="endLabel" [for]="endControl">{{ endLabel }}
-        <span *ngIf="isRequired" class="required">*</span>
-      </label>
-      <p-calendar [formControl]="endControl" [placeholder]="endControl.disabled ? '' : placeholder"
-        [timeOnly]="timeOnly" [showTime]="showTime" hourFormat="24" [dateFormat]="dateFormat" [view]="view"
-        [iconDisplay]="'input'" [ngClass]="{'ng-invalid ng-dirty': submitted && endControl.errors}"
-        [showIcon]="!endControl.disabled" [appendTo]="'body'" [minDate]="startControl.value">
-        <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
-          <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
-          <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>
-        </ng-template>
-      </p-calendar>
-      <app-control-messages [onerror]="submitted || (endControl.touched && endControl.invalid)" [control]="endControl">
-      </app-control-messages>
-    </div>
+  </div>
+</p-overlayPanel>
+<div class="grid p-fluid">
+  <div class="col pb-0">
+    <label *ngIf="startLabel" [for]="startControl">{{ startLabel }}
+      <span *ngIf="isRequired" class="required">*</span>
+    </label>
+    <p-calendar [formControl]="startControl" [placeholder]="startControl.disabled ? '' : placeholder"
+      [timeOnly]="timeOnly" [showTime]="showTime" hourFormat="24" [dateFormat]="dateFormat" [view]="view"
+      [ngClass]="{'ng-invalid ng-dirty': submitted && startControl.errors}" [showIcon]="!startControl.disabled"
+      [iconDisplay]="'input'" [appendTo]="'body'" [maxDate]="endControl.value">
+      <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+        <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
+        <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>
+      </ng-template>
+    </p-calendar>
+    <app-control-messages [onerror]="submitted || (startControl.touched && startControl.invalid)"
+      [control]="startControl">
+    </app-control-messages>
+  </div>
+  <div class="flex" [ngClass]="startLabel ?'pt-4':''">
+    <span class="align-self-center text-center " [ngClass]="startLabel ?'pt-1':''">~</span>
+  </div>
+  <div class="col pb-0">
+    <label *ngIf="endLabel" [for]="endControl">{{ endLabel }}
+      <span *ngIf="isRequired" class="required">*</span>
+    </label>
+    <p-calendar [formControl]="endControl" [placeholder]="endControl.disabled ? '' : placeholder" [timeOnly]="timeOnly"
+      [showTime]="showTime" hourFormat="24" [dateFormat]="dateFormat" [view]="view" [iconDisplay]="'input'"
+      [ngClass]="{'ng-invalid ng-dirty': submitted && endControl.errors}" [showIcon]="!endControl.disabled"
+      [appendTo]="'body'" [minDate]="startControl.value">
+      <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+        <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
+        <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>
+      </ng-template>
+    </p-calendar>
+    <app-control-messages [onerror]="submitted || (endControl.touched && endControl.invalid)" [control]="endControl">
+    </app-control-messages>
   </div>
 </div>

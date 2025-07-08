@@ -1,13 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-//
+import { FormGroup, Validators } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { FIN11090, FIN11090QueryResponse, Fin11090Service } from '../../../service/api/fin/fin11090.service';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-fin11090',
@@ -15,104 +10,68 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
   styleUrl: './fin11090.component.scss'
 })
 
-//1.1.1.9 非業主收銀機二聯式電子發票配號作業
-export class FIN11090Component extends BasicQpageComponent implements OnInit {
-  //
+export class FIN11090Component extends BasicQueryPageComponent<FIN11090> implements OnInit {
   queryForm = this.formBuilder.group({
-    twodatemm: [, [Validators.required]], // 發票年月
-    registerID: [], // 收銀機編號
+    // 依需求調整查詢欄位
+    // 範例：字軌、發票號碼、發票日期、收銀機代號、交易序號
+    prefix: ['', [Validators.required, Validators.maxLength(2)]],            // 字軌
+    invoice_no: ['', [Validators.required, Validators.maxLength(8)]],        // 發票號碼
+    invoice_date: ['', [Validators.required]],                               // 發票日期
+    cashier_no: ['', [Validators.required, Validators.maxLength(10)]],       // 收銀機代號
+    txn_seq: ['', [Validators.required, Validators.maxLength(6)]],           // 交易序號
+    ...createPaginationConfig([{ field: 'invoice_date', order: -1 }]), // 預設依日期新到舊排序
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '發票年月', visible: true },
-    { field: 'col2', header: '字軌', visible: true },
-    { field: 'col3', header: '發票號碼(起)', visible: true },
-    { field: 'col4', header: '發票號碼(迄)', visible: true },
-    { field: 'col5', header: '發票類別', visible: true },
-    { field: 'col6', header: '有無副聯', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  regidterCodeOptions: any[] = [
-    { value: 1, label: '999971/999997' },
+
+  totalRecords = 0;
+  data: FIN11090[] = [];
+  columns: Column[] = [
+    { field: 'invoice_date', header: '發票日期', visible: true },
+    { field: 'cashier_no', header: '收銀機代號', visible: true },
+    { field: 'txn_seq', header: '交易序號', visible: true },
+    { field: 'invoice_no', header: '發票號碼', visible: true },
+    { field: 'invoice_amt', header: '交易金額', visible: true },
+    // 依實際需求可再補充欄位
   ];
 
-  //
+  selectedItems: FIN11090QueryResponse[] = [];
 
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-  ) {
-    super(); // 呼叫父類建構子
+  constructor(private fin11090Service: Fin11090Service) {
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '110009';
-    this.cruPage = '/FIN1000/FIN11090CRU';
-    //
-    // ----------------------------------------------------------------
-    // ----------------------------------------------------------------
-
-    // ----------------------------------------------------------------
+    this.initializePage('FIN11090', 'fin/fin11090cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.handleSubmit(frm, () => {
+      this.fin11090Service.queryFIN11090(frm.value).subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            this.data = response.Data || [];
+            this.totalRecords = response.TotalCount || this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          } else {
+            this.messageService.errorBubble(`查詢失敗: ${response.Message}`);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
+  isRowSelectable(rowData: FIN11090): boolean {
+    return true;
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
-  }
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
+  onConfirm(selectedItems: FIN11090QueryResponse[]) {
+    this.messageService.successBubble('取消作廢紀錄並同步更新發票狀態');
+    console.log('已選擇項目:', selectedItems);
+    // 接api
   }
 }

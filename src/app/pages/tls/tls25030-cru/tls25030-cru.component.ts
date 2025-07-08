@@ -201,7 +201,7 @@ export class TLS25030CRUComponent extends BasicCrupageComponent implements OnIni
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -227,6 +227,6 @@ export class TLS25030CRUComponent extends BasicCrupageComponent implements OnIni
   }
 
   onCancel() {
-    this.router.navigate(['/demo/demoInputTable']);
+    this.router.navigate(['/demo/demoinputtable']);
   }
 }

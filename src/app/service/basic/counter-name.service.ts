@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../system/error-handler.service';
 import { catchError, Observable, tap, map } from 'rxjs';
 
 @Injectable({
@@ -14,7 +14,7 @@ export class CounterNameService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getCounters(): Observable<any[]> {
     return this.http.post<any>(this.apiUrl, {}).pipe(

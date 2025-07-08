@@ -3,9 +3,9 @@ import { FormGroup, Validators } from '@angular/forms';
 import { ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { DropDownListService } from '../../../service/api/dropdownservice/dropDownList.service'; // 導入 DropDownListService 和所需介面
+import { DropDownListService } from '../../../service/utility/dropDownList.service'; // 導入 DropDownListService 和所需介面
 import { finalize, map } from 'rxjs'; // 只需要 map 運算符，因為我們將直接訂閱
-import { ExportLabelService, IExportLabelRequest } from '../../../service/api/exportLabel/exportLabel.service';
+import { ExportLabelService, IExportLabelRequest } from '../../../service/utility/exportLabel.service';
 import { HttpResponse } from '@angular/common/http';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -37,6 +37,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     HOS_NoList: [null], // 倉庫代碼 multi-select
     LOGO_NoList: [null], // 品牌代碼 multi-select
     VEN_No: [null], // 廠商編號 multi-select
+    queryNo: ['', [Validators.maxLength(20)]], // 查詢編號 input
     PO_StatusList: [null, [Validators.required]], // 採購單狀態 multi-select
     APPLY_USR: [null], // 申請人員 multi-select
     APPLY_Date_Start: [null], // 申請日期 起 calendar-range

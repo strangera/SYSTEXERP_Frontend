@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../system/error-handler.service';
 import { catchError, Observable, of, tap } from 'rxjs';
 
 @Injectable({
@@ -11,7 +11,7 @@ export class PaymentToolService {
 
   apiUrl: string = environment.ApiUrl
   title: string = '支付工具';
-  
+
   // Payment tool options based on the image content
   options: any[] = [
     { value: 1, label: '現金' },
@@ -43,7 +43,7 @@ export class PaymentToolService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   // Get local payment tool options
   getPaymentToolOptions(): Observable<any[]> {

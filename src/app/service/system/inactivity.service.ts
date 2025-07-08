@@ -1,5 +1,5 @@
 import { Inject, Injectable, NgZone } from '@angular/core';
-import { AuthService } from '../../service/system/auth.service';
+import { AuthService } from './auth.service';
 import { Router } from '@angular/router';
 import { DOCUMENT } from '@angular/common';
 

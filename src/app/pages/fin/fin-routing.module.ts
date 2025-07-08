@@ -323,6 +323,7 @@ import { FIN73030Component } from './fin73030/fin73030.component';
 import { FIN73040Component } from './fin73040/fin73040.component';
 import { FIN11200Component } from './fin11200/fin11200.component';
 import { FIN11200CRUComponent } from './fin11200-cru/fin11200-cru.component';
+import { FIN11050CRUComponent } from './fin11050-cru/fin11050-cru.component';
 
 const routes: Routes = [
   { path: 'fin11010', component: FIN11010Component },  // 營業人申報設定
@@ -334,6 +335,7 @@ const routes: Routes = [
   { path: 'fin11040', component: FIN11040Component },  // 發票格式代號維護
   { path: 'fin11040cru', component: FIN11040CRUComponent },
   { path: 'fin11050', component: FIN11050Component },  // 二聯式電子發票上送狀況表
+  { path: 'fin11050cru', component: FIN11050CRUComponent },  // 二聯式電子發票上送狀況表
   { path: 'fin11060', component: FIN11060Component },  // 產生二聯式電子未使用空白發票檔案
   { path: 'fin11070', component: FIN11070Component },  // 二聯式電子發票筆數核對表
   { path: 'fin11080', component: FIN11080Component },  // 二電退貨發票號碼清空重新上送作業

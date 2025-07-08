@@ -25,8 +25,8 @@ export class TLS29010CRUComponent {
   // 權限
   funInfo?: FunsrightInfo;
 
-  
-  
+
+
   // 查詢表單
   loading: boolean = false;
   submitted: boolean = false;
@@ -179,7 +179,7 @@ export class TLS29010CRUComponent {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -192,7 +192,7 @@ export class TLS29010CRUComponent {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
   get isFormEditable(): boolean {
     return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());

@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { IPOS2004DetailData, ITLS52020Data, TLS52020Detail, TLS52020Request, Tls52020Service } from '../../../service/api/tls/tls52020.service';
-import { DropDownListService, IDropdownItem } from '../../../service/api/dropdownservice/dropDownList.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { validateMinNumber } from '../../../shared/models/system/validate-field.model';
 import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
@@ -39,7 +39,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     { field: 'PLU_Unit', header: '單位編號' },
     { field: 'UNIT_NAME', header: '單位名稱' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
-    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : '應稅' },
+    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : value === '1' ? '應稅' : '' },
     { field: 'CRN_SubQty', header: '數量', type: 'inputNumber', validate: [validateMinNumber(0)] },
     { field: 'CRN_BuyPrc', header: '單價' },
     { field: 'CRN_BuyNet', header: '小計' },

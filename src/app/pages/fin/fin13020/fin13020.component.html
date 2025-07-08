@@ -23,23 +23,23 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
               label="退出/折讓單號"
-              [startControl]="queryForm.controls.TXN_Ret_No_Start"
-              [endControl]="queryForm.controls.TXN_Ret_No_End"
+              [startControl]="queryForm.controls.TXN_Ret_NoStart"
+              [endControl]="queryForm.controls.TXN_Ret_NoEnd"
               [submitted]="submitted"
             ></app-input-text-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="字軌"
-              [control]="queryForm.controls.PUR_GUINo"
+              [control]="queryForm.controls.GUI_Track"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
               label="發票號碼起"
-              [startControl]="queryForm.controls.PUR_GUINo_Start"
-              [endControl]="queryForm.controls.PUR_GUINo_End"
+              [startControl]="queryForm.controls.PUR_GUINoStart"
+              [endControl]="queryForm.controls.PUR_GUINoEnd"
               [submitted]="submitted"
             ></app-input-text-range>
           </div>
@@ -47,8 +47,8 @@
             <app-calendar-range
               calendarType="dateRange"
               label="退出/折讓日期"
-              [startControl]="queryForm.controls.PUR_GUIDate_Start"
-              [endControl]="queryForm.controls.PUR_GUIDate_End"
+              [startControl]="queryForm.controls.PUR_GUIDateStart"
+              [endControl]="queryForm.controls.PUR_GUIDateEnd"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -75,16 +75,16 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
               label="憑證單號"
-              [startControl]="queryForm.controls.Source_Doc_No_Start"
-              [endControl]="queryForm.controls.Source_Doc_No_End"
+              [startControl]="queryForm.controls.Source_Doc_NoStart"
+              [endControl]="queryForm.controls.Source_Doc_NoEnd"
               [submitted]="submitted"
             ></app-input-text-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
               label="傳票編號"
-              [startControl]="queryForm.controls.Voucher_No_Start"
-              [endControl]="queryForm.controls.Voucher_No_End"
+              [startControl]="queryForm.controls.Voucher_NoStart"
+              [endControl]="queryForm.controls.Voucher_NoEnd"
               [submitted]="submitted"
             ></app-input-text-range>
           </div>
@@ -105,9 +105,8 @@
     tableKey="FIN13020"
     [data]="data"
     [columns]="columns"
-    
-    dataKey="PUR_GUINo"
-    [multiSortMeta]="[{ field: 'PUR_GUINo', order: 1 }]"
+    dataKey="PUR_RepYYYYMM"
+    [multiSortMeta]="[{ field: 'PUR_RepYYYYMM', order: 1 }]"
     [totalRecords]="totalRecords"
     [lazy]="true"
     [loading]="loading"
@@ -119,3 +118,4 @@
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
   ></app-table>
 </div>
+

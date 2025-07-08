@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../system/error-handler.service';
 import { catchError, Observable, of, tap } from 'rxjs';
 
 @Injectable({
@@ -20,13 +20,13 @@ export class InstallmentPeriodService {
     { value: 12, label: '12期' },
     { value: 24, label: '24期' }
   ];
-    // 可以繼續添加其他選項
+  // 可以繼續添加其他選項
 
 
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   // 獲取所有分期期數（本地數據）
   getInstallmentPeriods(): Observable<any[]> {

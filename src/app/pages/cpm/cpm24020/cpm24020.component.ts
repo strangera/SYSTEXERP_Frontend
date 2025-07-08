@@ -88,7 +88,7 @@ export class CPM24020Component extends BasicQpageComponent implements OnInit {
         state: { crudstatus: CRUDStatus.Edit, rowdata: data, queryform: this.queryForm },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -97,7 +97,7 @@ export class CPM24020Component extends BasicQpageComponent implements OnInit {
       state: { crudstatus: CRUDStatus.Read, rowdata: data, queryform: this.queryForm },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 
   onClearForm(): void {

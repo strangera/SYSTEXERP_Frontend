@@ -4,7 +4,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ITLS52040Data, Tls52040Service } from '../../../service/api/tls/tls52040.service';
 import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { finalize, map, Subject, takeUntil } from 'rxjs';
-import { DropDownListService, IDropdownItem } from '../../../service/api/dropdownservice/dropDownList.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 
 export const enum POStatus {

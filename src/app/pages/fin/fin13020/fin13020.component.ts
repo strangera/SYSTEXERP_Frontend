@@ -1,9 +1,7 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { FormGroup } from '@angular/forms';
 import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
 @Component({
@@ -12,6 +10,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
   styleUrls: ['./fin13020.component.scss']
 })
 export class FIN13020Component extends BasicQueryPageComponent<any> {
+
   taxNumberOptions: any[] = [
     { value: '701702007', label: '701702007' },
     { value: '703902223', label: '703902223' },
@@ -23,47 +22,65 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
 
   queryForm = this.formBuilder.group({
     
-    startSalesDate: [null],   // 領用日期(起)
-    endSalesDate: [null],     // 領用日期(迄)
-    taxNumber: [null],        // 稅籍編號
-    Year: ['2025'],             // 查詢年
-    Month: ['01'],            // 查詢月
-    TXN_Ret_No_Start: [null], // 退出/折讓單號(起)
-    TXN_Ret_No_End: [null],   // 退出/折讓單號(迄)
-    PUR_GUINo: [null], // 字軌
-    PUR_GUINo_Start: [null],
-    PUR_GUINo_End: [null],
-    PUR_GUIDate_Start: [null], // 領用日期(起)
-    PUR_GUIDate_End: [null],   // 領用日期(迄)
+
+    TXN_Ret_NoStart: [null], // 退出/折讓單號(起)
+    TXN_Ret_NoEnd: [null],   // 退出/折讓單號(迄)
+    GUI_Track: [null], // 字軌
+    PUR_GUINoStart: [null],
+    PUR_GUINoEnd: [null],
+    PUR_GUIDateStart: [null], // 領用日期(起)
+    PUR_GUIDateEnd: [null],   // 領用日期(迄)
     PUR_VoucherType: [null], // 發票狀態
     PUR_RepYYYYMM: [null], // 發票年月
-    Source_Doc_No_Start: [], // 憑證單號(起)
-    Source_Doc_No_End: [],   // 憑證單號(迄)
-    Voucher_No_Start: [], // 發票號碼(起)
-    Voucher_No_End: [],   // 發票號碼(迄)
-    ...createPaginationConfig([{ field: 'startSalesDate', order: 1 }])
+    Source_Doc_NoStart: [], // 憑證單號(起)
+    Source_Doc_NoEnd: [],   // 憑證單號(迄)
+    Voucher_NoStart: [], // 發票號碼(起)
+    Voucher_NoEnd: [],   // 發票號碼(迄)
+    ...createPaginationConfig([{ field: 'PUR_RepYYYYMM', order: 1 }])
   });
 
   data: any[] = [];
   totalRecords = 0;
 
   columns: any[] = [
-    { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },
-    { field: 'PUR_GUINo', header: '字軌', visible: true },
-    { field: 'PUR_GUINo_Start', header: '發票號碼', visible: true },
-    { field: 'PUR_GUIDate', header: '退出/折讓日期', visible: true },
+    { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },   
+    { field: 'PUR_GUINo', header: '字軌', visible: true }, //
+    { field: 'PUR_GUINo_Start', header: '發票號碼', visible: true },//
+    { field: 'PUR_GUIDate', header: '退出/折讓日期', visible: true,format: this.formatDateFromBackend   },
     { field: 'PUR_VoucherType', header: '發票格式', visible: true },
-    { field: 'Credit_Type', header: '區別', visible: true },  //折讓/退出
-    { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true },
+    { field: 'Credit_Type', header: '區別', visible: true, format: this.formatCreditType },  //折讓/退出
+    { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true,
+    format: this.formatRepYYYYMM },
     { field: 'PUR_Net', header: '退回/折讓金額', visible: true },
+    { field: 'PUR_Tax', header: '退回/折讓稅額', visible: true },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票編號', visible: true },
-
   ];
 
   constructor(private fin13020Service: FIN13020Service) {
     super();
   }
+  formatCreditType(value: string): string {
+  switch (value) {
+    case 'C': return '折讓';
+    case 'R': return '退出';
+    default: return value;
+  }
+}
+formatDateFromBackend(dateStr: string): string {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return ''; // 無效日期處理
+  return `${date.getFullYear()}/${(date.getMonth() + 1)
+    .toString()
+    .padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+}
+formatRepYYYYMM(value: string): string {
+  if (!value || value.length !== 6) return value;
+  return `${value.substring(0, 4)}/${value.substring(4, 6)}`;
+}
+
+
 
   ngOnInit(): void {
     this.initializePage('FIN13020','/FIN/FIN13020CRU', this.queryForm);
@@ -124,4 +141,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
   onClearForm(): void {
     this.queryForm.reset();
   }
+
+
+
 }
