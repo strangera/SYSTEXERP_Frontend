@@ -26,6 +26,12 @@ export class dropDown51070 {
         { value: '0', label: '免稅' },
         { value: '1', label: '應稅' },
     ];
+    pluTypeOptions: option[] = [ // 商品類別
+        { value: '1', label: '一般商品' },
+        { value: '8', label: '專櫃' },
+        { value: 'CC', label: '專櫃商品' },
+        { value: 'SC', label: '特殊條碼' }
+    ];
 
     // ---POS2020 dropdown區---
     transTypeOption: option[] = [  //運輸方式

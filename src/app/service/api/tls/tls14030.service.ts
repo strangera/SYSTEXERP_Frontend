@@ -65,7 +65,12 @@ export class Tls14030Service {
       return this.http.post<any>(`${environment.ApiUrl}/querySYS3100_DropDownList`, body);
     }
 
-    //查詢 專櫃主檔 下拉
+    //查詢 專櫃主檔 編號
+    queryTLTTALENT_DropDownList(body: any): Observable<any> {
+      return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_DropDownList`, body);
+    }
+
+    //查詢 專櫃主檔 下拉 (會變更對應的狀態並寫入欄位)
     queryTLTTALENT_Status_DropDownList(body: any): Observable<any> {
       return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_Status_DropDownList`, body);
     }

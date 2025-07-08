@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 
@@ -38,13 +38,14 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
   implements OnInit{
 
   @ViewChild('labelTable') labelTable!: ExpandableEditTableComponent;
+  @ViewChild('priceAlterTable') priceAlterTable!: ExpandableEditTableComponent;
 
   formTitle!: string; //表頭
   baseId = 0; //初始id
+  state = window.history.state; // 接收標頭
 
-  // 查詢
-  queryForm = this.formBuilder.group({
-    // PLULOGO  商品品牌設定檔
+  // 查詢 標籤檔定加入欄位
+  queryLabelForm = this.formBuilder.group({
     PLU_MagNo: ['', [Validators.maxLength(20)]], // 商品管理碼
     PLU_No: ['', [Validators.maxLength(20)]], // 國際條碼
     PLU_OrgPLUNo: ['', [Validators.maxLength(20)]], // 廠商貨號
@@ -55,6 +56,14 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
   }, {
   validators: atLeastOneFieldRequired(['PLU_MagNo', 'PLU_No', 'PLU_OrgPLUNo']) //至少要填寫其中一項
   });
+
+  // 查詢 變價歷史紀錄
+  queryPriceForm = this.formBuilder.group({
+    PLU_MagNo: ['', [Validators.required, Validators.maxLength(20)]], // 商品管理碼
+    //分頁查詢
+    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
+  });
+
   // 表格
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
@@ -78,6 +87,41 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
 
     selectedItems: Label[] = [];// 多選項目
   // ----------------------------------------------------------------
+
+  // ---------變價記錄 (price) 編輯表格 -------------------------------------------------------
+    // label	資料
+    priceData: Label[] = [];
+    // label 展開式表格的欄位定義
+    priceColumn: Column[] = [
+      //---基本資料---
+      { field: 'LOGO_Name', header: '品牌編號', visible: true },
+      { field: 'PLU_MagNo', header: '商品編號', visible: true },
+      { field: 'PLU_Name', header: '品名', visible: true },
+      { field: 'PLU_NO', header: '國際條碼', visible: true },
+      { field: 'PLU_OrgPLUNo', header: '商品貨號', visible: true },
+      { field: 'CAT_LName', header: '大分類', visible: true },
+      { field: 'CAT_MName', header: '中分類', visible: true },
+      { field: 'CAT_SName', header: '小分類', visible: true },
+
+      { field: 'PLU_OrderPrc_POS2004', header: '標準進價', visible: true },
+      { field: 'PLU_SalePrc_POS2004', header: '商品售價', visible: true },
+
+      //---變價歷程---
+      { field: 'MAM_Date', header: '變價日期', visible: true,  format: formatDate},
+      { field: 'MAM_NO', header: '變價單號', visible: true },
+  
+      { field: 'PLU_SalePrc', header: '變價前售價', visible: true },
+      { field: 'MAM_UnitPrc', header: '變價後售價', visible: true },
+
+      { field: 'PLU_OrderPrc', header: '變價前進價', visible: true },
+      { field: 'MAM_OrderPrc', header: '變價後進價', visible: true },
+    ];
+  
+    // 展開式表格的載入狀態
+    expandpriceLoading = false;
+
+    // selectedItems: Label[] = [];// 多選項目
+  // ----------------------------------------------------------------
   constructor(private tls51070Service: Tls51070Service) {
     super();
   }
@@ -86,20 +130,19 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     this.initializePage('TLS51070');
 
     //更新顯示表頭部
-    const state = window.history.state;
-    console.log(state.destination); // 標籤檔或歷史紀錄查詢
-    if(state.destination == 'history'){
-      this.formTitle = '變更歷史紀錄';
-    }else if(state.destination == 'label'){
+    console.log(this.state.destination); // 標籤檔或歷史紀錄查詢
+    if(this.state.destination == 'history'){
+      this.formTitle = '商品變價紀錄';
+    }else if(this.state.destination == 'label'){
       this.formTitle = '產生標籤檔';
     }else{
       return
     }
   }
 
-  onSubmit(frm: FormGroup) {
-    if (this.queryForm.invalid) {
-      if (this.queryForm.errors?.['atLeastOneRequired']) {
+  onSubmitLabel(frm: FormGroup) {
+    if (this.queryLabelForm.invalid) {
+      if (this.queryLabelForm.errors?.['atLeastOneRequired']) {
         this.messageService.errorBubble('請至少填寫「商品管理碼」、「國際條碼」或「廠商貨號」其中一項');
       }
       return;
@@ -128,6 +171,39 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
 
             console.log('標籤資料',this.labelData);
 
+
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
+    });
+  }
+
+  // 變價紀錄 查詢
+  onSubmitPrice(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      console.log('query condition', frm.value);
+      // 有資料的管理碼  "PLU_MagNo": "0700000002799"
+      this.loading = false;
+      this.tls51070Service.queryTLS51070_PriceChangeRecord(frm.value).subscribe({
+        next: (response) => {
+          // console.log('回傳階層:', response.Data);
+          if (response.Status === '0000') {
+            this.priceData  = response.Data;
+            console.log('變價資料',this.priceData);
+
+            // ✅ 新增：如果沒有資料，顯示提示訊息
+            if (!this.priceData || this.priceData.length === 0) {
+              this.messageService.infoBubble('該商品無變價紀錄');
+            }
 
           } else {
             console.error('API error:', response.Status, response.Message);
