@@ -11,37 +11,74 @@
           <h5>基 本 資 料</h5>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="廠商編號" controlName="VEN_No" [control]="dataForm.controls.VEN_No"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="廠商編號"
+            controlName="VEN_No"
+            [control]="dataForm.controls.VEN_No"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="廠商統一編號或身份證字號" controlName="VEN_Uniform" [control]="dataForm.controls.VEN_Uniform"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="廠商統一編號或身份證字號"
+            controlName="VEN_Uniform"
+            [control]="dataForm.controls.VEN_Uniform"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="郵電負擔模式" controlName="VEN_RemitFeeMode" [control]="dataForm.controls.VEN_RemitFeeMode"
-            [options]="remitFeeOptions" optionLabel="label" optionValue="value" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            label="郵電負擔模式"
+            controlName="VEN_RemitFeeMode"
+            [control]="dataForm.controls.VEN_RemitFeeMode"
+            [options]="remitFeeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="廠商名稱(中文)" controlName="VEN_Name" [control]="dataForm.controls.VEN_Name"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="廠商名稱(中文)"
+            controlName="VEN_Name"
+            [control]="dataForm.controls.VEN_Name"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="廠商名稱(英文)" controlName="VEN_EngName" [control]="dataForm.controls.VEN_EngName"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="廠商名稱(英文)"
+            controlName="VEN_EngName"
+            [control]="dataForm.controls.VEN_EngName"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="廠商簡稱" controlName="VEN_ShortName" [control]="dataForm.controls.VEN_ShortName"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="廠商簡稱"
+            controlName="VEN_ShortName"
+            [control]="dataForm.controls.VEN_ShortName"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="" [control]="dataForm.controls.VEN_Uniform" [submitted]="submitted" placeholder="輸入文字">
+          <app-input-text
+            label=""
+            [control]="dataForm.controls.VEN_Uniform"
+            [submitted]="submitted"
+            placeholder="輸入文字"
+          >
             <header>
-              <app-radiobutton label="" [control]="dataForm.controls.VEN_Flag" [options]="[
+              <app-radiobutton
+                label=""
+                [control]="dataForm.controls.VEN_Flag"
+                [options]="[
                   { value: '1', label: '統一編號' },
                   { value: '2', label: '身份證字號' },
                   { value: '3', label: '護照證號' },
-                ]" [submitted]="submitted"></app-radiobutton>
+                ]"
+                [submitted]="submitted"
+              ></app-radiobutton>
             </header>
           </app-input-text>
         </div>
@@ -53,83 +90,89 @@
         </div>
         <div class="col-12 flex flex-row gap-4">
           <div class="flex-1">
-            <app-input-text label="公司登記地址" controlName="VEN_Address" [control]="dataForm.controls.VEN_Address"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="公司登記地址"
+              controlName="VEN_Address"
+              [control]="dataForm.controls.VEN_Address"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <div class="flex-1">
-            <app-input-text label="廠商發票地址" controlName="VEN_GUIAddr" [control]="dataForm.controls.VEN_GUIAddr"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="廠商發票地址"
+              controlName="VEN_GUIAddr"
+              [control]="dataForm.controls.VEN_GUIAddr"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <div class="flex-none" style="align-self: flex-end">
-            <app-button label="同公司登記地址" icon="pi pi-plus" severity="info" (clickEvent)="copyAddress()"></app-button>
+            <app-button
+              label="同公司登記地址"
+              icon="pi pi-plus"
+              severity="info"
+              (clickEvent)="copyAddress()"
+            ></app-button>
           </div>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="公司電話" controlName="VEN_Tel" [control]="dataForm.controls.VEN_Tel"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="公司電話"
+            controlName="VEN_Tel"
+            [control]="dataForm.controls.VEN_Tel"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="公司傳真" controlName="VEN_Fax" [control]="dataForm.controls.VEN_Fax"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="公司傳真"
+            controlName="VEN_Fax"
+            [control]="dataForm.controls.VEN_Fax"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="公司電子郵件" controlName="VEN_Email" [control]="dataForm.controls.VEN_Email"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="公司電子郵件"
+            controlName="VEN_Email"
+            [control]="dataForm.controls.VEN_Email"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="公司發票電子郵件" controlName="VEN_GUIEmail" [control]="dataForm.controls.VEN_GUIEmail"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="公司發票電子郵件"
+            controlName="VEN_GUIEmail"
+            [control]="dataForm.controls.VEN_GUIEmail"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
       </div>
 
-      <div class="grid p-fluid" formArrayName="contacts">
-        <div *ngFor="let contact of contacts.controls; let i = index" [formGroupName]="i"
-          class="col-12 border p-3 mb-3 relative">
-          <div class="flex justify-content-between align-items-center mb-2">
-            <h5 class="mt-5">聯 絡 人 資 料 {{ i + 1 }}</h5>
-            <app-button btnType="textclear" label="清除" styleClass="text-sm text-color-secondary"
-              (clickEvent)="removeContact(i)"></app-button>
-          </div>
-          <div class="grid p-fluid">
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="聯絡人" [control]="getFormControl(contact.get('VEN_Boss'))"
-                [submitted]="submitted"></app-input-text>
-            </div>
-
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="聯絡人職稱" [control]="getFormControl(contact.get('VEN_BossTitle'))"
-                [submitted]="submitted"></app-input-text>
-            </div>
-
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="聯絡人身份證字號" [control]="getFormControl(contact.get('VEN_BossID'))"
-                [submitted]="submitted"></app-input-text>
-            </div>
-
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="聯絡人電話" [control]="getFormControl(contact.get('VEN_BossTel'))"
-                [submitted]="submitted"></app-input-text>
-            </div>
-
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="聯絡人地址" [control]="getFormControl(contact.get('VEN_BossAddr'))"
-                [submitted]="submitted"></app-input-text>
-            </div>
-
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="聯絡人電子郵件" [control]="getFormControl(contact.get('VEN_BossEmail'))"
-                [submitted]="submitted"></app-input-text>
-            </div>
-          </div>
-        </div>
-
-        <!-- 新增按鈕獨立一列 -->
-        <div class="col-12 flex justify-content-center">
-          <app-button label="新增" icon="pi pi-plus" severity="info" (clickEvent)="addContact()"></app-button>
-        </div>
+      <div class="grid p-fluid">
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="廠商編號"
+          controlName="VEN_No"
+          [control]="dataForm.controls.VEN_No"
+          [submitted]="submitted"
+        ></app-input-text>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="廠商名稱"
+          controlName="VEN_Name"
+          [control]="dataForm.controls.VEN_Name"
+          [submitted]="submitted"
+        ></app-input-text>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="廠商簡稱"
+          controlName="VEN_ShortName"
+          [control]="dataForm.controls.VEN_ShortName"
+          [submitted]="submitted"
+        ></app-input-text>
       </div>
 
       <div class="grid p-fluid">
@@ -137,52 +180,106 @@
           <h5>付 款 資 料</h5>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="付款方式" controlName="VEN_PayType" [control]="dataForm.controls.VEN_PayType"
-            [options]="payTypeOptions" optionLabel="label" optionValue="value" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            label="付款方式"
+            controlName="VEN_PayType"
+            [control]="dataForm.controls.VEN_PayType"
+            [options]="payTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="廠商匯款銀行代號" controlName="VEN_BankNo" [control]="dataForm.controls.VEN_BankNo"
-            [options]="(bankOptions$ | async) || []" optionLabel="label" optionValue="value" [submitted]="submitted">
-          </app-dropdown>
+          <app-dropdown
+            label="廠商匯款銀行代號"
+            controlName="VEN_BankNo"
+            [control]="dataForm.controls.VEN_BankNo"
+            [options]="(bankOptions$ | async) || []"
+            optionLabel="label"
+            optionValue="value"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="匯款帳號" controlName="VEN_BankAccountNo" [control]="dataForm.controls.VEN_BankAccountNo"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="匯款帳號"
+            controlName="VEN_BankAccountNo"
+            [control]="dataForm.controls.VEN_BankAccountNo"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="匯款帳號名稱" controlName="VEN_AccountName" [control]="dataForm.controls.VEN_AccountName"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="匯款帳號名稱"
+            controlName="VEN_AccountName"
+            [control]="dataForm.controls.VEN_AccountName"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="付款期限" controlName="VEN_PayConditionDay"
-            [control]="dataForm.controls.VEN_PayConditionDay" [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="付款期限"
+            controlName="VEN_PayConditionDay"
+            [control]="dataForm.controls.VEN_PayConditionDay"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
       </div>
+      <div class="grid p-fluid mt-5">
+        <app-table
+          [showReportMode]="false"
+          class="col-12"
+          [data]="contacts"
+          [columns]="columns"
+          [showEdit]="false"
+          [showDetail]="false"
+          [showCheckBox]="true"
+          [showInsert]="true"
+          [showRowEdit]="true"
+          (delete)="onDelete($event)"
+          (selectionChange)="selectedRows = $event"
+          [selectedItems]="selectedRows"
+          [showCaption]="!isFormReadable"
+          [showManage]="!isFormReadable"
+          [showCheckBox]="!isFormReadable"
+          [insertRowData]="true"
+          (dataChange)="contacts = $event"
+        ></app-table>
+      </div>
+
 
       <div class="grid p-fluid">
         <div class="col-12 mt-5">
           <h5>其 他 資 料</h5>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="審核狀態" controlName="VEN_Status" [control]="dataForm.controls.VEN_Status"
-            [options]="statusOptions" optionLabel="label" optionValue="value" [submitted]="submitted">
-          </app-dropdown>
-
+          <app-dropdown
+            label="審核狀態"
+            controlName="VEN_Status"
+            [control]="dataForm.controls.VEN_Status"
+            [options]="statusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
-        <div class="col-12 md:col-6 lg:col-8 flex gap-2 align-items-end">
-          <app-button btnType="default" label="審核通過" (click)="approve()"></app-button>
-          <app-button btnType="default" label="反審核" (click)="unapprove()"></app-button>
-        </div>
-
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="備註" controlName="VEN_Remark" [control]="dataForm.controls.VEN_Remark"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="備註"
+            controlName="VEN_Remark"
+            [control]="dataForm.controls.VEN_Remark"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
       </div>
 
-      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <div
+        *ngIf="!isFormReadable"
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>
