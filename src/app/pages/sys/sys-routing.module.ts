@@ -92,7 +92,7 @@ const routes: Routes = [
   { path: 'sysb800', component: SYSB800Component }, // 大分類基本資料維護作業
   { path: 'sysb900', component: SYSB900Component }, // 中分類維護作業
   { path: 'sysb920', component: SYSB920Component }, // 小分類維護作業
-  { path: 'syrbc00', component: SYSBC00Component }, // 銀行基本資料維護作業
+  { path: 'sysbc00', component: SYSBC00Component }, // 銀行基本資料維護作業
   { path: 'sysbp00', component: SYSBP00Component }, // 參數資料設定維護
   { path: 'sysbq00', component: SYSBQ00Component }, // 簽核權限設定維護
   { path: 'sysbr00', component: SYSBR00Component }, // 縣市區域資料維護作業

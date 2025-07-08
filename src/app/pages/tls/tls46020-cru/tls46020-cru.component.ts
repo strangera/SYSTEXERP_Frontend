@@ -3,7 +3,8 @@ import { FormGroup, Validators } from '@angular/forms'; // 這裡已經有了，
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS46020Item, TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { ECR_GUI_Type_Option, ECR_SernoType_Option, ECR_SettleDD_Option, getToday2330, YN_Option } from '../tls46020/tls46020.model';
-import { finalize, Subject, takeUntil } from 'rxjs';
+import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 // 2.4.6.2 POS環境變數維護作業 CRU
 @Component({
@@ -151,8 +152,6 @@ export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> im
   YN_Option = YN_Option;
   ECR_SettleDD_Option = ECR_SettleDD_Option;
 
-  unsubscribe$ = new Subject<void>();
-
   constructor(
     private tls46020Service: TLS46020Service,
   ) {
@@ -166,9 +165,7 @@ export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> im
       this.dataForm.get('ECR_TmplStatus')?.disable();
     }
     // 監聽 ECR_GUI_Type 的變化來動態調整 ECR_GUI_PeriodQty 和 ECR_GUI_MinQty 的驗證
-    this.dataForm.get('ECR_GUI_Type')?.valueChanges.pipe(
-      takeUntil(this.unsubscribe$) // 使用 unsubscribe$ 確保在元件銷毀時取消訂閱
-    ).subscribe(value => {
+    this.dataForm.get('ECR_GUI_Type')?.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
       this.setGuiQtyValidators(value === '07');
     });
   }
@@ -199,7 +196,7 @@ export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> im
       const serviceCall = this.isFormCreateable
         ? this.tls46020Service.insertTLS46020(this.createBody(frm))
         : this.tls46020Service.updateTLS46020(this.createBody(frm));
-      serviceCall.pipe(finalize(() => this.loading = false)).subscribe({
+      serviceCall.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe({
         next: (res) => {
           this.messageService.successBubble(res.Message);
           if (this.isFormCreateable) {

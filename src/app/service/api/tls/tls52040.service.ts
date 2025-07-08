@@ -63,6 +63,14 @@ export interface ITLS52040Data {
   UPD_USR_Name: string; // 變更人員姓名
 }
 
+/** 更新 POS2018 資料狀態 (updateTLS52040_Status) 的請求介面 */
+export interface IUpdateTLS52040StatusRequest {
+  ODM_No: string; // 驗收編號
+  ODM_Status: string; // 驗收狀態 (例如 "審核", "作廢", "反審核")
+  ODM_Status_Ori: string; // 原始狀態
+  Request_No?: string | null; // 請款單號 (如果相關)
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -78,5 +86,14 @@ export class Tls52040Service {
    */
   queryTLS52040(params: IQueryTLS52040Request): Observable<ApiResponse<ITLS52040Data[]>> {
     return this.http.post<ApiResponse<ITLS52040Data[]>>(`${this.apiUrl}/queryTLS52030`, params);
+  }
+
+  /**
+   * 更新 POS2018 (進貨單主檔) 資料狀態 (審核、作廢、反審核)
+   * @param data 包含要更新的進貨單 ID 及目標狀態
+   * @returns API 響應
+   */
+  updateStatusTLS52040(data: IUpdateTLS52040StatusRequest): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateStatusTLS52040`, data);
   }
 }

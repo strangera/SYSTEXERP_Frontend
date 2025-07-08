@@ -5,6 +5,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { columns, guiTypeOptions, salTypeOptions, sernoTypeOptions, statusOptions, typeOptions } from './tls41010.model';
 import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-tls41010',
@@ -57,7 +58,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
-      this.tls41010Service.queryTLS41010(frm.value).pipe(finalize(() => this.loading = false)).subscribe((res) => {
+      this.tls41010Service.queryTLS41010(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe((res) => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
       });
@@ -69,7 +70,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     const deleteIds = Array.isArray(data) ? data.map((d) => d.id) : [data.id];
     if (deleteIds.length === 0) return;
     this.loading = true;
-    this.tls41010Service.deleteTLS41010(deleteIds).pipe(finalize(() => this.loading = false)).subscribe({
+    this.tls41010Service.deleteTLS41010(deleteIds).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe({
       next: () => {
         this.messageService.successBubble('刪除成功');
         this.onSubmit(this.queryForm);

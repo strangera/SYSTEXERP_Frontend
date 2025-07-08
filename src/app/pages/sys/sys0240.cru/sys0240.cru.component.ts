@@ -7,6 +7,7 @@ import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
 import { Sys0230Service } from '../../../service/api/sys/sys0230.service';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { TreeNode } from '../../../shared/models/sys/role.model'; // 引入 TreeNode
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 // 配對角色
 export interface UserOption {
@@ -72,7 +73,7 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblRole> implemen
 
   ngOnInit(): void {
     this.initializePage('SYS0240', this.dataForm);
-    this.sys0210Service.queryAllRole().subscribe((response) => {
+    this.sys0210Service.queryAllRole().pipe(untilDestroyed(this)).subscribe((response) => {
       this.targetOptions = response.Data.map((item: any) => ({
         ...item,
         label: item.Role_No + ' - ' + item.Role_Name
@@ -80,13 +81,13 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblRole> implemen
     });
 
     // 查詢來源角色使用者權限 (只顯示 match 為 true 的)
-    this.sys0230Service.queryRoleUsers({ Role_No: this.rowdata?.Role_No }).subscribe((response) => {
+    this.sys0230Service.queryRoleUsers({ Role_No: this.rowdata?.Role_No }).pipe(untilDestroyed(this)).subscribe((response) => {
       this.roleUserData = response.Data.filter((item: UserOption) => item.Match === true);
       this.cdr.markForCheck(); // 觸發變更檢測
     });
 
     // 查詢來源角色系統權限
-    this.sys0210Service.queryRolePrivileges({ Role_No: this.rowdata?.Role_No }).subscribe({
+    this.sys0210Service.queryRolePrivileges({ Role_No: this.rowdata?.Role_No }).pipe(untilDestroyed(this)).subscribe({
       next: (response) => {
         if (response.Status === '0000' && response.Data && Array.isArray(response.Data)) {
           response.Data.forEach((node: any) => {
@@ -259,7 +260,7 @@ export class SYS0240CRUComponent extends BasicCruPageComponent<tblRole> implemen
       };
 
       console.log('更新的請求內容', requestBody);
-      this.sys0210Service.copyRoleSettings(requestBody).subscribe(() => {
+      this.sys0210Service.copyRoleSettings(requestBody).pipe(untilDestroyed(this)).subscribe(() => {
         this.messageService.successBubble('複製成功');
         this.onCancel(); // 更新成功後返回查詢頁面
       });

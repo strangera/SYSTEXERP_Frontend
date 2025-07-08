@@ -4,6 +4,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
 import { Role } from '../../../shared/models/sys/role.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
 // 4-2-3-1角色系統權限設定
 @Component({
   selector: 'app-sys0310',
@@ -40,7 +41,7 @@ export class SYS0310Component extends BasicQueryPageComponent<Role> implements O
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.sys0210Service.queryRole(frm.value).subscribe({
+      this.sys0210Service.queryRole(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           this.data = response.Data
           this.totalRecords = response.TotalCount || response.Data.length;

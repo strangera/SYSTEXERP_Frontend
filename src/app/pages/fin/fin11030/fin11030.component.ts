@@ -5,6 +5,7 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
 import { APS2001Data, columns, SAL_GUIPaperOptions } from './fin11030.model';
 import { Fin11030Service } from '../../../service/api/fin/fin11030.service';
 import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-fin11030',
@@ -34,7 +35,7 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
   }
   onDelete(selectedRows: APS2001Data[]) {
     const ids = selectedRows.map(row => row.id);
-    this.fin11030Service.deleteFIN11030(ids).subscribe({
+    this.fin11030Service.deleteFIN11030(ids).pipe(untilDestroyed(this)).pipe(untilDestroyed(this)).subscribe({
       next: () => {
         this.onSubmit(this.queryForm);
         this.selectedRows = [];
@@ -46,7 +47,7 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
-      this.fin11030Service.queryFIN11030(frm.value).pipe(finalize(() => this.loading = false)).subscribe((response) => {
+      this.fin11030Service.queryFIN11030(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response) => {
         this.data = response.Data.map((item: APS2001Data) => ({
           ...item,
           SAL_GUIYYYYMM: this.convertYYYYMMToDate(item.SAL_GUIYYYYMM)

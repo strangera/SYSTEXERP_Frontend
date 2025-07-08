@@ -4,6 +4,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { Sysbq00Service, Sysbq00Data } from '../../../service/api/sys/sysbq00.service';
 import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-sysbq00',
@@ -49,7 +50,7 @@ export class SYSBQ00Component extends BasicQueryPageComponent<Sysbq00Data> imple
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
-      this.sysbq00Service.querySYSBQ00(frm.value).pipe(finalize(() => this.loading = false)).subscribe(res => {
+      this.sysbq00Service.querySYSBQ00(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         this.data = res.Data
         this.totalRecords = res.TotalCount || 0;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -61,7 +62,7 @@ export class SYSBQ00Component extends BasicQueryPageComponent<Sysbq00Data> imple
     const idList = rows.map(r => r.id).filter((id): id is number => id !== undefined);
     if (idList.length === 0) return;
     this.loading = true;
-    this.sysbq00Service.deleteSYSBQ00(idList).pipe(finalize(() => this.loading = false)).subscribe(res => {
+    this.sysbq00Service.deleteSYSBQ00(idList).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
       this.messageService.successBubble(res.Message);
       this.onSubmit(this.queryForm); // 重新查詢
     });

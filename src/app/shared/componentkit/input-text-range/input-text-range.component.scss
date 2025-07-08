@@ -1,21 +1,15 @@
-::ng-deep label {
-  margin-bottom: 0.25rem;
-  font-weight: 500;
-}
-
-::ng-deep .p-inputgroup {
-  width: 100%;
-}
-
-::ng-deep input.p-inputtext {
-  height: 2.5rem;
-}
-::ng-deep .range-separator {
+.datetime-range {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 2.5rem;
-  line-height: 1;
-  font-size: 1rem;
-  padding: 0 0.5rem;
+  flex-direction: column;
+}
+
+.datetime-inputs {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
 }

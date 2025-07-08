@@ -56,7 +56,7 @@
       <app-table dataKey="PLU_MagNo" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
         [showCheckBox]="isFormCreateable" (selectionChange)="selectedItems = $event" [showEdit]="false"
         [showDetail]="false" [showInsert]="true" (insert)="dialogVisible = true" [showRowEdit]="true"
-        (delete)="onDelete($event)"
+        (delete)="onDelete($event)" [showManage]="!isFormReadable" [showReportMode]="false"
         [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true"
         (rowEditSave)="onRowEditSave($event)" [showCaption]="isFormCreateable" />
 
@@ -91,8 +91,8 @@
     </div>
   </form>
   <hr />
-  <app-table tableKey="fin11200DialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
-    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog"
+  <app-table tableKey="tls52010CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
+    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
     (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
     [isRowSelectable]="isRowSelectable.bind(this)" [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)"

@@ -88,4 +88,10 @@ export class TLS13010Service {
       catchError(this.errorHandler.handleError)
     );
   }
+  queryTLS13010ChargeUnified(request: { TalentId: string; CurrentTltTermType: string }) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010ChargeUnified`, request).pipe(
+      tap((res) => console.log('統一抽成設定查詢結果:', res)),
+      catchError(this.errorHandler.handleError)
+    );
+  }
 }

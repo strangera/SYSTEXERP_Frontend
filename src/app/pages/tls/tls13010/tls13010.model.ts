@@ -1,6 +1,42 @@
 // tls13010.model.ts
 // 統一管理 TLS13010 相關型別
 
+export enum WorkflowStep {
+  QUERY = 0,           // 查詢頁面
+  CONTRACT_INFO = 1,   // 契約基本資訊 (CRU)
+  DEDUCTION = 2,       // 代扣款設定 (NEXT1)
+  COMMISSION = 3,      // 抽成設定 (NEXT2)
+  CONDITION = 4,       // 條件設定 (NEXT3)
+  FINAL = 5            // 最終確認
+}
+
+export interface WorkflowStatus {
+  currentStep: WorkflowStep;
+  completedSteps: WorkflowStep[];
+  canProceed: boolean;
+  contractId: string | null;
+  lastModified: Date;
+  isNewContract?: boolean;
+}
+
+export interface ContractDataStructure {
+  contractId: string | null;
+  queryRowData: ContractInfo | null;
+  step1: ContractInfo | null;
+  step2: FareItem[];
+  step3: CommissionItem[];
+  step4: ConditionItem[];
+  step5: FinalData | null;
+  dataToDelete: any | null;
+  unifiedCommissionData: UnifiedCommissionResponse | null; // 🎯 新增
+  metadata: {
+    createdAt: Date;
+    lastModified: Date;
+    version: number;
+    _isNewContract: boolean;
+  };
+}
+
 // 查詢結果/合約主資料型別
 export interface ContractItem {
   talent_id: string;
@@ -135,6 +171,7 @@ export interface ContractInfo {
   bus_type?: string;
   bus_class?: string;
   tlt_term_type?: string;
+  _isNewContract?: boolean;
 }
 
 // 代扣款設定（next1）
@@ -246,7 +283,7 @@ export interface DiscountSettingItem {
   cag_barcode: string;
   startDate: Date;      // 對應 TLTTALENT_CHARGED.tlt_bdate
   endDate: Date;        // 對應 TLTTALENT_CHARGED.tlt_edate
-  rate: number;
+  rate?: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
 }
 export interface AnnualPerformanceItem {
@@ -282,6 +319,10 @@ export interface BaseConditionItem {
   talent_id: string;
   _status?: 'original' | 'new' | 'modified' | 'deleted';
   _isNew?: boolean;
+
+  _fromNext2?: boolean; // 🎯 新增：標記是否來自 Next2
+
+  _readonly?: boolean;  // 🎯 新增：標記是否唯讀
 }
 
 // 一般抽成條件
@@ -309,7 +350,9 @@ export interface BaseRentHigherCondition extends BaseConditionItem {
   cag_bdate: string;        // 帳務起始日
   cag_edate: string;        // 帳務結束日
   base_rent: number;        // 租金金額
-  cag_charge_rate: number;  // 抽成率
+  cag_charge_rate?: number;  // 抽成率
+
+  _fromNext2?: boolean; // 標記是否來自 Next2 的抽成設定
 }
 
 // 包底抽成條件 (對應 TLTTALENT_LIMIT)
@@ -382,6 +425,288 @@ export interface BaseDataItem {
   _isNew?: boolean;
 }
 
+export interface UnifiedCommissionResponse {
+  TalentId: string;
+  TalentName: string;
+  OriginalTltTermType: string;
+  CurrentTltTermType: string;
+  IsTermTypeChanged: boolean;
+  HasError: boolean;
+  ErrorMessage?: string | null;
+  ActionType: string; // 'LOAD_EXISTING' | 'CLEAR_AND_INIT' | 'INIT_NEW' | 'ERROR'
+  UserMessage?: string;
+  Warning?: UnifiedCommissionWarning;
+  ExistingChargeData?: TalentChargeApiData; // Next2 用的抽成設定資料
+  RentSettingData?: RentSettingApiData;     // Next3 用的條件設定資料
+  DataToDelete?: CommissionDataStructure;   // 要刪除的舊資料
+  NewDataStructure?: NewCommissionDataStructure; // 新的資料結構
+}
+
+export interface UnifiedCommissionWarning {
+  Message: string;
+  ItemsToBeDeleted: string[];
+  TotalItemsCount: number;
+  HasCriticalData: boolean;
+}
+
+// Next2 抽成設定 API 資料格式
+export interface TalentChargeApiData {
+  TalentId: string;
+  ChargeSettings: ChargeSettingApiItem[];
+  TotalRecords: number;
+}
+
+// 抽成設定 API 項目
+export interface ChargeSettingApiItem {
+  id: number;
+  talent_id: number;
+  tlt_id: string;
+  tlt_id_desc: string;
+  cag_bdate: string;
+  cag_edate: string;
+  cag_taxtype: string;
+  sst_amount: number | null;
+  sst_rate: number | null;
+  cap_saletype1: string | null;
+  cap_saletype2: string | null;
+  cag_remark: string | null;
+  ChargeDetails: ChargeDetailApiItem[];
+  YearChargeDetails: YearChargeDetailApiItem[];
+  LevelChargeDetails: LevelChargeDetailApiItem[];
+}
+
+// 抽成明細 API 項目
+export interface ChargeDetailApiItem {
+  id: number;
+  talent_id: number;
+  tlt_id: string;
+  cag_barcode: string;
+  tlt_bdate: string;
+  tlt_edate: string;
+  cag_charge_rate: number;
+  barcode_desc?: string;
+}
+
+// 年度抽成明細 API 項目
+export interface YearChargeDetailApiItem {
+  id: number;
+  talent_id: number;
+  tlt_id: string;
+  tlt_bdate: string;
+  tlt_edate: string;
+  year_amount: number;
+  extra_rate: number;
+}
+
+// 層級抽成明細 API 項目
+export interface LevelChargeDetailApiItem {
+  id: number;
+  talent_id: number;
+  tlt_id: string;
+  seq_no: number;
+  cag_barcode: string;
+  level_bmount: number;
+  level_eamount: number;
+  level_charge_rate: number;
+  barcode_desc?: string;
+}
+
+// Next3 條件設定 API 資料格式
+export interface RentSettingApiData {
+  CommissionMasters?: CommissionMasterApiItem[];
+  ChargedDetails?: ChargeDetailApiItem[];
+  RentDetails?: RentDetailApiItem[];
+  LimitDetails?: LimitDetailApiItem[];
+  LevelDetails?: LevelDetailApiItem[];
+}
+
+// 抽成主檔 API 項目
+export interface CommissionMasterApiItem {
+  id: number;
+  talent_id: number;
+  tlt_id: string;
+  tlt_id_desc: string;
+  cag_bdate: string;
+  cag_edate: string;
+  cag_taxtype: string;
+  sst_amount: number | null;
+  sst_rate: number | null;
+  cap_saletype1: string | null;
+  cap_saletype2: string | null;
+  cag_remark: string | null;
+}
+
+// 租金明細 API 項目
+export interface RentDetailApiItem {
+  id: number;
+  talent_id: number;
+  tlt_id: string;
+  cag_bdate: string;
+  cag_edate: string;
+  base_rent: number;
+}
+
+// 包底明細 API 項目
+export interface LimitDetailApiItem {
+  id: number;
+  talent_id: number;
+  tlt_id: string;
+  cag_bdate: string;
+  cag_edate: string;
+  limit_amt: number;
+  limit_charge_rate: number;
+}
+
+// 階梯明細 API 項目
+export interface LevelDetailApiItem {
+  id: number;
+  talent_id: number;
+  seq_no: number;
+  cag_bdate: string;
+  cag_edate: string;
+  limit_amt?: number;
+  start_number: number;
+  end_number: number;
+  charge_rate: number;
+}
+
+// ========== API 請求/回應統一格式 ==========
+
+// 統一抽成設定請求
+export interface UnifiedCommissionRequest {
+  TalentId: string;
+  CurrentTltTermType: string;
+}
+
+// 統一抽成設定回應
+export interface UnifiedCommissionApiResponse {
+  Status: string;
+  Data: UnifiedCommissionResponse;
+  Error?: any;
+  Meta?: {
+    Timestamp: string;
+    RequestId: string;
+  };
+  Message?: string;
+  TotalCount?: number;
+  TotalPage?: number;
+}
+
+// ========== 資料轉換相關 Interface ==========
+
+// API 轉前端資料轉換器介面
+export interface ApiDataConverter {
+  convertChargeSettingsToCommissionItems(apiData: TalentChargeApiData): CommissionItem[];
+  convertRentSettingToConditionItems(apiData: RentSettingApiData, commissionType: string): ConditionItem[];
+  convertCommissionItemsToApiFormat(items: CommissionItem[]): any;
+  convertConditionItemsToApiFormat(items: ConditionItem[], commissionType: string): any;
+}
+
+// ========== 狀態管理相關 Interface ==========
+
+// 資料載入狀態
+export interface DataLoadingState {
+  isLoading: boolean;
+  isLoaded: boolean;
+  hasError: boolean;
+  errorMessage?: string;
+  lastLoadTime?: Date;
+}
+
+// 步驟驗證結果
+export interface StepValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  canProceed: boolean;
+}
+
+// ========== 服務層 Interface ==========
+
+// ContractFlowService 介面
+export interface IContractFlowService {
+  // 工作流程管理
+  startWorkflow(queryRowData: any): void;
+  getCurrentStatus(): WorkflowStatus;
+  canAccessStep(targetStep: WorkflowStep): boolean;
+
+  // 資料管理
+  saveStep1Data(data: ContractInfo): void;
+  saveStep2Data(data: FareItem[]): void;
+  saveStep3Data(data: CommissionItem[]): void;
+  saveStep4Data(data: ConditionItem[]): void;
+
+  getStep1Data(): ContractInfo | null;
+  getStep2Data(): FareItem[];
+  getStep3Data(): CommissionItem[];
+  getStep4Data(): ConditionItem[];
+
+  // 統一抽成設定管理
+  setUnifiedCommissionData(data: UnifiedCommissionResponse): void;
+  getUnifiedCommissionData(): UnifiedCommissionResponse | null;
+  getRentSettingDataForNext3(): RentSettingApiData | null;
+
+  // 其他
+  clearAllData(): void;
+  generateSubmitData(): SubmitDataStructure;
+}
+
+// ========== 元件 Interface ==========
+
+// Next2 元件資料介面
+export interface Next2ComponentData {
+  commissionData: CommissionItem[];
+  contractInfoData: ContractInfo[];
+  currentTalentId: string;
+  selectedSettingTab: string;
+  loading: boolean;
+  dataLoaded: boolean;
+}
+
+// Next3 元件資料介面
+export interface Next3ComponentData {
+  contractInfoData: ContractInfo[];
+  currentTalentId: string;
+  fixedRentItems: FixedRentCondition[];
+  baseRentHigherItems: BaseRentHigherCondition[];
+  generalCommissionItems: GeneralCommissionCondition[];
+  baseCommissionItems: BaseCommissionCondition[];
+  graduatedItems: GraduatedCommissionCondition[];
+  baseTierItems: BaseTierCondition[];
+  loading: boolean;
+}
+
+// ========== 表格相關 Interface ==========
+
+// 可編輯表格事件介面
+export interface EditableTableEvents {
+  onSave: (event: { oldData: any; newData: any }) => void;
+  onEdit: (data: any) => void;
+  onCancel: (data: any) => void;
+  onAdd?: () => void;
+  onBatchDelete?: (selectedItems: any[]) => void;
+}
+
+// 展開式表格事件介面
+export interface ExpandableTableEvents extends EditableTableEvents {
+  onDetailSave: (event: { oldData: any; newData: any; parentData: any }) => void;
+  onDetailEdit: (event: any) => void;
+  onDetailCancel: (parentData: any) => void;
+  onDetailTabChange?: (event: { rowData: any; tabId: string }) => void;
+  onAddDetailItem?: (parentData: any) => void;
+  onDetailBatchDelete?: (event: { selectedDetails: any[]; parentData: any; rowIndex: number }) => void;
+}
+
+// 新資料結構定義
+export interface NewCommissionDataStructure {
+  TermType: string;
+  ChargedDetails?: any[];
+  RentDetails?: any[];
+  LimitDetails?: any[];
+  LevelDetails?: any[];
+}
+
+
 // 提交資料結構
 export interface SubmitDataStructure {
   step1: {
@@ -417,7 +742,9 @@ export interface SubmitDataStructure {
     contractId: string;
     submittedAt: Date;
     totalOperations: number;
-    hasLegacyDataToDelete?: boolean; // 🎯 新增：標記是否有舊資料要刪除
+    hasLegacyDataToDelete?: boolean; // 標記是否有舊資料要刪除
+    isNewContract?: boolean;
+    dataVersions?: Record<string, number>;
   };
 }
 
@@ -1025,6 +1352,67 @@ export class Step3DataChangeTracker {
     return nextYear.toISOString().split('T')[0];
   }
 }
+
+export class Next3ComponentHelper {
+
+  /**
+   * 安全地取得 ID 字串
+   */
+  static safeGetIdString(id: number | string | undefined): string {
+    if (id === undefined || id === null) {
+      return '';
+    }
+    return id.toString();
+  }
+
+  /**
+   * 安全地分割 ID 字串
+   */
+  static safeSpiltId(id: number | string | undefined): string[] {
+    const idStr = this.safeGetIdString(id);
+    return idStr ? idStr.split('_') : [];
+  }
+
+  /**
+   * 檢查是否為來自 Next2 的有效 ID
+   */
+  static isValidNext2Id(id: number | string | undefined): boolean {
+    const parts = this.safeSpiltId(id);
+    return parts.length >= 3 && parts[0] === 'next2';
+  }
+
+  /**
+   * 從 Next2 ID 取得原始 commission ID
+   */
+  static extractCommissionIdFromNext2(id: number | string | undefined): string {
+    const parts = this.safeSpiltId(id);
+    return parts.length >= 2 ? parts[1] : '';
+  }
+
+  /**
+   * 從 Next2 ID 取得明細 ID
+   */
+  static extractDetailIdFromNext2(id: number | string | undefined): string {
+    const parts = this.safeSpiltId(id);
+    return parts.length >= 3 ? parts[2] : '';
+  }
+
+  /**
+   * 安全地取得數值
+   */
+  static safeGetNumber(value: number | undefined): number {
+    return value !== undefined ? value : 0;
+  }
+
+  /**
+   * 檢查抽成類型是否需要整合 Next2 資料
+   */
+  static shouldIntegrateNext2Data(commissionType: string | undefined): boolean {
+    return commissionType === '2' || commissionType === '3';
+  }
+}
+
+
 
 export type BaseRentHigherItem = BaseRentHigherCondition;
 export type BaseCommissionItem = BaseCommissionCondition;

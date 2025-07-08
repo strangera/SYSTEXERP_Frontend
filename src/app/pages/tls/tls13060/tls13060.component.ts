@@ -7,6 +7,7 @@ import { VendorCategoryOptionsService } from '../../../service/api/dropdownservi
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { TLS13060ResponseItem, TLS13060Service } from '../../../service/api/tls/tls13060.service';
 import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-tls13060',
@@ -62,17 +63,17 @@ export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseI
 
   ngOnInit(): void {
     this.initializePage('TLS13060', '/TLS/TLS13060cru', this.queryForm, (form) => this.onSubmit(form));
-    this.vendorCategoryOptionsService.getVendorCategoryOptions('1').subscribe((res) => {
+    this.vendorCategoryOptionsService.getVendorCategoryOptions('1').pipe(untilDestroyed(this)).subscribe((res) => {
       this.vandorCategoryOptions = res;
     });
-    this.locationOptionsService.getLocationOptions().subscribe((res) => {
+    this.locationOptionsService.getLocationOptions().pipe(untilDestroyed(this)).subscribe((res) => {
       this.locationOptions = res;
     });
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tLS13060Service.queryTLS13060(frm.value).pipe(finalize(() => this.loading = false)).subscribe(response => {
+      this.tLS13060Service.queryTLS13060(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(response => {
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);

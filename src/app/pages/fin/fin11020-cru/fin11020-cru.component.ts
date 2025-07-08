@@ -4,6 +4,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { guiStatusOptions, guiTypeOptions, MainInvoiceData } from '../fin11020/fin11020.model';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { Fin11020Service } from '../../../service/api/fin/fin11020.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 //1.1.1.2 發票基本資料維護 CRU
 @Component({
@@ -50,7 +51,7 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
       const qty = Math.floor(totQtyValue / 50);
       this.dataForm.get('GUI_Qty')?.setValue(qty);
     }
-    this.dataForm.get('GUI_EndNo')?.valueChanges.subscribe(endNoValue => {
+    this.dataForm.get('GUI_EndNo')?.valueChanges.pipe(untilDestroyed(this)).subscribe(endNoValue => {
       const begNoValue = this.dataForm.get('GUI_BegNo')?.value;
 
       if (begNoValue !== null && begNoValue !== '' && endNoValue !== null && endNoValue !== '') {
@@ -73,7 +74,7 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
       }
     });
     // 監聽「券數」變更，自動計算 GUI_TotQty
-    this.dataForm.get('GUI_Qty')?.valueChanges.subscribe(value => {
+    this.dataForm.get('GUI_Qty')?.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
       const qty = Number(value);
       if (!isNaN(qty)) {
         const totalQty = qty * 50;
@@ -97,7 +98,7 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
       const serviceCall = this.isFormCreateable
         ? this.fin11020Service.insertFIN11020(this.buildInsertBody(frm))
         : this.fin11020Service.updateFIN11020(this.buildUpdateBody(frm));
-      serviceCall.subscribe({
+      serviceCall.pipe(untilDestroyed(this)).subscribe({
         next: () => {
           this.loading = false;
         },

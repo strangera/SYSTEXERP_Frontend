@@ -1,45 +1,27 @@
-<!-- ✅ LABEL 單獨一行 -->
-<label class="block font-medium mb-0">
-  {{ label }}(起迄)
-  <span *ngIf="isRequired" class="required">*</span>
-</label>
-
-<!-- ✅ 輸入框區塊，一行內橫向排列 -->
-<div class="flex items-end gap-2">
-  <!-- 開始輸入框 -->
-  <div class="field">
-    <p-inputGroup>
-      <input
-        type="text"
-        pInputText
-        [formControl]="startControl"
-        [placeholder]="startLabel || placeholder"
-        [ngClass]="{ 'ng-invalid ng-dirty': submitted && startControl.errors }"
-        (input)="onStartInputChange($event)"
-        (blur)="onStartBlur($event)"
-      />
+<div class="grid p-fluid">
+  <div class="col pb-0">
+    <label for="input-text-range">{{ startLabel ? startLabel : label }}
+      <span *ngIf="isRequired" class="required">*</span>
+    </label>
+    <p-inputGroup id="input-text-start">
+      <input type="text" pInputText id="input-text-range" [formControl]="startControl" [placeholder]="placeholder"
+        [ngClass]="{'ng-dirty ng-invalid': submitted && startControl.errors}"
+        (onInputChange)="onStartInputChange($event)" (onBlur)="onStartBlur($event)" />
     </p-inputGroup>
+    <app-control-messages [onerror]="submitted || (startControl.touched && startControl.invalid)"
+      [control]="startControl"></app-control-messages>
   </div>
-
-  <!-- 分隔符號 -->
-  <div class="flex items-center" style="min-height: 2.5rem; padding-top: 4px;">~</div>
-
-  <!-- 結束輸入框 -->
-  <div class="field">
-    <p-inputGroup>
-      <input
-        type="text"
-        pInputText
-        [formControl]="endControl"
-        [placeholder]="endLabel || placeholder"
-        [ngClass]="{
-          'ng-invalid ng-dirty':
-            (submitted && endControl.errors) ||
-            (errorForGroup && startControl.parent?.errors)
-        }"
-        (input)="onEndInputChange($event)"
-        (blur)="onEndBlur($event)"
-      />
+  <span class="align-self-center text-center">~</span>
+  <div class="col pb-0">
+    <label for="input-text-range">{{ endLabel ? endLabel : label }}
+      <span *ngIf="isRequired" class="required">*</span>
+    </label>
+    <p-inputGroup id="input-text-end">
+      <input type="text" pInputText id="input-text-range" [formControl]="endControl" [placeholder]="placeholder"
+        [ngClass]="{'ng-dirty ng-invalid': submitted && endControl.errors|| (this.errorForGroup && this.startControl.parent?.errors)}"
+        (onInputChange)="onEndInputChange($event)" (onBlur)="onEndBlur($event)" />
     </p-inputGroup>
+    <app-control-messages [onerror]="submitted || (endControl.touched && endControl.invalid)" [control]="startControl"
+      [errorForGroup]='errorForGroup'></app-control-messages>
   </div>
 </div>

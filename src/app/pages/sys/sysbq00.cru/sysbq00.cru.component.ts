@@ -3,6 +3,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Sysbq00Data, Sysbq00Request, Sysbq00Service } from '../../../service/api/sys/sysbq00.service';
 import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-sysbq00-cru',
@@ -38,7 +39,7 @@ export class SYSBQ00CRUComponent extends BasicCruPageComponent<Sysbq00Data> impl
         ? this.sysbq00Service.insertSYSBQ00(request)
         : this.sysbq00Service.updateSYSBQ00(request);
 
-      save$.pipe(finalize(() => this.loading = false)).subscribe(res => {
+      save$.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         this.messageService.successBubble(res.Message);
 
         if (this.isFormCreateable) {

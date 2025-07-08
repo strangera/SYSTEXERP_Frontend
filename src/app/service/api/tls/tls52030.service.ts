@@ -93,23 +93,25 @@ export interface IODDetail {
 }
 
 /** 新增 POS2018 資料表 (insertTLS52030) 的請求介面 */
-export interface IInsertTLS52030Request {
+export interface ITLS52030Request {
+  id?: number; // ID
+  ODM_No?: string; // 進貨單號
   SYS_StoreNo: string; // 公司編號/店號
   VEN_No: string; // 廠商代號
   LOGO_No: string; // 品牌代碼
   HOS_No: string; // 倉庫代碼
-  org_id: string; // 組織代碼/所屬部門
+  org_id: string | null; // 組織代碼/所屬部門
   ODM_Date: string | Date; // 申請日期
   ODM_USR_No: string; // 申請人員
   ODM_USR_Name: string; // 申請人員姓名
   ODM_TotalBuyNet: number; // 未稅進價小計
   ODM_TotalBuyTax: number; // 進價稅額小計
   ODM_TotalBuyAmt: number; // 進價合計
-  ODM_TotalSaleNet: number; // 未稅售價小計
-  ODM_TotalSaleTax: number; // 售價稅額小計
+  ODM_TotalSaleNet?: number; // 未稅售價小計
+  ODM_TotalSaleTax?: number; // 售價稅額小計
   ODM_TotalSaleAmt: number; // 售價合計
-  ODM_Status: string; // 驗收狀態
-  ODM_TaxType: string; // 單據稅別
+  ODM_Status?: string; // 驗收狀態
+  ODM_TaxType?: string; // 單據稅別
   ODM_Remark: string | null; // 備註
   Details: IODDetail[]; // 明細資料陣列
 }
@@ -117,17 +119,8 @@ export interface IInsertTLS52030Request {
 /** 取得採購單資料 (GetPOS2016) 的請求介面 */
 export interface IGetPOS2016Request {
   LOGO_No?: string; // 品牌代碼
-  HOS_No?: string; // 倉庫代碼
+  HOS_No?: string | null; // 倉庫代碼
   VEN_No?: string; // 廠商代號
-}
-
-/** 取得採購單資料 (GetPOS2016) 的響應數據介面 */
-export interface IGetPOS2016Data {
-  PO_No: string; // 採購單號
-  APPLY_Date: string; // 申請日期
-  VEN_No: string; // 廠商代號
-  VEN_Name: string; // 廠商名稱
-  // 根據實際響應，這裡可能需要添加更多來自 POS2016 的字段
 }
 
 /** 取得採購單明細及驗收資料 (GetPOS2017AndPOS2019) 的請求介面 */
@@ -180,44 +173,12 @@ export interface IGetPOS2017AndPOS2019Response {
   // Swagger 範例沒有給出 Data 結構，這裡假設會返回這兩個陣列
 }
 
-/** 更新 POS2018、POS2019 資料 (updateTLS52030) 的請求介面 */
-export interface IUpdateTLS52030Request {
-  id: number; // ID
-  SYS_StoreNo: string; // 公司編號/店號
-  VEN_No: string; // 廠商代號
-  LOGO_No: string; // 品牌代碼
-  HOS_No: string; // 倉庫代碼
-  org_id: string; // 組織代碼/所屬部門
-  ODM_Date: string | Date; // 申請日期
-  ODM_USR_No: string; // 申請人員
-  ODM_USR_Name: string; // 申請人員姓名
-  ODM_TotalBuyNet: number; // 未稅進價小計
-  ODM_TotalBuyTax: number; // 進價稅額小計
-  ODM_TotalBuyAmt: number; // 進價合計
-  ODM_TotalSaleNet: number; // 未稅售價小計
-  ODM_TotalSaleTax: number; // 售價稅額小計
-  ODM_TotalSaleAmt: number; // 售價合計
-  ODM_Status: string; // 驗收狀態
-  ODM_TaxType: string; // 單據稅別
-  ODM_Remark: string | null; // 備註
-  Details: IODDetail[]; // 明細資料陣列 (更新時包含 id)
-}
-
 /** 更新 POS2018 資料狀態 (updateTLS52030_Status) 的請求介面 */
 export interface IUpdateTLS52030StatusRequest {
-  id: number; // ID
+  ODM_No: string; // 驗收編號
   ODM_Status: string; // 驗收狀態 (例如 "審核", "作廢", "反審核")
   ODM_Status_Ori: string; // 原始狀態
   Request_No?: string | null; // 請款單號 (如果相關)
-  APRV_Date?: string | Date | null; // 審核(驗收)日期
-  APRV_USR_No?: string | null; // 審核人員
-  APRV_USR_Name?: string | null; // 審核人員姓名
-  ReAPRV_Date?: string | Date | null; // 反審核日期
-  ReAPRV_USR_No?: string | null; // 反審核人員
-  ReAPRV_USR_Name?: string | null; // 反審核人員姓名
-  Void_Date?: string | Date | null; // 作廢日期
-  Void_USR_No?: string | null; // 作廢人員
-  Void_USR_Name?: string | null; // 作廢人員姓名
 }
 
 @Injectable({
@@ -242,7 +203,7 @@ export class Tls52030Service {
    * @param data 要新增的進貨單資料，包含主檔及明細
    * @returns API 響應
    */
-  insertTLS52030(data: IInsertTLS52030Request): Observable<ApiResponse<any>> {
+  insertTLS52030(data: ITLS52030Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertTLS52030`, data);
   }
 
@@ -251,8 +212,8 @@ export class Tls52030Service {
    * @param params 查詢條件 (LOGO_No, HOS_No, VEN_No)
    * @returns 包含 IGetPOS2016Data 陣列的 API 響應
    */
-  getPOS2016(params: IGetPOS2016Request): Observable<ApiResponse<IGetPOS2016Data[]>> {
-    return this.http.post<ApiResponse<IGetPOS2016Data[]>>(`${this.apiUrl}/GetPOS2016`, params);
+  getPOS2016(params: IGetPOS2016Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/GetPOS2016`, params);
   }
 
   /**
@@ -260,8 +221,17 @@ export class Tls52030Service {
    * @param params 查詢條件 (PO_NoList)
    * @returns 包含 POS2017 和 POS2019 資料的 API 響應
    */
-  getPOS2017AndPOS2019(params: IGetPOS2017AndPOS2019Request): Observable<ApiResponse<IGetPOS2017AndPOS2019Response>> {
-    return this.http.post<ApiResponse<IGetPOS2017AndPOS2019Response>>(`${this.apiUrl}/GetPOS2017AndPOS2019`, params);
+  getPOS2017AndPOS2019(params: IGetPOS2017AndPOS2019Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/GetPOS2017AndPOS2019`, params);
+  }
+
+  /**
+   * 取得進貨驗收明細資料 (POS2019)
+   * @param params 查詢條件 (ODM_No)
+   * @returns 包含 POS2019 資料的 API 響應
+   */
+  GetPOS2019(params: { ODM_No?: string }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/GetPOS2019`, params);
   }
 
   /**
@@ -269,7 +239,7 @@ export class Tls52030Service {
    * @param data 要更新的進貨單資料，包含主檔及明細
    * @returns API 響應
    */
-  updateTLS52030(data: IUpdateTLS52030Request): Observable<ApiResponse<any>> {
+  updateTLS52030(data: ITLS52030Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateTLS52030`, data);
   }
 
