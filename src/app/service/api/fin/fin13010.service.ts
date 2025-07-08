@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { catchError, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../shared/service/error-handler.service';
+import { ApiResponse } from '../../system/auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -17,15 +18,22 @@ export class FIN13010Service {
 
   //✅ 查詢
   queryFIN13010(query: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/FIN0000/FIN13010/queryFIN13010`, query).pipe(
+    return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13010`, query).pipe(
       tap(res => console.log('查詢結果:', res)),
       catchError(error => this.errorHandler.handleError(error))
     );
   }
+queryINV1000List(param: { GUI_Track: string }) {
+  return this.http.post<ApiResponse<any[]>>(
+    `${this.apiUrl}/FIN0000/INV1000/queryFIN13010_PURGUINo`,
+    param
+  );
+}
+
 
   // ✅ 新增
   insertFIN13010(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/FIN0000/FIN13010/insertFIN13010`, data).pipe(
+    return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/insertFIN13010`, data).pipe(
       tap(res => console.log('新增結果:', res)),
       catchError(error => this.errorHandler.handleError(error))
     );
@@ -33,11 +41,20 @@ export class FIN13010Service {
 
   // ✅ 更新
   updateFIN13010(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/FIN0000/FIN13010/updateFIN13010`, data).pipe(
+    return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/updateFIN13010`, data).pipe(
       tap(res => console.log('更新結果:', res)),
       catchError(error => this.errorHandler.handleError(error))
     );
   }
+  queryDetailByPURGUINo(param: { PUR_GUINo: string }) {
+  return this.http.post<any>('/FIN13010/queryDetailByPURGUINo', param);
+}
+queryCorrespondByGUINoCorrespond(param: { PUR_GUINo_Correspond: string }) {
+  return this.http.post<any>(
+    `${this.apiUrl}/FIN0000/INV1000/queryFIN13010_Correspond`,
+    param
+  );
+}
 //     // ✅ 查詢（使用假資料）
 //   queryFIN13010(query: any): Observable<any> {
 //   const mockData = [
