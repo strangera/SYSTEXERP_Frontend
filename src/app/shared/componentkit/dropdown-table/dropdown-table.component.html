@@ -5,9 +5,9 @@
         <label [for]="field.field">{{ field.header }}
           <span *ngIf="isRequired" class="required">*</span>
         </label>
-        <p-autoComplete [formControl]="control" [id]="field.field" [optionLabel]="optionLabel" (input)="onInputChange()"
-          (onFocus)="op.toggle($event)" [suggestions]="suggestions" [optionValue]="optionValue"
-          [placeholder]="control.disabled ? '' : placeholder"></p-autoComplete>
+        <p-autoComplete [formControl]="control" [id]="field.field" [optionLabel]="optionLabel"
+          (input)="onInputChange();op.hide()" (onFocus)="op.toggle($event)" [suggestions]="suggestions"
+          [optionValue]="optionValue" [placeholder]="control.disabled ? '' : placeholder"></p-autoComplete>
         <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
           [control]="control"></app-control-messages>
       </ng-container>
@@ -24,6 +24,8 @@
     <ng-content />
     <app-table class="col-12" [dataKey]="optionValue" [data]="dialogData" [selectedItems]="selectedItems"
       (select)="onSelectionChange($event)" [columns]="dialogColumns" [showHeader]="false" [showPage]="false"
-      [showCheckBox]="true" selectionMode="single" [showManage]="false" scrollHeight="200px" [loading]="loading" />
+      [showCheckBox]="true" selectionMode="single" [showManage]="false" scrollHeight="200px" [loading]="loading"
+      [multiSortMeta]="[{ field: optionValue, order: -1 }]" [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, formGroup)" [lazy]="true" [showCaption]="false" />
   </form>
 </p-overlayPanel>

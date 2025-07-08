@@ -6,6 +6,8 @@ import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime
 import { finalize, map, Subject, takeUntil } from 'rxjs';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
+import { FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 
 export const enum POStatus {
   已確認 = '1',
@@ -104,6 +106,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
     },
   ];
   constructor(
+    private tls52010Service: Tls52010Service,
     private tls52040Service: Tls52040Service,
     private dropDownListService: DropDownListService,
   ) { super(); }
@@ -166,5 +169,53 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
   }
   editDisabled(rowData: ITLS52040Data) {
     return rowData.ODM_Status !== POStatus.已確認;
+  }
+  // 管理編號
+  opLoading = false;
+  opForm = this.formBuilder.group({
+    queryNo: ['', [Validators.maxLength(20)]], // 商品管理編號/國際條碼/廠商貨號
+    PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
+    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
+  });
+  suggestions: IQueryPOS2004DetailResponse[] = [];
+  fieldsConfig: FieldsConfig[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
+    { field: 'PLU_Name', header: '商品名稱' },
+  ];
+  opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
+  opColumns: Column[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號' },
+    { field: 'PLU_No', header: '國際條碼' },
+    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
+    { field: 'PLU_Name', header: '商品名稱' },
+  ];
+  opTotalRecords = 0;
+  onAutoCompleteInputChange(event: any) {
+    const body = {
+      ...event,
+      VEN_No: '',
+      LOGO_No: '',
+      queryNo: event.PLU_MagNo || '',
+      pageSize: 30,
+      pageIndex: 1,
+      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
+    }
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.suggestions = [...results.Data];
+    });
+  }
+  onformValueChanged(event: IQueryPOS2004DetailRequest) {
+    this.opLoading = true;
+    const body = {
+      queryNo: event.queryNo || '',
+      PLU_Name: event.PLU_Name || '',
+      VEN_No: '',
+      LOGO_No: '',
+    };
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.opData = [...results.Data]; // 更新data資料
+      this.opTotalRecords = results.TotalCount;
+      this.opLoading = false;
+    });
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { HttpBackend, HttpClient } from '@angular/common/http';
@@ -13,6 +13,7 @@ import { QueryStateService } from '../../shared/service/query-state.service';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { registerLocaleData } from '@angular/common';
 import zhHant from '@angular/common/locales/zh-Hant';
+import { InactivityService } from './inactivity.service';
 registerLocaleData(zhHant, 'zh-Hant-TW');
 
 export interface ApiResponse<T> {
@@ -33,6 +34,7 @@ export interface ApiResponse<T> {
   providedIn: 'root'
 })
 export class AuthService {
+  private inactivityService?: InactivityService;
   private apiUrl: string = environment.ApiUrl;
   private userSubject: BehaviorSubject<UserInfo | null>;
   public user: Observable<UserInfo | null>;
@@ -50,6 +52,7 @@ export class AuthService {
     private notemessage: NotificationService,
     private queryStateService: QueryStateService,
     private httpBackend: HttpBackend,
+    private injector: Injector,
   ) {
     const userStorage: any = this.getUserInfo();
     this.userSubject = new BehaviorSubject(userStorage);
@@ -100,6 +103,12 @@ export class AuthService {
             if (response.Status === '0000') {
               this.userSubject.next(response.Data);
               localStorage.setItem('UserInfo', JSON.stringify(response.Data));
+              if (!this.inactivityService) {
+                this.inactivityService = this.injector.get(InactivityService);
+              }
+              this.inactivityService.setupListener();
+              this.inactivityService.startTimer();
+              this.queryStateService.clearAllQueryStates();
               this.router.navigate(['/sso/dashboard']);
               return response;
             } else {

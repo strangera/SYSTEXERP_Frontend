@@ -72,12 +72,18 @@
   [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
-      <app-input-text class="col-12 col-6 lg:col-4" label="商品管理編號" controlName="PLU_MagNo"
-        [control]="dialogQueryForm.controls.PLU_MagNo" />
-      <app-input-text class="col-12 col-6 lg:col-8" label="商品名稱" controlName="PLU_Name"
+      <app-dropdown-table class="col-12" [control]="dialogQueryForm.controls.PLU_MagNo" [submitted]="submitted"
+        optionLabel="PLU_MagNo" optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+        (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
+        [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
+        [totalRecords]="opTotalRecords">
+        <app-input-text class="col-12 md:col-6" label="商品管理編號/國際條碼/廠商貨號" controlName="queryNo"
+          [control]="opForm.controls.queryNo" />
+        <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
+          [control]="opForm.controls.PLU_Name" />
+      </app-dropdown-table>
+      <app-input-text class="col-12" label="商品名稱" controlName="PLU_Name"
         [control]="dialogQueryForm.controls.PLU_Name" />
-    </div>
-    <div class="grid p-fluid">
       <app-dropdown class="col-12 col-6 lg:col-4" label="大分類代碼" controlName="CAT_LNo"
         [control]="dialogQueryForm.controls.CAT_LNo" [options]="CAT_LNoOptions" optionLabel="label" optionValue="No" />
       <app-dropdown class="col-12 col-6 lg:col-4" label="中分類代碼" controlName="CAT_MNo"
