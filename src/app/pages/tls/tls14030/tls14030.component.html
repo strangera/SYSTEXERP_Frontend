@@ -76,7 +76,7 @@
             <app-multi-select
               label="組織別"
               [options]="orgOption"
-              optionLabel="Label"
+              optionLabel="Name"
               optionValue="No"
               [control]="queryForm.controls.org_idList"
               [submitted]="submitted"
@@ -172,7 +172,7 @@
 <div class="card">
   <app-table tableKey="TLS14030" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-    [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords"
+    [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'id', order: 1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
     [isRowSelectable]="isRowSelectable" [loading]="loading"></app-table>
 </div>

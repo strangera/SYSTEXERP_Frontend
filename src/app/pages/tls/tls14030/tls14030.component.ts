@@ -39,7 +39,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
 
     ticket_kind_List: [[]], // 票據種類 非必填但有限制長度 "1=本票 2=支票 3=行銀保證函 9=其他"
 
-    ...createPaginationConfig([{ field: 'talent_id', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
@@ -47,7 +47,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   columns: Column[] = [// 表格欄位定義
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'ven_uniform', header: '廠商統一編號', visible: true },
+    { field: 'VEN_No', header: '廠商代號', visible: true },
     { field: 'VEN_Name', header: '廠商名稱', visible: true },
     { field: 'ticket_type', header: '保證票型態', visible: true,
       format: (value: string) =>
@@ -74,10 +74,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   ];
   selectedItems: Garantee_Ticket[] = [];// 多選項目
 
-  tlt_noListOption: option[] = [
-    { value: '000517', label: '000517' },
-  ]; //專櫃編號列表
-
+  tlt_noListOption: option[] = []; //專櫃編號列表
   locationOption: apiOption[] = []; //位置編號
   areaOption: apiOption[] = []; //區域
   floorOption: apiOption[] = []; //樓層
@@ -134,10 +131,12 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   }
   // 提交查詢：處理表單並呼叫查詢 API
   onSubmit(frm: FormGroup): void {
+    console.log('14030要求',frm.value);
     this.handleSubmit(frm, () => {
       this.tls14030Service.queryTLS14030(frm.value).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
+            
             this.data = response.Data || [];
             this.totalRecords = response.TotalCount || response.Data.length; // 排序需要
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -247,7 +246,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
 
     // 組織 下拉
     this.tls14030Service
-          .queryTLTTALENT_Status_DropDownList({})
+          .querySYS3100_DropDownList({})
           .subscribe((response) => {
             this.orgOption = response.Data.map((item: apiOption) => ({
               No: item.No,
@@ -258,5 +257,16 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
             console.log('orgOption:', this.orgOption);
           });
 
+    // 專櫃編號 下拉
+    this.tls14030Service
+          .queryTLTTALENT_DropDownList({})
+          .subscribe((response) => {
+            this.tlt_noListOption = response.Data.map((item: apiOption) => ({
+              value: item.No,
+              label: item.Name,
+            }));
+  
+            console.log('tlt_noListOption:', this.orgOption);
+          });
   }
 }

@@ -46,7 +46,6 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
 
       private skipTalentChange = false; //是否更新編號的旗標
 
-      //
       storageOptions: apiOption[] = [];
       allquery: Garantee_Ticket[] = [];
 
