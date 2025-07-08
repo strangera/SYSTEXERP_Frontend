@@ -1,90 +1,24 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()" label="新增"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="查詢條件" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="銷售日期"
-              [startControl]="queryForm.controls.salesStartdate"
-              [endControl]="queryForm.controls.salesEnddate"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-input-text label="格式代號" controlName="format_code" [control]="queryForm.controls.format_code"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="產檔日期"
-              [startControl]="queryForm.controls.imgStartdate"
-              [endControl]="queryForm.controls.imgEnddate"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="發票號碼"
-              [startControl]="queryForm.controls.startserialInvoice"
-              [endControl]="queryForm.controls.endserialInvoice"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-input-text label="格式名稱" controlName="format_name" [control]="queryForm.controls.format_name"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="收銀機代號"
-              [startControl]="queryForm.controls.startserialRegister"
-              [endControl]="queryForm.controls.endserialRegister"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="查詢條件依據"
-              controlName="queryCondition"
-              [options]="queryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.queryCondition"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="是否只顯示異常"
-              groupname="errorCheck"
-              [control]="queryForm.controls.errorCheck"
-              [options]="whetherOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
-          </div>
-        </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -92,11 +26,10 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+    <app-table tableKey="FIN11050" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event" [showDelete]="false" [showCheckBox]="false" dataKey="row_no"
+      [multiSortMeta]="[{ field: 'format_code', order: 1 }]" [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+      [isRowSelectable]="isRowSelectable" (edit)="onEdit($event)" (detail)="onDetail($event)"></app-table>
   </div>
 </div>

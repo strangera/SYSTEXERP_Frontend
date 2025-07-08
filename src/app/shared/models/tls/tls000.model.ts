@@ -229,7 +229,7 @@ export interface Garantee_Ticket {
   "talent_id": number,
   "tlt_no": string,
   "tlt_name": string,
-  "ven_uniform": string,
+  "VEN_No": string,
   "VEN_Name": string,
   "ticket_type": string,
   "ticket_no": string,

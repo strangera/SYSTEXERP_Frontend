@@ -22,19 +22,16 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
   customPageSize = 1000;
 
   queryForm = this.formBuilder.group({
-    saleDateStart: [new Date('2020-01-01') as Date, [Validators.required]],
-    saleDateEnd: [new Date('2020-01-15') as Date, [Validators.required]],
-    organizationCode: [{}],
-    regionCode: [],
-    businessTypeCode: [],
-    whetherDisplayBusinessType: [],
-    locationRadio: [],
+    TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],
+    TXN_DateEnd: [new Date('2020-01-15') as Date, [Validators.required]],
+    bus_type: [],
+    ShowBusType: [],
     tlt_building: [],
     tlt_floor: [],
     org_id: [],
-    bus_typeList: [],
-    tlt_no: [],
-    ...createPaginationConfig([{ field: 'area', order: 1 }])
+    area_no : [],
+    TLT_No: [],
+    ...createPaginationConfig
   });
 
   data: any[] = [];

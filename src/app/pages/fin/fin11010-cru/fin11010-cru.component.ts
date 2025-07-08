@@ -3,20 +3,13 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption } from '../../../shared/models/sys/sysb000.module';
 import { Fin11010Service } from '../../../service/api/fin/fin11010.service';
+import { AddButton } from '../../../shared/componentkit/table/table.model';
 
 // 定義設定狀態枚舉
 export enum SettingStatus {
   未確認 = '未確認',
   使用中 = '使用中',
   已過期 = '已過期'
-}
-
-// 定義 AddButton 介面
-interface AddButton {
-  label: string;
-  icon: string;
-  action: (rowData: any) => void;
-  disabled: (rowData: any) => boolean;
 }
 
 //1.1.1.1 營業人申報設定 CRU
