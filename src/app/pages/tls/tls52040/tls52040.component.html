@@ -8,13 +8,13 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 採購單號 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="退貨驗收單號" controlName="ODM_No"
-            [control]="queryForm.controls.ODM_No" [submitted]="submitted"></app-input-text>
-          <!-- 單據狀態 (採購單狀態) -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="退貨驗收單狀態" controlName="ODM_Status"
+          <!-- 退貨單號 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="退貨驗收單號" controlName="RJM_No"
+            [control]="queryForm.controls.RJM_No" [submitted]="submitted"></app-input-text>
+          <!-- 單據狀態 (退貨單狀態) -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="退貨驗收單狀態" controlName="RJM_Status"
             [options]="poStatusOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.ODM_StatusList" [submitted]="submitted"></app-multi-select>
+            [control]="queryForm.controls.RJM_StatusList" [submitted]="submitted"></app-multi-select>
           <!-- 管理編號 -->
           <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.PLU_MagNo"
             [submitted]="submitted" optionLabel="PLU_MagNo" optionValue="PLU_MagNo" [suggestions]="suggestions"
@@ -38,22 +38,19 @@
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉別" controlName="HOS_No"
             [options]="warehouseOptions" optionLabel="Name" optionValue="No" [control]="queryForm.controls.HOS_NoList"
             [submitted]="submitted"></app-multi-select>
-          <!-- 管理編號 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="管理編號" controlName="PLU_MagNo"
-            [control]="queryForm.controls.PLU_MagNo" [submitted]="submitted"></app-input-text>
         </div>
         <hr />
         <div class="grid p-fluid">
           <!-- 申請人員 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人" controlName="ODM_USR" [options]="userOptions"
-            optionLabel="label" optionValue="value" [control]="queryForm.controls.ODM_USR"
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人" controlName="APPLY_USR" [options]="userOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.APPLY_USR"
             [submitted]="submitted"></app-dropdown>
           <!-- 申請日期 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
-            [startControl]="queryForm.controls.ODM_Date_Start" [endControl]="queryForm.controls.ODM_Date_End"
+            [startControl]="queryForm.controls.APPLY_Date_Start" [endControl]="queryForm.controls.APPLY_Date_End"
             [submitted]="submitted"></app-calendar-range>
-          <!-- 採購單號 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="採購單號" controlName="PO_No"
+          <!-- 退貨單號 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="退貨單號" controlName="PO_No"
             [control]="queryForm.controls.PO_No" [submitted]="submitted"></app-input-text>
           <!-- 審核人員 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="審核人" controlName="APRV_USR" [options]="userOptions"
@@ -73,9 +70,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS52030" dataKey="ODM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+  <app-table tableKey="TLS52040" dataKey="RJM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
     (detail)="onDetail($event)" [editDisabled]="editDisabled"
-    [multiSortMeta]="[{ field: 'ODM_Date', order: -1 }, { field: 'ODM_No', order: 1 }]" [totalRecords]="totalRecords"
+    [multiSortMeta]="[{ field: 'APRV_Date', order: -1 }, { field: 'RJM_No', order: 1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
     [addButton]="addButton">
