@@ -1966,6 +1966,37 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     return this.commissionData.filter(item => item._status !== 'deleted');
   }
 
+  get currentCommissionType(): string {
+    // 優先從合約資訊表格資料中取得
+    if (this.contractInfoData && this.contractInfoData.length > 0) {
+      return this.contractInfoData[0].tlt_term_type || '3';
+    }
+
+    // 備用：從 Step1 資料取得
+    const step1Data = this.contractFlowService.getStep1Data();
+    if (step1Data?.tlt_term_type) {
+      return step1Data.tlt_term_type.toString();
+    }
+
+    // 預設值
+    return '3';
+  }
+
+  // 🎯 判斷是否為一般抽成（簡潔版本）
+  get isGeneralCommissionMode(): boolean {
+    return this.currentCommissionType === '3';
+  }
+
+  // 🎯 取得按鈕類型（簡潔版本）
+  getNextButtonType(): "submit" | "create" {
+    return this.isGeneralCommissionMode ? 'submit' : 'create';
+  }
+
+  // 🎯 取得按鈕標籤（簡潔版本）
+  getNextButtonLabel(): string {
+    return this.isGeneralCommissionMode ? '確認' : '下一步(租金設定)';
+  }
+
   onAddDetailItem(parentData: any) {
     // 檢查 parentData 是否有 currentTab
     if (!parentData.currentTab) {
@@ -2092,41 +2123,84 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   // 導航方法
   onSubmitNext(): void {
-    console.log('🚀 Next2 提交，開始儲存資料...');
-
-    // 🔍 Debug: 檢查目前的抽成資料
-    console.log('📋 目前抽成資料:', this.commissionData);
-    console.log('📋 抽成資料數量:', this.commissionData.length);
-
-    // 確保資料格式正確
-    this.commissionData.forEach((item, index) => {
-      console.log(`📋 抽成項目 ${index + 1}:`, {
-        id: item.id,
-        commissionType: item.commissionType,
-        commissionTypeName: item.commissionTypeName,
-        taxType: item.taxType,
-        discountSettingItems: item.discountSettingItems.length,
-        annualPerformanceItems: item.annualPerformanceItems.length,
-        discountLevelItems: item.discountLevelItems.length,
-        _status: item._status
-      });
-    });
-
-    // 🎯 重要：確保正確儲存到工作流程
+    // 儲存資料到工作流程
     this.saveCommissionDataToWorkflow();
 
+    // 檢查是否有抽成項目
     const hasCommissionItems = this.commissionData.length > 0;
     if (!hasCommissionItems) {
       this.notificationService.warnBubble('請至少設定一個抽成項目');
       return;
     }
 
-    // 🔍 Debug: 檢查儲存後的資料
-    const savedData = this.contractFlowService.getStep3Data();
-    console.log('✅ 已儲存的 Step3 資料:', savedData);
+    // 根據抽成別決定下一步
+    if (this.isGeneralCommissionMode) {
+      // 一般抽成：驗證資料並送出
+      const validation = this.validateGeneralCommissionData();
+      if (!validation.isValid) {
+        this.notificationService.warnBubble(validation.errors[0]);
+        return;
+      }
+      this.submitGeneralCommissionContract();
+    } else {
+      // 其他抽成別：導航到 Next3
+      this.router.navigate(['account/tls/tls13010next3']);
+    }
+  }
 
-    // 導航到 Next3
-    this.router.navigate(['account/tls/tls13010next3']);
+  private validateGeneralCommissionData(): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    // 檢查是否有抽成項目
+    if (!this.commissionData || this.commissionData.length === 0) {
+      errors.push('請至少設定一個抽成項目');
+      return { isValid: false, errors };
+    }
+
+    // 檢查每個抽成項目
+    for (let i = 0; i < this.commissionData.length; i++) {
+      const item = this.commissionData[i];
+      const itemIndex = i + 1;
+
+      // 檢查基本資料
+      if (!item.commissionTypeName || item.commissionTypeName.trim() === '') {
+        errors.push(`抽成項目 ${itemIndex} 的名稱不能為空`);
+      }
+
+      if (item.taxType === null || item.taxType === undefined) {
+        errors.push(`抽成項目 ${itemIndex} 的稅別不能為空`);
+      }
+
+      // 檢查折扣設定
+      const activeDiscountItems = item.discountSettingItems?.filter(d => d._status !== 'deleted') || [];
+      if (activeDiscountItems.length === 0) {
+        errors.push(`抽成項目 ${itemIndex} 至少需要一個折扣設定`);
+        continue;
+      }
+
+      // 檢查折扣設定的完整性
+      for (let j = 0; j < activeDiscountItems.length; j++) {
+        const discount = activeDiscountItems[j];
+        const discountIndex = j + 1;
+
+        if (!discount.cag_barcode) {
+          errors.push(`抽成項目 ${itemIndex} 的折扣設定 ${discountIndex} 的折扣別不能為空`);
+        }
+        if (!discount.rate || discount.rate <= 0) {
+          errors.push(`抽成項目 ${itemIndex} 的折扣設定 ${discountIndex} 的抽成率必須大於 0`);
+        }
+      }
+
+      // 如果已經有錯誤，提早結束檢查
+      if (errors.length > 0) {
+        break;
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors: errors
+    };
   }
 
   override onCancel(): void {
@@ -2169,5 +2243,130 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   saveAllChanges(): void {
     this.saveCommissionDataToWorkflow();
     this.notificationService.successBubble('所有變更已儲存');
+  }
+
+  private submitGeneralCommissionContract(): void {
+    console.log('📤 開始送出一般抽成合約...');
+
+    // 顯示載入中
+    this.loading = true;
+    this.notificationService.blockUi();
+
+    try {
+      // 🎯 準備完整的合約資料
+      const contractData = this.prepareCompleteContractData();
+
+      console.log('📋 準備送出的合約資料:', contractData);
+
+      // 🎯 TODO: 調用 API 送出合約 (目前先模擬)
+      this.callSubmitContractAPI(contractData);
+
+    } catch (error) {
+      console.error('❌ 準備合約資料時發生錯誤:', error);
+      this.loading = false;
+      this.notificationService.unblockUi();
+      this.notificationService.errorBubble('準備合約資料時發生錯誤');
+    }
+  }
+
+  private prepareCompleteContractData(): any {
+    console.log('🔄 準備完整合約資料...');
+
+    // 取得各步驟的資料
+    const step1Data = this.contractFlowService.getStep1Data(); // 基本資料
+    const step2Data = this.contractFlowService.getStep2Data(); // 扣款設定
+    const step3Data = this.contractFlowService.getStep3Data(); // 抽成設定
+
+    // 🎯 合併所有資料
+    const completeData = {
+      // 基本合約資訊
+      contractInfo: {
+        talent_id: step1Data?.talent_id || this.currentTalentId,
+        apply_no: step1Data?.apply_no || '',
+        tlt_name: step1Data?.tlt_name || '',
+        ven_uniform: step1Data?.ven_uniform || '',
+        VEN_Name: step1Data?.VEN_Name || '',
+        contract_subno: step1Data?.contract_subno || '',
+        tlt_term_type: step1Data?.tlt_term_type || '3',
+        tlt_bdate: step1Data?.tlt_bdate || '',
+        tlt_edate: step1Data?.tlt_edate || '',
+        tlt_contract_bdate: step1Data?.tlt_contract_bdate || '',
+        tlt_contract_edate: step1Data?.tlt_contract_edate || '',
+        ...step1Data
+      },
+
+      // 扣款設定
+      deductionSettings: step2Data || [],
+
+      // 抽成設定
+      commissionSettings: step3Data || [],
+
+      // 工作流程資訊
+      workflowInfo: {
+        currentStep: 'COMMISSION_COMPLETED',
+        submissionTime: new Date().toISOString(),
+        isGeneralCommission: true
+      }
+    };
+
+    console.log('✅ 完整合約資料準備完成');
+    return completeData;
+  }
+
+  private callSubmitContractAPI(contractData: any): void {
+    console.log('📤 調用送出合約 API...');
+
+    // 🎯 TODO: 實際的 API 調用
+    // this.tls13010Service.submitContract(contractData).subscribe({
+    //   next: (response) => {
+    //     console.log('✅ 合約送出成功:', response);
+    //     this.handleSubmitSuccess(response);
+    //   },
+    //   error: (error) => {
+    //     console.error('❌ 合約送出失敗:', error);
+    //     this.handleSubmitError(error);
+    //   }
+    // });
+
+    // 🎯 暫時模擬 API 調用成功
+    setTimeout(() => {
+      console.log('✅ 模擬 API 調用成功');
+      this.handleSubmitSuccess({
+        success: true,
+        message: '一般抽成合約送出成功',
+        contractId: contractData.contractInfo.talent_id
+      });
+    }, 2000);
+  }
+
+  private handleSubmitSuccess(response: any): void {
+    console.log('✅ 合約送出成功處理:', response);
+
+    this.loading = false;
+    this.notificationService.unblockUi();
+
+    // 顯示成功訊息
+    this.notificationService.successBubble(
+      response.message || '一般抽成合約已成功送出'
+    );
+
+    // 🎯 清除暫存資料
+    this.contractFlowService.clearTempData();
+
+    // 🎯 延遲導航回主頁面
+    setTimeout(() => {
+      this.router.navigate(['account/tls/tls13010']);
+    }, 1500);
+  }
+
+  private handleSubmitError(error: any): void {
+    console.error('❌ 合約送出失敗處理:', error);
+
+    this.loading = false;
+    this.notificationService.unblockUi();
+
+    // 顯示錯誤訊息
+    const errorMessage = error?.message || '合約送出失敗，請稍後再試';
+    this.notificationService.errorBubble(errorMessage);
   }
 }
