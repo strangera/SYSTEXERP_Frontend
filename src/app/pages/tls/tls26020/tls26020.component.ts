@@ -1,148 +1,81 @@
-import { Component } from '@angular/core';
+import { TLS26020Service } from './../../../service/api/tls/tls26020.service';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// 權限相關
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-// 共用服務
-import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { FloorService } from '../../../service/basic/floor.service';
+import { finalize, map } from 'rxjs';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
+import { DropDownListService } from '../../../service/api/dropdownservice/dropDownList.service';
 
-import { ValidationService } from '../../../shared/service/validation.service';
-
-const now = new Date();
-const previousMonth = new Date(now);
-previousMonth.setMonth(now.getMonth() - 1);
 
 @Component({
   selector: 'app-tls26020',
   templateUrl: './tls26020.component.html',
-  styleUrls: ['./tls26020.component.scss']
 })
-export class TLS26020Component {
-
-  ProgNo: string = '220036';
-
-  // 權限變數
-  funInfo?: FunsrightInfo;
-
-
-
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    saleDateStart: [previousMonth], // 銷售日期起
-    saleDateEnd: [now],   // 銷售日期迄
-    machineStats: [],  // 依機台統計
+export class TLS26020Component extends BasicQueryPageComponent<any> implements OnInit {
+  queryForm: FormGroup = this.formBuilder.group({
+    saleDateStart: [null, Validators.required],
+    saleDateEnd: [null, Validators.required],
+    FLOOR_NO: [null],
+    tlt_building: [null],
+    org_id: [null]
   });
 
-  // 下拉選單選項
-  floorOptions: any[] = [];
+  data: any[] = [];
+  totalRecords = 0;
+  selectedItems: any[] = [];
 
-  // 表格資料
-  data: any[] = [
+  floorOptions: { label: string; value: string }[] = [];
+  BUILDING_NO_Options: { label: string; value: string }[] = [];
+  OrganizationCodeOptions: { formLabel: string; value: string }[] = [];
 
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'counterNumber', header: '專櫃編號', visible: true },
-    { field: 'counterName', header: '櫃位名稱', visible: true },
-    { field: 'invoiceAmount', header: '發票金額', visible: true },
-    { field: 'businessIncome', header: '業績金額', visible: true }
+  columns: Column[] = [
+    { field: 'LOCATION_No', header: '位置編號', visible: true },
+    { field: 'LOCATION_Name', header: '位置名稱', visible: true },
+    { field: 'LOCATION_Floor', header: '樓層', visible: true },
+    { field: 'LOCATION_Building', header: '館別', visible: true },
+    { field: 'org_id', header: '組織代碼', visible: true },
+    { field: 'org_name', header: '組織名稱', visible: true },
   ];
 
   constructor(
-    private router: Router,
     private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private floorService: FloorService,  // 依機台統計 service
-  ) { }
+    private dropDownListService: DropDownListService,
+    private tls26020Service: Tls26020Service,
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS26020', 'TLS/TLS26020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
+  }
 
-    this.floorService.getFloors().subscribe((data) => {
-      this.floorOptions = data;
+
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const formValue = { ...form.value };
+      this.loading = true;
+      this.tls26020Service.queryTLS26020(formValue).pipe(
+        finalize(() => (this.loading = false))
+      ).subscribe({
+        next: (res: any) => {
+          this.data = res.Data;
+          this.totalRecords = res.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, formValue);
+        },
+      });
     });
   }
 
-  canQuery(): boolean {
-    return true;
-  }
+  // onEdit(row: any): void {
+  //   console.log('編輯 row:', row);
+  // }
 
-  canAdd(): boolean {
-    return true;
-  }
+  // onDetail(row: any): void {
+  //   console.log('查看 row:', row);
+  // }
 
-  canEdit(): boolean {
-    return true;
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: 'Create',
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: 'Edit',
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: 'Read',
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
-  }
+  // onDelete(rows: any[]): void {
+  //   console.log('刪除 rows:', rows);
+  // }
 }
