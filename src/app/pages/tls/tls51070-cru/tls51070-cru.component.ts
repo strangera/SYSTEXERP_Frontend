@@ -55,6 +55,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_Unit: ['', [Validators.required, Validators.maxLength(2)]], // 單位代碼 --讀PLUUNIT  商品單位設定檔
 
     PLU_TaxType: ['1', [Validators.required, Validators.maxLength(1)]], // 售價稅別:0免稅,1應稅 預設 1應稅
+    PLU_Type: ['1', [Validators.required, Validators.maxLength(2)]], // 商品類別:1一般商品,8專櫃,CC:專櫃商品 ,SC:特殊條碼
+
     PLU_BoxQty: [0, [Validators.maxLength(4)]], // 包裝入數(裝箱入數) / --南紡 包裝入數
     PLU_Length: [0, [Validators.maxLength(10)]], //長度cm
     PLU_Weight: [0, [Validators.maxLength(10)]], //重量(g)
@@ -88,7 +90,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     //---必填未列入(都是預設不可編輯)---
     PLU_OpenPrc: ['Y', [Validators.required, Validators.maxLength(1)]], // 開放售價Y/N
-    PLU_Type: ['1', [Validators.required, Validators.maxLength(1)]], // 商品類別 1一般商品,2生鮮商品,6組合商品,8專櫃,B禮券,F:折讓
 
     PLU_AccountType: ['2', [Validators.maxLength(1)]], // 結帳別
     PLU_IsStock: ['Y', [Validators.maxLength(1)]], // 是否計算庫存 Y:是 N:否
@@ -115,6 +116,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // ---商品規格dropdown---
   attributeOptions: option[] = this.dropDown51070.attributeOptions;  // 商品型態
   taxTypeOptions: option[] = this.dropDown51070.taxTypeOptions; // 稅別
+  pluTypeOptions: option[] = this.dropDown51070.pluTypeOptions; // 稅別
   // ---POS2020 dropdown區---
   transTypeOption: option[] = this.dropDown51070.transTypeOption;  //運輸方式
   purchaseTypeOption: option[] = this.dropDown51070.purchaseTypeOption;  // 採購狀態
@@ -164,9 +166,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   };
 
   // POS2020 展開式表格的欄位定義
-  POS2020DataColumn: ColumnDef[] = [
-
-  ];
+  POS2020DataColumn: ColumnDef[] = []; // 等廠商編號好了再寫入POS2020欄位(廠商下拉)
   // 展開式表格的載入狀態
   expand2020Loading = false;
 
@@ -204,7 +204,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   constructor(
     private tls51060Service: Tls51060Service, //查詢品牌代碼檔
     private tls51070Service: Tls51070Service,
-    private dropDown51070: dropDown51070, //下拉選單
+    private dropDown51070: dropDown51070, //下拉選單 (選項固定)
     private detail2005Handler: detail2005HandlerService,// POS2005 table明細處理
     private detail2020Handler: detail2020HandlerService, // POS2020 table明細處理
   ) {
