@@ -41,6 +41,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
 
   formTitle!: string; //表頭
   baseId = 0; //初始id
+  state = window.history.state; // 接收標頭
 
   // 查詢
   queryForm = this.formBuilder.group({
@@ -86,11 +87,10 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     this.initializePage('TLS51070');
 
     //更新顯示表頭部
-    const state = window.history.state;
-    console.log(state.destination); // 標籤檔或歷史紀錄查詢
-    if(state.destination == 'history'){
+    console.log(this.state.destination); // 標籤檔或歷史紀錄查詢
+    if(this.state.destination == 'history'){
       this.formTitle = '變更歷史紀錄';
-    }else if(state.destination == 'label'){
+    }else if(this.state.destination == 'label'){
       this.formTitle = '產生標籤檔';
     }else{
       return

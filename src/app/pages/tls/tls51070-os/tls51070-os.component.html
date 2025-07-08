@@ -10,7 +10,10 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form
+
+      <!-- 標籤檔 -->
+      <ng-container *ngIf="state.destination === 'history'">
+        <form
         [formGroup]="queryForm"
         id="queryForm"
         (ngSubmit)="onSubmit(queryForm)"
@@ -61,15 +64,20 @@
         </div>
         <!-- </div> -->
       </form>
+
+      </ng-container>
     </p-accordionTab>
   </p-accordion>
 </div>
-<div class="card">
-  <div class="col-13">
-    <app-expandable-edit-table #labelTable title="產生標籤檔" [mainColumns]="labelColumn" [data]="labelData"
-          [loading]="expandlabelLoading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
-          [showAddButton]="false" [showDetailTabs]="false" [showDetailAddButton]="false"
-          (save)="onRowSave($event)" (cancel)="onRowCancel($event)"
-          (batchDelete)="deleteLabel($event)"></app-expandable-edit-table>
+<ng-container *ngIf="state.destination === 'history'">
+  <div class="card">
+    <div class="col-13">
+      <app-expandable-edit-table #labelTable title="產生標籤檔" [mainColumns]="labelColumn" [data]="labelData"
+            [loading]="expandlabelLoading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
+            [showAddButton]="false" [showDetailTabs]="false" [showDetailAddButton]="false"
+            (save)="onRowSave($event)" (cancel)="onRowCancel($event)"
+            (batchDelete)="deleteLabel($event)"></app-expandable-edit-table>
+    </div>
   </div>
-</div>
+</ng-container>
+

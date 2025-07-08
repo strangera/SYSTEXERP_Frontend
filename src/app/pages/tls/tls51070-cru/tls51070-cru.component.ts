@@ -691,9 +691,11 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     formData.append('IMG_SeqNo', IMG_SeqNo);
     formData.append('IMG_Remark', 'test');  // 備註先下空test
 
-    // 加入所有檔案（保留原始檔名）
+    // 加入所有檔案（以 uuid 命名）
     this.files.forEach(file => {
-      formData.append('Files', file, file.name);
+      const extension = file.name.split('.').pop(); // 保留副檔名
+      const uuidFileName = `${uuidv4()}.${extension}`;
+      formData.append('Files', file, uuidFileName);
     });
 
     // 👉 檢查內容（只能用 FormData.entries() 迴圈看）
