@@ -39,7 +39,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     { field: 'PLU_Unit', header: '單位編號' },
     { field: 'UNIT_NAME', header: '單位名稱' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
-    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : '應稅' },
+    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : value === '1' ? '應稅' : '' },
     { field: 'CRN_SubQty', header: '數量', type: 'inputNumber', validate: [validateMinNumber(0)] },
     { field: 'CRN_BuyPrc', header: '單價' },
     { field: 'CRN_BuyNet', header: '小計' },

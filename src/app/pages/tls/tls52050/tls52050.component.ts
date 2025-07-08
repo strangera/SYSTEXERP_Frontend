@@ -1,34 +1,17 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
+import { Component, OnInit } from '@angular/core';
+import { FormGroup } from '@angular/forms';
 import { VendorService } from '../../../service/basic/vendor.service';
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
 import { PriceChangeStatusService } from '../../../service/basic/price-change-status.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { ManagementIDService } from '../../../service/basic/management-id.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
 @Component({
   selector: 'app-tls52050',
   templateUrl: './tls52050.component.html',
-  styleUrl: './tls52050.component.scss'
 })
-export class TLS52050Component {
-
-  ProgNo: string = '250018';
-  funInfo?: FunsrightInfo;
-
-
-
-  loading: boolean = false;
-  submitted: boolean = false;
-
+export class TLS52050Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     priceChangeOrderNumber: [],  // New field for 變價單號
     vendorCode: [],
@@ -42,21 +25,14 @@ export class TLS52050Component {
     approvalStartDate: [],
     approvalEndDate: [],
   });
-
-  // Dropdown options
   vendorOptions: any[] = [];
   brandCodeOptions: any[] = [];
   priceChangeStatusOptions: any[] = [];
   paperStatusOptions: any[] = [];
   userCodeOptions: any[] = [];
   managementIdOptions: any[] = [];
-
-  // Table data
-  data: any[] = [
-
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
+  data: any[] = [];
+  columns: Column[] = [
     { field: 'priceChangeOrderNumber', header: '變價單號', visible: true },
     { field: 'brandCode', header: '品牌編碼', visible: true },
     { field: 'useDate', header: '啟用日期', visible: true },
@@ -68,22 +44,16 @@ export class TLS52050Component {
     { field: 'approvalDate', header: '審核日期', visible: true },
   ];
 
-
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
     private vendorService: VendorService,
     private brandCodeService: BrandCodeService,
     private priceChangeStatusService: PriceChangeStatusService,
     private userCodeService: UserCodeService,
     private managementIdService: ManagementIDService,
-    private authService: AuthService,
-  ) { }
+  ) { super(); }
 
   ngOnInit(): void {
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS52050', 'tls/tls52050cru', this.queryForm, (frm) => this.onSubmit(frm));
     this.vendorService.getVendors().subscribe(data => this.vendorOptions = data);
     this.brandCodeService.getSystemTypes().subscribe(data => this.brandCodeOptions = data);
     this.priceChangeStatusService.getPriceChangeStatusOptions().subscribe(data => this.priceChangeStatusOptions = data);
@@ -91,77 +61,9 @@ export class TLS52050Component {
     this.managementIdService.getSystemTypes().subscribe(data => this.managementIdOptions = data);
   }
 
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
+    this.handleSubmit(frm, () => {
 
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS5000/TLS52050CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+    })
   }
 }
