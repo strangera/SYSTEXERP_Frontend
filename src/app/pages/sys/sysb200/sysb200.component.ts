@@ -1,10 +1,12 @@
+import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { SortMeta } from 'primeng/api';
 import { ActivatedRoute } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 export interface VendorData {
   VEN_No: string;
@@ -42,7 +44,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     VEN_CName: ['', [Validators.maxLength(60)]], // 廠商名稱(中文)
     VEN_EName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
     VEN_SName: ['', [Validators.maxLength(10)]], // 廠商簡稱
-    VEN_BankNo: ['', [this.validationService.numberValidator, Validators.maxLength(10)]], // 廠商匯款銀行代號
+    VEN_BankNo: ['', [this.validationService.numberValidator, Validators.maxLength(10)]],
     VEN_Address: ['', [Validators.maxLength(100)]], // 通訊地址
     VEN_Boss: ['', [Validators.maxLength(12)]], // 聯絡人
     VEN_BossTitle: ['', [Validators.maxLength(16)]], // 聯絡人職稱
@@ -89,10 +91,13 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
   venderOptions: any[] = [];
   approvalOptions: any[] = [];
   t111Options: any[] = [];
+  bankOptions$!: Observable<any[]>;
+
 
   constructor(
     private activatedRoute: ActivatedRoute,
     private validationService: ValidationService,
+    private sysbc00Service: Sysbc00Service
   ) {
     super();
   }
@@ -126,6 +131,14 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
       { SYS_Name: '30天', id: 30 },
       { SYS_Name: '45天', id: 45 },
     ];
+
+    this.bankOptions$ = this.sysbc00Service.querySYSBC00({}).pipe(
+      map(res => (res.Data ?? []).map(item => ({
+        label: `${item.BNK_No} ${item.BNK_Name}`,
+        value: item.BNK_No
+      })))
+    );
+
 
   }
 

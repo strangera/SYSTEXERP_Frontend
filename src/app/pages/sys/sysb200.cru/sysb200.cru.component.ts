@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Validators, FormArray, FormBuilder, FormControl, AbstractControl } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Tlsb200Model } from './tlsb200.model';
+import { map, Observable } from 'rxjs';
+import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
 
 @Component({
   selector: 'app-sysb200-cru',
@@ -28,19 +30,20 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     VEN_Email: ['', Validators.maxLength(60)],
     VEN_GUIEmail: ['', Validators.maxLength(60)],
 
+    // 聯絡人 (多筆)
     contacts: this.formBuilder.array([]),
 
-
+    // 付款資料
     VEN_PayType: ['', Validators.required],
-    VEN_BNK_No: ['', Validators.required],
+    VEN_BankNo: ['', [Validators.maxLength(10)]],
     VEN_BankAccountNo: ['', Validators.maxLength(40)],
     VEN_AccountName: ['', Validators.maxLength(64)],
     VEN_PayConditionDay: ['', Validators.required],
 
-    VEN_CheckTitle: ['', Validators.maxLength(20)],
+    // 其他資料
+    VEN_Status: ['0', Validators.required],
     VEN_Remark: ['', Validators.maxLength(160)]
   });
-
 
   flagOptions = [
     { value: '1', label: '統一編號' },
@@ -53,30 +56,46 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   ];
 
   payTypeOptions = [
-    { value: '1', label: '匯款' },
-    { value: '2', label: '支票' }
+    { value: '1', label: '電匯' },
+    { value: '2', label: '發票' },
+    { value: '3', label: '現金' }
+  ];
+  statusOptions = [
+    { label: '未審核', value: '0' },
+    { label: '已審核', value: '1' }
   ];
 
-  bankCodeOptions = [
-    { value: '004', label: '台灣銀行' },
-    { value: '005', label: '土地銀行' }
-  ];
-  constructor(override readonly formBuilder: FormBuilder) {
+
+  bankOptions$!: Observable<any[]>;
+
+  constructor(
+    override readonly formBuilder: FormBuilder,
+    private sysbc00Service: Sysbc00Service,
+  ) {
     super();
   }
-
 
   ngOnInit(): void {
     this.initializePage('SYSB200', this.dataForm);
     this.addContact();
+    this.loadBankOptions();
   }
 
-  // 取出 contacts FormArray
+
+  loadBankOptions() {
+    this.bankOptions$ = this.sysbc00Service.querySYSBC00({}).pipe(
+      map(res => (res.Data ?? []).map(item => ({
+        label: `${item.BNK_No} ${item.BNK_Name}`,
+        value: item.BNK_No
+      })))
+    );
+  }
+
+  // contacts FormArray
   get contacts(): FormArray {
     return this.dataForm.get('contacts') as FormArray;
   }
 
-  // 建立單一聯絡人群組
   createContactGroup() {
     return this.formBuilder.group({
       VEN_Boss: ['', Validators.maxLength(12)],
@@ -86,6 +105,17 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
       VEN_BossAddr: ['', Validators.maxLength(100)],
       VEN_BossEmail: ['', Validators.maxLength(60)]
     });
+  }
+
+  approve() {
+    this.dataForm.controls['VEN_Status'].setValue('1');
+    this.messageService.successBubble('已通過審核');
+  }
+
+  unapprove() {
+
+    this.dataForm.controls['VEN_Status'].setValue('0');
+    this.messageService.successBubble('已取消審核');
   }
 
   addContact() {
@@ -100,7 +130,6 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     this.dataForm.controls['VEN_GUIAddr'].setValue(this.dataForm.controls['VEN_Address'].value);
   }
 
-  // 模板裡強制轉型
   getFormControl(control: AbstractControl | null): FormControl {
     return control as FormControl;
   }
@@ -109,9 +138,9 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     this.handleSubmit(form, () => {
       const data = form.getRawValue();
       if (this.crudstatus === 'Create') {
-        // 呼叫 API 新增
+        // this.apiService.create(data).subscribe(...)
       } else if (this.crudstatus === 'Edit') {
-        // 呼叫 API 更新
+        // this.apiService.update(data).subscribe(...)
       }
     });
   }
