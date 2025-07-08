@@ -136,10 +136,11 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
       this.tls14030Service.queryTLS14030(frm.value).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
-            
             this.data = response.Data || [];
             this.totalRecords = response.TotalCount || response.Data.length; // 排序需要
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
+
+            console.log('取得資料',this.data);
           }
           this.loading = false;
           this.messageService.unblockUi();

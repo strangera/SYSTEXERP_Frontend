@@ -93,25 +93,28 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     priceData: Label[] = [];
     // label 展開式表格的欄位定義
     priceColumn: Column[] = [
-      { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
-      { field: 'MAM_Date', header: '促銷日期', visible: true,  format: formatDate},
-      { field: 'MAM_NO', header: '促銷編號', visible: true },
-      { field: 'PLU_SalePrc', header: '售價', visible: true },
-      { field: 'MAM_UnitPrc', header: '促銷單價-POS售價', visible: true },
-      { field: 'PLU_OrderPrc', header: '進價', visible: true },
-      { field: 'MAM_OrderPrc', header: '促銷進價', visible: true },
-      { field: 'LOGO_Name', header: '品牌名稱', visible: true },
-      { field: 'PLU_Name', header: '商品名稱', visible: true },
+      //---基本資料---
+      { field: 'LOGO_Name', header: '品牌編號', visible: true },
+      { field: 'PLU_MagNo', header: '商品編號', visible: true },
+      { field: 'PLU_Name', header: '品名', visible: true },
       { field: 'PLU_NO', header: '國際條碼', visible: true },
-      { field: 'PLU_OrgPLUNo', header: '廠商貨號', visible: true },
-
+      { field: 'PLU_OrgPLUNo', header: '商品貨號', visible: true },
       { field: 'CAT_LName', header: '大分類', visible: true },
       { field: 'CAT_MName', header: '中分類', visible: true },
       { field: 'CAT_SName', header: '小分類', visible: true },
 
-      { field: 'PLU_OrderPrc_POS2004', header: '變價前進價', visible: true },
-      { field: 'PLU_SalePrc_POS2004', header: '變價前售價', visible: true },
+      { field: 'PLU_OrderPrc_POS2004', header: '標準進價', visible: true },
+      { field: 'PLU_SalePrc_POS2004', header: '商品售價', visible: true },
 
+      //---變價歷程---
+      { field: 'MAM_Date', header: '變價日期', visible: true,  format: formatDate},
+      { field: 'MAM_NO', header: '變價單號', visible: true },
+  
+      { field: 'PLU_SalePrc', header: '變價前售價', visible: true },
+      { field: 'MAM_UnitPrc', header: '變價後售價', visible: true },
+
+      { field: 'PLU_OrderPrc', header: '變價前進價', visible: true },
+      { field: 'MAM_OrderPrc', header: '變價後進價', visible: true },
     ];
   
     // 展開式表格的載入狀態

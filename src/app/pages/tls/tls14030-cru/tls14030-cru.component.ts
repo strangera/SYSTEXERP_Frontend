@@ -29,12 +29,12 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
         tlt_no: [{ value: null as string | null, disabled: true }], // 專櫃編號 read only          讀取 TLTTALENT 專櫃主檔
         tlt_name: [{ value: null as string | null, disabled: true }], // 專櫃名稱
 
-        ticket_type: ['', [Validators.required, Validators.maxLength(1)]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿保證票"
+        ticket_type: ['1', [Validators.required, Validators.maxLength(1)]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿保證票"
         ticket_no: ['', [Validators.required, Validators.maxLength(20)]], // 票據編號 手動輸入
-        ticket_kind: ['', [Validators.maxLength(1)]], // 票據種類 非必填但有限制長度 "1=本票 2=支票 3=行銀保證函 9=其他"
+        ticket_kind: [null, [Validators.maxLength(1)]], // 票據種類 非必填但有限制長度 "1=本票 2=支票 3=行銀保證函 9=其他"
         ticket_amount: [null, [Validators.required, Validators.min(0), Validators.maxLength(10)]], // 保證票金額 整數金額 "讀取 TLTTALENT 專櫃主檔相對的保證金金額"
         expiry_date: [null], // 票據到期日期 手動輸入
-        get_ticket_status: ['', [Validators.maxLength(1)]], // 票據收票狀態 "0=未繳票  1=已繳票  2=已退票  9=封存"
+        get_ticket_status: [null, [Validators.maxLength(1)]], // 票據收票狀態 "0=未繳票  1=已繳票  2=已退票  9=封存"
         get_date: [null], // 繳票日期 手動輸入
         return_date: [null], // 退票日期 手動輸入
         close_date: [null], // 封存日期 手動輸入

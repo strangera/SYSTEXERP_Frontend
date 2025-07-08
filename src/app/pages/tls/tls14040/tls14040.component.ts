@@ -276,6 +276,18 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
     
               console.log('orgOption:', this.orgOption);
             });
+
+      // 專櫃編號 下拉
+    this.tls14030Service
+          .queryTLTTALENT_DropDownList({})
+          .subscribe((response) => {
+            this.tlt_noListOption = response.Data.map((item: apiOption) => ({
+              value: item.No,
+              label: item.Name,
+            }));
+  
+            console.log('tlt_noListOption:', this.orgOption);
+          });      
   
     }
 }
