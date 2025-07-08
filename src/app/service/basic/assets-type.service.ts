@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../system/error-handler.service';
 import { catchError, Observable, of, tap } from 'rxjs';
 
 @Injectable({
@@ -14,13 +14,13 @@ export class AssetsTypeService {
     { value: 1, label: '資產' },
     { value: 2, label: '列管品' },
     { value: 3, label: '其他資產(無形)' },
-    { value: 4, label: '不領用之耗材' },  
+    { value: 4, label: '不領用之耗材' },
   ];
 
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getAssetsTypes(): Observable<any[]> {
     return of(this.options).pipe(

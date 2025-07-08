@@ -325,6 +325,7 @@ import { SharedModule } from '../../shared/shared.module';
 import { FIN11200Component } from './fin11200/fin11200.component';
 import { FIN11200CRUComponent } from './fin11200-cru/fin11200-cru.component';
 import { TooltipModule } from 'primeng/tooltip';
+import { FIN11050CRUComponent } from './fin11050-cru/fin11050-cru.component';
 
 @NgModule({
   declarations: [
@@ -651,6 +652,7 @@ import { TooltipModule } from 'primeng/tooltip';
     FIN73020Component,
     FIN73030Component,
     FIN73040Component,
+    FIN11050CRUComponent
   ],
   imports: [
     CommonModule,

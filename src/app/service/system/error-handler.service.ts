@@ -1,10 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
-import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment'; // 確保路徑正確
-import { NotificationService } from '../component/notification-message/notification.service'; // 確保路徑正確
-import { AuthService } from '../../service/system/auth.service';
+import { NotificationService } from '../../shared/component/notification-message/notification.service'; // 確保路徑正確
+import { AuthService } from './auth.service';
 
 /**
  * 集中處理應用程式中的 HTTP 錯誤。
@@ -19,7 +18,6 @@ export class ErrorHandlerService {
   private LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS: string = environment.LOCAL_STORAGE_KEY_HANDLE_EXCEPTION_ERRORS;
 
   constructor(
-    private router: Router,
     private notificationService: NotificationService,
     private authService: AuthService,
   ) { }

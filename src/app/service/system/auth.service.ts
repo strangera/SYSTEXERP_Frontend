@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { HttpBackend, HttpClient } from '@angular/common/http';
 import { EncryptionService } from '../../shared/service/encryption.service';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { userLogin } from '../../shared/models/system/userLogin';
 import { environment } from '../../../environments/environment';
 import { FunsrightInfo } from '../../shared/models/system/funsrightInfo';
@@ -11,6 +11,9 @@ import { UserInfo } from '../../shared/models/system/userInfo';
 import { NotificationService } from '../../shared/component/notification-message/notification.service';
 import { QueryStateService } from '../../shared/service/query-state.service';
 import { JwtHelperService } from '@auth0/angular-jwt';
+import { registerLocaleData } from '@angular/common';
+import zhHant from '@angular/common/locales/zh-Hant';
+registerLocaleData(zhHant, 'zh-Hant-TW');
 
 export interface ApiResponse<T> {
   Status: string;
@@ -45,7 +48,8 @@ export class AuthService {
     private http: HttpClient,
     private encrypt: EncryptionService,
     private notemessage: NotificationService,
-    private queryStateService: QueryStateService
+    private queryStateService: QueryStateService,
+    private httpBackend: HttpBackend,
   ) {
     const userStorage: any = this.getUserInfo();
     this.userSubject = new BehaviorSubject(userStorage);
@@ -85,19 +89,31 @@ export class AuthService {
   }
   login(data: userLogin): Observable<ApiResponse<UserInfo>> {
     data.password = this.encrypt.getPassword(data.code as string, data.password as string);
-    return this.http.post<ApiResponse<UserInfo>>(`${this.apiUrl}/User/userLogin`, data).pipe(
-      map((response: ApiResponse<UserInfo>) => {
-        if (response.Status === '0000') {
-          this.userSubject.next(response.Data);
-          localStorage.setItem('UserInfo', JSON.stringify(response.Data));
-          this.router.navigate(['/sso/dashboard']);
-          return response;
-        } else {
-          throw new Error(response.Message || 'Login failed');
-        }
-      }),
+    const newHttpClient = new HttpClient(this.httpBackend);
+    return newHttpClient.get<{ ip: string }>("http://api.ipify.org/?format=json").pipe(
+      map(result => {
+        data.client_ip = result.ip;
+        return data;
+      }), switchMap(updatedData =>
+        this.http.post<ApiResponse<UserInfo>>(`${this.apiUrl}/User/userLogin`, updatedData).pipe(
+          map((response: ApiResponse<UserInfo>) => {
+            if (response.Status === '0000') {
+              this.userSubject.next(response.Data);
+              localStorage.setItem('UserInfo', JSON.stringify(response.Data));
+              this.router.navigate(['/sso/dashboard']);
+              return response;
+            } else {
+              throw new Error(response.Message || 'Login failed');
+            }
+          }),
+          catchError(err => {
+            this.notemessage.errorBubble('登入失敗，請確認帳號密碼');
+            return throwError(() => err);
+          })
+        )
+      ),
       catchError(err => {
-        this.notemessage.errorBubble('登入失敗，請確認帳號密碼');
+        this.notemessage.errorBubble('無法確認您的目前位址');
         return throwError(() => err);
       })
     );

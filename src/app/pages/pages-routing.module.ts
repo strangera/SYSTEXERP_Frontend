@@ -17,7 +17,6 @@ const routes: Routes = [
       // 1. 財務會計系統 (FIN)
       { path: 'fin', loadChildren: () => import('./fin/fin.module').then(m => m.FinModule) },
       // 2. 銷售管理系統 (TLS)
-      { path: 'TLS', loadChildren: () => import('./tls/tls.module').then(m => m.TlsModule) },
       { path: 'tls', loadChildren: () => import('./tls/tls.module').then(m => m.TlsModule) },
       // 3. 資產管理系統 (ASS)
       { path: 'ass', loadChildren: () => import('./ass/ass.module').then(m => m.AssModule) },

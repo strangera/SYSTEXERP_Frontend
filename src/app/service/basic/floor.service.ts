@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../system/error-handler.service';
 import { catchError, map, Observable, tap } from 'rxjs';
 
 @Injectable({
@@ -45,7 +45,7 @@ export class FloorService {
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))
     );
   }
-    // ✅ 新增：查詢 APS1003 的下拉資料
+  // ✅ 新增：查詢 APS1003 的下拉資料
   getAPS1003DropDownList(cap_typeList: string[]): Observable<any[]> {
     return this.http.post<any>(
       `${this.apiUrl}/queryTLS13030_APS1003_DropDownList`,

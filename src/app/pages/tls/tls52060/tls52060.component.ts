@@ -24,8 +24,8 @@ export class TLS52060Component {
   // 權限變數
   funInfo?: FunsrightInfo;
 
-  
-  
+
+
 
   // 查詢表單
   loading: boolean = false;
@@ -101,7 +101,7 @@ export class TLS52060Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -115,7 +115,7 @@ export class TLS52060Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -128,7 +128,7 @@ export class TLS52060Component {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 
   onFileSelected(event: any) {

@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { Tls46010Service } from './tls46010.service';
+import { Fin11090Service } from './fin11090.service';
 
-describe('Tls46010Service', () => {
-  let service: Tls46010Service;
+describe('Fin11090Service', () => {
+  let service: Fin11090Service;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(Tls46010Service);
+    service = TestBed.inject(Fin11090Service);
   });
 
   it('should be created', () => {

@@ -3,7 +3,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS51130Service } from '../../../service/api/tls/tls51130.service';
-import { DropDownListService } from '../../../service/api/dropdownservice/dropDownList.service';
+import { DropDownListService } from '../../../service/utility/dropDownList.service';
 
 
 @Component({
@@ -29,14 +29,14 @@ export class TLS51130CRUComponent extends BasicCruPageComponent<any> implements 
   constructor(
     private tls51130Service: TLS51130Service,
     private dropDownListService: DropDownListService,
-    
+
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS51130', this.dataForm);
-    
+
 
     this.dropDownListService.queryPLULOGO_HOS_No_DropDownList().subscribe((res) => {
       const nestedData = res?.Data || [];
@@ -99,29 +99,30 @@ export class TLS51130CRUComponent extends BasicCruPageComponent<any> implements 
       }
     });
     // 如果是編輯模式且有值，就觸發查詢中分類與小分類
-if (this.crudstatus === CRUDStatus.Edit) {
-  const catLNo = this.dataForm.controls.CAT_LNo.value;
-  const catMNo = this.dataForm.controls.CAT_MNo.value;
+    if (this.crudstatus === CRUDStatus.Edit) {
+      const catLNo = this.dataForm.controls.CAT_LNo.value;
+      const catMNo = this.dataForm.controls.CAT_MNo.value;
 
-  if (catLNo) {
-    const paramL = { CAT_LNo: [catLNo] };
-    this.dropDownListService.queryPOS20031_DropDownList(paramL).subscribe((res) => {
-      const midData = res?.Data || [];
-      this.CAT_MOptions = midData.map((item) => ({ label: item.Name, value: item.No }));
+      if (catLNo) {
+        const paramL = { CAT_LNo: [catLNo] };
+        this.dropDownListService.queryPOS20031_DropDownList(paramL).subscribe((res) => {
+          const midData = res?.Data || [];
+          this.CAT_MOptions = midData.map((item) => ({ label: item.Name, value: item.No }));
 
-      // 若原本就有中分類值，再查小分類
-      if (catMNo) {
-        const paramM = {
-          CAT_LNo: [catLNo],
-          CAT_MNo: [catMNo]
-        };
-        this.dropDownListService.queryPOS20032_DropDownList(paramM).subscribe((res2) => {
-          const subData = res2?.Data || [];
-          this.CAT_SOptions = subData.map((item) => ({ label: item.Name, value: item.No }));
+          // 若原本就有中分類值，再查小分類
+          if (catMNo) {
+            const paramM = {
+              CAT_LNo: [catLNo],
+              CAT_MNo: [catMNo]
+            };
+            this.dropDownListService.queryPOS20032_DropDownList(paramM).subscribe((res2) => {
+              const subData = res2?.Data || [];
+              this.CAT_SOptions = subData.map((item) => ({ label: item.Name, value: item.No }));
+            });
+          }
         });
       }
-    });
-  }}
+    }
   }
 
   onSubmit(form: FormGroup): void {

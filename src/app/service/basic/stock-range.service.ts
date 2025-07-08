@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../system/error-handler.service';
 import { catchError, Observable, of, tap } from 'rxjs';
 
 @Injectable({
@@ -11,16 +11,16 @@ export class StockRangeService {
   apiUrl: string = environment.ApiUrl + '/stockRange';
   title: string = '顯示庫存範圍';
   options: any[] = [
-    { value:1, label: '全顯示' },
-    { value:2, label: '僅顯示不為零庫存' },
-    { value:3, label: '僅顯示零庫存' },
-    { value:4, label: '僅顯示為零庫存' }
+    { value: 1, label: '全顯示' },
+    { value: 2, label: '僅顯示不為零庫存' },
+    { value: 3, label: '僅顯示零庫存' },
+    { value: 4, label: '僅顯示為零庫存' }
   ];
 
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   getStockRangeOptions(): Observable<any[]> {
     return of(this.options).pipe(
