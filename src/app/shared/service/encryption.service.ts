@@ -1,13 +1,12 @@
 import { Injectable } from "@angular/core";
 import * as CryptoJS from 'crypto-js';
 import { environment } from "../../../environments/environment";
-import { CommonService } from '../../shared/service/common.service';
+import { formatDate } from "@angular/common";
 
 @Injectable({
   providedIn: "root"
 })
 export class EncryptionService {
-  constructor(private commService: CommonService) { }
   // 3DES 加密
   encryptTripleDES(str: string, key: string = environment.PasswordKey, iv: string = environment.PasswordIV): string {
     const keyHex = CryptoJS.enc.Utf8.parse(key);
@@ -21,7 +20,9 @@ export class EncryptionService {
     return encrypted.toString();
   }
   getPassword(no: string, password: string) {
-    const now = this.commService.getNOW();
+    const date = new Date();
+    const utc_nowtime = formatDate(date, 'yyyyMMddhhmmss', 'zh-Hant-TW');
+    const now = { "utc_nowtime": utc_nowtime };
     const key = `${no}${now.utc_nowtime}${environment.PasswordKey}`.substring(0, 16);
     password = this.encryptTripleDES(password as string, key, now.utc_nowtime);
     return password;

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { ErrorHandlerService } from '../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../system/error-handler.service';
 import { environment } from '../../../environments/environment'; // Added import for environment
 
 @Injectable({
@@ -23,7 +23,7 @@ export class ReconciliationMethodService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   // Method to get the options for ReconciliationMethod dropdown
   getReconciliationMethods(): Observable<any[]> {

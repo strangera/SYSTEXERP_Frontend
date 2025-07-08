@@ -1,6 +1,7 @@
 import { Component, OnInit, } from '@angular/core';
 import { PrimeNGConfig } from 'primeng/api';
 import { TranslateService } from '@ngx-translate/core';
+import { InactivityService } from './service/system/inactivity.service';
 
 @Component({
   selector: 'app-root',
@@ -10,7 +11,7 @@ export class AppComponent implements OnInit {
   // title = 'TSRDERP_Frontend';
 
   constructor(
-    // private inactivityService: InactivityService, // Auto logout: Lyndon 20240923 close
+    private inactivityService: InactivityService,
     private primengConfig: PrimeNGConfig,
     private translate: TranslateService,
   ) {

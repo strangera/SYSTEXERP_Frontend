@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../system/error-handler.service';
 import { catchError, Observable, of, tap } from 'rxjs';
 
 @Injectable({
@@ -10,7 +10,7 @@ import { catchError, Observable, of, tap } from 'rxjs';
 export class BigCategoryService {
   apiUrl: string = environment.ApiUrl;  // Replace with the actual API URL
   title: string = '大分類';
-  
+
   // Example options where value is numeric
   options: any[] = [
     { value: 0, label: '未設定' },
@@ -29,7 +29,7 @@ export class BigCategoryService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   // Fetch categories from the local list
   getCategories(): Observable<any[]> {

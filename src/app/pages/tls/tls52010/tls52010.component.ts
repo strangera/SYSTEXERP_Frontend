@@ -37,6 +37,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     HOS_NoList: [null], // 倉庫代碼 multi-select
     LOGO_NoList: [null], // 品牌代碼 multi-select
     VEN_No: [null], // 廠商編號 multi-select
+    queryNo: ['', [Validators.maxLength(20)]], // 查詢編號 input
     PO_StatusList: [null, [Validators.required]], // 採購單狀態 multi-select
     APPLY_USR: [null], // 申請人員 multi-select
     APPLY_Date_Start: [null], // 申請日期 起 calendar-range

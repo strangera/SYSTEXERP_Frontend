@@ -1,7 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()"></app-button>
+    <app-button btnType="create" (click)="onCreate()" />
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
@@ -10,58 +10,54 @@
         <div class="grid p-fluid">
           <!-- 採購單號 -->
           <app-input-text class="col-12 md:col-6 lg:col-4" label="採購單號" controlName="PO_No"
-            [control]="queryForm.controls.PO_No" [submitted]="submitted"></app-input-text>
-          <!-- 倉別 (對應 HOS_No) -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉別" controlName="HOS_No"
-            [options]="warehouseOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.HOS_NoList" [submitted]="submitted"></app-multi-select>
-          <!-- 品牌代碼 (對應 LOGO_No) -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No"
-            [options]="brandOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.LOGO_NoList"
-            [submitted]="submitted"></app-multi-select>
-          <!-- 廠商編號 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號/名稱" controlName="VEN_No" [options]="vendorOptions"
-            optionLabel="label" optionValue="value" [control]="queryForm.controls.VEN_No"
-            [submitted]="submitted"></app-dropdown>
+            [control]="queryForm.controls.PO_No" [submitted]="submitted" />
           <!-- 單據狀態 (採購單狀態) -->
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="單據狀態" controlName="PO_Status"
             [options]="poStatusOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.PO_StatusList" [submitted]="submitted"></app-multi-select>
+            [control]="queryForm.controls.PO_StatusList" [submitted]="submitted" />
+          <!-- 倉別 (對應 HOS_No) -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉別" controlName="HOS_No"
+            [options]="warehouseOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.HOS_NoList" [submitted]="submitted" />
+          <!-- 品牌代碼 (對應 LOGO_No) -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No"
+            [options]="brandOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.LOGO_NoList"
+            [submitted]="submitted" />
+          <!-- 廠商編號 -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號/名稱" controlName="VEN_No" [options]="vendorOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.VEN_No" [submitted]="submitted" />
         </div>
         <hr />
         <div class="grid p-fluid">
           <!-- 申請人員 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人" controlName="APPLY_USR" [options]="userOptions"
-            optionLabel="label" optionValue="value" [control]="queryForm.controls.APPLY_USR"
-            [submitted]="submitted"></app-dropdown>
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.APPLY_USR" [submitted]="submitted" />
           <!-- 申請日期 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
             [startControl]="queryForm.controls.APPLY_Date_Start" [endControl]="queryForm.controls.APPLY_Date_End"
-            [submitted]="submitted"></app-calendar-range>
+            [submitted]="submitted" />
         </div>
         <div class="grid p-fluid">
           <!-- 審核人員 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="審核人" controlName="APRV_USR" [options]="userOptions"
-            optionLabel="label" optionValue="value" [control]="queryForm.controls.APRV_USR"
-            [submitted]="submitted"></app-dropdown>
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.APRV_USR" [submitted]="submitted" />
           <!-- 審核日期 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="審核日期"
             [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"
-            [submitted]="submitted"></app-calendar-range>
+            [submitted]="submitted" />
         </div>
         <div class="grid p-fluid">
           <!-- 結案人員 (強制結案人員) -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="結案人" controlName="CLOS_USR" [options]="userOptions"
-            optionLabel="label" optionValue="value" [control]="queryForm.controls.CLOS_USR"
-            [submitted]="submitted"></app-dropdown>
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.CLOS_USR" [submitted]="submitted" />
           <!-- 結案日期 (強制結案日期) -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="結案日期"
             [startControl]="queryForm.controls.CLOS_Date_Start" [endControl]="queryForm.controls.CLOS_Date_End"
-            [submitted]="submitted"></app-calendar-range>
+            [submitted]="submitted" />
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear"></app-button>
-          <app-button btnType="query" [loading]="loading"></app-button>
+          <app-button btnType="clear" />
+          <app-button btnType="query" [loading]="loading" />
         </div>
       </form>
     </p-accordionTab>
