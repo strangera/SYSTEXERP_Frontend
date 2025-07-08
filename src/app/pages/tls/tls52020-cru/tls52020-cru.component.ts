@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { IPOS2004DetailData, ITLS52020Data, TLS52020Detail, TLS52020Request, Tls52020Service } from '../../../service/api/tls/tls52020.service';
-import { DropDownListService, IDropdownItem } from '../../../service/api/dropdownservice/dropDownList.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { validateMinNumber } from '../../../shared/models/system/validate-field.model';
 import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';

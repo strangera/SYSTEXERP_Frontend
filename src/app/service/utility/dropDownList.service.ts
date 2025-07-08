@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../system/auth.service'; // 假設 ApiResponse 介面在此定義
+import { environment } from '../../../environments/environment';
+import { ApiResponse } from '../system/auth.service'; // 假設 ApiResponse 介面在此定義
 
 // 通用的下拉選單項目介面，用於大部分返回 { No: string, Name: string } 的 API
 export interface IDropdownItem {

@@ -3,7 +3,7 @@ import { FormGroup } from '@angular/forms';
 import { TLS51130Service } from '../../../service/api/tls/tls51130.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropDownListService } from '../../../service/api/dropdownservice/dropDownList.service';
+import { DropDownListService } from '../../../service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-tls51130',
@@ -38,7 +38,7 @@ export class TLS51130Component extends BasicQueryPageComponent<any> {
 
   constructor(
     private TLS51130Service: TLS51130Service,
-    
+
     private dropDownListService: DropDownListService
   ) {
     super();

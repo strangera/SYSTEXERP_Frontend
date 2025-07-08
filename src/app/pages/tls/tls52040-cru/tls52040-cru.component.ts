@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
-import { DropDownListService, IDropdownItem } from '../../../service/api/dropdownservice/dropDownList.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime } from 'rxjs';
