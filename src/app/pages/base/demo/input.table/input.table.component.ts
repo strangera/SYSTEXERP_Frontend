@@ -241,7 +241,7 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
   }
 
   ngOnInit(): void {
-    this.initializePage('900001', '/demo/demoInputTableCRU');
+    this.initializePage('900001', '/demo/demoinputtableCRU');
     this.systemTypeService.getSystemTypes().subscribe(data => {
       this.systemTypeOptions = data;
     });

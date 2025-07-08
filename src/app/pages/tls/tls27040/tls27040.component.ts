@@ -200,7 +200,7 @@ export class TLS27040Component {
         },
         skipLocationChange: true
       };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -213,6 +213,6 @@ export class TLS27040Component {
       },
       skipLocationChange: true
     };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 }

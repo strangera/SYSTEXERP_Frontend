@@ -173,7 +173,7 @@ export class TLS26010CRUComponent extends BasicCrupageComponent implements OnIni
   }//CRU
 
   onCancel() {
-    this.router.navigate(['/demo/demoInputTable']);
+    this.router.navigate(['/demo/demoinputtable']);
   }
   onEdit(data: any) {
     if (this.canEdit()) {

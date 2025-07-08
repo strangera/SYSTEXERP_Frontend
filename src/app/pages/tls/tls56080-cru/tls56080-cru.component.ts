@@ -38,8 +38,8 @@ export class TLS56080CRUComponent
   // funInfo?: FunsrightInfo;
   // // Permissions
   // a
-  // 
-  // 
+  //
+  //
   // loading: boolean = false;
   // submitted: boolean = false;
   // formTitle: string = '';   //CRU
@@ -214,7 +214,7 @@ export class TLS56080CRUComponent
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -227,7 +227,7 @@ export class TLS56080CRUComponent
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 
   submitForm(frm: FormGroup) {

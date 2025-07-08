@@ -212,7 +212,7 @@ export class TLS28010CRUComponent extends BasicCrupageComponent implements OnIni
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoInputTableCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -225,7 +225,7 @@ export class TLS28010CRUComponent extends BasicCrupageComponent implements OnIni
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoInputTableCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
   // get isFormEditable(): boolean {
   //   return (
