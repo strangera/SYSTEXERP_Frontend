@@ -1375,11 +1375,26 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     }
   }
 
+  // private submitContractData(): void {
+  //   this.loading = true;
+  //   try {
+  //     const submitDataStructure = this.contractFlowService.generateSubmitData();
+  //     console.log('📋 完整提交資料結構:', submitDataStructure);
+  //     this.callSubmitAPI(submitDataStructure);
+  //   } catch (error) {
+  //     console.error('❌ 準備提交資料時發生錯誤:', error);
+  //     this.loading = false;
+  //     this.notificationService.errorBubble('準備提交資料時發生錯誤');
+  //   }
+  // }
   private submitContractData(): void {
     this.loading = true;
     try {
       const submitDataStructure = this.contractFlowService.generateSubmitData();
-      console.log('📋 完整提交資料結構:', submitDataStructure);
+
+      // 🚀 一行搞定 - 完整 JSON 輸出
+      console.log('🚀 完整提交 JSON:', JSON.stringify(submitDataStructure, null, 2));
+
       this.callSubmitAPI(submitDataStructure);
     } catch (error) {
       console.error('❌ 準備提交資料時發生錯誤:', error);
