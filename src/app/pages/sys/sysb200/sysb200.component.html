@@ -1,6 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
 
   <p-accordion>
@@ -118,8 +119,8 @@
 
 <div class="card">
   <app-table tableKey="TLS2A020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (edit)="onEdit($event)" (selectionChange)="selectedItems = $event" (detail)="onDetail($event)" [showCheckBox]="true" dataKey="id"
-    [multiSortMeta]="[{ field: 'pendingApprovalRegisterCode', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
-    [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [showManage]="true" [addButton]="addButton"></app-table>
+    (edit)="onEdit($event)" (selectionChange)="selectedItems = $event" (detail)="onDetail($event)" [showCheckBox]="true"
+    dataKey="id" [multiSortMeta]="[{ field: 'pendingApprovalRegisterCode', order: 1 }]" [totalRecords]="totalRecords"
+    [lazy]="true" [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [showManage]="true" [addButton]="addButton" [showDelete]=false></app-table>
 </div>

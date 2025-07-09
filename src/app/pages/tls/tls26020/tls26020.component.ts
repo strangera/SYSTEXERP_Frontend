@@ -1,4 +1,3 @@
-import { TLS26020Service } from './../../../service/api/tls/tls26020.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { finalize, map } from 'rxjs';
@@ -12,7 +11,7 @@ import { DropDownListService } from '../../../service/api/dropdownservice/dropDo
   templateUrl: './tls26020.component.html',
 })
 export class TLS26020Component extends BasicQueryPageComponent<any> implements OnInit {
-  queryForm: FormGroup = this.formBuilder.group({
+  queryForm = this.formBuilder.group({
     saleDateStart: [null, Validators.required],
     saleDateEnd: [null, Validators.required],
     FLOOR_NO: [null],
@@ -38,16 +37,15 @@ export class TLS26020Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    private formBuilder: FormBuilder,
     private dropDownListService: DropDownListService,
-    private tls26020Service: Tls26020Service,
+    // private tls26020Service: Tls26020Service,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS26020', 'TLS/TLS26020cru', this.queryForm, (form) => this.onSubmit(form));
-    this.loadOptions();
+    // this.loadOptions();
   }
 
 
@@ -55,15 +53,15 @@ export class TLS26020Component extends BasicQueryPageComponent<any> implements O
     this.handleSubmit(form, () => {
       const formValue = { ...form.value };
       this.loading = true;
-      this.tls26020Service.queryTLS26020(formValue).pipe(
-        finalize(() => (this.loading = false))
-      ).subscribe({
-        next: (res: any) => {
-          this.data = res.Data;
-          this.totalRecords = res.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, formValue);
-        },
-      });
+      // this.tls26020Service.queryTLS26020(formValue).pipe(
+      //   finalize(() => (this.loading = false))
+      // ).subscribe({
+      //   next: (res: any) => {
+      //     this.data = res.Data;
+      //     this.totalRecords = res.TotalCount;
+      //     this.queryStateService.setQueryState(this.ProgNo, formValue);
+      //   },
+      // });
     });
   }
 

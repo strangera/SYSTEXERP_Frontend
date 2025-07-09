@@ -4,63 +4,29 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="銷售日期"
-              [startControl]="queryForm.controls.saleDateStart"
-              [endControl]="queryForm.controls.saleDateEnd"
-              [submitted]="submitted"
-            ></app-calendar-range>
+          <!-- <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateRange" label="銷售日期" [startControl]="queryForm.controls.saleDateStart"
+              [endControl]="queryForm.controls.saleDateEnd" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="樓層"
-              controlName="FLOOR_NO"
-              [options]="floorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.FLOOR_NO"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.tlt_floorList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="館別"
-              [options]="BUILDING_NO_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.tlt_building"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="館別" [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="組織代碼/名稱"
-              controlName="OrganizationCodeOptions"
-              [options]="OrganizationCodeOptions"
-              optionLabel="formLabel"
-              optionValue="value"
-              [control]="queryForm.controls.org_id"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
+            <app-multi-select label="組織代碼/名稱" controlName="OrganizationCodeOptions" [options]="OrganizationCodeOptions"
+              optionLabel="formLabel" optionValue="value" [control]="queryForm.controls.org_id"
+              [submitted]="submitted"></app-multi-select>
+          </div> -->
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -69,7 +35,7 @@
   </p-accordion>
 </div>
 
-<div class="card">
+<!-- <div class="card">
   <app-table
     tableKey="TLS11010"
     [data]="data"
@@ -87,4 +53,4 @@
     [lazy]="true"
     [loading]="loading"
   ></app-table>
-</div>
+</div> -->

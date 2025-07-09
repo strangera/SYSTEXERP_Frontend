@@ -49,7 +49,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   // 聯絡人表格資料
   contacts: any[] = [];
   selectedRows: any[] = [];
-
+  isReadonly = false;
   columns: Column[] = [
     { field: 'VEN_Boss', header: '聯絡人', type: 'input', validate: [validateMaxLength(12)] },
     { field: 'VEN_BossTitle', header: '職稱', type: 'input', validate: [validateMaxLength(16)] },
@@ -92,7 +92,22 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   ngOnInit(): void {
     this.initializePage('SYSB200', this.dataForm);
     this.loadBankOptions();
+
+    if (this.crudstatus === 'Create') {
+      // 新增不鎖定審核欄位
+      this.isReadonly = false;
+    } else {
+      if (this.dataForm.get('VEN_Status')?.value === '1') {
+        this.dataForm.disable();
+        this.isReadonly = true;
+      } else {
+        this.isReadonly = false;
+        this.dataForm.get('VEN_Status')?.disable();
+        this.dataForm.get('VEN_No')?.disable();
+      }
+    }
   }
+
 
   loadBankOptions() {
     this.bankOptions$ = this.sysbc00Service.querySYSBC00({}).pipe(
