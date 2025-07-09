@@ -1,14 +1,27 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
 import { ValidationService } from '../../../shared/service/validation.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Tls51010DropDownListService } from '../../../service/api/tls/tls51010-dropdown.service';
+
+interface CategoryItem {
+  id: number;
+  CAT_LNo: string;
+  CAT_LName: string;
+  CAT_MNo: string;
+  CAT_MName: string;
+  CAT_MRemark: string;
+  CRT_Date: string;
+  CRT_USR_No: string;
+  CRT_USR_Name: string;
+  UPD_Date: string;
+  UPD_USR_No: string;
+  UPD_USR_Name: string;
+  CAT_LDisplay?: string; // 組合 CAT_LNo 和 CAT_LName
+  CanDel: boolean;
+}
 
 // 2.4.1.3 收銀專櫃人員資料維護作業
 @Component({
@@ -16,171 +29,136 @@ import { ValidationService } from '../../../shared/service/validation.service';
   templateUrl: './tls41030.component.html',
   styleUrl: './tls41030.component.scss'
 })
-export class TLS41030Component {
-  ProgNo: string = '240003';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    // POS2001 收銀員資料檔
-
-    USR_No: [, [Validators.maxLength(8)]], // 收銀員編號
-    USR_Name: ['', [Validators.maxLength(20)]], // 收銀員姓名
-    USR_Passwd: ['', [Validators.maxLength(20)]], // 密碼
-    USR_Level: [, [Validators.maxLength(6)]], // 收銀鍵盤等級(編號)
-    USR_Auth: [, [Validators.maxLength(6)]], // 收銀員授權等級
-
-    USR_JobStatus: ['', [Validators.maxLength(2)]], // 收銀員狀態 J=在職 Q=離職
-    USR_Class: ['', [Validators.maxLength(2)]], // 收銀員等級 R=一般 M=店長 S=系統管理者
-    USR_RegType: [, [Validators.maxLength(2)]], // 收銀員區分 2=獨立收銀 1=集中收銀
-
-    USR_TLT_No: [, [Validators.maxLength(20)]], // 收銀員所屬櫃編
-    USR_TLT_Name: ['', [Validators.maxLength(60)]], // 收銀員所屬櫃位名稱
-
-    USR_OnJobDate: [], // 啟用日期
-    USR_QuitDate: [], // 停用日期
-
-    // 以下可以不用顯示於查詢頁
-    CRT_Date: [], // 建立日期
-    CRT_USR_No: ['', [Validators.maxLength(8)]], // 建立人員
-    CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-    UPD_Date: [], // 變更日期
-    UPD_USR_No: ['', [Validators.maxLength(8)]], // 變更人員
-    UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
-  });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    {
-      USR_No: '920019', USR_Name: '朱小姐', USR_Passwd: '920019', USR_Level: 'XXXXXX', USR_Auth: 0,
-      USR_JobStatus: 'J', USR_Class: 'R', USR_RegType: 1, USR_TLT_No: '', USR_TLT_Name: '',
-      USR_TitleName: '', USR_OnJobDate: '2010/07/03 00:00:00.000', USR_QuitDate: '2026/03/31 00:00:00.000'
-    },
-    {
-      USR_No: '920020', USR_Name: '梁先生', USR_Passwd: '920020', USR_Level: 'XXXXXX', USR_Auth: 0,
-      USR_JobStatus: 'J', USR_Class: 'R', USR_RegType: 1, USR_TLT_No: '', USR_TLT_Name: '',
-      USR_TitleName: '', USR_OnJobDate: '2014/02/05 00:00:00.000', USR_QuitDate: ' 2025/06/30 00:00:00.000'
-    },
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'USR_No', header: '收銀員編號', visible: true },
-    { field: 'USR_Name', header: '收銀員姓名', visible: true },
-    { field: 'USR_Passwd', header: '密碼', visible: true },
-    { field: 'USR_Level', header: '收銀鍵盤等級(編號)', visible: true },
-    { field: 'USR_Auth', header: '收銀員授權等級', visible: true },
-
-    { field: 'USR_JobStatus', header: '在職狀態', visible: true },
-    { field: 'USR_Class', header: '收銀員等級', visible: true },
-    { field: 'USR_RegType', header: '收銀員區分', visible: true },
-    { field: 'USR_TLT_No', header: '收銀員所屬櫃編', visible: true },
-    { field: 'USR_TLT_Name', header: '收銀員所屬櫃位名稱', visible: true },
-
-    { field: 'USR_TitleName', header: '職稱', visible: false },
-    { field: 'USR_OnJobDate', header: '到職日期', visible: false },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  USR_JobStatus_Options: any[] = [
-    { value: 'J', label: '在職' },
-    { value: 'Q', label: '離職' },
-  ];
-  USR_Class_Options: any[] = [
-    { value: 'R', label: '一般' },
-    { value: 'M', label: '店長' },
-    { value: 'S', label: '系統管理者' },
-  ];
-  USR_RegType_Options: any[] = [
-    { value: 2, label: '獨立收銀' },
-    { value: 1, label: '集中收銀' },
-  ];
-
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-  ) {
-  }
-
-  ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+export class TLS41030Component extends BasicQueryPageComponent<CategoryItem> implements OnInit{
+    bigCategoryOptions: { value: string, label: string }[] = []; // 用於下拉選單
+    queryForm = this.formBuilder.nonNullable.group({
+      CAT_MNo: ['', [Validators.maxLength(3), this.validationService.numberValidator]], // 中分類代碼
+      CAT_MName: ['', [Validators.maxLength(32)]], // 中分類名稱
+      CAT_LNo: [[] as string[]],  //大分類代碼
+      // CAT_MRemark: [,], // 說明
+      ...createPaginationConfig([{ field: 'CAT_MNo', order: 1 }]), // 分頁和排序參數
+    });
+    // 表格
     // ----------------------------------------------------------------
-  }
-
-  // 權限
-  // ----------------------------------------------------------------
-  canQuery(): boolean {
-    return true;
-  }
-  canAdd(): boolean {
-    return true;
-  }
-  canEdit(): boolean {
-    return true;
-  }
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+    data: CategoryItem[] = [];
+    filteredData: CategoryItem[] = [...this.data];
+    //篩選表格的欄位
+    columns: Column[] = [
+      { field: 'CAT_MNo', header: '中分類代碼', visible: true },
+      { field: 'CAT_MName', header: '中分類名稱', visible: true },
+      { field: 'CAT_LNo', header: '大分類代碼', visible: true },
+      { field: 'CAT_LName', header: '大分類名稱', visible: true },
+      { field: 'CAT_MRemark', header: '備註', visible: true }, // 說明
+    ];
+  
+    totalRecords = 0;
+  
+    // 多選項目
+    selectedItems: CategoryItem[] = [];
+  
+    constructor(
+      private validationService: ValidationService,
+      private dropdownListService: Tls51010DropDownListService,
+      private apiService: TLS5000Service,
+    ) {
+      super();
     }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
+  
+    ngOnInit(): void {
+      this.initializePage('TLS41030', '/TLS/TLS41030cru', this.queryForm, (form) => this.onSubmit(form));
+      // 獲取大分類代碼
+      this.dropdownListService.getSystemTypes().subscribe({
+        next: (response) => {
+          this.bigCategoryOptions = response;
+        },
+        error: (error) => {
+          console.error('獲取大分類代碼失敗:', error);
+          this.messageService.errorBubble('無法載入大分類代碼，請稍後重試');
+        }
+      });
     }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
+    onSubmit(frm: FormGroup): void {
+      this.handleSubmit(frm, () => {
+        // 處理多選大分類代碼的查詢參數
+        const queryParams = { ...frm.value };
+  
+        // 處理多選大分類代碼陣列
+        if (queryParams.CAT_LNo && Array.isArray(queryParams.CAT_LNo)) {
+          // 如果是空陣列，根據後端需求處理
+          if (queryParams.CAT_LNo.length === 0) {
+            // 選擇以下其中一種處理方式（根據您的後端 API 需求）：
+            queryParams.CAT_LNo = null; // 設為 null
+            // delete queryParams.CAT_LNo; // 或刪除參數
+          }
+          // 如果有值，保持陣列格式不變
+        }
+  
+        console.log('查詢參數:', queryParams); // 除錯用，上線時可移除
+  
+        this.apiService.queryTLS51020(queryParams).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.data = response.Data.map((item: CategoryItem) => ({
+                ...item,
+                CAT_LDisplay: `${item.CAT_LNo || ''} - ${item.CAT_LName || ''}`
+              }));
+              this.filteredData = [...this.data];
+              this.totalRecords = response.TotalCount || response.Data.length;
+              this.queryStateService.setQueryState(this.ProgNo, frm.value);
+              if (this.data.length === 0) {
+                console.log('查詢結果為空');
+              }
+            } else {
+              console.error('API error:', response.Status, response.Message);
+            }
+            this.loading = false;
+            this.messageService.unblockUi();
+          },
+          error: (err: string) => {
+            console.error('API error:', err);
+            this.loading = false;
+            this.messageService.unblockUi();
+          }
+        });
+      });
     }
-  }
-
-  onDetail(data: any) {
-    console.log(data);
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
-
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
-      },
-    };
-
-    console.log(crudstatus);
-
-    this.router.navigate(['/TLS4000/TLS41030CRU'], extras);
-  }
+  
+  
+    onDelete(data: CategoryItem | CategoryItem[]): void {
+      const items = Array.isArray(data) ? data : [data];
+      if (items.length === 0) return;
+  
+      const idList = items
+        .filter(item => item && item.id != null)
+        .map(item => item.id);
+  
+      if (idList.length === 0) {
+        this.messageService.warnBubble('未找到有效的刪除項目');
+        return;
+      }
+  
+      this.apiService.deleteTLS51020({ idList }).subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            this.messageService.successBubble('選中項目刪除成功');
+          } else {
+            console.error('API error:', response.Status, response.Message);
+            this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+          }
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.messageService.errorBubble('刪除失敗');
+        },
+        complete: () => {
+          this.onSubmit(this.queryForm); // 刷新資料
+        },
+      });
+  
+      this.selectedItems = [];
+    }
+  
+    isRowSelectable(rowData: CategoryItem): boolean {
+      return rowData.CanDel
+    }
 }
