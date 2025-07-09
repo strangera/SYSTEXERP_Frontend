@@ -1,9 +1,10 @@
 export interface UserInfo {
-  user_No: string;
-  AccessToken: string;
-  id: number;
-  user_Name: string;
-  user_email: string;
-  USER_PwdExpireDate: string;
-  SYS_StoreNo: string;
+  AccessToken: string;        // Token
+  SYS_StoreNo: string;        // 分店編號
+  USER_PwdExpireDate: string; // 使用者密碼過期日期
+  id: number;                 // ID 
+  mid: string;                // 商場編號  
+  user_Name: string;          // 使用者 名稱
+  user_No: string;            // 使用者 編號
+  user_email: string;         // 使用者 電子郵件
 }

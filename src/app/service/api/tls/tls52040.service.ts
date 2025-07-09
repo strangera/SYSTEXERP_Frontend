@@ -85,7 +85,7 @@ export interface ITLS52040Detail {
   RJD_SaleTax?: number; // 銷售稅額
   RJD_SaleAmt?: number; // 銷售金額 (售價小計)
   RJD_Remark?: string | null; // 明細備註
-  POD_SubQty?: number; // 採購數量 (來自採購單明細，用於參考)
+  CRN_SubQty?: number; // 採購數量 (來自採購單明細，用於參考)
   RJD_ConfirmQty_Finished?: number; // 已完成確認數量 (累計已驗收數量)
   CRN_No?: string; // 退貨單號 (關聯)
   RJM_No?: string; // 退貨驗收單號 (主檔關聯)
@@ -204,8 +204,8 @@ export class Tls52040Service {
    * @param params 查詢條件 (RJM_No)
    * @returns 包含 ITLS52040Detail 陣列的 API 響應 (假設返回退貨驗收明細列表)
    */
-  GetPOS2032(params: IGetPOS2032Request): Observable<ApiResponse<ITLS52040Detail[]>> {
-    return this.http.post<ApiResponse<ITLS52040Detail[]>>(`${this.apiUrl}/GetPOS2032`, params);
+  GetPOS2032(params: IGetPOS2032Request): Observable<any> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/GetPOS2032`, params);
   }
 
   /**

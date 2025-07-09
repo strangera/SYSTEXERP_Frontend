@@ -120,6 +120,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
         id: item.id,
         ODM_No: formData.ODM_No,
         SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
+        HOS_No: formData.HOS_No,
         PLU_MagNo: item.PLU_MagNo,
         PLU_No: item.PLU_No,
         PLU_Unit: item.PLU_Unit,
@@ -219,6 +220,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
           ODD_ConfirmQty: 0
         }))
       ];
+      this.calculateTotals();
     })
     this.dialogVisible = false;
     this.selectedItemsDialog = [];

@@ -18,9 +18,9 @@ import { FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdo
 export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     CRN_No: [{ value: '系統自動產生', disabled: true }], // 採購單號 (與 POS2016.PO_No 對應)
-    VEN_No: [null, [Validators.required]], // 廠商編號 (與 POS2016.VEN_No 對應)
+    VEN_No: ['84445301-1', [Validators.required]], // 廠商編號 (與 POS2016.VEN_No 對應)
     vendorShortName: [{ value: '', disabled: true }], // 廠商簡稱 (前端專用，不對應資料庫欄位，顯示在 VEN_No 下一欄)
-    LOGO_No: ['', [Validators.required]], // 品牌編號 (與 POS2016.LOGO_No 對應)
+    LOGO_No: ['0001', [Validators.required]], // 品牌編號 (與 POS2016.LOGO_No 對應)
     HOS_No: [{ value: null as string | null, disabled: true }, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
     CRN_TotalBuyNet: [{ value: 0, disabled: true }], // 採購金額
     CRN_TotalBuyTax: [{ value: 0, disabled: true }], //稅額

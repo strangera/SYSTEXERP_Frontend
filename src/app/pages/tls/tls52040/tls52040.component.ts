@@ -12,6 +12,8 @@ import { FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdo
 export const enum POStatus {
   已確認 = '1',
   已審核 = '2',
+  部分驗收 = '3',
+  全部驗收 = '4',
   作廢 = '9',
 }
 @Component({
@@ -33,7 +35,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
     APRV_USR: [''], // 審核人員
     APRV_Date_Start: [''], // 審核(驗收)日期起
     APRV_Date_End: [''], // 審核(驗收)日期迄
-    ...createPaginationConfig([{ field: 'APRV_Date', order: -1 }, { field: 'RJM_No', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'APPLY_Date', order: -1 }, { field: 'RJM_No', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
   warehouseOptions: IDropdownItem[] = []; // 倉別
@@ -54,16 +56,16 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
     { field: 'HOS_No', header: '倉庫代碼', visible: true },
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
     { field: 'org_id', header: '組織代碼/所屬部門', visible: true },
-    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime },
-    { field: 'APPLY_USR_No', header: '申請人員', visible: true },
-    { field: 'APPLY_USR_Name', header: '申請人員姓名', visible: true },
+    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime, sortField: 'APPLY_Date' },
+    { field: 'APPLY_USR_No', header: '申請人員', visible: true, sortField: 'APPLY_USR_No' },
+    { field: 'APPLY_USR_Name', header: '申請人員姓名', visible: true, sortField: 'APPLY_USR_Name' },
+    { field: 'RJM_Status', header: '退貨狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value },
     { field: 'RJM_TotalBuyNet', header: '未稅進價小計', visible: true, format: formatAmount },
     { field: 'RJM_TotalBuyTax', header: '進價稅額小計', visible: true, format: formatAmount },
     { field: 'RJM_TotalBuyAmt', header: '進價合計', visible: true, format: formatAmount },
     { field: 'RJM_TotalSaleNet', header: '未稅售價小計', visible: true, format: formatAmount },
     { field: 'RJM_TotalSaleTax', header: '售價稅額小計', visible: true, format: formatAmount },
     { field: 'RJM_TotalSaleAmt', header: '售價合計', visible: true, format: formatAmount },
-    { field: 'RJM_Status', header: '驗收狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value },
     // { field: 'RJM_TaxType', header: '單據稅別', visible: true, format: value => value === '1' ? '應稅' : '免稅' },
     { field: 'APRV_Date', header: '審核(驗收)日期', visible: true, format: formatDateTime },
     { field: 'APRV_USR_No', header: '審核人員', visible: true },
@@ -154,7 +156,9 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       });
     })
   }
+  btnLoading = false;
   statusChange(rowData: ITLS52040Data, status: string) {
+    this.btnLoading = true;
     const body = {
       id: rowData.id,
       RJM_No: rowData.RJM_No,
@@ -162,7 +166,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       RJM_Status_Ori: rowData.RJM_Status,
       Rebate_No: rowData.Request_No || '',
     }
-    this.tls52040Service.updateStatusTLS52040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+    this.tls52040Service.updateStatusTLS52040(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.onSubmit(this.queryForm);
     });
@@ -217,5 +221,15 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       this.opTotalRecords = results.TotalCount;
       this.opLoading = false;
     });
+  }
+  get disabledClose() {
+    return this.selectedItems.some(item => (item.RJM_Status !== POStatus.已審核) && (item.RJM_Status !== POStatus.部分驗收));
+  }
+
+  get selectedCount() {
+    return this.selectedItems.length;
+  }
+  print(rowData: ITLS52040Data[]) {
+    console.log('列印多筆事件:', rowData);
   }
 }
