@@ -32,19 +32,22 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
   }
 
   async ngOnInit(): Promise<void> {
-    const state = history.state;
-    console.log('✅ Router 傳入的 state:', state);
+const state = history.state;
 
-    if (state?.data) {
-      this.data = state.data;
-      this.queryFormValue = state.queryFormValue;
-      this.dateStart = state.queryFormValue?.TXN_DateStart || '';
-      this.dateEnd = state.queryFormValue?.TXN_DateEnd || '';
-      this.pageSize = state.pageSize || 1000;
-      this.printedAt = new Date().toLocaleString('zh-TW');
-    } else {
-      this.messageService.warnBubble('⚠️ 無資料可顯示，請重新查詢。');
-    }
+
+if (state?.data && Array.isArray(state.data)) {
+  
+  this.data = state.data;
+  this.queryFormValue = state.queryFormValue;
+  this.dateStart = state.queryFormValue?.TXN_DateStart || '';
+  this.dateEnd = state.queryFormValue?.TXN_DateEnd || '';
+  this.pageSize = state.pageSize || 1000;
+  this.printedAt = new Date().toLocaleString('zh-TW');
+  
+} else {
+  console.warn('🚨 state.data 無效，無法顯示報表');
+  this.messageService.warnBubble('⚠️ 無資料可顯示，請重新查詢。');
+}
 
     this.tls11010Service.getOrgOptions().subscribe(res => {
       this.OrganizationCodeOptions = (res || []).map(x => ({
@@ -69,10 +72,9 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
     this.initializePage('TLS23120', this.dataForm);
   }
 
-  moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0';
-  }
-
+moneyFormat(value: any): string {
+  return typeof value === 'number' ? value.toLocaleString('en-US') : '0';
+}
   goBack(): void {
     this.location.back();
   }
@@ -90,16 +92,16 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
       printedAt: this.printedAt,
       columns: this.columns,
       data: this.data,
-      subtotalFields: [
-        'transactionCount',
-        'netSales',
-        'businessTax',
-        'transactionAmount',
-        'preSaleCount',
-        'preSaleAmount',
-        'settleCount',
-        'settleAmount'
-      ],
+subtotalFields: [
+  'sad_sale_qty',
+  'sad_sale_namt',
+  'sad_sale_tax',
+  'sad_sale_amt',
+  'sad_preorder_qty',
+  'sad_preorder_amt',
+  'sad_settle_qty',
+  'sad_settle_amt'
+],
       summaryText: [],
       mergeTotalCols: 1
     });
