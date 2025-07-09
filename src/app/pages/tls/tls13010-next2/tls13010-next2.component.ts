@@ -19,7 +19,8 @@ import {
   Step3DataChangeTracker,
   WorkflowStep,
   UnifiedCommissionResponse,
-  ChargeSettingApiItem
+  ChargeSettingApiItem,
+  SubmitDataStructure
 } from '../tls13010/tls13010.model';
 
 @Component({
@@ -47,6 +48,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   // 展開區域表格的動態列定義
   detailColumns: ColumnDef[] = [];
+
+  showConfirmDialog = false;
 
   // 合約資訊欄位定義
   contractInfoColumns: ColumnDef[] = [
@@ -904,9 +907,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   hasCommissionData(): boolean {
-    const hasData = this.dataLoaded && this.commissionData && this.commissionData.length > 0;
+    // 數據已載入，且有抽成項目（未被刪除的）
+    const hasData = this.dataLoaded &&
+      this.commissionData &&
+      this.commissionData.filter(item => item._status !== 'deleted').length > 0;
     return hasData;
   }
+
 
   private saveCommissionDataToWorkflow(): void {
     console.log('💾 Next2 儲存抽成資料到工作流程...');
@@ -2135,16 +2142,25 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     // 根據抽成別決定下一步
     if (this.isGeneralCommissionMode) {
-      // 一般抽成：驗證資料並送出
+      // 🎯 修改：一般抽成顯示確認對話框而不是直接送出
       const validation = this.validateGeneralCommissionData();
       if (!validation.isValid) {
         this.notificationService.warnBubble(validation.errors[0]);
         return;
       }
-      this.submitGeneralCommissionContract();
+
+      // 🎯 新增：顯示確認對話框
+      this.showConfirmDialog = true;
     } else {
       // 其他抽成別：導航到 Next3
       this.router.navigate(['account/tls/tls13010next3']);
+    }
+  }
+
+  onConfirmDialogResult(confirmed: boolean): void {
+    this.showConfirmDialog = false;
+    if (confirmed) {
+      this.submitGeneralCommissionContract();
     }
   }
 
@@ -2152,14 +2168,15 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     const errors: string[] = [];
 
     // 檢查是否有抽成項目
-    if (!this.commissionData || this.commissionData.length === 0) {
-      errors.push('請至少設定一個抽成項目');
+    const activeCommissionItems = this.commissionData.filter(item => item._status !== 'deleted');
+    if (!activeCommissionItems || activeCommissionItems.length === 0) {
+      errors.push('請至少新增一個抽成項目');
       return { isValid: false, errors };
     }
 
     // 檢查每個抽成項目
-    for (let i = 0; i < this.commissionData.length; i++) {
-      const item = this.commissionData[i];
+    for (let i = 0; i < activeCommissionItems.length; i++) {
+      const item = activeCommissionItems[i];
       const itemIndex = i + 1;
 
       // 檢查基本資料
@@ -2205,8 +2222,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   override onCancel(): void {
     this.saveCommissionDataToWorkflow();
-    this.router.navigate(['account/tls/tls13010next1']);
-    this.notificationService.infoBubble('已返回扣款設定頁面');
+    this.router.navigate(['account/tls/tls13010']);
+    this.notificationService.infoBubble('已返回初始頁面');
   }
 
   onRealCancel(): void {
@@ -2230,7 +2247,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   getCommissionItemCount(): number {
-    return this.commissionData.length;
+    return this.commissionData.filter(item => item._status !== 'deleted').length;
   }
 
   reloadData(): void {
@@ -2253,13 +2270,14 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     this.notificationService.blockUi();
 
     try {
-      // 🎯 準備完整的合約資料
-      const contractData = this.prepareCompleteContractData();
+      // 🎯 修改：使用與 Next3 相同的邏輯
+      const submitDataStructure = this.contractFlowService.generateSubmitData();
 
-      console.log('📋 準備送出的合約資料:', contractData);
+      // 🎯 新增：完整 JSON 輸出（與 Next3 一致）
+      console.log('🚀 完整提交 JSON:', JSON.stringify(submitDataStructure, null, 2));
 
-      // 🎯 TODO: 調用 API 送出合約 (目前先模擬)
-      this.callSubmitContractAPI(contractData);
+      // 🎯 修改：調用統一的提交 API
+      this.callSubmitAPI(submitDataStructure);
 
     } catch (error) {
       console.error('❌ 準備合約資料時發生錯誤:', error);
@@ -2269,55 +2287,12 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     }
   }
 
-  private prepareCompleteContractData(): any {
-    console.log('🔄 準備完整合約資料...');
-
-    // 取得各步驟的資料
-    const step1Data = this.contractFlowService.getStep1Data(); // 基本資料
-    const step2Data = this.contractFlowService.getStep2Data(); // 扣款設定
-    const step3Data = this.contractFlowService.getStep3Data(); // 抽成設定
-
-    // 🎯 合併所有資料
-    const completeData = {
-      // 基本合約資訊
-      contractInfo: {
-        talent_id: step1Data?.talent_id || this.currentTalentId,
-        apply_no: step1Data?.apply_no || '',
-        tlt_name: step1Data?.tlt_name || '',
-        ven_uniform: step1Data?.ven_uniform || '',
-        VEN_Name: step1Data?.VEN_Name || '',
-        contract_subno: step1Data?.contract_subno || '',
-        tlt_term_type: step1Data?.tlt_term_type || '3',
-        tlt_bdate: step1Data?.tlt_bdate || '',
-        tlt_edate: step1Data?.tlt_edate || '',
-        tlt_contract_bdate: step1Data?.tlt_contract_bdate || '',
-        tlt_contract_edate: step1Data?.tlt_contract_edate || '',
-        ...step1Data
-      },
-
-      // 扣款設定
-      deductionSettings: step2Data || [],
-
-      // 抽成設定
-      commissionSettings: step3Data || [],
-
-      // 工作流程資訊
-      workflowInfo: {
-        currentStep: 'COMMISSION_COMPLETED',
-        submissionTime: new Date().toISOString(),
-        isGeneralCommission: true
-      }
-    };
-
-    console.log('✅ 完整合約資料準備完成');
-    return completeData;
-  }
-
-  private callSubmitContractAPI(contractData: any): void {
+  // 🎯 修改：統一的 API 調用邏輯（與 Next3 一致）
+  private callSubmitAPI(submitData: SubmitDataStructure): void {
     console.log('📤 調用送出合約 API...');
 
     // 🎯 TODO: 實際的 API 調用
-    // this.tls13010Service.submitContract(contractData).subscribe({
+    // this.tls13010Service.submitContract(submitData).subscribe({
     //   next: (response) => {
     //     console.log('✅ 合約送出成功:', response);
     //     this.handleSubmitSuccess(response);
@@ -2328,45 +2303,18 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     //   }
     // });
 
-    // 🎯 暫時模擬 API 調用成功
+    // 🎯 暫時模擬 API 調用成功（與 Next3 一致）
     setTimeout(() => {
-      console.log('✅ 模擬 API 調用成功');
-      this.handleSubmitSuccess({
-        success: true,
-        message: '一般抽成合約送出成功',
-        contractId: contractData.contractInfo.talent_id
-      });
+      this.loading = false;
+      this.notificationService.unblockUi();
+      this.notificationService.successBubble('契約資料提交成功！');
+      this.contractFlowService.clearAllData();
+      this.router.navigate(['account/tls/tls13010']);
     }, 2000);
   }
 
-  private handleSubmitSuccess(response: any): void {
-    console.log('✅ 合約送出成功處理:', response);
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-
-    // 顯示成功訊息
-    this.notificationService.successBubble(
-      response.message || '一般抽成合約已成功送出'
-    );
-
-    // 🎯 清除暫存資料
-    this.contractFlowService.clearTempData();
-
-    // 🎯 延遲導航回主頁面
-    setTimeout(() => {
-      this.router.navigate(['account/tls/tls13010']);
-    }, 1500);
-  }
-
-  private handleSubmitError(error: any): void {
-    console.error('❌ 合約送出失敗處理:', error);
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-
-    // 顯示錯誤訊息
-    const errorMessage = error?.message || '合約送出失敗，請稍後再試';
-    this.notificationService.errorBubble(errorMessage);
+  getDeductionItemCount(): number {
+    const step2Data = this.contractFlowService.getStep2Data();
+    return Array.isArray(step2Data) ? step2Data.filter(item => item._status !== 'deleted').length : 0;
   }
 }
