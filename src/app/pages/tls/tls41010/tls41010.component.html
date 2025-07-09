@@ -34,14 +34,13 @@
             [options]="statusOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_Status"
             [submitted]="submitted"></app-multi-select>
 
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="區域" controlName="ECR_AreaNo"
-            [control]="queryForm.controls.ECR_AreaNo" [submitted]="submitted"></app-input-text>
 
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="次樓別" controlName="ECR_SubGroup"
-            [control]="queryForm.controls.ECR_SubGroup" [submitted]="submitted"></app-input-text>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="樓層" controlName="ECR_SubGroup"
+            [options]="floorOptions" [control]="queryForm.controls.ECR_SubGroup"
+            [submitted]="submitted"></app-multi-select>
 
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="位置編號" controlName="ECR_LocNo"
-            [control]="queryForm.controls.ECR_LocNo" [submitted]="submitted"></app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="位置編號" controlName="ECR_LocNo"
+            [control]="queryForm.controls.ECR_LocNo" [submitted]="submitted"></app-dropdown>
 
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="機台類型" controlName="ECR_Type"
             [control]="queryForm.controls.ECR_Type" [options]="typeOptions" optionLabel="label" optionValue="value"
@@ -64,19 +63,19 @@
             [control]="queryForm.controls.ECR_USR_Name" [submitted]="submitted"></app-input-text>
         </div>
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機電腦名稱" controlName="ECR_ComName"
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="機台電腦名稱" controlName="ECR_ComName"
             [control]="queryForm.controls.ECR_ComName" [submitted]="submitted"></app-input-text>
 
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機網路IP" controlName="ECR_IP"
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="機台網路IP" controlName="ECR_IP"
             [control]="queryForm.controls.ECR_IP" [submitted]="submitted"></app-input-text>
 
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機後台主機IP" controlName="ECR_SrvIP"
-            [control]="queryForm.controls.ECR_SrvIP" [submitted]="submitted"></app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="後台主機IP" controlName="ECR_SrvIP"
+            [control]="queryForm.controls.ECR_SrvIP" [submitted]="submitted"></app-dropdown>
         </div>
         <hr />
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="周邊設定模版編號" controlName="ECR_TmplNo"
-            [control]="queryForm.controls.ECR_TmplNo" [submitted]="submitted"></app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="環境變數編號" controlName="ECR_TmplNo"
+            [control]="queryForm.controls.ECR_TmplNo" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>

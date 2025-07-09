@@ -3,6 +3,10 @@ import { FormGroup, Validators } from '@angular/forms'; // Import FormBuilder
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS41010Data } from '../../../service/api/tls/tls41010.service';
+import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
+import { finalize } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+
 import { guiTypeOptions, salTypeOptions, sernoTypeOptions, settleDDOptions, statusOptions, typeOptions, yesNoOptions } from './tls41010-cru.model';
 
 // 2.4.1.1 收銀機基本資料維護 CRU
@@ -146,12 +150,36 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   yesNoOptions = yesNoOptions
 
   constructor(
+    private tls46020Service: TLS46020Service,
+    private http: HttpClient
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
     this.initializePage('TLS41010', this.dataForm);
+    this.dataForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
+      if (tmplNo) {
+        this.callTLS46020Api(tmplNo);
+      }
+    });
+  }
+  callTLS46020Api(tmplNo: string) {
+    const params = {
+      ECR_TmplNo: tmplNo,
+      PageSize: 10,
+      PageIndex: 1
+    };
+
+    this.loading = true;
+    this.tls46020Service.queryTLS46020(params).pipe(finalize(() => this.loading = false)).subscribe({
+      next: (res) => {
+        console.log('查詢 TLS46020 成功', res.Data);
+      },
+      error: (err) => {
+        console.error('查詢 TLS46020 失敗', err);
+      }
+    });
   }
 
   onSubmit(frm: FormGroup) {

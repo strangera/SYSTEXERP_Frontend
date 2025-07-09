@@ -1,6 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
 
   <p-accordion>
@@ -38,12 +39,11 @@
             <app-input-text label="廠商簡稱" controlName="	VEN_SName" [control]="queryForm.controls.VEN_SName"
               [submitted]="submitted"></app-input-text>
           </div>
-
-          <div class="col-12 md:col-6 lg:col-6">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="廠商匯款銀行代號" controlName="VEN_BankNo" [control]="queryForm.controls.VEN_BankNo"
-              [submitted]="submitted"></app-dropdown>
+              [options]="(bankOptions$ | async) || []" optionLabel="label" optionValue="value" [submitted]="submitted">
+            </app-dropdown>
           </div>
-
           <div class="col-12 md:col-6 lg:col-6">
             <app-input-text label="通訊地址" controlName="VEN_Address" [control]="queryForm.controls.VEN_Address"
               [submitted]="submitted"></app-input-text>
@@ -119,8 +119,8 @@
 
 <div class="card">
   <app-table tableKey="TLS2A020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (edit)="onEdit($event)" (selectionChange)="selectedItems = $event" [showCheckBox]="true" dataKey="id"
-    [multiSortMeta]="[{ field: 'pendingApprovalRegisterCode', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
-    [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [showManage]="true"></app-table>
+    (edit)="onEdit($event)" (selectionChange)="selectedItems = $event" (detail)="onDetail($event)" [showCheckBox]="true"
+    dataKey="id" [multiSortMeta]="[{ field: 'pendingApprovalRegisterCode', order: 1 }]" [totalRecords]="totalRecords"
+    [lazy]="true" [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [showManage]="true" [addButton]="addButton" [showDelete]=false></app-table>
 </div>
