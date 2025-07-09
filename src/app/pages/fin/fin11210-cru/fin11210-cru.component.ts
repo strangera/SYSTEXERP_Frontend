@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { FIN11210, FIN11210Service } from '../../../service/api/fin/fin11210.service';
+import { FIN11210Data, FIN11210Service } from '../../../service/api/fin/fin11210.service';
 
 @Component({
   selector: 'app-fin11210-cru',
   templateUrl: './fin11210-cru.component.html',
   styleUrl: './fin11210-cru.component.scss'
 })
-export class FIN11210CruComponent extends BasicCruPageComponent<FIN11210> {
+export class FIN11210CruComponent extends BasicCruPageComponent<FIN11210Data> {
   dataForm = this.formBuilder.nonNullable.group({
     code: ['', [Validators.required, Validators.maxLength(2)]], // 參數代碼
     content: ['', [Validators.required, Validators.maxLength(100)]], // 參數內容

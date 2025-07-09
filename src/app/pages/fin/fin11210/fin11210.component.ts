@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FIN11210 } from '../../../service/api/fin/fin11210.service';
+import { FIN11210Data } from '../../../service/api/fin/fin11210.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { FormGroup, Validators } from '@angular/forms';
@@ -11,14 +11,14 @@ import { FIN11210Service } from '../../../service/api/fin/fin11210.service';
   templateUrl: './fin11210.component.html',
   styleUrl: './fin11210.component.scss'
 })
-export class FIN11210Component extends BasicQueryPageComponent<FIN11210> implements OnInit {
+export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> implements OnInit {
   queryForm = this.formBuilder.group({
     code: ['', [Validators.maxLength(3)]], // 金資中心銀行代碼
     ...createPaginationConfig([{ field: 'code', order: 0 }]), // 分頁和排序參數
   });
   totalRecords = 0;
-  data: FIN11210[] = [];
-  selectedItems: FIN11210[] = [];
+  data: FIN11210Data[] = [];
+  selectedItems: FIN11210Data[] = [];
   columns: Column[] = [
     { field: 'code', header: '參數代碼', visible: true },
     { field: 'description', header: '參數說明', visible: true },
@@ -45,7 +45,7 @@ export class FIN11210Component extends BasicQueryPageComponent<FIN11210> impleme
     })
   }
 
-  isRowSelectable(rowData: FIN11210): boolean {
+  isRowSelectable(rowData: FIN11210Data): boolean {
     return true;
   }
 }

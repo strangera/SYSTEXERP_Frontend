@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 
-export interface FIN11210 {
+export interface FIN11210Data {
   code: string;      // 參數代碼
   description: string; // 參數說明
   content: string; // 參數內容
@@ -20,7 +20,7 @@ export class FIN11210Service {
   constructor() { }
 
   // 查詢
-  queryFIN11210(params: FIN11210QueryRequest): Observable<BaseQueryResponse<FIN11210>> {
+  queryFIN11210(params: FIN11210QueryRequest): Observable<BaseQueryResponse<FIN11210Data>> {
     // 回傳假資料
     return new Observable((r) => {
       r.next({
@@ -33,7 +33,7 @@ export class FIN11210Service {
         Message: '查詢成功',
         TotalCount: 1,
         TotalPage: 1,
-      } as BaseQueryResponse<FIN11210>);
+      } as BaseQueryResponse<FIN11210Data>);
       r.complete();
     });
   }
