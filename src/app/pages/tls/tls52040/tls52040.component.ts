@@ -3,7 +3,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ITLS52040Data, Tls52040Service } from '../../../service/api/tls/tls52040.service';
 import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { finalize, map, Subject, takeUntil } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
@@ -44,7 +44,6 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
   vendorOptions: IDropdownItem[] = []; // 廠商編號
   poStatusOptions: { label: string, value: string }[] = []; // 採購單狀態 (靜態資料)
   userOptions: { label: string, value: string }[] = []; // 申請人員、審核人員、結案人員
-  private destroy$ = new Subject<void>(); // 用於管理訂閱的生命週期
   data: ITLS52040Data[] = [];
   selectedItems: ITLS52040Data[] = [];
   columns: Column[] = [
@@ -116,18 +115,18 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
   ngOnInit(): void {
     this.initializePage('TLS52040', 'TLS/TLS52040cru', this.queryForm, (f) => this.onSubmit(f));
     // 倉別 (HOS_No)
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this), takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
       this.warehouseOptions = response.Data;
     });
     // 品牌代碼 (LOGO_No)
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this), takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.brandOptions = response.Data.map(brand => ({
         ...brand,
         label: `${brand.No} - ${brand.Name}`,
       }));
     });
     // 廠商編號 (VEN_No)
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this), takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.vendorOptions = response.Data.map(vendor => ({
         ...vendor,
         label: `${vendor.VEN_No} - ${vendor.Name}`,
@@ -140,7 +139,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       { label: '作廢', value: '9' },
     ];
     // 申請人員、審核人員、結案人員 (共用人員下拉選單)
-    this.dropDownListService.queryUser_Name_DropDownList().pipe(untilDestroyed(this),
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this),
       map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
     ).subscribe(options => {
       this.userOptions = options;
