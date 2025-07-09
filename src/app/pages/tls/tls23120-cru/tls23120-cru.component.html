@@ -6,31 +6,75 @@
 
   <!-- 報表區塊 -->
   <div class="card">
-    <app-report-table-group 
+    <app-report-table-group
       [columns]="columns"
       [data]="data"
       [subtotalFields]="[
-        'transactionCount',
-        'netSales',
-        'businessTax',
-        'transactionAmount',
-        'preSaleCount',
-        'preSaleAmount',
-        'settleCount',
-        'settleAmount'
+        'sad_sale_qty',
+        'sad_sale_namt',
+        'sad_sale_tax',
+        'sad_sale_amt',
+        'sad_preorder_qty',
+        'sad_preorder_amt',
+        'sad_settle_qty',
+        'sad_settle_amt',
       ]"
-      [enableGrouping]="false"
-      [reportTitle]="'區分銷售月報表'"
+      [enableGrouping]="true"
+      [reportTitle]="'專櫃日對帳單'"
       [currentPage]="1"
       [dateStart]="dateStart"
       [dateEnd]="dateEnd"
       [printedAt]="printedAt"
       [showTotalOnly]="false"
       [pdfSummaryText]="[]"
-      [defaultMergedView]="true"
+      [defaultMergedView]="false"
       [showExpandColumn]="false"
       [detailFieldKeys]="['area']"
-    >
-    </app-report-table-group>
-  </div>  
+      [groupByField]="'tlt_name'"
+      [groupByLabel]="'櫃位名稱'"
+      [showGroupedBody]="true"
+      [showDateRangeLabel]="false"
+      [groupHeaderTemplate]="customGroupHeader"
+       [secondaryGroupByField]="'SYS_Name'"
+    ></app-report-table-group>
+  </div>
 </div>
+<ng-template #customGroupHeader let-group>
+  <div class="grid p-fluid">
+    <!-- 資料區間 -->
+    <div class="col-12 md:col-6 lg:col-4">
+      資料區間：{{ dateStart | date: "yyyy/MM/dd" }} ~
+      {{ dateEnd | date: "yyyy/MM/dd" }}
+    </div>
+    <div></div>
+
+    <!-- 其他資料 -->
+    <div class="col-12 md:col-6 lg:col-4">
+      業種：{{ group[0]?.bus_type }} / {{ group[0]?.bus_type_name }}
+    </div>
+    <div class="col-12 md:col-6 lg:col-4">
+      銷售日期：{{ group[0]?.TXN_DATE | date: "yyyy/MM/dd" }}
+    </div>
+
+    <div class="col-12 md:col-6 lg:col-4">
+      專櫃：{{ group[0]?.TLT_NO }} / {{ group[0]?.tlt_name }}
+    </div>
+    <div class="col-12 md:col-6 lg:col-4">製表日期：{{ printedAt }}</div>
+
+    <div class="col-12 md:col-6 lg:col-4">
+      區域：{{ group[0]?.AREA_NO ?? "－" }}
+    </div>
+    <div class="col-12 md:col-6 lg:col-4">
+      樓層：{{ group[0]?.FLOOR_NO ?? "－" }}
+      <span class="text-blue-600 ml-2">抽成類別：</span>
+      <span class="text-red-600">{{ group[0]?.Talent_ID ?? "無" }}</span>
+    </div>
+
+    <div class="col-12 md:col-6 lg:col-4">
+      交易總件數：{{ group.length }} / 退貨件數：{{ group[0]?.return_qty ?? 0 }}
+    </div>
+    <div class="col-12 md:col-6 lg:col-4">
+      退貨金額：{{ group[0]?.return_amt ?? 0 }}
+    </div>
+  </div>
+</ng-template>

@@ -20,8 +20,8 @@
             <app-calendar-range-quick
               calendarType="dateRange"
               label="銷售日期區間"
-              [startControl]="queryForm.controls.saleDateStart"
-              [endControl]="queryForm.controls.saleDateEnd"
+              [startControl]="queryForm.controls.TXN_DateStart"
+              [endControl]="queryForm.controls.TXN_DateEnd"
               [submitted]="submitted"
             ></app-calendar-range-quick>
           </div>
@@ -34,7 +34,7 @@
               [options]="CounterOptions"
               optionLabel="formLabel"
               optionValue="value"
-              [control]="queryForm.controls.tlt_no"
+              [control]="queryForm.controls.TLT_No"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -44,7 +44,7 @@
             <app-multi-select
               label="大分類"
               [options]="bus_typeOptions"
-              [control]="queryForm.controls.bus_typeList"
+              [control]="queryForm.controls.bus_type"
               optionLabel="label"
               optionValue="value"
               [submitted]="submitted"
@@ -55,11 +55,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="是否顯示大分類"
-              controlName="whetherDisplayBusinessType"
+              controlName="ShowBusType"
               [options]="whetherOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.whetherDisplayBusinessType"
+              [control]="queryForm.controls.ShowBusType"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -79,11 +79,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="區域"
-              controlName="regionCode"
+              controlName="area_no"
               [options]="regionOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.regionCode"
+              [control]="queryForm.controls.area_no"
               [submitted]="submitted"
             ></app-multi-select>
           </div>

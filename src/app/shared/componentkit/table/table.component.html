@@ -16,7 +16,8 @@
   currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})" (onSort)="onSort($event)"
   (selectionChange)="onSelectionChange($event)" (onRowSelect)="select.emit($event)"
   (onRowUnselect)="unSelect.emit($event)" [rowSelectable]="rowSelectableWrapper"
-  [expandedRowKeys]="IsPrint ? expandedRows : {}" paginatorDropdownAppendTo="body" editMode="row">
+  [loading]="loading && data.length === 0" [expandedRowKeys]="IsPrint ? expandedRows : {}"
+  paginatorDropdownAppendTo="body" editMode="row">
   <ng-template pTemplate="caption">
     <div class="grid align-items-center justify-content-between mx-0" *ngIf="showCaption && !rowEditing">
       <div class="caption-left button-group flex gap-2 py-2">

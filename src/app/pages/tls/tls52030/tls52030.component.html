@@ -8,31 +8,36 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 採購單號 -->
+          <!-- 退貨單號 -->
           <app-input-text class="col-12 md:col-6 lg:col-4" label="進貨驗收單號" controlName="ODM_No"
             [control]="queryForm.controls.ODM_No" [submitted]="submitted"></app-input-text>
-          <!-- 倉別 (對應 HOS_No) -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉別" controlName="HOS_No"
-            [options]="warehouseOptions" optionLabel="Name" optionValue="No" [control]="queryForm.controls.HOS_NoList"
-            [submitted]="submitted"></app-multi-select>
+          <!-- 單據狀態 (退貨單狀態) -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="進貨驗收單狀態" controlName="ODM_Status"
+            [options]="poStatusOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.ODM_StatusList" [submitted]="submitted"></app-multi-select>
           <!-- 管理編號 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="管理編號" controlName="PLU_MagNo"
-            [control]="queryForm.controls.PLU_MagNo" [submitted]="submitted"></app-input-text>
-          <!-- 品牌代碼 (對應 LOGO_No) -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌編號" controlName="LOGO_No" [options]="brandOptions"
-            optionLabel="label" optionValue="No" [control]="queryForm.controls.LOGO_NoList"
-            [submitted]="submitted"></app-multi-select>
+          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.PLU_MagNo"
+            [submitted]="submitted" optionLabel="PLU_MagNo" optionValue="PLU_MagNo" [suggestions]="suggestions"
+            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
+            (formValueChanged)="onformValueChanged($event)" [formGroup]="opForm" [dialogData]="opData"
+            [dialogColumns]="opColumns" [loading]="opLoading" [totalRecords]="opTotalRecords">
+            <app-input-text class="col-12 md:col-6" label="管理編號" controlName="queryNo"
+              [control]="opForm.controls.queryNo" />
+            <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
+              [control]="opForm.controls.PLU_Name" />
+          </app-dropdown-table>
           <!-- 廠商編號 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號" controlName="VEN_No" [options]="vendorOptions"
             optionLabel="label" optionValue="No" [control]="queryForm.controls.VEN_No"
             [submitted]="submitted"></app-dropdown>
-          <!-- 單據狀態 (採購單狀態) -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="單據狀態" controlName="ODM_Status"
-            [options]="poStatusOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.ODM_StatusList" [submitted]="submitted"></app-multi-select>
-          <!-- 採購單號 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="採購單號" controlName="PO_No"
-            [control]="queryForm.controls.PO_No" [submitted]="submitted"></app-input-text>
+          <!-- 品牌代碼 (對應 LOGO_No) -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌編號" controlName="LOGO_No" [options]="brandOptions"
+            optionLabel="label" optionValue="No" [control]="queryForm.controls.LOGO_NoList"
+            [submitted]="submitted"></app-multi-select>
+          <!-- 倉別 (對應 HOS_No) -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉別" controlName="HOS_No"
+            [options]="warehouseOptions" optionLabel="Name" optionValue="No" [control]="queryForm.controls.HOS_NoList"
+            [submitted]="submitted"></app-multi-select>
         </div>
         <hr />
         <div class="grid p-fluid">
@@ -41,9 +46,12 @@
             optionLabel="label" optionValue="value" [control]="queryForm.controls.ODM_USR"
             [submitted]="submitted"></app-dropdown>
           <!-- 申請日期 -->
-          <app-calendar-range class="col-12 md:col-6" calendarType="dateRange" label="申請日期"
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
             [startControl]="queryForm.controls.ODM_Date_Start" [endControl]="queryForm.controls.ODM_Date_End"
             [submitted]="submitted"></app-calendar-range>
+          <!-- 退貨單號 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="退貨單號" controlName="PO_No"
+            [control]="queryForm.controls.PO_No" [submitted]="submitted"></app-input-text>
         </div>
         <div class="grid p-fluid">
           <!-- 審核人員 -->
@@ -51,7 +59,7 @@
             optionLabel="label" optionValue="value" [control]="queryForm.controls.APRV_USR"
             [submitted]="submitted"></app-dropdown>
           <!-- 審核日期 -->
-          <app-calendar-range class="col-12 md:col-6" calendarType="dateRange" label="審核日期"
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="審核日期"
             [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"
             [submitted]="submitted"></app-calendar-range>
         </div>
