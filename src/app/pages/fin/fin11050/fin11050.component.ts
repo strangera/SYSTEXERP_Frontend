@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { FIN11050, Fin11050Service } from '../../../service/api/fin/fin11050.service';
 import { Validators, FormGroup } from '@angular/forms';
+import { FIN11050Data, FIN11050QueryRequest, Fin11050Service } from '../../../service/api/fin/fin11050.service';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
@@ -9,8 +9,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
   templateUrl: './fin11050.component.html',
   styleUrl: './fin11050.component.scss'
 })
-
-export class FIN11050Component extends BasicQueryPageComponent<FIN11050> implements OnInit {
+export class FIN11050Component extends BasicQueryPageComponent<FIN11050Data> implements OnInit {
   queryForm = this.formBuilder.group({
     format_code: ['', [Validators.maxLength(2)]],        // 格式代號
     format_name: ['', [Validators.maxLength(100)]],      // 格式名稱
@@ -18,13 +17,13 @@ export class FIN11050Component extends BasicQueryPageComponent<FIN11050> impleme
   });
 
   totalRecords = 0;
-  data: FIN11050[] = [];
+  data: FIN11050Data[] = [];
   columns: Column[] = [
     { field: 'format_code', header: '格式代號', visible: true },
     { field: 'format_name', header: '格式名稱', visible: true }
   ];
 
-  selectedItems: FIN11050[] = [];
+  selectedItems: FIN11050Data[] = [];
 
   constructor(private fin11050Service: Fin11050Service) {
     super();
@@ -36,7 +35,7 @@ export class FIN11050Component extends BasicQueryPageComponent<FIN11050> impleme
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.fin11050Service.queryFIN11050(frm.value).subscribe({
+      this.fin11050Service.queryFIN11050(frm.value as FIN11050QueryRequest).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.data = response.Data || [];
@@ -48,7 +47,7 @@ export class FIN11050Component extends BasicQueryPageComponent<FIN11050> impleme
           this.loading = false;
           this.messageService.unblockUi();
         },
-        error: (err: string) => {
+        error: () => {
           this.loading = false;
           this.messageService.unblockUi();
         },
@@ -56,7 +55,7 @@ export class FIN11050Component extends BasicQueryPageComponent<FIN11050> impleme
     });
   }
 
-  isRowSelectable(rowData: FIN11050): boolean {
+  isRowSelectable(rowData: FIN11050Data): boolean {
     return true;
   }
 }
