@@ -221,6 +221,8 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   /* LOGOBUDGET 品牌每月進貨限額設定檔*/
   /* POS2004 商品基本資料檔 */
   // 沒有該資料才可以刪除
+  // 更新刪除邏輯
+  // 有歷史庫存就不能刪除
   //-------------
   // 刪除項目
   onDelete(data: POS2004 | POS2004[]): void {
@@ -245,13 +247,13 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     }
 
     //確認是否全部都可以刪除
-    // const canDelete = items.every((item) => item.CanDel);
+    const canDelete = items.every((item) => item.CanDel);
 
-    // if (!canDelete) {
-    //   console.error('Some items cannot be deleted');
-    //   this.messageService.errorBubble('無法刪除：組織階層互相關連');
-    //   return;
-    // }
+    if (!canDelete) {
+      console.error('Some items cannot be deleted');
+      this.messageService.errorBubble('無法刪除：組織階層互相關連');
+      return;
+    }
 
     const deleteBody = {
       idList: idList, // 符合 API 的 idList 格式
