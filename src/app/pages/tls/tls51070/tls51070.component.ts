@@ -5,6 +5,9 @@ import { createPaginationConfig, Column } from '../../../shared/componentkit/tab
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { POS2004 } from '../../../shared/models/tls/tls000.model';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
+import { FileSelectEvent } from 'primeng/fileupload';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { environment } from '../../../../environments/environment';
 
 // 2.5.1.7  商品基本資料
 @Component({
@@ -361,5 +364,38 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
         destination: destination,
       }
     });
+  }
+
+  //匯入excel並產生錯誤檔
+  onFileUpload(event: FileSelectEvent) {
+    const file = event.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    this.tls51070Service.uploadTLS51070(formData).pipe(untilDestroyed(this)).subscribe({
+      next: (res) => {
+        const data = res?.Data;
+
+        if (data) {
+          if (data.ErrorFilePath) {
+            // 有錯誤檔：顯示錯誤提示
+            this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
+            // 自動下載錯誤檔
+             this.downloadErrorFile(data.ErrorFilePath);
+          } else {
+            // 沒有錯誤檔：顯示成功筆數
+            this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
+          }
+        }
+      },
+      error: (err) => {
+        console.error(err);
+        this.messageService.errorBubble('檔案上傳失敗，請稍後再試');
+      },
+    });
+  }
+
+  downloadErrorFile(filePath: string) {
+    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 }
