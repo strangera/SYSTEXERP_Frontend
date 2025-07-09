@@ -70,6 +70,7 @@ export class FIN11090Component extends BasicQueryPageComponent<FIN11090> impleme
   }
 
   onConfirm(selectedItems: FIN11090QueryResponse[]) {
+    if (selectedItems.length === 0) return;
     this.messageService.successBubble('取消作廢紀錄並同步更新發票狀態');
     console.log('已選擇項目:', selectedItems);
     // 接api

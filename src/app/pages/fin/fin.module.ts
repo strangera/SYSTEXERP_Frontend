@@ -14,7 +14,6 @@ import { FIN11060Component } from './fin11060/fin11060.component';
 import { FIN11070Component } from './fin11070/fin11070.component';
 import { FIN11080CRUComponent } from './fin11080-cru/fin11080-cru.component';
 import { FIN11080Component } from './fin11080/fin11080.component';
-import { FIN11090CRUComponent } from './fin11090-cru/fin11090-cru.component';
 import { FIN11090Component } from './fin11090/fin11090.component';
 import { FIN12010CRUComponent } from './fin12010-cru/fin12010-cru.component';
 import { FIN12010Component } from './fin12010/fin12010.component';
@@ -344,7 +343,6 @@ import { FIN11210CruComponent } from './fin11210-cru/fin11210-cru.component';
     FIN11070Component,
     FIN11080CRUComponent,
     FIN11080Component,
-    FIN11090CRUComponent,
     FIN11090Component,
     FIN11200Component,
     FIN11200CRUComponent,
