@@ -163,7 +163,51 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
         this.callTLS46020Api(tmplNo);
       }
     });
+    this.dataForm.get('ECR_SrvIP')?.valueChanges.subscribe((ip) => {
+      if (ip) {
+        this.callOtherApi(ip);
+      }
+    });
+    this.dataForm.get('ECR_Type')?.valueChanges.subscribe((value) => {
+      this.checkTltNoRequired(value);
+    });
+
+    // 預設初始化時檢查一次
+    this.checkTltNoRequired(this.dataForm.get('ECR_Type')?.value ?? '');
+
+
   }
+  callOtherApi(ip: string) {
+    const apiUrl = `http://${ip}/TLS0000/TLS4000/queryTLS46010`;
+    const requestData = {
+      queryKey: 'value'
+    };
+
+    this.loading = true;
+    this.http.post(apiUrl, requestData).pipe(finalize(() => this.loading = false)).subscribe({
+      next: (res) => {
+        console.log('呼叫後台主機 API 成功', res);
+      },
+      error: (err) => {
+        console.error('呼叫後台主機 API 失敗', err);
+      }
+    });
+  }
+  checkTltNoRequired(value: string) {
+    const tltNoControl = this.dataForm.get('ECR_TLT_No');
+
+    if (value === '2') {
+      // 設為必填
+      tltNoControl?.setValidators([Validators.required, Validators.maxLength(20)]);
+    } else {
+      // 取消必填
+      tltNoControl?.clearValidators();
+    }
+
+    tltNoControl?.updateValueAndValidity();
+  }
+
+
   callTLS46020Api(tmplNo: string) {
     const params = {
       ECR_TmplNo: tmplNo,
