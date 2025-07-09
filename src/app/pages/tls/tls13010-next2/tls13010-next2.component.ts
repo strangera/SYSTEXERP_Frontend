@@ -2222,7 +2222,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   override onCancel(): void {
     this.saveCommissionDataToWorkflow();
-    this.router.navigate(['account/tls/tls13010']);
+    this.router.navigate(['account/tls/tls13010next1']);
     this.notificationService.infoBubble('已返回初始頁面');
   }
 
