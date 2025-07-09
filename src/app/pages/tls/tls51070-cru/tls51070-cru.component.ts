@@ -322,6 +322,13 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         // 若品牌編號為空 不進行操作
       }
     });
+
+    //新增模式時如果 [商品售價] 發生變動就強制設定品牌為空 防止價錢算錯
+    this.dataForm.get('PLU_SalePrc')!.valueChanges.subscribe(() => {
+      if(this.crudstatus == CRUDStatus.Create){
+        this.dataForm.get('LOGO_No')?.setValue('');
+      }
+    });
   }
 
   //根據新增/編輯 環境建立表單
@@ -507,7 +514,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           { field: 'PLU_TransType', header: '運輸方式', editable: true, type: 'dropdown', options: this.transTypeOption }, // １＝自行送貨２＝貨運  ３＝快遞  ４＝其它。
           { field: 'PLU_TransDay', header: '送貨天數', editable: true, type: 'number' },
           { field: 'PLU_Purchase', header: '採購狀態', editable: true, type: 'dropdown', options: this.purchaseTypeOption }, // １＝正常採購（預設） ２＝停止採購
-          { field: 'PLU_OrderPrc', header: '目前進價', editable: false, type: 'number' }, //目前進價 > 顯示 最後進價
+          { field: 'PLU_OrderPrc', header: '目前進價', editable: false, type: 'number'}, //目前進價 > 顯示 最後進價
           //readonly，商品新增時，最後進價=POS2004的標準進價PLU_OrderPrc，之後進價異動透過進價/售價變價作業(關帳作業、啟動變價時更新)
 
           { field: 'VDP_LastStockDate', header: '最後進貨日期', editable: false, type: 'date' }, //  readonly，商品新增時，不給值，進貨作業驗收更新
@@ -561,18 +568,15 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   //讀取明細檔案
   async loadDetail(pLU_MagNo: string, pLU_OrderPrc: number): Promise<void> {
     if (pLU_MagNo == '') {
-      this.messageService.infoBubble('商品管理碼為空，不載入明細檔');
+      if(this.crudstatus !== CRUDStatus.Create)
+        this.messageService.infoBubble('商品管理碼為空，不載入明細檔'); //編輯、查看模式如果沒有明細檔就跳出提示
     } else {
       this.tls51070Service.queryTLS51070_Detail({ 'PLU_MagNo': pLU_MagNo }).subscribe(async (response) => {
-        // this.img1001Detail = response.Data[0].IMG1001Detail.map((item: { IMG_Path: string; IMG_File: File; }) => ({ ...item, IMG_Path: `${environment.ApiUrl}/${item.IMG_Path.replace('~', '')}/${item.IMG_File}` }));
-
         this.pos2005Detail = response.Data[0].POS2005Detail;
         this.pos2020Detail = response.Data[0].POS2020Detail;
-
         const rawImages = response.Data[0].IMG1001Detail;
 
         // 圖片讀取時進行轉檔 將IMG1001Detail的IMG_File內容變更為_以後的內容
-        // this.img1001Detail = response.Data[0].IMG1001Detail.map((item: { IMG_File: string; }) => {
         const downloadPromises = rawImages.map(async (item: any) => {
         const path = item.IMG_Path.replace('~', '');
         const url = `${environment.ApiUrl}/${path}/${item.IMG_File}`.replace(/\/{2,}/g, '/');
