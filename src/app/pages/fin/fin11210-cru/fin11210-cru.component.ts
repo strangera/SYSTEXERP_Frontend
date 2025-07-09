@@ -26,6 +26,8 @@ export class FIN11210CruComponent extends BasicCruPageComponent<FIN11210Data> {
   }
 
   onSubmit(frm: FormGroup) {
+    this.submitted = true;
+
     // 呼叫新增資料的api
     console.log('Submitting form:', frm.value);
   }
