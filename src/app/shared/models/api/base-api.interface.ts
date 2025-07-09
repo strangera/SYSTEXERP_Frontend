@@ -13,7 +13,7 @@ export interface BaseQueryRequest {
 
 export interface BaseQueryResponse<T> {
   Status: string; // 狀態標記
-  Data: T;                              // 泛型資料，可為陣列或物件
+  Data: T[];                              // 泛型資料，可為陣列或物件
   Error?: ApiError;                     // 錯誤資訊（選填）
   Meta: ApiMeta;                       // 請求中繼資訊（選填）
   Message: string;                     // 額外訊息
