@@ -326,6 +326,8 @@ import { FIN11200Component } from './fin11200/fin11200.component';
 import { FIN11200CRUComponent } from './fin11200-cru/fin11200-cru.component';
 import { TooltipModule } from 'primeng/tooltip';
 import { FIN11050CRUComponent } from './fin11050-cru/fin11050-cru.component';
+import { FIN11210Component } from './fin11210/fin11210.component';
+import { FIN11210CruComponent } from './fin11210-cru/fin11210-cru.component';
 
 @NgModule({
   declarations: [
@@ -652,7 +654,9 @@ import { FIN11050CRUComponent } from './fin11050-cru/fin11050-cru.component';
     FIN73020Component,
     FIN73030Component,
     FIN73040Component,
-    FIN11050CRUComponent
+    FIN11050CRUComponent,
+    FIN11210Component,
+    FIN11210CruComponent
   ],
   imports: [
     CommonModule,

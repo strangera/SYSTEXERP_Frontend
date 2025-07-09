@@ -324,6 +324,8 @@ import { FIN73040Component } from './fin73040/fin73040.component';
 import { FIN11200Component } from './fin11200/fin11200.component';
 import { FIN11200CRUComponent } from './fin11200-cru/fin11200-cru.component';
 import { FIN11050CRUComponent } from './fin11050-cru/fin11050-cru.component';
+import { FIN11210CruComponent } from './fin11210-cru/fin11210-cru.component';
+import { FIN11210Component } from './fin11210/fin11210.component';
 
 const routes: Routes = [
   { path: 'fin11010', component: FIN11010Component },  // 營業人申報設定
@@ -646,6 +648,9 @@ const routes: Routes = [
   { path: 'fin73020cru', component: FIN73020CRUComponent },
   { path: 'fin73030', component: FIN73030Component },  // 支付申請單
   { path: 'fin73040', component: FIN73040Component },  // 零用金撥補明細表
+  { path: 'fin11210', component: FIN11210Component },  // 電子發票參數維護作業
+  { path: 'fin11210cru', component: FIN11210CruComponent },
+
 ];
 
 @NgModule({
