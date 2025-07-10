@@ -9,7 +9,9 @@ export interface FIN11210Data {
 }
 
 export interface FIN11210QueryRequest extends BaseQueryRequest {
-  code?: string;      // 參數代碼
+  code: string;      // 參數代碼
+  description: string; // 參數說明
+  cashierNo: string; // 收銀機號
 }
 
 @Injectable({
