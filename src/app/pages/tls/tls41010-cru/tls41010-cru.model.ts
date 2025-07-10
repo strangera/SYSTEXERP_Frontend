@@ -13,7 +13,7 @@ export const statusOptions = [
 ];
 
 export const salTypeOptions = [
-  { label: '商場收銀機台(預設值)', value: '' },
+  { label: '商場收銀機台', value: '' },
   { label: '停車場機台', value: 'PKNG' },
   { label: '會員APP', value: 'APP' },
   { label: '環友票券系統', value: 'CPN' },
@@ -21,18 +21,18 @@ export const salTypeOptions = [
 
 export const sernoTypeOptions = [
   { label: '循環使用', value: '1' },
-  { label: '每日重計(預設值)', value: '2' },
+  { label: '每日重計', value: '2' },
   { label: '每月重計', value: '3' },
 ];
 
-export const guiTypeOptions = [
-  { label: '不開發票', value: '00' },
-  { label: '二聯式收銀機發票', value: '03' },
-  { label: '電子發票(預設值)', value: '07' },
+export const ECR_GUI_Type_Option = [
+  { value: '07', label: '電子發票' },
+  { value: '00', label: '不開發票' },
+  { value: '03', label: '二聯式收銀機發票' },
 ];
 
 export const settleDDOptions = [
-  { label: '當天(預設值)', value: 'T' },
+  { label: '當天', value: 'T' },
   { label: '隔天', value: 'N' },
 ];
 

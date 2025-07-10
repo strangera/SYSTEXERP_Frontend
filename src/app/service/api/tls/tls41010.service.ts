@@ -4,191 +4,56 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../system/auth.service';
 import { SortMeta } from 'primeng/api';
+import { TLS41010Data } from '../../../pages/tls/tls41010/tls41010.model';
 
 const API_URL = `${environment.ApiUrl}/TLS0000/TLS4000`;
 
 export interface QueryTLS41010Request {
-    PageSize: number;
-    PageIndex: number;
-    SortBy?: SortMeta[];
-    ECR_No?: string;
-    ECR_Name?: string;
-    ECR_TLT_No?: string;
-    ECR_TLT_Name?: string;
-    ECR_ActiveDateStart?: string;
-    ECR_ActiveDateEnd?: string;
-    ECR_CloseDateStart?: string;
-    ECR_CloseDateEnd?: string;
-    ECR_Status?: string;
-    ECR_AreaNo?: string;
-    ECR_SubGroup?: string;
-    ECR_LocNo?: string;
-    ECR_Type?: string;
-    ECR_SAL_Type?: string;
-    ECR_GUI_Type?: string;
-    ECR_USR_No?: string;
-    ECR_USR_Name?: string;
-    ECR_ComName?: string;
-    ECR_IP?: string;
-    ECR_SrvIP?: string;
-    ECR_TmplNo?: string;
-}
-
-export interface TLS41010Data {
-    id: number;
-    SYS_StoreNo: string;
-    ECR_No: string;
-    ECR_Name: string;
-    ECR_Type: string;
-    ECR_TLT_No: string;
-    ECR_TLT_Name: string;
-    ECR_USR_No: string;
-    ECR_USR_Name: string;
-    ECR_ActiveDate: string;
-    ECR_ExpireDate: string;
-    ECR_CloseDate: string;
-    ECR_Status: string;
-    ECR_Group: string;
-    ECR_SubGroup: string;
-    ECR_AreaNo: string;
-    ECR_LocNo: string;
-    HOS_No: string;
-    ECR_SAL_Type: string;
-    ECR_ComName: string;
-    ECR_IP: string;
-    ECR_SrvIP: string;
-    ECR_TmplNo: string;
-    ECR_SernoType: string;
-    ECR_GUI_Type: string;
-    ECR_TimeTickInvl: number;
-    ECR_Interval: number;
-    ECR_MaxQty: number;
-    ECR_MaxAmt: number;
-    ECR_MaxItemAmt: number;
-    ECR_MaxDisc: number;
-    ECR_EdcTimeout: number;
-    ECR_EdcSettle: string;
-    ECR_ForceInput: string;
-    ECR_CustCntEntry: string;
-    ECR_CustTypeEntry: string;
-    ECR_ClerkEntry: string;
-    ECR_ForceMember: string;
-    ECR_BoxReqCode: string;
-    ECR_SelfReport: string;
-    ECR_SaleRpt1: string;
-    ECR_SaleRpt2: string;
-    ECR_SaleRpt3: string;
-    ECR_SaleRpt4: string;
-    ECR_SaleRpt5: string;
-    ECR_SaleRpt6: string;
-    ECR_SaleRpt7: string;
-    ECR_SaleRpt8: string;
-    ECR_SaleRpt9: string;
-    ECR_SaleRpt10: string;
-    ECR_PcashValid: string;
-    ECR_PickUpValid: string;
-    ECR_ReprintGUI: string;
-    ECR_PrnLogo: string;
-    ECR_Logo1: string;
-    ECR_Logo2: string;
-    ECR_Logo3: string;
-    ECR_Logo4: string;
-    ECR_Logo5: string;
-    ECR_Logo6: string;
-    ECR_VoidTxn: string;
-    ECR_VoidRstDay: number;
-    ECR_CreditNote: string;
-    ECR_GUI_PeriodQty: number;
-    ECR_GUI_MinQty: number;
-    ECR_SettleDD: string;
-    ECR_SettleHHNN: string;
-    ECR_KBLevel: string;
-    ECR_KBType: string;
-    ECR_Scanner: string;
-    ECR_ScannerCom: number;
-    ECR_ScrType: string;
-    ECR_CD: string;
-    ECR_CDCom: number;
-    ECR_ExtScr: string;
-    ECR_ExtScrCom: number;
-    ECR_GUIPrn: string;
-    ECR_GUICom: number;
-    ECR_SlipPrn: string;
-    ECR_SlipPrnCom: number;
-    ECR_LablePrn: string;
-    ECR_LablePrnCom: number;
-    ECR_EDC: string;
-    ECR_EDCCom: number;
-    ECR_EDC2: string;
-    ECR_EDC2Com: number;
-    ECR_EDC3: string;
-    ECR_EDC3Com: number;
-    ECR_ElecSVCrdA: string;
-    ECR_ElecSVCrdACom: number;
-    ECR_ElecSVCrdB: string;
-    ECR_ElecSVCrdBCom: number;
-    ECR_ElecSVCrdC: string;
-    ECR_ElecSVCrdCCom: number;
-    ECR_ElecPay: string;
-    ECR_ElecPayCom: number;
-    ECR_Drawer: string;
-    ECR_DrawerCom: number;
-    ECR_Device1Name: string;
-    ECR_Device1Com: number;
-    ECR_Device2Name: string;
-    ECR_Device2Com: number;
-    ECR_Device3Name: string;
-    ECR_Device3Com: number;
-    ECR_Device4Name: string;
-    ECR_Device4Com: number;
-    ECR_Device5Name: string;
-    ECR_Device5Com: number;
-    ECR_Device6Name: string;
-    ECR_Device6Com: number;
-    ECR_Device7Name: string;
-    ECR_Device7Com: number;
-    ECR_Device8Name: string;
-    ECR_Device8Com: number;
-    ECR_Device9Name: string;
-    ECR_Device9Com: number;
-    ECR_Device10Name: string;
-    ECR_Device10Com: number;
-    CRT_Date: string;
-    CRT_USR_No: string;
-    CRT_USR_Name: string;
-    UPD_Date: string;
-    UPD_USR_No: string;
-    UPD_USR_Name: string;
-}
-
-export interface DeleteTLS41010Request {
-    idList: number[];
+  PageSize: number;
+  PageIndex: number;
+  SortBy?: SortMeta[];
+  ECR_No?: string;
+  ECR_Name?: string;
+  ECR_TLT_No?: string;
+  ECR_TLT_Name?: string;
+  ECR_ActiveDateStart?: string;
+  ECR_ActiveDateEnd?: string;
+  ECR_CloseDateStart?: string;
+  ECR_CloseDateEnd?: string;
+  ECR_Status?: string;
+  ECR_AreaNo?: string;
+  ECR_SubGroup?: string;
+  ECR_LocNo?: string;
+  ECR_Type?: string;
+  ECR_SAL_Type?: string;
+  ECR_GUI_Type?: string;
+  ECR_USR_No?: string;
+  ECR_USR_Name?: string;
+  ECR_ComName?: string;
+  ECR_IP?: string;
+  ECR_SrvIP?: string;
+  ECR_TmplNo?: string;
 }
 
 @Injectable({
-    providedIn: 'root',
+  providedIn: 'root',
 })
 export class TLS41010Service {
-    constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) { }
 
-    /** 查詢 */
-    queryTLS41010(params: QueryTLS41010Request): Observable<ApiResponse<TLS41010Data[]>> {
-        return this.http.post<ApiResponse<TLS41010Data[]>>(`${API_URL}/queryTLS41010`, params);
-    }
+  queryTLS41010(params: QueryTLS41010Request): Observable<ApiResponse<TLS41010Data[]>> {
+    return this.http.post<ApiResponse<TLS41010Data[]>>(`${API_URL}/queryTLS41010`, params);
+  }
 
-    /** 新增 */
-    insertTLS41010(data: Partial<TLS41010Data>): Observable<ApiResponse<any>> {
-        return this.http.post<ApiResponse<any>>(`${API_URL}/insertTLS41010`, data);
-    }
+  insertTLS41010(data: Partial<TLS41010Data>): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${API_URL}/insertTLS41010`, data);
+  }
 
-    /** 更新 */
-    updateTLS41010(data: Partial<TLS41010Data>): Observable<ApiResponse<any>> {
-        return this.http.post<ApiResponse<any>>(`${API_URL}/updateTLS41010`, data);
-    }
+  updateTLS41010(data: Partial<TLS41010Data>): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${API_URL}/updateTLS41010`, data);
+  }
 
-    /** 刪除 */
-    deleteTLS41010(idList: number[]): Observable<ApiResponse<any>> {
-        const body: DeleteTLS41010Request = { idList };
-        return this.http.post<ApiResponse<any>>(`${API_URL}/deleteTLS41010`, body);
-    }
+  deleteTLS41010(idList: number[]): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${API_URL}/deleteTLS41010`, { idList });
+  }
 }
