@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { ApiResponse } from '../../system/auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -17,9 +18,10 @@ export class SYSBR00Service {apiUrl: string = environment.ApiUrl + '/CityDist';
     return this.http.post<any>(`${this.apiUrl}/GetCity`, {})
   }
   // 查詢所有區域
-  queryDistricts(): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/GetArea`, {})
-  }
+queryDistricts(payload: { CITY_No: string }): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/GetArea`, payload);
+}
+
   // 條件查詢
   queryCitiesByCondition(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/GetCity`, data)
@@ -45,7 +47,10 @@ export class SYSBR00Service {apiUrl: string = environment.ApiUrl + '/CityDist';
     return this.http.post<any>(`${this.apiUrl}/UpdateArea`, data);
   }
   // 新增區域
-  insertArea(CITY_No: string, district: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/InsertSYS2100`, { CITY_No, ...district });
-  }
+insertArea(data: any): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/InsertSYS2100`, data);
+}
+  checkCityUnique(payload: { CITY_No: string, CITY_Name: string, CurrentCityId?: number }): Observable<ApiResponse<boolean>> {
+  return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/CheckCityUnique`, payload);
+}
 }

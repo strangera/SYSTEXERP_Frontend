@@ -4,6 +4,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { SYSBR00Service } from '../../../service/api/sys/sysbr00.service';
 import { finalize } from 'rxjs/operators';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 const QUERY_STORAGE_KEY = 'sysbr00Query';
 
@@ -14,9 +15,10 @@ const QUERY_STORAGE_KEY = 'sysbr00Query';
 })
 export class SYSBR00Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    City_No: ['', [Validators.maxLength(4)]],
-    City_Name: ['', [Validators.maxLength(8)]],
-    City_Group: ['', [Validators.maxLength(6)]],
+    
+    CITY_No: [''],
+    CITY_Name: [''],
+    CITY_Group: [''],
     ...createPaginationConfig([{ field: 'CITY_No', order: 1 }])
   });
 
@@ -79,6 +81,14 @@ export class SYSBR00Component extends BasicQueryPageComponent<any> implements On
       this.messageService.errorBubble('查詢錯誤');
     }
   });
+}
+override onEdit(row: any): void {
+this.navigateWithState(CRUDStatus.Edit, {
+  ...row,
+  original_CITY_No: row.CITY_No,
+  original_CITY_Name: row.CITY_Name
+});
+
 }
 
   onClearForm(): void {
