@@ -2,7 +2,6 @@ import { Tls41030Service } from './../../../service/API/tls/tls41030.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 import { option } from '../../../shared/models/sys/sysb000.module';
 
@@ -140,8 +139,7 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
 
       });
     }
-  
-  
+
     onDelete(data: POS2001 | POS2001[]): void {
       const items = Array.isArray(data) ? data : [data];
       if (items.length === 0) return;
@@ -155,28 +153,32 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
         return;
       }
   
-      // this.tls41030Service.deleteTLS41030({ idList }).subscribe({
-      //   next: (response) => {
-      //     if (response.Status === '0000') {
-      //       this.messageService.successBubble('選中項目刪除成功');
-      //     } else {
-      //       console.error('API error:', response.Status, response.Message);
-      //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-      //     }
-      //   },
-      //   error: (err: string) => {
-      //     console.error('API error:', err);
-      //     this.messageService.errorBubble('刪除失敗');
-      //   },
-      //   complete: () => {
-      //     this.onSubmit(this.queryForm); // 刷新資料
-      //   },
-      // });
+      this.tls41030Service.deleteTLS41030({ idList }).subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            this.messageService.successBubble('選中項目刪除成功');
+          } else {
+            console.error('API error:', response.Status, response.Message);
+            this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+          }
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.messageService.errorBubble('刪除失敗');
+        },
+        complete: () => {
+          this.onSubmit(this.queryForm); // 刷新資料
+        },
+      });
   
       this.selectedItems = [];
     }
   
+    //---0710規格更新--
+    // 刪除都先不用限制
+    //------
     isRowSelectable(rowData: POS2001): boolean {
-      return rowData.CanDel
+      // return rowData.CanDel;
+      return true;
     }
 }
