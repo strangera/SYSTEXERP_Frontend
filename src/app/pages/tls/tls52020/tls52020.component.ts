@@ -125,7 +125,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
       { label: '作廢', value: '9' },
     ];
     // 申請人員、審核人員、結案人員 (共用人員下拉選單)
-    this.dropDownListService.queryUser_Name_DropDownList().pipe(map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
     ).pipe(untilDestroyed(this)).subscribe(options => {
       this.userOptions = options;
     });

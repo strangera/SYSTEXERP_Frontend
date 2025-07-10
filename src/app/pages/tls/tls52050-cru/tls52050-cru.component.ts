@@ -1,68 +1,36 @@
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-// Services
-import { VendorService } from '../../../service/basic/vendor.service';
-import { BrandCodeService } from '../../../service/basic/brand-code.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { TranslateService } from '@ngx-translate/core';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { Router } from '@angular/router';
+import { FormGroup, Validators } from '@angular/forms';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ITLS52050Data, Tls52050Service } from '../../../service/api/tls/tls52050.service';
+import { Column } from '../../../shared/componentkit/table/table.model';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { map } from 'rxjs';
 
 @Component({
   selector: 'app-tls52050-cru',
   templateUrl: './tls52050-cru.component.html',
-  styleUrl: './tls52050-cru.component.scss'
 })
-export class TLS52050CRUComponent extends BasicCrupageComponent implements OnInit {
-
-  // ProgNo: string = '250018';
-  // funInfo?: FunsrightInfo;
-  // // Permissions
-  // a
-  // 
-  // 
-  // loading: boolean = false;
-  // submitted: boolean = false;
-
+export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> implements OnInit {
   dataForm = this.formBuilder.group({
-    priceChangeOrderNumber: [{ value: '自動編號', disabled: true }],  // 變價單號
-    brandCode: [, Validators.required],
-    vendorCode: [, Validators.required],
-    priceChangeDescription: [],
-    startDate: [],
-    applicationDate: [],
-    applicantCode: [],
-    costPriceDiscount: [],
-    costPriceAdjustment: [],
-    salePriceDiscount: [],
-    salePriceAdjustment: [],
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+    MAM_No: [{ value: '系統自動產生', disabled: true }],  // 變價單號
+    VEN_No: ['', Validators.required], // 廠商代號
+    LOGO_No: ['', Validators.required], // 品牌代號
+    MAM_InvDesc: ['', Validators.required], // 進價變價單說明
+    MAM_Method: [null, Validators.required], // 是否為永久變價
+    MAM_BegDate: [null, Validators.required], // 生效起始日期
+    MAM_EndDate: [{ value: null as Date | null, disabled: true }], // 生效結束日期
+    APPLY_USR_No: [{ value: null as string | null, disabled: true }], // 申請人
+    APPLY_Date: [{ value: new Date(), disabled: true }], // 申請日期
   });
-
-  // Dropdown options
-  brandCodeOptions: any[] = [];
-  vendorOptions: any[] = [];
-  userCodeOptions: any[] = [];
-  // formTitle: string = '';   //CRU
-  // showConfirm: boolean = false;//CRU
-  // crudstatus: CRUDStatus = CRUDStatus.Read;//CRU
-
-
-  // Table data
+  brandOptions: IDropdownItem[] = []; // 品牌代碼
+  vendorOptions: IDropdownItem[] = []; // 廠商編號
+  userOptions: { label: string, value: string }[] = []; // 申請人員、審核人員、結案人員
   data: any[] = [
     { projectNumber: '001', projectName: '專櫃A', activity: '促銷活動', startDate: '2023-01-01', endDate: '2023-01-31', executionStartDate: '2023-01-01', executionEndDate: '2023-01-31' },
     { projectNumber: '002', projectName: '專櫃B', activity: '新品發布', startDate: '2023-02-01', endDate: '2023-02-28', executionStartDate: '2023-02-01', executionEndDate: '2023-02-28' }
   ];
-
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'projectNumber', header: '專櫃編號', visible: true },
     { field: 'projectName', header: '櫃位名稱', visible: true },
     { field: 'activity', header: '活動', visible: true },
@@ -71,134 +39,38 @@ export class TLS52050CRUComponent extends BasicCrupageComponent implements OnIni
     { field: 'executionStartDate', header: '營運起始日', visible: true },
     { field: 'executionEndDate', header: '營運終止日', visible: true }
   ];
-
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private vendorService: VendorService,
-    private brandCodeService: BrandCodeService,
-    private userCodeService: UserCodeService,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
+    private dropDownListService: DropDownListService,
+    private tls52050Service: Tls52050Service
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '250018';
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.vendorService.getVendors().subscribe(data => this.vendorOptions = data);
-    this.brandCodeService.getSystemTypes().subscribe(data => this.brandCodeOptions = data);
-    this.userCodeService.getUserCode().subscribe(data => this.userCodeOptions = data);
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-
-    }//CRU
-  }
-
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-
-  //
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-
-      mgname: [],
-      bigC: [{ value: '自動帶入', disabled: true }],
-      midC: [{ value: '自動帶入', disabled: true }],
-      smallC: [{ value: '自動帶入', disabled: true }],
-      discount: [{ value: '自動帶入', disabled: true }],
-      padjprice: [{ value: '自動帶入', disabled: true }],
-      aadjprice: [],
-      padjsaleprice: [{ value: '自動帶入', disabled: true }],
-      aadjsaleprice: [],
-      descript: [],
-
+    this.initializePage('TLS52050', this.dataForm);
+    // 品牌代碼 (LOGO_No)
+    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
+      this.brandOptions = response.Data.map(brand => ({
+        ...brand,
+        label: `${brand.No} - ${brand.Name}`,
+      }));
+    });
+    // 廠商編號 (VEN_No)
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
+      this.vendorOptions = response.Data.map(vendor => ({
+        ...vendor,
+        label: `${vendor.VEN_No} - ${vendor.Name}`,
+      }));
+    });
+    // 申請人員、審核人員、結案人員 (共用人員下拉選單)
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this),
+      map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
+    ).subscribe(options => {
+      this.userOptions = options;
     });
   }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+    this.handleSubmit(frm, () => {
+    });
   }
-
-  submitForm(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCancel() {
-    this.router.navigate(['TLS5000/TLS52050']);
-  }
-
-
 }

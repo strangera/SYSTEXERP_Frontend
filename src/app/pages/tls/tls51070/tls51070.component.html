@@ -1,6 +1,8 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <p-fileUpload #fileUpload mode="basic" chooseIcon="pi pi-upload" accept=".xls" class="p-button p-button-sm"
+      (onSelect)="onFileUpload($event);fileUpload.clear()" [auto]="true" chooseLabel="匯入EXCEL" />
     <app-button label="變價歷史紀錄" (click)="gotoTls51070OS('history')"></app-button>
     <app-button label="產生標籤檔" (click)="gotoTls51070OS('label')"></app-button>
     <app-button

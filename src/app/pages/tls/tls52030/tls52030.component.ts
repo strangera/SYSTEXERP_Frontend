@@ -143,7 +143,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     ];
 
     // 申請人員、審核人員、結案人員 (共用人員下拉選單)
-    this.dropDownListService.queryUser_Name_DropDownList().pipe(untilDestroyed(this),
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this),
       map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
     ).subscribe(options => {
       this.userOptions = options;
