@@ -226,6 +226,11 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
 
   // 匯出標籤檔
   exportLabel(){
+    if (!this.labelData || this.labelData.length === 0) {
+      this.messageService.errorBubble('尚未產生標籤資料，請先查詢後再匯出');
+      return;
+    }
+
     // 將 labelData 的每一筆物件複製一份，並移除 id 屬性
     const exportData = this.labelData.map(({ id, ...rest }) => rest);
     this.tls51070Service.exportLabel(exportData)
