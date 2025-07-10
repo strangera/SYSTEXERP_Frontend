@@ -72,7 +72,6 @@ CREATE TABLE POS5006
     TXN_OrgTime         DATETIME               NULL,      /*原始交易時間*/
     TXN_SaleNoteNo      VARCHAR(30)            NULL,      /*銷貨單號，SA + 交易日期YYMMDD + 機號 + 流水號6碼*/
     TXN_Sales           VARCHAR(20)            NULL,      /*銷貨員*/
-
     TXN_MemID           VARCHAR(20)            NULL,      /*會員識別碼*/
     MEB_Type            VARCHAR(02)            NULL,      /*會員卡別*/
     TXN_VIP_Disc        DECIMAL(04)            NULL,      /*[未使用]*/
@@ -80,7 +79,6 @@ CREATE TABLE POS5006
     TXN_TotScoreAmt     DECIMAL(14,4)          NULL,      /*交易會員積點金額[未使用]*/
     TXN_TotPayScore     DECIMAL(14,4)          NULL,      /*會員點數扣抵(負項)*/
     TXN_TotPayScoreAmt  DECIMAL(14,4)          NULL,      /*會員點數扣抵金額(負項)*/
-
     TXN_PrintTimes      DECIMAL(02)            NULL,      /*列印次數*/
     TXN_GUI_Flag        CHAR(01)               NULL,      /*發票註記*/
     TXN_GUIItemCnt      DECIMAL(04)            NULL,      /*發票列印項數，POS30061的筆數*/
@@ -91,7 +89,6 @@ CREATE TABLE POS5006
     TXN_GUI_CarrType    VARCHAR(06)            NULL,      /*電子發票載具類別，悠遊載具卡=1K0001、手機條碼=3J0002、自然人憑證=CQ0001、一卡通載具=1H0001、信用卡載具=EK0002、#=取消載具*/
     TXN_GUI_CarrId      VARCHAR(64)            NULL,      /*電子發票載具ID隱碼，CarrierId2載具隱碼id 信用卡=信用卡加密卡號50碼*/
     TXN_GUI_CarrIdEx    VARCHAR(64)            NULL,      /*電子發票載具ID顯碼，CarrierId1載具顯碼id 信用卡=刷卡日期(民國年月日7碼)刷卡金額(右靠左補0共10碼) */
-
     TLT_No              VARCHAR(12)            NULL,      /*專櫃編號*/
     Contract_No         VARCHAR(12)            NULL,      /*專櫃合約編號*/
     Contract_SubNo      VARCHAR(04)            NULL,      /*專櫃合約附號*/
@@ -101,12 +98,9 @@ CREATE TABLE POS5006
     TXN_PreOrder        CHAR(01)               NULL,      /*預售註記，Y=是、N=否*/
     ECR_LocNo           VARCHAR(10)            NULL,      /*店位代碼，POS2002.Location_No*/
     TXN_TaxFreeCertNo   VARCHAR(10)            NULL,      /*免稅證證號*/
-
     TXN_TotTaxAlwnc     DECIMAL(12,4)          NULL,      /*備抵總稅額*/
-
 	PRM_TLT_No          VARCHAR(12)            NULL,      /*修正前-專櫃編號*/
 	PRM_Talent_ID       DECIMAL(19,0)          NULL,      /*修正前-專櫃合約編號系統 ID*/
-
     CRT_Date            DATETIME               NULL,      /*建立日期*/
     UPD_Date            DATETIME               NULL,      /*變更日期*/
 

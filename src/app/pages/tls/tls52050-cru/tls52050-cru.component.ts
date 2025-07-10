@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ITLS52050Data, Tls52050Service } from '../../../service/api/tls/tls52050.service';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { ITLS52050Data, POS2008Data, Tls52050Service } from '../../../service/api/tls/tls52050.service';
+import { Column, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { map } from 'rxjs';
@@ -39,19 +39,22 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   brandOptions: IDropdownItem[] = []; // 品牌代碼
   vendorOptions: IDropdownItem[] = []; // 廠商編號
   userOptions: { user_No: string; user_Name: string }[] = []; // 申請人員、審核人員、結案人員
-  data: any[] = [
-    { projectNumber: '001', projectName: '專櫃A', activity: '促銷活動', startDate: '2023-01-01', endDate: '2023-01-31', executionStartDate: '2023-01-01', executionEndDate: '2023-01-31' },
-    { projectNumber: '002', projectName: '專櫃B', activity: '新品發布', startDate: '2023-02-01', endDate: '2023-02-28', executionStartDate: '2023-02-01', executionEndDate: '2023-02-28' }
+  data: POS2008Data[] = [
+    { id: 1, MID: "0", MAM_No: "MAM202310010001", SYS_StoreNo: "10", PLU_MagNo: "PLU202310010001", PLU_Name: "商品名稱", CAT_LNo: "01", CAT_MNo: "01", CAT_SNo: "01", PLU_OrderPrcRate: 50, PLU_OrderPrc: 1000, MAM_OrderPrc: 500, PLU_SalePrc: 1200, MAM_UnitPrc: 600, MAD_Remark: "單項說明", }
   ];
-  selectedItems: any[] = [];
+  selectedItems: POS2008Data[] = [];
   columns: Column[] = [
-    { field: 'projectNumber', header: '專櫃編號', visible: true },
-    { field: 'projectName', header: '櫃位名稱', visible: true },
-    { field: 'activity', header: '活動', visible: true },
-    { field: 'startDate', header: '開始起始日', visible: true },
-    { field: 'endDate', header: '開始終止日', visible: true },
-    { field: 'executionStartDate', header: '營運起始日', visible: true },
-    { field: 'executionEndDate', header: '營運終止日', visible: true }
+    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
+    { field: 'PLU_Name', header: '商品名稱', visible: true },
+    { field: 'CAT_LNo', header: '大類代號', visible: true },
+    { field: 'CAT_MNo', header: '中類代號', visible: true },
+    { field: 'CAT_SNo', header: '小類代號', visible: true },
+    { field: 'PLU_OrderPrcRate', header: '進價折數', visible: true },
+    { field: 'PLU_OrderPrc', header: '調整前進價', visible: true },
+    { field: 'MAM_OrderPrc', header: '調整後進價', visible: true },
+    { field: 'PLU_SalePrc', header: '調整前售價', visible: true },
+    { field: 'MAM_UnitPrc', header: '調整後售價', visible: true },
+    { field: 'MAD_Remark', header: '營運終止日', visible: true }
   ];
   constructor(
     private dropDownListService: DropDownListService,
@@ -127,6 +130,11 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
         if (ctrlA.disabled) ctrlA.enable({ emitEvent: false });
       }
     });
+  }
+  onDelete(selectedRows: POS2008Data[]) {
+    this.data = this.data.filter(row => !selectedRows.includes(row));
+  }
+  onRowEditSave(event: RowEditSaveEvent) {
   }
   // onShowDialog
   onSubmit(frm: FormGroup) {

@@ -82,10 +82,21 @@ export interface ITLS52050Data {
 }
 
 export interface POS2008Data {
-  MID: number; // 商戶編號
-  MAM_No: string; // 促銷編號(變價單號)
-  SYS_StoreNo: string; // 公司編號/店號
+  id?: number; // ID - 隱藏
+  MID: string; // 商戶編號 - 隱藏
+  MAM_No: string; // 促銷編號(變價單號) - 隱藏
+  SYS_StoreNo: string; // 公司編號/店號 - 隱藏
   PLU_MagNo: string; // 商品管理編號
+  PLU_Name: string; // 商品名稱
+  CAT_LNo: string; // 大類代號
+  CAT_MNo: string; // 中類代號
+  CAT_SNo: string; // 小類代號
+  PLU_OrderPrcRate: number; // 進價折數
+  PLU_OrderPrc: number; // 調整前進價
+  MAM_OrderPrc: number; // 調整後進價
+  PLU_SalePrc: number; // 調整前售價
+  MAM_UnitPrc: number; // 調整後售價
+  MAD_Remark: string; // 單項說明
 }
 
 @Injectable({

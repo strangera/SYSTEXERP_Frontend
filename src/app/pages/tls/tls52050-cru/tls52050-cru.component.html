@@ -44,12 +44,11 @@
         <app-input-number class="col-12 md:col-6 lg:col-3" label="售價金額調整" controlName="salePriceAmount"
           [control]="dataForm.controls.salePriceAmount" [submitted]="submitted"></app-input-number>
       </div>
-      <!-- <app-table dataKey="id" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
+      <app-table dataKey="id" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
         (selectionChange)="selectedItems = $event" [showEdit]="false" [showDetail]="false" [showInsert]="true"
-        (insert)="onShowDialog()" [showRowEdit]="true" (delete)="onDelete($event)" (rowEditSave)="onRowEditSave($event)"
+        [showRowEdit]="true" (delete)="onDelete($event)" (rowEditSave)="onRowEditSave($event)"
         [showCaption]="isFormCreateable" [showReportMode]="false" [showManage]="!isFormReadable"
-        [multiSortMeta]="[{ field: 'PO_No', order: 1 }]" [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value &&
-        dataForm.controls.HOS_No.value ? false : true" [showDelete]="false" [showCheckBox]="false" /> -->
+        [multiSortMeta]="[{ field: 'PO_No', order: 1 }]" [showDelete]="false" [showCheckBox]="false" />
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" />
         <app-button btnType="submit" [loading]="loading" />
