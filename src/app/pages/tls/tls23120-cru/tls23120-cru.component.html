@@ -36,52 +36,53 @@
               class="p-button-sm p-button-secondary"
               (click)="goBack()"></button>
 
-      <div class="flex items-center gap-2">
-        <p-inputSwitch [(ngModel)]="showGroupedBody"
-                       (ngModelChange)="onToggleGroupedBody()" />
-        <label class="text-sm">顯示資料列</label>
-      </div>
+
     </div>
   </div>
 
 
   <!-- 群組資料表區塊 -->
-  <div class="grouped-view">
+  <div id="print-section"  class="grouped-view">
     <div *ngFor="let group of groupedData; let i = index" class="report-table-wrapper mb-5">
-        <div class="text-xl font-bold text-blue-600 mb-2" *ngIf="group?.length">
-  {{ groupByLabel }}：{{ group[0]?.[groupByField] }} / {{ group[0]?.tlt_name }}
+<div *ngIf="group?.rows?.length && !group.showTotal">
+  {{ groupByLabel }}：{{ group.tltKey }} / 抽成類別：{{ group.talentKey }}
 </div>
       <!-- 標頭 Template -->
-      <div class="grid p-fluid" *ngIf="group?.length">
-        <div class="col-12 md:col-6 lg:col-4">
+      <div class="grid p-fluid" *ngIf="group?.rows?.length">
+        <!-- <div class="col-12 md:col-6 lg:col-4">
           資料區間：{{ dateStart | date: "yyyy/MM/dd" }} ~ {{ dateEnd | date: "yyyy/MM/dd" }}
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">業種：{{ group[0]?.bus_type }} / {{ group[0]?.bus_type_name }}</div>
-        <div class="col-12 md:col-6 lg:col-4">銷售日期：{{ group[0]?.TXN_DATE | date: "yyyy/MM/dd" }}</div>
-        <div class="col-12 md:col-6 lg:col-4">專櫃：{{ group[0]?.TLT_NO }} / {{ group[0]?.tlt_name }}</div>
+        </div> -->
+<div class="col-12 md:col-6 lg:col-4" *ngIf="showBusType">
+  大分類：{{group.rows[0]?.bus_type }} / {{group.rows[0]?.bus_type_name }}
+</div>
+        <div class="col-12 md:col-6 lg:col-4">銷售日期：{{group.rows[0]?.TXN_DATE | date: "yyyy/MM/dd" }}</div>
+        <div class="col-12 md:col-6 lg:col-4">專櫃：{{group.rows[0]?.TLT_NO }} / {{group.rows[0]?.tlt_name }}</div>
         <div class="col-12 md:col-6 lg:col-4">製表日期：{{ printedAt }}</div>
-        <div class="col-12 md:col-6 lg:col-4">區域：{{ group[0]?.AREA_NO ?? '－' }}</div>
+        <div class="col-12 md:col-6 lg:col-4">區域：{{group.rows[0]?.AREA_NO ?? '－' }}</div>
         <div class="col-12 md:col-6 lg:col-4">
-          樓層：{{ group[0]?.FLOOR_NO ?? '－' }}
+          樓層：{{group.rows[0]?.FLOOR_NO ?? '－' }}
           <span class="text-blue-600 ml-2">抽成類別：</span>
-          <span class="text-red-600">{{ group[0]?.Talent_ID ?? '無' }}</span>
+          <span class="text-red-600">{{group.rows[0]?.TLT_ID ?? '無' }}</span>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          交易總件數：{{ group?.length ?? 0 }} / 退貨件數：{{ group[0]?.return_qty ?? 0 }}
+          交易總件數：{{ group?.rows?.length ?? 0 }} / 退貨件數：{{group.rows[0]?.return_qty ?? 0 }}
         </div>
-        <div class="col-12 md:col-6 lg:col-4">退貨金額：{{ group[0]?.return_amt ?? 0 }}</div>
+        <div class="col-12 md:col-6 lg:col-4">退貨金額：{{group.rows[0]?.return_amt ?? 0 }}</div>
       </div>
+<!-- 群組標題 -->
+<div class="text-xl font-bold text-blue-600 mb-2" *ngIf="group?.rows?.length && !group.showTotal">
+  {{ groupByLabel }}：{{ group.tltKey }} / 抽成類別：{{ group.talentKey }}
+</div>
 
-      <!-- 表格 -->
-      <p-table
-        [value]="group"
-        [columns]="selectedColumns"
-        [resizableColumns]="true"
-        [paginator]="false"
-        scrollable="true"
-        [style]="{ width: '100%' }"
-        [scrollHeight]="'auto'"
-        [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'">
+
+  <!-- 表格 -->
+  <p-table
+    [value]="group.rows"
+    [columns]="selectedColumns"
+    [paginator]="false"
+    scrollable="true"
+    [style]="{ width: '100%' }"
+    [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'">
         
         <!-- 表頭 -->
 <ng-template pTemplate="header">
@@ -112,23 +113,34 @@
           </tr>
         </ng-template>
 
-        <!-- 小計 -->
-        <ng-template pTemplate="footer">
-          <tr class="bg-yellow-100 font-semibold" *ngIf="subtotalFields.length > 0">
-            <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
-              <ng-container [ngSwitch]="col.field">
-                <ng-container *ngSwitchCase="'__index'">小計</ng-container>
-                <ng-container *ngSwitchDefault>
-                  <ng-container *ngIf="subtotalFields.includes(col.field)">
-                    {{ getSubtotal(group, col.field) }}
-                  </ng-container>
-                </ng-container>
-              </ng-container>
-            </td>
-          </tr>
-        </ng-template>
-
-      </p-table>
+      <!-- 表尾：小計 or 總計 -->
+    <ng-template pTemplate="footer">
+  <tr *ngIf="group.showSubtotal" class="font-semibold bg-yellow-100">
+    <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
+      <ng-container [ngSwitch]="col.field">
+        <ng-container *ngSwitchCase="'__index'">小計</ng-container>
+        <ng-container *ngSwitchDefault>
+          <ng-container *ngIf="subtotalFields.includes(col.field)">
+            {{ getSubtotal(group.rows, col.field) }}
+          </ng-container>
+        </ng-container>
+      </ng-container>
+    </td>
+  </tr>
+  <tr *ngIf="group.showTotal" class="font-semibold bg-orange-200">
+    <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
+      <ng-container [ngSwitch]="col.field">
+        <ng-container *ngSwitchCase="'__index'">總計</ng-container>
+        <ng-container *ngSwitchDefault>
+          <ng-container *ngIf="subtotalFields.includes(col.field)">
+            {{ getSubtotal(group.rows, col.field) }}
+          </ng-container>
+        </ng-container>
+      </ng-container>
+    </td>
+  </tr>
+</ng-template>
+  </p-table>
     </div>
   </div>
 
