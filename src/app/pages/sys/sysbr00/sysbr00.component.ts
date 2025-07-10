@@ -35,7 +35,7 @@ export class SYSBR00Component extends BasicQueryPageComponent<any> implements On
   }
 
   ngOnInit(): void {
-    this.initializePage('sysbr00', '/sys/sysbr00cru', this.queryForm);
+    this.initializePage('SYSBR00', '/sys/sysbr00cru', this.queryForm);
     this.handleQueryRestore(this.queryForm, QUERY_STORAGE_KEY, (form) => this.onSubmit(form));
   }
 
