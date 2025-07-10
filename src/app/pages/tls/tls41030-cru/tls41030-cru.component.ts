@@ -2,10 +2,8 @@ import { Tls41030Service } from './../../../service/API/tls/tls41030.service';
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { Tls51080Service } from '../../../service/api/tls/tls51080.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
-import { POS2034 } from '../../../shared/models/tls/tls000.model';
 
 interface POS2001 {
   id: number;
@@ -19,8 +17,8 @@ interface POS2001 {
   USR_RegType: string; // 收銀員區分，2=獨立收銀(預設值)、1=集中收銀
   USR_TLT_No: string; // 收銀員所屬櫃編
   USR_TLT_Name: string; // 收銀員所屬專櫃名稱
-  USR_OnJobDate: Date; // 啟用(到職)日期
-  USR_QuitDate: Date; // 停用(離職)日期
+  USR_OnJobDate: string; // 啟用(到職)日期
+  USR_QuitDate: string; // 停用(離職)日期
   CRT_Date: string; // 建立日期
   CRT_USR_No: string; // 建立人員
   CRT_USR_Name: string; // 建立人員姓名
@@ -42,10 +40,10 @@ export class TLS41030CRUComponent extends BasicCruPageComponent<POS2001>
   implements OnInit {
   // ----------------------------------------------------------------
     dataForm = this.formBuilder.nonNullable.group({
-      // id: [null, [Validators.required]], // decimal(19, 0)
+      id: [null, [Validators.required]], // decimal(19, 0)
       USR_No: ['', [Validators.required, Validators.maxLength(8)]], // 收銀員編號
       USR_Name: ['', [Validators.required, Validators.maxLength(20)]], // 收銀員姓名
-      USR_Passwd: ['', [Validators.required, Validators.maxLength(20)]], // 密碼
+      USR_Passwd: ['', [Validators.required, Validators.maxLength(20)]], // 密碼 (要顯示嗎，待確認)
       USR_Level: ['', [Validators.required, Validators.maxLength(6)]], // 收銀鍵盤等級(編號)
       USR_Auth: [0, [Validators.required, Validators.maxLength(6)]], // 收銀員授權等級，預設值為0
 
@@ -53,7 +51,7 @@ export class TLS41030CRUComponent extends BasicCruPageComponent<POS2001>
       USR_Class: ['R', [Validators.required, Validators.maxLength(2)]], // 收銀員等級
       USR_RegType: ['2', [Validators.required, Validators.maxLength(2)]], // 收銀員區分
       USR_TLT_No: ['', [Validators.maxLength(20)]], // 所屬櫃編（可選）
-      USR_TLT_Name: ['', [Validators.maxLength(60)]], // 所屬專櫃名稱（可選）
+      USR_TLT_Name: ['', [Validators.maxLength(60)]], // 所屬專櫃名稱（可選) ---目前沒有顯示在畫面，當櫃編變化後會重新寫入
       USR_OnJobDate: [''], // 到職日（可選）
       USR_QuitDate: [''], // 離職日（可選
     });
@@ -73,6 +71,9 @@ export class TLS41030CRUComponent extends BasicCruPageComponent<POS2001>
       {value: '2', label: '獨立收銀'}, // 預設值
       {value: '1', label: '集中收銀'},
     ];
+
+    TLTOption: apiOption[] = []; //專櫃下拉選單
+
     // ----------------------------------------------------------------
     constructor(private tls41030Service: Tls41030Service) {
       super(); // 呼叫父類建構子
@@ -80,7 +81,22 @@ export class TLS41030CRUComponent extends BasicCruPageComponent<POS2001>
   
     ngOnInit(): void {
       this.initializePage('TLS41030', this.dataForm);
+      this.loadOptions();
       console.log('讀取資料', this.dataForm.value);
+
+      if(this.crudstatus !== CRUDStatus.Create){ //非編輯模式不可變更 收銀員編號
+        this.dataForm.get('USR_No')?.disable();
+      }
+
+      // 專櫃選單變更時，更新專櫃名稱欄位
+      this.dataForm.get('USR_TLT_No')?.valueChanges.subscribe(selectedNo => {
+        const matched = this.TLTOption.find(opt => opt.No === selectedNo);
+        if (matched) {
+          this.dataForm.get('USR_TLT_Name')?.setValue(matched.Name);
+        } else {
+          this.dataForm.get('USR_TLT_Name')?.setValue('');
+        }
+      });
     }
   
     onSubmit(frm: FormGroup) {
@@ -125,5 +141,20 @@ export class TLS41030CRUComponent extends BasicCruPageComponent<POS2001>
   
     onClearForm() {
       this.dataForm.reset(); // 重置表單
+    }
+
+    loadOptions(){
+      //查詢 專櫃主檔 下拉選單
+      this.tls41030Service
+        .queryTLTTALENT_DropDownList({})
+        .subscribe((response) => {
+          this.TLTOption = response.Data.map((item: apiOption) => ({
+            No: item.No,
+            Name: item.Name,
+            Label: item.No + '-' + item.Name,
+          }));
+      
+          console.log('專櫃主檔:', this.TLTOption);
+      });
     }
 }
