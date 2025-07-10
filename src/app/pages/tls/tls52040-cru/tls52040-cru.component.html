@@ -33,7 +33,7 @@
         <app-input-textarea class="col-12" label="進貨驗收單說明" controlName="RJM_Remark"
           [control]="dataForm.controls.RJM_Remark" [submitted]="submitted" />
       </div>
-      <app-table dataKey="PLU_No" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
+      <app-table dataKey="id" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
         (selectionChange)="selectedItems = $event" [showEdit]="false" [showDetail]="false" [showInsert]="true"
         (insert)="onShowDialog()" [showRowEdit]="true" (delete)="onDelete($event)" (rowEditSave)="onRowEditSave($event)"
         [showCaption]="isFormCreateable" [showReportMode]="false" [showManage]="!isFormReadable"
