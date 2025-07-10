@@ -123,4 +123,13 @@ export class Tls52050Service {
   updateTLS52050(data: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateTLS52050`, data);
   }
+
+  /**
+ * 取得標籤檔資料
+ * @param params 查詢條件 (MAM_No)
+ * @returns API 響應
+ */
+  getLabelTLS52050(params: { MAM_No: string }): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/getLabelTLS52050`, params);
+  }
 }

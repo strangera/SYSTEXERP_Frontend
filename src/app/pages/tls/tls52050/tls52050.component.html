@@ -1,6 +1,8 @@
-<div class="card">
+<div class="card tls52050">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <p-fileUpload #fileUpload mode="basic" chooseIcon="pi pi-upload" accept=".csv"
+      (onSelect)="onFileUpload($event);fileUpload.clear()" [auto]="true" chooseLabel="匯入CSV" />
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
@@ -49,6 +51,6 @@
   <app-table tableKey="TLS52050" dataKey="MAM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
     (detail)="onDetail($event)" [showDelete]="false" [multiSortMeta]="[{ field: 'MAM_No', order: 1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading">
+    [loading]="loading" [addButton]="addButton">
   </app-table>
 </div>
