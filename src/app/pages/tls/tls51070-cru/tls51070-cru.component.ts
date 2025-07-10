@@ -194,12 +194,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   files: File[] = [];        // 上傳的檔案
   img1001Data: IMG1001Detail[] = []; // 圖片List editable, readable
   confirmDeleteImages: string[] = []; // 確定刪除的圖片
-  // ----------------------------------------------------------------
-
-  // isRowSelectable(rowData: POS2004): boolean {
-  //   // return rowData.isdelete;
-  // }
-  // ----------------------------------------------------------------
 
   constructor(
     private tls51060Service: Tls51060Service, //查詢品牌代碼檔
@@ -356,6 +350,13 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       return;
     }
 
+    // 檢查 POS2020明細檔 是否輸入
+    if (this.POS2020Data.length === 0) {
+      this.messageService.errorBubble('未輸入商品採購廠商，請重新輸入');
+      this.messageService.unblockUi();
+      return;
+    }
+
     //--檢查--
     // 商品管理編號：鍵值，自動編號，大分類編號(2碼)+10碼流水號+1碼檢查碼，檢查碼為EAN 檢查碼計算規則，流水號給號讀SER1001商品管理編號序號檔
     // 國際條碼：必填，沒有輸入國際條碼時，國際條碼=商品管理編號 (bubble跳出提示)。
@@ -390,16 +391,16 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           }
           console.log('insert', requestBody);
 
-          this.tls51070Service.insertTLS51070(requestBody).subscribe(async (response) => {
-            this.messageService.successBubble('POS2004主檔新增成功');
+          // this.tls51070Service.insertTLS51070(requestBody).subscribe(async (response) => {
+          //   this.messageService.successBubble('POS2004主檔新增成功');
 
-            const newSeqNo = response?.Data; // 回傳的 IMG_SeqNo
-            console.log('新增取號:', newSeqNo);
+          //   const newSeqNo = response?.Data; // 回傳的 IMG_SeqNo
+          //   console.log('新增取號:', newSeqNo);
 
-            // 進行圖片檔更新
-            await this.createImage(newSeqNo); // ✅ 傳入圖片
-            this.onCancel();
-          });
+          //   // 進行圖片檔更新
+          //   await this.createImage(newSeqNo); // ✅ 傳入圖片
+          //   this.onCancel();
+          // });
         }
         break;
       case CRUDStatus.Edit:

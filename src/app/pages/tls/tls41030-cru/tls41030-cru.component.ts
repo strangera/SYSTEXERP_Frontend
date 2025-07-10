@@ -40,7 +40,7 @@ export class TLS41030CRUComponent extends BasicCruPageComponent<POS2001>
   implements OnInit {
   // ----------------------------------------------------------------
     dataForm = this.formBuilder.nonNullable.group({
-      id: [null, [Validators.required]], // decimal(19, 0)
+      id: [null], // decimal(19, 0)
       USR_No: ['', [Validators.required, Validators.maxLength(8)]], // 收銀員編號
       USR_Name: ['', [Validators.required, Validators.maxLength(20)]], // 收銀員姓名
       USR_Passwd: ['', [Validators.required, Validators.maxLength(20)]], // 密碼 (要顯示嗎，待確認)
@@ -52,8 +52,8 @@ export class TLS41030CRUComponent extends BasicCruPageComponent<POS2001>
       USR_RegType: ['2', [Validators.required, Validators.maxLength(2)]], // 收銀員區分
       USR_TLT_No: ['', [Validators.maxLength(20)]], // 所屬櫃編（可選）
       USR_TLT_Name: ['', [Validators.maxLength(60)]], // 所屬專櫃名稱（可選) ---目前沒有顯示在畫面，當櫃編變化後會重新寫入
-      USR_OnJobDate: [''], // 到職日（可選）
-      USR_QuitDate: [''], // 離職日（可選
+      USR_OnJobDate: [null], // 到職日（可選）
+      USR_QuitDate: [null], // 離職日（可選
     });
     //
     jobStatusOption: option[] = [ // 收銀員(在職)狀態 選單
@@ -121,6 +121,8 @@ export class TLS41030CRUComponent extends BasicCruPageComponent<POS2001>
               // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
               this.dataForm.reset(); // 重置表單
             });
+          }else{
+            console.log('沒有權限');
           }
           break;
         case CRUDStatus.Edit:
