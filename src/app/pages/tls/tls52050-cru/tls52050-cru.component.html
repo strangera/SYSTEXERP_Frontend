@@ -9,20 +9,24 @@
         <app-input-text class="col-12 md:col-6 lg:col-4" label="變價單號" controlName="MAM_No"
           [control]="dataForm.controls.MAM_No" [submitted]="submitted"></app-input-text>
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="品牌代碼" controlName="LOGO_No" [options]="brandOptions"
-          optionLabel="label" optionValue="value" [control]="dataForm.controls.LOGO_No"
+          optionLabel="Name" optionValue="No" [control]="dataForm.controls.LOGO_No"
           [submitted]="submitted"></app-dropdown>
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商代碼" controlName="VEN_No" [options]="vendorOptions"
-          optionLabel="label" optionValue="value" [control]="dataForm.controls.VEN_No"
+          optionLabel="label" optionValue="VEN_No" [control]="dataForm.controls.VEN_No"
           [submitted]="submitted"></app-dropdown>
         <app-input-textarea class="col-12 md:col-6 lg:col-4" label="進價售價變價單說明" controlName="MAM_InvDesc"
           [control]="dataForm.controls.MAM_InvDesc" [submitted]="submitted"></app-input-textarea>
-        <div class="col-12 md:col-6 lg:col-4 flex align-items-center">
-          <p-checkbox formControlName="MAM_Method" inputId="MAM_MethodCheckbox" />
-          <label for="MAM_MethodCheckbox" class="ml-2">僅顯示回價變價單</label>
-        </div>
-        <app-calendar-range class="col-12 md:col-6 lg:col-4" startLabel="啟用日期"
+        <app-calendar-range class="col-12 md:col-6 lg:col-4" startLabel="生效日期(起)" endLabel="生效日期(迄)"
           [startControl]="dataForm.controls.MAM_BegDate" [endControl]="dataForm.controls.MAM_EndDate"
-          [submitted]="submitted"></app-calendar-range>
+          [submitted]="submitted">
+          <footer>
+            <div class="flex align-items-center pt-2">
+              <p-checkbox [binary]="true" inputId="MAM_MethodCheckbox" [formControl]="dataForm.controls.MAM_Method"
+                [trueValue]="'1'" [falseValue]="'H'" label="僅顯示回價變價單">
+              </p-checkbox>
+            </div>
+          </footer>
+        </app-calendar-range>
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人" controlName="RJM_USR_No" [options]="userOptions"
           optionLabel="user_Name" optionValue="user_No" [control]="dataForm.controls.APPLY_USR_No"
           [submitted]="submitted" />
