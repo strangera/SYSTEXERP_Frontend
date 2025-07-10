@@ -2,6 +2,7 @@
   {{ label + '(起迄)' }}
   <span *ngIf="isRequired" class="required">*</span>
 </label>
+<ng-content select="header"></ng-content>
 <div class="grid p-fluid">
   <div class="col pb-0">
     <label *ngIf="startLabel" [for]="startControl">{{ startLabel }}
@@ -21,7 +22,7 @@
       [control]="startControl">
     </app-control-messages>
   </div>
-  <div class="flex" [ngClass]="startLabel ?'pt-4':''">
+  <div class="flex" [ngClass]="startLabel ? (startControl.touched && startControl.invalid) ? 'py-4' : 'pt-4':''">
     <span class="align-self-center text-center " [ngClass]="startLabel ?'pt-1':''">~</span>
   </div>
   <div class="col pb-0">
@@ -41,3 +42,4 @@
     </app-control-messages>
   </div>
 </div>
+<ng-content select="footer"></ng-content>

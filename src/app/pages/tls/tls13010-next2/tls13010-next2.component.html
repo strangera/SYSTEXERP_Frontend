@@ -1,14 +1,16 @@
+<!-- tls13010-next2.component.html - 優化版本 -->
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
     <app-button
-      btnType="create"
-      label="下一步(租金設定)"
+      [btnType]="getNextButtonType()"
+      [label]="getNextButtonLabel()"
       (click)="onSubmitNext()"
       [disabled]="!hasCommissionData()"
+      [loading]="loading"
     ></app-button>
-    <app-button btnType="cancel" (click)="onCancel()"></app-button>
+    <app-button btnType="back" (click)="onClearAndExit()"></app-button>
   </div>
 
   <!-- 載入中指示器 -->
@@ -56,25 +58,10 @@
           [selected]="true"
           class="line-height-3 m-0"
         >
-          <!-- 🎯 修改：無資料顯示條件 -->
-          <div
-            *ngIf="dataLoaded && !hasCommissionData()"
-            class="text-center p-5"
-          >
-            <i class="pi pi-info-circle text-4xl text-gray-400 mb-3"></i>
-            <h5 class="text-gray-600 mb-2">尚未設定抽成項目</h5>
-            <p class="text-gray-500 mb-3">請點擊下方按鈕新增抽成設定項目</p>
-            <app-button
-              label="新增抽成項目"
-              icon="pi pi-plus"
-              (click)="onAddCommissionItem()"
-            ></app-button>
-          </div>
-
-          <!-- 🎯 修改：抽成設定表格顯示條件 -->
-          <div *ngIf="dataLoaded && hasCommissionData()">
+          <!-- 🎯 修改：直接顯示表格，無論是否有資料 -->
+          <div *ngIf="dataLoaded">
             <app-expandable-edit-table
-              [data]="commissionData"
+              [data]="visibleCommissionData"
               [mainColumns]="commissionColumns"
               [detailKey]="'detailItems'"
               [dataKey]="'id'"
@@ -89,6 +76,7 @@
                 annual: annualColumns,
                 level: levelColumns,
               }"
+              [emptyMessage]="'尚未設定抽成項目，請點擊新增按鈕開始設定'"
               (detailTabChange)="onDetailTabChange($event)"
               (edit)="onItemEdit($event)"
               (save)="onItemSave($event)"
@@ -103,7 +91,7 @@
             ></app-expandable-edit-table>
           </div>
 
-          <!-- 🎯 新增：資料載入中的提示 -->
+          <!-- 🎯 保留：資料載入中的提示 -->
           <div *ngIf="!dataLoaded" class="text-center p-5">
             <p-progressSpinner></p-progressSpinner>
             <p class="mt-2 text-gray-600">正在載入抽成設定資料...</p>
@@ -117,12 +105,12 @@
       class="flex justify-content-between align-items-center mt-3 pt-3 border-top-1 border-gray-200"
     >
       <div class="flex align-items-center gap-2">
-        <!-- <span class="text-sm text-gray-600">
+        <span class="text-sm text-gray-600" *ngIf="dataLoaded">
           目前共有
           <span class="font-semibold">{{ getCommissionItemCount() }}</span>
           個抽成項目
-        </span> -->
-        <!-- 🎯 新增：資料載入狀態指示 -->
+        </span>
+        <!-- 🎯 保留：資料載入狀態指示 -->
         <span *ngIf="!dataLoaded" class="text-xs text-orange-500">
           (載入中...)
         </span>
@@ -136,3 +124,42 @@
     </div>
   </div>
 </div>
+
+<p-dialog
+  header="確認提交"
+  [modal]="true"
+  [closable]="false"
+  [visible]="showConfirmDialog"
+  [style]="{ width: '450px' }"
+>
+  <div class="p-4">
+    <p class="mb-3">
+      <i class="pi pi-exclamation-triangle text-orange-500 mr-2"></i>
+      確定要提交契約資料嗎？提交後將無法修改。
+    </p>
+
+    <!-- <div class="text-sm text-gray-600 mb-4">
+      <p>• 抽成設定項目：{{ getCommissionItemCount() }} 個</p>
+      <p>• 扣款設定項目：{{ getDeductionItemCount() }} 個</p>
+    </div> -->
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      type="button"
+      pButton
+      label="取消"
+      icon="pi pi-times"
+      class="p-button-secondary mr-2"
+      (click)="onConfirmDialogResult(false)"
+    ></button>
+    <button
+      type="button"
+      pButton
+      label="確認提交"
+      icon="pi pi-check"
+      class="p-button-primary"
+      (click)="onConfirmDialogResult(true)"
+    ></button>
+  </ng-template>
+</p-dialog>

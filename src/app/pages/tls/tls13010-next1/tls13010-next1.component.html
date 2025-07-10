@@ -8,7 +8,7 @@
       (click)="onSubmitNext()"
       [disabled]="getTotalSelectedCount() === 0"
     ></app-button>
-    <app-button btnType="cancel" (click)="onCancel()"></app-button>
+    <app-button btnType="back" (click)="onClearAndExit()"></app-button>
     <!-- <app-button
       label="🔍 檢查暫存"
       (click)="debugCheckSavedData()"

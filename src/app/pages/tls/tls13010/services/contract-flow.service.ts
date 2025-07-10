@@ -64,16 +64,52 @@ export class ContractFlowService {
    * 🎯 新增：取得資料版本號
    */
   getDataVersion(stepKey: string): number {
-    return this.dataVersions.get(stepKey) || 0;
+    try {
+      const version = this.dataVersions.get(stepKey);
+      if (version === undefined) {
+        console.warn(`⚠️ 步驟 ${stepKey} 的版本號不存在，返回 0`);
+        this.dataVersions.set(stepKey, 0);
+        return 0;
+      }
+      return version;
+    } catch (error) {
+      console.error(`❌ 取得版本號失敗 (${stepKey}):`, error);
+      return 0;
+    }
   }
 
   /**
    * 🎯 新增：增加資料版本號
    */
-  private incrementDataVersion(stepKey: string): void {
-    const currentVersion = this.dataVersions.get(stepKey) || 0;
-    this.dataVersions.set(stepKey, currentVersion + 1);
-    console.log(`📈 ${stepKey} 版本號更新為:`, currentVersion + 1);
+  private incrementDataVersion(stepKey: string): number {
+    try {
+      const currentVersion = this.dataVersions.get(stepKey) || 0;
+      const newVersion = currentVersion + 1;
+      this.dataVersions.set(stepKey, newVersion);
+      console.log(`📈 ${stepKey} 版本號更新為:`, newVersion);
+      
+      // 立即觸發儲存確保版本號同步
+      this.saveToStorage();
+      
+      return newVersion;
+    } catch (error) {
+      console.error(`❌ 更新版本號失敗 (${stepKey}):`, error);
+      return this.getDataVersion(stepKey);
+    }
+  }
+
+  /**
+   * 🎯 新增：公開的版本增加方法 (用於 Next2 → Next3 同步)
+   */
+  public incrementDataVersionPublic(stepKey: string): number {
+    try {
+      const result = this.incrementDataVersion(stepKey);
+      console.log(`🔄 公開版本更新: ${stepKey} -> ${this.getDataVersion(stepKey)}`);
+      return this.getDataVersion(stepKey);
+    } catch (error) {
+      console.error(`❌ 公開版本更新失敗 (${stepKey}):`, error);
+      return this.getDataVersion(stepKey);
+    }
   }
 
   /**
@@ -82,6 +118,26 @@ export class ContractFlowService {
   hasVersionChanged(stepKey: string, lastKnownVersion: number): boolean {
     const currentVersion = this.getDataVersion(stepKey);
     return currentVersion > lastKnownVersion;
+  }
+
+  /**
+   * 🎯 新增：驗證和修復版本號完整性
+   */
+  private validateAndRepairVersions(): void {
+    const requiredSteps = ['step1', 'step2', 'step3', 'step4', 'unified'];
+    let hasRepaired = false;
+
+    requiredSteps.forEach(stepKey => {
+      if (!this.dataVersions.has(stepKey)) {
+        console.warn(`⚠️ 缺少 ${stepKey} 版本號，補充為 0`);
+        this.dataVersions.set(stepKey, 0);
+        hasRepaired = true;
+      }
+    });
+
+    if (hasRepaired) {
+      console.log('🔧 已修復版本號完整性:', Object.fromEntries(this.dataVersions.entries()));
+    }
   }
 
   /**
@@ -726,18 +782,32 @@ export class ContractFlowService {
    * 🎯 修正：套用載入的資料（包含版本號）
    */
   private applyLoadedData(data: any): void {
-    this.contractData = data.contractData;
-    this.workflowStatusSubject.next(data.workflowStatus);
+    try {
+      this.contractData = data.contractData;
+      this.workflowStatusSubject.next(data.workflowStatus);
 
-    // 🎯 恢復版本號
-    if (data.dataVersions) {
-      this.dataVersions.clear();
-      Object.entries(data.dataVersions).forEach(([key, value]) => {
-        this.dataVersions.set(key, value as number);
-      });
-      console.log('📊 已恢復資料版本號:', data.dataVersions);
-    } else {
-      // 舊版本相容性
+      // 🎯 恢復版本號
+      if (data.dataVersions && typeof data.dataVersions === 'object') {
+        this.dataVersions.clear();
+        Object.entries(data.dataVersions).forEach(([key, value]) => {
+          if (typeof value === 'number' && value >= 0) {
+            this.dataVersions.set(key, value);
+          } else {
+            console.warn(`⚠️ 無效的版本號 ${key}: ${value}, 設為 0`);
+            this.dataVersions.set(key, 0);
+          }
+        });
+        console.log('📊 已恢復資料版本號:', Object.fromEntries(this.dataVersions.entries()));
+      } else {
+        // 舊版本相容性或無效版本資料
+        console.warn('⚠️ 無版本號資料，重新初始化');
+        this.initializeDataVersions();
+      }
+
+      // 🎯 驗證版本號完整性
+      this.validateAndRepairVersions();
+    } catch (error) {
+      console.error('❌ 套用載入資料失敗:', error);
       this.initializeDataVersions();
     }
   }
