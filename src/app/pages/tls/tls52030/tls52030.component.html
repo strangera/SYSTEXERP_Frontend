@@ -16,7 +16,7 @@
             [options]="poStatusOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.ODM_StatusList" [submitted]="submitted"></app-multi-select>
           <!-- 管理編號 -->
-          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.PLU_MagNo"
+          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.queryNo"
             [submitted]="submitted" optionLabel="PLU_MagNo" optionValue="PLU_MagNo" [suggestions]="suggestions"
             [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
             (formValueChanged)="onformValueChanged($event)" [formGroup]="opForm" [dialogData]="opData"

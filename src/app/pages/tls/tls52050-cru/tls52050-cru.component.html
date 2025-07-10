@@ -16,7 +16,7 @@
           [submitted]="submitted"></app-dropdown>
         <app-input-textarea class="col-12 md:col-6 lg:col-4" label="進價售價變價單說明" controlName="MAM_InvDesc"
           [control]="dataForm.controls.MAM_InvDesc" [submitted]="submitted"></app-input-textarea>
-        <app-calendar-range class="col-12 md:col-6 lg:col-4" startLabel="生效日期(起)" endLabel="生效日期(迄)"
+        <app-calendar-range class="col-12 lg:col-8" startLabel="生效日期(起)" endLabel="生效日期(迄)"
           [startControl]="dataForm.controls.MAM_BegDate" [endControl]="dataForm.controls.MAM_EndDate"
           [submitted]="submitted">
           <footer>
@@ -32,15 +32,17 @@
           [submitted]="submitted" />
         <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateTimeOne" label="申請日期" controlName="RJM_Date"
           [control]="dataForm.controls.APPLY_Date" [submitted]="submitted" />
-        <!-- <app-input-number class="col-12 md:col-6 lg:col-4" label="進價折扣%" controlName="costPriceDiscount"
+      </div>
+      <!-- <div class="grid p-fluid">
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="進價折扣%" controlName="costPriceDiscount"
           [control]="dataForm.controls.costPriceDiscount" [submitted]="submitted"></app-input-number>
         <app-input-number class="col-12 md:col-6 lg:col-4" label="進價金額調整" controlName="costPriceAdjustment"
           [control]="dataForm.controls.costPriceAdjustment" [submitted]="submitted"></app-input-number>
         <app-input-number class="col-12 md:col-6 lg:col-4" label="售價折扣%" controlName="salePriceDiscount"
           [control]="dataForm.controls.salePriceDiscount" [submitted]="submitted"></app-input-number>
         <app-input-number class="col-12 md:col-6 lg:col-4" label="售價金額調整" controlName="salePriceAdjustment"
-          [control]="dataForm.controls.salePriceAdjustment" [submitted]="submitted"></app-input-number> -->
-      </div>
+          [control]="dataForm.controls.salePriceAdjustment" [submitted]="submitted"></app-input-number>
+      </div> -->
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" />
         <app-button btnType="submit" [loading]="loading" />
