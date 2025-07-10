@@ -237,50 +237,12 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     this.loadDiscountOptions().then(() => {
       this.loadWorkflowData();
       this.setupAutoSave();
-      this.setupNext3EventListener();
     });
   }
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
-    // 清理 Next3 事件監聽器
-    if (this.next3EventListener) {
-      window.removeEventListener('next3DataChanged', this.next3EventListener);
-    }
   }
-
-  private next3EventListener: ((event: Event) => void) | null = null;
-
-  // 🎯 新增：設定 Next3 事件監聽器
-  private setupNext3EventListener(): void {
-    this.next3EventListener = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      console.log('📡 Next2 收到 Next3 資料變更事件:', customEvent.detail);
-      
-      if (customEvent.detail?.source === 'next3-navigation') {
-        console.log('🔄 Next3 導航前的強制同步，刷新 Next2 資料載入優先順序');
-        
-        // 🎯 重要：延遲一點時間，確保 Next3 的暫存已完成
-        setTimeout(() => {
-          this.refreshDataFromWorkflow();
-        }, 100);
-      }
-    };
-
-    window.addEventListener('next3DataChanged', this.next3EventListener);
-    console.log('✅ Next3 事件監聽器已設定');
-  }
-
-  // 🎯 新增：從工作流程重新載入資料（考慮 Next3 變更）
-  private refreshDataFromWorkflow(): void {
-    console.log('🔄 Next2 因 Next3 變更而重新載入資料...');
-    
-    // 重新載入抽成資料，這次會考慮 Next3 的最新暫存
-    this.loadCommissionDataWithPriority();
-    
-    console.log('✅ Next2 資料重新載入完成');
-  }
-
   private setupAutoSave(): void {
     if (this.dataForm) {
       const formSubscription = this.dataForm.valueChanges.pipe(
@@ -1355,9 +1317,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     this.updateDetailItemsForDisplay();
     this.saveToWorkflow();
 
-    // 🎯 新增：檢查是否需要同步到 Next3
-    this.syncToNext3IfNeeded();
-
     console.log('✅ 新增抽成項目完成，ID:', newCommissionItem.id);
     this.notificationService.infoBubble('已新增抽成項目');
   }
@@ -1382,9 +1341,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     if (item._status === 'original') {
       item._status = 'modified';
     }
-
-    // 🎯 新增：檢查是否需要同步到 Next3
-    this.syncToNext3IfNeeded();
   }
   addAnnualPerformanceItem(item: CommissionItem): void {
     console.log('➕ 新增年度業績項目到項目:', item.id);
@@ -1438,9 +1394,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       target._status = 'deleted';
     }
     this.saveToWorkflow();
-
-    // 🎯 新增：檢查是否需要同步到 Next3
-    this.syncToNext3IfNeeded();
   }
 
   removeAnnualPerformanceItem(item: CommissionItem, index: number): void {
@@ -1452,9 +1405,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     }
 
     this.saveToWorkflow();
-
-    // 🎯 新增：檢查是否需要同步到 Next3
-    this.syncToNext3IfNeeded();
   }
 
   removeDiscountLevelItem(item: CommissionItem, index: number): void {
@@ -1466,9 +1416,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     }
 
     this.saveToWorkflow();
-
-    // 🎯 新增：檢查是否需要同步到 Next3
-    this.syncToNext3IfNeeded();
   }
 
   // 表格事件處理
@@ -2018,9 +1965,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       });
 
       this.saveToWorkflow();
-
-      // 🎯 新增：檢查是否需要同步到 Next3
-      this.syncToNext3IfNeeded();
     }
   }
 
@@ -2042,94 +1986,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     // 預設值
     return '3';
-  }
-
-  // 🎯 新增：同步資料到 Next3 的方法
-  private syncToNext3IfNeeded(): void {
-    const commissionType = this.currentCommissionType;
-    
-    // 只有「底租抽成取高者」才需要同步
-    if (commissionType !== '2') {
-      return;
-    }
-
-    console.log('🔄 Next2 → Next3 資料同步開始');
-    
-    // 觸發版本更新，讓 Next3 知道資料已變更
-    this.contractFlowService.incrementDataVersionPublic('step3');
-    
-    // 通知 Next3 資料已更新
-    this.notifyNext3DataChanged();
-    
-    console.log('✅ Next2 → Next3 資料同步完成');
-  }
-
-  private notifyNext3DataChanged(): void {
-    // 發送事件通知 Next3 資料已變更
-    const event = new CustomEvent('next2DataChanged', {
-      detail: {
-        commissionData: this.commissionData,
-        timestamp: Date.now()
-      }
-    });
-    window.dispatchEvent(event);
-  }
-
-  // 🎯 新增：檢查資料筆數是否一致的方法
-  private checkDataConsistency(): boolean {
-    const commissionType = this.currentCommissionType;
-    
-    if (commissionType !== '2') {
-      return true; // 非底租抽成取高者不需檢查
-    }
-
-    // 計算 Next2 有效的抽成項目數量
-    const next2ValidItems = this.commissionData.filter(item => 
-      item._status !== 'deleted' && 
-      item.discountSettingItems && 
-      item.discountSettingItems.filter(discount => discount._status !== 'deleted').length > 0
-    );
-
-    // 計算 Next2 折扣設定明細總數
-    const next2DiscountItemsCount = next2ValidItems.reduce((total, item) => {
-      return total + item.discountSettingItems.filter(discount => discount._status !== 'deleted').length;
-    }, 0);
-
-    // 從 Next3 取得條件設定資料
-    const next3Data = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
-    const next3BaseRentHigherItems = Array.isArray(next3Data) ? 
-      next3Data.filter(item => 
-        'base_rent' in item && 
-        'cag_charge_rate' in item && 
-        (item as any)._status !== 'deleted'
-      ) : [];
-
-    console.log('🔍 資料一致性檢查:', {
-      next2ValidItems: next2ValidItems.length,
-      next2DiscountItemsCount: next2DiscountItemsCount,
-      next3BaseRentHigherItems: next3BaseRentHigherItems.length,
-      isConsistent: next2DiscountItemsCount === next3BaseRentHigherItems.length
-    });
-
-    return next2DiscountItemsCount === next3BaseRentHigherItems.length;
-  }
-
-  // 🎯 新增：驗證資料同步狀態的方法
-  validateDataSyncStatus(): void {
-    const commissionType = this.currentCommissionType;
-    
-    if (commissionType !== '2') {
-      this.notificationService.infoBubble('當前抽成類型不需要與條件設定同步');
-      return;
-    }
-
-    const isConsistent = this.checkDataConsistency();
-    
-    if (isConsistent) {
-      this.notificationService.successBubble('Next2 和 Next3 資料已同步，筆數一致');
-    } else {
-      this.notificationService.warnBubble('Next2 和 Next3 資料筆數不一致，請檢查資料');
-    }
   }
 
   // 🎯 判斷是否為一般抽成（簡潔版本）
@@ -2184,9 +2040,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       // 🎯 重要：只更新這個項目的顯示
       this.updateSingleItemDetailDisplay(parentData);
       this.saveCommissionDataToWorkflow();
-
-      // 🎯 修復：新增 Next2 → Next3 同步
-      this.syncToNext3IfNeeded();
 
       console.log(`✅ 已處理 ${selectedDetails.length} 個明細項目的刪除`);
     }
@@ -2288,17 +2141,16 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     // 根據抽成別決定下一步
     if (this.isGeneralCommissionMode) {
-      // 🎯 修改：一般抽成顯示確認對話框而不是直接送出
+      // 🎯 一般抽成：直接送出，不需要 Next3 一致性檢查
       const validation = this.validateGeneralCommissionData();
       if (!validation.isValid) {
         this.notificationService.warnBubble(validation.errors[0]);
         return;
       }
-
-      // 🎯 新增：顯示確認對話框
       this.showConfirmDialog = true;
     } else {
-      // 其他抽成別：導航到 Next3
+      // 🎯 其他抽成別：前往 Next3，移除一致性檢查
+      console.log('🔄 前往 Next3 設定條件');
       this.router.navigate(['account/tls/tls13010next3']);
     }
   }
@@ -2463,4 +2315,39 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     const step2Data = this.contractFlowService.getStep2Data();
     return Array.isArray(step2Data) ? step2Data.filter(item => item._status !== 'deleted').length : 0;
   }
+
+  private validateNext3DataConsistency(): boolean {
+    const commissionType = this.currentCommissionType;
+
+    if (commissionType !== '2') {
+      return true; // 非底租抽成取高者不需檢查
+    }
+
+    // 🎯 正確：計算 Next2 外層表格的有效項目數量
+    const next2MainItemsCount = this.commissionData.filter(item =>
+      item._status !== 'deleted'
+    ).length;
+
+    // 🎯 從 Next3 取得條件設定資料
+    const next3Data = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
+    const next3ItemsCount = Array.isArray(next3Data) ?
+      next3Data.filter(item => (item as any)._status !== 'deleted').length : 0;
+
+    console.log('🔍 Next2 送出前數量一致性檢查:', {
+      next2MainItemsCount,     // Next2 外層表格項目數
+      next3ItemsCount,         // Next3 條件設定項目數
+      isConsistent: next2MainItemsCount === next3ItemsCount
+    });
+
+    if (next2MainItemsCount !== next3ItemsCount) {
+      this.notificationService.errorBubble(
+        `資料不一致：抽成設定有 ${next2MainItemsCount} 個項目，` +
+        `但條件設定有 ${next3ItemsCount} 個項目。請檢查資料後再送出。`
+      );
+      return false;
+    }
+
+    return true;
+  }
+
 }

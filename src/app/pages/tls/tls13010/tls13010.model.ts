@@ -1403,13 +1403,6 @@ export class Next3ComponentHelper {
   static safeGetNumber(value: number | undefined): number {
     return value !== undefined ? value : 0;
   }
-
-  /**
-   * 檢查抽成類型是否需要整合 Next2 資料
-   */
-  static shouldIntegrateNext2Data(commissionType: string | undefined): boolean {
-    return commissionType === '2' || commissionType === '3';
-  }
 }
 
 
