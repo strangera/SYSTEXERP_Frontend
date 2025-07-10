@@ -44,8 +44,8 @@ export class TLS41030CRUComponent extends BasicCruPageComponent<POS2001>
       USR_No: ['', [Validators.required, Validators.maxLength(8)]], // 收銀員編號
       USR_Name: ['', [Validators.required, Validators.maxLength(20)]], // 收銀員姓名
       USR_Passwd: ['', [Validators.required, Validators.maxLength(20)]], // 密碼 (要顯示嗎，待確認)
-      USR_Level: ['', [Validators.required, Validators.maxLength(6)]], // 收銀鍵盤等級(編號)
-      USR_Auth: [0, [Validators.required, Validators.maxLength(6)]], // 收銀員授權等級，預設值為0
+      USR_Level: ['0', [Validators.required, Validators.maxLength(6)]], // 收銀鍵盤等級(編號)，預設值為0
+      USR_Auth: ['0', [Validators.required, Validators.maxLength(6)]], // 收銀員授權等級，預設值為0
 
       USR_JobStatus: ['J', [Validators.required, Validators.maxLength(2)]], // 收銀員在職狀態
       USR_Class: ['R', [Validators.required, Validators.maxLength(2)]], // 收銀員等級
@@ -73,7 +73,6 @@ export class TLS41030CRUComponent extends BasicCruPageComponent<POS2001>
     ];
 
     TLTOption: apiOption[] = []; //專櫃下拉選單
-
     // ----------------------------------------------------------------
     constructor(private tls41030Service: Tls41030Service) {
       super(); // 呼叫父類建構子
@@ -99,6 +98,10 @@ export class TLS41030CRUComponent extends BasicCruPageComponent<POS2001>
       });
     }
   
+    //---0710規格更新--
+    // 密碼都明碼
+    // 支援明碼查詢
+    //-----
     onSubmit(frm: FormGroup) {
       this.messageService.blockUi();
       this.submitted = true;
