@@ -7,6 +7,7 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 import { tblUser, apiOption, option, SYS1000 } from '../../../shared/models/sys/sysb000.module';
+import { UserData } from '../../../shared/models/sys/user.model';
 
 // 4-2-2-4使用者之角色設定維護
 @Component({
@@ -15,7 +16,7 @@ import { tblUser, apiOption, option, SYS1000 } from '../../../shared/models/sys/
   styleUrls: ['./sys0220.component.scss'],
 })
 
-export class SYS0220Component extends BasicQueryPageComponent<tblUser> implements OnInit {
+export class SYS0220Component extends BasicQueryPageComponent<UserData> implements OnInit {
   // 查詢
   queryForm = this.formBuilder.group({
     user_No: ['', Validators.maxLength(10)], // 使用者編號
@@ -39,7 +40,7 @@ export class SYS0220Component extends BasicQueryPageComponent<tblUser> implement
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   // 表格資料
-  data: tblUser[] = [];
+  data: UserData[] = [];
   columns: Column[] = [
     { field: 'user_No', header: '使用者編號', visible: true },
     { field: 'user_Name', header: '使用者名稱', visible: true },

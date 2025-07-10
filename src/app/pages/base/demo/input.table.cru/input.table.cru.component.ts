@@ -153,6 +153,6 @@ export class InputTableCRUComponent extends BasicCrupageComponent implements OnI
   }//CRU
 
   onCancel() {
-    this.router.navigate(['/demo/demoInputTable']);
+    this.router.navigate(['/demo/demoinputtable']);
   }
 }

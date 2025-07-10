@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ErrorHandlerService } from '../../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../../system/error-handler.service';
 
 @Injectable({
   providedIn: 'root',
@@ -10,7 +10,7 @@ import { ErrorHandlerService } from '../../../shared/service/error-handler.servi
 export class TLS11020Service {
   private apiUrl: string = environment.ApiUrl;
 
-  constructor(private http: HttpClient, private errorHandler: ErrorHandlerService) {}
+  constructor(private http: HttpClient, private errorHandler: ErrorHandlerService) { }
 
   /** 查詢扣款項目資料 */
   queryTLS11020(payload: any) {

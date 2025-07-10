@@ -51,16 +51,6 @@
               [control]="dialogForm.controls.AREA_NO" />
           </app-dropdown-table>
         </div>
-        <!-- <p-divider align="left" type="solid">
-          <b class="text-primary">Table多選下拉</b>
-        </p-divider> -->
-        <!-- <div class="grid p-fluid">
-          <app-multi-select-table class="col-12" label="位置編號" controlName="multiSelectTable"
-            [control]="queryForm.controls.multiSelectTable" [submitted]="submitted" optionLabel="LOCATION_No"
-            optionValue="LOCATION_No" [suggestions]="suggestions" datakey="LOCATION_No"
-            (inputValueChanged)="onAutoCompleteInputChange($event)">
-          </app-multi-select-table>
-        </div> -->
         <p-divider align="left" type="solid">
           <b class="text-red-500 text-2xl">開發中</b>
         </p-divider>
@@ -98,6 +88,12 @@
         <div class="grid p-fluid">
           <app-input-text class="col-12 md:col-6 lg:col-5" label="文字輸入" controlName="text"
             [control]="queryForm.controls.text" [submitted]="submitted" />
+          <app-input-text-range class="col-12 md:col-6 lg:col-5" label="文字輸入"
+            [startControl]="queryForm.controls.number1" [endControl]="queryForm.controls.number2"
+            [submitted]="submitted" />
+          <app-input-text-range class="col-12 md:col-6 lg:col-5" startLabel="文字輸入" endLabel="文字輸入"
+            [startControl]="queryForm.controls.number1" [endControl]="queryForm.controls.number2"
+            [submitted]="submitted" />
           <app-input-textarea class="col-12 md:col-6 lg:col-5" label="長文字輸入" controlName="textarea"
             [control]="queryForm.controls.textarea" [submitted]="submitted" />
         </div>
@@ -107,7 +103,7 @@
         <div class="grid p-fluid">
           <app-input-number class="col-12 md:col-6 lg:col-5" label="數字輸入" controlName="number"
             [control]="queryForm.controls.number" [submitted]="submitted" />
-          <app-input-number-range class="col-12 md:col-6 lg:col-5" label="數字輸入(範圍)"
+          <app-input-number-range class="col-12 md:col-6 lg:col-5" label="數字輸入"
             [startControl]="queryForm.controls.number1" [endControl]="queryForm.controls.number2"
             [submitted]="submitted" />
         </div>

@@ -10,6 +10,7 @@ import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdow
 import { finalize, forkJoin, map } from 'rxjs';
 import { UserInfo, UserSys3700Detail } from '../sys0110/sys0110.model';
 import { UserCodeService } from '../../../service/basic/user-code.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 // 4-2-1-1使用者基本資料維護
 @Component({
   selector: 'app-sys0110-cru',
@@ -83,7 +84,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
 
     }
     this.loadAndSetupColumns(); // 呼叫新的方法來處理異步載入和 columns 設定
-    this.dataForm.get('org_ID')?.valueChanges.subscribe((value) => {
+    this.dataForm.get('org_ID')?.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {
       if (this.isFormCreateable && value && this.data.length === 0) {
         this.data = [
           {
@@ -142,7 +143,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
       regionOptions$,
       busTypeOptions$,
       TLTTALENT_OPTIONS$,
-    ]).subscribe(([
+    ]).pipe(untilDestroyed(this)).subscribe(([
       orgOptions,
       systemCodeOptions,
       buildingOptions,
@@ -210,7 +211,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
       const serviceCall = this.isFormCreateable
         ? this.sys0110Service.createUser(body)
         : this.sys0110Service.updateUser(body);
-      serviceCall.subscribe(() => {
+      serviceCall.pipe(untilDestroyed(this)).subscribe(() => {
         if (this.isFormCreateable) {
           this.messageService.successBubble('新增成功');
           this.dataForm.reset();
@@ -235,7 +236,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
       SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
       User_No: this.dataForm.get('user_No')?.value || '',
     }
-    this.userCodeService.resetPassword(body).pipe(finalize(() => this.resetLoading = false)).subscribe(response => {
+    this.userCodeService.resetPassword(body).pipe(untilDestroyed(this), finalize(() => this.resetLoading = false)).subscribe(response => {
       this.messageService.successBubble(`${this.dataForm.get('user_No')?.value} 密碼重置成功，密碼為：${response.Data}`);
       this.dataForm.get('user_Password')?.setValue(response.Data);
       this.showStar = false;

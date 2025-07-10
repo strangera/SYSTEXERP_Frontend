@@ -11,6 +11,7 @@ interface ConfirmOptions {
   accept?: () => void;
   reject?: () => void;
   type?: 'confirm' | 'update' | 'delete'; // 添加类型
+  showIcon?: boolean; // 新增是否顯示圖示的屬性
 }
 interface InputBoxOptions {
   header: string;

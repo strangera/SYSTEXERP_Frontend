@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'; // 引入 uuidv4
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { ChangeDetectorRef, Component, OnInit, ViewChild, } from '@angular/core';
+import { UntilDestroy } from '@ngneat/until-destroy';
+import { Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -14,7 +14,6 @@ import { dropDown51070 } from './dropDown51070';
 import { Tls51060Service } from '../../../service/api/tls/tls51060.service';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { environment } from '../../../../environments/environment';
-import { IMG1001 } from '../../base/demo/input.table/input.table.component';
 import { firstValueFrom } from 'rxjs';
 
 @UntilDestroy()
@@ -56,6 +55,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_Unit: ['', [Validators.required, Validators.maxLength(2)]], // 單位代碼 --讀PLUUNIT  商品單位設定檔
 
     PLU_TaxType: ['1', [Validators.required, Validators.maxLength(1)]], // 售價稅別:0免稅,1應稅 預設 1應稅
+    PLU_Type: ['1', [Validators.required, Validators.maxLength(2)]], // 商品類別:1一般商品,8專櫃,CC:專櫃商品 ,SC:特殊條碼
+
     PLU_BoxQty: [0, [Validators.maxLength(4)]], // 包裝入數(裝箱入數) / --南紡 包裝入數
     PLU_Length: [0, [Validators.maxLength(10)]], //長度cm
     PLU_Weight: [0, [Validators.maxLength(10)]], //重量(g)
@@ -70,9 +71,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     // 商品資訊 顯示畫面
     LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌編號 ---PLULOGO
     PLU_SalePrc: [0, [Validators.required, Validators.maxLength(10)]], // 商品售價
-    stock: [0, [Validators.maxLength(10)]], // 庫存量 讀POS2099 新增固定0 ---未確認---
-    PLU_OrderPrc: [0, [Validators.required, Validators.maxLength(10)]], // 標準進價 商品售價＊進貨折數/1.05 ，計算到小數點以下2位，必填 (不可編輯 新增遵循此規則)
-    PLU_SafeQty: [0, [Validators.maxLength(10)]], // 安全存量
+    STK_CurrentQty: [{ value: 0, disabled: true }], // 庫存量 讀POS2099 新增固定0 ---後端直接提供(不允許編輯)---
+    PLU_OrderPrc: [{ value: 0, disabled: true }], // 標準進價 商品售價＊進貨折數/1.05 ，計算到小數點以下2位，必填 (不可編輯 新增遵循此規則)
+    PLU_SafeQty: [{ value: 0, disabled: true }], // 安全存量
 
     //---
     // 系統日期-建檔日期 > 365天, 去年整年度銷售量/12個月*2個月 🡪取整數
@@ -83,13 +84,12 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     //                    安全庫存量= 10(銷售量) / 0.5(計算月數) * 2個月= 40
 
     //---
-    PLU_OrderPrcRate: [0, [Validators.required, Validators.maxLength(10)]], // 進價折數 預設0 (依照品牌 PLULOGO)
+    PLU_OrderPrcRate: [{ value: 0, disabled: true }], // 進價折數 預設0 (依照品牌 PLULOGO)
     PLU_ECStatus: ['1', [Validators.maxLength(1)]], // EC商品狀態: 1.正常2.停用3.停進4,下架 For EC (備註: 原來的 商品狀態(PLU_Status) 改為 EC商品狀態(PLU_ECStatus))
     PLU_Status: ['0', [Validators.required, Validators.maxLength(1)]], // 商品狀態:0一般 不顯示
 
     //---必填未列入(都是預設不可編輯)---
     PLU_OpenPrc: ['Y', [Validators.required, Validators.maxLength(1)]], // 開放售價Y/N
-    PLU_Type: ['1', [Validators.required, Validators.maxLength(1)]], // 商品類別 1一般商品,2生鮮商品,6組合商品,8專櫃,B禮券,F:折讓
 
     PLU_AccountType: ['2', [Validators.maxLength(1)]], // 結帳別
     PLU_IsStock: ['Y', [Validators.maxLength(1)]], // 是否計算庫存 Y:是 N:否
@@ -116,6 +116,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // ---商品規格dropdown---
   attributeOptions: option[] = this.dropDown51070.attributeOptions;  // 商品型態
   taxTypeOptions: option[] = this.dropDown51070.taxTypeOptions; // 稅別
+  pluTypeOptions: option[] = this.dropDown51070.pluTypeOptions; // 稅別
   // ---POS2020 dropdown區---
   transTypeOption: option[] = this.dropDown51070.transTypeOption;  //運輸方式
   purchaseTypeOption: option[] = this.dropDown51070.purchaseTypeOption;  // 採購狀態
@@ -165,9 +166,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   };
 
   // POS2020 展開式表格的欄位定義
-  POS2020DataColumn: ColumnDef[] = [
-
-  ];
+  POS2020DataColumn: ColumnDef[] = []; // 等廠商編號好了再寫入POS2020欄位(廠商下拉)
   // 展開式表格的載入狀態
   expand2020Loading = false;
 
@@ -203,10 +202,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // ----------------------------------------------------------------
 
   constructor(
-    private cdr: ChangeDetectorRef,
     private tls51060Service: Tls51060Service, //查詢品牌代碼檔
     private tls51070Service: Tls51070Service,
-    private dropDown51070: dropDown51070, //下拉選單
+    private dropDown51070: dropDown51070, //下拉選單 (選項固定)
     private detail2005Handler: detail2005HandlerService,// POS2005 table明細處理
     private detail2020Handler: detail2020HandlerService, // POS2020 table明細處理
   ) {
@@ -223,10 +221,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     } else {
       this.dataForm.get('PLU_SalePrc')?.disable();
     }
-    this.dataForm.get('PLU_SafeQty')?.disable();  // 安全存量
-    this.dataForm.get('PLU_OrderPrc')?.disable();  // 標準進價
-    this.dataForm.get('stock')?.disable();  // 庫存量
-    this.dataForm.get('PLU_OrderPrcRate')?.disable();  // 進價折數
 
     //國際條碼 新增可空白、其他狀況必填
     if (this.crudstatus !== CRUDStatus.Create) {
@@ -328,6 +322,13 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         // 若品牌編號為空 不進行操作
       }
     });
+
+    //新增模式時如果 [商品售價] 發生變動就強制設定品牌為空 防止價錢算錯
+    this.dataForm.get('PLU_SalePrc')!.valueChanges.subscribe(() => {
+      if(this.crudstatus == CRUDStatus.Create){
+        this.dataForm.get('LOGO_No')?.setValue('');
+      }
+    });
   }
 
   //根據新增/編輯 環境建立表單
@@ -342,6 +343,15 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     this.submitted = true;
 
     if (this.dataForm.invalid) {
+      this.messageService.unblockUi();
+      return;
+    }
+
+    //---送出前的POS2005檢核---
+    // 檢查 POS2005明細檔 是否有任何一筆 PLU_No 為空
+    const hasEmptyPLUNo = this.POS2005Data.some(item => !item.PLU_No || item.PLU_No.trim() === '');
+    if (hasEmptyPLUNo) {
+      this.messageService.errorBubble('有商品的國際條碼（PLU_No）為空，請確認後再儲存');
       this.messageService.unblockUi();
       return;
     }
@@ -380,9 +390,15 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           }
           console.log('insert', requestBody);
 
-          this.tls51070Service.insertTLS51070(requestBody).subscribe(() => {
-            this.messageService.successBubble('新增成功');
-            this.onCancel(); // 儲存後，會返回列表
+          this.tls51070Service.insertTLS51070(requestBody).subscribe(async (response) => {
+            this.messageService.successBubble('POS2004主檔新增成功');
+
+            const newSeqNo = response?.Data; // 回傳的 IMG_SeqNo
+            console.log('新增取號:', newSeqNo);
+
+            // 進行圖片檔更新
+            await this.createImage(newSeqNo); // ✅ 傳入圖片
+            this.onCancel();
           });
         }
         break;
@@ -398,15 +414,23 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           const requestBody = {
             ...formValue,
             PLU_No: POS2005PLUs,
-            // 如果IMG_File也有資料，就合併進去IMG1001
             "POS2020_INFO": this.POS2020Data,
           };
 
           console.log('update', requestBody);
 
           this.tls51070Service.updateTLS51070(requestBody).subscribe({
-            next: () => {
-              this.messageService.successBubble('更新成功');
+            next: async () => {
+              // 用 this.img1001Data 裡的 IMG_SeqNo 呼叫 createImage
+              const seqNo = this.dataForm.get('PLU_MagNo')?.value; //圖片編號抓商品管理碼
+              if (!seqNo) {
+                console.log('IMGData',this.img1001Data);
+                console.warn('⚠️ 商品管理碼(PLU_MagNo)為空，無法更新圖片');
+                return;
+              }
+              await this.createImage(seqNo);
+              await this.deleteImages();
+
               this.onCancel(); // 儲存後，會返回列表
             }
           });
@@ -474,9 +498,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     this.tls51070Service
       .queryPOS2013_DropDownList({ "VEN_Flag": '1' })
       .subscribe((response) => {
-        this.vendorOptions = response.Data.map((item: apiOption) => ({
-          value: item.No,
-          label: item.No + '-' + item.Name,
+        this.vendorOptions = response.Data.map((item: any) => ({
+          value: item.VEN_No,
+          label: item.VEN_No + '-' + item.Name,
         }));
 
         console.log('廠商代碼:', this.vendorOptions);
@@ -490,7 +514,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           { field: 'PLU_TransType', header: '運輸方式', editable: true, type: 'dropdown', options: this.transTypeOption }, // １＝自行送貨２＝貨運  ３＝快遞  ４＝其它。
           { field: 'PLU_TransDay', header: '送貨天數', editable: true, type: 'number' },
           { field: 'PLU_Purchase', header: '採購狀態', editable: true, type: 'dropdown', options: this.purchaseTypeOption }, // １＝正常採購（預設） ２＝停止採購
-          { field: 'PLU_OrderPrc', header: '目前進價', editable: false, type: 'number' }, //目前進價 > 顯示 最後進價
+          { field: 'PLU_OrderPrc', header: '目前進價', editable: false, type: 'number'}, //目前進價 > 顯示 最後進價
           //readonly，商品新增時，最後進價=POS2004的標準進價PLU_OrderPrc，之後進價異動透過進價/售價變價作業(關帳作業、啟動變價時更新)
 
           { field: 'VDP_LastStockDate', header: '最後進貨日期', editable: false, type: 'date' }, //  readonly，商品新增時，不給值，進貨作業驗收更新
@@ -544,46 +568,26 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   //讀取明細檔案
   async loadDetail(pLU_MagNo: string, pLU_OrderPrc: number): Promise<void> {
     if (pLU_MagNo == '') {
-      this.messageService.infoBubble('商品管理碼為空，不載入明細檔');
+      if(this.crudstatus !== CRUDStatus.Create)
+        this.messageService.infoBubble('商品管理碼為空，不載入明細檔'); //編輯、查看模式如果沒有明細檔就跳出提示
     } else {
       this.tls51070Service.queryTLS51070_Detail({ 'PLU_MagNo': pLU_MagNo }).subscribe(async (response) => {
-        // this.img1001Detail = response.Data[0].IMG1001Detail.map((item: { IMG_Path: string; IMG_File: File; }) => ({ ...item, IMG_Path: `${environment.ApiUrl}/${item.IMG_Path.replace('~', '')}/${item.IMG_File}` }));
-
         this.pos2005Detail = response.Data[0].POS2005Detail;
         this.pos2020Detail = response.Data[0].POS2020Detail;
-
         const rawImages = response.Data[0].IMG1001Detail;
 
         // 圖片讀取時進行轉檔 將IMG1001Detail的IMG_File內容變更為_以後的內容
-        // this.img1001Detail = response.Data[0].IMG1001Detail.map((item: { IMG_File: string; }) => {
         const downloadPromises = rawImages.map(async (item: any) => {
-          const cleanFileName = item.IMG_File.split('_').slice(1).join('_');
-          const cleanPath = item.IMG_Path.replace('~', '');
-          const fullPath = `${cleanPath}/${item.IMG_File}`;
-
-          try {
-            const blob = await firstValueFrom(this.tls51070Service.downloadImage2(fullPath));
-            const blobUrl = URL.createObjectURL(blob);
-
-            return {
-              ...item,
-              IMG_File: cleanFileName,
-              IMG_Url: blobUrl // 自訂欄位給 <img> 用
-            };
-          } catch (err) {
-            console.error('圖片讀取失敗', fullPath);
-            return {
-              ...item,
-              IMG_File: cleanFileName,
-              IMG_Url: '' // 留空避免爆掉
-            };
-          }
+        const path = item.IMG_Path.replace('~', '');
+        const url = `${environment.ApiUrl}/${path}/${item.IMG_File}`.replace(/\/{2,}/g, '/');
+          return {
+            ...item,
+            IMG_Path: url
+          };
         });
 
         this.img1001Detail = await Promise.all(downloadPromises);
         console.log(this.img1001Detail);
-        this.img1001Data = this.img1001Detail
-        
 
         this.POS2005Data = this.pos2005Detail;
         this.POS2020Data = this.pos2020Detail;
@@ -595,7 +599,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
         console.log('POS2005Data', this.POS2005Data);
         console.log('POS2020Data', this.POS2020Data);
-        console.log('img1001Detail', this.img1001Detail);
+        console.log('img1001Data', this.img1001Data);
       });
     }
   }
@@ -668,87 +672,101 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     this.detail2020Handler.deletePOS2020(selectedItems, this.POS2020Data, this.pos2020Table);
   }
 
-  // ---圖片相關---
-  images: IMG1001[] = [{
-    "id": 101,
-    "IMG_Type": "POS2004",
-    "IMG_SeqNo": "0100000000014",
-    "IMG_Path": "https://localhost:7271/IMAGES/POS2004/2506/250627082102041_food_energy_bar.png",
-    "IMG_File": "250627082102041_food_energy_bar.png",
-    "IMG_Remark": "",
-    "CRT_Date": "0001-01-01T00:00:00",
-    "UPD_Date": "2025-06-27T16:21:01.99",
-    "UPD_USR_No": "admin",
-    "UPD_USR_Name": "管理員⭐"
-  }]
-
-  // 取得圖片資料
-  loadImages(IMG_Type: string, IMG_SeqNo: string) {
-    if (IMG_Type && IMG_SeqNo) {
-      const request = {
-        "IMG_Type": IMG_Type,
-        "IMG_SeqNo": IMG_SeqNo
-      }
-      this.tls51070Service.queryImage(request).pipe(untilDestroyed(this)).subscribe(data => {
-        this.img1001Data = data.Data.map((item: { IMG_Path: string; IMG_File: any; }) => {
-          // 處理圖片完整 URL
-          const imgPath = item.IMG_Path.replace('~', '');
-          const fullUrl = `${environment.ApiUrl}/${imgPath}/${item.IMG_File}`.replace(/\/{2,}/g, '/');
-          return {
-            ...item,
-            IMG_Path: fullUrl // 將原本的 IMG_Path 改成完整 URL
-          };
-        });
-
-        console.log('取得圖片資料', this.img1001Data);
-        this.cdr.markForCheck();
-      });
-    } else {
-
-      this.messageService.infoBubble('無圖片相關序號');
-    }
-  }
+  // ---圖片更新相關---
 
   //* 圖片相關
-  async createImage(pluMagNo: string, type: string) {
-    const promises: Promise<any>[] = [];
-    if (this.confirmDeleteImages.length > 0) {
-      promises.push(this.deleteImages(pluMagNo));
+  async createImage(IMG_SeqNo: string) {
+    console.log('變更資料', this.files);
+
+    if (!IMG_SeqNo) {
+      console.warn('⚠️ 缺少圖片編號 IMG_SeqNo，無法上傳');
+      return;
     }
-    if (this.files.length > 0) {
-      promises.push(this.uploadImages(pluMagNo, type));
+
+    if (!this.files || this.files.length === 0) {
+      console.info('⚠️ 沒有選擇要上傳的圖片');
+      return;
     }
-    if (promises.length > 0) {
-      const results = await Promise.allSettled(promises);
-      results.forEach((result, index) => {
-        if (result.status === 'fulfilled') {
-          console.log(`操作 ${index + 1} 成功:`, result.value);
+
+    const formData = new FormData();
+
+    // 取得必填欄位
+    formData.append('IMG_Type', 'POS2004');
+    formData.append('IMG_SeqNo', IMG_SeqNo);
+    formData.append('IMG_Remark', 'test');  // 備註先下空test
+
+    // 加入所有檔案（以 uuid 命名）
+    this.files.forEach(file => {
+      const extension = file.name.split('.').pop(); // 保留副檔名
+      const uuidFileName = `${uuidv4()}.${extension}`;
+      formData.append('Files', file, uuidFileName);
+    });
+
+    // 👉 檢查內容（只能用 FormData.entries() 迴圈看）
+    console.log('📤 寄出的 FormData：');
+    for (const [key, value] of (formData as any).entries()) {
+      if (value instanceof File) {
+        console.log(`🔹 ${key}: ${value.name} (${value.type}, ${value.size} bytes)`);
+      } else {
+        console.log(`🔸 ${key}: ${value}`);
+      }
+    }
+
+    try {
+      await firstValueFrom(this.tls51070Service.uploadImages(formData));
+      this.messageService.successBubble('圖片上傳成功');
+    } catch (error) {
+      console.error('❌ 圖片上傳失敗:', error);
+      this.messageService.errorBubble('圖片上傳失敗');
+    }
+  }
+
+  private async deleteImages() {
+    if (!this.confirmDeleteImages || this.confirmDeleteImages.length === 0) {
+      console.info('⚠️ 無需刪除圖片');
+      return;
+    }
+
+    const tasks: Promise<any>[] = [];
+
+    // ✅ 從目前 img1001Data 中，找出任一筆作為參考值（前提是該批圖片屬性都相同）
+    const reference = this.img1001Data.find(img =>
+      img.IMG_Type && img.IMG_SeqNo
+    );
+
+    if (!reference) {
+      console.warn('⚠️ 找不到任何參考圖片資料，無法補齊 API 參數');
+      return;
+    }
+
+    const { IMG_SeqNo } = reference;
+
+    for (const fileName of this.confirmDeleteImages) {
+      const request = {
+        'IMG_Type': 'POS2004',
+        "IMG_SeqNo": IMG_SeqNo,
+        IMG_File: fileName,
+      };
+
+      console.log('📤 刪除圖片內容:', request);
+      tasks.push(firstValueFrom(this.tls51070Service.deleteImage(request)));
+    }
+
+    try {
+      const results = await Promise.allSettled(tasks);
+
+      results.forEach((res, i) => {
+        if (res.status === 'fulfilled') {
+          console.log(`✅ 圖片刪除 ${i + 1} 成功`);
         } else {
-          console.error(`操作 ${index + 1} 失敗:`, result.reason);
+          console.error(`❌ 圖片刪除 ${i + 1} 失敗:`, res.reason);
         }
       });
+
+      this.messageService.successBubble(`成功刪除 ${tasks.length} 張圖片`);
+    } catch (err) {
+      console.error('❌ 刪除圖片過程中發生錯誤:', err);
+      this.messageService.errorBubble('圖片刪除失敗');
     }
   }
-  private async uploadImages(pluMagNo: string, type: string) {
-    const formData = new FormData();
-    this.files.forEach(file => {
-      // 取得原始副檔名
-      const originalName = file.name;
-      const lastDotIndex = originalName.lastIndexOf('.');
-      const extension = lastDotIndex === -1 ? '' : originalName.substring(lastDotIndex);
-      // 產生 UUID v4 作為新的檔名
-      const uniqueId = uuidv4();
-      const normalizedName = `${uniqueId}${extension}`;
-      // 創建一個新的 File 物件，使用規範化的檔名
-      const newFile = new File([file], normalizedName, { type: file.type, lastModified: file.lastModified });
-      // 將新的 File 物件加入 FormData
-      formData.append('files', newFile, newFile.name);
-    });
-    // await firstValueFrom(this.tls51070Service.uploadImages(pluMagNo, type, formData));
-  }
-  private async deleteImages(pluMagNo: string) {
-    // await firstValueFrom(this.tls51070Service.deleteImage(this.confirmDeleteImages, pluMagNo, 'POS2004'));
-  }
 }
-
-

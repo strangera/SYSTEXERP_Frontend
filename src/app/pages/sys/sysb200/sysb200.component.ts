@@ -1,251 +1,250 @@
+import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-// Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Sysb200m } from '../../../shared/models/sys/sysb000.module';
-import { SortMeta } from 'primeng/api';
-import { TableLazyLoadEvent } from 'primeng/table';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { SystemTypeService } from '../../../service/basic/system-type.service';
-import { ApprovalStatusService } from '../../../service/basic/approval-status.service';
-import { SYS1000Response } from '../../../shared/models/system/SYS1000';
-
-// 本地儲存鍵：用於儲存查詢狀態
-const storageKey = 'SYSB200';
+import { SortMeta } from 'primeng/api';
+import { ActivatedRoute } from '@angular/router';
+import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { AddButton } from '../../../shared/componentkit/table/table.model';
+export const enum POStatus {
+  已申請 = '0',
+  取消 = '1',
+  已審核 = '2',
+  部分驗收 = '3',
+  全部驗收 = '4',
+  強制結案 = '6',
+  作廢 = '9',
+}
+export interface VendorData {
+  VEN_No: string;
+  VEN_Status: string;
+  VEN_Uniform: string;
+  VEN_CName: string;
+  VEN_EName: string;
+  VEN_SName: string;
+  VEN_Address: string;
+  VEN_Boss: string;
+  VEN_BossTitle: string;
+  VEN_GUEmail: string;
+  VEN_BossTel: string;
+  VEN_BossID: string;
+  VEN_BossAddr: string;
+  VEN_Tel: string;
+  VEN_Fax: string;
+  VEN_WebSite: string;
+  VEN_Remark: string;
+  VEN_PayConditionDay: number;
+  VEN_BankNo: string;
+}
 
 @Component({
   selector: 'app-sysb200',
   templateUrl: './sysb200.component.html',
-  styleUrl: './sysb200.component.scss',
 })
-
-// 廠商基本資料維護作業
-export class SYSB200Component
-  extends BasicQueryPageComponent<Sysb200m>
-  implements OnInit {
-  // 查詢
-  // ----------------------------------------------------------------
+export class SYSB200Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    manufacturerID: ['', [Validators.maxLength(14)]], // 廠商編號
-    approvalStatus: [[] as number[]], // 審核狀態
-    manufacturerUID: ['', [Validators.maxLength(10)]], // 廠商統一編號或個人身份證字號
-    manufacturerCName: ['', [Validators.maxLength(60)]], // 廠商名稱(中文)
-    manufacturerEName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
-    manufacturerSName: ['', [Validators.maxLength(10)]], // 廠商簡稱
-    mailingAddress: ['', [Validators.maxLength(60)]], // 通訊地址
-    contactPerson: ['', [Validators.maxLength(12)]], // 聯絡人
-    contactPersonTitle: ['', [Validators.maxLength(16)]], // 聯絡人職稱
-    contactPersonUID: ['', [Validators.maxLength(10)]], // 聯絡人身份証字號
-    contactPersonPhone: ['', [Validators.maxLength(15)]], // 聯絡人電話
-    contactAddress: ['', [Validators.maxLength(100)]], // 聯絡人聯絡地址
-    contactEmail: ['', [Validators.maxLength(60)]], // 聯絡人電子郵件
-    registeredAddress: ['', [Validators.maxLength(100)]], // 公司登記地址
-    registeredPhone: ['', [Validators.maxLength(15)]], // 公司登記電話
-    companyFax: ['', [Validators.maxLength(15)]], // 公司傳真
-    companyWebsite: ['', [Validators.maxLength(60)]], // 公司網址
-    systemtype: [[] as number[]], // 系統別
-    remark: ['', [Validators.maxLength(160)]], // 備註
-    expirationDay: [, [this.validationService.numberValidator]], // 付款期限(天數)
-    remittanceBankCode: [
-      ,
-      [this.validationService.numberValidator, Validators.max(9999999)],
-    ], // 廠商匯款銀行代號
-
-    //分頁查詢
+    VEN_No: [[]],
+    VEN_Status: [['0', '1']],
+    VEN_Uniform: ['', [Validators.maxLength(10)]],
+    VEN_CName: ['', [Validators.maxLength(60)]],
+    VEN_EName: ['', [Validators.maxLength(60)]],
+    VEN_SName: ['', [Validators.maxLength(10)]],
+    VEN_BankNo: ['', [this.validationService.numberValidator, Validators.maxLength(10)]],
+    VEN_Address: ['', [Validators.maxLength(100)]],
+    VEN_Boss: ['', [Validators.maxLength(12)]],
+    VEN_BossTitle: ['', [Validators.maxLength(16)]],
+    VEN_GUEmail: ['', [Validators.maxLength(60)]],
+    VEN_BossTel: ['', [Validators.maxLength(15)]],
+    VEN_BossID: ['', [Validators.maxLength(10)]],
+    VEN_BossAddr: ['', [Validators.maxLength(100)]],
+    VEN_Tel: ['', [Validators.maxLength(15)]],
+    VEN_Fax: ['', [Validators.maxLength(15)]],
+    VEN_Remark: ['', [Validators.maxLength(160)]],
+    VEN_PayConditionDay: ['', [this.validationService.numberValidator]],
     pageSize: [10],
     pageIndex: [0],
-    SortBy: [[{ field: 'manufacturerID', order: 1 }] as SortMeta[]],
+    SortBy: [[{ field: 'VEN_No', order: 1 }] as SortMeta[]],
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: Sysb200m[] = [
-    // 其他資料
+
+  approvalOptions: { label: string; value: string }[] = [
+    { label: '未審核', value: '0' },
+    { label: '已審核', value: '1' },
   ];
-  filteredData: Sysb200m[] = [...this.data];
+
   columns: any[] = [
-    { field: 'manufacturerID', header: '廠商編號', visible: true },
-    { field: 'approvalStatus', header: '審核狀態', visible: true },
-    { field: 'manufacturerUID', header: '統一編號', visible: true },
-    { field: 'manufacturerCName', header: '廠商名稱(中文)', visible: true },
-    { field: 'manufacturerEName', header: '廠商名稱(英文)', visible: false },
-    { field: 'mailingAddress', header: '發票地址', visible: true },
-    { field: 'contactPerson', header: '聯絡人', visible: true },
-    { field: 'registeredPhone', header: '公司登記電話', visible: true },
-    { field: 'companyFax', header: '公司傳真', visible: true },
-    { field: 'expirationDay', header: '付款期限(天數)', visible: true },
-    { field: 'remittanceBankCode', header: '廠商匯款銀行帳號', visible: true },
-    // 其他欄位
-    { field: 'VENDOR_NAME_S', header: '廠商簡稱', visible: false },
-    { field: 'TAX_ADDR', header: '通訊地址', visible: false },
-    { field: 'CHARGE_TITLE', header: '聯絡人職稱', visible: false },
-    { field: 'CHARGE_PID', header: '聯絡人身份証字號', visible: false },
-    { field: 'CHARGE_TEL', header: '聯絡人電話', visible: false },
-    { field: 'CHARGE_ADDR', header: '聯絡人聯絡地址', visible: false },
-    { field: 'CHARGE_EMAIL', header: '聯絡人電子郵件', visible: false },
-    { field: 'VENDOR_REG_ADDR', header: '公司登記地址', visible: false },
-    { field: 'VENDOR_EMAIL', header: '公司電子郵件', visible: false },
-    { field: 'SYS_ID', header: '系統別', visible: false },
-    { field: 'NOTES', header: '備註', visible: false },
-    { field: 'SUPL_BANK_ACCT', header: '廠商銀行帳號', visible: false },
-    { field: 'SUPL_ACCT_NAME', header: '廠商帳戶名稱', visible: false },
+    { field: 'VEN_No', header: '廠商編號', visible: true },
+    {
+      field: 'VEN_Status',
+      header: '審核狀態',
+      visible: true,
+      format: (value: string) => {
+        const option = this.approvalOptions.find(x => x.value === value);
+        return option ? option.label : value;
+      }
+    },
+    { field: 'VEN_Uniform', header: '統一編號', visible: true },
+    { field: 'VEN_CName', header: '廠商名稱(中文)', visible: true },
+    { field: 'VEN_EName', header: '廠商名稱(英文)', visible: false },
+    { field: 'VEN_SName', header: '廠商簡稱', visible: false },
+    { field: 'VEN_Address', header: '通訊地址', visible: true },
+    { field: 'VEN_Boss', header: '聯絡人', visible: true },
+    { field: 'VEN_BossTitle', header: '聯絡人職稱', visible: false },
+    { field: 'VEN_GUEmail', header: '聯絡人電子郵件', visible: false },
+    { field: 'VEN_BossTel', header: '聯絡人電話', visible: false },
+    { field: 'VEN_BossID', header: '聯絡人身份證字號', visible: false },
+    { field: 'VEN_BossAddr', header: '聯絡人聯絡地址', visible: false },
+    { field: 'VEN_Tel', header: '公司登記電話', visible: true },
+    { field: 'VEN_Fax', header: '公司傳真', visible: true },
+    { field: 'VEN_Remark', header: '備註', visible: false },
+    { field: 'VEN_PayConditionDay', header: '付款期限(天數)', visible: true },
+    { field: 'VEN_BankNo', header: '廠商匯款銀行代號', visible: true },
   ];
 
-  venderOptions = [
-    { id: 1, code: '000000000-1', name: '南紡流通服務台' },
-    { id: 2, code: '000000000-2', name: '停車管理' },
-    { id: 3, code: '000000000-3', name: '南紡流通-特殊交易' },
-  ];
-
-  // // 分頁和排序參數
-  // pageSize: number = 10;
-  // pageIndex: number = 0;
   totalRecords = 0;
-  // lastQueryParams: any = null;
-  // sortField: string = 'CAT_LNo';
-  // sortOrder: number = 1;
-
-  // 多選項目
-  selectedItems: Sysb200m[] = [];
-
-  // ----------------------------------------------------------------
-  t111Options: SYS1000Response[] = [];
-  venderColumns: any[] = [
-    { field: 'id', header: 'ID', visible: true },
-    { field: 'code', header: '廠商代碼', visible: true },
-    { field: 'name', header: '廠商名稱', visible: true },
+  selectedItems: VendorData[] = [];
+  data: VendorData[] = [];
+  venderOptions: any[] = [];
+  t111Options: any[] = [];
+  bankOptions$!: Observable<any[]>;
+  addButton: AddButton[] = [
+    {
+      label: '單據審核',
+      icon: 'pi pi-check-circle text-green-500',
+      action: (rowData: VendorData) => {
+        if (rowData.VEN_Status !== '0') {
+          this.messageService.warnBubble('狀態不是「未審核」，無法審核');
+          return;
+        }
+        this.statusChange(rowData, '1'); //更新成「已審核」
+      },
+    },
+    {
+      label: '反審核',
+      icon: 'pi pi-undo text-orange-500',
+      action: (rowData: VendorData) => {
+        if (rowData.VEN_Status !== '1') {
+          this.messageService.warnBubble('狀態已審核，無法反審核');
+          return;
+        }
+        this.statusChange(rowData, '0'); // 更新成「未審核」
+      },
+    },
   ];
-  approvalOptions: any[] = [];
-  systemCodeOptions: any[] = [];
+
+  statusChange(rowData: VendorData, status: string) {
+    this.messageService.successBubble(`你點了狀態更新，ID: ${rowData.VEN_No}，要更新成 ${status}`);
+    rowData.VEN_Status = status;
+  }
+
+
   constructor(
-    // private sysb200Service: Sysb200Service,
+    private activatedRoute: ActivatedRoute,
     private validationService: ValidationService,
-    private systemTypeService: SystemTypeService,
-    private approvalStatusService: ApprovalStatusService,
+    private sysbc00Service: Sysbc00Service
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSB200', 'SYS/SYSB200CRU');
+    this.initializePage('SYSB200', 'sys/sysb200cru');
     this.loadOptions();
+    this.handleQueryRestore(this.queryForm, 'SYSB200', (form) => this.onSubmit(form));
+  }
 
-    // 恢復查詢狀態並自動查詢
-    this.handleQueryRestore(this.queryForm, storageKey, (form) =>
-      this.onSubmit(form),
+  loadOptions() {
+    this.venderOptions = [
+      { label: '廠商A', value: 'A' },
+      { label: '廠商B', value: 'B' },
+      { label: '廠商C', value: 'C' },
+    ];
+
+    this.t111Options = [
+      { SYS_Name: '即期', id: 0 },
+      { SYS_Name: '15天', id: 15 },
+      { SYS_Name: '30天', id: 30 },
+      { SYS_Name: '45天', id: 45 },
+    ];
+
+    this.bankOptions$ = this.sysbc00Service.querySYSBC00({}).pipe(
+      map(res => (res.Data ?? []).map(item => ({
+        label: `${item.BNK_No} ${item.BNK_Name}`,
+        value: item.BNK_No
+      })))
     );
   }
-  loadOptions() {
-    // ----------------------------------------------------------------
-    this.systemTypeService.getSystemTypes().subscribe((data) => {
-      this.systemCodeOptions = data;
+  onSubmit(form: FormGroup) {
+    this.handleSubmit(form, () => {
+      this.data = [
+        {
+          VEN_No: 'A001',
+          VEN_Status: '0', // 未審核
+          VEN_Uniform: '12345678',
+          VEN_CName: '台灣測試股份有限公司',
+          VEN_EName: 'Taiwan Test Co.',
+          VEN_SName: '台測',
+          VEN_Address: '台北市信義區松智路',
+          VEN_Boss: '林小華',
+          VEN_BossTitle: '董事長',
+          VEN_GUEmail: 'boss1@test.com',
+          VEN_BossTel: '0911111111',
+          VEN_BossID: 'A123456789',
+          VEN_BossAddr: '台北市內湖區',
+          VEN_Tel: '0222222222',
+          VEN_Fax: '0222222223',
+          VEN_WebSite: 'https://taiwantest.com',
+          VEN_Remark: '第一次測試資料',
+          VEN_PayConditionDay: 30,
+          VEN_BankNo: '004'
+        },
+        {
+          VEN_No: 'A002',
+          VEN_Status: '1', // 已審核
+          VEN_Uniform: '87654321',
+          VEN_CName: '巨匠國際有限公司',
+          VEN_EName: 'Master Intl Ltd.',
+          VEN_SName: '巨匠',
+          VEN_Address: '新北市新店區寶橋路',
+          VEN_Boss: '陳美麗',
+          VEN_BossTitle: '總經理',
+          VEN_GUEmail: 'boss2@test.com',
+          VEN_BossTel: '0922222222',
+          VEN_BossID: 'B223456789',
+          VEN_BossAddr: '桃園市中壢區',
+          VEN_Tel: '0333333333',
+          VEN_Fax: '0333333334',
+          VEN_WebSite: 'https://masterintl.com',
+          VEN_Remark: '第二筆測試資料',
+          VEN_PayConditionDay: 45,
+          VEN_BankNo: '005'
+        },
+        {
+          VEN_No: 'A003',
+          VEN_Status: '0', // 未審核
+          VEN_Uniform: '56781234',
+          VEN_CName: '優秀科技股份有限公司',
+          VEN_EName: 'Excellent Tech Inc.',
+          VEN_SName: '優科',
+          VEN_Address: '台中市南屯區公益路',
+          VEN_Boss: '張大仁',
+          VEN_BossTitle: '技術長',
+          VEN_GUEmail: 'boss3@test.com',
+          VEN_BossTel: '0933333333',
+          VEN_BossID: 'C323456789',
+          VEN_BossAddr: '高雄市左營區',
+          VEN_Tel: '0444444444',
+          VEN_Fax: '0444444445',
+          VEN_WebSite: 'https://excellenttech.com',
+          VEN_Remark: '第三筆測試資料',
+          VEN_PayConditionDay: 60,
+          VEN_BankNo: '700'
+        },
+      ];
 
-      // let systemCodeValues = this.systemCodeOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   systemtype: systemCodeValues
-      // });
+      this.totalRecords = this.data.length;
+      this.loading = false;
+      this.messageService.unblockUi();
     });
-    //
-    this.approvalStatusService.getSystemTypes().subscribe((data) => {
-      this.approvalOptions = data;
-
-      // let approvalValues = this.approvalOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   approvalStatus: approvalValues
-      // });
-    });
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      // this.sysb200Service.querySYSB200(frm.value).subscribe({
-      //   next: (response: any) => {
-      //     console.log('API response:', response);
-      //     if (response.Status === '0000') {
-      //       this.data = response.Data || [];
-      //       this.filteredData = [...this.data];
-      //       this.totalRecords = response.TotalCount || response.Data.length;
-      //       this.queryStateService.setQueryState(storageKey, frm.value);
-      //     } else {
-      //       console.error('API error:', response.Status, response.Message);
-      //     }
-      //     this.loading = false;
-      //     this.messageService.unblockUi();
-      //   },
-      //   error: (err: string) => {
-      //     console.error('API error:', err);
-      //     this.loading = false;
-      //     this.messageService.unblockUi();
-      //   },
-      // });
-    });
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  // 刪除項目
-  onDelete(data: Sysb200m | Sysb200m[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
-
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
-
-    // 收集所有有效的 ID
-    const idList = items
-      .filter(
-        (item) =>
-          item &&
-          item.manufacturerID != null &&
-          item.manufacturerID !== undefined,
-      )
-      .map((item) => item.manufacturerID);
-
-    if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-      return;
-    }
-
-    // const deleteBody = {
-    //   idList: idList, // 符合 API 的 idList 格式
-    // };
-    // this.sysb100Service.deleteSYSB100(deleteBody).subscribe({
-    //   next: (response: any) => {
-    //     if (response.Status === '0000') {
-    //       this.messageService.successBubble('選中項目刪除成功');
-    //     } else {
-    //       console.error('API error:', response.Status, response.Message);
-    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-    //     }
-    //   },
-    //   error: (err: string) => {
-    //     console.error('API error:', err);
-    //     this.messageService.errorBubble('刪除失敗');
-    //   },
-    //   complete: () => {
-    //     this.onSubmit(this.queryForm);
-    //   },
-    // });
-
-    this.selectedItems = [];
-  }
-
-  loadData(event: TableLazyLoadEvent) {
-    const form = this.queryForm.value;
-    if (this.totalRecords === 0) {
-      return;
-    }
-    form.pageSize = event.rows && event.rows > 0 ? event.rows : 10;
-    form.pageIndex = (event.first ?? 0) / form.pageSize + 1;
-    form.SortBy = event.multiSortMeta ?? [
-      { field: 'manufacturerID', order: 1 },
-    ];
-    this.onSubmit(this.queryForm);
   }
 }

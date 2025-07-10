@@ -158,7 +158,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
       next: (res) => {
         if (res.Status === '0000') {
           this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-          this.router.navigate(['account/TLS/TLS23060CRU'], {
+          this.router.navigate(['account/tls/tls23060cru'], {
             state: {
               queryFormValue,
               pageSize: this.customPageSize,

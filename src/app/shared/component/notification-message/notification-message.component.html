@@ -1,7 +1,8 @@
 <p-confirmDialog #cd>
   <ng-template pTemplate="headless" let-message>
     <div class="flex flex-column align-items-center p-5 surface-overlay border-round">
-      <div class="border-circle bg-primary inline-flex justify-content-center align-items-center h-6rem w-6rem">
+      <div *ngIf="showIcon"
+        class="border-circle bg-primary inline-flex justify-content-center align-items-center h-6rem w-6rem">
         <i class="pi pi-{{ message.icon }} text-5xl"></i>
       </div>
       <span class="font-bold text-2xl block mb-2 mt-4">

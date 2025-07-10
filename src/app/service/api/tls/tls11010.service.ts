@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, catchError, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ErrorHandlerService } from '../../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../../system/error-handler.service';
 
 @Injectable({
   providedIn: 'root',
@@ -14,7 +14,7 @@ export class Tls11010Service {
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
   ) { }
-//floor
+  //floor
   getFloorOptions(): Observable<any[]> {
     return this.http
       .post<any>(`${this.apiUrl}/querySYS3900_DropDownList`, {})

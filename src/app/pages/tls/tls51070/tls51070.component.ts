@@ -5,6 +5,9 @@ import { createPaginationConfig, Column } from '../../../shared/componentkit/tab
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { POS2004 } from '../../../shared/models/tls/tls000.model';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
+import { FileSelectEvent } from 'primeng/fileupload';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { environment } from '../../../../environments/environment';
 
 // 2.5.1.7  商品基本資料
 @Component({
@@ -218,6 +221,8 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   /* LOGOBUDGET 品牌每月進貨限額設定檔*/
   /* POS2004 商品基本資料檔 */
   // 沒有該資料才可以刪除
+  // 更新刪除邏輯
+  // 有歷史庫存就不能刪除
   //-------------
   // 刪除項目
   onDelete(data: POS2004 | POS2004[]): void {
@@ -242,13 +247,13 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     }
 
     //確認是否全部都可以刪除
-    // const canDelete = items.every((item) => item.CanDel);
+    const canDelete = items.every((item) => item.CanDel);
 
-    // if (!canDelete) {
-    //   console.error('Some items cannot be deleted');
-    //   this.messageService.errorBubble('無法刪除：組織階層互相關連');
-    //   return;
-    // }
+    if (!canDelete) {
+      console.error('Some items cannot be deleted');
+      this.messageService.errorBubble('無法刪除：組織階層互相關連');
+      return;
+    }
 
     const deleteBody = {
       idList: idList, // 符合 API 的 idList 格式
@@ -356,10 +361,43 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   gotoTls51070OS(destination: string) {
     console.log('導引到', destination);
     //導引到sysb400.os
-    this.router.navigate(['account/TLS/TLS51070OS'], {
+    this.router.navigate(['account/tls/tls51070os'], {
       state: {
         destination: destination,
       }
     });
+  }
+
+  //匯入excel並產生錯誤檔
+  onFileUpload(event: FileSelectEvent) {
+    const file = event.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    this.tls51070Service.uploadTLS51070(formData).pipe(untilDestroyed(this)).subscribe({
+      next: (res) => {
+        const data = res?.Data;
+
+        if (data) {
+          if (data.ErrorFilePath) {
+            // 有錯誤檔：顯示錯誤提示
+            this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
+            // 自動下載錯誤檔
+             this.downloadErrorFile(data.ErrorFilePath);
+          } else {
+            // 沒有錯誤檔：顯示成功筆數
+            this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
+          }
+        }
+      },
+      error: (err) => {
+        console.error(err);
+        this.messageService.errorBubble('檔案上傳失敗，請稍後再試');
+      },
+    });
+  }
+
+  downloadErrorFile(filePath: string) {
+    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 }

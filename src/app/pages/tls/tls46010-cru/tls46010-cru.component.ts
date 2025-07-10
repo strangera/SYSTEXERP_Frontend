@@ -78,7 +78,6 @@ export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implem
 
   ngOnInit(): void {
     this.initializePage('TLS46010', this.dataForm);
-    // 禁止編輯店號
     this.dataForm.get('SYS_StoreNo')?.disable();
     this.userSubscription = this.authService.user.subscribe((userInfo: UserInfo | null) => {
       this.userInfo = userInfo;

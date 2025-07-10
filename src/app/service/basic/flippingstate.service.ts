@@ -3,7 +3,7 @@ import { environment } from '../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { ErrorHandlerService } from '../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../system/error-handler.service';
 
 @Injectable({
   providedIn: 'root'
@@ -22,7 +22,7 @@ export class FlippingstateService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   // Method to get the options for ExcessHandlingMethod dropdown
   getOptions(): Observable<any[]> {

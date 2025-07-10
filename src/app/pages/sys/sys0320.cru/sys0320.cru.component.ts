@@ -6,6 +6,7 @@ import { ApiResponse } from '../../../service/system/auth.service';
 import { UserData } from '../../../shared/models/sys/user.model';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { Sys0230Service } from '../../../service/api/sys/sys0230.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 interface PrivilegeOutput {
   prog_no: string;
@@ -43,7 +44,7 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
   }
   ngOnInit(): void {
     this.initializePage('SYS0320', this.dataForm);
-    this.sys0110Service.queryUserPrivileges({ user_no: `${this.rowdata?.user_No}` }).subscribe({
+    this.sys0110Service.queryUserPrivileges({ user_no: `${this.rowdata?.user_No}` }).pipe(untilDestroyed(this)).subscribe({
       next: (response: ApiResponse<TreeNode[]>) => {
         if (response.Data && Array.isArray(response.Data)) {
           response.Data.forEach(node => {
@@ -355,7 +356,7 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
     };
     this.loading = true;
 
-    this.sys0230Service.updateUserPrivileges(body).subscribe({
+    this.sys0230Service.updateUserPrivileges(body).pipe(untilDestroyed(this)).subscribe({
       next: (response: ApiResponse<any>) => {
         console.log('Update Role Privileges Response:', response);
         this.messageService.successBubble('更新成功');

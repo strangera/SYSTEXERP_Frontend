@@ -8,6 +8,7 @@ export interface Column {
   hidden?: boolean;  // 是否隱藏 (是否為無法篩選欄位)
   format?: (value: any) => string | number | null; // 格式化(日期、時間...)
 
+  showSort?: boolean;
   sortField?: string; // 排序欄位(預設為 field)
 
   disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
@@ -42,7 +43,7 @@ export interface LazyLoadEvent {
 
 export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
   return {
-    pageSize: [100],
+    pageSize: [10],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [defaultSortBy],
   };
@@ -153,9 +154,9 @@ export const formatTimeHHMM = (value: string | number): string => {
 };
 
 // 000,000,000
-export const formatAmount = (number: number | string): string => {
-  if (!number) return '0';
-  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+export const formatAmount = (number: number | string): number => {
+  if (number === null || number === undefined || isNaN(Number(number))) return 0;
+  return Number(number); // 或維持原本 regex 寫法
 };
 
 export const formatYN = (value: string): string => {

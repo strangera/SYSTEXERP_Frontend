@@ -33,9 +33,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   // select 選擇Row相關
   @Input() showCheckBox = false;                                                // 是否顯示 checkbox
   @Input() selectionMode: 'multiple' | 'single' | null | undefined = 'multiple';// table 勾選 Mode (預設多選)
-  @Input() selectedItems: any = [];                                           // table 已勾選資料
+  @Input() selectedItems: any = [];                                             // table 已勾選資料
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true; // 可選擇(條件)
-  @Output() select = new EventEmitter<TableRowSelectEvent>();               // 資料取消勾選(事件)
+  @Output() select = new EventEmitter<TableRowSelectEvent>();                   // 資料取消勾選(事件)
   @Output() unSelect = new EventEmitter<TableRowUnSelectEvent>();               // 資料取消勾選(事件)
   @Output() selectionChange = new EventEmitter<any>();                          // 資料勾選(事件)
   // Sort 相關
@@ -52,7 +52,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() showCaption = true;                                                  // 是否顯示 Caption
   // Header(左) 相關
   @Input() showHeader = true;                 // 是否顯示 Header
-  @Input() showReportMode = true;                 // 是否顯示 匯出按鈕
+  @Input() showReportMode = true;             // 是否顯示 匯出按鈕
   @Input() showInsert = false;                // 是否顯示 Insert新增按鈕
   @Input() insertRowData = false;             // 預設新增模式 (關聯：需要加入dataKey, dataChange)
   @Input() defaultInsertData: any = {};       // 預設新增資料 (可選，預設為所有資料為null)
@@ -68,8 +68,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
   // Header(右) 相關
   @Input() showExcel = false;                      // 是否顯示 匯出Excel
-  @Input() showExcelExport = true;                         // 是否顯示 匯出Excel按鈕
-  @Input() showExcelImport = true;                         // 是否顯示 匯入Excel按鈕
+  @Input() showExcelExport = true;                 // 是否顯示 匯出Excel按鈕
+  @Input() showExcelImport = true;                 // 是否顯示 匯入Excel按鈕
   @Output() exportExcel = new EventEmitter<any>(); // 匯出 Excel 事件
   @Input() exportExcelLoading = false;             // 匯出 Excel loading
   @Output() importExcel = new EventEmitter<FileSelectEvent>(); // 匯入 Excel 事件
@@ -90,12 +90,12 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   // Footer
   @Input() showFooter = false;                      // 是否顯示 Footer
   // 分頁器
-  @Input() scrollHeight = '600px';                  // table 高度
+  @Input() scrollHeight = '400px';                  // table 高度
   @Input() scrollable = true                        // 是否要滾輪
   @Input() showPaginator = true;                    // 是否顯示 分頁器
   @Input() totalRecords = 0;                        // 記錄總數
   totalPages = 0;                                   // 共幾頁數
-  rows = 100;                                        // 每頁顯示的行數
+  rows = 10;                                        // 每頁顯示的行數
   first = 0;                                        // 當前表格的起始索引
   pages: { label: string, value: number }[] = [];   // (右上)下拉選單 頁數選項
   selectedPage: number | null = 1;                  // (右上)下拉選單 當前選擇的頁數
@@ -281,7 +281,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
       this.insert.emit();
     }
   }
-  deleteRow(selectedItems: any) { this.delete.emit(selectedItems); }// Delete 按鈕
+  deleteRow(selectedItems: any) { this.delete.emit(selectedItems); this.selectedItems = []; }// Delete 按鈕
   onExportExcel() { this.exportExcel.emit(); }                      // 匯出Excel範本 事件
   onImportExcel(event: FileSelectEvent) {                           // 匯入Excel
     this.importExcel.emit(event);

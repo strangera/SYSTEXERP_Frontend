@@ -37,8 +37,7 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
   whetherOptions: any[] = [];
   carrierTypeOptions: any[] = [];
   constructor(
-    private location: Location,
-    private pdfService: PdfService,
+
     private statusFlagService: StatusFlagService,
     private whetherService: WhetherService,
     private txnSubtypeService: TXN_SubtypeService,
@@ -50,7 +49,10 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
   async ngOnInit(): Promise<void> {
     const state = history.state;
     this.queryFormValue = state?.queryFormValue;
-    this.data = state?.data || [];
+    this.data = (state?.data || []).map((row: any) => ({
+  ...row,
+  TXN_Key: `${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`
+}));
     this.pageSize = state?.pageSize ?? 1000;
     this.displayMode = state?.displayMode ?? 'Detail'; // 
     this.printedAt = new Date().toLocaleString('zh-TW', { hour12: false });
@@ -111,7 +113,14 @@ set displayMode(value: 'Detail' | 'Summary') {
   }
 
 
-
+fetchDetailData = async (payload: any): Promise<any[]> => {
+  const match = this.data.find(row =>
+    row.TXN_Date === payload.TXN_Date &&
+    row.ECR_No === payload.ECR_No &&
+    row.TXN_No === payload.TXN_No
+  );
+  return match?.DetailList ?? [];
+};
 
 
   
@@ -174,7 +183,7 @@ private updatePdfSummary(): void {
           : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
       }
     },
-    { field: 'ECR_No', header: '機號',  },
+    { field: 'ECR_No', header: '收銀機代號',  },
     { field: 'TXN_No', header: '交易序號', style: 'text-right' },
     { field: 'tlt_no', header: '專櫃編號'  },
     { field: 'tlt_name', header: '櫃位名稱', style: 'text-left' }, // 非 POS5006 欄位，UI 顯示用
@@ -223,8 +232,7 @@ private updatePdfSummary(): void {
     },
     { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號',  },
     { field: 'TXN_Time', header: '起始時間', format: this.formatTimeToHHMM.bind(this) },
-{ field: 'TXN_Time', header: '結束時間', format: this.formatTimeToHHMM.bind(this) },
-
+    { field: 'TXN_Time', header: '結束時間', format: this.formatTimeToHHMM.bind(this) },
     { field: 'USR_No', header: '收銀員',  style: 'text-left' },
     { field: 'TXN_PreOrderNo', header: '預售/訂金單號',  },
     { field: 'ORG_TXN_Date', header: '原交易日期',  },
@@ -269,25 +277,25 @@ private updatePdfSummary(): void {
       field: 'TXN_PrintGUI',
       header: '信用卡別',
     
-      format: (val: any) => this.getYesNoLabel(val)
+      
     },
     {
       field: 'TXN_PrintGUI',
       header: '號碼',
     
-      format: (val: any) => this.getYesNoLabel(val)
+      
     },
     {
       field: 'TXN_PrintGUI',
       header: '分期期數',
     
-      format: (val: any) => this.getYesNoLabel(val)
+     
     },
     {
       field: 'TXN_PrintGUI',
       header: '金額',
     
-      format: (val: any) => this.getYesNoLabel(val)
+      
     },
          ];
 
@@ -303,9 +311,9 @@ case 'Summary':
           ? val
           : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
       }},
-  { field: 'tlt_no', header: '專櫃編號' },
-  { field: 'tlt_name', header: '櫃位名稱' },
-  { field: 'TXN_TotSaleAmt', header: '發票總金額', style: 'text-right', format: this.moneyFormat },
+      { field: 'tlt_no', header: '專櫃編號' },
+      { field: 'tlt_name', header: '櫃位名稱' },
+      { field: 'TXN_TotSaleAmt', header: '發票總金額', style: 'text-right', format: this.moneyFormat },
   
  ];
 
@@ -313,5 +321,28 @@ case 'Summary':
         return [{ header: '錯誤', field: '', format: () => '未知模式' }];
     }
   }
-
+get detailColumns(): ReportColumn[] {
+  return [
+        {
+      field: 'TXN_Date',
+      header: '銷售日期',
+    
+      format: (val: string) => {
+        const date = new Date(val);
+        return isNaN(date.getTime())
+          ? val
+          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+      }},
+       { field: 'ECR_No', header: '收銀機代號',  },
+       { field: 'TXN_No', header: '交易序號', style: 'text-right' },
+    { field: 'PAY_NO', header: '支付方式代號' },
+        { field: 'tlt_no', header: '專櫃編號'  },
+    { field: 'tlt_name', header: '櫃位名稱', style: 'text-left' }, // 非 POS5006 欄位，UI 顯示用
+    { field: 'PAY_NAME', header: '付款別' },
+    { field: 'CRD_Type', header: '卡別' },
+    { field: 'CRD_Name', header: '號碼' },
+    { field: 'TERM_No', header: '分期期數', style: 'text-right' },
+    { field: 'TXN_PayAmt', header: '金額', style: 'text-right', format: this.moneyFormat }
+  ];
+}
 }

@@ -11,6 +11,7 @@ import { CurrentPageService } from '../../../layout/app.menulist/current-page.se
 import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { LazyLoadEvent } from '../../componentkit/table/table.model';
 import { UntilDestroy } from '@ngneat/until-destroy';
+import { ConfirmationService } from 'primeng/api';
 @UntilDestroy()
 export class BasicQueryPageComponent<T> {
   ProgNo = '';
@@ -25,6 +26,7 @@ export class BasicQueryPageComponent<T> {
   formBuilder: FormBuilder = inject(FormBuilder);
   queryStateService: QueryStateService = inject(QueryStateService);
   currentPageService: CurrentPageService = inject(CurrentPageService);
+  confirmationService: ConfirmationService = inject(ConfirmationService);
 
   language = navigator.language;
   loading = false;

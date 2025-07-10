@@ -6,6 +6,8 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { apiOption, option, SYS1000, tblUser } from '../../../shared/models/sys/sysb000.module';
 import { Column, createPaginationConfig, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
+import { UserData } from '../../../shared/models/sys/user.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 // 4-2-1-1 使用者基本資料維護
 @Component({
@@ -13,7 +15,7 @@ import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
   templateUrl: './sys0110.component.html',
 })
 
-export class SYS0110Component extends BasicQueryPageComponent<tblUser> implements OnInit {
+export class SYS0110Component extends BasicQueryPageComponent<UserData> implements OnInit {
   // 表單控制
   queryForm = this.formBuilder.group({
     user_No: ['', Validators.maxLength(10)], // 使用者編號
@@ -32,7 +34,7 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   // 表格資料
-  data: tblUser[] = [];
+  data: UserData[] = [];
   columns: Column[] = [
     { field: 'user_No', header: '使用者編號', visible: true },
     { field: 'user_Name', header: '使用者名稱', visible: true },
@@ -92,7 +94,7 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
   // 初始化下拉選單選項
   loadOptions() {
     // *職稱代碼-SYS1000
-    this.sys0110Service.queryAllSystemCode({}).subscribe((response) => {
+    this.sys0110Service.queryAllSystemCode({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.titleOptions = response.Data
         .filter((item: SYS1000) => item.SYS_Type === 'T103')
         .map((item: SYS1000) => ({
@@ -104,7 +106,7 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     });
 
     //建立組織下拉清單(SYS3100) 查詢全部
-    this.sysb400Service.querySYS3100_DropDownList({}).subscribe((response) => {
+    this.sysb400Service.querySYS3100_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.SYS3100_Options = response.Data.map((item: any) => ({
         No: item.No,
         Name: item.Name,
@@ -130,7 +132,7 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       console.log('查詢表單', frm.value);
-      this.sys0110Service.queryUser(frm.value).subscribe({
+      this.sys0110Service.queryUser(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -162,7 +164,7 @@ export class SYS0110Component extends BasicQueryPageComponent<tblUser> implement
     };
     console.log('Delete body:', JSON.stringify(requestBody, null, 2));
     // 調用 API
-    this.sys0110Service.deleteUser(requestBody).subscribe({
+    this.sys0110Service.deleteUser(requestBody).pipe(untilDestroyed(this)).subscribe({
       next: (res) => { console.log(res); },
       error: (err: string) => { console.error('API error:', err); },
       complete: () => { this.onSubmit(this.queryForm); },

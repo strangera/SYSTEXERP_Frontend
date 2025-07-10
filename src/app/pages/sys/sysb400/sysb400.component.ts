@@ -205,7 +205,7 @@ export class SYSB400Component
 
   gotoGraph() {
     //導引到sysb400.os
-    this.router.navigate(['account/SYS/SYSB400OS']);
+    this.router.navigate(['account/sys/sysb400os']);
   }
 
   isRowSelectable(rowData: Sysb400m): boolean {

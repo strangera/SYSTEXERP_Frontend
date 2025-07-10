@@ -13,7 +13,6 @@ import { FIN11060Component } from './fin11060/fin11060.component';
 import { FIN11070Component } from './fin11070/fin11070.component';
 import { FIN11080CRUComponent } from './fin11080-cru/fin11080-cru.component';
 import { FIN11080Component } from './fin11080/fin11080.component';
-import { FIN11090CRUComponent } from './fin11090-cru/fin11090-cru.component';
 import { FIN11090Component } from './fin11090/fin11090.component';
 import { FIN12010CRUComponent } from './fin12010-cru/fin12010-cru.component';
 import { FIN12010Component } from './fin12010/fin12010.component';
@@ -323,6 +322,9 @@ import { FIN73030Component } from './fin73030/fin73030.component';
 import { FIN73040Component } from './fin73040/fin73040.component';
 import { FIN11200Component } from './fin11200/fin11200.component';
 import { FIN11200CRUComponent } from './fin11200-cru/fin11200-cru.component';
+import { FIN11050CRUComponent } from './fin11050-cru/fin11050-cru.component';
+import { FIN11210CruComponent } from './fin11210-cru/fin11210-cru.component';
+import { FIN11210Component } from './fin11210/fin11210.component';
 
 const routes: Routes = [
   { path: 'fin11010', component: FIN11010Component },  // 營業人申報設定
@@ -334,12 +336,12 @@ const routes: Routes = [
   { path: 'fin11040', component: FIN11040Component },  // 發票格式代號維護
   { path: 'fin11040cru', component: FIN11040CRUComponent },
   { path: 'fin11050', component: FIN11050Component },  // 二聯式電子發票上送狀況表
+  { path: 'fin11050cru', component: FIN11050CRUComponent },  // 二聯式電子發票上送狀況表
   { path: 'fin11060', component: FIN11060Component },  // 產生二聯式電子未使用空白發票檔案
   { path: 'fin11070', component: FIN11070Component },  // 二聯式電子發票筆數核對表
   { path: 'fin11080', component: FIN11080Component },  // 二電退貨發票號碼清空重新上送作業
   { path: 'fin11080cru', component: FIN11080CRUComponent },
   { path: 'fin11090', component: FIN11090Component },  // 非業主收銀機二聯式電子發票配號作業
-  { path: 'fin11090cru', component: FIN11090CRUComponent },
   { path: 'fin11200', component: FIN11200Component },  // 電子發票配號作業
   { path: 'fin11200cru', component: FIN11200CRUComponent },  // 電子發票配號作業
   { path: 'fin12010', component: FIN12010Component },  // 電子式發票各系統配號維護
@@ -644,6 +646,9 @@ const routes: Routes = [
   { path: 'fin73020cru', component: FIN73020CRUComponent },
   { path: 'fin73030', component: FIN73030Component },  // 支付申請單
   { path: 'fin73040', component: FIN73040Component },  // 零用金撥補明細表
+  { path: 'fin11210', component: FIN11210Component },  // 電子發票參數維護作業
+  { path: 'fin11210cru', component: FIN11210CruComponent },
+
 ];
 
 @NgModule({

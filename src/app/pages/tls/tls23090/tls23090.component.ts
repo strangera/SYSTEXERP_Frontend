@@ -17,7 +17,7 @@ import { ConnectionStatusService } from '../../../service/basic/connection-statu
 @Component({
   selector: 'app-tls23090',
   templateUrl: './tls23090.component.html',
-  styleUrls: ['./tls23090.component.scss']
+  styleUrls: ['./tls23090.component.scss'],
 })
 export class TLS23090Component extends BasicQueryPageComponent<any> {
   showPageSizeDialog = false;
@@ -39,7 +39,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     AcqBank: [],
     ConnStatus: [],
     IsHaveTERM_No: [null],
-    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }])
+    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
   });
 
   cardTypeOptions: any[] = [];
@@ -61,16 +61,46 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     { field: 'ECR_No', header: '收銀機代號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true, style: 'text-left' },
-    { field: 'tlt_no', header: '櫃位名稱', visible: true, style: 'text-left', format: (val: any) => this.getLabelFromOptions(val, this.CounterOptions) },
+    {
+      field: 'tlt_no',
+      header: '櫃位名稱',
+      visible: true,
+      style: 'text-left',
+      format: (val: any) => this.getLabelFromOptions(val, this.CounterOptions),
+    },
     { field: 'CRD_Type', header: '信用卡卡別', visible: true },
     { field: 'CRD_No', header: '信用卡卡號', visible: true },
-    { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: this.moneyFormat },
-    { field: 'TXN_Bonus', header: '紅利', visible: true, style: 'text-right', format: this.moneyFormat },
+    {
+      field: 'TXN_PayAmt',
+      header: '金額',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_Bonus',
+      header: '紅利',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
     { field: 'TXN_Installment', header: '分期', visible: true },
     { field: 'TXN_PeriodType', header: '分期期別', visible: true },
     { field: 'TXN_Periods', header: '分期期數', visible: true },
-    { field: 'TXN_DownPayAmt', header: '頭期款分期金額', visible: true, style: 'text-right', format: this.moneyFormat },
-    { field: 'TXN_MonthlyAmt', header: '每期分期金額', visible: true, style: 'text-right', format: this.moneyFormat }
+    {
+      field: 'TXN_DownPayAmt',
+      header: '頭期款分期金額',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_MonthlyAmt',
+      header: '每期分期金額',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
   ];
 
   constructor(
@@ -83,42 +113,61 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     private installmentPeriodService: InstallmentPeriodService,
     private acquiringBankService: AcquiringBankService,
     private connectionStatusService: ConnectionStatusService,
-    private tls11010Service: Tls11010Service
+    private tls11010Service: Tls11010Service,
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23090', 'TLS23090cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS23090', 'TLS23090cru', this.queryForm, (form) =>
+      this.onSubmit(form),
+    );
 
-    this.cardTypeService.getCardType().subscribe(data => this.cardTypeOptions = data);
-    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
-    this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
-    this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
-    this.tls11010Service.getOrgOptions().subscribe(res => {
-      this.OrganizationCodeOptions = res?.map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
-      })) || [];
+    this.cardTypeService
+      .getCardType()
+      .subscribe((data) => (this.cardTypeOptions = data));
+    this.floorService
+      .getFloors()
+      .subscribe((data) => (this.floorOptions = data));
+    this.whetherService
+      .getWhetherOptions()
+      .subscribe((data) => (this.WhetherOptions = data));
+    this.tls11010Service
+      .getBuildingOptions()
+      .subscribe((data) => (this.BUILDING_NO_Options = data));
+    this.tls11010Service.getOrgOptions().subscribe((res) => {
+      this.OrganizationCodeOptions =
+        res?.map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        })) || [];
     });
-    this.ECRNoService.getECRNo().subscribe(res => {
-      this.ECRNoOptions = res?.map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
-      })) || [];
+    this.ECRNoService.getECRNo().subscribe((res) => {
+      this.ECRNoOptions =
+        res?.map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        })) || [];
     });
-    this.counterNameService.getCounters().subscribe(res => {
-      this.CounterOptions = res?.map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
-      })) || [];
+    this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions =
+        res?.map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        })) || [];
     });
-    this.installmentPeriodService.getInstallmentPeriods().subscribe(data => this.installmentPeriodOptions = data);
-    this.acquiringBankService.getAcquiringBanks().subscribe(data => this.acquiringBankOptions = data);
-    this.connectionStatusService.getConnectionStatusOptions().subscribe(data => this.connectionStatusOptions = data);
+    this.installmentPeriodService
+      .getInstallmentPeriods()
+      .subscribe((data) => (this.installmentPeriodOptions = data));
+    this.acquiringBankService
+      .getAcquiringBanks()
+      .subscribe((data) => (this.acquiringBankOptions = data));
+    this.connectionStatusService
+      .getConnectionStatusOptions()
+      .subscribe((data) => (this.connectionStatusOptions = data));
   }
 
   onSubmit(form: FormGroup): void {
@@ -136,7 +185,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
       if (payload.IsHaveTERM_No === 'Y') payload.IsHaveTERM_No = true;
       else if (payload.IsHaveTERM_No === 'N') payload.IsHaveTERM_No = false;
 
-      Object.keys(payload).forEach(key => {
+      Object.keys(payload).forEach((key) => {
         if (payload[key] === '') payload[key] = null;
       });
 
@@ -168,7 +217,9 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   }
 
   goToReportMode(): void {
-    this.customPageSize = 1000;
+    if (!this.customPageSize || this.customPageSize <= 0) {
+      this.customPageSize = 1000;
+    }
     this.showPageSizeDialog = true;
   }
 
@@ -182,52 +233,53 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
 
     const queryFormValue = {
       ...this.queryForm.value,
-      pageSize: this.customPageSize
+      pageSize: this.customPageSize,
     };
 
     this.loading = true;
     this.messageService.blockUi();
 
-    this.tls23090Service.queryTLS23090(queryFormValue, this.displayMode).subscribe({
-      next: (res) => {
-        if (res.Status === '0000') {
-          this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
+    this.tls23090Service
+      .queryTLS23090(queryFormValue, this.displayMode)
+      .subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
 
-          this.router.navigate(['account/TLS/TLS23090CRU'], {
-            state: {
-              queryFormValue,
-              pageSize: this.customPageSize,
-              data: res.Data || [],
-              displayMode: this.displayMode // ✅ 傳入查詢模式
-            }
-          });
+            this.router.navigate(['account/tls/tls23090cru'], {
+              state: {
+                queryFormValue,
+                pageSize: this.customPageSize,
+                data: res.Data || [],
+                displayMode: this.displayMode, // ✅ 傳入查詢模式
+              },
+            });
 
-          this.messageService.successBubble('查詢成功');
-        } else {
-          this.messageService.errorBubble('查詢失敗');
-        }
-      },
-      error: () => {
-        this.messageService.errorBubble('查詢錯誤');
-        this.loading = false;
-        this.messageService.unblockUi();
-        this.showPageSizeDialog = false;
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-        this.showPageSizeDialog = false;
-      }
-    });
+            this.messageService.successBubble('查詢成功');
+          } else {
+            this.messageService.errorBubble('查詢失敗');
+          }
+        },
+        error: () => {
+          this.messageService.errorBubble('查詢錯誤');
+          this.loading = false;
+          this.messageService.unblockUi();
+          this.showPageSizeDialog = false;
+        },
+        complete: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+          this.showPageSizeDialog = false;
+        },
+      });
   }
-
 
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
 
   getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find(opt => String(opt.value) === String(value));
+    const found = options?.find((opt) => String(opt.value) === String(value));
     return found ? found.label : value;
   }
 }

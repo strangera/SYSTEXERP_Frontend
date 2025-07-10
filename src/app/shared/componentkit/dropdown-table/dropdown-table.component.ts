@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnI
 import { FormControl, FormGroup } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { OverlayPanel } from 'primeng/overlaypanel';
-import { debounceTime, Subject, switchMap, takeUntil, tap } from 'rxjs';
+import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { TableRowSelectEvent } from 'primeng/table';
-import { Column } from '../table/table.model';
+import { Column, LazyLoadEvent } from '../table/table.model';
 
 export interface FieldsConfig {
   field: string;
@@ -39,6 +39,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   selectedItems: any;
   @Input() dialogColumns: Column[] = [];             // 下拉table 的欄位配置 必填
   @Output() formValueChanged = new EventEmitter<any>(); // 表單改變事件
+  @Input() totalRecords = 0;                         // 總筆數
 
   ngOnInit(): void {
     this.updateControlState(this.control);
@@ -56,6 +57,10 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     this.destroy$.complete();
   }
   onInputChange() {
+    if (this.control.value === null || this.control.value === undefined || this.control.value === '') {
+      this.suggestions = [];
+      return;
+    }
     this.inputValueChanged.emit({ [this.optionValue]: this.control.value }); // 使用動態 key
   }
   getFieldValue(field: FieldsConfig): string {
@@ -87,5 +92,13 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     this.dialogData = [];
     this.selectedItems = [];
     this.formGroup.reset();
+  }
+
+  onLazyLoadData(event: LazyLoadEvent, dataForm: FormGroup) {
+    dataForm.patchValue({
+      pageSize: event.pageSize,
+      pageIndex: event.pageIndex,
+      SortBy: event.SortBy
+    });
   }
 }

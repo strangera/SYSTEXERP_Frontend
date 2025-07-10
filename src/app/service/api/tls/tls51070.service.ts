@@ -36,6 +36,16 @@ export class Tls51070Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLS51070_Detail`, body);
   }
 
+  // 查詢 商品變價紀錄
+  queryTLS51070_PriceChangeRecord(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS51070_PriceChangeRecord`, body);
+  }
+
+  // excel匯入並且產生錯誤檔
+  uploadTLS51070(formData: FormData): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/uploadTLS51070`, formData);
+  }
+
   // ---圖片處理---
 
   //查詢圖片
@@ -43,9 +53,9 @@ export class Tls51070Service {
     return this.http.post<any>(`${environment.ApiUrl}/Image/queryImage`, body);
   }
 
-  //上傳圖片
-  uploadImages(body: any): Observable<any> {
-    return this.http.post<any>(`${environment.ApiUrl}/Image/uploadImages`, body);
+  // 上傳圖片
+  uploadImages(formData: FormData): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/Image/uploadImages`, formData);
   }
 
   //下載圖片
@@ -55,13 +65,10 @@ export class Tls51070Service {
 
   //刪除圖片
   deleteImage(body: any): Observable<any> {
-    return this.http.delete<any>(`${environment.ApiUrl}/Image/deleteImage`, body);
-  }
-
-  downloadImage2(path: string): Observable<Blob> {
-  return this.http.get(`${environment.ApiUrl}/${path}`, {
-    responseType: 'blob'
-  });
+    return this.http.delete<any>(`${environment.ApiUrl}/Image/deleteImage`, {
+      headers: { 'Content-Type': 'application/json' },
+      body: body
+    });
 }
 
   // --- 標籤檔 ---

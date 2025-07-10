@@ -12,9 +12,6 @@ import { ApiResponse } from '../../system/auth.service'; // 請確認你的 ApiR
 
 /** 查詢 POS2016 資料表 (queryTLS52010) 的請求介面 */
 export interface IQueryTLS52010Request {
-  PageSize: number;
-  PageIndex: number;
-  SortBy?: SortMeta[];
   PO_No?: string; // 採購單號
   HOS_No?: string; // 醫院代號
   LOGO_No?: string; // LOGO代碼
@@ -88,7 +85,10 @@ export interface IBudgetAmountResponse {
 
 /** POS2004 資料表的詳細商品數據介面 (queryPOS2004Detail & queryPOS2004Detail_VEN_No 響應) */
 export interface IPOS2004DetailData {
-  id: number;
+  id?: number;
+  PO_No: string;
+  HOS_No: string;
+  POD_SeqNo?: number;
   PLU_MagNo: string; // 商品管理編號
   PLU_Name: string; // 商品名稱
   PLU_No: string; // 國際條碼
@@ -96,18 +96,35 @@ export interface IPOS2004DetailData {
   UNIT_NAME: string; // 單位名稱
   PLU_BoxQty: number; // 包裝入數
   PLU_StockTaxType: string; // 進貨稅別
-  PLU_SalePrc_UNI: number; // 單價
-  PLU_SalePrc: number; // 售價
+  PLU_TaxType: string; // 售價稅別
+  PLU_SalePrc_UNI?: number; // 單價
+  PLU_SalePrc?: number; // 售價
   POD_SubQty?: number; // 採購數量
   POD_BuyNet?: number; // 採購淨額
   POD_SaleAmt?: number; // 銷售金額
+  POD_Remark?: string; // 備註
 }
 
 /** 商品管理編號/國際條碼/廠商貨號查詢商品 (queryPOS2004Detail) 的請求介面 */
 export interface IQueryPOS2004DetailRequest {
-  VEN_No: string; // 廠商代號
+  VEN_No: string | null; // 廠商代號
   queryNo: string; // 查詢編號 (商品管理編號/國際條碼/廠商貨號)
-  LOGO_No: string; // LOGO代碼
+  PLU_Name?: string; // 商品名稱 (查詢條件，可選)
+  LOGO_No: string | null; // LOGO代碼
+}
+
+export interface IQueryPOS2004DetailResponse {
+  id: number,
+  PLU_MagNo: string,
+  PLU_Name: string,
+  PLU_No: string,
+  PLU_Unit: string,
+  UNIT_NAME: string,
+  PLU_BoxQty: number,
+  PLU_StockTaxType: string,
+  PLU_SalePrc_UNI: number,
+  PLU_SalePrc: number,
+  PLU_TaxType: string
 }
 
 /** 查詢廠商所有商品 (queryPOS2004Detail_VEN_No) 的請求介面 */
@@ -132,6 +149,7 @@ export interface IPODetail {
   PLU_Unit: string; // 商品單位
   PLU_BoxQty: number; // 箱入數
   PLU_StockTaxType: string; // 進貨稅別
+  PLU_TaxType: string; // 售價稅別
   POD_SubQty: number; // 採購數量
   POD_BuyPrc: number; // 採購單價
   POD_BuyNet: number; // 採購淨額
@@ -143,11 +161,16 @@ export interface IPODetail {
 
 
 /** 新增 POS2016 資料表 (insertTLS52010) 的請求介面 */
-export interface IInsertTLS52010Request {
+export interface ITLS52010Request {
+  id?: number;
+  org_id: string | null;
+  PO_No: string; // 採購單號
+  ODM_TaxType: string;
   SYS_StoreNo: string; // 門店編號 (系統)
   VEN_No: string; // 廠商代號
   LOGO_No: string; // LOGO代碼
   HOS_No: string; // 醫院代號
+  PO_Status: string; // 資料狀態
   PO_TotalSubQty: number; // 採購總數量
   PO_TotalSaleNet?: number; // 售價未稅小計
   PO_TotalSaleTax?: number; // 售價稅額
@@ -164,27 +187,6 @@ export interface IInsertTLS52010Request {
   Details: IPODetail[]; // 明細資料陣列
 }
 
-/** 更新 POS2016、POS2017 資料 (updateTLS52010) 的請求介面 */
-export interface IUpdateTLS52010Request {
-  id: number; // 採購單 ID (用於識別要更新的採購單)
-  SYS_StoreNo: string; // 門店編號 (系統)
-  VEN_No: string; // 廠商代號
-  LOGO_No: string; // LOGO代碼
-  HOS_No: string; // 醫院代號
-  PO_TotalSubQty: number; // 採購總數量
-  PO_TotalBuyNet: number; // 採購總淨額
-  PO_TotalBuyTax: number; // 採購總稅額
-  PO_TotalBuyAmt: number; // 採購總金額
-  APPLY_Date: string; // 申請日期 (ISO 格式字串)
-  APPLY_USR_No: string; // 申請人員編號
-  APPLY_USR_Name: string; // 申請人員姓名
-  PO_Status: string; // 採購單狀態
-  PO_Remark: string | null; // 採購單備註
-  BudgetAmount: number | null; // 預算金額
-  YYYYMM: string; // 年月 (YYYYMM 格式字串)
-  Details: IPODetail[]; // 明細資料陣列 (更新時可能包含 id)
-}
-
 /** 查詢 POS2017 資料表 (queryPOS2017) 的請求介面 */
 export interface IQueryPOS2017Request {
   PO_No: string; // 採購單號
@@ -192,13 +194,34 @@ export interface IQueryPOS2017Request {
 
 /** POS2017 資料表 (queryPOS2017) 的單筆響應資料介面 */
 export interface IPOS2017Data {
-  PLU_MagNo: string; // 商品管理編號
-  PLU_Name: string; // 商品名稱
-  PLU_BoxQty: number; // 箱入數
-  PLU_SalePrc: number; // 銷售價格
-  UNIT_NAME: string; // 單位名稱
-  PLU_OrgPLUNo: string; // 商品原編號
-  PLU_No: string; // 商品編號
+  id: number,
+  PO_No: string,
+  HOS_No: string,
+  SYS_StoreNo: string,
+  POD_SeqNo: number,
+  PLU_MagNo: string,
+  PLU_No: string,
+  PLU_Unit: string,
+  PLU_BoxQty: number,
+  PLU_Name: string,
+  PLU_StockTaxType: string,
+  POD_SubQty: number,
+  POD_BuyPrc: number,
+  POD_BuyNet: number,
+  POD_BuyTax: number,
+  POD_BuyAmt: number,
+  PLU_TaxType: string,
+  POD_SalePrc: number,
+  POD_SaleTax: number,
+  POD_SaleAmt: number,
+  POD_Remark: string,
+  UNIT_NAME: string,
+  CRT_Date: string,
+  CRT_USR_No: string,
+  CRT_USR_Name: string,
+  UPD_Date: string,
+  UPD_USR_No: string,
+  UPD_USR_Name: string,
 }
 
 /** 更新 POS2016 資料狀態 (SetCloseTLS52010) 的請求介面 */
@@ -206,9 +229,6 @@ export interface ISetCloseTLS52010Request {
   idList: number[]; // 要設定狀態的採購單 ID 列表
   PO_Status: string; // 要設定的狀態 (例如 "結案", "作廢" 等)
 }
-
-
-// --- 服務定義 ---
 
 @Injectable({
   providedIn: 'root',
@@ -235,16 +255,14 @@ export class Tls52010Service {
   GetBudgetAmount(params: IGetBudgetAmountRequest): Observable<ApiResponse<number>> { // 假設返回的 Data 是數字
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/GetBudgetAmount`, params);
   }
-
   /**
-   * 根據商品管理編號/國際條碼/廠商貨號查詢商品 (POS2004 詳細資料)
-   * @param params 查詢條件 (VEN_No, LOGO_No, queryNo)
+   * 查詢 POS2004 (商品詳細資料) 資料表
+   * @param params 查詢條件 (VEN_No, queryNo, PLU_Name, LOGO_No)
    * @returns 包含 IPOS2004DetailData 陣列的 API 響應
-   *///!!!未完成
-  queryPOS2004Detail(params: IQueryPOS2004DetailRequest): Observable<ApiResponse<IPOS2004DetailData[]>> {
-    return this.http.post<ApiResponse<IPOS2004DetailData[]>>(`${this.apiUrl}/queryPOS2004Detail`, params);
+   */
+  queryPOS2004Detail(params: IQueryPOS2004DetailRequest): Observable<ApiResponse<IQueryPOS2004DetailResponse[]>> {
+    return this.http.post<ApiResponse<IQueryPOS2004DetailResponse[]>>(`${this.apiUrl}/queryPOS2004Detail`, params);
   }
-
   /**
    * 查詢廠商所有商品 (POS2004 詳細資料)
    * @param params 查詢條件 (VEN_No, LOGO_No, PLU_MagNo, PLU_Name, CAT_LNo, CAT_MNo, CAT_SNo)
@@ -257,7 +275,7 @@ export class Tls52010Service {
    * 查詢 POS2017 (採購單明細) 資料表
    * @param params 查詢條件 (PO_No)
    * @returns 包含 IPOS2017Data 陣列的 API 響應
-   *///!!!未完成 (編輯)
+   */
   queryPOS2017(params: IQueryPOS2017Request): Observable<ApiResponse<IPOS2017Data[]>> {
     return this.http.post<ApiResponse<IPOS2017Data[]>>(`${this.apiUrl}/queryPOS2017`, params);
   }
@@ -266,16 +284,16 @@ export class Tls52010Service {
    * 根據狀態更新 POS2016 (採購單主檔) 資料 (結案或作廢)
    * @param data 包含要更新的採購單 ID 列表及目標狀態
    * @returns API 響應
-   *///!!!未完成
-  SetCloseTLS52010(data: ISetCloseTLS52010Request): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/SetCloseTLS52010`, data);
+   */
+  updateStatusTLS52010(data: ISetCloseTLS52010Request): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateStatusTLS52010`, data);
   }
   /**
    * 新增 POS2016 (採購單主檔) 資料
    * @param data 要新增的採購單資料，包含主檔及明細
    * @returns API 響應
-   *///!!!未完成
-  insertTLS52010(data: IInsertTLS52010Request): Observable<ApiResponse<any>> {
+   */
+  insertTLS52010(data: ITLS52010Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertTLS52010`, data);
   }
 
@@ -283,8 +301,8 @@ export class Tls52010Service {
    * 更新 POS2016、POS2017 (採購單主檔及明細) 資料
    * @param data 要更新的採購單資料，包含主檔及明細
    * @returns API 響應
-   *///!!!未完成
-  updateTLS52010(data: IUpdateTLS52010Request): Observable<ApiResponse<any>> {
+   */
+  updateTLS52010(data: ITLS52010Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateTLS52010`, data);
   }
 

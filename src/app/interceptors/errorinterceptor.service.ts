@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, timer } from 'rxjs'; // <-- 導入 timer
 import { catchError, retry, tap } from 'rxjs/operators'; // 移除 delay，因為我們會手動用 timer
-import { ErrorHandlerService } from '../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../service/system/error-handler.service';
 
 /**
  * HTTP 錯誤攔截器。
@@ -15,8 +15,8 @@ export class ErrorinterceptorService implements HttpInterceptor {
   constructor(private errorHandler: ErrorHandlerService) { }
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const maxRetries = 1; // 定義最大重試次數，可根據需求調整
-    const retryDelayMs = 1000; // 重試之間的延遲時間 (毫秒)
+    const maxRetries = 0; // 定義最大重試次數，可根據需求調整
+    const retryDelayMs = 100000000; // 重試之間的延遲時間 (毫秒)
 
     return next.handle(req).pipe(
       // === 重試邏輯放在 catchError 之前 ===

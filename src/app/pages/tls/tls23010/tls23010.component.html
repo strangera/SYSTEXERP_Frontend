@@ -9,12 +9,8 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
-        <div class="grid p-fluid">
+<form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+  <div class="grid p-fluid">
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="銷售日期"
@@ -243,7 +239,20 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-        </div>
+           </div> 
+           </form>
+                <div class="col-12 md:col-6 lg:col-4">
+      <label for="pageSize">限制筆數</label>
+      <input
+        id="pageSize"
+        type="number"
+        pInputText
+        [(ngModel)]="customPageSize"
+        min="1"
+        style="width: 100%"
+      />
+    </div>
+      
 
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
@@ -256,7 +265,7 @@
             (clickEvent)="goToReportMode()"
           ></app-button>
         </div>
-      </form>
+   
     </p-accordionTab>
   </p-accordion>
 </div>
@@ -285,29 +294,17 @@
   ></app-table>
 </div> -->
 <p-dialog
-  header="限制筆數"
+  header="查詢模式"
   [(visible)]="showPageSizeDialog"
   [modal]="true"
   [closable]="false"
   [style]="{ width: '300px' }"
 >
-  <div class="p-fluid">
-    <!-- 限制筆數輸入欄 -->
-    <div class="field">
-      <label for="pageSize">限制筆數</label>
-      <input
-        id="pageSize"
-        type="number"
-        pInputText
-        [(ngModel)]="customPageSize"
-        min="1"
-        style="width: 100%"
-      />
-    </div>
+ 
 
     <!-- 查詢模式選擇 -->
     <div class="field mt-3">
-      <label>查詢模式</label>
+     
       <div class="flex flex-column gap-2">
         <div class="flex align-items-center gap-2">
           <p-radioButton
@@ -329,7 +326,6 @@
         </div>
       </div>
     </div>
-  </div>
 
   <!-- 對話框按鈕 -->
   <ng-template pTemplate="footer">

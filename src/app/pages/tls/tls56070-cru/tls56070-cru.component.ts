@@ -194,6 +194,6 @@ export class TLS56070CRUComponent extends BasicCrupageComponent implements OnIni
   }
 
   onCancel() {
-    this.router.navigate(['/demo/demoInputTable']);
+    this.router.navigate(['/demo/demoinputtable']);
   }
 }

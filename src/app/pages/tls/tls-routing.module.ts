@@ -795,7 +795,7 @@ const routes: Routes = [
   { path: 'tls51050cru', component: TLS51050CRUComponent }, // 商品單位設定 CRU
   { path: 'tls51060cru', component: TLS51060CRUComponent }, // 品牌設定作業 CRU
   { path: 'tls51070cru', component: TLS51070CRUComponent }, // 商品基本資料 CRU
-  { path: 'tls51070OS', component: Tls51070OsComponent }, // 商品基本資料 OS
+  { path: 'tls51070os', component: Tls51070OsComponent }, // 商品基本資料 OS
   { path: 'tls51080cru', component: TLS51080CRUComponent }, // 分倉資料處理 CRU
   { path: 'tls51090cru', component: TLS51090CRUComponent }, // 自營收銀機維護作業 CRU
   { path: 'tls51100cru', component: TLS51100CRUComponent }, // 商品資料轉入 CRU

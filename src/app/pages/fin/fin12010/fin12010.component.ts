@@ -8,6 +8,7 @@ import { Fin12010Service, IFin12010Data } from '../../../service/api/fin/fin1201
 import { finalize } from 'rxjs';
 import { formatDate as dateFnsFormatDate } from '@angular/common';
 import { SAL_GUIPaperOptions } from '../fin11030/fin11030.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-fin12010',
@@ -73,7 +74,7 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
         SAL_GUIYYYYMM_start,
         SAL_GUIYYYYMM_end,
       };
-      this.fin12010Service.queryFIN12010(body).pipe(finalize(() => this.loading = false)).subscribe(res => {
+      this.fin12010Service.queryFIN12010(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
         this.data = res.Data.map(item => ({
           ...item,
           SAL_GUIYYYYMM_Date: item.SAL_GUIYYYYMM
@@ -93,7 +94,7 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
     this.loading = true;
 
     this.fin12010Service.deleteFIN12010(idList)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(untilDestroyed(this), finalize(() => this.loading = false))
       .subscribe({
         next: () => {
           this.messageService.successBubble('刪除成功');

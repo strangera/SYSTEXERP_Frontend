@@ -1,133 +1,54 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div *appHasPermission="addPermission">
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="變價單號"
-              controlName="priceChangeOrderNumber"
-              [control]="queryForm.controls.priceChangeOrderNumber"
-              [submitted]="submitted"
-            ></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="變價單號" controlName="MAM_No"
+            [control]="queryForm.controls.MAM_No" [submitted]="submitted"></app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商代碼" controlName="VEN_No" [options]="vendorOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.VEN_No"
+            [submitted]="submitted"></app-dropdown>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌代碼" controlName="LOGO_No" [options]="brandOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.LOGO_No"
+            [submitted]="submitted"></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="進價變價單狀態" controlName="MAM_Status"
+            [options]="MAM_StatusOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.MAM_Status" [submitted]="submitted"></app-multi-select>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人" controlName="APPLY_USR_No"
+            [options]="vendorOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.APPLY_USR_No" [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" class="col-12 md:col-6 lg:col-4" n label="審核人編號"
+            controlName="APRV_USR_No" [options]="userOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.APRV_USR_No" [submitted]="submitted"></app-dropdown>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
+            [startControl]="queryForm.controls.APPLY_Date_Start" [endControl]="queryForm.controls.APPLY_Date_End"
+            [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="審核日期"
+            [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"
+            [submitted]="submitted"></app-calendar-range>
+          <div class="col-12 md:col-6 lg:col-4 flex align-items-center">
+            <p-checkbox formControlName="showReturnPriceOrdersOnly" [binary]="true"
+              inputId="showReturnPriceOrdersOnlyCheckbox" />
+            <label for="showReturnPriceOrdersOnlyCheckbox" class="ml-2">僅顯示回價變價單</label>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="廠商代碼"
-              controlName="vendorCode"
-              [options]="vendorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.vendorCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="品牌代碼"
-              controlName="brandCode"
-              [options]="brandCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.brandCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="進價變價單狀態"
-              controlName="priceChangeStatus"
-              [options]="priceChangeStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.priceChangeStatus"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="申請人"
-              controlName="applicantCode"
-              [options]="userCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.applicantCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="審核人編號"
-              controlName="approverCode"
-              [options]="userCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.approverCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="申請日期"
-              [startControl]="queryForm.controls.startDate"
-              [endControl]="queryForm.controls.endDate"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="審核日期"
-              [startControl]="queryForm.controls.approvalStartDate"
-              [endControl]="queryForm.controls.approvalEndDate"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table tableKey="TLS52050" dataKey="MAM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [showDelete]="false" [multiSortMeta]="[{ field: 'MAM_No', order: 1 }]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading">
+  </app-table>
 </div>

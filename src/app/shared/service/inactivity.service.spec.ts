@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { InactivityService } from './inactivity.service';
+import { InactivityService } from '../../service/system/inactivity.service';
 
 describe('InactivityService', () => {
   let service: InactivityService;

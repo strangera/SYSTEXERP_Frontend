@@ -6,6 +6,7 @@ import { Aps1004Request, Sys1004Service } from '../../../service/api/sys/sys1004
 import { ISysbc00Data, Sysbc00Service } from '../../../service/api/sys/sysbc00.service';
 import { concatMap, finalize, forkJoin, Observable, of } from 'rxjs';
 import { validateDuplicate, validateMaxLength, validateMaxNumber, validateRequired } from '../../../shared/models/system/validate-field.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-sysbc00.cru',
@@ -39,7 +40,7 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
     if (!this.isFormCreateable && this.dataForm.value.BNK_No) {
       this.dataForm.get('BNK_No')?.disable();
       const body = { BNK_No: this.dataForm.getRawValue().BNK_No };
-      this.sys1004Service.queryAPS1004(body).subscribe(data => {
+      this.sys1004Service.queryAPS1004(body).pipe(untilDestroyed(this)).subscribe(data => {
         this.data = data.Data.map(item => ({ ...item, ID: item.id }));
       });
     }
@@ -56,21 +57,14 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
 
       saveMain$
         .pipe(
-          // 儲存主檔完成 → 儲存子表
+          untilDestroyed(this),
           concatMap(() => {
             const saveChildren$ = this.getSys1004SaveObservables(this.data);
             return saveChildren$.length > 0 ? forkJoin(saveChildren$) : of(null);
-          }),
-          // 子表完成 → 判斷是否有要刪除的
-          concatMap(() => {
-            const idList = this.deleteRows
-              .map(item => item.id)
-              .filter((id): id is number => id !== undefined);
-            return idList.length > 0
-              ? this.sys1004Service.deleteAPS1004(idList)
-              : of(null);
-          }),
-          finalize(() => (this.loading = false))
+          }), concatMap(() => {
+            const idList = this.deleteRows.map(item => item.id).filter((id): id is number => id !== undefined);
+            return idList.length > 0 ? this.sys1004Service.deleteAPS1004(idList) : of(null);
+          }), finalize(() => (this.loading = false))
         )
         .subscribe(() => {
           this.messageService.successBubble(isCreate ? '新增成功' : '修改成功');
@@ -110,12 +104,8 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
   onDelete(rows: Aps1004Request[]) {
     // 將畫面資料中刪除這些 row
     this.data = this.data.filter(item => !rows.includes(item));
-
     // 將有 id 的項目（表示是資料庫已存在的）加進 deleteRows，避免重複
-    rows
-      .filter(item => item.id !== undefined && !this.deleteRows.some(d => d.id === item.id))
-      .forEach(item => this.deleteRows.push(item));
-
+    rows.filter(item => item.id !== undefined && !this.deleteRows.some(d => d.id === item.id)).forEach(item => this.deleteRows.push(item));
     // 清空選取列
     this.selectedRows = [];
   }

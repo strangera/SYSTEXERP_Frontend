@@ -16,7 +16,7 @@ import { of } from 'rxjs';
 @Component({
   selector: 'app-tls23040',
   templateUrl: './tls23040.component.html',
-  styleUrls: ['./tls23040.component.scss']
+  styleUrls: ['./tls23040.component.scss'],
 })
 export class TLS23040Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
@@ -36,7 +36,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     TXN_FlagStatus: [''],
     TXN_Subtype: [''],
 
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }])
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
   data: any[] = [];
@@ -52,12 +52,17 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
         return isNaN(d.getTime())
           ? val
           : `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
-      }
+      },
     },
     { field: 'ECR_No', header: '收銀機代號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
+    {
+      field: 'tlt_name',
+      header: '櫃位名稱',
+      visible: true,
+      style: 'text-left',
+    },
     { field: 'gui_track', header: '發票起號(字軌)', visible: true },
     { field: 'GUIBegNo', header: '發票號碼(起)', visible: true },
     { field: 'GUIEndNo', header: '發票號碼(迄)', visible: true },
@@ -66,20 +71,21 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       header: '發票金額',
       visible: true,
       style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0'
+      format: (val: number) => val?.toLocaleString('en-US') || '0',
     },
     {
       field: 'TXN_TotSaleAmt',
       header: '業績金額',
       visible: true,
       style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0'
+      format: (val: number) => val?.toLocaleString('en-US') || '0',
     },
     {
       field: 'TXN_Status',
       header: '交易型態',
       visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions)
+      format: (val: any) =>
+        this.getLabelFromOptions(val, this.txnStatusOptions),
     },
     // {
     //   field: 'TXN_FlagStatus',
@@ -103,7 +109,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
         return isNaN(d.getTime())
           ? val
           : `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
-      }
+      },
     },
     { field: 'ORG_ECR_No', header: '原收銀機代號', visible: true },
     { field: 'ORG_TXN_No', header: '原交易序號', visible: true },
@@ -113,8 +119,8 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       header: '會員積點折抵',
       visible: true,
       style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0'
-    }
+      format: (val: number) => val?.toLocaleString('en-US') || '0',
+    },
   ];
 
   statusFlagOptions: any[] = [];
@@ -127,7 +133,6 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   WhetherOptions: any[] = [];
   CounterOptions: any[] = [];
 
-
   constructor(
     private tls23040Service: TLS23040Service,
     private statusFlagService: StatusFlagService,
@@ -137,41 +142,56 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
 
-    private tls11010Service: Tls11010Service
+    private tls11010Service: Tls11010Service,
   ) {
     super();
   }
   useSummaryMode = false; // 預設為明細表模式
   ngOnInit(): void {
-    this.initializePage('TLS23040', '', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS23040', '', this.queryForm, (form) =>
+      this.onSubmit(form),
+    );
     this.useSummaryMode = false; // 預設為明細表模式
 
-    this.statusFlagService.getStatusFlags().subscribe(data => this.statusFlagOptions = data);
-    this.TXN_SubtypeService.getTXNSubtype().subscribe(data => this.TXN_SubtypeOptions = data);
-    this.txnStatusService.getTxnStatusOptions().subscribe(data => this.txnStatusOptions = data);
+    this.statusFlagService
+      .getStatusFlags()
+      .subscribe((data) => (this.statusFlagOptions = data));
+    this.TXN_SubtypeService.getTXNSubtype().subscribe(
+      (data) => (this.TXN_SubtypeOptions = data),
+    );
+    this.txnStatusService
+      .getTxnStatusOptions()
+      .subscribe((data) => (this.txnStatusOptions = data));
 
-    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
-    this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
+    this.floorService
+      .getFloors()
+      .subscribe((data) => (this.floorOptions = data));
+    this.tls11010Service
+      .getBuildingOptions()
+      .subscribe((data) => (this.BUILDING_NO_Options = data));
     this.tls11010Service.getOrgOptions().subscribe((res) => {
-      this.OrganizationCodeOptions = res?.map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
-      })) || [];
+      this.OrganizationCodeOptions =
+        res?.map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        })) || [];
     });
     this.ECRNoService.getECRNo().subscribe((res) => {
-      this.ECRNoOptions = res?.map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
-      })) || [];
+      this.ECRNoOptions =
+        res?.map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        })) || [];
     });
     this.counterNameService.getCounters().subscribe((res) => {
-      this.CounterOptions = res?.map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
-      })) || [];
+      this.CounterOptions =
+        res?.map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        })) || [];
     });
   }
 
@@ -186,7 +206,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
 
     this.handleSubmit(form, () => {
       const payload = { ...form.value };
-      Object.keys(payload).forEach(key => {
+      Object.keys(payload).forEach((key) => {
         if (payload[key] === '') payload[key] = null;
       });
 
@@ -212,25 +232,28 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
         complete: () => {
           this.loading = false;
           this.messageService.unblockUi();
-        }
+        },
       });
     });
   }
 
   getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find(opt => String(opt.value) === String(value));
+    const found = options?.find((opt) => String(opt.value) === String(value));
     return found ? found.label : value;
   }
 
   //報表模式
-
 
   showPageSizeDialog = false;
   customPageSize = 1000;
   private cleanFormPayload(payload: any): any {
     for (const key in payload) {
       const val = payload[key];
-      if (val === '' || val === null || (Array.isArray(val) && val.length === 0)) {
+      if (
+        val === '' ||
+        val === null ||
+        (Array.isArray(val) && val.length === 0)
+      ) {
         payload[key] = null;
       }
     }
@@ -240,18 +263,18 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
 
     return {
       ...payload,
-      pageSize: payload.pageSize ?? 30,           // ✅ 小寫
-      pageIndex: (payload.pageIndex ?? 1) - 1,     // ✅ 小寫
+      pageSize: payload.pageSize ?? 30, // ✅ 小寫
+      pageIndex: (payload.pageIndex ?? 1) - 1, // ✅ 小寫
       Offset: 0,
       OrderBy: '',
-      SortBy: payload.SortBy ?? [{ field: 'ID', order: 1 }]
+      SortBy: payload.SortBy ?? [{ field: 'ID', order: 1 }],
     };
   }
 
-
-
   goToReportMode(): void {
-    this.customPageSize = 1000;
+    if (!this.customPageSize || this.customPageSize <= 0) {
+      this.customPageSize = 1000;
+    }
     this.showPageSizeDialog = true;
   }
   displayMode: 'Report' | 'ByPaymentType' | 'ByDiscountType' = 'Report';
@@ -266,7 +289,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     const queryFormValue = this.cleanFormPayload({
       ...this.queryForm.value,
       pageSize: this.customPageSize,
-      displayMode: this.displayMode
+      displayMode: this.displayMode,
     });
 
     console.log('🔍 當前查詢模式:', this.displayMode);
@@ -292,47 +315,48 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
         ? this.tls23040Service.queryTLS23040(queryFormValue)
         : this.tls23040Service.queryCombined(queryFormValue);
 
-    query$.pipe(
-      timeout(30000),
-      catchError(err => {
-        if (err.name === 'TimeoutError') {
-          this.messageService.warnBubble('查詢時間過久，請嘗試縮小查詢條件範圍');
-        } else {
-          this.messageService.errorBubble('查詢失敗');
-        }
-        this.loading = false;
-        this.messageService.unblockUi();
-        return of({ Status: '9999', Data: [] });
-      })
-    ).subscribe({
-      next: (res) => {
-        if (res.Status === '0000') {
-          const resultData = res.Data || [];
+    query$
+      .pipe(
+        timeout(30000),
+        catchError((err) => {
+          if (err.name === 'TimeoutError') {
+            this.messageService.warnBubble(
+              '查詢時間過久，請嘗試縮小查詢條件範圍',
+            );
+          } else {
+            this.messageService.errorBubble('查詢失敗');
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+          return of({ Status: '9999', Data: [] });
+        }),
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            const resultData = res.Data || [];
 
-          this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
+            this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
 
-          this.router.navigate(['account/TLS/TLS23040CRU'], {
-            state: {
-              queryFormValue,
-              pageSize: this.customPageSize,
-              data: resultData,
-              displayMode: this.displayMode
-            }
-          });
+            this.router.navigate(['account/tls/tls23040cru'], {
+              state: {
+                queryFormValue,
+                pageSize: this.customPageSize,
+                data: resultData,
+                displayMode: this.displayMode,
+              },
+            });
 
-          this.messageService.successBubble('查詢成功');
-        } else {
-          this.messageService.errorBubble('查詢失敗');
-        }
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-        this.showPageSizeDialog = false;
-      }
-    });
+            this.messageService.successBubble('查詢成功');
+          } else {
+            this.messageService.errorBubble('查詢失敗');
+          }
+        },
+        complete: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+          this.showPageSizeDialog = false;
+        },
+      });
   }
-
-
-
 }

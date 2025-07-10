@@ -18,6 +18,7 @@ export class NotificationMessageComponent implements OnInit {
   inputBoxInputText = '';
   inputBoxOK?: (value: string) => void;
   inputBoxCancel?: () => void;
+  showIcon = false; // 新增 showIcon 屬性，預設為 false
   // ----------------------------------------------------------------
   constructor(
     private notificationService: NotificationService,
@@ -39,6 +40,7 @@ export class NotificationMessageComponent implements OnInit {
     });
 
     this.notificationService.confirmMsg$.subscribe((opts) => {
+      this.showIcon = opts.showIcon === true; // 只有明確設定為 true 時才顯示圖示
       this.confirmationService.confirm({
         header: opts.header,
         message: opts.message,

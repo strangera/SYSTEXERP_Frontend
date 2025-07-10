@@ -24,9 +24,7 @@ export class LowerCaseUrlSerializer extends DefaultUrlSerializer {
    * @returns 解析後的 UrlTree。
    */
   override parse(url: string): UrlTree {
-    // 預設的解析行為已經足夠，不需要在這裡進行額外的小寫轉換，
-    // 因為 serialize 方法已經確保了路由定義是小寫的。
-    return super.parse(url);
+    return super.parse(url.toLowerCase());
   }
 }
 

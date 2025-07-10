@@ -60,11 +60,12 @@ export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
       frm.value.org_id = frm.value.org_id.split('/')[0];
     }
 
+    const formValue = frm.getRawValue();
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
-          console.log('insert', frm.value);
-          this.tls51080Service.insertTLS51080(frm.value).subscribe(() => {
+          console.log('insert', formValue);
+          this.tls51080Service.insertTLS51080(formValue).subscribe(() => {
             this.messageService.successBubble('新增成功');
             // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
             this.dataForm.reset(); // 重置表單
@@ -73,8 +74,8 @@ export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
-          console.log('update', frm.value);
-          this.tls51080Service.updateTLS51080(frm.value).subscribe(() => {
+          console.log('update', formValue);
+          this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
             // this.messageService.successBubble('更新成功');
             this.onCancel(); // 儲存後，會返回列表
           });

@@ -38,8 +38,8 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
     if (state?.data) {
       this.data = state.data;
       this.queryFormValue = state.queryFormValue;
-      this.dateStart = state.queryFormValue?.saleDateStart || '';
-      this.dateEnd = state.queryFormValue?.saleDateEnd || '';
+      this.dateStart = state.queryFormValue?.TXN_DateStart || '';
+      this.dateEnd = state.queryFormValue?.TXN_DateEnd || '';
       this.pageSize = state.pageSize || 1000;
       this.printedAt = new Date().toLocaleString('zh-TW');
     } else {
@@ -55,15 +55,15 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
     });
 
     this.columns = [
-      { field: 'area', header: '區分', visible: true },
-      { field: 'transactionCount', header: '銷貨筆數', visible: true },
-      { field: 'netSales', header: '淨銷貨', visible: true, style: 'text-right', format: this.moneyFormat },
-      { field: 'businessTax', header: '營業稅', visible: true, style: 'text-right', format: this.moneyFormat },
-      { field: 'transactionAmount', header: '銷貨金額', visible: true, style: 'text-right', format: this.moneyFormat },
-      { field: 'preSaleCount', header: '預售筆數', visible: true },
-      { field: 'preSaleAmount', header: '預售金額', visible: true, style: 'text-right', format: this.moneyFormat },
-      { field: 'settleCount', header: '結帳筆數', visible: true },
-      { field: 'settleAmount', header: '結帳金額', visible: true, style: 'text-right', format: this.moneyFormat }
+      { field: 'SYS_Name', header: '區分', visible: true },
+      { field: 'sad_sale_qty', header: '銷貨筆數', visible: true },
+      { field: 'sad_sale_namt', header: '淨銷貨', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'sad_sale_tax', header: '營業稅', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'sad_sale_amt', header: '銷貨金額', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'sad_preorder_qty', header: '預售筆數', visible: true },
+      { field: 'sad_preorder_amt', header: '預售金額', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'sad_settle_qty', header: '結帳筆數', visible: true },
+      { field: 'sad_settle_amt', header: '結帳金額', visible: true, style: 'text-right', format: this.moneyFormat }
     ];
 
     this.initializePage('TLS23120', this.dataForm);

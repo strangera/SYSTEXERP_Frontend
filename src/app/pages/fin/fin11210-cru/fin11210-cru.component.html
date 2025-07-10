@@ -1,0 +1,24 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-4">
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="參數代碼" controlName="code"
+            [control]="dataForm.controls.code" [submitted]="submitted" />
+        </div>
+        <div class="col-12 md:col-4">
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="參數內容" controlName="content"
+            [control]="dataForm.controls.content" [submitted]="submitted" />
+        </div>
+      </div>
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
+    </form>
+  </p-panel>
+</div>

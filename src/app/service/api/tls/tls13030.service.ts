@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { catchError, tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
-import { ErrorHandlerService } from '../../../shared/service/error-handler.service';
+import { ErrorHandlerService } from '../../system/error-handler.service';
 
 @Injectable({ providedIn: 'root' })
 export class TLS13030Service {
@@ -12,7 +12,7 @@ export class TLS13030Service {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   /**
    * 查詢 TLS13030 主資料

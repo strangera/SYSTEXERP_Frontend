@@ -31,7 +31,7 @@
   }
 
   .p-datatable-scrollable .p-datatable-wrapper {
-    width: max-content;   /* ✅ 寬度根據內容決定 */
+    width: 100%;       /* ✅ 讓它跟隨父層寬度 */
     min-width: 100%;      /* ✅ 但至少佔滿容器 */
   }
 
@@ -40,6 +40,11 @@
     width: 100%;
     overflow-x: auto; /* ✅ 外層也開啟 scroll 能力 */
   }
+}
+.merged-view {
+  width: 100%;
+  overflow-x: auto; /* ✅ 讓內部內容橫向可滾動 */
+  box-sizing: border-box;
 }
 
 @media print {
