@@ -98,7 +98,7 @@ export class AuthService {
   login(data: userLogin): Observable<ApiResponse<UserInfo>> {
     data.password = this.encrypt.getPassword(data.code as string, data.password as string);
     const newHttpClient = new HttpClient(this.httpBackend);
-    return newHttpClient.get<{ ip: string }>("http://api.ipify.org/?format=json").pipe(
+    return newHttpClient.get<{ ip: string }>("https://api.ipify.org/?format=json").pipe(
       map(result => {
         data.client_ip = result.ip;
         return data;
