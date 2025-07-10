@@ -30,17 +30,30 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   //目前標籤列
   buttonID = 1; //預設在 基本資料標籤
+
+  //2004廠商編號選擇後自動帶入預設到2020
+  // 品牌編號 ---PLULOGO 站存試算資料
+  // 新增 欄位PLU_PrnName 和  預設商品中文名稱 一樣 --ok
+  // 商品採購廠商 編號模糊查詢
+  // login token自動帶出 分店編號 readonly
+  // 2004 最主要"PLU_No": [""], > 指定給 2005 多筆"PLU_No": [""], -- 新增時增加提示這樣使用者也不用輸入兩次 --ok
+  // 修改 標準進價 不要連動到 目前進價
+  // 標籤檔 新增 預覽 (規格書藍色字) > 然後再確認
+  // 變價表單拆成 主資料 變價前後 組合
+
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [{ value: 0, disabled: true }], // 主鍵ID;
     // POS2004 商品主檔
     // 基本資料 顯示畫面
-    PLU_MagNo: ['', [Validators.required, Validators.maxLength(20)]], // 商品管理編號
+    PLU_MagNo: ['', [Validators.required, Validators.maxLength(20)]], // 商品管理編號 自動取號
     PLU_Name: ['', [Validators.required, Validators.maxLength(60)]], // 商品中文名稱
+    PLU_PrnName: ['', [Validators.maxLength(40)]], // 列印名稱 預設商品中文名稱 一樣
 
     PLU_EngName: ['', [Validators.maxLength(100)]], // 商品英文名稱
     PLU_OrgPLUNo: ['', [Validators.maxLength(30)]], // 廠商貨號 --廠商自編碼 廠商貨號 
-    PLU_No: ['', [Validators.maxLength(20)]], // 國際條碼 可選擇帶入PLU_MagNo，新增模式以外加上 必填
+    // PLU_No: ['', [Validators.maxLength(20)]], // 國際條碼 可選擇帶入PLU_MagNo，新增模式以外加上 必填
+    PLU_No: [{ value: '多筆國際條碼第一筆自動帶入', disabled: true }], // 國際條碼 由輸入的POS2005內容帶入
     PLU_MinOrder: [1, [Validators.maxLength(8)]], // 最小訂購量 ---預設1，採購時，輸入的採購量必需為最小訂購量的倍數。
     PLU_Lable: ['', [Validators.maxLength(50)]], // 標籤名稱
 
@@ -52,12 +65,12 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     // 商品規格 顯示畫面
     PLU_Attribute: ['1', [Validators.required, Validators.maxLength(1)]], // 商品型態 1一般、2進口、3買斷、4試銷、5寄賣*/ --南紡 商品型態 1一般、2進口、3買斷、4試銷、5寄賣
     PLU_StockTaxType: ['1', [Validators.required, Validators.maxLength(1)]], // 進價稅別 0免稅,1應稅， 預設 1應稅
-    PLU_Unit: ['', [Validators.required, Validators.maxLength(2)]], // 單位代碼 --讀PLUUNIT  商品單位設定檔
+    PLU_Unit: ['01', [Validators.required, Validators.maxLength(2)]], // 單位代碼 --讀PLUUNIT  商品單位設定檔 --
 
     PLU_TaxType: ['1', [Validators.required, Validators.maxLength(1)]], // 售價稅別:0免稅,1應稅 預設 1應稅
     PLU_Type: ['1', [Validators.required, Validators.maxLength(2)]], // 商品類別:1一般商品,8專櫃,CC:專櫃商品 ,SC:特殊條碼
 
-    PLU_BoxQty: [0, [Validators.maxLength(4)]], // 包裝入數(裝箱入數) / --南紡 包裝入數
+    PLU_BoxQty: [1, [Validators.maxLength(4)]], // 包裝入數(裝箱入數) / --南紡 包裝入數
     PLU_Length: [0, [Validators.maxLength(10)]], //長度cm
     PLU_Weight: [0, [Validators.maxLength(10)]], //重量(g)
     PLU_Height: [0, [Validators.maxLength(10)]], //高度(cm)
@@ -89,13 +102,13 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_Status: ['0', [Validators.required, Validators.maxLength(1)]], // 商品狀態:0一般 不顯示
 
     //---必填未列入(都是預設不可編輯)---
-    PLU_OpenPrc: ['Y', [Validators.required, Validators.maxLength(1)]], // 開放售價Y/N
+    PLU_OpenPrc: ['N', [Validators.required, Validators.maxLength(1)]], // 開放售價Y/N
 
     PLU_AccountType: ['2', [Validators.maxLength(1)]], // 結帳別
     PLU_IsStock: ['Y', [Validators.maxLength(1)]], // 是否計算庫存 Y:是 N:否
     PLU_ReadyDay: [0, [Validators.maxLength(4)]], // 備貨天數 預設0
     PLU_StockType: ['0', [Validators.maxLength(1)]], // 庫存類別 0:一般 1:標準用量 2:自動轉換(沒用到) 3:子母商品 4:手動轉換
-    PLU_TaxRate: [0, [Validators.maxLength(7)]], // 稅率 預設0
+    PLU_TaxRate: [0.05, [Validators.maxLength(7)]], // 稅率 預設0.05
 
     PLU_StopSale: ['N', [Validators.maxLength(1)]], // 停止銷售註記(Y/N)
     PLU_CalcSaleStock: ['N', [Validators.maxLength(1)]], // 計算庫存方式(N:依數量 Y:依金額)
@@ -216,14 +229,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       this.dataForm.get('PLU_SalePrc')?.disable();
     }
 
-    //國際條碼 新增可空白、其他狀況必填
-    if (this.crudstatus !== CRUDStatus.Create) {
-      this.dataForm.get('PLU_No')?.setValidators(Validators.required);
-    } else {
-      console.log('新增模式，國條可非必填');
-      this.dataForm.get('stock')?.disable();  //新增模式 庫存只能是0 且不可編輯
-    }
-
     //導入下拉清單
     this.loadOptions();
 
@@ -238,7 +243,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       this.loadDetail(this.dataForm.get('PLU_MagNo')?.value || '', this.dataForm.get('PLU_OrderPrcRate')?.value || 0);
     }
 
-    // 監聽 大分類 是否為''
+    // 觀察 大分類 是否為''
     this.dataForm.get('CAT_LNo')!.valueChanges.subscribe((newValue) => {
       // console.log('大分類變更為:', newValue);
       if (!newValue) {
@@ -294,7 +299,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       }
     });
 
-    // 監聽 品牌編號 是否為變更(更新 進價折數、 標準進價)
+    // 觀察 品牌編號 是否為變更(更新 進價折數、 標準進價)
     this.dataForm.get('LOGO_No')!.valueChanges.subscribe((newValue) => {
 
       if (newValue) {
@@ -314,6 +319,15 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         }
       } else {
         // 若品牌編號為空 不進行操作
+      }
+    });
+
+    // 觀察 商品名稱(PLU_Name)發生變化時自動寫入給 PLU_Lable、PLU_PrnName
+    this.dataForm.get('PLU_Name')?.valueChanges.subscribe(value => {
+      const currentLabel = this.dataForm.get('PLU_Lable')?.value;
+      if (value && value !== currentLabel) {
+        this.dataForm.get('PLU_Lable')?.setValue(value);
+        this.dataForm.get('PLU_PrnName')?.setValue(value);
       }
     });
 
@@ -391,16 +405,16 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           }
           console.log('insert', requestBody);
 
-          // this.tls51070Service.insertTLS51070(requestBody).subscribe(async (response) => {
-          //   this.messageService.successBubble('POS2004主檔新增成功');
+          this.tls51070Service.insertTLS51070(requestBody).subscribe(async (response) => {
+            this.messageService.successBubble('POS2004主檔新增成功');
 
-          //   const newSeqNo = response?.Data; // 回傳的 IMG_SeqNo
-          //   console.log('新增取號:', newSeqNo);
+            const newSeqNo = response?.Data; // 回傳的 IMG_SeqNo
+            console.log('新增取號:', newSeqNo);
 
-          //   // 進行圖片檔更新
-          //   await this.createImage(newSeqNo); // ✅ 傳入圖片
-          //   this.onCancel();
-          // });
+            // 進行圖片檔更新
+            await this.createImage(newSeqNo); // ✅ 傳入圖片
+            this.onCancel();
+          });
         }
         break;
       case CRUDStatus.Edit:
@@ -449,25 +463,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   onClearForm() {
     this.dataForm.reset(); // 重置表單
-  }
-
-  //複製商品管理編號(pluMagno) 到 國際條碼(pluNo)
-  //新增時可選擇pluNo與pluMagno相同，此情況pluNo可為''
-  copyNoToMagNo() {
-    const pluMagNo = this.dataForm.get('PLU_MagNo')?.value || '';
-    if (pluMagNo !== '') {
-      this.dataForm.get('PLU_No')?.setValue(pluMagNo);
-      this.messageService.infoBubble('已複製商品管理編號');
-    }
-  }
-
-  //複製商品中文名稱(PLU_Name) 到 標籤名稱(PLU_Lable)
-  copyPLU_NameToPLU_Lable() {
-    const pluName = this.dataForm.get('PLU_Name')?.value || '';
-    if (pluName !== '') {
-      this.dataForm.get('PLU_Lable')?.setValue(pluName);
-      this.messageService.infoBubble('已複製商品中文名稱');
-    }
   }
 
   // 讀取dopropdown選項
