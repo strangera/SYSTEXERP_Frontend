@@ -80,6 +80,14 @@ export interface ITLS52050Data {
   UPD_USR_No: string | null; // 變更人員
   UPD_USR_Name: string | null; // 變更人員姓名
 }
+
+export interface POS2008Data {
+  MID: number; // 商戶編號
+  MAM_No: string; // 促銷編號(變價單號)
+  SYS_StoreNo: string; // 公司編號/店號
+  PLU_MagNo: string; // 商品管理編號
+}
+
 @Injectable({
   providedIn: 'root',
 })

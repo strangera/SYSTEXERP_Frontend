@@ -13,7 +13,7 @@ import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
   templateUrl: './tls52050-cru.component.html',
 })
 export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> implements OnInit {
-  dataForm = this.formBuilder.group({
+  dataForm = this.formBuilder.nonNullable.group({
     MAM_No: [{ value: '系統自動產生', disabled: true }],  // 變價單號
     VEN_No: ['', Validators.required], // 廠商代號
     LOGO_No: ['', Validators.required], // 品牌代號
@@ -28,7 +28,13 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     APPLY_USR_No: [{ value: null as string | null, disabled: true }], // 申請人
     APPLY_Date: [{ value: new Date(), disabled: true }], // 申請日期
     MAM_Status: [{ value: '0', disabled: true }],
-    MAM_Type: [{ value: '3', disabled: true }]
+    MAM_Type: [{ value: '3', disabled: true }],
+
+    // 進價折扣、進價金額調整、售價折扣、售價金額調整
+    costPriceDiscount: [0], // 進價折扣%
+    costPriceAmount: [0], // 進價金額調整
+    salePriceDiscount: [0], // 售價折扣%
+    salePriceAmount: [0], // 售價金額調整
   });
   brandOptions: IDropdownItem[] = []; // 品牌代碼
   vendorOptions: IDropdownItem[] = []; // 廠商編號
@@ -37,6 +43,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     { projectNumber: '001', projectName: '專櫃A', activity: '促銷活動', startDate: '2023-01-01', endDate: '2023-01-31', executionStartDate: '2023-01-01', executionEndDate: '2023-01-31' },
     { projectNumber: '002', projectName: '專櫃B', activity: '新品發布', startDate: '2023-02-01', endDate: '2023-02-28', executionStartDate: '2023-02-01', executionEndDate: '2023-02-28' }
   ];
+  selectedItems: any[] = [];
   columns: Column[] = [
     { field: 'projectNumber', header: '專櫃編號', visible: true },
     { field: 'projectName', header: '櫃位名稱', visible: true },
@@ -85,17 +92,43 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
         this.userOptions = response.Data.map(user => ({ user_No: user.user_No, user_Name: user.user_Name }));
       })
     }
-    // 監聽 MAM_Method
+    this.setupFormListeners();// 監聽方法
+    this.setupMutualExclusiveControls('costPriceDiscount', 'costPriceAmount');
+    this.setupMutualExclusiveControls('salePriceDiscount', 'salePriceAmount');
+  }
+  setupFormListeners() {
+    // 監聽 MAM_Method 是否為永久變價
     this.dataForm.controls.MAM_Method.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
+      this.dataForm.controls.MAM_EndDate.setValue(null);
       if (value === '1') {
         this.dataForm.controls.MAM_EndDate.disable();
-        this.dataForm.controls.MAM_EndDate.setValue(null);
       } else {
         this.dataForm.controls.MAM_EndDate.enable();
-        this.dataForm.controls.MAM_EndDate.setValue(null);
       }
     });
   }
+  private setupMutualExclusiveControls(controlA: string, controlB: string): void {
+    const controls: any = this.dataForm.controls;
+
+    controls[controlA].valueChanges.pipe(untilDestroyed(this)).subscribe((value: number) => {
+      const ctrlB = controls[controlB];
+      if (value > 0) {
+        if (!ctrlB.disabled) ctrlB.disable({ emitEvent: false });
+      } else {
+        if (ctrlB.disabled) ctrlB.enable({ emitEvent: false });
+      }
+    });
+
+    controls[controlB].valueChanges.pipe(untilDestroyed(this)).subscribe((value: number) => {
+      const ctrlA = controls[controlA];
+      if (value > 0) {
+        if (!ctrlA.disabled) ctrlA.disable({ emitEvent: false });
+      } else {
+        if (ctrlA.disabled) ctrlA.enable({ emitEvent: false });
+      }
+    });
+  }
+  // onShowDialog
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       console.log('query condition', frm.value);
