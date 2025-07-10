@@ -1,72 +1,65 @@
-<div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-  </div>
-  <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="縣市代碼"
-              controlName="city_no"
-              [control]="queryForm.controls.city_no"
-              [submitted]="submitted"
-            >
-              >
-            </app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="縣市名稱"
-              controlName="city_name"
-              [control]="queryForm.controls.city_name"
-              [submitted]="submitted"
-            >
-              >
-            </app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="區域"
-              controlName="city_group"
-              [control]="queryForm.controls.city_group"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
-        </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
-        </div>
-      </form>
-    </p-accordionTab>
-  </p-accordion>
+<div class="flex gap-2 mb-2">
+  <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  <app-button btnType="create" (click)="onCreate()"></app-button>
 </div>
+<p-accordion>
+  <p-accordionTab
+    header="查詢條件"
+    [selected]="true"
+    class="line-height-3 m-0"
+    [headerStyleClass]="'query-accordionTab'"
+  >
+    <form
+      [formGroup]="queryForm"
+      id="queryForm"
+      (ngSubmit)="onSubmit(queryForm)"
+    >
+      <div class="grid p-fluid">
+        <app-input-text
+          class="col-12 sm:col-6 md:col-4"
+          label="縣市代號"
+          controlName="City_No"
+          [control]="queryForm.controls.City_No"
+          [submitted]="submitted"
+        ></app-input-text>
+        <app-input-text
+          class="col-12 sm:col-6 md:col-4"
+          label="縣市名稱"
+          controlName="City_Name"
+          [control]="queryForm.controls.City_Name"
+          [submitted]="submitted"
+        ></app-input-text>
+        <app-input-text
+          class="col-12 sm:col-6 md:col-4"
+          label="群組"
+          controlName="City_Group"
+          [control]="queryForm.controls.City_Group"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="clear"></app-button>
+        <app-button btnType="query" [loading]="loading"></app-button>
+      </div>
+    </form>
+  </p-accordionTab>
+</p-accordion>
 <div class="card">
   <app-table
-    [data]="data"
+    [tableKey]="'sysbr00'"
+    dataKey="CITY_ID"
+    [multiSortMeta]="[{ field: 'CITY_No', order: 1 }]"
     [columns]="columns"
-    [expansionColumns]="subColumns"
+    [data]="data"
+    [loading]="loading"
+    [showCheckBox]="true"
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    [showCheckBox]="true"
+    (delete)="deleteRow($event)"
   ></app-table>
 </div>
