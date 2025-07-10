@@ -7,10 +7,12 @@
     <p-accordionTab header="查詢條件" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="參數代碼" controlName="code" [control]="queryForm.controls.code"
-              [submitted]="submitted"></app-input-text>
-          </div>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="cashierNo"
+            [control]="queryForm.controls.cashierNo" [submitted]="submitted"></app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="參數代號" controlName="code"
+            [control]="queryForm.controls.code" [submitted]="submitted" [options]="codeOptions"></app-dropdown>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="參數說明" controlName="description"
+            [control]="queryForm.controls.description" [submitted]="submitted"></app-input-text>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
