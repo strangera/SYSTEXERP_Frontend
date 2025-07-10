@@ -228,14 +228,12 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     super();
   }
 
-  // ==========  生命週期方法 ==========
   ngOnInit(): void {
     this.initializePage('TLS13010', this.dataForm);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
     // 先載入基本下拉選單
     this.loadDropdownOptions();
-
     // 然後載入位置選項
     this.loadLocationWithDetailsOptions();
     // 載入 POS2013 選項
@@ -246,13 +244,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // ✅ 載入工作流程資料
     this.loadWorkflowData();
 
-    // ✅ 驗證暫存資料（開發時使用）
-    setTimeout(() => {
-      this.validateWorkflowData();
-      // this.debugLocationStatus();
-    }, 1000);
-
-    this.loadWorkflowData();
+    // 設定監聽器
     this.setupAutoSave();
     this.setupBusTypeListener();
   }
@@ -382,12 +374,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     console.log('🚀 CRU 載入工作流程資料:', workflowData);
 
     if (workflowData.contractId) {
-      // 🎯 統一使用 ContractFlowService 的模式判定
       if (this.contractFlowService.isNewContractMode()) {
-        console.log('🆕 新增模式：檢查是否有暫存資料');
+        console.log('🆕 新增模式');
         this.loadNewModeData();
       } else {
-        console.log('📝 編輯模式：載入資料');
+        console.log('📝 編輯模式');
         this.loadEditModeData(workflowData);
       }
     } else {
@@ -395,6 +386,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.router.navigate(['account/tls/tls13010']);
     }
   }
+
 
   private loadNewModeData(): void {
     console.log('🆕 載入新增模式資料');
@@ -416,9 +408,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   private loadEditModeData(workflowData: any): void {
     console.log('📝 載入編輯模式資料');
 
-    // 🎯 優先使用 CRU 頁面編輯後的暫存資料
+    // 優先使用暫存資料
     const savedFormData = this.contractFlowService.getStep1Data();
-    console.log('📦 檢查 Step1 暫存資料:', savedFormData);
 
     if (savedFormData && Object.keys(savedFormData).length > 0) {
       console.log('📝 載入編輯模式暫存表單資料');
@@ -426,9 +417,15 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     } else if (workflowData.queryRowData) {
       console.log('📋 載入查詢結果資料');
       this.loadDataFromQueryResult(workflowData.queryRowData);
+
+      // 🎯 載入後立即儲存一份
+      setTimeout(() => {
+        this.saveToWorkflow();
+        console.log('✅ 初始資料已儲存到工作流程');
+      }, 500);
     }
 
-    // 🎯 載入既有位置資料（如果有 talent_id 且沒有暫存位置資料）
+    // 載入既有位置資料
     const currentTalentId = this.contractFlowService.getCurrentTalentId();
     if (currentTalentId && (!savedFormData?.locationInfo || savedFormData.locationInfo.length === 0)) {
       console.log('🔄 載入既有位置資料');
@@ -666,33 +663,23 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   // ==========  表單操作方法 ==========
   private saveToWorkflow(): void {
-    if (this.dataForm.dirty || this.hasLocationChanges()) {
-      const formData = this.dataForm.getRawValue();
+    const formData = this.dataForm.getRawValue();
 
-      console.log('💾 準備儲存工作流程資料...');
-      console.log('📋 表單資料:', {
-        talent_id: formData.talent_id,
-        apply_no: formData.apply_no,
-        tlt_name: formData.tlt_name,
-        isNewMode: this.contractFlowService.isNewContractMode()
-      });
+    console.log('💾 儲存工作流程資料...');
 
-      // 🎯 準備位置資料
-      const workflowData = {
-        ...formData,
-        locationInfo: this.prepareLocationDataForSubmit()
-      };
+    const workflowData = {
+      ...formData,
+      locationInfo: this.prepareLocationDataForSubmit()
+    };
 
-      const contractInfo = {
-        id: formData.talent_id || '',
-        ...workflowData
-      } as ContractInfo;
+    const contractInfo = {
+      id: formData.talent_id || '',
+      ...workflowData
+    } as ContractInfo;
 
-      // 🎯 移除自訂處理，讓 ContractFlowService 統一處理 talent_id
-      this.contractFlowService.saveStep1Data(contractInfo);
-
-      console.log('✅ 已暫存到工作流程');
-    }
+    // 🎯 主檔直接儲存，不管是否有變更
+    this.contractFlowService.saveStep1Data(contractInfo);
+    console.log('✅ 已儲存到工作流程');
   }
 
   private generateTempTalentId(): string {
@@ -864,27 +851,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   onSubmitNext(): void {
     console.log('🔍 CRU onSubmitNext 開始執行');
-    console.log('📋 表單狀態:', {
-      valid: this.dataForm.valid,
-      mode: this.contractFlowService.isNewContractMode() ? '新增' : '編輯'
-    });
 
     if (this.dataForm.valid) {
-      const formData = this.dataForm.getRawValue();
-      console.log('📋 表單資料:', {
-        talent_id: formData.talent_id,
-        apply_no: formData.apply_no,
-        tlt_name: formData.tlt_name
-      });
-
-      // 🎯 儲存到工作流程
+      // 🎯 直接儲存並進入下一步
       this.saveToWorkflow();
 
-      // 🎯 檢查工作流程狀態
-      const workflowStatus = this.contractFlowService.getCurrentStatus();
-      console.log('🚀 工作流程狀態:', workflowStatus);
-
-      // 🎯 導向下一步
       console.log('🔄 導向 Next1');
       this.router.navigate(['account/tls/tls13010next1']);
     } else {

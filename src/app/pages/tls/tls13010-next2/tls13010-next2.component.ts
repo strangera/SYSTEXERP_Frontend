@@ -20,7 +20,6 @@ import {
   WorkflowStep,
   UnifiedCommissionResponse,
   ChargeSettingApiItem,
-  SubmitDataStructure
 } from '../tls13010/tls13010.model';
 
 @Component({
@@ -2165,57 +2164,22 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   private validateGeneralCommissionData(): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    // 檢查是否有抽成項目
-    const activeCommissionItems = this.commissionData.filter(item => item._status !== 'deleted');
-    if (!activeCommissionItems || activeCommissionItems.length === 0) {
-      errors.push('請至少新增一個抽成項目');
-      return { isValid: false, errors };
+    // 🎯 使用新的驗證方法
+    try {
+      const validation = this.contractFlowService.validateCleanSubmitData(
+        this.contractFlowService.generateCleanSubmitData()
+      );
+
+      return {
+        isValid: validation.isValid,
+        errors: validation.errors
+      };
+    } catch (error) {
+      return {
+        isValid: false,
+        errors: [`資料驗證過程發生錯誤: ${error}`]
+      };
     }
-
-    // 檢查每個抽成項目
-    for (let i = 0; i < activeCommissionItems.length; i++) {
-      const item = activeCommissionItems[i];
-      const itemIndex = i + 1;
-
-      // 檢查基本資料
-      if (!item.commissionTypeName || item.commissionTypeName.trim() === '') {
-        errors.push(`抽成項目 ${itemIndex} 的名稱不能為空`);
-      }
-
-      if (item.taxType === null || item.taxType === undefined) {
-        errors.push(`抽成項目 ${itemIndex} 的稅別不能為空`);
-      }
-
-      // 檢查折扣設定
-      const activeDiscountItems = item.discountSettingItems?.filter(d => d._status !== 'deleted') || [];
-      if (activeDiscountItems.length === 0) {
-        errors.push(`抽成項目 ${itemIndex} 至少需要一個折扣設定`);
-        continue;
-      }
-
-      // 檢查折扣設定的完整性
-      for (let j = 0; j < activeDiscountItems.length; j++) {
-        const discount = activeDiscountItems[j];
-        const discountIndex = j + 1;
-
-        if (!discount.cag_barcode) {
-          errors.push(`抽成項目 ${itemIndex} 的折扣設定 ${discountIndex} 的折扣別不能為空`);
-        }
-        if (!discount.rate || discount.rate <= 0) {
-          errors.push(`抽成項目 ${itemIndex} 的折扣設定 ${discountIndex} 的抽成率必須大於 0`);
-        }
-      }
-
-      // 如果已經有錯誤，提早結束檢查
-      if (errors.length > 0) {
-        break;
-      }
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors: errors
-    };
   }
 
   override onCancel(): void {
@@ -2261,36 +2225,67 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   private submitGeneralCommissionContract(): void {
-    console.log('📤 開始送出一般抽成合約...');
+    console.log('📤 開始送出一般抽成合約（使用清理後資料）...');
 
     // 顯示載入中
     this.loading = true;
     this.notificationService.blockUi();
 
     try {
-      // 🎯 修改：使用與 Next3 相同的邏輯
-      const submitDataStructure = this.contractFlowService.generateSubmitData();
+      // 🎯 使用新的清理資料方法
+      const cleanSubmitData = this.contractFlowService.generateCleanSubmitData();
 
-      // 🎯 新增：完整 JSON 輸出（與 Next3 一致）
-      console.log('🚀 完整提交 JSON:', JSON.stringify(submitDataStructure, null, 2));
+      console.log('🚀 最終送出的完整 JSON:');
+      console.log(JSON.stringify(cleanSubmitData, null, 2));
 
-      // 🎯 修改：調用統一的提交 API
-      this.callSubmitAPI(submitDataStructure);
+      // 🎯 驗證資料
+      const validation = this.contractFlowService.validateCleanSubmitData(cleanSubmitData);
+
+      if (!validation.isValid) {
+        console.error('❌ 資料驗證失敗:', validation.errors);
+        this.loading = false;
+        this.notificationService.unblockUi();
+        this.notificationService.errorBubble(`資料驗證失敗: ${validation.errors[0]}`);
+        return;
+      }
+
+      // 🎯 顯示警告（如果有）
+      if (validation.warnings.length > 0) {
+        console.warn('⚠️ 提交警告:', validation.warnings);
+        validation.warnings.forEach(warning => {
+          this.notificationService.warnBubble(warning);
+        });
+      }
+
+      // 🎯 輸出清理後的完整 JSON（除錯用）
+      console.log('🚀 清理後的完整提交 JSON:');
+      console.log(JSON.stringify(cleanSubmitData, null, 2));
+
+      // 🎯 顯示資料大小比較
+      const sizeInfo = this.contractFlowService.getSubmitDataSize();
+      console.log('📊 資料大小比較:', {
+        原始大小: `${sizeInfo.original} 字元`,
+        清理後大小: `${sizeInfo.clean} 字元`,
+        減少: sizeInfo.reduction
+      });
+
+      // 🎯 調用統一的提交 API
+      this.callCleanSubmitAPI(cleanSubmitData);
 
     } catch (error) {
       console.error('❌ 準備合約資料時發生錯誤:', error);
       this.loading = false;
       this.notificationService.unblockUi();
-      this.notificationService.errorBubble('準備合約資料時發生錯誤');
+      this.notificationService.errorBubble(`準備合約資料時發生錯誤: ${error}`);
     }
   }
 
-  // 🎯 修改：統一的 API 調用邏輯（與 Next3 一致）
-  private callSubmitAPI(submitData: SubmitDataStructure): void {
-    console.log('📤 調用送出合約 API...');
+
+  private callCleanSubmitAPI(cleanData: any): void {
+    console.log('📤 調用清理後資料送出 API...');
 
     // 🎯 TODO: 實際的 API 調用
-    // this.tls13010Service.submitContract(submitData).subscribe({
+    // this.tls13010Service.submitCleanContract(cleanData).subscribe({
     //   next: (response) => {
     //     console.log('✅ 合約送出成功:', response);
     //     this.handleSubmitSuccess(response);
@@ -2301,12 +2296,14 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     //   }
     // });
 
-    // 🎯 暫時模擬 API 調用成功（與 Next3 一致）
+    // 🎯 暫時模擬 API 調用成功
     setTimeout(() => {
       this.loading = false;
       this.notificationService.unblockUi();
       this.notificationService.successBubble('契約資料提交成功！');
-      this.contractFlowService.clearAllData();
+
+      // 🎯 提交成功後清理
+      this.contractFlowService.onSubmitSuccess();
       this.router.navigate(['account/tls/tls13010']);
     }, 2000);
   }

@@ -9,20 +9,16 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 import {
-  ConditionDataItem,
   ContractInfo,
   FixedRentCondition,
   BaseRentHigherCondition,
   BaseCommissionCondition,
   GraduatedCommissionCondition,
   BaseTierCondition,
-  SubmitDataStructure,
   GeneralCommissionCondition,
   ConditionItem,
   WorkflowStep,
-  UnifiedCommissionResponse,
   RentSettingApiData,
-  CommissionItem
 } from '../tls13010/tls13010.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 
@@ -31,7 +27,7 @@ import { LocationOptionsService } from '../../../service/api/dropdownservice/loc
   templateUrl: './tls13010-next3.component.html',
   styleUrls: ['./tls13010-next3.component.scss']
 })
-export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataItem> implements OnInit, OnDestroy {
+export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem> implements OnInit, OnDestroy {
 
   private discountOptions: any[] = [];
   private subscriptions: Subscription[] = [];
@@ -931,22 +927,101 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
 
   private submitContractData(): void {
-    // 🆕 新增：檢查與 Next2 的數量一致性
+    console.log('📤 Next3 開始送出合約資料（使用清理後資料）...');
+    // 🔍 除錯：檢查資料狀態
+    console.log('=== 除錯資料狀態 ===');
+    console.log('Step1 資料:', this.contractFlowService.getStep1Data());
+    console.log('QueryRowData:', this.contractFlowService.getQueryRowData());
+    console.log('CurrentData:', this.contractFlowService.getCurrentData());
+    console.log('ContractInfoData:', this.contractInfoData);
+
+    // 🆕 檢查與 Next2 的數量一致性（簡化版）
     if (!this.validateNext2DataConsistency()) {
       return;
     }
 
     this.loading = true;
+    this.notificationService.blockUi();
+
     try {
-      const submitDataStructure = this.contractFlowService.generateSubmitData();
-      console.log('🚀 完整提交 JSON:', JSON.stringify(submitDataStructure, null, 2));
-      this.callSubmitAPI(submitDataStructure);
+      // 🎯 最後一次暫存條件設定資料
+      this.saveConditionDataToWorkflow();
+
+      // 🎯 使用新的清理資料方法
+      const cleanSubmitData = this.contractFlowService.generateCleanSubmitData();
+
+      console.log('🚀 Next3 最終送出的完整 JSON:');
+      console.log(JSON.stringify(cleanSubmitData, null, 2));
+
+      // 🎯 驗證資料
+      const validation = this.contractFlowService.validateCleanSubmitData(cleanSubmitData);
+
+      if (!validation.isValid) {
+        console.error('❌ 資料驗證失敗:', validation.errors);
+        this.loading = false;
+        this.notificationService.unblockUi();
+        this.notificationService.errorBubble(`資料驗證失敗: ${validation.errors[0]}`);
+        return;
+      }
+
+      // 🎯 顯示警告（如果有）
+      if (validation.warnings.length > 0) {
+        console.warn('⚠️ 提交警告:', validation.warnings);
+        validation.warnings.forEach(warning => {
+          this.notificationService.warnBubble(warning);
+        });
+      }
+
+      // 🎯 輸出清理後的完整 JSON（除錯用）
+      console.log('🚀 Next3 清理後的完整提交 JSON:');
+      console.log(JSON.stringify(cleanSubmitData, null, 2));
+
+      // 🎯 顯示資料大小比較
+      const sizeInfo = this.contractFlowService.getSubmitDataSize();
+      console.log('📊 Next3 資料大小比較:', {
+        原始大小: `${sizeInfo.original} 字元`,
+        清理後大小: `${sizeInfo.clean} 字元`,
+        減少: sizeInfo.reduction
+      });
+
+      // 🎯 調用統一的提交 API
+      this.callCleanSubmitAPI(cleanSubmitData);
+
     } catch (error) {
-      console.error('❌ 準備提交資料時發生錯誤:', error);
+      console.error('❌ Next3 準備提交資料時發生錯誤:', error);
       this.loading = false;
-      this.notificationService.errorBubble('準備提交資料時發生錯誤');
+      this.notificationService.unblockUi();
+      this.notificationService.errorBubble(`準備提交資料時發生錯誤: ${error}`);
     }
   }
+
+  private callCleanSubmitAPI(cleanData: any): void {
+    console.log('📤 Next3 調用清理後資料送出 API...');
+
+    // 🎯 TODO: 實際的 API 調用
+    // this.tls13010Service.submitCleanContract(cleanData).subscribe({
+    //   next: (response) => {
+    //     console.log('✅ Next3 合約送出成功:', response);
+    //     this.handleSubmitSuccess(response);
+    //   },
+    //   error: (error) => {
+    //     console.error('❌ Next3 合約送出失敗:', error);
+    //     this.handleSubmitError(error);
+    //   }
+    // });
+
+    // 🎯 暫時模擬 API 調用成功
+    setTimeout(() => {
+      this.loading = false;
+      this.notificationService.unblockUi();
+      this.notificationService.successBubble('契約資料提交成功！');
+
+      // 🎯 提交成功後清理
+      this.contractFlowService.onSubmitSuccess();
+      this.router.navigate(['account/tls/tls13010']);
+    }, 2000);
+  }
+
   private validateNext2DataConsistency(): boolean {
     const commissionType = this.contractInfoData[0]?.tlt_term_type;
 
@@ -954,42 +1029,39 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       return true; // 非底租抽成取高者不需檢查
     }
 
-    // 🎯 正確：從 Next2 取得外層表格項目數量
-    const next2Data = this.contractFlowService.getStep3Data();
-    const next2MainItemsCount = Array.isArray(next2Data) ?
-      next2Data.filter(item => item._status !== 'deleted').length : 0;
+    try {
+      // 🎯 簡化檢查：使用清理後的資料
+      const cleanData = this.contractFlowService.generateCleanSubmitData();
 
-    // 🎯 正確：計算 Next3 條件設定項目數量
-    const next3ItemsCount = this.baseRentHigherItems.filter(item =>
-      item._status !== 'deleted'
-    ).length;
+      const next2MasterCount = cleanData.commissions.masters.toInsert.length +
+        cleanData.commissions.masters.toUpdate.length;
 
-    console.log('🔍 Next3 送出前數量一致性檢查:', {
-      next2MainItemsCount,     // Next2 外層表格項目數
-      next3ItemsCount,         // Next3 條件設定項目數
-      isConsistent: next2MainItemsCount === next3ItemsCount
-    });
+      const next3RentCount = cleanData.conditions.rents.toInsert.length +
+        cleanData.conditions.rents.toUpdate.length;
 
-    if (next2MainItemsCount !== next3ItemsCount) {
-      this.notificationService.errorBubble(
-        `資料不一致：抽成設定有 ${next2MainItemsCount} 個項目，` +
-        `但條件設定有 ${next3ItemsCount} 個項目。請檢查資料後再送出。`
-      );
-      return false;
+      console.log('🔍 Next3 數量一致性檢查:', {
+        next2MasterCount,
+        next3RentCount,
+        isConsistent: next2MasterCount === next3RentCount
+      });
+
+      if (next2MasterCount !== next3RentCount) {
+        this.notificationService.errorBubble(
+          `資料不一致：抽成設定有 ${next2MasterCount} 個項目，` +
+          `但條件設定有 ${next3RentCount} 個項目。請檢查資料後再送出。`
+        );
+        return false;
+      }
+
+      return true;
+
+    } catch (error) {
+      console.error('❌ 一致性檢查失敗:', error);
+      this.notificationService.warnBubble('無法驗證資料一致性，請檢查資料完整性');
+      return true; // 允許繼續，但給出警告
     }
-
-    return true;
   }
 
-
-  private callSubmitAPI(submitData: SubmitDataStructure): void {
-    setTimeout(() => {
-      this.loading = false;
-      this.notificationService.successBubble('契約資料提交成功！');
-      this.contractFlowService.clearAllData();
-      this.router.navigate(['account/tls/tls13010']);
-    }, 2000);
-  }
 
   // 🎯 導航方法
   override onCancel(): void {
