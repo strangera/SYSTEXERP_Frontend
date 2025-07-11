@@ -1,128 +1,93 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-//
-import { CounterCodeService } from './../../../service/basic/counter-code.service';
+import { FIN12020Data, FIN12020QueryRequest, FIN12020Service } from '../../../service/api/fin/fin12020.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { FormGroup, Validators } from '@angular/forms';
+import { finalize } from 'rxjs';
+import { DropdownOption } from '../../../shared/componentkit/dropdown/dropdown.model';
 
-//1.1.2.2 使用完/空白發票繳回作業
 @Component({
   selector: 'app-fin12020',
   templateUrl: './fin12020.component.html',
   styleUrl: './fin12020.component.scss'
 })
-export class FIN12020Component extends BasicQpageComponent implements OnInit {
-  //
+export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    twodatemm: [, [Validators.required]], // 發票年月
-    wordTrack: ['', [Validators.required, Validators.maxLength(2)]], // 字軌
-    registerID: [, [Validators.required]], // 收銀機代號
-    serialInvoice: [, [Validators.required, Validators.maxLength(8)]], // 發票號碼
-    startserialInvoice: [, [Validators.required, this.validationService.numberValidator, Validators.maxLength(8)]], // 發票號碼(起)
-    endserialInvoice: [, [Validators.required, this.validationService.numberValidator, Validators.maxLength(8)]], // 發票號碼(迄)
-    rollNumber: [1, [Validators.required, this.validationService.numberValidator, Validators.max(99999999)]], // 券數
-    usageStatus: [], // 發票使用狀況
+    invoice_month: [''], // 發票年月
+    invoice_month_start: ['', Validators.required], // 發票年月(起)
+    invoice_month_end: ['', Validators.required], // 發票年月(迄)
+    invoice_type: [''], // 發票類別
+    prefix: ['', [Validators.maxLength(2)]], // 字軌
+    invoice_no: ['', [Validators.maxLength(8)]], // 發票號碼
+    invoice_no_start: [''], // 發票號碼(起)
+    invoice_no_end: [''], // 發票號碼(迄)
+    cashier_no: [''], // 收銀機代號
+    invoice_status: [''], // 發票狀態
+    usage_type: [''], // 使用別
+    ...createPaginationConfig([{ field: 'invoice_month', order: -1 }]), // 分頁和排序參數
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '發票年月', visible: true },
-    { field: 'col2', header: '字軌', visible: true },
-    { field: 'col3', header: '發票號碼(起)', visible: true },
-    { field: 'col4', header: '發票號碼(迄)', visible: true },
-    { field: 'col5', header: 'NEXT發票配號號碼', visible: true },
-    { field: 'col6', header: '使用別', visible: true },
-    { field: 'col7', header: '使用狀態', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  //
-  usageStatusOptions: any[] = [
-    { value: 1, label: '已使用繳回發票' },
-    { value: 2, label: '空白已繳回發票' },
-  ];
-  registerIDOptions: any[] = [];
 
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private counterCodeService: CounterCodeService,
-  ) {
-    super(); // 呼叫父類建構子
+  totalRecords = 0;
+  data: FIN12020Data[] = [];
+  selectedItems: FIN12020Data[] = [];
+  columns: Column[] = [
+    { field: 'invoice_month', header: '發票年月', visible: true },
+    { field: 'prefix', header: '字軌', visible: true },
+    { field: 'invoice_no_start', header: '發票號碼(起)', visible: true },
+    { field: 'invoice_no_end', header: '發票號碼(迄)', visible: true },
+    { field: 'next_invoice_no', header: 'NEXT發票配號號碼', visible: true },
+    { field: 'usage_type', header: '使用別', visible: true },
+    { field: 'invoice_status', header: '使用狀態', visible: true },
+  ];
+
+  // 下拉選單 options
+  invoiceTypeOptions: DropdownOption[] = [];
+  cashierNoOptions: DropdownOption[] = [];
+  invoiceStatusOptions: DropdownOption[] = [];
+  usageTypeOptions: DropdownOption[] = [];
+
+  constructor(private fin12020Service: FIN12020Service) {
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '110011';
-    this.cruPage = '/FIN1000/FIN12020CRU';
-    //
-    // ----------------------------------------------------------------
-    this.counterCodeService.getCounterCodes().subscribe(data => {
-      this.registerIDOptions = data;
-    });
-    // ----------------------------------------------------------------
+    this.initializePage('FIN12020', 'fin/fin12020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
 
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.handleSubmit(frm, () => {
+      this.fin12020Service.queryFIN12020(frm.value as FIN12020QueryRequest)
+        .pipe(finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        });
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
-  }
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
+  loadOptions() {
+    // 這裡可以載入下拉選單的 options
+    // 暫時先用假資料，實際應該從服務端獲取
+    this.invoiceTypeOptions = [
+      { label: '一般發票', value: '01' },
+      { label: '特種發票', value: '02' },
+      { label: '電子發票', value: '03' }
+    ];
+    this.cashierNoOptions = [
+      { label: '收銀機1', value: '001' },
+      { label: '收銀機2', value: '002' },
+      { label: '收銀機3', value: '003' }
+    ];
+    this.invoiceStatusOptions = [
+      { label: '未使用', value: '0' },
+      { label: '已使用', value: '1' },
+      { label: '已作廢', value: '2' }
+    ];
+    this.usageTypeOptions = [
+      { label: '一般', value: '01' },
+      { label: '特殊', value: '02' }
+    ];
   }
 }

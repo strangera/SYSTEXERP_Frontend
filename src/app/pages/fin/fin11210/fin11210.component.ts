@@ -5,6 +5,7 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
 import { FormGroup, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { FIN11210Service } from '../../../service/api/fin/fin11210.service';
+import { DropdownOption } from '../../tls/tls13010/tls13010.dropdown';
 
 @Component({
   selector: 'app-fin11210',
@@ -13,7 +14,9 @@ import { FIN11210Service } from '../../../service/api/fin/fin11210.service';
 })
 export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    code: ['', [Validators.maxLength(3)]], // 金資中心銀行代碼
+    code: ['', [Validators.maxLength(20)]], // 參數代碼
+    description: ['', [Validators.maxLength(100)]], // 參數說明
+    cashierNo: ['', [Validators.maxLength(20)]], // 收銀機號
     ...createPaginationConfig([{ field: 'code', order: 0 }]), // 分頁和排序參數
   });
   totalRecords = 0;
@@ -47,5 +50,14 @@ export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> imp
 
   isRowSelectable(rowData: FIN11210Data): boolean {
     return true;
+  }
+
+  get codeOptions(): DropdownOption[] {
+    return [
+      { label: '本期發票年月結束前幾天自動分配下期發票', value: 'EcrGUIAutoCnfgDayBeforeMonEnd' },
+      { label: '電子發票應用API APP ID', value: 'EInvAppApiAppId' },
+      { label: '電子發票應用API Key', value: 'EInvAppApiKey' },
+      { label: '電子發票應用API路徑', value: 'EInvAppApiPath' },
+    ];
   }
 }
