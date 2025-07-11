@@ -3,6 +3,10 @@ import { FormGroup, Validators } from '@angular/forms'; // Import FormBuilder
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS41010Data } from '../../../service/api/tls/tls41010.service';
+import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
+import { finalize } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+
 import { guiTypeOptions, salTypeOptions, sernoTypeOptions, settleDDOptions, statusOptions, typeOptions, yesNoOptions } from './tls41010-cru.model';
 
 // 2.4.1.1 收銀機基本資料維護 CRU
@@ -146,12 +150,80 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   yesNoOptions = yesNoOptions
 
   constructor(
+    private tls46020Service: TLS46020Service,
+    private http: HttpClient
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
     this.initializePage('TLS41010', this.dataForm);
+    this.dataForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
+      if (tmplNo) {
+        this.callTLS46020Api(tmplNo);
+      }
+    });
+    this.dataForm.get('ECR_SrvIP')?.valueChanges.subscribe((ip) => {
+      if (ip) {
+        this.callOtherApi(ip);
+      }
+    });
+    this.dataForm.get('ECR_Type')?.valueChanges.subscribe((value) => {
+      this.checkTltNoRequired(value);
+    });
+
+    // 預設初始化時檢查一次
+    this.checkTltNoRequired(this.dataForm.get('ECR_Type')?.value ?? '');
+
+
+  }
+  callOtherApi(ip: string) {
+    const apiUrl = `http://${ip}/TLS0000/TLS4000/queryTLS46010`;
+    const requestData = {
+      queryKey: 'value'
+    };
+
+    this.loading = true;
+    this.http.post(apiUrl, requestData).pipe(finalize(() => this.loading = false)).subscribe({
+      next: (res) => {
+        console.log('呼叫後台主機 API 成功', res);
+      },
+      error: (err) => {
+        console.error('呼叫後台主機 API 失敗', err);
+      }
+    });
+  }
+  checkTltNoRequired(value: string) {
+    const tltNoControl = this.dataForm.get('ECR_TLT_No');
+
+    if (value === '2') {
+      // 設為必填
+      tltNoControl?.setValidators([Validators.required, Validators.maxLength(20)]);
+    } else {
+      // 取消必填
+      tltNoControl?.clearValidators();
+    }
+
+    tltNoControl?.updateValueAndValidity();
+  }
+
+
+  callTLS46020Api(tmplNo: string) {
+    const params = {
+      ECR_TmplNo: tmplNo,
+      PageSize: 10,
+      PageIndex: 1
+    };
+
+    this.loading = true;
+    this.tls46020Service.queryTLS46020(params).pipe(finalize(() => this.loading = false)).subscribe({
+      next: (res) => {
+        console.log('查詢 TLS46020 成功', res.Data);
+      },
+      error: (err) => {
+        console.error('查詢 TLS46020 失敗', err);
+      }
+    });
   }
 
   onSubmit(frm: FormGroup) {

@@ -19,7 +19,7 @@ registerLocaleData(zhHant, 'zh-Hant-TW');
 export interface ApiResponse<T> {
   Status: string;
   Data: T;
-  Error: string;
+  Error: null | ErrorResponse;
   Meta: {
     Timestamp: string;
     RequestId: string;
@@ -29,6 +29,11 @@ export interface ApiResponse<T> {
   TotalPage: number;
 }
 
+interface ErrorResponse {
+  Code: string;
+  Detail: string;
+  Message: string;
+}
 
 @Injectable({
   providedIn: 'root'

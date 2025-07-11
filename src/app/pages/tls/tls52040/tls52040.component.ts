@@ -3,7 +3,7 @@ import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ITLS52040Data, Tls52040Service } from '../../../service/api/tls/tls52040.service';
 import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { finalize, map, Subject, takeUntil } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
@@ -12,6 +12,8 @@ import { FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdo
 export const enum POStatus {
   已確認 = '1',
   已審核 = '2',
+  部分驗收 = '3',
+  全部驗收 = '4',
   作廢 = '9',
 }
 @Component({
@@ -24,7 +26,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
     LOGO_NoList: [null], // 品牌代碼
     HOS_NoList: [null], // 倉庫代碼
     VEN_No: [''], // 廠商代號
-    PLU_MagNo: ['', [Validators.maxLength(20)]], // 管理編號
+    queryNo: ['', [Validators.maxLength(20)]], // 管理編號
     RJM_StatusList: [null, [Validators.required]], // 驗收狀態
     APPLY_USR: [''], // 申請人員
     APPLY_Date_Start: [''], // 申請日期起
@@ -33,7 +35,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
     APRV_USR: [''], // 審核人員
     APRV_Date_Start: [''], // 審核(驗收)日期起
     APRV_Date_End: [''], // 審核(驗收)日期迄
-    ...createPaginationConfig([{ field: 'APRV_Date', order: -1 }, { field: 'RJM_No', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'APPLY_Date', order: -1 }, { field: 'RJM_No', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
   warehouseOptions: IDropdownItem[] = []; // 倉別
@@ -42,7 +44,6 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
   vendorOptions: IDropdownItem[] = []; // 廠商編號
   poStatusOptions: { label: string, value: string }[] = []; // 採購單狀態 (靜態資料)
   userOptions: { label: string, value: string }[] = []; // 申請人員、審核人員、結案人員
-  private destroy$ = new Subject<void>(); // 用於管理訂閱的生命週期
   data: ITLS52040Data[] = [];
   selectedItems: ITLS52040Data[] = [];
   columns: Column[] = [
@@ -54,16 +55,16 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
     { field: 'HOS_No', header: '倉庫代碼', visible: true },
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
     { field: 'org_id', header: '組織代碼/所屬部門', visible: true },
-    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime },
-    { field: 'APPLY_USR_No', header: '申請人員', visible: true },
-    { field: 'APPLY_USR_Name', header: '申請人員姓名', visible: true },
+    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime, sortField: 'APPLY_Date' },
+    { field: 'APPLY_USR_No', header: '申請人員', visible: true, sortField: 'APPLY_USR_No' },
+    { field: 'APPLY_USR_Name', header: '申請人員姓名', visible: true, sortField: 'APPLY_USR_Name' },
+    { field: 'RJM_Status', header: '退貨狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value },
     { field: 'RJM_TotalBuyNet', header: '未稅進價小計', visible: true, format: formatAmount },
     { field: 'RJM_TotalBuyTax', header: '進價稅額小計', visible: true, format: formatAmount },
     { field: 'RJM_TotalBuyAmt', header: '進價合計', visible: true, format: formatAmount },
     { field: 'RJM_TotalSaleNet', header: '未稅售價小計', visible: true, format: formatAmount },
     { field: 'RJM_TotalSaleTax', header: '售價稅額小計', visible: true, format: formatAmount },
     { field: 'RJM_TotalSaleAmt', header: '售價合計', visible: true, format: formatAmount },
-    { field: 'RJM_Status', header: '驗收狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value },
     // { field: 'RJM_TaxType', header: '單據稅別', visible: true, format: value => value === '1' ? '應稅' : '免稅' },
     { field: 'APRV_Date', header: '審核(驗收)日期', visible: true, format: formatDateTime },
     { field: 'APRV_USR_No', header: '審核人員', visible: true },
@@ -114,18 +115,18 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
   ngOnInit(): void {
     this.initializePage('TLS52040', 'TLS/TLS52040cru', this.queryForm, (f) => this.onSubmit(f));
     // 倉別 (HOS_No)
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this), takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
       this.warehouseOptions = response.Data;
     });
     // 品牌代碼 (LOGO_No)
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this), takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.brandOptions = response.Data.map(brand => ({
         ...brand,
         label: `${brand.No} - ${brand.Name}`,
       }));
     });
     // 廠商編號 (VEN_No)
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this), takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.vendorOptions = response.Data.map(vendor => ({
         ...vendor,
         label: `${vendor.VEN_No} - ${vendor.Name}`,
@@ -138,7 +139,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       { label: '作廢', value: '9' },
     ];
     // 申請人員、審核人員、結案人員 (共用人員下拉選單)
-    this.dropDownListService.queryUser_Name_DropDownList().pipe(untilDestroyed(this),
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this),
       map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
     ).subscribe(options => {
       this.userOptions = options;
@@ -154,7 +155,9 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       });
     })
   }
+  btnLoading = false;
   statusChange(rowData: ITLS52040Data, status: string) {
+    this.btnLoading = true;
     const body = {
       id: rowData.id,
       RJM_No: rowData.RJM_No,
@@ -162,7 +165,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       RJM_Status_Ori: rowData.RJM_Status,
       Rebate_No: rowData.Request_No || '',
     }
-    this.tls52040Service.updateStatusTLS52040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+    this.tls52040Service.updateStatusTLS52040(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.onSubmit(this.queryForm);
     });
@@ -173,14 +176,13 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
   // 管理編號
   opLoading = false;
   opForm = this.formBuilder.group({
-    queryNo: ['', [Validators.maxLength(20)]], // 商品管理編號/國際條碼/廠商貨號
+    queryNo: ['', [Validators.maxLength(20)]], // 管理編號
     PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
   });
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
-    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_MagNo', header: '管理編號', mainDataField: true },
   ];
   opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [
@@ -217,5 +219,15 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       this.opTotalRecords = results.TotalCount;
       this.opLoading = false;
     });
+  }
+  get disabledClose() {
+    return this.selectedItems.some(item => (item.RJM_Status !== POStatus.已審核) && (item.RJM_Status !== POStatus.部分驗收));
+  }
+
+  get selectedCount() {
+    return this.selectedItems.length;
+  }
+  print(rowData: ITLS52040Data[]) {
+    console.log('列印多筆事件:', rowData);
   }
 }

@@ -12,9 +12,6 @@ import { ApiResponse } from '../../system/auth.service'; // 請確認你的 ApiR
 
 /** 查詢 POS2016 資料表 (queryTLS52010) 的請求介面 */
 export interface IQueryTLS52010Request {
-  PageSize: number;
-  PageIndex: number;
-  SortBy?: SortMeta[];
   PO_No?: string; // 採購單號
   HOS_No?: string; // 醫院代號
   LOGO_No?: string; // LOGO代碼
@@ -232,9 +229,6 @@ export interface ISetCloseTLS52010Request {
   idList: number[]; // 要設定狀態的採購單 ID 列表
   PO_Status: string; // 要設定的狀態 (例如 "結案", "作廢" 等)
 }
-
-
-// --- 服務定義 ---
 
 @Injectable({
   providedIn: 'root',

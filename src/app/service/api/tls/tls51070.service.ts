@@ -41,6 +41,10 @@ export class Tls51070Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLS51070_PriceChangeRecord`, body);
   }
 
+  // excel匯入並且產生錯誤檔
+  uploadTLS51070(formData: FormData): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/uploadTLS51070`, formData);
+  }
 
   // ---圖片處理---
 

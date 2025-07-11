@@ -429,6 +429,12 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   onBatchDelete() {
+    // console.log('🔍 DEBUG 批次刪除檢查:');
+    // console.log('  selectedItems.length:', this.selectedItems.length);
+    // console.log('  editingRow:', this.editingRow);
+    // console.log('  editingDetail:', this.editingDetail);
+    // console.log('  selectedItems:', this.selectedItems);
+
     if (this.selectedItems.length === 0) {
       console.warn('請選擇要刪除的項目');
       return;

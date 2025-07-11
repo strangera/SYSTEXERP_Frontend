@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { finalize, map, Subject, takeUntil } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { ITLS52030Data, Tls52030Service } from '../../../service/api/tls/tls52030.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -28,7 +28,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     LOGO_NoList: [null], // 品牌代碼
     HOS_NoList: [null], // 倉庫代碼
     VEN_No: [''], // 廠商代號
-    PLU_MagNo: ['', [Validators.maxLength(20)]], // 管理編號
+    queryNo: ['', [Validators.maxLength(20)]], // 管理編號
     ODM_StatusList: [null, [Validators.required]], // 驗收狀態
     ODM_USR: [''], // 申請人員
     ODM_Date_Start: [''], // 申請日期起
@@ -46,7 +46,6 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   vendorOptions: IDropdownItem[] = []; // 廠商編號
   poStatusOptions: { label: string, value: string }[] = []; // 採購單狀態 (靜態資料)
   userOptions: { label: string, value: string }[] = []; // 申請人員、審核人員、結案人員
-  private destroy$ = new Subject<void>(); // 用於管理訂閱的生命週期
   data: ITLS52030Data[] = [];
   selectedItems: ITLS52030Data[] = [];
   columns: Column[] = [
@@ -119,18 +118,18 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   ngOnInit(): void {
     this.initializePage('TLS52030', 'TLS/TLS52030cru', this.queryForm, (f) => this.onSubmit(f));
     // 倉別 (HOS_No)
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this), takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
       this.warehouseOptions = response.Data;
     });
     // 品牌代碼 (LOGO_No)
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this), takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.brandOptions = response.Data.map(brand => ({
         ...brand,
         label: `${brand.No} - ${brand.Name}`,
       }));
     });
     // 廠商編號 (VEN_No)
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this), takeUntil(this.destroy$)).subscribe(response => {
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.vendorOptions = response.Data.map(vendor => ({
         ...vendor,
         label: `${vendor.VEN_No} - ${vendor.Name}`,
@@ -144,7 +143,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     ];
 
     // 申請人員、審核人員、結案人員 (共用人員下拉選單)
-    this.dropDownListService.queryUser_Name_DropDownList().pipe(untilDestroyed(this),
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this),
       map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
     ).subscribe(options => {
       this.userOptions = options;
@@ -180,14 +179,13 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   // 管理編號
   opLoading = false;
   opForm = this.formBuilder.group({
-    queryNo: ['', [Validators.maxLength(20)]], // 商品管理編號/國際條碼/廠商貨號
+    queryNo: ['', [Validators.maxLength(20)]], // 管理編號
     PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
   });
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
-    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_MagNo', header: '管理編號', mainDataField: true },
   ];
   opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [
@@ -224,5 +222,11 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
       this.opTotalRecords = results.TotalCount;
       this.opLoading = false;
     });
+  }
+  get selectedCount() {
+    return this.selectedItems.length;
+  }
+  print(rowData: ITLS52030Data[]) {
+    console.log('列印多筆事件:', rowData);
   }
 }

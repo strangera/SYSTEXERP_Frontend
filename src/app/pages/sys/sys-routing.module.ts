@@ -112,7 +112,6 @@ const routes: Routes = [
   { path: 'sysbq00cru', component: SYSBQ00CRUComponent }, // 簽核權限設定維護 CRU
   { path: 'sysbr00cru', component: SYSBR00CRUComponent }, // 縣市區域資料維護作業 CRU
   { path: 'sysbr10cru', component: SYSBR10CRUComponent }, // 佈告欄管理作業 CRU
-  { path: 'sysb400os', component: Sysb400OsComponent }, // 組織碼設定作業 OS
 ];
 
 @NgModule({

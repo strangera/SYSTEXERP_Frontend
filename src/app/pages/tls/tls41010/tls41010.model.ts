@@ -53,7 +53,6 @@ export const columns = [
   { field: 'ECR_Status', header: '收銀機狀態', visible: true, format: (value: string) => statusOptions.find(option => option.value === value)?.label || value },
   { field: 'ECR_Group', header: '群組', visible: false },
   { field: 'ECR_SubGroup', header: '次樓別', visible: false },
-  { field: 'ECR_AreaNo', header: '區域', visible: false },
   { field: 'ECR_LocNo', header: '位置編號', visible: true },
   { field: 'HOS_No', header: '倉庫編號', visible: true },
   { field: 'ECR_SAL_Type', header: '機台用途別', visible: true, format: (value: string) => salTypeOptions.find(option => option.value === value)?.label || value },

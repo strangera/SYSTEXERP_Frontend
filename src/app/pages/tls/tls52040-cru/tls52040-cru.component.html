@@ -24,16 +24,16 @@
         <app-input-number class="col-12 md:col-6 lg:col-4" label="合計金額" controlName="RJM_TotalBuyAmt"
           [control]="dataForm.controls.RJM_TotalBuyAmt" [submitted]="submitted" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人" controlName="RJM_USR_No" [options]="userOptions"
-          optionLabel="user_Name" optionValue="user_No" [control]="dataForm.controls.RJM_USR_No"
+          optionLabel="user_Name" optionValue="user_No" [control]="dataForm.controls.APPLY_USR_No"
           [submitted]="submitted" />
         <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateTimeOne" label="申請日期" controlName="RJM_Date"
-          [control]="dataForm.controls.RJM_Date" [submitted]="submitted" />
+          [control]="dataForm.controls.APPLY_Date" [submitted]="submitted" />
         <app-input-number class="col-12 md:col-6 lg:col-4" label="售價總計" controlName="RJM_TotalSaleAmt"
           [control]="dataForm.controls.RJM_TotalSaleAmt" [submitted]="submitted" />
         <app-input-textarea class="col-12" label="進貨驗收單說明" controlName="RJM_Remark"
           [control]="dataForm.controls.RJM_Remark" [submitted]="submitted" />
       </div>
-      <app-table dataKey="PO_No" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
+      <app-table dataKey="id" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
         (selectionChange)="selectedItems = $event" [showEdit]="false" [showDetail]="false" [showInsert]="true"
         (insert)="onShowDialog()" [showRowEdit]="true" (delete)="onDelete($event)" (rowEditSave)="onRowEditSave($event)"
         [showCaption]="isFormCreateable" [showReportMode]="false" [showManage]="!isFormReadable"
@@ -49,10 +49,10 @@
 
 <app-dialog [visible]="dialogVisible" header="選擇退貨單" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
   [disable]="selectedItemsDialog.length === 0" [height]="'500px'">
-  <app-table tableKey="tls52030DialogTable" dataKey="PO_No" [showReportMode]="false" [data]="dialogData"
+  <app-table tableKey="tls52030DialogTable" dataKey="CRN_No" [showReportMode]="false" [data]="dialogData"
     [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
     (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
-    [isRowSelectable]="isRowSelectable.bind(this)" [multiSortMeta]="[{ field: 'PO_No', order: 1 }]"
+    [isRowSelectable]="isRowSelectable.bind(this)" [multiSortMeta]="[{ field: 'CRN_No', order: 1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, dataForm);" [lazy]="true"
     [loading]="dialogLoading">
   </app-table>

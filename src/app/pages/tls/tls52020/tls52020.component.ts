@@ -125,7 +125,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
       { label: '作廢', value: '9' },
     ];
     // 申請人員、審核人員、結案人員 (共用人員下拉選單)
-    this.dropDownListService.queryUser_Name_DropDownList().pipe(map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
     ).pipe(untilDestroyed(this)).subscribe(options => {
       this.userOptions = options;
     });
@@ -179,14 +179,13 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   // 管理編號
   opLoading = false;
   opForm = this.formBuilder.group({
-    queryNo: ['', [Validators.maxLength(20)]], // 商品管理編號/國際條碼/廠商貨號
+    queryNo: ['', [Validators.maxLength(20)]], // 管理編號
     PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
   });
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
-    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_MagNo', header: '管理編號', mainDataField: true },
   ];
   opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [

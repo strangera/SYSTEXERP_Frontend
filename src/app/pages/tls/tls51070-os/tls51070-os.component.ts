@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, Column, formatDate, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 
@@ -76,7 +76,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
       { field: 'PLU_MagNo', header: '商品管理碼', editable: false, type: 'text' },
       { field: 'PLU_Name', header: '商品名稱', editable: false, type: 'text' },
       { field: 'Label_Qty', header: '標籤數量', editable: true, type: 'number' },
-      { field: 'PLU_SalePrc', header: '商品售價', editable: false, type: 'number' },
+      { field: 'PLU_SalePrc', header: '商品售價', editable: false, type: 'number'},
       { field: 'PLU_Unit', header: '商品單位', editable: false, type: 'text' },
       { field: 'PLU_OrgPLUNo', header: '廠商貨號', editable: false, type: 'text' },
       { field: 'PLU_No', header: '國際條碼', editable: false, type: 'text' },
@@ -103,18 +103,18 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
       { field: 'CAT_MName', header: '中分類', visible: true },
       { field: 'CAT_SName', header: '小分類', visible: true },
 
-      { field: 'PLU_OrderPrc_POS2004', header: '標準進價', visible: true },
-      { field: 'PLU_SalePrc_POS2004', header: '商品售價', visible: true },
+      { field: 'PLU_OrderPrc_POS2004', header: '標準進價', visible: true, format: formatAmount },
+      { field: 'PLU_SalePrc_POS2004', header: '商品售價', visible: true, format: formatAmount },
 
       //---變價歷程---
       { field: 'MAM_Date', header: '變價日期', visible: true,  format: formatDate},
       { field: 'MAM_NO', header: '變價單號', visible: true },
   
-      { field: 'PLU_SalePrc', header: '變價前售價', visible: true },
-      { field: 'MAM_UnitPrc', header: '變價後售價', visible: true },
+      { field: 'PLU_SalePrc', header: '變價前售價', visible: true, format: formatAmount },
+      { field: 'MAM_UnitPrc', header: '變價後售價', visible: true, format: formatAmount },
 
-      { field: 'PLU_OrderPrc', header: '變價前進價', visible: true },
-      { field: 'MAM_OrderPrc', header: '變價後進價', visible: true },
+      { field: 'PLU_OrderPrc', header: '變價前進價', visible: true, format: formatAmount },
+      { field: 'MAM_OrderPrc', header: '變價後進價', visible: true, format: formatAmount },
     ];
   
     // 展開式表格的載入狀態
@@ -226,6 +226,11 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
 
   // 匯出標籤檔
   exportLabel(){
+    if (!this.labelData || this.labelData.length === 0) {
+      this.messageService.errorBubble('尚未產生標籤資料，請先查詢後再匯出');
+      return;
+    }
+
     // 將 labelData 的每一筆物件複製一份，並移除 id 屬性
     const exportData = this.labelData.map(({ id, ...rest }) => rest);
     this.tls51070Service.exportLabel(exportData)
