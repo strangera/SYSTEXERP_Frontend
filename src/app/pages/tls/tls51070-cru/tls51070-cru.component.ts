@@ -32,17 +32,16 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   buttonID = 1; //預設在 基本資料標籤
 
   //2004廠商編號選擇後自動帶入預設到2020
-  // 品牌編號 ---PLULOGO 站存試算資料
+  
   // 新增 欄位PLU_PrnName 和  預設商品中文名稱 一樣 --ok
-
-  // 商品採購廠商 編號模糊查詢
-  // 廠商編號新增
-  // 刪除廠商編號 只能刪除不一樣的 廠商 (POS2020不能刪除POS2004對應到的廠商編號)
-
+  // 商品採購廠商 編號模糊查詢 --ok
+  // 廠商編號新增 --ok
+  // 刪除廠商編號 只能刪除不一樣的 廠商 (POS2020不能刪除POS2004對應到的廠商編號) --ok
   // login token自動帶出 分店編號 readonly --ok
   // 2004 最主要"PLU_No": [""], > 指定給 2005 多筆"PLU_No": [""], -- 新增時增加提示這樣使用者也不用輸入兩次 --ok
-  // 修改 標準進價 不要連動到 目前進價 --ok 新增重算的標準進價會另外送出，不會影響到舊的
+  // 修改 標準進價 不要連動到 目前進價 --ok 新增重算的標準進價會另外送出，不會影響到舊的 --ok
 
+  // 品牌編號 ---PLULOGO 站存試算資料
   // 標籤檔 新增 預覽 (規格書藍色字) > 然後再確認
   // 變價表單拆成 主資料 變價前後 組合
 
@@ -143,6 +142,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   pos2005Detail: POS2005Detail[] = [];
   pos2020Detail: POS2020Detail[] = [];
   img1001Detail: IMG1001Detail[] = [];
+  //---暫存品牌資料---
+  private initialLogoNo: string | null = null;
   // ---------國際條碼 (POS2005) 編輯表格 至少要一筆-------------------------------------------------------
   // 國際條碼編號	下拉
   POS2005Data: POS2005Detail[] = [];
