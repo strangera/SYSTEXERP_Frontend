@@ -38,7 +38,7 @@ export class SYSBR00Component extends BasicQueryPageComponent<any> implements On
 
   ngOnInit(): void {
     this.initializePage('SYSBR00', '/sys/sysbr00cru', this.queryForm);
-    this.handleQueryRestore(this.queryForm, QUERY_STORAGE_KEY, (form) => this.onSubmit(form));
+    
   }
 
  onSubmit(form: FormGroup): void {
@@ -90,24 +90,26 @@ this.navigateWithState(CRUDStatus.Edit, {
 });
 
 }
+onDelete(selectedItems: any[]): void {
+  if (!selectedItems.length) return;
 
-  onClearForm(): void {
-    this.queryForm.reset();
-  }
-  deleteRow(rows: any[]): void {
-  this.confirmationService.confirm({
-    header: '刪除資料',
-    message: '確定要刪除選取的縣市資料？',
-    icon: 'pi pi-exclamation-triangle',
-    accept: () => {
-      rows.forEach((row) => {
-        this.sysbr00Service.deleteCity(row.CITY_ID).subscribe(() => {
-          this.messageService.successBubble('刪除成功');
-          this.onSubmit(this.queryForm); // 重新查詢
-        });
-      });
+  const confirmed = window.confirm('是否確定刪除選取項目？');
+  if (!confirmed) return;
+
+  const cityNos = selectedItems.map(item => item.CITY_No); // ✅ 取得 CITY_No 陣列
+
+  this.sysbr00Service.deleteCities(cityNos).subscribe({
+    next: () => {
+      this.messageService.successBubble('刪除成功');
+      this.selectedItems = []; // ✅ 清空已選
+      this.onSubmit(this.queryForm); // ✅ 重新查詢
+    },
+    error: () => {
+      this.messageService.errorBubble('刪除失敗');
     },
   });
 }
+
+
 
 }

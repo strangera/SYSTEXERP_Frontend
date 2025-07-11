@@ -27,9 +27,11 @@ queryDistricts(payload: { CITY_No: string }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/GetCity`, data)
   }
   // 刪除縣市
-  deleteCity(cityId: number): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/DeleteSYS2000`, cityId); // 直接傳遞 cityId
-  }
+
+deleteCities(cityNos: string[]): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/DeleteSYS2000`, cityNos);
+}
+
   // 修改縣市
   updateCity(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/UpdateSYS2000`, data);
@@ -39,13 +41,14 @@ queryDistricts(payload: { CITY_No: string }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/InsertSYS2000`, data);
   }
   // 刪除區域
-  deleteArea(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/DeleteSYS2100`, data);
-  }
+deleteAreas(data: { CITY_No: string; AREA_No: string }[]): Observable<any> {
+  return this.http.post(`${this.apiUrl}/DeleteSYS2100`, data);
+}
   // 修改區域
-  updateArea(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/UpdateArea`, data);
-  }
+updateArea(data: { CITY_No: string; AREA_No: string; AREA_Name: string; POST_No: string }): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/UpdateArea`, data);
+}
+
   // 新增區域
 insertArea(data: any): Observable<any> {
   return this.http.post<any>(`${this.apiUrl}/InsertSYS2100`, data);

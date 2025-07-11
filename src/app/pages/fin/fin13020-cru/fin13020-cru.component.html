@@ -182,7 +182,7 @@
 </div>
 <div class="card">
   <app-table
-    tableKey="FIN13020"  
+    tableKey="FIN13020"
     [columns]="columns"
     dataKey="PUR_RepYYYYMM"
     [multiSortMeta]="[{ field: 'PUR_RepYYYYMM', order: 1 }]"
@@ -190,21 +190,21 @@
     [loading]="loading"
     (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit(dataForm)"
     [insertRowData]="true"
-      [defaultInsertData]="{
-    ProductName: '',
-    Quantity: 0,
-    UnitPrice: 0,
-    TotalAmount: 0
-  }"
-   [showInsert]="true"
-   [showRowEdit]="true"
-    [showEdit]="false"      
-  [showDetail]="false"    
-  [showReportMode]="false" 
-      [showDelete]="false"
+    [defaultInsertData]="{
+      ProductName: '',
+      Quantity: 0,
+      UnitPrice: 0,
+      TotalAmount: 0,
+    }"
+    [showInsert]="true"
+    [showRowEdit]="true"
+    [showEdit]="false"
+    [showDetail]="false"
+    [showReportMode]="false"
+    [showDelete]="false"
     [showCheckBox]="false"
     [showPaginator]="false"
-     [(data)]="detailRows"
-   (fieldChange)="onFieldChange($event)" 
+    [(data)]="detailRows"
+    (fieldChange)="onFieldChange($event)"
   ></app-table>
 </div>

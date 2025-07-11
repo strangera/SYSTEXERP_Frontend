@@ -48,18 +48,20 @@
 </p-accordion>
 <div class="card">
   <app-table
-    [tableKey]="'sysbr00'"
-    dataKey="CITY_ID"
-    [multiSortMeta]="[{ field: 'CITY_No', order: 1 }]"
-    [columns]="columns"
+    tableKey="SYSBR00"
     [data]="data"
-    [loading]="loading"
-    [showCheckBox]="true"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
+    [columns]="columns"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
+    (delete)="onDelete($event)"
     [showCheckBox]="true"
-    (delete)="deleteRow($event)"
+    dataKey="CITY_No"
+    [multiSortMeta]="[{ field: 'CITY_No', order: 1 }]"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [loading]="loading"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
   ></app-table>
 </div>

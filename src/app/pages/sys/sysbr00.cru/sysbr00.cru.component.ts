@@ -32,21 +32,24 @@ columns: any[] = [
     field: 'AREA_No',
     header: '地區代號',
     type: 'input',
-    validate: [Validators.required, Validators.maxLength(4)],
+    
+   
   },
   {
     field: 'AREA_Name',
     header: '地區名稱',
     type: 'input',
-    validate: [Validators.required, Validators.maxLength(12)],
+   
   },
   {
     field: 'POST_No',
     header: '郵遞區號',
     type: 'input',
-    validate: [Validators.required, Validators.maxLength(6)],
-  },
+   
+  }
 ];
+
+
 
   districtForm = this.formBuilder.nonNullable.group({
     AREA_No: ['', [Validators.required, Validators.maxLength(4)]],
@@ -102,24 +105,34 @@ initDistrict(): void {
     return;
   }
 
-
   const request = { CITY_No: cityNo };
 
   this.SYSBR00Service.queryDistricts(request).subscribe({
     next: (res) => {
       this.district = res.Data || [];
-      this.data = this.district.map((d: any) => ({ ...d, id: uuidv4() }));
+
+      // ✅ 用 CITY_No + AREA_No 組成唯一 ID
+      this.data = this.district.map((d: any) => ({
+        ...d,
+        id: `${d.CITY_No}-${d.AREA_No}`
+      }));
 
       this.cdr.detectChanges();
 
       this.districtForm.controls['AREA_No'].setValidators([
-        Validators.required, Validators.maxLength(4), this.duplicateValidator(this.data.map(d => d.AREA_No))
+        Validators.required,
+        Validators.maxLength(4),
+        this.duplicateValidator(this.data.map(d => d.AREA_No))
       ]);
       this.districtForm.controls['AREA_Name'].setValidators([
-        Validators.required, Validators.maxLength(12), this.duplicateValidator(this.data.map(d => d.AREA_Name))
+        Validators.required,
+        Validators.maxLength(12),
+        this.duplicateValidator(this.data.map(d => d.AREA_Name))
       ]);
       this.districtForm.controls['POST_No'].setValidators([
-        Validators.required, Validators.maxLength(6), this.duplicateValidator(this.data.map(d => d.POST_No))
+        Validators.required,
+        Validators.maxLength(6),
+        this.duplicateValidator(this.data.map(d => d.POST_No))
       ]);
       this.districtForm.updateValueAndValidity();
     },
@@ -129,6 +142,7 @@ initDistrict(): void {
     }
   });
 }
+
 
 
 
@@ -176,39 +190,53 @@ onAddDistrict(form: FormGroup): void {
 
 onRowEditSave(event: any): void {
   const cityNo = this.dataForm.get('CITY_No')?.value?.trim();
-  const body = {
-    AREA_ID: event.newData.AREA_ID,
-    AREA_No: event.newData.AREA_No?.trim(),
-    AREA_Name: event.newData.AREA_Name?.trim(),
-    POST_No: event.newData.POST_No?.trim(),
-    CITY_No: cityNo
-  };
+  const areaNo = event.newData.AREA_No?.trim();
+  const areaName = event.newData.AREA_Name?.trim();
+  const postNo = event.newData.POST_No?.trim();
 
-  if (!body.CITY_No) {
-    this.messageService.errorBubble('缺少 CITY_No，無法儲存區域資料');
+  if (!cityNo || !areaNo) {
+    this.messageService.errorBubble('CITY_No 與 AREA_No 為必填，無法儲存區域資料');
     return;
   }
 
-  this.SYSBR00Service.updateArea(body).subscribe({
+  const payload = {
+    CITY_No: cityNo,
+    AREA_No: areaNo,
+    AREA_Name: areaName,
+    POST_No: postNo
+  };
+
+  this.SYSBR00Service.updateArea(payload).subscribe({
     next: () => {
       this.messageService.successBubble('更新成功');
-      this.initDistrict();
+      this.initDistrict(); // 重新查詢列表
     },
-    error: () => this.messageService.errorBubble('更新失敗')
+    error: () => {
+      this.messageService.errorBubble('更新失敗');
+    }
   });
 }
 
 
-  onDelete(rows: any[]): void {
-    const deletes = rows.map(row => this.SYSBR00Service.deleteArea(row.AREA_ID));
-    forkJoin(deletes).subscribe({
-      next: () => {
-        this.messageService.successBubble('刪除成功');
-        this.initDistrict();
-      },
-      error: () => this.messageService.errorBubble('刪除失敗')
-    });
-  }
+onDelete(rows: any[]): void {
+  if (!rows.length) return;
+
+  const payload = rows.map(item => ({
+    CITY_No: item.CITY_No,
+    AREA_No: item.AREA_No,
+  }));
+
+  this.SYSBR00Service.deleteAreas(payload).subscribe({
+    next: () => {
+      this.messageService.successBubble('刪除成功');
+      this.initDistrict(); // 重新查詢
+    },
+    error: () => {
+      this.messageService.errorBubble('刪除失敗');
+    },
+  });
+}
+
 
 onSubmit(form: FormGroup): void {
   this.handleSubmit(form, () => {
