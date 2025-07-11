@@ -648,7 +648,6 @@ const routes: Routes = [
   { path: 'fin73040', component: FIN73040Component },  // 零用金撥補明細表
   { path: 'fin11210', component: FIN11210Component },  // 電子發票參數維護作業
   { path: 'fin11210cru', component: FIN11210CruComponent },
-
 ];
 
 @NgModule({
