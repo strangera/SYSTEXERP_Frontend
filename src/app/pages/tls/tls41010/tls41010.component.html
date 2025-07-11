@@ -23,12 +23,15 @@
         <hr />
         <div class="grid p-fluid">
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="啟用日期"
-            [startControl]="queryForm.controls.ECR_ActiveDate" [endControl]="queryForm.controls.ECR_ActiveDate"
-            calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
+            [startControl]="queryForm.controls.ECR_ActiveDateStart" [endControl]="queryForm.controls.ECR_ActiveDateEnd"
+            calendarType="dateRange" [submitted]="submitted">
+          </app-calendar-range>
 
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="停用日期"
-            [startControl]="queryForm.controls.ECR_CloseDate" [endControl]="queryForm.controls.ECR_CloseDate"
-            calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
+            [startControl]="queryForm.controls.ECR_CloseDateStart" [endControl]="queryForm.controls.ECR_CloseDateEnd"
+            calendarType="dateRange" [submitted]="submitted">
+          </app-calendar-range>
+
 
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="收銀機狀態" controlName="ECR_Status"
             [options]="statusOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_Status"

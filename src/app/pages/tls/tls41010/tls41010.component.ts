@@ -26,10 +26,10 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     ECR_Name: ['', [Validators.maxLength(20)]],
     ECR_TLT_No: ['', [Validators.maxLength(20)]],
     ECR_TLT_Name: ['', [Validators.maxLength(60)]],
-    ECR_ActiveDate: "",
-    ECR_CloseDate: "",
-    ECR_CloseDateStart: "",
-    ECR_CloseDateEnd: "",
+    ECR_ActiveDateStart: [null],
+    ECR_ActiveDateEnd: [null],
+    ECR_CloseDateStart: [null],
+    ECR_CloseDateEnd: [null],
     ECR_Status: ['A'],
     ECR_SubGroup: ['', [Validators.maxLength(20)]],
     ECR_LocNo: ['', [Validators.maxLength(10)]],
@@ -158,13 +158,17 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = true;
-      this.tls41010Service.queryTLS41010(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe((res) => {
-        this.data = res.Data;
-        this.totalRecords = res.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, frm.value);
-      });
+
+      this.tls41010Service.queryTLS41010(frm.getRawValue())
+        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this))
+        .subscribe((res) => {
+          this.data = res.Data;
+          this.totalRecords = res.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm);
+        });
     });
   }
+
 
 }
