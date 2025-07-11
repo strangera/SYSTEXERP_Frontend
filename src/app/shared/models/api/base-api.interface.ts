@@ -31,3 +31,8 @@ export interface ApiMeta {
   Timestamp: string;   // 例如 ISO 格式時間
   RequestId: string;   // 後端可回傳唯一追蹤編號
 }
+
+export interface DropdownOption {
+  No: string; // 顯示的文字
+  Name: string; // 實際的值
+}

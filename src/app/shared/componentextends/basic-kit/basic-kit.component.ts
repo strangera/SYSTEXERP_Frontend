@@ -5,11 +5,15 @@ export class BasicKitComponent {
   isRequired = false; // 控制 * 顯示或隱藏
   maxLength: number | null = null; // 設定最長輸入數
   minLength: number | null = null; // 設定最短輸入數
+  isNumberOnly = false; // 檢查是否只能輸入數字
+
   updateControlState(control1: FormControl, control2?: FormControl) {
     this.checkRequiredValidator(control1, control2);
     this.checkIntLengthValidator(control1);
+    this.checkNumberValidator(control1); // 加入數字驗證檢查
     this.setPlaceholder(control1);
   }
+
   // Required
   // ----------------------------------------------------------------
   // 檢查是否必填 - 單一欄位
@@ -20,6 +24,7 @@ export class BasicKitComponent {
       this.isRequired = control1?.hasValidator(Validators.required) ?? false;
     }
   }
+
   // 檢查是否有長度限制
   // ----------------------------------------------------------------
   checkIntLengthValidator(control: AbstractControl): void {
@@ -35,12 +40,32 @@ export class BasicKitComponent {
     this.minLength = "minlength" in minLengthErrors ? minLengthErrors['minlength'].requiredLength : null;
   }
 
+  // 檢查是否為數字驗證器
+  // ----------------------------------------------------------------
+  checkNumberValidator(control: AbstractControl): void {
+    const validator = control.validator;
+    if (validator === null) {
+      this.isNumberOnly = false;
+      return;
+    }
+
+    // 檢查是否有 invalidNumber 錯誤 
+    const invalidNumberErrors = validator(new FormControl('b')) ?? {};
+    if ("invalidNumber" in invalidNumberErrors) {
+      this.isNumberOnly = true;
+      return;
+    }
+
+    this.isNumberOnly = false;
+  }
+
   // Placeholder
   // ----------------------------------------------------------------
   setPlaceholder(control: FormControl) {
     if (this.placeholder) {
       return;
     }
+
     this.placeholder = '請輸入...';
     const placeholderParts: string[] = [];
 
@@ -53,6 +78,12 @@ export class BasicKitComponent {
     }
     if (this.minLength) {
       placeholderParts.push(`最少${this.minLength}個字`);
+    }
+
+    // 如果是數字placeholder
+    if (this.isNumberOnly) {
+      this.placeholder = '請輸入數字';
+      return;
     }
 
     this.placeholder = placeholderParts.join(', ');
