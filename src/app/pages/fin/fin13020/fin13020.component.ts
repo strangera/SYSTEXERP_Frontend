@@ -26,17 +26,17 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     TXN_Ret_NoStart: [null], // 退出/折讓單號(起)
     TXN_Ret_NoEnd: [null],   // 退出/折讓單號(迄)
     GUI_Track: [null], // 字軌
-    PUR_GUINoStart: [null],
-    PUR_GUINoEnd: [null],
-    PUR_GUIDateStart: [null], // 領用日期(起)
-    PUR_GUIDateEnd: [null],   // 領用日期(迄)
-    PUR_VoucherType: [null], // 發票狀態
-    PUR_RepYYYYMM: [null], // 發票年月
+    InvoiceNumberStart: [null],
+    InvoiceNumberEnd: [null],
+    InvoiceDateStart: [null], // 領用日期(起)
+    InvoiceDateEnd: [null],   // 領用日期(迄)
+    InvoiceType: [null], // 發票狀態
+    INV_DeclareYM: [null], // 發票年月
     Source_Doc_NoStart: [], // 憑證單號(起)
     Source_Doc_NoEnd: [],   // 憑證單號(迄)
     Voucher_NoStart: [], // 發票號碼(起)
     Voucher_NoEnd: [],   // 發票號碼(迄)
-    ...createPaginationConfig([{ field: 'PUR_RepYYYYMM', order: 1 }])
+    ...createPaginationConfig
   });
 
   data: any[] = [];
@@ -45,7 +45,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
   columns: any[] = [
     { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },   
     { field: 'PUR_GUINo', header: '字軌', visible: true }, //
-    { field: 'PUR_GUINo_Start', header: '發票號碼', visible: true },//
+    { field: 'InvoiceNumber', header: '發票號碼', visible: true },//
     { field: 'PUR_GUIDate', header: '退出/折讓日期', visible: true,format: this.formatDateFromBackend   },
     { field: 'PUR_VoucherType', header: '發票格式', visible: true },
     { field: 'Credit_Type', header: '區別', visible: true, format: this.formatCreditType },  //折讓/退出

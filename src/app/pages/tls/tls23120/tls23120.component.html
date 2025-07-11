@@ -109,6 +109,16 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+  <app-radiobutton
+    class="col-12"
+    label="顯示大分類"
+    groupname="show_bus_type"
+    [control]="queryForm.controls.ShowBusType"
+    [options]="WhetherOptions"
+    [submitted]="submitted"
+  ></app-radiobutton>
+</div>
         </div>
       </form>
       <div class="col-12 md:col-6 lg:col-4">
