@@ -1,21 +1,26 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
-import { TLS41010Service, TLS41010Data } from '../../../service/api/tls/tls41010.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { columns, guiTypeOptions, salTypeOptions, sernoTypeOptions, statusOptions, typeOptions } from './tls41010.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { columns, guiTypeOptions, salTypeOptions, sernoTypeOptions, statusOptions, TLS41010Data, typeOptions } from './tls41010.model';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { HttpClient } from '@angular/common/http';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
+import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
+
+
+
 
 @Component({
   selector: 'app-tls41010',
   templateUrl: './tls41010.component.html',
 })
 export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> implements OnInit {
+  columns: Column[] = columns;
   queryForm = this.formBuilder.group({
     ECR_No: ['', [Validators.maxLength(10)]],      // 收銀機號
     ECR_Name: ['', [Validators.maxLength(20)]],
@@ -37,6 +42,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     ECR_IP: ['', [Validators.maxLength(20)]],
     ECR_SrvIP: ['', [Validators.maxLength(20)]],
     ECR_TmplNo: ['', [Validators.maxLength(8)]],
+
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
   statusOptions = statusOptions;
@@ -44,51 +50,23 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   guiTypeOptions = guiTypeOptions;
   salTypeOptions = salTypeOptions;
   sernoTypeOptions = sernoTypeOptions;
-
   data: TLS41010Data[] = [];
   selectedItems: TLS41010Data[] = [];
   totalRecords = 0;
-  columns = columns;
   floorOptions: any[] = [];
+  ECR_TmplNo_Option: IDropdownItem[] = [];
 
   constructor(
     private tls41010Service: TLS41010Service,
     private locationOptionsService: LocationOptionsService,
     private tls46020Service: TLS46020Service,
     private tls11010Service: Tls11010Service,
+    private dropDownListService: DropDownListService,
     private http: HttpClient
   ) {
     super();
   }
 
-
-  ngOnInit(): void {
-    this.initializePage('TLS41010', 'TLS/TLS41010cru', this.queryForm, (form) => this.onSubmit(form));
-    this.queryForm.get('ECR_SrvIP')?.valueChanges.subscribe((ip) => {
-      if (ip) {
-        this.callOtherApi(ip);
-      }
-    });
-    this.locationOptionsService.getFloorOptions().subscribe({
-      next: (res) => {
-        this.floorOptions = res.map((item: any) => ({
-          label: item.name || item.FLOOR_NAME || item.label,
-          value: item.code || item.FLOOR_NO || item.value
-        }));
-      },
-      error: () => this.messageService.errorBubble('載入樓層選單失敗')
-    });
-    this.queryForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
-      if (tmplNo) {
-        this.callTLS46020Api(tmplNo);
-      }
-    });
-    this.queryForm.get('ECR_LocNo')?.valueChanges.subscribe((locNo) => {
-      if (locNo) {
-        this.callTls11010Api(locNo);
-      }
-    });
-  }
   callOtherApi(ip: string) {
     const apiUrl = `http://${ip}/TLS0000/TLS4000/queryTLS46010`;
     const requestData = {
@@ -141,29 +119,56 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     });
   }
 
-
+  ngOnInit(): void {
+    this.initializePage('TLS41010', 'TLS/TLS41010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.queryForm.get('ECR_SrvIP')?.valueChanges.subscribe((ip) => {
+      if (ip) {
+        this.callOtherApi(ip);
+      }
+    });
+    this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(option => {
+      this.ECR_TmplNo_Option = option.Data;
+    })
+    this.queryForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
+      if (tmplNo) {
+        this.callTLS46020Api(tmplNo);
+      }
+    });
+    this.locationOptionsService.getFloorOptions().subscribe({
+      next: (res) => {
+        this.floorOptions = res.map((item: any) => ({
+          label: item.name || item.FLOOR_NAME || item.label,
+          value: item.code || item.FLOOR_NO || item.value
+        }));
+      },
+      error: () => this.messageService.errorBubble('載入樓層選單失敗')
+    });
+    this.queryForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
+      if (tmplNo) {
+        this.callTLS46020Api(tmplNo);
+      }
+    });
+    this.queryForm.get('ECR_LocNo')?.valueChanges.subscribe((locNo) => {
+      if (locNo) {
+        this.callTls11010Api(locNo);
+      }
+    });
+  }
 
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = true;
-      this.tls41010Service.queryTLS41010(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe((res) => {
-        this.data = res.Data;
-        this.totalRecords = res.TotalCount;
-      });
+
+      this.tls41010Service.queryTLS41010(frm.getRawValue())
+        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this))
+        .subscribe((res) => {
+          this.data = res.Data;
+          this.totalRecords = res.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm);
+        });
     });
   }
 
 
-  onDelete(data: TLS41010Data | TLS41010Data[]): void {
-    const deleteIds = Array.isArray(data) ? data.map((d) => d.id) : [data.id];
-    if (deleteIds.length === 0) return;
-    this.loading = true;
-    this.tls41010Service.deleteTLS41010(deleteIds).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe({
-      next: () => {
-        this.messageService.successBubble('刪除成功');
-        this.onSubmit(this.queryForm);
-      },
-    });
-  }
 }

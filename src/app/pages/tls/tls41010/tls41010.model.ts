@@ -1,6 +1,7 @@
-import { formatDate, formatDateTime } from "../../../shared/componentkit/table/table.model";
+// import { formatDate, formatDateTime } from "../../../shared/componentkit/table/table.model";
 
-// 狀態：A=啟用、C=停用、S=強制停用、T=訓練
+import { Column } from "../../../shared/componentkit/table/table.model";
+
 export const statusOptions = [
   { label: '啟用', value: 'A' },
   { label: '停用', value: 'C' },
@@ -8,7 +9,6 @@ export const statusOptions = [
   { label: '訓練', value: 'T' },
 ];
 
-// 機台類型：1=集中機台、2=專櫃機台、5=離線機台、7=它社機台
 export const typeOptions = [
   { label: '集中機台(統收)', value: '1' },
   { label: '專櫃機台(自收)', value: '2' },
@@ -16,14 +16,12 @@ export const typeOptions = [
   { label: '它社機台', value: '7' },
 ];
 
-// 發票類別：00=不開發票、03=二聯式發票、07=電子發票
 export const guiTypeOptions = [
   { label: '不開發票', value: '00' },
   { label: '二聯式收銀機發票', value: '03' },
   { label: '電子發票', value: '07' },
 ];
 
-// 機台用途別：空白=商場、PKNG=停車場、APP=會員APP、CPN=環友票券
 export const salTypeOptions = [
   { label: '商場收銀機台', value: '' },
   { label: '停車場機台', value: 'PKNG' },
@@ -31,134 +29,288 @@ export const salTypeOptions = [
   { label: '環友票券系統', value: 'CPN' },
 ];
 
-// 交易序號模式，1=循環使用、2=每日重計(預設值)、3=每月重計
 export const sernoTypeOptions = [
   { label: '循環使用', value: '1' },
   { label: '每日重計', value: '2' },
   { label: '每月重計', value: '3' },
 ];
 
-export const columns = [
+export interface TLS41010QueryParams {
+  PageSize?: number;
+  PageIndex?: number;
+  SortBy?: { field: string; order: number }[];
+  ECR_No?: string;
+  ECR_Name?: string;
+  ECR_TLT_No?: string;
+  ECR_TLT_Name?: string;
+  ECR_ActiveDateStart?: string;
+  ECR_ActiveDateEnd?: string;
+  ECR_CloseDateStart?: string;
+  ECR_CloseDateEnd?: string;
+  ECR_Status?: string;
+  ECR_AreaNo?: string;
+  ECR_SubGroup?: string;
+  ECR_LocNo?: string;
+  ECR_Type?: string;
+  ECR_SAL_Type?: string;
+  ECR_GUI_Type?: string;
+  ECR_USR_No?: string;
+  ECR_USR_Name?: string;
+  ECR_ComName?: string;
+  ECR_IP?: string;
+  ECR_SrvIP?: string;
+  ECR_TmplNo?: string;
+}
+
+export interface TLS41010Data {
+  id: number;
+  SYS_StoreNo: string;
+  ECR_No: string;
+  ECR_Name: string;
+  ECR_Type: string;
+  ECR_TLT_No: string;
+  ECR_TLT_Name: string;
+  ECR_USR_No: string;
+  ECR_USR_Name: string;
+  ECR_ActiveDate: string;
+  ECR_ExpireDate: string;
+  ECR_CloseDate: string;
+  ECR_Status: string;
+  ECR_Group: string;
+  ECR_SubGroup: string;
+  ECR_AreaNo: string;
+  ECR_LocNo: string;
+  HOS_No: string;
+  ECR_SAL_Type: string;
+  ECR_ComName: string;
+  ECR_IP: string;
+  ECR_SrvIP: string;
+  ECR_TmplNo: string;
+  ECR_SernoType: string;
+  ECR_GUI_Type: string;
+  ECR_TimeTickInvl: number;
+  ECR_Interval: number;
+  ECR_MaxQty: number;
+  ECR_MaxAmt: number;
+  ECR_MaxItemAmt: number;
+  ECR_MaxDisc: number;
+  ECR_EdcTimeout: number;
+  ECR_EdcSettle: string;
+  ECR_ForceInput: string;
+  ECR_CustCntEntry: string;
+  ECR_CustTypeEntry: string;
+  ECR_ClerkEntry: string;
+  ECR_ForceMember: string;
+  ECR_BoxReqCode: string;
+  ECR_SelfReport: string;
+  ECR_SaleRpt1: string;
+  ECR_SaleRpt2: string;
+  ECR_SaleRpt3: string;
+  ECR_SaleRpt4: string;
+  ECR_SaleRpt5: string;
+  ECR_SaleRpt6: string;
+  ECR_SaleRpt7: string;
+  ECR_SaleRpt8: string;
+  ECR_SaleRpt9: string;
+  ECR_SaleRpt10: string;
+  ECR_PcashValid: string;
+  ECR_PickUpValid: string;
+  ECR_ReprintGUI: string;
+  ECR_PrnLogo: string;
+  ECR_Logo1: string;
+  ECR_Logo2: string;
+  ECR_Logo3: string;
+  ECR_Logo4: string;
+  ECR_Logo5: string;
+  ECR_Logo6: string;
+  ECR_VoidTxn: string;
+  ECR_VoidRstDay: number;
+  ECR_CreditNote: string;
+  ECR_GUI_PeriodQty: number;
+  ECR_GUI_MinQty: number;
+  ECR_SettleDD: string;
+  ECR_SettleHHNN: string;
+  ECR_KBLevel: string;
+  ECR_KBType: string;
+  ECR_Scanner: string;
+  ECR_ScannerCom: number;
+  ECR_ScrType: string;
+  ECR_CD: string;
+  ECR_CDCom: number;
+  ECR_ExtScr: string;
+  ECR_ExtScrCom: number;
+  ECR_GUIPrn: string;
+  ECR_GUICom: number;
+  ECR_SlipPrn: string;
+  ECR_SlipPrnCom: number;
+  ECR_LablePrn: string;
+  ECR_LablePrnCom: number;
+  ECR_EDC: string;
+  ECR_EDCCom: number;
+  ECR_EDC2: string;
+  ECR_EDC2Com: number;
+  ECR_EDC3: string;
+  ECR_EDC3Com: number;
+  ECR_ElecSVCrdA: string;
+  ECR_ElecSVCrdACom: number;
+  ECR_ElecSVCrdB: string;
+  ECR_ElecSVCrdBCom: number;
+  ECR_ElecSVCrdC: string;
+  ECR_ElecSVCrdCCom: number;
+  ECR_ElecPay: string;
+  ECR_ElecPayCom: number;
+  ECR_Drawer: string;
+  ECR_DrawerCom: number;
+  ECR_Device1Name: string;
+  ECR_Device1Com: number;
+  ECR_Device2Name: string;
+  ECR_Device2Com: number;
+  ECR_Device3Name: string;
+  ECR_Device3Com: number;
+  ECR_Device4Name: string;
+  ECR_Device4Com: number;
+  ECR_Device5Name: string;
+  ECR_Device5Com: number;
+  ECR_Device6Name: string;
+  ECR_Device6Com: number;
+  ECR_Device7Name: string;
+  ECR_Device7Com: number;
+  ECR_Device8Name: string;
+  ECR_Device8Com: number;
+  ECR_Device9Name: string;
+  ECR_Device9Com: number;
+  ECR_Device10Name: string;
+  ECR_Device10Com: number;
+  CRT_Date: string;
+  CRT_USR_No: string;
+  CRT_USR_Name: string;
+  UPD_Date: string;
+  UPD_USR_No: string;
+  UPD_USR_Name: string;
+}
+
+export const columns: Column[] = [
   { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: true },
   { field: 'ECR_No', header: '收銀機號', visible: true },
   { field: 'ECR_Name', header: '收銀機名稱', visible: true },
-  { field: 'ECR_Type', header: '機台類型', visible: true, format: (value: string) => typeOptions.find(option => option.value === value)?.label || value },
+  { field: 'ECR_Type', header: '機台類型', visible: true },
   { field: 'ECR_TLT_No', header: '機台所屬專櫃編號', visible: true },
   { field: 'ECR_TLT_Name', header: '機台所屬專櫃名稱', visible: true },
   { field: 'ECR_USR_No', header: '機台所屬收銀員', visible: true },
   { field: 'ECR_USR_Name', header: '機台所屬收銀員姓名', visible: true },
-  { field: 'ECR_ActiveDate', header: '啟用日期', visible: true, format: formatDate },
-  { field: 'ECR_ExpireDate', header: '到期日期', visible: true, format: formatDate },
-  { field: 'ECR_CloseDate', header: '停用日期', visible: true, format: formatDate },
-  { field: 'ECR_Status', header: '收銀機狀態', visible: true, format: (value: string) => statusOptions.find(option => option.value === value)?.label || value },
-  { field: 'ECR_Group', header: '群組', visible: false },
-  { field: 'ECR_SubGroup', header: '次樓別', visible: false },
+  { field: 'ECR_ActiveDate', header: '啟用日期', visible: true },
+  { field: 'ECR_ExpireDate', header: '到期日期', visible: true },
+  { field: 'ECR_CloseDate', header: '停用日期', visible: true },
+  { field: 'ECR_Status', header: '收銀機狀態', visible: true },
+  { field: 'ECR_Group', header: '群組', visible: true },
+  { field: 'ECR_SubGroup', header: '次樓別', visible: true },
+  { field: 'ECR_AreaNo', header: '區域', visible: true },
   { field: 'ECR_LocNo', header: '位置編號', visible: true },
   { field: 'HOS_No', header: '倉庫編號', visible: true },
-  { field: 'ECR_SAL_Type', header: '機台用途別', visible: true, format: (value: string) => salTypeOptions.find(option => option.value === value)?.label || value },
+  { field: 'ECR_SAL_Type', header: '機台用途別', visible: true },
   { field: 'ECR_ComName', header: '收銀機電腦名稱', visible: true },
   { field: 'ECR_IP', header: '收銀機網路IP', visible: true },
-  { field: 'ECR_SrvIP', header: '收銀機後台主機(POSServer)IP', visible: true },
+  { field: 'ECR_SrvIP', header: '收銀機後台主機IP', visible: true },
   { field: 'ECR_TmplNo', header: '周邊設定模版編號', visible: true },
-  { field: 'ECR_SernoType', header: '交易序號模式', visible: true, format: (value: string) => sernoTypeOptions.find(option => option.value === value)?.label || value },
-  { field: 'ECR_GUI_Type', header: '發票使用類別', visible: true, format: (value: string) => guiTypeOptions.find(option => option.value === value)?.label || value },
-  { field: 'ECR_TimeTickInvl', header: '系統對時間隔(秒)', visible: false },
-  { field: 'ECR_Interval', header: '上下傳異動檔間隔(秒)', visible: false },
-  { field: 'ECR_MaxQty', header: '單筆交易數量上限', visible: false },
-  { field: 'ECR_MaxAmt', header: '單筆交易金額上限', visible: false },
-  { field: 'ECR_MaxItemAmt', header: '單一明細金額上限', visible: false },
-  { field: 'ECR_MaxDisc', header: '單筆交易最大折扣比率限制', visible: false },
-  { field: 'ECR_EdcTimeout', header: '信用卡刷卡機連線時限(秒)', visible: false },
-  { field: 'ECR_EdcSettle', header: '信用卡刷卡機連動日結', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_ForceInput', header: '是否強制輸入付款金額', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_CustCntEntry', header: '是否輸入來客數', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_CustTypeEntry', header: '是否輸入客層數', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_ClerkEntry', header: '是否強制輸入營業員', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_ForceMember', header: '是否強制輸入會員編號', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_BoxReqCode', header: '開抽屜是否輸入密碼', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_SelfReport', header: '是否執行自我報帳', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_SaleRpt1', header: '是否列印收銀員交班表', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_SaleRpt2', header: '是否列印收銀機財務報表', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_SaleRpt3', header: '是否列印時段銷售報表', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_SaleRpt4', header: '是否列印部門銷售報表', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_SaleRpt5', header: '是否列印單品銷售報表', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_SaleRpt6', header: '是否列印銷貨明細表', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_SaleRpt7', header: '是否列印作廢明細表', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_SaleRpt8', header: '是否列印自我報帳(現額報告)帳條', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_SaleRpt9', header: '是否列印保全現金帳條(現金明細表)', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_SaleRpt10', header: '保留', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_PcashValid', header: '零用金是否需要認證', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_PickUpValid', header: '中途取現是否需要認證', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_ReprintGUI', header: '是否允許執行補印發票', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_PrnLogo', header: '是否列印商標', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_Logo1', header: '商標1(店名)', visible: false },
-  { field: 'ECR_Logo2', header: '商標2(地址)', visible: false },
-  { field: 'ECR_Logo3', header: '商標3(電話)', visible: false },
-  { field: 'ECR_Logo4', header: '商標4(統一編號)', visible: false },
-  { field: 'ECR_Logo5', header: '商標5', visible: false },
-  { field: 'ECR_Logo6', header: '商標6', visible: false },
-  { field: 'ECR_VoidTxn', header: '是否允許作廢交易', visible: true, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_VoidRstDay', header: '作廢交易限制天數', visible: false },
-  { field: 'ECR_CreditNote', header: '是否允許開立折讓單', visible: false, format: (value: string) => value === 'Y' ? '是' : '否' },
-  { field: 'ECR_GUI_PeriodQty', header: '機台每期電子發票預設配號數量', visible: false },
-  { field: 'ECR_GUI_MinQty', header: '機台電子發票最小安全存量', visible: false },
-  { field: 'ECR_SettleDD', header: '清機提示日期', visible: false, format: (value: string) => value === 'T' ? '當日' : '隔天' },
-  { field: 'ECR_SettleHHNN', header: '清機提示時間-時分', visible: false },
-  { field: 'ECR_KBLevel', header: '機台鍵盤等級', visible: false },
-  { field: 'ECR_KBType', header: '鍵盤型態', visible: false },
-  { field: 'ECR_Scanner', header: '掃描器型態', visible: false },
-  { field: 'ECR_ScannerCom', header: '掃描器連接埠', visible: false },
-  { field: 'ECR_ScrType', header: '收銀畫面樣式', visible: false },
-  { field: 'ECR_CD', header: '客戶顯示器型態', visible: false },
-  { field: 'ECR_CDCom', header: '客戶顯示器連接埠', visible: false },
-  { field: 'ECR_ExtScr', header: '收銀外接顯示器名稱', visible: false },
-  { field: 'ECR_ExtScrCom', header: '收銀外接顯示器連接埠', visible: false },
-  { field: 'ECR_GUIPr', header: '發票印表機型態', visible: false },
-  { field: 'ECR_GUICom', header: '發票印表機連接埠', visible: false },
-  { field: 'ECR_SlipPr', header: '菜單印表機型態', visible: false },
-  { field: 'ECR_SlipPrnCom', header: '菜單印表機連接埠', visible: false },
-  { field: 'ECR_LablePr', header: '標籤印表機型態', visible: false },
-  { field: 'ECR_LablePrnCom', header: '標籤印表機連接埠', visible: false },
-  { field: 'ECR_EDC', header: '信用卡刷卡機型態', visible: false },
-  { field: 'ECR_EDCCom', header: '信用卡刷卡機連接埠', visible: false },
-  { field: 'ECR_EDC2', header: '第二台信用卡刷卡機型態', visible: false },
-  { field: 'ECR_EDC2Com', header: '第二台信用卡刷卡機連接埠', visible: false },
-  { field: 'ECR_EDC3', header: '第三台信用卡刷卡機型態', visible: false },
-  { field: 'ECR_EDC3Com', header: '第三台信用卡刷卡機連接埠', visible: false },
-  { field: 'ECR_ElecSVCrdA', header: '悠遊卡', visible: false },
-  { field: 'ECR_ElecSVCrdACom', header: '悠遊卡連接埠', visible: false },
-  { field: 'ECR_ElecSVCrdB', header: '一卡通', visible: false },
-  { field: 'ECR_ElecSVCrdBCom', header: '一卡通連接埠', visible: false },
-  { field: 'ECR_ElecSVCrdC', header: '愛金卡', visible: false },
-  { field: 'ECR_ElecSVCrdCCom', header: '愛金卡連接埠', visible: false },
-  { field: 'ECR_ElecPay', header: '電子支付', visible: false },
-  { field: 'ECR_ElecPayCom', header: '電子支付連接埠', visible: false },
-  { field: 'ECR_Drawer', header: '錢櫃型態', visible: false },
-  { field: 'ECR_DrawerCom', header: '錢櫃連接埠', visible: false },
-  { field: 'ECR_Device1Name', header: '週邊裝置1名稱', visible: false },
-  { field: 'ECR_Device1Com', header: '週邊裝置1連接埠', visible: false },
-  { field: 'ECR_Device2Name', header: '週邊裝置2名稱', visible: false },
-  { field: 'ECR_Device2Com', header: '週邊裝置2連接埠', visible: false },
-  { field: 'ECR_Device3Name', header: '週邊裝置3名稱', visible: false },
-  { field: 'ECR_Device3Com', header: '週邊裝置3連接埠', visible: false },
-  { field: 'ECR_Device4Name', header: '週邊裝置4名稱', visible: false },
-  { field: 'ECR_Device4Com', header: '週邊裝置4連接埠', visible: false },
-  { field: 'ECR_Device5Name', header: '週邊裝置5名稱', visible: false },
-  { field: 'ECR_Device5Com', header: '週邊裝置5連接埠', visible: false },
-  { field: 'ECR_Device6Name', header: '週邊裝置6名稱', visible: false },
-  { field: 'ECR_Device6Com', header: '週邊裝置6連接埠', visible: false },
-  { field: 'ECR_Device7Name', header: '週邊裝置7名稱', visible: false },
-  { field: 'ECR_Device7Com', header: '週邊裝置7連接埠', visible: false },
-  { field: 'ECR_Device8Name', header: '週邊裝置8名稱', visible: false },
-  { field: 'ECR_Device8Com', header: '週邊裝置8連接埠', visible: false },
-  { field: 'ECR_Device9Name', header: '週邊裝置9名稱', visible: false },
-  { field: 'ECR_Device9Com', header: '週邊裝置9連接埠', visible: false },
-  { field: 'ECR_Device10Name', header: '週邊裝置10名稱', visible: false },
-  { field: 'ECR_Device10Com', header: '週邊裝置10連接埠', visible: false },
-  { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
-  { field: 'CRT_USR_No', header: '建立人員', visible: false },
-  { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-  { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime },
-  { field: 'UPD_USR_No', header: '變更人員', visible: false },
-  { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
-];
+  { field: 'ECR_SernoType', header: '交易序號模式', visible: true },
+  { field: 'ECR_GUI_Type', header: '發票使用類別', visible: true },
+  { field: 'ECR_TimeTickInvl', header: '系統對時間隔(秒)', visible: true },
+  { field: 'ECR_Interval', header: '上下傳異動檔間隔(秒)', visible: true },
+  { field: 'ECR_MaxQty', header: '單筆交易數量上限', visible: true },
+  { field: 'ECR_MaxAmt', header: '單筆交易金額上限', visible: true },
+  { field: 'ECR_MaxItemAmt', header: '單一明細金額上限', visible: true },
+  { field: 'ECR_MaxDisc', header: '單筆交易最大折扣比率限制', visible: true },
+  { field: 'ECR_EdcTimeout', header: '信用卡刷卡機連線時限(秒)', visible: true },
+  { field: 'ECR_EdcSettle', header: '信用卡刷卡機連動日結', visible: true },
+  { field: 'ECR_ForceInput', header: '是否強制輸入付款金額', visible: true },
+  { field: 'ECR_CustCntEntry', header: '是否輸入來客數', visible: true },
+  { field: 'ECR_CustTypeEntry', header: '是否輸入客層數', visible: true },
+  { field: 'ECR_ClerkEntry', header: '是否強制輸入營業員', visible: true },
+  { field: 'ECR_ForceMember', header: '是否強制輸入會員編號', visible: true },
+  { field: 'ECR_BoxReqCode', header: '開抽屜是否輸入密碼', visible: true },
+  { field: 'ECR_SelfReport', header: '是否執行自我報帳', visible: true },
+  { field: 'ECR_SaleRpt1', header: '是否列印收銀員交班表', visible: true },
+  { field: 'ECR_SaleRpt2', header: '是否列印收銀機財務報表', visible: true },
+  { field: 'ECR_SaleRpt3', header: '是否列印時段銷售報表', visible: true },
+  { field: 'ECR_SaleRpt4', header: '是否列印部門銷售報表', visible: true },
+  { field: 'ECR_SaleRpt5', header: '是否列印單品銷售報表', visible: true },
+  { field: 'ECR_SaleRpt6', header: '是否列印銷貨明細表', visible: true },
+  { field: 'ECR_SaleRpt7', header: '是否列印作廢明細表', visible: true },
+  { field: 'ECR_SaleRpt8', header: '是否列印自我報帳(現額報告)帳條', visible: true },
+  { field: 'ECR_SaleRpt9', header: '是否列印保全現金帳條(現金明細表)', visible: true },
+  { field: 'ECR_SaleRpt10', header: '保留', visible: true },
+  { field: 'ECR_PcashValid', header: '零用金是否需要認證', visible: true },
+  { field: 'ECR_PickUpValid', header: '中途取現是否需要認證', visible: true },
+  { field: 'ECR_ReprintGUI', header: '是否允許執行補印發票', visible: true },
+  { field: 'ECR_PrnLogo', header: '是否列印商標', visible: true },
+  { field: 'ECR_Logo1', header: '商標1 (店名)', visible: true },
+  { field: 'ECR_Logo2', header: '商標2 (地址)', visible: true },
+  { field: 'ECR_Logo3', header: '商標3 (電話)', visible: true },
+  { field: 'ECR_Logo4', header: '商標4 (統一編號)', visible: true },
+  { field: 'ECR_Logo5', header: '商標5', visible: true },
+  { field: 'ECR_Logo6', header: '商標6', visible: true },
+  { field: 'ECR_VoidTxn', header: '是否允許作廢交易', visible: true },
+  { field: 'ECR_VoidRstDay', header: '作廢交易限制天數', visible: true },
+  { field: 'ECR_CreditNote', header: '是否允許開立折讓單', visible: true },
+  { field: 'ECR_GUI_PeriodQty', header: '機台每期電子發票預設配號數量', visible: true },
+  { field: 'ECR_GUI_MinQty', header: '機台電子發票最小安全存量', visible: true },
+  { field: 'ECR_SettleDD', header: '清機提示日期', visible: true },
+  { field: 'ECR_SettleHHNN', header: '清機提示時間-時分', visible: true },
+  { field: 'ECR_KBLevel', header: '機台鍵盤等級', visible: true },
+  { field: 'ECR_KBType', header: '鍵盤型態', visible: true },
+  { field: 'ECR_Scanner', header: '掃描器型態', visible: true },
+  { field: 'ECR_ScannerCom', header: '掃描器連接埠', visible: true },
+  { field: 'ECR_ScrType', header: '收銀畫面樣式', visible: true },
+  { field: 'ECR_CD', header: '客戶顯示器型態', visible: true },
+  { field: 'ECR_CDCom', header: '客戶顯示器連接埠', visible: true },
+  { field: 'ECR_ExtScr', header: '收銀外接顯示器名稱', visible: true },
+  { field: 'ECR_ExtScrCom', header: '收銀外接顯示器連接埠', visible: true },
+  { field: 'ECR_GUIPrn', header: '發票印表機型態', visible: true },
+  { field: 'ECR_GUICom', header: '發票印表機連接埠', visible: true },
+  { field: 'ECR_SlipPrn', header: '菜單印表機型態', visible: true },
+  { field: 'ECR_SlipPrnCom', header: '菜單印表機連接埠', visible: true },
+  { field: 'ECR_LablePrn', header: '標籤印表機型態', visible: true },
+  { field: 'ECR_LablePrnCom', header: '標籤印表機連接埠', visible: true },
+  { field: 'ECR_EDC', header: '信用卡刷卡機型態', visible: true },
+  { field: 'ECR_EDCCom', header: '信用卡刷卡機連接埠', visible: true },
+  { field: 'ECR_EDC2', header: '第二台信用卡刷卡機型態', visible: true },
+  { field: 'ECR_EDC2Com', header: '第二台信用卡刷卡機連接埠', visible: true },
+  { field: 'ECR_EDC3', header: '第三台信用卡刷卡機型態', visible: true },
+  { field: 'ECR_EDC3Com', header: '第三台信用卡刷卡機連接埠', visible: true },
+  { field: 'ECR_ElecSVCrdA', header: '悠遊卡', visible: true },
+  { field: 'ECR_ElecSVCrdACom', header: '悠遊卡連接埠', visible: true },
+  { field: 'ECR_ElecSVCrdB', header: '一卡通', visible: true },
+  { field: 'ECR_ElecSVCrdBCom', header: '一卡通連接埠', visible: true },
+  { field: 'ECR_ElecSVCrdC', header: '愛金卡', visible: true },
+  { field: 'ECR_ElecSVCrdCCom', header: '愛金卡連接埠', visible: true },
+  { field: 'ECR_ElecPay', header: '電子支付', visible: true },
+  { field: 'ECR_ElecPayCom', header: '電子支付連接埠', visible: true },
+  { field: 'ECR_Drawer', header: '錢櫃型態', visible: true },
+  { field: 'ECR_DrawerCom', header: '錢櫃連接埠', visible: true },
+  { field: 'ECR_Device1Name', header: '週邊裝置1名稱', visible: true },
+  { field: 'ECR_Device1Com', header: '週邊裝置1連接埠', visible: true },
+  { field: 'ECR_Device2Name', header: '週邊裝置2名稱', visible: true },
+  { field: 'ECR_Device2Com', header: '週邊裝置2連接埠', visible: true },
+  { field: 'ECR_Device3Name', header: '週邊裝置3名稱', visible: true },
+  { field: 'ECR_Device3Com', header: '週邊裝置3連接埠', visible: true },
+  { field: 'ECR_Device4Name', header: '週邊裝置4名稱', visible: true },
+  { field: 'ECR_Device4Com', header: '週邊裝置4連接埠', visible: true },
+  { field: 'ECR_Device5Name', header: '週邊裝置5名稱', visible: true },
+  { field: 'ECR_Device5Com', header: '週邊裝置5連接埠', visible: true },
+  { field: 'ECR_Device6Name', header: '週邊裝置6名稱', visible: true },
+  { field: 'ECR_Device6Com', header: '週邊裝置6連接埠', visible: true },
+  { field: 'ECR_Device7Name', header: '週邊裝置7名稱', visible: true },
+  { field: 'ECR_Device7Com', header: '週邊裝置7連接埠', visible: true },
+  { field: 'ECR_Device8Name', header: '週邊裝置8名稱', visible: true },
+  { field: 'ECR_Device8Com', header: '週邊裝置8連接埠', visible: true },
+  { field: 'ECR_Device9Name', header: '週邊裝置9名稱', visible: true },
+  { field: 'ECR_Device9Com', header: '週邊裝置9連接埠', visible: true },
+  { field: 'ECR_Device10Name', header: '週邊裝置10名稱', visible: true },
+  { field: 'ECR_Device10Com', header: '週邊裝置10連接埠', visible: true },
+  { field: 'CRT_Date', header: '建立日期', visible: true },
+  { field: 'CRT_USR_No', header: '建立人員', visible: true },
+  { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
+  { field: 'UPD_Date', header: '變更日期', visible: true },
+  { field: 'UPD_USR_No', header: '變更人員', visible: true },
+  { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
+]
