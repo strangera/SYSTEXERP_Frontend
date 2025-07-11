@@ -33,9 +33,9 @@
           </app-calendar-range>
 
 
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="收銀機狀態" controlName="ECR_Status"
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機狀態" controlName="ECR_Status"
             [options]="statusOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_Status"
-            [submitted]="submitted"></app-multi-select>
+            [submitted]="submitted"></app-dropdown>
 
 
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="樓層" controlName="ECR_SubGroup"
