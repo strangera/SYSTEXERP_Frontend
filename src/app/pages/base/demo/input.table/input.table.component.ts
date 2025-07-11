@@ -7,18 +7,6 @@ import { SystemTypeService } from '../../../../service/basic/system-type.service
 import { Column } from '../../../../shared/componentkit/table/table.model';
 import { FieldsConfig } from '../../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { ExpandableEditTableComponent } from '../../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-
-
-// 定義展開式表格所需的資料結構
-interface ProductDetail {
-  id: number;
-  description: string;
-  manufacturer: string;
-  quantity: number;
-  price: number;
-  discount: number;
-}
-
 // 定義欄位結構
 interface ColumnDef {
   field: string;
@@ -28,19 +16,6 @@ interface ColumnDef {
   hidden?: boolean;
   style?: string;
 }
-
-// 定義事件資料類型
-interface RowSaveEvent {
-  oldData: any;
-  newData: any;
-}
-
-interface DetailSaveEvent {
-  oldDetail: any;
-  newDetail: any;
-  parentData: any;
-}
-
 export interface IMG1001 {
   id: number;             // 圖檔ID
   IMG_Type: string;       // 圖檔類別 - 'POS2004'
@@ -60,7 +35,6 @@ export interface IMG1001 {
 @Component({
   selector: 'app-input.table',
   templateUrl: './input.table.component.html',
-  styleUrl: './input.table.component.scss'
 })
 export class InputTableComponent extends BasicQueryPageComponent<any> implements OnInit {
 

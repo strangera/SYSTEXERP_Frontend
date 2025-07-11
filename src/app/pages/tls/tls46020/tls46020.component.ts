@@ -5,6 +5,8 @@ import { TLS46020Item, TLS46020Service } from '../../../service/api/tls/tls46020
 import { Column, createPaginationConfig, formatAmount, formatDate, formatDateTime, formatTimeHHMM, formatYN } from '../../../shared/componentkit/table/table.model';
 import { finalize } from 'rxjs';
 import { ECR_GUI_Type_Option, ECR_SernoType_Option } from './tls46020.model';
+import { DropdownChangeEvent } from 'primeng/dropdown';
+import { DropDownListService } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 
 // 2.4.6.2  POS環境變數維護作業
@@ -24,6 +26,7 @@ export class TLS46020Component extends BasicQueryPageComponent<TLS46020Item> imp
   ECR_GUI_Type_Option = ECR_GUI_Type_Option; // 發票使用類別選項
   totalRecords = 0;
   data: TLS46020Item[] = [];
+  selectedItems: TLS46020Item[] = [];
   columns: Column[] = [
     { field: 'ECR_TmplNo', header: '模版編號', visible: true },
     { field: 'ECR_TmplDesc', header: '模版備註', visible: true },
@@ -139,20 +142,90 @@ export class TLS46020Component extends BasicQueryPageComponent<TLS46020Item> imp
 
   constructor(
     private tls46020Service: TLS46020Service,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS46020', '/TLS/TLS46020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS46020', '/TLS/TLS46020CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.dropDownListService.queryPOS1002TML_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.dialogOptions = res.Data.map(item => ({
+        ...item,
+        label: `${item.No} - ${item.Name}`,
+      }));
+      this.mergedDialogOptions = [{ label: '新增一筆環境變數', No: 'new' }, ...this.dialogOptions];
+    });
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tls46020Service.queryTLS46020(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
+      this.tls46020Service.queryTLS46020(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
+  }
+  onDelete(selectedRows: TLS46020Item[]) {
+    const idList = selectedRows.map(row => row.id).filter((id): id is number => typeof id === 'number');
+    this.tls46020Service.deleteTLS46020(idList).pipe(untilDestroyed(this)).subscribe({
+      next: () => {
+        this.onSubmit(this.queryForm);
+        this.selectedItems = [];
+      },
+      error: () => { this.loading = false; },
+    });
+  }
+  dialogVisible = false;
+  dialogQueryForm = this.formBuilder.group({
+    ECR_TmplNo: ['', [Validators.required]], // 環境變數編號
+    Target_ECR_No: ['', [Validators.required]], // 目的環境變數編號
+  });
+  dialogSelectItem: TLS46020Item | null = null;
+  dialogSelectTargetItem: TLS46020Item | null = null;
+  dialogOptions: { No?: string; Name?: string; label?: string }[] = [];
+  mergedDialogOptions: { No?: string; Name?: string; label?: string }[] = [];
+  saveDialog(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      this.loading = false;
+      if (this.isValid) { return; }
+      const body = {
+        ...this.dialogSelectItem,
+        ECR_TmplNo: frm.value.ECR_TmplNo === 'new' ? undefined : frm.value.Target_ECR_No,
+        id: frm.value.ECR_TmplNo === 'new' ? undefined : this.dialogSelectTargetItem?.id
+      }
+      if (frm.value.Target_ECR_No === 'new') {
+        this.tls46020Service.insertTLS46020(body).pipe(untilDestroyed(this)).subscribe(res => {
+          console.log('新增環境變數成功', res);
+          this.dialogVisible = false;
+          this.onSubmit(this.queryForm);
+        });
+      } else {
+        this.tls46020Service.updateTLS46020(body).pipe(untilDestroyed(this)).subscribe(res => {
+          console.log('複製環境變數成功', res);
+          this.dialogVisible = false;
+          this.onSubmit(this.queryForm);
+        });
+      }
+    });
+  }
+  onDialogChange(event: DropdownChangeEvent) {
+    const selectedValue = event.value;
+    const body = { ECR_TmplNo: selectedValue };
+    this.tls46020Service.queryTLS46020(body).pipe(untilDestroyed(this)).subscribe(res => {
+      this.dialogSelectItem = res.Data[0];
+    });
+  }
+  onDialogChange2(event: DropdownChangeEvent) {
+    const selectedValue = event.value;
+    const body = { ECR_TmplNo: selectedValue };
+    this.tls46020Service.queryTLS46020(body).pipe(untilDestroyed(this)).subscribe(res => {
+      this.dialogSelectTargetItem = res.Data[0];
+    });
+  }
+  get isValid(): boolean {
+    const ECR_TmplNo = this.dialogQueryForm.value.ECR_TmplNo ?? '';
+    const Target_ECR_No = this.dialogQueryForm.value.Target_ECR_No ?? '';
+    return (ECR_TmplNo !== '' && Target_ECR_No !== '') && (ECR_TmplNo === Target_ECR_No);
   }
 }

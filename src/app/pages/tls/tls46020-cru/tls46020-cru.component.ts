@@ -3,8 +3,8 @@ import { FormGroup, Validators } from '@angular/forms'; // 這裡已經有了，
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS46020Item, TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { ECR_GUI_Type_Option, ECR_SernoType_Option, ECR_SettleDD_Option, getToday2330, YN_Option } from '../tls46020/tls46020.model';
-import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
 
 // 2.4.6.2 POS環境變數維護作業 CRU
 @Component({
@@ -196,7 +196,7 @@ export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> im
       const serviceCall = this.isFormCreateable
         ? this.tls46020Service.insertTLS46020(this.createBody(frm))
         : this.tls46020Service.updateTLS46020(this.createBody(frm));
-      serviceCall.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe({
+      serviceCall.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe({
         next: (res) => {
           this.messageService.successBubble(res.Message);
           if (this.isFormCreateable) {

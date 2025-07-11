@@ -20,7 +20,6 @@ export interface UserInfo {
 @Component({
   selector: 'app-changepsw',
   templateUrl: './changepsw.component.html',
-  styleUrls: ['./changepsw.component.scss'],
 })
 export class ChangepswComponent implements OnInit {
   submitted = false;

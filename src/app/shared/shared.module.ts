@@ -78,7 +78,8 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { ReportTableGroupComponent } from './componentkit/report-table-group/report-table-group.component';
 import { DialogComponent } from './componentkit/dialog/dialog.component';
 import { RadiobuttonYNComponent } from './componentkit/radiobutton-yn/radiobutton-yn.component';
-import { GroupByFieldPipe } from './componentkit/report-table-group/group-by-field.pipe'; 
+import { GroupByFieldPipe } from './componentkit/report-table-group/group-by-field.pipe';
+import { MenuModule } from 'primeng/menu';
 
 @NgModule({
   declarations: [
@@ -170,6 +171,8 @@ import { GroupByFieldPipe } from './componentkit/report-table-group/group-by-fie
     ReactiveFormsModule,
     TranslateModule,
     // PrimeNG
+    OverlayPanelModule,
+    MenuModule,
     FileUploadModule,
     OrganizationChartModule,
     ProgressSpinnerModule,

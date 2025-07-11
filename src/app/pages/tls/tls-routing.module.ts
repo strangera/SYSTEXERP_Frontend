@@ -69,18 +69,6 @@ import { TLS23130Component } from './tls23130/tls23130.component';
 import { TLS23140Component } from './tls23140/tls23140.component';
 import { TLS24010CRUComponent } from './tls24010-cru/tls24010-cru.component';
 import { TLS24010Component } from './tls24010/tls24010.component';
-import { TLS24020CRUComponent } from './tls24020-cru/tls24020-cru.component';
-import { TLS24020Component } from './tls24020/tls24020.component';
-import { TLS24030CRUComponent } from './tls24030-cru/tls24030-cru.component';
-import { TLS24030Component } from './tls24030/tls24030.component';
-import { TLS24040CRUComponent } from './tls24040-cru/tls24040-cru.component';
-import { TLS24040Component } from './tls24040/tls24040.component';
-import { TLS24050CRUComponent } from './tls24050-cru/tls24050-cru.component';
-import { TLS24050Component } from './tls24050/tls24050.component';
-import { TLS24060CRUComponent } from './tls24060-cru/tls24060-cru.component';
-import { TLS24060Component } from './tls24060/tls24060.component';
-import { TLS24070CRUComponent } from './tls24070-cru/tls24070-cru.component';
-import { TLS24070Component } from './tls24070/tls24070.component';
 import { TLS24080CRUComponent } from './tls24080-cru/tls24080-cru.component';
 import { TLS24080Component } from './tls24080/tls24080.component';
 import { TLS25010CRUComponent } from './tls25010-cru/tls25010-cru.component';
@@ -226,7 +214,6 @@ import { TLS2K060CRUComponent } from './tls2k060-cru/tls2k060-cru.component';
 import { TLS2K060Component } from './tls2k060/tls2k060.component';
 import { Tls21030ModComponent } from './tls21030-mod/tls21030-mod.component';
 import { TLS21040ModComponent } from './tls21040-mod/tls21040-mod.component';
-import { TLS24010ModComponent } from './tls24010-mod/tls24010-mod.component';
 import { TLS25010ModComponent } from './tls25010-mod/tls25010-mod.component';
 import { TLS25020ModComponent } from './tls25020-mod/tls25020-mod.component';
 import { TLS25030ModComponent } from './tls25030-mod/tls25030-mod.component';
@@ -480,12 +467,6 @@ const routes: Routes = [
   { path: 'tls23130', component: TLS23130Component }, // 信用卡銷貨月報表
   { path: 'tls23140', component: TLS23140Component }, // 有價券查詢報表
   { path: 'tls24010', component: TLS24010Component }, // 交易補登作業
-  { path: 'tls24020', component: TLS24020Component }, // 專櫃編號修正作業
-  { path: 'tls24030', component: TLS24030Component }, // 折扣別資料修正作業
-  { path: 'tls24040', component: TLS24040Component }, // 付款別資料修正作業
-  { path: 'tls24050', component: TLS24050Component }, // 中分類資料修正作業
-  { path: 'tls24060', component: TLS24060Component }, // 交易資料作廢作業
-  { path: 'tls24070', component: TLS24070Component }, // 發票修正作業
   { path: 'tls24080', component: TLS24080Component }, // 交易資料修正報表
   { path: 'tls25010', component: TLS25010Component }, // 商場違規類別維護作業
   { path: 'tls25020', component: TLS25020Component }, // 商場違規項目維護作業
@@ -582,12 +563,6 @@ const routes: Routes = [
   { path: 'tls23130cru', component: TLS23130CRUComponent }, // 信用卡銷退日報表
   { path: 'tls23140cru', component: TLS23140CRUComponent }, // 有價券查詢報表
   { path: 'tls24010cru', component: TLS24010CRUComponent }, // 交易補登作業 CRU
-  { path: 'tls24020cru', component: TLS24020CRUComponent }, // 專櫃編號修正作業 CRU
-  { path: 'tls24030cru', component: TLS24030CRUComponent }, // 折扣別資料修正作業 CRU
-  { path: 'tls24040cru', component: TLS24040CRUComponent }, // 付款別資料修正作業 CRU
-  { path: 'tls24050cru', component: TLS24050CRUComponent }, // 中分類資料修正作業 CRU
-  { path: 'tls24060cru', component: TLS24060CRUComponent }, // 交易資料作廢作業 CRU
-  { path: 'tls24070cru', component: TLS24070CRUComponent }, // 發票修正作業 CRU
   { path: 'tls24080cru', component: TLS24080CRUComponent }, // 交易資料修正報表 CRU
   { path: 'tls25010cru', component: TLS25010CRUComponent }, // 商場違規類別維護作業 CRU
   { path: 'tls25020cru', component: TLS25020CRUComponent }, // 商場違規項目維護作業 CRU
@@ -662,7 +637,6 @@ const routes: Routes = [
   { path: 'tls2k060cru', component: TLS2K060CRUComponent }, // 餘代卡查詢報表 CRU
   { path: 'tls21030MOD', component: Tls21030ModComponent }, // 對帳單備註維護作業 MOD
   { path: 'tls21040MOD', component: TLS21040ModComponent }, // 對帳單備註維護作業 MOD
-  { path: 'tls24010MOD', component: TLS24010ModComponent }, // 對帳單備註維護作業 MOD
   { path: 'tls25010MOD', component: TLS25010ModComponent }, // 商場違規類別維護作業  MOD
   { path: 'tls25020MOD', component: TLS25020ModComponent }, // 商場違規項目維護作業  MOD
   { path: 'tls25030MOD', component: TLS25030ModComponent }, // 商場違規扣款維護作業 MOD

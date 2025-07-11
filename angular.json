@@ -98,6 +98,11 @@
     }
   },
   "cli": {
-    "analytics": "9201dc9f-2ce4-4001-9a32-a5c87bf84c77"
+    "analytics": "9201dc9f-2ce4-4001-9a32-a5c87bf84c77",
+    "cache": {
+      "enabled": true,
+      "path": ".angular/cache",
+      "environment": "all"
+    }
   }
 }
