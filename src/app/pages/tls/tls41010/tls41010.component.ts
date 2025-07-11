@@ -30,7 +30,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     ECR_ActiveDateEnd: [null],
     ECR_CloseDateStart: [null],
     ECR_CloseDateEnd: [null],
-    ECR_Status: [''],
+    ECR_Status: ['A'],
     ECR_SubGroup: ['', [Validators.maxLength(20)]],
     ECR_LocNo: ['', [Validators.maxLength(10)]],
     ECR_Type: ['', [Validators.maxLength(2)]],
