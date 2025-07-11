@@ -16,7 +16,7 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit, O
   @Input() submitted = false; // 檢查欄位是否標準
   @Input() step = 1; // 步進值
   @Input() showButtons = false; // 是否顯示按鈕
-  @Input() min = 0; // 最小值
+  @Input() min: number | null = 0; // 最小值
   @Input() max = 99999999999; // 最大值
   @Input() minFractionDigits = 0; // 最小小數位數
   @Input() maxFractionDigits = 0; // 最大小數位數

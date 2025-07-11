@@ -30,4 +30,9 @@ export class Tls41030Service {
     deleteTLS41030(body: any): Observable<any> {
       return this.http.post<any>(`${this.apiUrl}/deleteTLS41030`, body);
     }
+
+    //讀取專櫃 下拉
+    queryTLTTALENT_DropDownList(body: any): Observable<any> {
+      return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_DropDownList`, body);
+    }
 }

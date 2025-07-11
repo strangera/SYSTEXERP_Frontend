@@ -1,154 +1,107 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-//
-import { WhetherService } from './../../../service/basic/whether.service';
-import { InformationSourceService } from './../../../service/basic/information-source.service';
+import { FIN13030Data, FIN13030QueryRequest, FIN13030Service } from '../../../service/api/fin/fin13030.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { FormGroup, Validators } from '@angular/forms';
+import { finalize } from 'rxjs';
+import { DropdownOption } from '../../../shared/componentkit/dropdown/dropdown.model';
 
-//1.1.3.2 二收及二電發票表
 @Component({
   selector: 'app-fin13030',
   templateUrl: './fin13030.component.html',
   styleUrl: './fin13030.component.scss'
 })
-export class FIN13030Component extends BasicQpageComponent implements OnInit {
-  //
+export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    onedatemm: [], // 申報年月
-    salesStartdate: [], // 銷售日期
-    saleEnddate: [], // 銷售日期
-    registerNumber: [, [Validators.maxLength(6)]], // 收銀機編號
-    invoiceType: [], // 發票類別
-    uIdCheck: [[] as number[]], // 是否有統一編號
-    infoSource: [[] as number[]], // 資料來源
+    invNoStart: [''], // 發票號碼(起)
+    invNoEnd: [''], // 發票號碼(迄)
+    invDateStart: [''], // 發票日期(起)
+    invDateEnd: [''], // 發票日期(迄)
+    invYmStart: [''], // 資料所屬年月(起)
+    invYmEnd: [''], // 資料所屬年月(迄)
+    declareYm: [''], // 申報年月
+    buyerTaxNo: ['', [Validators.maxLength(10)]], // 買受人統一編號
+    goodsName: ['', [Validators.maxLength(20)]], // 貨物或勞務名稱
+    goodsQtyStart: [''], // 貨物或勞務數量(起)
+    goodsQtyEnd: [''], // 貨物或勞務數量(迄)
+    exportMethod: [''], // 外銷方式
+    docNo: ['', [Validators.maxLength(10)]], // 證明文件號碼
+    docName: ['', [Validators.maxLength(20)]], // 證明文件名稱
+    exportNo: ['', [Validators.maxLength(10)]], // 出口報單號碼
+    exportType: [''], // 出口報單類別
+    nonCustomsAmtStart: [''], // 非經海關出口金額(起)
+    nonCustomsAmtEnd: [''], // 非經海關出口金額(迄)
+    customsAmtStart: [''], // 經海關出口金額(起)
+    customsAmtEnd: [''], // 經海關出口金額(迄)
+    exportDateStart: [''], // 輸出或結匯日期(起)
+    exportDateEnd: [''], // 輸出或結匯日期(迄)
+    remark: ['', [Validators.maxLength(100)]], // 備註
+    ...createPaginationConfig([{ field: 'invNoStart', order: -1 }]), // 分頁和排序參數
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '發票年月', visible: true },
-    { field: 'col2', header: '申報年月', visible: true },
-    { field: 'col3', header: '類別', visible: true },
-    { field: 'col4', header: '字軌', visible: true },
-    { field: 'col5', header: '發票號碼(起)', visible: true },
-    { field: 'col6', header: '發票號碼(迄)', visible: true },
-    { field: 'col7', header: '領用機號', visible: true },
-    { field: 'col8', header: '領用單位', visible: true },
-    { field: 'col9', header: '領用日期', visible: true },
-    { field: 'col10', header: '繳回機台', visible: true },
-    { field: 'col11', header: '繳回日期', visible: true },
-    { field: 'col12', header: '發票狀態', visible: true },
-    { field: 'col13', header: '裝箱箱號', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  //
-  invoiceTypeOptions: any[] = [
-    { value: 1, label: '二聯式收銀機發票' },
-    { value: 2, label: '二聯式電子發票' },
-  ];
-  //
-  infoSourceOptions: any[] = [];
-  whetherOptions: any[] = [];
 
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private whetherService: WhetherService,
-    private informationSourceService: InformationSourceService,
-  ) {
-    super(); // 呼叫父類建構子
+  totalRecords = 0;
+  data: FIN13030Data[] = [];
+  selectedItems: FIN13030Data[] = [];
+  columns: Column[] = [
+    { field: 'invNoStart', header: '發票號碼(起)', visible: true },
+    { field: 'invNoEnd', header: '發票號碼(迄)', visible: true },
+    { field: 'invDateStart', header: '發票日期(起)', visible: true },
+    { field: 'invDateEnd', header: '發票日期(迄)', visible: true },
+    { field: 'invYmStart', header: '資料所屬年月(起)', visible: true },
+    { field: 'invYmEnd', header: '資料所屬年月(迄)', visible: true },
+    { field: 'declareYm', header: '申報年月', visible: true },
+    { field: 'buyerTaxNo', header: '買受人統一編號', visible: true },
+    { field: 'goodsName', header: '貨物或勞務名稱', visible: true },
+    { field: 'goodsQtyStart', header: '貨物或勞務數量(起)', visible: true },
+    { field: 'goodsQtyEnd', header: '貨物或勞務數量(迄)', visible: true },
+    { field: 'exportMethod', header: '外銷方式', visible: true },
+    { field: 'docNo', header: '證明文件號碼', visible: true },
+    { field: 'docName', header: '證明文件名稱', visible: true },
+    { field: 'exportNo', header: '出口報單號碼', visible: true },
+    { field: 'exportType', header: '出口報單類別', visible: true },
+    { field: 'nonCustomsAmtStart', header: '非經海關出口金額(起)', visible: true },
+    { field: 'nonCustomsAmtEnd', header: '非經海關出口金額(迄)', visible: true },
+    { field: 'customsAmtStart', header: '經海關出口金額(起)', visible: true },
+    { field: 'customsAmtEnd', header: '經海關出口金額(迄)', visible: true },
+    { field: 'exportDateStart', header: '輸出或結匯日期(起)', visible: true },
+    { field: 'exportDateEnd', header: '輸出或結匯日期(迄)', visible: true },
+    { field: 'remark', header: '備註', visible: true },
+  ];
+
+  exportMethodOptions: DropdownOption[] = [];
+  exportTypeOptions: DropdownOption[] = [];
+
+  constructor(private fin13030Service: FIN13030Service) {
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '110015';
-    this.cruPage = '/FIN1000/FIN13030CRU';
-    //
-    // ----------------------------------------------------------------
-    //
-    this.whetherService.getWhetherOptions().subscribe(data => {
-      this.whetherOptions = data;
-
-      // 全選填入
-      // let allSystemValues = this.whetherOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   uIdCheck: allSystemValues
-      // });
-    });
-    //
-    this.informationSourceService.getInformationSources().subscribe(data => {
-      this.infoSourceOptions = data;
-
-      // 全選填入
-      // let allSystemValues = this.infoSourceOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   infoSource: allSystemValues
-      // });
-    });
-    // ----------------------------------------------------------------
+    this.initializePage('FIN13030', 'fin/fin13030cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
 
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.handleSubmit(frm, () => {
+      this.fin13030Service.queryFIN13030(frm.value as FIN13030QueryRequest)
+        .pipe(finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        });
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
-  }
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
+  loadOptions() {
+    // 假資料，實際應從服務取得
+    this.exportMethodOptions = [
+      { label: '外銷貨物', value: '1' },
+      { label: '外銷勞務', value: '2' },
+      { label: '免稅商店', value: '3' }
+    ];
+    this.exportTypeOptions = [
+      { label: '一般出口', value: 'A' },
+      { label: '特種出口', value: 'B' }
+    ];
   }
 }

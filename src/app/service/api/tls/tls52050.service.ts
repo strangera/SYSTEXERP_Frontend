@@ -80,6 +80,25 @@ export interface ITLS52050Data {
   UPD_USR_No: string | null; // 變更人員
   UPD_USR_Name: string | null; // 變更人員姓名
 }
+
+export interface POS2008Data {
+  id?: number; // ID - 隱藏
+  MID: string; // 商戶編號 - 隱藏
+  MAM_No: string; // 促銷編號(變價單號) - 隱藏
+  SYS_StoreNo: string; // 公司編號/店號 - 隱藏
+  PLU_MagNo: string; // 商品管理編號
+  PLU_Name: string; // 商品名稱
+  CAT_LNo: string; // 大類代號
+  CAT_MNo: string; // 中類代號
+  CAT_SNo: string; // 小類代號
+  PLU_OrderPrcRate: number; // 進價折數
+  PLU_OrderPrc: number; // 調整前進價
+  MAM_OrderPrc: number; // 調整後進價
+  PLU_SalePrc: number; // 調整前售價
+  MAM_UnitPrc: number; // 調整後售價
+  MAD_Remark: string; // 單項說明
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -103,5 +122,14 @@ export class Tls52050Service {
 
   updateTLS52050(data: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateTLS52050`, data);
+  }
+
+  /**
+ * 取得標籤檔資料
+ * @param params 查詢條件 (MAM_No)
+ * @returns API 響應
+ */
+  getLabelTLS52050(params: { MAM_No: string }): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/getLabelTLS52050`, params);
   }
 }

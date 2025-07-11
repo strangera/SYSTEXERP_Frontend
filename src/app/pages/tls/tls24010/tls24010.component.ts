@@ -85,7 +85,8 @@ export class TLS24010Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      this.loading = false;
+      // this.queryStateService.setQueryState(this.ProgNo, frm.value);
     });
   }
 }
