@@ -21,154 +21,154 @@
             <app-input-number
               [useGrouping]="false"
               label="合約編號"
-              controlName="recruitmentCode"
-              [control]="queryForm.controls.recruitmentCode"
+              controlName="contract_no"
+              [control]="queryForm.controls.contract_no"
               [submitted]="submitted"
               maxlength="8"
             ></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="大分類"
-              controlName="businessTypeCode"
+              controlName="bus_typeList"
               [options]="businessTypeCodeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.businessTypeCodeOptions"
+              [control]="queryForm.controls.bus_typeList"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number
               [useGrouping]="false"
               label="專櫃編號"
-              controlName="counterCode"
-              [control]="queryForm.controls.counterCode"
+              controlName="tlt_no"
+              [control]="queryForm.controls.tlt_no"
               [submitted]="submitted"
             ></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="櫃位名稱"
-              controlName="counterName"
-              [control]="queryForm.controls.counterName"
+              controlName="tlt_name"
+              [control]="queryForm.controls.tlt_name"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="廠商統一編號"
-              controlName="vendorCode"
+              controlName="ven_uniform_List"
               [options]="vendorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.vendorCode"
+              [control]="queryForm.controls.ven_uniform_List"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="位置"
-              controlName="locationCode"
+              controlName="locationList"
               [options]="locationOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.locationCode"
+              [control]="queryForm.controls.locationList"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
               [useGrouping]="false"
               label="版本編號"
-              [startControl]="queryForm.controls.startserial"
-              [endControl]="queryForm.controls.endserial"
+              [startControl]="queryForm.controls.contract_subno_Start"
+              [endControl]="queryForm.controls.contract_subno_End"
               [submitted]="submitted"
             ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="合約狀態"
-              controlName="contractStatus"
+              controlName="approve_status_List"
               [options]="contractStatusOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.contractStatus"
+              [control]="queryForm.controls.approve_status_List"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="區域"
-              controlName="regionCode"
+              controlName="area_no_List"
               [options]="regionOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.regionCode"
+              [control]="queryForm.controls.area_no_List"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="樓層"
-              controlName="floorCode"
+              controlName="tlt_floor_List"
               [options]="floorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.floorCode"
+              [control]="queryForm.controls.tlt_floor_List"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="洽談者"
-              controlName="negotiator"
+              controlName="contact_USR_No_List"
               [options]="negotiatorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.negotiator"
+              [control]="queryForm.controls.contact_USR_No_List"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="組織"
-              controlName="organizationCode"
+              controlName="org_id_List"
               [options]="organizationOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.organizationCode"
+              [control]="queryForm.controls.org_id_List"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="營運狀況"
-              controlName="operationStatus"
+              controlName="tlt_openflag_List"
               [options]="operationStatusOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.operationStatus"
+              [control]="queryForm.controls.tlt_openflag_List"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="抽成額計算方式"
-              controlName="commissionCalculation"
+              controlName="comm_comp_type_List"
               [options]="commissionCalculationOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.commissionCalculation"
+              [control]="queryForm.controls.comm_comp_type_List"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
               label="回函日期"
-              [startControl]="queryForm.controls.responseStartDate"
-              [endControl]="queryForm.controls.responseEndDate"
+              [startControl]="queryForm.controls.feedback_date_Start"
+              [endControl]="queryForm.controls.feedback_date_End"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -176,8 +176,8 @@
             <app-calendar-range
               calendarType="dateRange"
               label="回函截止日"
-              [startControl]="queryForm.controls.responseDeadlineStartDate"
-              [endControl]="queryForm.controls.responseDeadlineEndDate"
+              [startControl]="queryForm.controls.due_date_Start"
+              [endControl]="queryForm.controls.due_date_End"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -185,28 +185,28 @@
             <app-calendar-range
               calendarType="dateRange"
               label="洽談日期"
-              [startControl]="queryForm.controls.negotiationStartDate"
-              [endControl]="queryForm.controls.negotiationEndDate"
+              [startControl]="queryForm.controls.contact_Date_Start"
+              [endControl]="queryForm.controls.contact_Date_End"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="營業型態"
-              controlName="businessType"
+              controlName="paper_type_List"
               [options]="businessTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.businessType"
+              [control]="queryForm.controls.paper_type_List"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
               label="契約起始日"
-              [startControl]="queryForm.controls.contractStartDate"
-              [endControl]="queryForm.controls.contractEndDate"
+              [startControl]="queryForm.controls.tlt_bdate_Start"
+              [endControl]="queryForm.controls.tlt_bdate_End"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -214,8 +214,8 @@
             <app-calendar-range
               calendarType="dateRange"
               label="契約截止日"
-              [startControl]="queryForm.controls.contractDeadlineStartDate"
-              [endControl]="queryForm.controls.contractDeadlineEndDate"
+              [startControl]="queryForm.controls.tlt_edate_Start"
+              [endControl]="queryForm.controls.tlt_edate_End"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -223,8 +223,8 @@
             <app-calendar-range
               calendarType="dateRange"
               label="營運起始日"
-              [startControl]="queryForm.controls.operationStartDate"
-              [endControl]="queryForm.controls.operationEndDate"
+              [startControl]="queryForm.controls.tlt_contract_bdate_Start"
+              [endControl]="queryForm.controls.tlt_contract_bdate_End"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -232,128 +232,140 @@
             <app-calendar-range
               calendarType="dateRange"
               label="營運截止日"
-              [startControl]="queryForm.controls.operationDeadlineStartDate"
-              [endControl]="queryForm.controls.operationDeadlineEndDate"
+              [startControl]="queryForm.controls.tlt_contract_edate_Start"
+              [endControl]="queryForm.controls.tlt_contract_edate_End"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="櫃別"
-              controlName="counterCategory"
+              controlName="tlt_kind_List"
               [options]="counterCategoryOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.counterCategory"
+              [control]="queryForm.controls.tlt_kind_List"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="裝潢方式"
-              controlName="decorationMethod"
+              controlName="deco_type_List"
               [options]="decorationMethodOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.decorationMethod"
+              [control]="queryForm.controls.deco_type_List"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="抽成別"
-              controlName="commissionType"
+              controlName="tlt_term_type_List"
               [options]="commissionTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.commissionType"
+              [control]="queryForm.controls.tlt_term_type_List"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="結帳方式"
-              controlName="settlementMethod"
+              controlName="money_type_List"
               [options]="settlementMethodOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.settlementMethod"
+              [control]="queryForm.controls.money_type_List"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="付款方式"
-              controlName="paymentMethod"
+              controlName="paytype_List"
               [options]="paymentMethodOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.paymentMethod"
+              [control]="queryForm.controls.paytype_List"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="配合方式"
-              controlName="cooperationMethod"
+              controlName="store_way_List"
               [options]="cooperationMethodOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.cooperationMethod"
+              [control]="queryForm.controls.store_way_List"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="是否開立業主發票"
-              controlName="issueOwnerInvoice"
+              controlName="rece_yn"
               [options]="whetherOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.whetherOptions"
+              [control]="queryForm.controls.rece_yn"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="是否使用業主收銀機"
-              controlName="useOwnerCashRegister"
+              controlName="pos_yn"
               [options]="whetherOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.whetherOptions"
+              [control]="queryForm.controls.pos_yn"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="是否為業主收現"
-              controlName="ownerCashCollection"
+              controlName="cash_yn"
               [options]="whetherOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.whetherOptions"
+              [control]="queryForm.controls.cash_yn"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
         </div>
-      </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
-      </div>
+      </form>
+      <div></div>
     </p-accordionTab>
   </p-accordion>
 </div>
-<!-- <div class="card">
-    <div class="col-12">
-        <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-        </app-table>
-    </div>
-</div> -->
+<div class="card">
+  <div class="col-12">
+    <app-table
+      tableKey="TLS14020"
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      [showCheckBox]="true"
+      [showDelete]="false"
+      dataKey="id"
+      [multiSortMeta]="[{ field: 'contract_no', order: 1 }]"
+      [totalRecords]="totalRecords"
+      [lazy]="true"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [loading]="loading"
+    ></app-table>
+    <!-- (detail)="onDetail($event)" (delete)="onDelete($event)" -->
+  </div>
+</div>
