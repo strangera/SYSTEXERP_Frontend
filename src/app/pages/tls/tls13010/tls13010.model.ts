@@ -1,6 +1,7 @@
 // tls13010.model.ts
 // 統一管理 TLS13010 相關型別
 
+// ========== 1. 保留原有的前端邏輯介面（不變） ==========
 export enum WorkflowStep {
   QUERY = 0,           // 查詢頁面
   CONTRACT_INFO = 1,   // 契約基本資訊 (CRU)
