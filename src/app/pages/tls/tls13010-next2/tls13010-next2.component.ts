@@ -20,6 +20,7 @@ import {
   WorkflowStep,
   UnifiedCommissionResponse,
   ChargeSettingApiItem,
+  CleanSubmitData,
 } from '../tls13010/tls13010.model';
 
 @Component({
@@ -2225,7 +2226,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   private submitGeneralCommissionContract(): void {
-    console.log('📤 開始送出一般抽成合約（使用清理後資料）...');
+    console.log('📤 Next2: 開始送出一般抽成合約（使用清理後資料）...');
 
     // 顯示載入中
     this.loading = true;
@@ -2235,14 +2236,14 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       // 🎯 使用新的清理資料方法
       const cleanSubmitData = this.contractFlowService.generateCleanSubmitData();
 
-      console.log('🚀 最終送出的完整 JSON:');
+      console.log('🚀 Next2: 最終送出的完整 JSON:');
       console.log(JSON.stringify(cleanSubmitData, null, 2));
 
       // 🎯 驗證資料
       const validation = this.contractFlowService.validateCleanSubmitData(cleanSubmitData);
 
       if (!validation.isValid) {
-        console.error('❌ 資料驗證失敗:', validation.errors);
+        console.error('❌ Next2: 資料驗證失敗:', validation.errors);
         this.loading = false;
         this.notificationService.unblockUi();
         this.notificationService.errorBubble(`資料驗證失敗: ${validation.errors[0]}`);
@@ -2251,61 +2252,110 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
       // 🎯 顯示警告（如果有）
       if (validation.warnings.length > 0) {
-        console.warn('⚠️ 提交警告:', validation.warnings);
+        console.warn('⚠️ Next2: 提交警告:', validation.warnings);
         validation.warnings.forEach(warning => {
           this.notificationService.warnBubble(warning);
         });
       }
 
-      // 🎯 輸出清理後的完整 JSON（除錯用）
-      console.log('🚀 清理後的完整提交 JSON:');
-      console.log(JSON.stringify(cleanSubmitData, null, 2));
-
-      // 🎯 顯示資料大小比較
-      const sizeInfo = this.contractFlowService.getSubmitDataSize();
-      console.log('📊 資料大小比較:', {
-        原始大小: `${sizeInfo.original} 字元`,
-        清理後大小: `${sizeInfo.clean} 字元`,
-        減少: sizeInfo.reduction
-      });
-
-      // 🎯 調用統一的提交 API
+      // 🎯 調用真實的 API
       this.callCleanSubmitAPI(cleanSubmitData);
 
     } catch (error) {
-      console.error('❌ 準備合約資料時發生錯誤:', error);
+      console.error('❌ Next2: 準備提交資料時發生錯誤:', error);
       this.loading = false;
       this.notificationService.unblockUi();
-      this.notificationService.errorBubble(`準備合約資料時發生錯誤: ${error}`);
+      this.notificationService.errorBubble(`準備提交資料時發生錯誤: ${error}`);
     }
   }
 
+  private callCleanSubmitAPI(cleanData: CleanSubmitData): void {
+    console.log('📤 Next2: 調用真實 API 提交契約資料...');
 
-  private callCleanSubmitAPI(cleanData: any): void {
-    console.log('📤 調用清理後資料送出 API...');
+    // 🎯 調用真實的 API
+    this.tls13010Service.submitFinalTLS13010(cleanData).subscribe({
+      next: (response) => {
+        console.log('✅ Next2: 契約提交成功:', response);
+        this.handleSubmitSuccess(response);
+      },
+      error: (error) => {
+        console.error('❌ Next2: 契約提交失敗:', error);
+        this.handleSubmitError(error);
+      }
+    });
+  }
 
-    // 🎯 TODO: 實際的 API 調用
-    // this.tls13010Service.submitCleanContract(cleanData).subscribe({
-    //   next: (response) => {
-    //     console.log('✅ 合約送出成功:', response);
-    //     this.handleSubmitSuccess(response);
-    //   },
-    //   error: (error) => {
-    //     console.error('❌ 合約送出失敗:', error);
-    //     this.handleSubmitError(error);
-    //   }
-    // });
+  private handleSubmitSuccess(response: any): void {
+    this.loading = false;
+    this.notificationService.unblockUi();
 
-    // 🎯 暫時模擬 API 調用成功
+    console.log('🎉 Next2: 處理提交成功回應:', response);
+
+    // 🎯 顯示成功訊息
+    let successMessage = '契約資料提交成功！';
+    if (response.talentId) {
+      successMessage += `\n專櫃編號: ${response.talentId}`;
+    }
+    if (response.contractNo) {
+      successMessage += `\n合約編號: ${response.contractNo}`;
+    }
+    if (response.totalProcessed) {
+      successMessage += `\n處理項目數: ${response.totalProcessed}`;
+    }
+
+    this.notificationService.successBubble(successMessage);
+
+    // 🎯 顯示警告（如果有）
+    if (response.warnings && response.warnings.length > 0) {
+      response.warnings.forEach((warning: string) => {
+        this.notificationService.warnBubble(warning);
+      });
+    }
+
+    // 🎯 提交成功後清理暫存並導航
+    this.contractFlowService.onSubmitSuccess();
+
+    // 🎯 延遲導航，讓使用者看到成功訊息
     setTimeout(() => {
-      this.loading = false;
-      this.notificationService.unblockUi();
-      this.notificationService.successBubble('契約資料提交成功！');
-
-      // 🎯 提交成功後清理
-      this.contractFlowService.onSubmitSuccess();
       this.router.navigate(['account/tls/tls13010']);
     }, 2000);
+  }
+
+  private handleSubmitError(error: any): void {
+    this.loading = false;
+    this.notificationService.unblockUi();
+
+    console.error('💥 Next2: 處理提交錯誤:', error);
+
+    let errorMessage = '契約資料提交失敗';
+
+    // 🎯 解析錯誤訊息
+    if (error?.error?.Message) {
+      errorMessage += `: ${error.error.Message}`;
+    } else if (error?.message) {
+      errorMessage += `: ${error.message}`;
+    } else if (typeof error === 'string') {
+      errorMessage += `: ${error}`;
+    }
+
+    // 🎯 特殊錯誤處理
+    if (error?.status === 400) {
+      errorMessage = '資料格式錯誤，請檢查輸入內容';
+    } else if (error?.status === 500) {
+      errorMessage = '伺服器內部錯誤，請稍後重試或聯繫管理員';
+    } else if (error?.status === 0) {
+      errorMessage = '網路連線錯誤，請檢查網路狀態';
+    }
+
+    this.notificationService.errorBubble(errorMessage);
+
+    // 🎯 記錄詳細錯誤資訊供除錯
+    console.group('❌ Next2: 詳細錯誤資訊');
+    console.log('Status:', error?.status);
+    console.log('StatusText:', error?.statusText);
+    console.log('Error Object:', error?.error);
+    console.log('Full Error:', error);
+    console.groupEnd();
   }
 
   getDeductionItemCount(): number {

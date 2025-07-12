@@ -57,7 +57,7 @@ export class ContractFlowService {
   // ========== 🎯 新增：清理後的資料生成方法 ==========
 
   /**
-   * 🆕 生成清理後的提交資料（推薦使用）
+   * 🆕 生成清理後的提交資料
    */
   generateCleanSubmitData(): CleanSubmitData {
     console.log('🔄 開始生成清理後的提交資料...');
@@ -116,7 +116,7 @@ export class ContractFlowService {
         commissionMasterUpdates: cleanData.commissions.masters.toUpdate.length,
         totalOperations: cleanData.metadata.totalOperations
       });
-      console.log('✅ 清理後的提交資料生成完成');
+
       console.log('🚀 最終要送出的完整 JSON:');
       console.log(JSON.stringify(cleanData, null, 2));
       return cleanData;
@@ -126,7 +126,6 @@ export class ContractFlowService {
       throw new Error(`生成提交資料失敗: ${error}`);
     }
   }
-
   /**
    * 🎯 計算總操作數量
    */

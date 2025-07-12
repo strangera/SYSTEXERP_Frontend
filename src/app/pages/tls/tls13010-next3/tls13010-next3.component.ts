@@ -19,6 +19,7 @@ import {
   ConditionItem,
   WorkflowStep,
   RentSettingApiData,
+  CleanSubmitData,
 } from '../tls13010/tls13010.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 
@@ -912,28 +913,8 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     }
   }
 
-  // private submitContractData(): void {
-  //   this.loading = true;
-  //   try {
-  //     const submitDataStructure = this.contractFlowService.generateSubmitData();
-  //     console.log('📋 完整提交資料結構:', submitDataStructure);
-  //     this.callSubmitAPI(submitDataStructure);
-  //   } catch (error) {
-  //     console.error('❌ 準備提交資料時發生錯誤:', error);
-  //     this.loading = false;
-  //     this.notificationService.errorBubble('準備提交資料時發生錯誤');
-  //   }
-  // }
-
-
   private submitContractData(): void {
-    console.log('📤 Next3 開始送出合約資料（使用清理後資料）...');
-    // 🔍 除錯：檢查資料狀態
-    console.log('=== 除錯資料狀態 ===');
-    console.log('Step1 資料:', this.contractFlowService.getStep1Data());
-    console.log('QueryRowData:', this.contractFlowService.getQueryRowData());
-    console.log('CurrentData:', this.contractFlowService.getCurrentData());
-    console.log('ContractInfoData:', this.contractInfoData);
+    console.log('📤 Next3: 開始送出合約資料（使用清理後資料）...');
 
     // 🆕 檢查與 Next2 的數量一致性（簡化版）
     if (!this.validateNext2DataConsistency()) {
@@ -950,14 +931,14 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       // 🎯 使用新的清理資料方法
       const cleanSubmitData = this.contractFlowService.generateCleanSubmitData();
 
-      console.log('🚀 Next3 最終送出的完整 JSON:');
+      console.log('🚀 Next3: 最終送出的完整 JSON:');
       console.log(JSON.stringify(cleanSubmitData, null, 2));
 
       // 🎯 驗證資料
       const validation = this.contractFlowService.validateCleanSubmitData(cleanSubmitData);
 
       if (!validation.isValid) {
-        console.error('❌ 資料驗證失敗:', validation.errors);
+        console.error('❌ Next3: 資料驗證失敗:', validation.errors);
         this.loading = false;
         this.notificationService.unblockUi();
         this.notificationService.errorBubble(`資料驗證失敗: ${validation.errors[0]}`);
@@ -966,60 +947,173 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
       // 🎯 顯示警告（如果有）
       if (validation.warnings.length > 0) {
-        console.warn('⚠️ 提交警告:', validation.warnings);
+        console.warn('⚠️ Next3: 提交警告:', validation.warnings);
         validation.warnings.forEach(warning => {
           this.notificationService.warnBubble(warning);
         });
       }
 
-      // 🎯 輸出清理後的完整 JSON（除錯用）
-      console.log('🚀 Next3 清理後的完整提交 JSON:');
-      console.log(JSON.stringify(cleanSubmitData, null, 2));
-
-      // 🎯 顯示資料大小比較
-      const sizeInfo = this.contractFlowService.getSubmitDataSize();
-      console.log('📊 Next3 資料大小比較:', {
-        原始大小: `${sizeInfo.original} 字元`,
-        清理後大小: `${sizeInfo.clean} 字元`,
-        減少: sizeInfo.reduction
-      });
-
-      // 🎯 調用統一的提交 API
+      // 🎯 調用真實的 API
       this.callCleanSubmitAPI(cleanSubmitData);
 
     } catch (error) {
-      console.error('❌ Next3 準備提交資料時發生錯誤:', error);
+      console.error('❌ Next3: 準備提交資料時發生錯誤:', error);
       this.loading = false;
       this.notificationService.unblockUi();
       this.notificationService.errorBubble(`準備提交資料時發生錯誤: ${error}`);
     }
   }
 
-  private callCleanSubmitAPI(cleanData: any): void {
-    console.log('📤 Next3 調用清理後資料送出 API...');
+  private callCleanSubmitAPI(cleanData: CleanSubmitData): void {
+    console.log('📤 Next3: 調用真實 API 提交契約資料...');
 
-    // 🎯 TODO: 實際的 API 調用
-    // this.tls13010Service.submitCleanContract(cleanData).subscribe({
-    //   next: (response) => {
-    //     console.log('✅ Next3 合約送出成功:', response);
-    //     this.handleSubmitSuccess(response);
-    //   },
-    //   error: (error) => {
-    //     console.error('❌ Next3 合約送出失敗:', error);
-    //     this.handleSubmitError(error);
-    //   }
-    // });
+    // 🎯 調用真實的 API
+    this.tls13010Service.submitFinalTLS13010(cleanData).subscribe({
+      next: (response) => {
+        console.log('✅ Next3: 契約提交成功:', response);
+        this.handleSubmitSuccess(response);
+      },
+      error: (error) => {
+        console.error('❌ Next3: 契約提交失敗:', error);
+        this.handleSubmitError(error);
+      }
+    });
+  }
 
-    // 🎯 暫時模擬 API 調用成功
+  private handleSubmitSuccess(response: any): void {
+    this.loading = false;
+    this.notificationService.unblockUi();
+
+    console.log('🎉 Next3: 處理提交成功回應:', response);
+
+    // 🎯 準備成功訊息
+    let successMessage = '契約資料提交成功！';
+    const details: string[] = [];
+
+    if (response.talentId) {
+      details.push(`專櫃編號: ${response.talentId}`);
+    }
+    if (response.contractNo) {
+      details.push(`合約編號: ${response.contractNo}`);
+    }
+    if (response.totalProcessed) {
+      details.push(`處理項目數: ${response.totalProcessed}`);
+    }
+    if (response.processingTime) {
+      details.push(`處理時間: ${response.processingTime}`);
+    }
+
+    if (details.length > 0) {
+      successMessage += '\n\n' + details.join('\n');
+    }
+
+    this.notificationService.successBubble(successMessage);
+
+    // 🎯 顯示警告（如果有）
+    if (response.warnings && response.warnings.length > 0) {
+      console.warn('⚠️ Next3: 收到警告訊息:', response.warnings);
+      response.warnings.forEach((warning: string) => {
+        this.notificationService.warnBubble(warning);
+      });
+    }
+
+    // 🎯 額外的成功後處理
+    this.onContractSubmitSuccess(response);
+
+    // 🎯 提交成功後清理暫存並導航
+    this.contractFlowService.onSubmitSuccess();
+
+    // 🎯 延遲導航，讓使用者看到成功訊息
     setTimeout(() => {
-      this.loading = false;
-      this.notificationService.unblockUi();
-      this.notificationService.successBubble('契約資料提交成功！');
-
-      // 🎯 提交成功後清理
-      this.contractFlowService.onSubmitSuccess();
       this.router.navigate(['account/tls/tls13010']);
-    }, 2000);
+    }, 3000); // Next3 給更多時間讓使用者閱讀詳細資訊
+  }
+
+  private handleSubmitError(error: any): void {
+    this.loading = false;
+    this.notificationService.unblockUi();
+
+    console.error('💥 Next3: 處理提交錯誤:', error);
+
+    let errorMessage = '契約資料提交失敗';
+    let additionalInfo: string[] = [];
+
+    // 🎯 解析錯誤訊息
+    if (error?.error?.Message) {
+      errorMessage += `: ${error.error.Message}`;
+    } else if (error?.message) {
+      errorMessage += `: ${error.message}`;
+    } else if (typeof error === 'string') {
+      errorMessage += `: ${error}`;
+    }
+
+    // 🎯 特殊錯誤處理和建議
+    if (error?.status === 400) {
+      errorMessage = '資料格式錯誤，請檢查輸入內容';
+      additionalInfo.push('請檢查所有必填欄位是否已正確填寫');
+      additionalInfo.push('確認日期格式和數值範圍是否正確');
+    } else if (error?.status === 500) {
+      errorMessage = '伺服器內部錯誤，請稍後重試或聯繫管理員';
+      additionalInfo.push('您的資料已暫存，可稍後重新提交');
+    } else if (error?.status === 0) {
+      errorMessage = '網路連線錯誤，請檢查網路狀態';
+      additionalInfo.push('請確認網路連線正常後重試');
+    } else if (error?.status === 409) {
+      errorMessage = '資料衝突，可能有其他使用者正在編輯相同資料';
+      additionalInfo.push('請重新載入最新資料後再試');
+    }
+
+    // 🎯 顯示主要錯誤訊息
+    this.notificationService.errorBubble(errorMessage);
+
+    // 🎯 顯示額外建議（如果有）
+    if (additionalInfo.length > 0) {
+      setTimeout(() => {
+        additionalInfo.forEach(info => {
+          this.notificationService.infoBubble(info);
+        });
+      }, 1000);
+    }
+
+    // 🎯 記錄詳細錯誤資訊供除錯
+    console.group('❌ Next3: 詳細錯誤資訊');
+    console.log('Status:', error?.status);
+    console.log('StatusText:', error?.statusText);
+    console.log('URL:', error?.url);
+    console.log('Error Object:', error?.error);
+    console.log('Full Error:', error);
+    console.groupEnd();
+
+    // 🎯 額外的錯誤後處理
+    this.onContractSubmitError(error);
+  }
+
+  // 🎯 新增：提交成功後的額外處理
+  private onContractSubmitSuccess(response: any): void {
+    console.log('🎊 Next3: 執行提交成功後的額外處理');
+
+    // 可以在這裡加入額外的成功後邏輯，例如：
+    // - 發送統計資料
+    // - 更新本地暫存
+    // - 記錄操作日誌
+
+    // 🎯 如果有處理摘要，可以記錄
+    if (response.data?.Summary) {
+      console.log('📊 處理摘要:', response.data.Summary);
+    }
+  }
+
+  // 🎯 新增：提交錯誤後的額外處理
+  private onContractSubmitError(error: any): void {
+    console.log('🔧 Next3: 執行提交錯誤後的額外處理');
+
+    // 可以在這裡加入額外的錯誤後邏輯，例如：
+    // - 自動儲存錯誤報告
+    // - 發送錯誤統計
+    // - 提供復原建議
+
+    // 🎯 保持資料暫存狀態，方便使用者重試
+    console.log('💾 錯誤後保持資料暫存狀態，使用者可重新提交');
   }
 
   private validateNext2DataConsistency(): boolean {
@@ -1036,10 +1130,10 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       const next2MasterCount = cleanData.commissions.masters.toInsert.length +
         cleanData.commissions.masters.toUpdate.length;
 
-      const next3RentCount = cleanData.conditions.rents.toInsert.length +
-        cleanData.conditions.rents.toUpdate.length;
+      const next3RentCount = cleanData.conditions.baseRentHigher.toInsert.length +
+        cleanData.conditions.baseRentHigher.toUpdate.length;
 
-      console.log('🔍 Next3 數量一致性檢查:', {
+      console.log('🔍 Next3: 數量一致性檢查:', {
         next2MasterCount,
         next3RentCount,
         isConsistent: next2MasterCount === next3RentCount
@@ -1056,12 +1150,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       return true;
 
     } catch (error) {
-      console.error('❌ 一致性檢查失敗:', error);
+      console.error('❌ Next3: 一致性檢查失敗:', error);
       this.notificationService.warnBubble('無法驗證資料一致性，請檢查資料完整性');
       return true; // 允許繼續，但給出警告
     }
   }
-
 
   // 🎯 導航方法
   override onCancel(): void {

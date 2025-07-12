@@ -603,7 +603,7 @@
             ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
+            <app-dropdown
               label="有無保證金"
               controlName="guaranteeNote"
               [options]="depositTypeOptions"
@@ -611,7 +611,7 @@
               optionValue="value"
               [control]="dataForm.controls.open_deposit"
               [submitted]="submitted"
-            ></app-multi-select>
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
