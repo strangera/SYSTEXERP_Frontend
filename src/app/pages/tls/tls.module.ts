@@ -71,18 +71,6 @@ import { TLS23130Component } from './tls23130/tls23130.component';
 import { TLS23140Component } from './tls23140/tls23140.component';
 import { TLS24010CRUComponent } from './tls24010-cru/tls24010-cru.component';
 import { TLS24010Component } from './tls24010/tls24010.component';
-import { TLS24020CRUComponent } from './tls24020-cru/tls24020-cru.component';
-import { TLS24020Component } from './tls24020/tls24020.component';
-import { TLS24030CRUComponent } from './tls24030-cru/tls24030-cru.component';
-import { TLS24030Component } from './tls24030/tls24030.component';
-import { TLS24040CRUComponent } from './tls24040-cru/tls24040-cru.component';
-import { TLS24040Component } from './tls24040/tls24040.component';
-import { TLS24050CRUComponent } from './tls24050-cru/tls24050-cru.component';
-import { TLS24050Component } from './tls24050/tls24050.component';
-import { TLS24060CRUComponent } from './tls24060-cru/tls24060-cru.component';
-import { TLS24060Component } from './tls24060/tls24060.component';
-import { TLS24070CRUComponent } from './tls24070-cru/tls24070-cru.component';
-import { TLS24070Component } from './tls24070/tls24070.component';
 import { TLS24080CRUComponent } from './tls24080-cru/tls24080-cru.component';
 import { TLS24080Component } from './tls24080/tls24080.component';
 import { TLS25010CRUComponent } from './tls25010-cru/tls25010-cru.component';
@@ -228,7 +216,6 @@ import { TLS2K060CRUComponent } from './tls2k060-cru/tls2k060-cru.component';
 import { TLS2K060Component } from './tls2k060/tls2k060.component';
 import { Tls21030ModComponent } from './tls21030-mod/tls21030-mod.component';
 import { TLS21040ModComponent } from './tls21040-mod/tls21040-mod.component';
-import { TLS24010ModComponent } from './tls24010-mod/tls24010-mod.component';
 import { TLS25010ModComponent } from './tls25010-mod/tls25010-mod.component';
 import { TLS25020ModComponent } from './tls25020-mod/tls25020-mod.component';
 import { TLS25030ModComponent } from './tls25030-mod/tls25030-mod.component';
@@ -483,12 +470,6 @@ import { Tls51070OsComponent } from './tls51070-os/tls51070-os.component';
     TLS23130Component,
     TLS23140Component,
     TLS24010Component,
-    TLS24020Component,
-    TLS24030Component,
-    TLS24040Component,
-    TLS24050Component,
-    TLS24060Component,
-    TLS24070Component,
     TLS24080Component,
     TLS25010Component,
     TLS25020Component,
@@ -583,14 +564,7 @@ import { Tls51070OsComponent } from './tls51070-os/tls51070-os.component';
     TLS23120CRUComponent,
     TLS23130CRUComponent,
     TLS23140CRUComponent,
-
     TLS24010CRUComponent,
-    TLS24020CRUComponent,
-    TLS24030CRUComponent,
-    TLS24040CRUComponent,
-    TLS24050CRUComponent,
-    TLS24060CRUComponent,
-    TLS24070CRUComponent,
     TLS24080CRUComponent,
     TLS25010CRUComponent,
     TLS25020CRUComponent,
@@ -665,7 +639,6 @@ import { Tls51070OsComponent } from './tls51070-os/tls51070-os.component';
     TLS2K060CRUComponent,
     Tls21030ModComponent,
     TLS21040ModComponent,
-    TLS24010ModComponent,
     TLS25010ModComponent,
     TLS25020ModComponent,
     TLS25030ModComponent,

@@ -78,7 +78,7 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { ReportTableGroupComponent } from './componentkit/report-table-group/report-table-group.component';
 import { DialogComponent } from './componentkit/dialog/dialog.component';
 import { RadiobuttonYNComponent } from './componentkit/radiobutton-yn/radiobutton-yn.component';
-import { GroupByFieldPipe } from './componentkit/report-table-group/group-by-field.pipe'; 
+
 
 @NgModule({
   declarations: [
@@ -114,7 +114,7 @@ import { GroupByFieldPipe } from './componentkit/report-table-group/group-by-fie
     ReportTableGroupComponent,
     DialogComponent,
     RadiobuttonYNComponent,
-    GroupByFieldPipe
+    
   ],
   imports: [
     ReactiveFormsModule,
@@ -170,6 +170,8 @@ import { GroupByFieldPipe } from './componentkit/report-table-group/group-by-fie
     ReactiveFormsModule,
     TranslateModule,
     // PrimeNG
+    OverlayPanelModule,
+    MenuModule,
     FileUploadModule,
     OrganizationChartModule,
     ProgressSpinnerModule,
@@ -233,7 +235,7 @@ import { GroupByFieldPipe } from './componentkit/report-table-group/group-by-fie
     ReportTableGroupComponent,
     DialogComponent,
     RadiobuttonYNComponent,
-    GroupByFieldPipe
+    
   ],
 })
 export class SharedModule { }

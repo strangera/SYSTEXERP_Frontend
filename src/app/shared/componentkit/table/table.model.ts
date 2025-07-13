@@ -65,7 +65,7 @@ export const expandAnimation = trigger('expandAnimation', [
 export interface AddButton {
   label: string;
   icon: string;
-  action: (rowData: any) => void;
+  action: (rowData: any, event?: Event) => void;
   disabled?: (rowData: any) => boolean;
 }
 

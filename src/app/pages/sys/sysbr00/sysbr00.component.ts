@@ -1,165 +1,115 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { SYSBR00Service } from '../../../service/api/sys/sysbr00.service';
+import { finalize } from 'rxjs/operators';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { ValidationService } from '../../../shared/service/validation.service';
+const QUERY_STORAGE_KEY = 'sysbr00Query';
 
 @Component({
   selector: 'app-sysbr00',
   templateUrl: './sysbr00.component.html',
-  styleUrl: './sysbr00.component.scss'
+  styleUrls: ['./sysbr00.component.scss'],
 })
-// 縣市區域資料維護作業
-export class SYSBR00Component {
-  ProgNo: string = '410013';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
+export class SYSBR00Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    // SYS2000 地址/縣市主檔
-    city_no: ['', [Validators.maxLength(2)]], // 縣市代碼
-    city_name: ['', [Validators.maxLength(6)]], // 縣市名稱
-    city_group: ['', [Validators.maxLength(2)]], // 區域
+    
+    CITY_No: [''],
+    CITY_Name: [''],
+    CITY_Group: [''],
+    ...createPaginationConfig([{ field: 'CITY_No', order: 1 }])
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    {
-      id: 1, city_no: 1, city_name: '臺北市', city_group: 12,
-      children: [
-        { id: 1, area_no: '63', post_no: '6301', area_name: '松山區' },
-        { id: 2, area_no: '63', post_no: '6302', area_name: '信義區' },
-        { id: 3, area_no: '63', post_no: '6303', area_name: '大安區' }
-      ],
-    },
-    {
-      id: 2, city_no: 9, city_name: '台中市', city_group: 29,
-      children: [
-        { id: 4, area_no: '66', post_no: '6601', area_name: '中區' },
-      ]
-    }
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'city_no', header: '縣市代碼', visible: true },
-    { field: 'city_name', header: '縣市名稱', visible: true },
-    { field: 'city_group', header: '區域', visible: true },
-    // 其他欄位
-  ];
-  subColumns: any[] = [
-    { field: 'area_no', header: '鄉鎮區代碼', visible: true },
-    { field: 'post_no', header: '郵遞區號', visible: true },
-    { field: 'area_name', header: '鄉鎮區名稱', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
 
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-  ) {
+  data: any[] = [];
+  totalRecords = 0;
+  selectedItems: any[] = [];
+
+  columns: any[] = [
+    { field: 'CITY_No', header: '縣市代號', visible: true },
+    { field: 'CITY_Name', header: '縣市名稱', visible: true },
+    { field: 'CITY_Group', header: '群組', visible: true },
+  ];
+
+  constructor(private sysbr00Service: SYSBR00Service) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
+    this.initializePage('SYSBR00', '/sys/sysbr00cru', this.queryForm);
+    
   }
 
-  canQuery(): boolean {
-    return true;
+ onSubmit(form: FormGroup): void {
+  this.submitted = true;
+  if (form.invalid) {
+    this.messageService.warnBubble('請完整填寫查詢條件');
+    return;
   }
 
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      //console.log("extra", extras);
-      this.router.navigate(['/SYSB000/SYSBR00CRU'], extras);
+  const payload = { ...form.value };
+  for (const key in payload) {
+    if (typeof payload[key] === 'string') {
+      payload[key] = payload[key].trim();
+      if (payload[key] === '') payload[key] = null;
     }
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
+  this.loading = true;
+  this.messageService.blockUi();
 
-      this.router.navigate(['/SYSB000/SYSBR00CRU'], extras);
+  this.sysbr00Service.queryCitiesByCondition(payload).pipe(
+    finalize(() => {
+      this.loading = false;
+      this.messageService.unblockUi();
+    })
+  ).subscribe({
+    next: (res) => {
+      this.data = res.Data || [];
+      this.totalRecords = res.TotalCount || this.data.length;
+
+      if (!this.data.length) {
+        this.messageService.warnBubble('查無資料');
+      } else {
+        this.messageService.successBubble('查詢成功');
+      }
+
+      this.queryStateService.setQueryState(QUERY_STORAGE_KEY, payload);
+    },
+    error: () => {
+      this.messageService.errorBubble('查詢錯誤');
     }
-  }
+  });
+}
+override onEdit(row: any): void {
+this.navigateWithState(CRUDStatus.Edit, {
+  ...row,
+  original_CITY_No: row.CITY_No,
+  original_CITY_Name: row.CITY_Name
+});
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
-    };
+}
+onDelete(selectedItems: any[]): void {
+  if (!selectedItems.length) return;
 
-    this.router.navigate(['/SYSB000/SYSBR00CRU'], extras);
-  }
+  const confirmed = window.confirm('是否確定刪除選取項目？');
+  if (!confirmed) return;
+
+  const cityNos = selectedItems.map(item => item.CITY_No); // ✅ 取得 CITY_No 陣列
+
+  this.sysbr00Service.deleteCities(cityNos).subscribe({
+    next: () => {
+      this.messageService.successBubble('刪除成功');
+      this.selectedItems = []; // ✅ 清空已選
+      this.onSubmit(this.queryForm); // ✅ 重新查詢
+    },
+    error: () => {
+      this.messageService.errorBubble('刪除失敗');
+    },
+  });
+}
+
+
+
 }

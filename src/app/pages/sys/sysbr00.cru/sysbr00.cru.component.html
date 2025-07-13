@@ -1,71 +1,193 @@
-<div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="縣市代碼" controlName="city_no" [control]="dataForm.controls.city_no"
-                        [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="縣市名稱" controlName="city_name" [control]="dataForm.controls.city_name"
-                        [submitted]="submitted">>
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="區域" controlName="city_group"
-                        [control]="dataForm.controls.city_group" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-            </div>
-            <!---->
-            <hr />
-            <ng-container formArrayName="items">
-                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                    <div class="grid align-items-center">
-                        <div class="col" style="flex: 1">
-                            <h5>地址/鄉鎮區 {{ i + 1 }}</h5>
-                        </div>
-                        <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)"
-                                [IsDelete]="getFormControl(i, 'area_no').value ? true : false" [crudstatus]="crudstatus"
-                                class="col"></app-button-dynamicallydelete>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="鄉鎮區代碼" controlName="area_no"
-                                [control]="getFormControl(i, 'area_no')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="郵遞區號" controlName="post_no" [control]="getFormControl(i, 'post_no')"
-                                [submitted]="submitted">>
-                            </app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="鄉鎮區名稱" controlName="area_name"
-                                [control]="getFormControl(i, 'area_name')" [submitted]="submitted">>
-                            </app-input-text>
-                        </div>
-                    </div>
-                    <hr />
-                </ng-container>
-            </ng-container>
-            <div class="pt-1">
-                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
-            </div>
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
-            </div>
-        </div>
-    </p-panel>
+<div class="flex gap-2 mb-2">
+  <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  <app-button btnType="back" (click)="onCancel()"></app-button>
 </div>
+<p-panel [header]="formTitle">
+  <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <div class="grid p-fluid">
+      <div class="col-12 md:col-12 lg:col-4">
+        <app-input-text
+          label="縣市代號"
+          controlName="CityNo"
+          [control]="dataForm.controls.CITY_No"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div>
+      <div class="col-12 md:col-12 lg:col-4">
+        <app-input-text
+          label="縣市名稱"
+          controlName="CityName"
+          [control]="dataForm.controls.CITY_Name"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div>
+      <div class="col-12 md:col-12 lg:col-4">
+        <app-input-text
+          label="縣市群組"
+          controlName="CityGroup"
+          [control]="dataForm.controls.CITY_Group"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div>
+    </div>
+    <div
+      class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+    >
+      <app-button btnType="cancel"></app-button>
+      <app-button btnType="submit"></app-button>
+    </div>
+  </form>
+<app-table
+  title="縣市地區"
+  *ngIf="!isFormCreateable"
+  tableKey="SYSBR00CRU"
+  [columns]="columns"
+  [data]="data"
+  dataKey="id"
+  [multiSortMeta]="[{ field: 'AREA_No', order: 1 }]"
+  [insertRowData]="true"
+  [showInsert]="true"
+  [showRowEdit]="true"
+  [showEdit]="false"
+  [showDetail]="false"
+  [showReportMode]="false"
+  [showDelete]="false"
+  [showCheckBox]="false"
+  [showPaginator]="false"
+  [loading]="loading"
+  (delete)="onDelete($event)"
+  (rowEditSave)="onRowEditSave($event)">
+
+    <header>
+      <form [formGroup]="districtForm" (ngSubmit)="onAddDistrict(districtForm)">
+        <p-inputGroup>
+          <div class="p-inputwrapper relative">
+            <span
+              class="text-red-500 absolute"
+              [style]="{ top: '-20px' }"
+              *ngIf="
+                districtForm.controls.AREA_No.invalid &&
+                districtForm.controls.AREA_No.touched
+              "
+            >
+              <ng-container
+                *ngIf="
+                  districtForm.controls.AREA_No.errors?.['required'];
+                  else duplicateError
+                "
+              >
+                請輸入地區代號
+              </ng-container>
+              <ng-template #duplicateError>
+                <ng-container
+                  *ngIf="districtForm.controls.AREA_No.errors?.['duplicate']"
+                >
+                  不可輸入相同的地區代號
+                </ng-container>
+              </ng-template>
+            </span>
+            <input
+              type="text"
+              class="w-full"
+              pInputText
+              [formControl]="districtForm.controls.AREA_No"
+              placeholder="地區代號"
+              maxlength="4"
+              [ngClass]="{
+                'ng-dirty ng-invalid':
+                  districtForm.controls.AREA_No.invalid &&
+                  districtForm.controls.AREA_No.touched,
+              }"
+            />
+          </div>
+          <div class="p-inputwrapper relative">
+            <span
+              class="text-red-500 absolute"
+              [style]="{ top: '-20px' }"
+              *ngIf="
+                districtForm.controls.AREA_Name.invalid &&
+                districtForm.controls.AREA_Name.touched
+              "
+            >
+              <ng-container
+                *ngIf="
+                  districtForm.controls.AREA_Name.errors?.['required'];
+                  else duplicateError
+                "
+              >
+                請輸入地區名稱
+              </ng-container>
+              <ng-template #duplicateError>
+                <ng-container
+                  *ngIf="districtForm.controls.AREA_Name.errors?.['duplicate']"
+                >
+                  不可輸入相同的地區名稱
+                </ng-container>
+              </ng-template>
+            </span>
+            <input
+              type="text"
+              class="w-full"
+              pInputText
+              [formControl]="districtForm.controls.AREA_Name"
+              placeholder="地區名稱"
+              maxlength="12"
+              [ngClass]="{
+                'ng-dirty ng-invalid':
+                  districtForm.controls.AREA_Name.invalid &&
+                  districtForm.controls.AREA_Name.touched,
+              }"
+            />
+          </div>
+          <div class="p-inputwrapper relative">
+            <span
+              class="text-red-500 absolute"
+              [style]="{ top: '-20px' }"
+              *ngIf="
+                districtForm.controls.POST_No.invalid &&
+                districtForm.controls.POST_No.touched
+              "
+            >
+              <ng-container
+                *ngIf="
+                  districtForm.controls.POST_No.errors?.['required'];
+                  else duplicateError
+                "
+              >
+                請輸入郵遞區號
+              </ng-container>
+              <ng-template #duplicateError>
+                <ng-container
+                  *ngIf="districtForm.controls.POST_No.errors?.['duplicate']"
+                >
+                  不可輸入相同的郵遞區號
+                </ng-container>
+              </ng-template>
+            </span>
+            <input
+              type="text"
+              class="w-full"
+              pInputText
+              [formControl]="districtForm.controls.POST_No"
+              placeholder="郵遞區號"
+              maxlength="6"
+              [ngClass]="{
+                'ng-dirty ng-invalid':
+                  districtForm.controls.POST_No.invalid &&
+                  districtForm.controls.POST_No.touched,
+              }"
+            />
+          </div>
+          <button
+            title="新增一筆"
+            type="submit"
+            pButton
+            label="加入"
+            iconPos="right"
+            tooltipPosition="top"
+          ></button>
+        </p-inputGroup>
+      </form>
+    </header>
+  </app-table>
+</p-panel>
