@@ -1,17 +1,40 @@
 import { Component, OnInit } from '@angular/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { monthOptions, POS1002, Pos1018 } from '../fin11200/fin11200.model';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { NgIf } from '@angular/common';
+import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-fin11200-cru',
-  templateUrl: './fin11200-cru.component.html',
+    selector: 'app-fin11200-cru',
+    templateUrl: './fin11200-cru.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        CalendarComponent,
+        TableComponent,
+        NgIf,
+        DialogComponent,
+        InputTextComponent,
+        TranslateModule,
+    ],
 })
 export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> implements OnInit {
   dataForm = this.formBuilder.group({

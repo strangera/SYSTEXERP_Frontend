@@ -1,11 +1,17 @@
 import { Component } from '@angular/core';
-import { Location, formatDate } from '@angular/common';
+import { Location, formatDate, NgFor, NgIf, NgClass, NgSwitch, NgSwitchCase, NgSwitchDefault, DatePipe } from '@angular/common';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { PdfService } from '../../../service/basic/pdf.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ColumnLabelService } from '../../../service/basic/column-label.service';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { DialogModule } from 'primeng/dialog';
+import { FormsModule } from '@angular/forms';
+import { ButtonDirective } from 'primeng/button';
+import { TableModule } from 'primeng/table';
+import { PrimeTemplate } from 'primeng/api';
 
 interface GroupedDataItem {
   tltKey: string;
@@ -16,9 +22,25 @@ interface GroupedDataItem {
 }
 
 @Component({
-  selector: 'app-tls23120-cru',
-  templateUrl: './tls23120-cru.component.html',
-  styleUrls: ['./tls23120-cru.component.scss'],
+    selector: 'app-tls23120-cru',
+    templateUrl: './tls23120-cru.component.html',
+    styleUrls: ['./tls23120-cru.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        DialogModule,
+        FormsModule,
+        ButtonDirective,
+        NgFor,
+        NgIf,
+        TableModule,
+        PrimeTemplate,
+        NgClass,
+        NgSwitch,
+        NgSwitchCase,
+        NgSwitchDefault,
+        DatePipe,
+    ],
 })
 export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
   // 原始欄位與資料

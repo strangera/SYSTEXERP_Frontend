@@ -1,15 +1,25 @@
 import { ITLS52050Data, Tls52050Service } from './../../../service/api/tls/tls52050.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize, map } from 'rxjs';
 import { MAM_StatusOptions, POS2008M_COLUMNS } from './tls52050.model';
-import { FileSelectEvent } from 'primeng/fileupload';
+import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { ExportLabelService, IExportLabelRequest } from '../../../service/utility/exportLabel.service';
 import { HttpResponse } from '@angular/common/http';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CheckboxModule } from 'primeng/checkbox';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 export const enum MAMStatus {
   已申請 = '0',
   已審核 = '1',
@@ -19,9 +29,25 @@ export const enum MAMStatus {
 }
 
 @Component({
-  selector: 'app-tls52050',
-  templateUrl: './tls52050.component.html',
-  styleUrls: ['./tls52050.component.scss'],
+    selector: 'app-tls52050',
+    templateUrl: './tls52050.component.html',
+    styleUrls: ['./tls52050.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        FileUploadModule,
+        ButtonComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        DropdownComponent,
+        MultiSelectComponent,
+        CalendarRangeComponent,
+        CheckboxModule,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> implements OnInit {
   queryForm = this.formBuilder.group({

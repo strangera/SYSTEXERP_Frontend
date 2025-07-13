@@ -8,8 +8,8 @@ describe('CalendarRangeComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [CalendarRangeComponent]
-    })
+    imports: [CalendarRangeComponent]
+})
     .compileComponents();
 
     fixture = TestBed.createComponent(CalendarRangeComponent);

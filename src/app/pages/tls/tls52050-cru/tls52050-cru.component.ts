@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ITLS52050Data, POS2008Data, Tls52050Service } from '../../../service/api/tls/tls52050.service';
 import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
@@ -7,10 +7,45 @@ import { DropDownListService, IDropdownItem } from '../../../service/utility/dro
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime, finalize, map } from 'rxjs';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CheckboxModule } from 'primeng/checkbox';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { NgIf } from '@angular/common';
+import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
+import { DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-tls52050-cru',
-  templateUrl: './tls52050-cru.component.html',
+    selector: 'app-tls52050-cru',
+    templateUrl: './tls52050-cru.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        DropdownComponent,
+        InputTextareaComponent,
+        CalendarRangeComponent,
+        CheckboxModule,
+        CalendarComponent,
+        InputNumberComponent,
+        TableComponent,
+        NgIf,
+        DialogComponent,
+        DropdownTableComponent,
+        TranslateModule,
+    ],
 })
 export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

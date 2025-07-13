@@ -3,6 +3,7 @@ import { AuthService } from '../../../service/system/auth.service';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { Subject, takeUntil } from 'rxjs';
 import { FormGroup } from '@angular/forms';
+import { Button } from 'primeng/button';
 interface ButtonConfig {
   label: string;
   icon?: string;
@@ -15,9 +16,11 @@ interface ButtonConfig {
   permissionCode?: string; // 加上這個，表示 permissionCode 可能是 string 或 undefined
 }
 @Component({
-  selector: 'app-button',
-  templateUrl: './button.component.html',
-  styleUrl: './button.component.scss'
+    selector: 'app-button',
+    templateUrl: './button.component.html',
+    styleUrl: './button.component.scss',
+    standalone: true,
+    imports: [Button]
 })
 export class ButtonComponent implements OnInit, OnDestroy {
   @Input() btnType: 'default' | 'create' | 'edit' | 'delete' | 'query' | 'cancel' | 'clear' | 'submit' | 'next' | 'previous' | 'smartclear' | 'report' | 'back' | 'CSV'  | 'textclear' = 'default';

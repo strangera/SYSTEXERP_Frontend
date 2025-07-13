@@ -1,17 +1,27 @@
 import { Component } from '@angular/core';
 import { FIN13030Data, FIN13030Service } from '../../../service/api/fin/fin13030.service';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { DropdownOption } from '../../../shared/models/api/base-api.interface';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { NgIf } from '@angular/common';
 
 @Component({
-  selector: 'app-fin13030-cru',
-  templateUrl: './fin13030-cru.component.html',
-  styleUrl: './fin13030-cru.component.scss'
+    selector: 'app-fin13030-cru',
+    templateUrl: './fin13030-cru.component.html',
+    styleUrl: './fin13030-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarComponent, InputNumberComponent, DropdownComponent, NgIf]
 })
 export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
   dataForm = this.formBuilder.group({

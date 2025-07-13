@@ -1,4 +1,4 @@
-import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { Router, NavigationEnd } from '@angular/router';
@@ -9,6 +9,11 @@ import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { ContractFlowService } from '../tls13010/services/contract-flow.service';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 import { FareItem, ContractInfo, WorkflowStep } from '../tls13010/tls13010.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf, NgFor } from '@angular/common';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { AccordionModule } from 'primeng/accordion';
 
 // 介面定義
 interface CategoryItem {
@@ -21,9 +26,11 @@ interface CategoryItem {
 }
 
 @Component({
-  selector: 'app-tls13010-next1',
-  templateUrl: './tls13010-next1.component.html',
-  styleUrls: ['./tls13010-next1.component.scss']
+    selector: 'app-tls13010-next1',
+    templateUrl: './tls13010-next1.component.html',
+    styleUrls: ['./tls13010-next1.component.scss'],
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, NgFor]
 })
 export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
 

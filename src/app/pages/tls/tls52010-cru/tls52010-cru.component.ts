@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { debounceTime, finalize } from 'rxjs';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
@@ -8,12 +8,43 @@ import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../share
 import { validateMinNumber } from '../../../shared/models/system/validate-field.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
-import { FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { FieldsConfig, DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { NgClass, NgIf } from '@angular/common';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 2.5.2.1  採購單維護作業 CRU
 @Component({
-  selector: 'app-tls52010-cru',
-  templateUrl: './tls52010-cru.component.html',
+    selector: 'app-tls52010-cru',
+    templateUrl: './tls52010-cru.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        DropdownComponent,
+        NgClass,
+        NgIf,
+        InputNumberComponent,
+        CalendarComponent,
+        InputTextareaComponent,
+        TableComponent,
+        DialogComponent,
+        DropdownTableComponent,
+        TranslateModule,
+    ],
 })
 export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> implements OnInit {
   // === 表單群組 (與 POS2016 欄位對應) ===

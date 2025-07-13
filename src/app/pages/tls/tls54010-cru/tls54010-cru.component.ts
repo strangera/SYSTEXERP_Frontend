@@ -1,11 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import {
-  FormArray,
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  Validators,
-} from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { WarehouseService } from '../../../service/basic/warehouse.service';
@@ -21,10 +15,38 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { NgFor, NgIf } from '@angular/common';
+import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
+import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 @Component({
-  selector: 'app-tls54010-cru',
-  templateUrl: './tls54010-cru.component.html',
-  styleUrl: './tls54010-cru.component.scss',
+    selector: 'app-tls54010-cru',
+    templateUrl: './tls54010-cru.component.html',
+    styleUrl: './tls54010-cru.component.scss',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        DropdownComponent,
+        InputNumberRangeComponent,
+        EditorTextComponent,
+        CalendarRangeComponent,
+        NgFor,
+        ButtonDynamicallydeleteComponent,
+        ButtonDynamicallyaddComponent,
+        ButtonComponent,
+        NgIf,
+    ],
 })
 export class TLS54010CRUComponent
   extends BasicCrupageComponent

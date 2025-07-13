@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormGroup } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { AnnouncementCategoryService } from '../../../service/basic/announcement-category.service';
 import { SYSBR10Service } from '../../../service/api/sys/sysbr10.service';
@@ -8,11 +8,34 @@ import { DropDownListService } from '../../../service/utility/dropDownList.servi
 import { forkJoin } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-sysbr10',
-  templateUrl: './sysbr10.component.html',
-  styleUrls: ['./sysbr10.component.scss'],
+    selector: 'app-sysbr10',
+    templateUrl: './sysbr10.component.html',
+    styleUrls: ['./sysbr10.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        CalendarRangeComponent,
+        MultiSelectComponent,
+        RadiobuttonComponent,
+        InputTextComponent,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 export class SYSBR10Component extends BasicQueryPageComponent<any> {
   // 下拉選單資料

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -16,14 +16,25 @@ import { InstallmentPeriodService } from '../../../service/basic/installment-per
 import { AcquiringBankService } from '../../../service/basic/acquiring-bank.service';
 import { QueryFilterService } from '../../../service/basic/query-filter.service';
 import { CreditCardTransactionTypeService } from '../../../service/basic/credit-card-transaction-type.service'; // Import for transaction type
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus'; // Add this import as requested
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common'; // Add this import as requested
 
 const now = new Date();
 
 @Component({
   selector: 'app-tls27040-cru',
   templateUrl: './tls27040-cru.component.html',
-  styleUrl: './tls27040-cru.component.scss'
+  styleUrl: './tls27040-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputNumberComponent, CalendarComponent, TableComponent, ButtonComponent, NgIf]
 })
 export class TLS27040CRUComponent {
 
@@ -215,7 +226,7 @@ export class TLS27040CRUComponent {
         },
         skipLocationChange: true
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -228,7 +239,7 @@ export class TLS27040CRUComponent {
       },
       skipLocationChange: true
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
 
   get isFormEditable(): boolean {

@@ -6,20 +6,31 @@ import { WillingnessLevelService } from './../../../service/basic/willingness-le
 import { UserCodeService } from './../../../service/basic/user-code.service';
 // --Commonly used imports--
 import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { ValidationService } from '../../../shared/service/validation.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
 
 // 2.1.2.2 專櫃訪談記錄維護CRU
 @Component({
-  selector: 'app-tls12020-cru',
-  templateUrl: './tls12020-cru.component.html',
-  styleUrl: './tls12020-cru.component.scss'
+    selector: 'app-tls12020-cru',
+    templateUrl: './tls12020-cru.component.html',
+    styleUrl: './tls12020-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarComponent, InputNumberComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class TLS12020CRUComponent extends BasicCrupageComponent implements OnInit {
   positionNumberOptions: any[] = [];

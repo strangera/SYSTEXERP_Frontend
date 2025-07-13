@@ -4,18 +4,49 @@ import { LayoutService } from '../../../layout/layout.service';
 import { ApiResponse, AuthService } from '../../../service/system/auth.service';
 import { UserInfo } from '../../../shared/models/system/userInfo';
 import { concatMap, finalize, Subscription, throwError } from 'rxjs'; // 引入 tap
-import { MenuItem } from 'primeng/api';
-import { Router } from '@angular/router';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MenuItem, PrimeTemplate } from 'primeng/api';
+import { Router, RouterLink } from '@angular/router';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ApiItem, SsoDashboardService } from './sso-dashboard.service';
 import { EncryptionService } from '../../../shared/service/encryption.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { ValidationService } from '../../../shared/service/validation.service';
+import { NgIf, NgClass, NgStyle, NgFor, AsyncPipe } from '@angular/common';
+import { TooltipModule } from 'primeng/tooltip';
+import { MenuModule } from 'primeng/menu';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { CardModule } from 'primeng/card';
+import { Button } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { PasswordModule } from 'primeng/password';
+import { DividerModule } from 'primeng/divider';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-sso-dashboard',
-  templateUrl: './sso-dashboard.component.html',
+    selector: 'app-sso-dashboard',
+    templateUrl: './sso-dashboard.component.html',
+    standalone: true,
+    imports: [
+        NgIf,
+        RouterLink,
+        NgClass,
+        NgStyle,
+        TooltipModule,
+        MenuModule,
+        PrimeTemplate,
+        ProgressSpinnerModule,
+        NgFor,
+        CardModule,
+        Button,
+        DialogModule,
+        FormsModule,
+        ReactiveFormsModule,
+        PasswordModule,
+        DividerModule,
+        AsyncPipe,
+        TranslateModule,
+    ],
 })
 export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDestroy
   logo = 'assets/layout/images/logo.png';

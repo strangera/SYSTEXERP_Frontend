@@ -1,13 +1,30 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Fin11040Service } from '../../../service/api/fin/fin11040.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { columns, TDS1008Data } from './fin11040.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 @Component({
-  selector: 'app-fin11040',
-  templateUrl: './fin11040.component.html',
+    selector: 'app-fin11040',
+    templateUrl: './fin11040.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 //1.1.1.4 銷項品項資料設定
 export class FIN11040Component extends BasicQueryPageComponent<TDS1008Data> implements OnInit {

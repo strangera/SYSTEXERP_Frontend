@@ -1,15 +1,32 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ISysbc00Data, Sysbc00Service } from '../../../service/api/sys/sysbc00.service';
 import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { finalize } from 'rxjs';
 import { Sys1004Service } from '../../../service/api/sys/sys1004.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-sysbc00',
-  templateUrl: './sysbc00.component.html',
+    selector: 'app-sysbc00',
+    templateUrl: './sysbc00.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 // 銀行基本資料維護作業
 export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> implements OnInit {

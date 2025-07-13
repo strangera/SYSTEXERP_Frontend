@@ -1,10 +1,13 @@
 import { Component, Input } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
 import { ValidationService } from '../../service/validation.service';
+import { NgIf } from '@angular/common';
 
 @Component({
-  selector: 'app-control-messages',
-  templateUrl: './control-messages.component.html',
+    selector: 'app-control-messages',
+    templateUrl: './control-messages.component.html',
+    standalone: true,
+    imports: [NgIf],
 })
 export class ControlMessagesComponent {
   // 是否按下確認

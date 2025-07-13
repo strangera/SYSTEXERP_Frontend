@@ -4,8 +4,8 @@ import { FormGroup } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subscription } from 'rxjs';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { SelectItem } from 'primeng/api';
-import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { SelectItem, PrimeTemplate } from 'primeng/api';
+import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { ContractFlowService } from '../tls13010/services/contract-flow.service';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
@@ -22,11 +22,20 @@ import {
   ChargeSettingApiItem,
   SubmitDataStructure
 } from '../tls13010/tls13010.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { AccordionModule } from 'primeng/accordion';
+import { DialogModule } from 'primeng/dialog';
+import { ButtonDirective } from 'primeng/button';
 
 @Component({
-  selector: 'app-tls13010-next2',
-  templateUrl: './tls13010-next2.component.html',
-  styleUrls: ['./tls13010-next2.component.scss']
+    selector: 'app-tls13010-next2',
+    templateUrl: './tls13010-next2.component.html',
+    styleUrls: ['./tls13010-next2.component.scss'],
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, DialogModule, PrimeTemplate, ButtonDirective]
 })
 export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> implements OnInit, OnDestroy {
   @ViewChild('expandedContent') expandedContentTemplate!: TemplateRef<any>;

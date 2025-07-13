@@ -1,10 +1,18 @@
 import { Tls14030Service } from './../../../service/API/tls/tls14030.service';
 import { Component, OnInit } from '@angular/core';
-import { Validators, FormGroup } from '@angular/forms';
+import { Validators, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { Garantee_Ticket } from '../../../shared/models/tls/tls000.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 專櫃下拉資訊
 interface TLTTALENT{
@@ -18,9 +26,11 @@ interface TLTTALENT{
 }
 
 @Component({
-  selector: 'app-tls14030-cru',
-  templateUrl: './tls14030-cru.component.html',
-  styleUrl: './tls14030-cru.component.scss'
+    selector: 'app-tls14030-cru',
+    templateUrl: './tls14030-cru.component.html',
+    styleUrl: './tls14030-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarComponent, NgIf, TranslateModule]
 })
 
 export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>

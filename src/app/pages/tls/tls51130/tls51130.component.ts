@@ -1,14 +1,31 @@
 import { Component } from '@angular/core';
-import { FormGroup } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TLS51130Service } from '../../../service/api/tls/tls51130.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-tls51130',
-  templateUrl: './tls51130.component.html',
-  styleUrls: ['./tls51130.component.scss'],
+    selector: 'app-tls51130',
+    templateUrl: './tls51130.component.html',
+    styleUrls: ['./tls51130.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        DropdownComponent,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 export class TLS51130Component extends BasicQueryPageComponent<any> {
   selectedItems: any[] = [];

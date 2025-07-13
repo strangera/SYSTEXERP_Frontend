@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
@@ -9,11 +9,30 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { LocationCodeService } from './../../../service/basic/locationcode.service';
 import { FloorService } from './../../../service/basic/floor.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-cpm21060',
   templateUrl: './cpm21060.component.html',
   styleUrl: './cpm21060.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    InputTextComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 export class CPM21060Component extends BasicQpageComponent implements OnInit {
   // 表單控制項
@@ -121,7 +140,7 @@ export class CPM21060Component extends BasicQpageComponent implements OnInit {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -135,6 +154,6 @@ export class CPM21060Component extends BasicQpageComponent implements OnInit {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
 }

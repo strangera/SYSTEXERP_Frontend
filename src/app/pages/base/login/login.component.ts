@@ -1,18 +1,30 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { first } from 'rxjs';
-import { registerLocaleData } from '@angular/common';
+import { registerLocaleData, NgIf, NgClass } from '@angular/common';
 import zhHant from '@angular/common/locales/zh-Hant';
 import { AuthService } from '../../../service/system/auth.service';
 import { userLogin } from '../../../shared/models/system/userLogin';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { PasswordModule } from 'primeng/password';
+import { Button, ButtonDirective } from 'primeng/button';
 
 registerLocaleData(zhHant, 'zh-tw');
 
 @Component({
-  selector: 'app-login',
-  templateUrl: './login.component.html',
-  styleUrl: './login.component.scss',
+    selector: 'app-login',
+    templateUrl: './login.component.html',
+    styleUrl: './login.component.scss',
+    standalone: true,
+    imports: [
+        FormsModule,
+        ReactiveFormsModule,
+        NgIf,
+        PasswordModule,
+        NgClass,
+        Button,
+        ButtonDirective,
+    ],
 })
 export class LoginComponent {
   logoPath = 'assets/layout/images/login_logo.png';

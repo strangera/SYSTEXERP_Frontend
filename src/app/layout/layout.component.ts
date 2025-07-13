@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, Renderer2, Type, ViewChild } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
+import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
 import { Subject, Subscription, filter } from 'rxjs';
 import { UserInfo } from '../shared/models/system/userInfo';
 import { AuthService } from '../service/system/auth.service';
@@ -7,6 +7,7 @@ import { AppMenulistComponent } from './app.menulist/app.menulist.component';
 import { AppTopbarComponent } from './app.topbar/app.topbar.component';
 import { LayoutService } from './layout.service';
 import { computed } from '@angular/core';
+import { NgIf, NgClass } from '@angular/common';
 
 interface TabItem {
   title: string;
@@ -19,9 +20,11 @@ interface AddTabItem {
 }
 
 @Component({
-  selector: 'app-layout',
-  templateUrl: './layout.component.html',
-  styleUrl: './layout.component.scss'
+    selector: 'app-layout',
+    templateUrl: './layout.component.html',
+    styleUrl: './layout.component.scss',
+    standalone: true,
+    imports: [NgIf, NgClass, AppTopbarComponent, AppMenulistComponent, RouterOutlet]
 })
 export class LayoutComponent implements AfterViewInit, OnDestroy {
   @ViewChild(AppMenulistComponent) appSidebar!: AppMenulistComponent;

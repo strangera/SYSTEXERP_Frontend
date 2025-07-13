@@ -1,7 +1,7 @@
 import { NeedPayTicketService } from './../../../service/basic/need-pay-ticket.service';
 import { WhetherService } from './../../../service/basic/whether.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -9,13 +9,20 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
 //
 
 //3.1.1.8 處分資產基本設定
 @Component({
-  selector: 'app-ass11080',
-  templateUrl: './ass11080.component.html',
-  styleUrl: './ass11080.component.scss'
+    selector: 'app-ass11080',
+    templateUrl: './ass11080.component.html',
+    styleUrl: './ass11080.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, ButtonComponent, TranslateModule]
 })
 export class ASS11080Component extends BasicQpageComponent implements OnInit {
   //

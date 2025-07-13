@@ -1,12 +1,17 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { CalendarMonthChangeEvent, CalendarYearChangeEvent } from 'primeng/calendar';
+import { CalendarMonthChangeEvent, CalendarYearChangeEvent, CalendarModule } from 'primeng/calendar';
+import { NgIf, NgClass } from '@angular/common';
+import { PrimeTemplate } from 'primeng/api';
+import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 
 @Component({
-  selector: 'app-calendar',
-  templateUrl: './calendar.component.html',
-  styleUrl: './calendar.component.scss'
+    selector: 'app-calendar',
+    templateUrl: './calendar.component.html',
+    styleUrl: './calendar.component.scss',
+    standalone: true,
+    imports: [NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent]
 })
 export class CalendarComponent extends BasicKitComponent implements OnInit {
   // 📌 基本設置

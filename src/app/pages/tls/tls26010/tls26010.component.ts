@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
 import {
@@ -11,14 +11,23 @@ import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 預購活動檔期設定
 const now = new Date();
 
 @Component({
-  selector: 'app-tls26010',
-  templateUrl: './tls26010.component.html',
-  styleUrls: ['./tls26010.component.scss']
+    selector: 'app-tls26010',
+    templateUrl: './tls26010.component.html',
+    styleUrls: ['./tls26010.component.scss'],
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, TableComponent, TranslateModule]
 })
 export class TLS26010Component {
 

@@ -1,18 +1,28 @@
 import { Component, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { ValidationService } from '../../../shared/service/validation.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 //---------------------------------
 
 // 2.2.19.1 餘代卡產卡作業CRU
 @Component({
-  selector: 'app-tls2k010-cru',
-  templateUrl: './tls2k010-cru.component.html',
-  styleUrl: './tls2k010-cru.component.scss'
+    selector: 'app-tls2k010-cru',
+    templateUrl: './tls2k010-cru.component.html',
+    styleUrl: './tls2k010-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class TLS2K010CRUComponent {
   ProgNo: string = '220097';

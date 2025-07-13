@@ -7,7 +7,7 @@ import { FloorService } from './../../../service/basic/floor.service';
 import { CounterCodeService } from './../../../service/basic/counter-code.service';
 import { SettlementMethodService } from './../../../service/basic/settlement-method.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -19,12 +19,24 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { ValidationService } from '../../../shared/service/validation.service';
 import { CommissionTypeService } from '../../../service/basic/commission-type.service';
 import { CooperationMethodService } from '../../../service/basic/cooperation-method.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { CheckboxModule } from 'primeng/checkbox';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.14.5 專櫃帳款試算彙總表
 @Component({
-  selector: 'app-tls2e050',
-  templateUrl: './tls2e050.component.html',
-  styleUrl: './tls2e050.component.scss'
+    selector: 'app-tls2e050',
+    templateUrl: './tls2e050.component.html',
+    styleUrl: './tls2e050.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, RadiobuttonComponent, TableComponent, TranslateModule]
 })
 export class TLS2E050Component {
   ProgNo: string = '220074';

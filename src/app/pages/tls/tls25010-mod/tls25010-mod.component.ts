@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
 import {
@@ -12,14 +12,26 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 const now = new Date();
 //商場違規類別維護作業
 @Component({
   selector: 'app-tls25010-mod',
-
   templateUrl: './tls25010-mod.component.html',
   styleUrl: './tls25010-mod.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    ButtonComponent,
+  ],
 })
 export class TLS25010ModComponent {
   ProgNo: string = '220032';
@@ -135,7 +147,7 @@ export class TLS25010ModComponent {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -148,7 +160,7 @@ export class TLS25010ModComponent {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
   onSubmitMOD() { }
 }

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -10,13 +10,27 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
 import { VendorService } from '../../../service/basic/vendor.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { PaymentMethodService } from '../../../service/basic/payment-method.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 //
 
 //3.1.1.7 備用供應商資料維護作業
 @Component({
-  selector: 'app-ass11070',
-  templateUrl: './ass11070.component.html',
-  styleUrl: './ass11070.component.scss'
+    selector: 'app-ass11070',
+    templateUrl: './ass11070.component.html',
+    styleUrl: './ass11070.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, InputTextComponent, InputNumberComponent, InputNumberRangeComponent, EditorTextComponent, TableComponent, TranslateModule]
 })
 export class ASS11070Component extends BasicQpageComponent implements OnInit {
   //

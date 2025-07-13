@@ -1,6 +1,6 @@
 import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { SortMeta } from 'primeng/api';
@@ -8,6 +8,15 @@ import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { AddButton } from '../../../shared/componentkit/table/table.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AsyncPipe } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 export const enum POStatus {
   已申請 = '0',
   取消 = '1',
@@ -40,8 +49,22 @@ export interface VendorData {
 }
 
 @Component({
-  selector: 'app-sysb200',
-  templateUrl: './sysb200.component.html',
+    selector: 'app-sysb200',
+    templateUrl: './sysb200.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        MultiSelectComponent,
+        InputTextComponent,
+        DropdownComponent,
+        TableComponent,
+        AsyncPipe,
+        TranslateModule,
+    ],
 })
 export class SYSB200Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({

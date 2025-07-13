@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenuItem } from 'primeng/api';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
@@ -7,6 +7,12 @@ import { AuthService } from '../../../service/system/auth.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { Router } from '@angular/router';
 import { EncryptionService } from '../../../shared/service/encryption.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { PasswordComponent } from './password/password.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface UserInfo {
   AccessToken: string;
@@ -18,8 +24,19 @@ export interface UserInfo {
 }
 
 @Component({
-  selector: 'app-changepsw',
-  templateUrl: './changepsw.component.html',
+    selector: 'app-changepsw',
+    templateUrl: './changepsw.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        PasswordComponent,
+        ButtonComponent,
+        TranslateModule,
+    ],
 })
 export class ChangepswComponent implements OnInit {
   submitted = false;

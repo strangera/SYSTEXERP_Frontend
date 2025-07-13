@@ -13,21 +13,19 @@ import { DividerModule } from 'primeng/divider';
 import { PasswordModule } from 'primeng/password';
 
 @NgModule({
-  declarations: [
-    SsoDashboardComponent
-  ],
-  imports: [
-    CommonModule,
-    SsoDashboardRoutingModule,
-    TranslateModule,
-    ProgressSpinnerModule,
-    CardModule,
-    MenuModule,
-    ButtonModule,
-    DialogModule,
-    ReactiveFormsModule,
-    DividerModule,
-    PasswordModule
-  ],
+    imports: [
+        CommonModule,
+        SsoDashboardRoutingModule,
+        TranslateModule,
+        ProgressSpinnerModule,
+        CardModule,
+        MenuModule,
+        ButtonModule,
+        DialogModule,
+        ReactiveFormsModule,
+        DividerModule,
+        PasswordModule,
+        SsoDashboardComponent
+    ],
 })
 export class SsoDashboardModule { }

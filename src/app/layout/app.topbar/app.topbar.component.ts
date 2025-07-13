@@ -1,15 +1,23 @@
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output, ViewChild, ViewEncapsulation } from '@angular/core';
-import { MenuItem } from 'primeng/api';
+import { MenuItem, PrimeTemplate } from 'primeng/api';
 import { LayoutService } from '../layout.service';
 import { AuthService } from '../../service/system/auth.service';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UserInfo } from '../../shared/models/system/userInfo';
 import { FunsrightInfo } from '../../shared/models/system/funsrightInfo';
 import { interval, Subscription } from 'rxjs';
 import { NotificationService } from '../../shared/component/notification-message/notification.service';
-import { OverlayPanel } from 'primeng/overlaypanel';
-import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
+import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
+import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
+import { NgFor, NgClass, NgIf, NgStyle, DatePipe } from '@angular/common';
+import { Button } from 'primeng/button';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { TooltipModule } from 'primeng/tooltip';
+import { TableModule } from 'primeng/table';
+import { MenuModule } from 'primeng/menu';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface Favorite {
   USER_No: string,
@@ -24,10 +32,31 @@ interface Favorite {
 }
 
 @Component({
-  selector: 'app-topbar',
-  templateUrl: './app.topbar.component.html',
-  styleUrl: './app.topbar.component.scss',
-  encapsulation: ViewEncapsulation.None,
+    selector: 'app-topbar',
+    templateUrl: './app.topbar.component.html',
+    styleUrl: './app.topbar.component.scss',
+    encapsulation: ViewEncapsulation.None,
+    standalone: true,
+    imports: [
+        RouterLink,
+        NgFor,
+        Button,
+        NgClass,
+        FormsModule,
+        ReactiveFormsModule,
+        IconFieldModule,
+        AutoCompleteModule,
+        InputIconModule,
+        TooltipModule,
+        OverlayPanelModule,
+        TableModule,
+        PrimeTemplate,
+        NgIf,
+        NgStyle,
+        MenuModule,
+        DatePipe,
+        TranslateModule,
+    ],
 })
 export class AppTopbarComponent implements OnInit, OnDestroy {
   @ViewChild('appTopbarDiv', { static: false }) appTopbarDiv!: ElementRef;

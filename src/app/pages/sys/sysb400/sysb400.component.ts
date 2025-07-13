@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { option, Sysb400m } from '../../../shared/models/sys/sysb000.module';
@@ -7,13 +7,32 @@ import { Sysb300Service } from '../../../service/api/sys/sysb300.service';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 import { apiOption } from '../../../shared/models/tls/tls000.model';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 // 組織碼設定作業
 @Component({
-  selector: 'app-sysb400',
-  templateUrl: './sysb400.component.html',
-  styleUrls: ['./sysb400.component.scss'],
+    selector: 'app-sysb400',
+    templateUrl: './sysb400.component.html',
+    styleUrls: ['./sysb400.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        DropdownComponent,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 export class SYSB400Component
   extends BasicQueryPageComponent<Sysb400m>

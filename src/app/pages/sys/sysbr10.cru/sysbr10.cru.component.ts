@@ -1,16 +1,43 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
 import { AnnouncementCategoryService } from '../../../service/basic/announcement-category.service';
 import { SYSBR10Service } from '../../../service/api/sys/sysbr10.service';
 import { Column } from '../../../shared/componentkit/table/table.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { NgIf } from '@angular/common';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-sysbr10.cru',
-  templateUrl: './sysbr10.cru.component.html',
-  styleUrls: ['./sysbr10.cru.component.scss'],
+    selector: 'app-sysbr10.cru',
+    templateUrl: './sysbr10.cru.component.html',
+    styleUrls: ['./sysbr10.cru.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        CalendarRangeComponent,
+        RadiobuttonComponent,
+        DropdownComponent,
+        InputTextComponent,
+        EditorTextComponent,
+        NgIf,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 export class SYSBR10CRUComponent
   extends BasicCruPageComponent<any>

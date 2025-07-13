@@ -1,9 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { Tls14010Service } from '../../../service/api/tls/tls14010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 //建立查詢項目的interface
 export interface TLTContract {
@@ -22,9 +31,11 @@ export interface TLTContract {
 }
 
 @Component({
-  selector: 'app-tls14010',
-  templateUrl: './tls14010.component.html',
-  styleUrls: ['./tls14010.component.scss']
+    selector: 'app-tls14010',
+    templateUrl: './tls14010.component.html',
+    styleUrls: ['./tls14010.component.scss'],
+    standalone: true,
+    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, DropdownComponent, CalendarRangeQuickComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 
 export class TLS14010Component extends BasicQueryPageComponent<TLTContract>

@@ -4,11 +4,15 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
 import { PdfService } from '../../../service/basic/pdf.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 
 @Component({
-  selector: 'app-tls23050-cru',
-  templateUrl: './tls23050-cru.component.html',
-  styleUrls: ['./tls23050-cru.component.scss']
+    selector: 'app-tls23050-cru',
+    templateUrl: './tls23050-cru.component.html',
+    styleUrls: ['./tls23050-cru.component.scss'],
+    standalone: true,
+    imports: [MenubarComponent, ReportTableGroupComponent]
 })
 export class TLS23050CRUComponent extends BasicCruPageComponent<any> {
   data: any[] = [];

@@ -1,11 +1,32 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownModule } from 'primeng/dropdown';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 @Component({
-  selector: 'app-tls2a050',
-  templateUrl: './tls2a050.component.html',
+    selector: 'app-tls2a050',
+    templateUrl: './tls2a050.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        CalendarComponent,
+        CalendarRangeComponent,
+        DropdownModule,
+        ButtonComponent,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 export class TLS2A050Component extends BasicQueryPageComponent<any> implements OnInit {
 

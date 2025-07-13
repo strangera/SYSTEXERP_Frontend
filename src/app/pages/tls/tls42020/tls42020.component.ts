@@ -1,6 +1,6 @@
 import { CounterCodeService } from './../../../service/basic/counter-code.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -10,15 +10,21 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 import { ValidationService } from '../../../shared/service/validation.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 2.4.2.1 快速鍵維護作業
 
 //先新增主檔再新增明細檔
 //透過主檔查詢明細檔
 @Component({
-  selector: 'app-tls42020',
-  templateUrl: './tls42020.component.html',
-  styleUrl: './tls42020.component.scss'
+    selector: 'app-tls42020',
+    templateUrl: './tls42020.component.html',
+    styleUrl: './tls42020.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule]
 })
 export class TLS42020Component {
   ProgNo: string = '240008';
