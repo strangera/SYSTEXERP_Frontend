@@ -275,6 +275,7 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     // 是否開立業主發票、是否使用業主收銀機、是否為業主收現
     this.whetherOptions = [...TLS13010_DROPDOWN_OPTIONS.yesNo];
   }
+
   canQuery(): boolean {
     return true;
   }
@@ -317,31 +318,31 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
   }
   onPrint(data: any): void {
     console.log('目前資料', data);
-    // this.loading = true;
-    // this.messageService.blockUi();
+    this.loading = true;
+    this.messageService.blockUi();
 
-    // // 調用你的 service 來產生 Word 文檔
-    // this.tls14020Service.wordReport(data).subscribe({
-    //   next: (response: any) => {
-    //     if (response.Status === '0000') {
-    //       // 成功時下載檔案
-    //       this.downloadFile(response.Data, `talent_report_${data}.docx`);
-    //       console.log('Word文檔生成成功');
-    //     } else {
-    //       console.error('生成Word文檔失敗:', response.Status, response.Message);
-    //       // 可以顯示錯誤訊息給用戶
-    //       this.messageService.errorBox(response.Message || '生成文檔失敗');
-    //     }
-    //     this.loading = false;
-    //     this.messageService.unblockUi();
-    //   },
-    //   error: (err: string) => {
-    //     console.error('生成Word文檔錯誤:', err);
-    //     this.loading = false;
-    //     this.messageService.unblockUi();
-    //     this.messageService.errorBox('生成文檔失敗，請稍後再試');
-    //   }
-    // });
+    // 調用你的 service 來產生 Word 文檔
+    this.tls14020Service.exportTLS14020(data).subscribe({
+      next: (response: any) => {
+        if (response.Status === '0000') {
+          // 成功時下載檔案
+          this.downloadFile(response.Data, `talent_report_${data}.docx`);
+          console.log('Word文檔生成成功');
+        } else {
+          console.error('生成Word文檔失敗:', response.Status, response.Message);
+          // 可以顯示錯誤訊息給用戶
+          this.messageService.errorBox(response.Message || '生成文檔失敗');
+        }
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+      error: (err: string) => {
+        console.error('生成Word文檔錯誤:', err);
+        this.loading = false;
+        this.messageService.unblockUi();
+        this.messageService.errorBox('生成文檔失敗，請稍後再試');
+      }
+    });
   }
 
   // 下載檔案的輔助函數
