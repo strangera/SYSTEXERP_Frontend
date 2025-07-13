@@ -1,9 +1,12 @@
 import { Component } from '@angular/core';
+import { DropdownModule } from 'primeng/dropdown';
 
 @Component({
-  selector: 'app-tls12050',
-  templateUrl: './tls12050.component.html',
-  styleUrl: './tls12050.component.scss'
+    selector: 'app-tls12050',
+    templateUrl: './tls12050.component.html',
+    styleUrl: './tls12050.component.scss',
+    standalone: true,
+    imports: [DropdownModule]
 })
 export class TLS12050Component {
   dropdown1 = [

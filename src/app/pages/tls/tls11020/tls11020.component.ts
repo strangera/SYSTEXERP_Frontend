@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { DeductionService } from '../../../service/basic/deduction.service';
@@ -7,11 +7,30 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { TLS11020Service } from '../../../service/api/tls/tls11020.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-tls11020',
-  templateUrl: './tls11020.component.html',
-  styleUrls: ['./tls11020.component.scss'],
+    selector: 'app-tls11020',
+    templateUrl: './tls11020.component.html',
+    styleUrls: ['./tls11020.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        MultiSelectComponent,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 export class TLS11020Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({

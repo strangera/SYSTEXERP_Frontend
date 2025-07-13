@@ -1,19 +1,39 @@
 import { Component } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { DeductionService } from '../../../service/basic/deduction.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS11020Service } from '../../../service/api/tls/tls11020.service';
 import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { NgIf } from '@angular/common';
+import { Button } from 'primeng/button';
 
 @Component({
-  selector: 'app-tls11020-cru',
-  templateUrl: './tls11020-cru.component.html',
-  styleUrls: ['./tls11020-cru.component.scss'],
+    selector: 'app-tls11020-cru',
+    templateUrl: './tls11020-cru.component.html',
+    styleUrls: ['./tls11020-cru.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        DropdownComponent,
+        NgIf,
+        Button,
+        TranslateModule,
+    ],
 })
 export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
   deductionCategoryOptions: any[] = [];

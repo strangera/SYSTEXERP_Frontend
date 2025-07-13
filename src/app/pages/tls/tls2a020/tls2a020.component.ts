@@ -1,10 +1,19 @@
 // import { ApiResponse } from './../../../service/system/auth.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface SalesRecord {
   id: number;
@@ -18,7 +27,21 @@ interface SalesRecord {
 }
 
 @Component({
-  templateUrl: './tls2a020.component.html',
+    templateUrl: './tls2a020.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        CalendarComponent,
+        MultiSelectComponent,
+        DropdownComponent,
+        RadiobuttonComponent,
+        ButtonComponent,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 
 export class TLS2A020Component extends BasicQueryPageComponent<any> implements OnInit {

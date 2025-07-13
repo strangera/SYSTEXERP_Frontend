@@ -1,7 +1,7 @@
 import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
 import { IndustryTypeService } from './../../../service/basic/industry-type.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -11,12 +11,22 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 import { ValidationService } from '../../../shared/service/validation.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.16.4 預算日報表
 @Component({
-  selector: 'app-tls2g040',
-  templateUrl: './tls2g040.component.html',
-  styleUrl: './tls2g040.component.scss'
+    selector: 'app-tls2g040',
+    templateUrl: './tls2g040.component.html',
+    styleUrl: './tls2g040.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, InputNumberComponent, TableComponent, TranslateModule]
 })
 export class TLS2G040Component {
   ProgNo: string = '220086';

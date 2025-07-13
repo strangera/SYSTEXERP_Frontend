@@ -1,12 +1,33 @@
 import { WhetherService } from './../../../service/basic/whether.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { DropdownModule } from 'primeng/dropdown';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  templateUrl: './tls22020.component.html',
+    templateUrl: './tls22020.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        CalendarComponent,
+        MultiSelectComponent,
+        DropdownModule,
+        ButtonComponent,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 
 export class TLS22020Component extends BasicQueryPageComponent<any> implements OnInit {

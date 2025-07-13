@@ -6,7 +6,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { ContractFlowService } from '../tls13010/services/contract-flow.service';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 import {
   ConditionDataItem,
@@ -25,11 +25,21 @@ import {
   CommissionItem
 } from '../tls13010/tls13010.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { AccordionModule } from 'primeng/accordion';
+import { DialogModule } from 'primeng/dialog';
+import { PrimeTemplate } from 'primeng/api';
+import { Button } from 'primeng/button';
 
 @Component({
-  selector: 'app-tls13010-next3',
-  templateUrl: './tls13010-next3.component.html',
-  styleUrls: ['./tls13010-next3.component.scss']
+    selector: 'app-tls13010-next3',
+    templateUrl: './tls13010-next3.component.html',
+    styleUrls: ['./tls13010-next3.component.scss'],
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, DialogModule, PrimeTemplate, Button]
 })
 export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataItem> implements OnInit, OnDestroy {
 

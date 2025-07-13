@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
@@ -7,6 +7,13 @@ import { debounceTime } from 'rxjs';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Tls51020DropDownService } from '../../../service/api/tls/tls51020-dropdown.service';
 import { Tls51010DropDownListService } from '../../../service/api/tls/tls51010-dropdown.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface CategoryItem {
   id: number;
@@ -28,9 +35,11 @@ interface CategoryItem {
   CanDel: boolean; // 是否可以刪除
 }
 @Component({
-  selector: 'app-tls51030',
-  templateUrl: './tls51030.component.html',
-  styleUrls: ['./tls51030.component.scss']
+    selector: 'app-tls51030',
+    templateUrl: './tls51030.component.html',
+    styleUrls: ['./tls51030.component.scss'],
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })
 export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({

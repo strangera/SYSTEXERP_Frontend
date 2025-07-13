@@ -1,6 +1,6 @@
 import { PurchaseTypeService } from './../../../service/basic/purchase-type.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -10,13 +10,25 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 //
 
 //3.1.3.5  移轉交接表
 @Component({
-  selector: 'app-ass13050',
-  templateUrl: './ass13050.component.html',
-  styleUrl: './ass13050.component.scss'
+    selector: 'app-ass13050',
+    templateUrl: './ass13050.component.html',
+    styleUrl: './ass13050.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, MultiSelectComponent, RadiobuttonComponent, DropdownComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class ASS13050Component extends BasicQpageComponent implements OnInit {
   //

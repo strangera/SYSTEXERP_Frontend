@@ -1,6 +1,17 @@
 import { Component, Input, Output, EventEmitter, ViewChild, ChangeDetectorRef, TemplateRef, ContentChild, ElementRef, OnInit, OnChanges } from '@angular/core';
-import { Table } from 'primeng/table';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { Table, TableModule } from 'primeng/table';
+import { FormBuilder, FormGroup, FormsModule } from '@angular/forms';
+import { NgIf, NgClass, NgFor, NgStyle, NgSwitch, NgSwitchCase, NgSwitchDefault, DecimalPipe } from '@angular/common';
+import { PrimeTemplate } from 'primeng/api';
+import { ButtonDirective } from 'primeng/button';
+import { Ripple } from 'primeng/ripple';
+import { TooltipModule } from 'primeng/tooltip';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { DropdownModule } from 'primeng/dropdown';
+import { CheckboxModule } from 'primeng/checkbox';
+import { DialogModule } from 'primeng/dialog';
+import { CalendarModule } from 'primeng/calendar';
 
 interface DataItem {
   id: number;
@@ -108,9 +119,11 @@ export interface ColumnDef {
 }
 
 @Component({
-  selector: 'app-expandable-edit-table',
-  templateUrl: './expandable-edit-table.component.html',
-  styleUrls: ['./expandable-edit-table.component.scss']
+    selector: 'app-expandable-edit-table',
+    templateUrl: './expandable-edit-table.component.html',
+    styleUrls: ['./expandable-edit-table.component.scss'],
+    standalone: true,
+    imports: [NgIf, TableModule, NgClass, PrimeTemplate, ButtonDirective, Ripple, TooltipModule, NgFor, NgStyle, NgSwitch, NgSwitchCase, FormsModule, InputTextModule, InputNumberModule, DropdownModule, CheckboxModule, NgSwitchDefault, DialogModule, CalendarModule, DecimalPipe]
 })
 export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @ViewChild('dt') dt!: Table;

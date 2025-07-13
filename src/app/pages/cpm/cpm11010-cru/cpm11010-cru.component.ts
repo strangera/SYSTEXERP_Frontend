@@ -1,20 +1,28 @@
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { FloorService } from '../../../service/basic/floor.service';
 import { RegionService } from '../../../service/basic/region-code.service';
 import { LocationService } from '../../../service/basic/location.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
 
 //5.1.1.1 服務台位置維護作業 CRU
 @Component({
-  selector: 'app-cpm11010-cru',
-  templateUrl: './cpm11010-cru.component.html',
-  styleUrl: './cpm11010-cru.component.scss'
+    selector: 'app-cpm11010-cru',
+    templateUrl: './cpm11010-cru.component.html',
+    styleUrl: './cpm11010-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class CPM11010CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------

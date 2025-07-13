@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { WarehouseService } from '../../../service/basic/warehouse.service';
@@ -14,12 +14,23 @@ import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/fu
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { NgIf } from '@angular/common';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 
 @Component({
   selector: 'app-tls56040-cru',
   templateUrl: './tls56040-cru.component.html',
-  styleUrl: './tls56040-cru.component.scss'
+  styleUrl: './tls56040-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, EditorTextComponent, CalendarComponent, NgIf, TableComponent]
 })
 export class TLS56040CRUComponent {
   ProgNo: string = '250035';
@@ -215,7 +226,7 @@ export class TLS56040CRUComponent {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -228,7 +239,7 @@ export class TLS56040CRUComponent {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
   get isFormEditable(): boolean {
     return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());

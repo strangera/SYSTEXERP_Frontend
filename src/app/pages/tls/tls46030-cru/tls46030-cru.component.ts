@@ -1,18 +1,30 @@
 import { ValidationService } from './../../../shared/service/validation.service';
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
 
 // 2.4.6.3  TOUCH功能按鈕開/關設定 CRU
 @Component({
-  selector: 'app-tls46030-cru',
-  templateUrl: './tls46030-cru.component.html',
-  styleUrl: './tls46030-cru.component.scss'
+    selector: 'app-tls46030-cru',
+    templateUrl: './tls46030-cru.component.html',
+    styleUrl: './tls46030-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarComponent, InputNumberComponent, EditorTextComponent, DropdownComponent, MultiSelectComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class TLS46030CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------

@@ -1,19 +1,28 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { POS2004 } from '../../../shared/models/tls/tls000.model';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
-import { FileSelectEvent } from 'primeng/fileupload';
+import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { environment } from '../../../../environments/environment';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 2.5.1.7  商品基本資料
 @Component({
-  selector: 'app-tls51070',
-  templateUrl: './tls51070.component.html',
-  styleUrl: './tls51070.component.scss'
+    selector: 'app-tls51070',
+    templateUrl: './tls51070.component.html',
+    styleUrl: './tls51070.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, FileUploadModule, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, TableComponent, TranslateModule]
 })
 export class TLS51070Component extends BasicQueryPageComponent<POS2004> implements OnInit {
   // 查詢

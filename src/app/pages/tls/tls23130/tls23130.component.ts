@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RegionService } from '../../../service/basic/region-code.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -12,11 +12,21 @@ import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { CardTypeService } from '../../../service/basic/card-type.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-tls23130',
-  templateUrl: './tls23130.component.html',
-  styleUrls: ['./tls23130.component.scss']
+    selector: 'app-tls23130',
+    templateUrl: './tls23130.component.html',
+    styleUrls: ['./tls23130.component.scss'],
+    standalone: true,
+    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextModule, ButtonComponent, TranslateModule]
 })
 export class TLS23130Component extends BasicQueryPageComponent<any> {
   showPageSizeDialog = false;

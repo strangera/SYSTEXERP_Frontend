@@ -1,13 +1,21 @@
 import { Component, OnInit } from '@angular/core';
-import { Validators, FormGroup } from '@angular/forms';
+import { Validators, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FIN11050Data, FIN11050QueryRequest, Fin11050Service } from '../../../service/api/fin/fin11050.service';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-fin11050',
-  templateUrl: './fin11050.component.html',
-  styleUrl: './fin11050.component.scss'
+    selector: 'app-fin11050',
+    templateUrl: './fin11050.component.html',
+    styleUrl: './fin11050.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableComponent, TranslateModule]
 })
 export class FIN11050Component extends BasicQueryPageComponent<FIN11050Data> implements OnInit {
   queryForm = this.formBuilder.group({

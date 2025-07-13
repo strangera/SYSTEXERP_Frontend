@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { columns, guiTypeOptions, salTypeOptions, sernoTypeOptions, statusOptions, TLS41010Data, typeOptions } from './tls41010.model';
@@ -11,13 +11,36 @@ import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
 import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 
 
 @Component({
-  selector: 'app-tls41010',
-  templateUrl: './tls41010.component.html',
+    selector: 'app-tls41010',
+    templateUrl: './tls41010.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        CalendarRangeComponent,
+        DropdownComponent,
+        MultiSelectComponent,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> implements OnInit {
   columns: Column[] = columns;

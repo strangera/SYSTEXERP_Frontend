@@ -1,6 +1,6 @@
 
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { WarehouseService } from '../../../service/basic/warehouse.service';
@@ -19,10 +19,22 @@ import { VendorService } from '../../../service/basic/vendor.service';
 import { TransferReasonService } from '../../../service/basic/transfer-reason.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { NgFor, NgIf } from '@angular/common';
+import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
+import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 @Component({
   selector: 'app-tls56070-cru',
   templateUrl: './tls56070-cru.component.html',
-  styleUrl: './tls56070-cru.component.scss'
+  styleUrl: './tls56070-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, EditorTextComponent, CalendarComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf]
 })
 export class TLS56070CRUComponent extends BasicCrupageComponent implements OnInit {
 
@@ -194,6 +206,6 @@ export class TLS56070CRUComponent extends BasicCrupageComponent implements OnIni
   }
 
   onCancel() {
-    this.router.navigate(['/demo/demoinputtable']);
+    this.router.navigate(['/demo']);
   }
 }

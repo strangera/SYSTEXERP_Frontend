@@ -1,12 +1,12 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 //
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -14,12 +14,22 @@ import { VendorService } from '../../../service/basic/vendor.service';
 import { PaymentMethodService } from '../../../service/basic/payment-method.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
 
 //1.2.3.1 暫付款申請作業 CRU
 @Component({
-  selector: 'app-fin23010-cru',
-  templateUrl: './fin23010-cru.component.html',
-  styleUrl: './fin23010-cru.component.scss'
+    selector: 'app-fin23010-cru',
+    templateUrl: './fin23010-cru.component.html',
+    styleUrl: './fin23010-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarComponent, DropdownComponent, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class FIN23010CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------

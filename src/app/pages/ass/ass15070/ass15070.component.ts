@@ -1,6 +1,6 @@
 import { UserCodeService } from './../../../service/basic/user-code.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Services
 
@@ -13,11 +13,30 @@ import { BigCategoryService } from '../../../service/basic/big-category.service'
 import { MidCategoryService } from '../../../service/basic/mid-category.service';
 import { SmallCategoryService } from '../../../service/basic/small-category.service';
 import { VendorService } from '../../../service/basic/vendor.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-ass15070',
   templateUrl: './ass15070.component.html',
   styleUrl: './ass15070.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    DropdownComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 export class ASS15070Component extends BasicQpageComponent implements OnInit {
   queryForm = this.formBuilder.group({
@@ -225,7 +244,7 @@ export class ASS15070Component extends BasicQpageComponent implements OnInit {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -238,7 +257,7 @@ export class ASS15070Component extends BasicQpageComponent implements OnInit {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
   onClearForm() {
     this.queryForm.reset(); // 重置表單

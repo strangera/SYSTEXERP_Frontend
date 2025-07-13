@@ -1,22 +1,37 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import {
-  FormArray,
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  Validators,
-} from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { NgFor, NgIf } from '@angular/common';
+import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 //存入保證金保管聯備註維護
 @Component({
-  selector: 'app-fin35040-cru',
-  templateUrl: './fin35040-cru.component.html',
-  styleUrl: './fin35040-cru.component.scss',
+    selector: 'app-fin35040-cru',
+    templateUrl: './fin35040-cru.component.html',
+    styleUrl: './fin35040-cru.component.scss',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        NgFor,
+        ButtonDynamicallydeleteComponent,
+        EditorTextComponent,
+        ButtonDynamicallyaddComponent,
+        ButtonComponent,
+        NgIf,
+        TranslateModule,
+    ],
 })
 export class FIN35040CRUComponent
   extends BasicCrupageComponent

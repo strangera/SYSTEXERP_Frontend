@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'app-fin32010-cru',
-  templateUrl: './fin32010-cru.component.html',
-  styleUrl: './fin32010-cru.component.scss'
+    selector: 'app-fin32010-cru',
+    templateUrl: './fin32010-cru.component.html',
+    styleUrl: './fin32010-cru.component.scss',
+    standalone: true
 })
 export class FIN32010CRUComponent {
 

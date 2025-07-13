@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ContractStatusService } from '../../../service/basic/contract-status.service';
 import { CounterCategoryService } from '../../../service/basic/counter-category.service';
 import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
@@ -15,6 +15,15 @@ import { NegotiatorOptionsService } from '../../../service/api/dropdownservice/n
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface ContractItem {
   id: string;
@@ -48,7 +57,9 @@ interface ContractItem {
 @Component({
   selector: 'app-tls14020',
   templateUrl: './tls14020.component.html',
-  styleUrl: './tls14020.component.scss'
+  styleUrl: './tls14020.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, TranslateModule]
 })
 export class TLS14020Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
   // ProgNo: string = '210018';

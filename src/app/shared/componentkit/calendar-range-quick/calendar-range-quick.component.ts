@@ -1,13 +1,31 @@
 import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { FormControl } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TimeRangeOption, timeRangeOptions, timeUnitOptions } from './calendar-range-quick.model';
-import { OverlayPanel } from 'primeng/overlaypanel';
-import { SelectButtonChangeEvent } from 'primeng/selectbutton';
+import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
+import { SelectButtonChangeEvent, SelectButtonModule } from 'primeng/selectbutton';
+import { NgIf, NgClass } from '@angular/common';
+import { Button } from 'primeng/button';
+import { CalendarModule } from 'primeng/calendar';
+import { PrimeTemplate } from 'primeng/api';
+import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 
 @Component({
-  selector: 'app-calendar-range-quick',
-  templateUrl: './calendar-range-quick.component.html',
+    selector: 'app-calendar-range-quick',
+    templateUrl: './calendar-range-quick.component.html',
+    standalone: true,
+    imports: [
+        NgIf,
+        Button,
+        OverlayPanelModule,
+        SelectButtonModule,
+        FormsModule,
+        CalendarModule,
+        ReactiveFormsModule,
+        NgClass,
+        PrimeTemplate,
+        ControlMessagesComponent,
+    ],
 })
 export class CalendarRangeQuickComponent extends BasicKitComponent implements OnInit {
   // 表單基本設置

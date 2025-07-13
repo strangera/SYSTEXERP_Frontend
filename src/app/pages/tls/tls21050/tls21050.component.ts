@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import {
@@ -16,12 +16,18 @@ import { OperationStatusService } from '../../../service/basic/operation-status.
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { DeductionService } from '../../../service/basic/deduction.service';
 import { DeductionCodeNameService } from '../../../service/basic/deduction-code-name.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 @Component({
   selector: 'app-tls21050',
   templateUrl: './tls21050.component.html',
-  styleUrl: './tls21050.component.scss'
+  styleUrl: './tls21050.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, ButtonComponent, TranslateModule]
 })
 export class TLS21050Component {
   ProgNo: string = '220005';
@@ -151,7 +157,7 @@ export class TLS21050Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -165,7 +171,7 @@ export class TLS21050Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -178,6 +184,6 @@ export class TLS21050Component {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
 }

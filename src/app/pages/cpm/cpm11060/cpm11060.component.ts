@@ -7,12 +7,17 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 //5.1.1.6 總機廣播服務
 @Component({
-  selector: 'app-cpm11060',
-  templateUrl: './cpm11060.component.html',
-  styleUrl: './cpm11060.component.scss'
+    selector: 'app-cpm11060',
+    templateUrl: './cpm11060.component.html',
+    styleUrl: './cpm11060.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, TableComponent]
 })
 export class CPM11060Component extends BasicQpageComponent implements OnInit {
   //

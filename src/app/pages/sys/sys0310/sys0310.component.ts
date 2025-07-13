@@ -1,14 +1,31 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
 import { Role } from '../../../shared/models/sys/role.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 // 4-2-3-1角色系統權限設定
 @Component({
-  selector: 'app-sys0310',
-  templateUrl: './sys0310.component.html',
+    selector: 'app-sys0310',
+    templateUrl: './sys0310.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        ButtonComponent,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 
 export class SYS0310Component extends BasicQueryPageComponent<Role> implements OnInit {

@@ -1,18 +1,43 @@
 import { Component, Input, OnInit, TemplateRef } from '@angular/core';
 import { Column } from '../table/table.model';
-import { Location } from '@angular/common';
+import { Location, NgIf, NgFor, NgTemplateOutlet, NgClass, NgSwitch, NgSwitchCase, NgSwitchDefault, DatePipe } from '@angular/common';
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
 import { ChangeDetectorRef } from '@angular/core';
 import { formatDate } from '../table/table.model';
+import { ButtonDirective } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { FormsModule } from '@angular/forms';
+import { InputSwitchModule } from 'primeng/inputswitch';
+import { TableModule } from 'primeng/table';
+import { PrimeTemplate } from 'primeng/api';
+import { MultiSelectModule } from 'primeng/multiselect';
 
 
 
 @Component({
-  selector: 'app-report-table-group',
-  templateUrl: './report-table-group.component.html',
+    selector: 'app-report-table-group',
+    templateUrl: './report-table-group.component.html',
+    standalone: true,
+    imports: [
+        NgIf,
+        ButtonDirective,
+        DialogModule,
+        FormsModule,
+        InputSwitchModule,
+        NgFor,
+        NgTemplateOutlet,
+        TableModule,
+        PrimeTemplate,
+        NgClass,
+        NgSwitch,
+        NgSwitchCase,
+        NgSwitchDefault,
+        MultiSelectModule,
+        DatePipe,
+    ],
 })
 export class ReportTableGroupComponent implements OnInit {
   @Input() columns: Column[] = [];

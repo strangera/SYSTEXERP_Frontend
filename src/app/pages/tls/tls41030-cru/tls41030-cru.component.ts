@@ -1,9 +1,17 @@
 import { Tls41030Service } from './../../../service/API/tls/tls41030.service';
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface POS2001 {
   id: number;
@@ -32,9 +40,11 @@ interface POS2001 {
 
 // 2.4.1.3 收銀專櫃人員資料維護作業 CRU
 @Component({
-  selector: 'app-tls41030-cru',
-  templateUrl: './tls41030-cru.component.html',
-  styleUrl: './tls41030-cru.component.scss'
+    selector: 'app-tls41030-cru',
+    templateUrl: './tls41030-cru.component.html',
+    styleUrl: './tls41030-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent, NgIf, TranslateModule]
 })
 export class TLS41030CRUComponent extends BasicCruPageComponent<POS2001>
   implements OnInit {

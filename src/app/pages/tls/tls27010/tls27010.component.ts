@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
 import {
@@ -10,12 +10,17 @@ import {
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { FileType } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { FileType, FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-tls27010',
   templateUrl: './tls27010.component.html',
-  styleUrls: ['./tls27010.component.scss']
+  styleUrls: ['./tls27010.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, FileUploadComponent, TranslateModule]
 })
 export class TLS27010Component {
 
@@ -103,7 +108,7 @@ export class TLS27010Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -117,7 +122,7 @@ export class TLS27010Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -130,7 +135,7 @@ export class TLS27010Component {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
 
   onFileSelected(event: any) {

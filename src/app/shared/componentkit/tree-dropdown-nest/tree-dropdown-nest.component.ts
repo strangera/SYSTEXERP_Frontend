@@ -1,5 +1,9 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { TreeNode } from 'primeng/api';
+import { TreeNode, PrimeTemplate } from 'primeng/api';
+import { Button } from 'primeng/button';
+import { OverlayPanelModule } from 'primeng/overlaypanel';
+import { NgFor, NgIf, NgClass } from '@angular/common';
+import { TreeModule } from 'primeng/tree';
 
 export interface Column {
   value: string;
@@ -7,9 +11,11 @@ export interface Column {
 }
 
 @Component({
-  selector: 'app-tree-dropdown-nest',
-  templateUrl: './tree-dropdown-nest.component.html',
-  styleUrl: './tree-dropdown-nest.component.scss'
+    selector: 'app-tree-dropdown-nest',
+    templateUrl: './tree-dropdown-nest.component.html',
+    styleUrl: './tree-dropdown-nest.component.scss',
+    standalone: true,
+    imports: [Button, OverlayPanelModule, NgFor, NgIf, TreeModule, PrimeTemplate, NgClass]
 })
 export class TreeDropdownNestComponent implements OnInit {
   @Input() members: any[] = []; // 允許外部傳入成員資料

@@ -1,13 +1,25 @@
 import { ValidationService } from './../../../shared/service/validation.service';
 import { Component } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { NgFor } from '@angular/common';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { Button } from 'primeng/button';
+import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.18.4 發票換開作業
 @Component({
-  selector: 'app-tls2j040',
-  templateUrl: './tls2j040.component.html',
-  styleUrl: './tls2j040.component.scss'
+    selector: 'app-tls2j040',
+    templateUrl: './tls2j040.component.html',
+    styleUrl: './tls2j040.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, NgFor, CalendarRangeComponent, InputNumberComponent, InputNumberRangeComponent, Button, ButtonDynamicallyaddComponent, TranslateModule]
 })
 export class TLS2J040Component {
   ProgNo: string = '220093';

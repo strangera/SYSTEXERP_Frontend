@@ -1,10 +1,13 @@
 import { Component, Input, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
-import { MenuItem } from 'primeng/api';
+import { MenuItem, PrimeTemplate } from 'primeng/api';
 import { UserInfo } from '../../models/system/userInfo';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../../service/system/auth.service';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { NotificationService } from '../notification-message/notification.service';
+import { BreadcrumbModule } from 'primeng/breadcrumb';
+import { RouterLink } from '@angular/router';
+import { NgIf } from '@angular/common';
 
 interface Favorite {
   USER_No: string,
@@ -12,10 +15,17 @@ interface Favorite {
   FVT_SeqNo: number,
 }
 @Component({
-  selector: 'app-menubar',
-  templateUrl: './menubar.component.html',
-  styleUrl: './menubar.component.scss',
-  encapsulation: ViewEncapsulation.None,
+    selector: 'app-menubar',
+    templateUrl: './menubar.component.html',
+    styleUrl: './menubar.component.scss',
+    encapsulation: ViewEncapsulation.None,
+    standalone: true,
+    imports: [
+        BreadcrumbModule,
+        PrimeTemplate,
+        RouterLink,
+        NgIf,
+    ],
 })
 export class MenubarComponent implements OnInit, OnDestroy {
   @Input() ProgNo = '';

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { v4 as uuidv4 } from 'uuid';
 import { ChangeDetectorRef } from '@angular/core';
 import { SYSBR00Service } from '../../../service/api/sys/sysbr00.service';
@@ -8,11 +8,35 @@ import { SYSBR00Service } from '../../../service/api/sys/sysbr00.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { forkJoin } from 'rxjs';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { NgIf, NgClass } from '@angular/common';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonDirective } from 'primeng/button';
 
 @Component({
-  selector: 'app-sysbr00-cru',
-  templateUrl: './sysbr00.cru.component.html',
-  styleUrls: ['./sysbr00.cru.component.scss'],
+    selector: 'app-sysbr00-cru',
+    templateUrl: './sysbr00.cru.component.html',
+    styleUrls: ['./sysbr00.cru.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        NgIf,
+        TableComponent,
+        InputGroupModule,
+        InputTextModule,
+        NgClass,
+        ButtonDirective,
+    ],
 })
 export class SYSBR00CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

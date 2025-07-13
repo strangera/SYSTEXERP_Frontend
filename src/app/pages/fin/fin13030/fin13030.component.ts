@@ -2,15 +2,28 @@ import { Component, OnInit } from '@angular/core';
 import { FIN13030Data, FIN13030QueryRequest, FIN13030Service } from '../../../service/api/fin/fin13030.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { DropdownOption } from '../../../shared/models/api/base-api.interface';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-fin13030',
-  templateUrl: './fin13030.component.html',
-  styleUrl: './fin13030.component.scss'
+    selector: 'app-fin13030',
+    templateUrl: './fin13030.component.html',
+    styleUrl: './fin13030.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, CalendarRangeComponent, CalendarComponent, InputTextComponent, DropdownComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
 })
 export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> implements OnInit {
   queryForm = this.formBuilder.group({

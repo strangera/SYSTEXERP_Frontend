@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -11,13 +11,21 @@ import { PurchaseTypeService } from '../../../service/basic/purchase-type.servic
 import { ItemCodeService } from '../../../service/basic/item-code.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { TranslateModule } from '@ngx-translate/core';
 //
 
 //3.1.5.1  財產標籤列印作業
 @Component({
-  selector: 'app-ass15010',
-  templateUrl: './ass15010.component.html',
-  styleUrl: './ass15010.component.scss'
+    selector: 'app-ass15010',
+    templateUrl: './ass15010.component.html',
+    styleUrl: './ass15010.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TranslateModule]
 })
 export class ASS15010Component extends BasicQpageComponent implements OnInit {
   //

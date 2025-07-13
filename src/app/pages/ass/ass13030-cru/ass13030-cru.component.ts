@@ -1,10 +1,10 @@
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 //
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -17,13 +17,23 @@ import { AssetStatusService } from '../../../service/basic/asset-status.service'
 import { AssetsTypeService } from '../../../service/basic/assets-type.service';
 import { NeedPayTicketService } from '../../../service/basic/need-pay-ticket.service';
 
-import { FileType } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { FileType, FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
 
 //3.1.2.5 採購單驗收作業 CRU
 @Component({
-  selector: 'app-ass13030-cru',
-  templateUrl: './ass13030-cru.component.html',
-  styleUrl: './ass13030-cru.component.scss'
+    selector: 'app-ass13030-cru',
+    templateUrl: './ass13030-cru.component.html',
+    styleUrl: './ass13030-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, FileUploadComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS13030CRUComponent extends BasicCrupageComponent implements OnInit {
   // Upload files

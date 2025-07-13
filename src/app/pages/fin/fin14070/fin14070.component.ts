@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -10,12 +10,26 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
 //
 import { WhetherService } from './../../../service/basic/whether.service';
 import { InvoiceCategoryService } from './../../../service/basic/invoice-category.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 //1.1.4.7 二聯收銀機發票維護
 @Component({
-  selector: 'app-fin14070',
-  templateUrl: './fin14070.component.html',
-  styleUrl: './fin14070.component.scss'
+    selector: 'app-fin14070',
+    templateUrl: './fin14070.component.html',
+    styleUrl: './fin14070.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarComponent, CalendarRangeComponent, InputTextComponent, InputNumberRangeComponent, MultiSelectComponent, DropdownComponent, TableComponent, TranslateModule]
 })
 export class FIN14070Component extends BasicQpageComponent implements OnInit {
   //

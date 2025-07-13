@@ -1,7 +1,7 @@
 import { LocationCodeService } from './../../../service/basic/locationcode.service';
 import { FloorService } from './../../../service/basic/floor.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Services
 
@@ -14,11 +14,32 @@ import { BigCategoryService } from '../../../service/basic/big-category.service'
 import { MidCategoryService } from '../../../service/basic/mid-category.service';
 import { SmallCategoryService } from '../../../service/basic/small-category.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-ass21060',
   templateUrl: './ass21060.component.html',
   styleUrl: './ass21060.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    InputTextComponent,
+    CalendarComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 export class ASS21060Component extends BasicQpageComponent implements OnInit {
   ngOnInit(): void {
@@ -244,7 +265,7 @@ export class ASS21060Component extends BasicQpageComponent implements OnInit {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -257,7 +278,7 @@ export class ASS21060Component extends BasicQpageComponent implements OnInit {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
   onClearForm() {
     this.queryForm.reset(); // 重置表單

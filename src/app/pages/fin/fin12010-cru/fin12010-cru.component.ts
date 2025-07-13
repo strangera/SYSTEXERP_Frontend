@@ -1,5 +1,5 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { SystemOption } from '../../../shared/models/sys/sys1000.model';
@@ -7,11 +7,36 @@ import { SystemOptionsService } from '../../../service/system/sys1000.service';
 import { monthOptions } from '../fin11200/fin11200.model';
 import { Fin12010Service, IFin12010Data } from '../../../service/api/fin/fin12010.service';
 import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 //1.1.2.1 電子式發票各系統配號維護
 @Component({
-  selector: 'app-fin12010-cru',
-  templateUrl: './fin12010-cru.component.html',
+    selector: 'app-fin12010-cru',
+    templateUrl: './fin12010-cru.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        CalendarComponent,
+        InputTextComponent,
+        InputNumberComponent,
+        InputTextRangeComponent,
+        DropdownComponent,
+        NgIf,
+        TranslateModule,
+    ],
 })
 export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> implements OnInit {
   dataForm = this.formBuilder.group({
