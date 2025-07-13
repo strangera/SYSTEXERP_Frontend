@@ -22,31 +22,32 @@ import { DialogModule } from 'primeng/dialog';
 import { PasswordModule } from 'primeng/password';
 import { DividerModule } from 'primeng/divider';
 import { TranslateModule } from '@ngx-translate/core';
-
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+@UntilDestroy()
 @Component({
-    selector: 'app-sso-dashboard',
-    templateUrl: './sso-dashboard.component.html',
-    standalone: true,
-    imports: [
-        NgIf,
-        RouterLink,
-        NgClass,
-        NgStyle,
-        TooltipModule,
-        MenuModule,
-        PrimeTemplate,
-        ProgressSpinnerModule,
-        NgFor,
-        CardModule,
-        Button,
-        DialogModule,
-        FormsModule,
-        ReactiveFormsModule,
-        PasswordModule,
-        DividerModule,
-        AsyncPipe,
-        TranslateModule,
-    ],
+  selector: 'app-sso-dashboard',
+  templateUrl: './sso-dashboard.component.html',
+  standalone: true,
+  imports: [
+    NgIf,
+    RouterLink,
+    NgClass,
+    NgStyle,
+    TooltipModule,
+    MenuModule,
+    PrimeTemplate,
+    ProgressSpinnerModule,
+    NgFor,
+    CardModule,
+    Button,
+    DialogModule,
+    FormsModule,
+    ReactiveFormsModule,
+    PasswordModule,
+    DividerModule,
+    AsyncPipe,
+    TranslateModule,
+  ],
 })
 export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDestroy
   logo = 'assets/layout/images/logo.png';
@@ -94,7 +95,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
     private validationService: ValidationService
   ) {
     this.subscriptions.push(
-      this.authService.user.subscribe((x) => {
+      this.authService.user.pipe(untilDestroyed(this)).subscribe((x) => {
         this.user = x;
         // 在這裡設置 code 字段的值，因為 user 可能會延遲加載
         if (this.user) {
@@ -140,6 +141,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
     ];
     this.subscriptions.push( // 將訂閱添加到 subscriptions 陣列
       this.ssoDashboardService.fetchUrlList().pipe(
+        untilDestroyed(this),
         finalize(() => this.loading = false) // 無論成功失敗，在所有請求完成後將 loading 設為 false
       ).subscribe({
         next: (data) => {
@@ -170,6 +172,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
       // 導向內部系統 (this.urlItems[0])
       this.subscriptions.push( // 將訂閱添加到 subscriptions 陣列
         this.ssoDashboardService.Inner().pipe(
+          untilDestroyed(this),
           concatMap((innerResponse: ApiResponse<any>) => {
             if (innerResponse.Status === '0000') {
               console.log("Inner API 成功:", innerResponse);
@@ -189,6 +192,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
       // 導向外部系統
       this.subscriptions.push( // 將訂閱添加到 subscriptions 陣列
         this.ssoDashboardService.Outer().pipe(
+          untilDestroyed(this),
           finalize(() => this.loading = false) // 外部系統請求完成後，設置 loading 為 false
         ).subscribe({
           next: (response) => {
@@ -223,6 +227,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
       };
       this.subscriptions.push( // 將訂閱添加到 subscriptions 陣列
         this.userCodeService.changePassword(query).pipe(
+          untilDestroyed(this),
           finalize(() => this.formButtonLoading = false) // 無論成功失敗，都重置按鈕載入狀態
         ).subscribe({
           next: () => {

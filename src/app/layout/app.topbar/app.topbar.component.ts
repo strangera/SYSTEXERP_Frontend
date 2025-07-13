@@ -18,6 +18,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TableModule } from 'primeng/table';
 import { MenuModule } from 'primeng/menu';
 import { TranslateModule } from '@ngx-translate/core';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
 interface Favorite {
   USER_No: string,
@@ -30,33 +31,33 @@ interface Favorite {
   UPD_USR_No: string | null,
   UPD_USR_Name: string | null
 }
-
+@UntilDestroy()
 @Component({
-    selector: 'app-topbar',
-    templateUrl: './app.topbar.component.html',
-    styleUrl: './app.topbar.component.scss',
-    encapsulation: ViewEncapsulation.None,
-    standalone: true,
-    imports: [
-        RouterLink,
-        NgFor,
-        Button,
-        NgClass,
-        FormsModule,
-        ReactiveFormsModule,
-        IconFieldModule,
-        AutoCompleteModule,
-        InputIconModule,
-        TooltipModule,
-        OverlayPanelModule,
-        TableModule,
-        PrimeTemplate,
-        NgIf,
-        NgStyle,
-        MenuModule,
-        DatePipe,
-        TranslateModule,
-    ],
+  selector: 'app-topbar',
+  templateUrl: './app.topbar.component.html',
+  styleUrl: './app.topbar.component.scss',
+  encapsulation: ViewEncapsulation.None,
+  standalone: true,
+  imports: [
+    RouterLink,
+    NgFor,
+    Button,
+    NgClass,
+    FormsModule,
+    ReactiveFormsModule,
+    IconFieldModule,
+    AutoCompleteModule,
+    InputIconModule,
+    TooltipModule,
+    OverlayPanelModule,
+    TableModule,
+    PrimeTemplate,
+    NgIf,
+    NgStyle,
+    MenuModule,
+    DatePipe,
+    TranslateModule,
+  ],
 })
 export class AppTopbarComponent implements OnInit, OnDestroy {
   @ViewChild('appTopbarDiv', { static: false }) appTopbarDiv!: ElementRef;
@@ -214,7 +215,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
       this.selectedFavorites = [];
     }
     if (this.data?.user_No === undefined || !this.funRightsInfo.length) return;
-    this.authService.getFavorites(this.data?.user_No).subscribe({
+    this.authService.getFavorites(this.data?.user_No).pipe(untilDestroyed(this)).subscribe({
       next: (response) => { // 指明 response 的結構
         const favoritesWithDetails: FunsrightInfo[] = [];
         if (response.Data.length === 0) { this.Favorites = []; return; }
@@ -257,7 +258,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
         PROG_No: favorite['prog_No'],
         FVT_SeqNo: index + 1,
       }));
-      this.authService.UpdateUserFavorite(body).subscribe({
+      this.authService.UpdateUserFavorite(body).pipe(untilDestroyed(this)).subscribe({
         next: () => {
           this.editingFavorites = false; // 取消編輯狀態
           this.selectedFavorites = []; // 清空已選中的項目
@@ -278,7 +279,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
       PROG_No: favorite['prog_No'],
       FVT_SeqNo: index + 1, // 根據目前的順序生成 FVT_SeqNo
     }))
-    this.authService.UpdateUserFavorite(body).subscribe({
+    this.authService.UpdateUserFavorite(body).pipe(untilDestroyed(this)).subscribe({
       next: () => {
         this.initFavorites();
       }, error: error => { console.error('Error fetching favorites:', error); }
