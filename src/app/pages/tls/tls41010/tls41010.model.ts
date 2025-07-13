@@ -61,7 +61,6 @@ export interface TLS41010QueryParams {
   ECR_SrvIP?: string;
   ECR_TmplNo?: string;
 }
-
 export interface TLS41010Data {
   id: number;
   SYS_StoreNo: string;
@@ -72,7 +71,7 @@ export interface TLS41010Data {
   ECR_TLT_Name: string;
   ECR_USR_No: string;
   ECR_USR_Name: string;
-  ECR_ActiveDate: string;
+  ECR_ActiveDate?: string | null;
   ECR_ExpireDate: string;
   ECR_CloseDate: string;
   ECR_Status: string;
@@ -117,12 +116,12 @@ export interface TLS41010Data {
   ECR_PickUpValid: string;
   ECR_ReprintGUI: string;
   ECR_PrnLogo: string;
-  ECR_Logo1: string;
-  ECR_Logo2: string;
-  ECR_Logo3: string;
-  ECR_Logo4: string;
-  ECR_Logo5: string;
-  ECR_Logo6: string;
+  ECR_Logo1: string | null;
+  ECR_Logo2: string | null;
+  ECR_Logo3: string | null;
+  ECR_Logo4: string | null;
+  ECR_Logo5: string | null;
+  ECR_Logo6: string | null;
   ECR_VoidTxn: string;
   ECR_VoidRstDay: number;
   ECR_CreditNote: string;
@@ -181,15 +180,16 @@ export interface TLS41010Data {
   ECR_Device9Com: number;
   ECR_Device10Name: string;
   ECR_Device10Com: number;
-  CRT_Date: string;
+  CRT_Date?: string | null;
   CRT_USR_No: string;
   CRT_USR_Name: string;
-  UPD_Date: string;
+  UPD_Date?: string | null;
   UPD_USR_No: string;
   UPD_USR_Name: string;
 }
 
-export interface TLS46020Item {
+
+export interface TLS41010Item {
   id: number;
   ECR_TmplNo: string;
   ECR_TmplDesc: string;

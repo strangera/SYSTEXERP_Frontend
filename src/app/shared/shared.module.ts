@@ -12,6 +12,7 @@ import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
+import { MenuModule } from 'primeng/menu';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TabViewModule } from 'primeng/tabview';
 import { DropdownModule } from 'primeng/dropdown';
@@ -114,7 +115,7 @@ import { RadiobuttonYNComponent } from './componentkit/radiobutton-yn/radiobutto
     ReportTableGroupComponent,
     DialogComponent,
     RadiobuttonYNComponent,
-    
+
   ],
   imports: [
     ReactiveFormsModule,
@@ -235,7 +236,7 @@ import { RadiobuttonYNComponent } from './componentkit/radiobutton-yn/radiobutto
     ReportTableGroupComponent,
     DialogComponent,
     RadiobuttonYNComponent,
-    
+
   ],
 })
 export class SharedModule { }

@@ -7,12 +7,11 @@ import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { HttpClient } from '@angular/common/http';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
+import { TLS46020Item, TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
 import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
-
-
+import { DropdownChangeEvent } from 'primeng/dropdown';
 
 
 @Component({
@@ -55,6 +54,16 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   totalRecords = 0;
   floorOptions: any[] = [];
   ECR_TmplNo_Option: IDropdownItem[] = [];
+  // 複製設定 Dialog 相關
+  dialogVisible = false;
+  dialogQueryForm = this.formBuilder.group({
+    ECR_TmplNo: ['', [Validators.required]], // 環境變數編號
+    Target_ECR_No: ['', [Validators.required]], // 目的環境變數編號
+  });
+  dialogSelectItem: TLS46020Item | null = null;
+  dialogSelectTargetItem: TLS46020Item | null = null;
+  dialogOptions: { No?: string; Name?: string; label?: string }[] = [];
+  mergedDialogOptions: { No?: string; Name?: string; label?: string }[] = [];
 
   constructor(
     private tls41010Service: TLS41010Service,
@@ -121,19 +130,23 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
   ngOnInit(): void {
     this.initializePage('TLS41010', 'TLS/TLS41010cru', this.queryForm, (form) => this.onSubmit(form));
+
     this.queryForm.get('ECR_SrvIP')?.valueChanges.subscribe((ip) => {
       if (ip) {
         this.callOtherApi(ip);
       }
     });
+
     this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(option => {
       this.ECR_TmplNo_Option = option.Data;
-    })
+    });
+
     this.queryForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
       if (tmplNo) {
         this.callTLS46020Api(tmplNo);
       }
     });
+
     this.locationOptionsService.getFloorOptions().subscribe({
       next: (res) => {
         this.floorOptions = res.map((item: any) => ({
@@ -143,22 +156,25 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       },
       error: () => this.messageService.errorBubble('載入樓層選單失敗')
     });
-    this.queryForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
-      if (tmplNo) {
-        this.callTLS46020Api(tmplNo);
-      }
-    });
+
     this.queryForm.get('ECR_LocNo')?.valueChanges.subscribe((locNo) => {
       if (locNo) {
         this.callTls11010Api(locNo);
       }
     });
+    this.dropDownListService.queryPOS1002TML_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.dialogOptions = res.Data.map(item => ({
+        ...item,
+        label: `${item.No} - ${item.Name}`,
+      }));
+      this.mergedDialogOptions = [{ label: '新增一筆環境變數', No: 'new' }, ...this.dialogOptions];
+    });
   }
 
 
+  //  Submit 查詢
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-
       this.tls41010Service.queryTLS41010(frm.getRawValue())
         .pipe(finalize(() => this.loading = false))
         .pipe(untilDestroyed(this))
@@ -170,5 +186,49 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     });
   }
 
-
+  saveDialog(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      this.loading = false;
+      if (this.isValid) { return; }
+      const body = {
+        ...this.dialogSelectItem,
+        ECR_TmplNo: frm.value.ECR_TmplNo === 'new' ? undefined : frm.value.Target_ECR_No,
+        id: frm.value.ECR_TmplNo === 'new' ? undefined : this.dialogSelectTargetItem?.id
+      }
+      if (frm.value.Target_ECR_No === 'new') {
+        this.tls46020Service.insertTLS46020(body).pipe(untilDestroyed(this)).subscribe(res => {
+          console.log('新增環境變數成功', res);
+          this.dialogVisible = false;
+          this.onSubmit(this.queryForm);
+        });
+      } else {
+        this.tls46020Service.updateTLS46020(body).pipe(untilDestroyed(this)).subscribe(res => {
+          console.log('複製環境變數成功', res);
+          this.dialogVisible = false;
+          this.onSubmit(this.queryForm);
+        });
+      }
+    });
+  }
+  onDialogChange(event: DropdownChangeEvent) {
+    const selectedValue = event.value;
+    const body = { ECR_TmplNo: selectedValue };
+    this.tls46020Service.queryTLS46020(body).pipe(untilDestroyed(this)).subscribe(res => {
+      this.dialogSelectItem = res.Data[0];
+    });
+  }
+  onDialogChange2(event: DropdownChangeEvent) {
+    const selectedValue = event.value;
+    const body = { ECR_TmplNo: selectedValue };
+    this.tls46020Service.queryTLS46020(body).pipe(untilDestroyed(this)).subscribe(res => {
+      this.dialogSelectTargetItem = res.Data[0];
+    });
+  }
+  get isValid(): boolean {
+    const ECR_TmplNo = this.dialogQueryForm.value.ECR_TmplNo ?? '';
+    const Target_ECR_No = this.dialogQueryForm.value.Target_ECR_No ?? '';
+    return (ECR_TmplNo !== '' && Target_ECR_No !== '') && (ECR_TmplNo === Target_ECR_No);
+  }
 }
+
+

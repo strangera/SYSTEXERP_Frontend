@@ -1,30 +1,12 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button *ngIf="!isCopyMode" btnType="copy" label="複製機台" (click)="onCopyMode()"></app-button>
+    <app-button btnType="back" (click)="onCancel()" />
   </div>
 
-  <p-panel *ngIf="isCopyMode" [header]="'複製機台' | translate" class="line-height-3 m-0">
-    <form [formGroup]="copyForm" id="copyForm" (ngSubmit)="onSubmitCopy(copyForm)">
-      <div class="grid p-fluid">
-        <app-input-text class="col-12 md:col-6 xl:col-3" label="來源收銀機號" controlName="sourceECR"
-          [control]="copyForm.controls.sourceECR"></app-input-text>
-        <app-input-text class="col-12 md:col-6 xl:col-3" label="目標收銀機號清單" controlName="targetECRs"
-          [control]="copyForm.controls.targetECRs"></app-input-text>
 
-        <div class="col-12 sm:col-6 grid justify-content-end gap-2 m-0 mt-2">
-          <app-button btnType="submit" label="確認"></app-button>
-          <app-button btnType="cancel" label="取消" (click)="onCancelCopy()"></app-button>
-        </div>
-      </div>
-      <div *ngIf="copyForm.controls.isAllCopy?.value">
-        <app-table title="來源收銀機設定預覽" [tableKey]="'ecr-duplication'" dataKey="Code" [data]="sourceECRData"
-          [columns]="sourceECRColumns" [showManage]="false" [showCaption]="false" />
-      </div>
-    </form>
-  </p-panel>
-  <p-panel *ngIf="!isCopyMode" [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
 
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
@@ -380,7 +362,7 @@
         </p-accordionTab>
       </p-accordion>
       <hr />
-      <div class="card" *ngIf="!isFormCreateable">
+      <div class="card">
         <div class="grid p-fluid">
           <app-calendar class="col-12 md:col-6 lg:col-4" label="建立日期" controlName="CRT_Date"
             [control]="dataForm.controls.CRT_Date" [submitted]="submitted" />
