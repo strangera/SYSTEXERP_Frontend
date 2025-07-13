@@ -4,18 +4,50 @@ import { LayoutService } from '../../../layout/layout.service';
 import { ApiResponse, AuthService } from '../../../service/system/auth.service';
 import { UserInfo } from '../../../shared/models/system/userInfo';
 import { concatMap, finalize, Subscription, throwError } from 'rxjs'; // 引入 tap
-import { MenuItem } from 'primeng/api';
-import { Router } from '@angular/router';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MenuItem, PrimeTemplate } from 'primeng/api';
+import { Router, RouterLink } from '@angular/router';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiItem, SsoDashboardService } from './sso-dashboard.service';
 import { EncryptionService } from '../../../shared/service/encryption.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { ValidationService } from '../../../shared/service/validation.service';
-
+import { NgIf, NgClass, NgStyle, NgFor, AsyncPipe } from '@angular/common';
+import { TooltipModule } from 'primeng/tooltip';
+import { MenuModule } from 'primeng/menu';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { CardModule } from 'primeng/card';
+import { Button } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { PasswordModule } from 'primeng/password';
+import { DividerModule } from 'primeng/divider';
+import { TranslateModule } from '@ngx-translate/core';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+@UntilDestroy()
 @Component({
   selector: 'app-sso-dashboard',
   templateUrl: './sso-dashboard.component.html',
+  standalone: true,
+  imports: [
+    NgIf,
+    RouterLink,
+    NgClass,
+    NgStyle,
+    TooltipModule,
+    MenuModule,
+    PrimeTemplate,
+    ProgressSpinnerModule,
+    NgFor,
+    CardModule,
+    Button,
+    DialogModule,
+    FormsModule,
+    ReactiveFormsModule,
+    PasswordModule,
+    DividerModule,
+    AsyncPipe,
+    TranslateModule,
+  ],
 })
 export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDestroy
   logo = 'assets/layout/images/logo.png';
@@ -63,7 +95,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
     private validationService: ValidationService
   ) {
     this.subscriptions.push(
-      this.authService.user.subscribe((x) => {
+      this.authService.user.pipe(untilDestroyed(this)).subscribe((x) => {
         this.user = x;
         // 在這裡設置 code 字段的值，因為 user 可能會延遲加載
         if (this.user) {
@@ -109,6 +141,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
     ];
     this.subscriptions.push( // 將訂閱添加到 subscriptions 陣列
       this.ssoDashboardService.fetchUrlList().pipe(
+        untilDestroyed(this),
         finalize(() => this.loading = false) // 無論成功失敗，在所有請求完成後將 loading 設為 false
       ).subscribe({
         next: (data) => {
@@ -139,6 +172,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
       // 導向內部系統 (this.urlItems[0])
       this.subscriptions.push( // 將訂閱添加到 subscriptions 陣列
         this.ssoDashboardService.Inner().pipe(
+          untilDestroyed(this),
           concatMap((innerResponse: ApiResponse<any>) => {
             if (innerResponse.Status === '0000') {
               console.log("Inner API 成功:", innerResponse);
@@ -158,6 +192,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
       // 導向外部系統
       this.subscriptions.push( // 將訂閱添加到 subscriptions 陣列
         this.ssoDashboardService.Outer().pipe(
+          untilDestroyed(this),
           finalize(() => this.loading = false) // 外部系統請求完成後，設置 loading 為 false
         ).subscribe({
           next: (response) => {
@@ -192,6 +227,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
       };
       this.subscriptions.push( // 將訂閱添加到 subscriptions 陣列
         this.userCodeService.changePassword(query).pipe(
+          untilDestroyed(this),
           finalize(() => this.formButtonLoading = false) // 無論成功失敗，都重置按鈕載入狀態
         ).subscribe({
           next: () => {
