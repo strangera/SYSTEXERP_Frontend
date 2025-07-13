@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { catchError, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../system/error-handler.service';
+import { ApiResponse } from '../../system/auth.service';
 
 @Injectable({
   providedIn: 'root',
@@ -42,6 +43,18 @@ export class FIN13020Service {
         catchError((error) => this.errorHandler.handleError(error)),
       );
   }
+    queryINV1000List(param: { GUI_Track: string }) {
+      return this.http.post<ApiResponse<any[]>>(
+        `${this.apiUrl}/FIN0000/INV1000/queryFIN13020_InvoiceNumber`,
+        param
+      );
+    }
+      queryCorrespondByGUINoCorrespond(param: { InvoiceNumber_Correspond: string }) {
+    return this.http.post<any>(
+      `${this.apiUrl}/FIN0000/INV1000/queryFIN13020_Correspond`,
+      param
+    );}
+  
   // ✅ 查詢（使用假資料）
   // queryFIN13020(query: any): Observable<any> {
   //   const mockData = [

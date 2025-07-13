@@ -4,9 +4,7 @@ import { CurrentPageService } from '../../../layout/app.menulist/current-page.se
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss',
 })
-// 公告
 export class DashboardComponent implements OnInit {
 
   constructor(

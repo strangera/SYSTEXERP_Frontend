@@ -14,7 +14,6 @@ import { FIN11060Component } from './fin11060/fin11060.component';
 import { FIN11070Component } from './fin11070/fin11070.component';
 import { FIN11080CRUComponent } from './fin11080-cru/fin11080-cru.component';
 import { FIN11080Component } from './fin11080/fin11080.component';
-import { FIN11090CRUComponent } from './fin11090-cru/fin11090-cru.component';
 import { FIN11090Component } from './fin11090/fin11090.component';
 import { FIN12010CRUComponent } from './fin12010-cru/fin12010-cru.component';
 import { FIN12010Component } from './fin12010/fin12010.component';
@@ -326,6 +325,8 @@ import { FIN11200Component } from './fin11200/fin11200.component';
 import { FIN11200CRUComponent } from './fin11200-cru/fin11200-cru.component';
 import { TooltipModule } from 'primeng/tooltip';
 import { FIN11050CRUComponent } from './fin11050-cru/fin11050-cru.component';
+import { FIN11210Component } from './fin11210/fin11210.component';
+import { FIN11210CruComponent } from './fin11210-cru/fin11210-cru.component';
 
 @NgModule({
   declarations: [
@@ -342,7 +343,6 @@ import { FIN11050CRUComponent } from './fin11050-cru/fin11050-cru.component';
     FIN11070Component,
     FIN11080CRUComponent,
     FIN11080Component,
-    FIN11090CRUComponent,
     FIN11090Component,
     FIN11200Component,
     FIN11200CRUComponent,
@@ -652,7 +652,9 @@ import { FIN11050CRUComponent } from './fin11050-cru/fin11050-cru.component';
     FIN73020Component,
     FIN73030Component,
     FIN73040Component,
-    FIN11050CRUComponent
+    FIN11050CRUComponent,
+    FIN11210Component,
+    FIN11210CruComponent
   ],
   imports: [
     CommonModule,

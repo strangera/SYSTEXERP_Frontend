@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, TemplateRef } from '@angular/core';
 import { Column } from '../table/table.model';
 import { Location } from '@angular/common';
 
@@ -37,6 +37,8 @@ export class ReportTableGroupComponent implements OnInit {
   @Input() enableGrouping: boolean = false;
   @Input() detailColumns: Column[] = []; // 自訂明細欄位
  @Input() showGroupedBody: boolean = false;
+ @Input() groupHeaderTemplate?: TemplateRef<any>;
+
 
   private _data: any[] = [];
 
@@ -65,6 +67,7 @@ export class ReportTableGroupComponent implements OnInit {
 @Input() showExpandColumn: boolean = false;
 @Input() detailFieldKeys: string[] = [];
 @Input() fetchDetailFn: (payload: any) => Promise<any[]> = async () => [];
+@Input() showDateRangeLabel = true;
 
 expandedRows: { [key: string]: boolean } = {};
 rowDetails: { [key: string]: any[] } = {};
@@ -152,10 +155,12 @@ objectKeys(obj: any): string[] {
   constructor(private location: Location, private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
+
     this.mergedView = this.defaultMergedView ?? false; // ✅ 沒傳入就 false
     this.splitData();
     this.buildSelectedColumns();
     this.availableColumns = this.columns;
+
   }
 
   mergeGroupedTable(): void {
@@ -214,10 +219,11 @@ objectKeys(obj: any): string[] {
       );
     }
  // ✅ 預設展開狀態與 showGroupedBody 同步
-  this.groupedData.forEach(group => {
-    const key = group[0]?.__groupKey ?? '';
-    this.groupBodyExpanded[key] = this.showGroupedBody;
-  });
+    // ✅ 預設展開狀態與 showGroupedBody 同步
+    this.groupedData.forEach((group) => {
+      const key = group[0]?.__groupKey ?? '';
+      this.groupBodyExpanded[key] = this.showGroupedBody;
+    });
   }
 
 
@@ -226,57 +232,63 @@ objectKeys(obj: any): string[] {
     this.buildSelectedColumns();
   }
 
-  private groupAndSplitData(): void {
-    if (this.groupByField) {
-      const groupedMap = new Map<string, any[]>();
-      this._data.forEach(item => {
-        const key = item[this.groupByField!] ?? '未指定';
-        if (!groupedMap.has(key)) groupedMap.set(key, []);
-        groupedMap.get(key)!.push(item);
-      });
-      this.groupedData = Array.from(groupedMap.entries()).map(([key, items]) => {
-        items.forEach(row => row['__groupKey'] = key);
-        return items;
-      });
-    } else {
-      const total = this._data?.length || 0;
-      const groupCount = Math.ceil(total / this.rowsPerTable);
-      this.groupedData = Array.from({ length: groupCount }, (_, i) =>
-        this._data.slice(i * this.rowsPerTable, (i + 1) * this.rowsPerTable)
-      );
+private groupAndSplitData(): void {
+  if (this.groupByField) {
+    const groupedMap = new Map<string, any[]>();
+    this._data.forEach(item => {
+      const key = item[this.groupByField!] ?? '未指定';
+      if (!groupedMap.has(key)) groupedMap.set(key, []);
+      // ⛔ 你之前可能是 groupedMap.get(key)!.push({ __groupKey: key });
+      // ✅ 正確：保留 item 所有欄位再加上 __groupKey
+      groupedMap.get(key)!.push({ ...item, __groupKey: key });
+    });
+
+    // ✅ groupedData 變成 group array
+    this.groupedData = Array.from(groupedMap.values());
+  } else {
+    const total = this._data?.length || 0;
+    const groupCount = Math.ceil(total / this.rowsPerTable);
+    this.groupedData = Array.from({ length: groupCount }, (_, i) =>
+      this._data.slice(i * this.rowsPerTable, (i + 1) * this.rowsPerTable)
+    );
+  }
+
+  this.groupedData.forEach(group => {
+    const key = group[0]?.__groupKey ?? '';
+    if (key && !(key in this.groupBodyExpanded)) {
+      this.groupBodyExpanded[key] = this.showGroupedBody;
     }
-    this.groupedData.forEach(group => {
-  const key = group[0]?.__groupKey ?? '';
-  if (key && !(key in this.groupBodyExpanded)) {
-    this.groupBodyExpanded[key] = this.showGroupedBody; // ✅ 根據全域切換
-  }
-});
-  }
+  });
+
+
+}
+
+
+
 
 
 
 getSubtotal(group: any[], field: string): string {
-  const sum = group.reduce((acc, row) => {
-    const raw = row[field];
-    if (raw == null) return acc;
+  // 🔍 Debug 開始
+  if (field === 'sad_sale_amt') {
+    
+  }
 
-    const numeric = parseFloat(String(raw).replace(/,/g, '')); // 去掉逗號後轉數字
+  const sum = group.reduce((acc, row) => {
+    const value = row[field];
+    const numeric = +String(value).replace(/,/g, '');
     return acc + (isNaN(numeric) ? 0 : numeric);
   }, 0);
 
   return sum.toLocaleString();
 }
-  get pagedData(): any[] {
-    if (this.mergedView) {
-      return this._data.slice(0, this.rowsPerTable);
-    }
-    return this._data;
-  }
+
+
 
 
   getGrandTotal(field: string): number | string {
     const sum = this._data.reduce((acc, row) => acc + (parseFloat(row[field]) || 0), 0);
-    console.log('🔍 總計', field, '=', sum);
+    
     return sum.toLocaleString();
   }
 

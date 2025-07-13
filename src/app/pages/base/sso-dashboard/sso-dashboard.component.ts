@@ -104,7 +104,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
         System_Id: 'ERP',
         System_Name: '商場營運管理系統',
         System_Url: '/account/dashboard',
-        System_ImgFile: 'EIP_Image',
+        System_ImgFile: 'TSRDERP',
       },
     ];
     this.subscriptions.push( // 將訂閱添加到 subscriptions 陣列

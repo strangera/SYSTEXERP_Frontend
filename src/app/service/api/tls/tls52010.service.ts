@@ -12,9 +12,6 @@ import { ApiResponse } from '../../system/auth.service'; // 請確認你的 ApiR
 
 /** 查詢 POS2016 資料表 (queryTLS52010) 的請求介面 */
 export interface IQueryTLS52010Request {
-  PageSize: number;
-  PageIndex: number;
-  SortBy?: SortMeta[];
   PO_No?: string; // 採購單號
   HOS_No?: string; // 醫院代號
   LOGO_No?: string; // LOGO代碼
@@ -110,9 +107,24 @@ export interface IPOS2004DetailData {
 
 /** 商品管理編號/國際條碼/廠商貨號查詢商品 (queryPOS2004Detail) 的請求介面 */
 export interface IQueryPOS2004DetailRequest {
-  VEN_No: string; // 廠商代號
+  VEN_No: string | null; // 廠商代號
   queryNo: string; // 查詢編號 (商品管理編號/國際條碼/廠商貨號)
-  LOGO_No: string; // LOGO代碼
+  PLU_Name?: string; // 商品名稱 (查詢條件，可選)
+  LOGO_No: string | null; // LOGO代碼
+}
+
+export interface IQueryPOS2004DetailResponse {
+  id: number,
+  PLU_MagNo: string,
+  PLU_Name: string,
+  PLU_No: string,
+  PLU_Unit: string,
+  UNIT_NAME: string,
+  PLU_BoxQty: number,
+  PLU_StockTaxType: string,
+  PLU_SalePrc_UNI: number,
+  PLU_SalePrc: number,
+  PLU_TaxType: string
 }
 
 /** 查詢廠商所有商品 (queryPOS2004Detail_VEN_No) 的請求介面 */
@@ -218,9 +230,6 @@ export interface ISetCloseTLS52010Request {
   PO_Status: string; // 要設定的狀態 (例如 "結案", "作廢" 等)
 }
 
-
-// --- 服務定義 ---
-
 @Injectable({
   providedIn: 'root',
 })
@@ -245,6 +254,14 @@ export class Tls52010Service {
    */
   GetBudgetAmount(params: IGetBudgetAmountRequest): Observable<ApiResponse<number>> { // 假設返回的 Data 是數字
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/GetBudgetAmount`, params);
+  }
+  /**
+   * 查詢 POS2004 (商品詳細資料) 資料表
+   * @param params 查詢條件 (VEN_No, queryNo, PLU_Name, LOGO_No)
+   * @returns 包含 IPOS2004DetailData 陣列的 API 響應
+   */
+  queryPOS2004Detail(params: IQueryPOS2004DetailRequest): Observable<ApiResponse<IQueryPOS2004DetailResponse[]>> {
+    return this.http.post<ApiResponse<IQueryPOS2004DetailResponse[]>>(`${this.apiUrl}/queryPOS2004Detail`, params);
   }
   /**
    * 查詢廠商所有商品 (POS2004 詳細資料)

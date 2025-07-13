@@ -211,10 +211,10 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
       const currentData = this.contractFlowService.getCurrentData();
       const stepName = this.contractFlowService.getStepName(currentStatus.currentStep);
 
-      this.messageService.infoBubble(
-        `發現進行中的工作流程 (${currentData.queryRowData?.apply_no || currentStatus.contractId})，` +
-        `當前在：${stepName}`
-      );
+      // this.messageService.infoBubble(
+      //   `發現進行中的工作流程 (${currentData.queryRowData?.apply_no || currentStatus.contractId})，` +
+      //   `當前在：${stepName}`
+      // );
     }
   }
 

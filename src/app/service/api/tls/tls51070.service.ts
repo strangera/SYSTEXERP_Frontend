@@ -36,6 +36,16 @@ export class Tls51070Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLS51070_Detail`, body);
   }
 
+  // 查詢 商品變價紀錄
+  queryTLS51070_PriceChangeRecord(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS51070_PriceChangeRecord`, body);
+  }
+
+  // excel匯入並且產生錯誤檔
+  uploadTLS51070(formData: FormData): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/uploadTLS51070`, formData);
+  }
+
   // ---圖片處理---
 
   //查詢圖片

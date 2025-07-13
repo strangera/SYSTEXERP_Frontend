@@ -1,8 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { Validators, FormBuilder, FormGroup } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
-import { FIN11050, Fin11050Service } from '../../../service/api/fin/fin11050.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { Validators, FormGroup } from '@angular/forms';
+import { FIN11050Data, Fin11050Service } from '../../../service/api/fin/fin11050.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
 @Component({
@@ -10,7 +8,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
   templateUrl: './fin11050-cru.component.html',
   styleUrl: './fin11050-cru.component.scss'
 })
-export class FIN11050CRUComponent extends BasicCruPageComponent<FIN11050> implements OnInit {
+export class FIN11050CRUComponent extends BasicCruPageComponent<FIN11050Data> implements OnInit {
   dataForm = this.formBuilder.group({
     format_code: ['', [Validators.required, Validators.maxLength(2)]],    // 格式代號
     format_name: ['', [Validators.required, Validators.maxLength(100)]]   // 格式名稱
@@ -22,8 +20,6 @@ export class FIN11050CRUComponent extends BasicCruPageComponent<FIN11050> implem
 
   ngOnInit(): void {
     this.initializePage('FIN11050', this.dataForm);
-    // 若為顯示或修改模式，initializePage 已自動 patchValue
-    // 若有需要額外處理可於此完成
     if (this.isFormReadable) {
       this.dataForm.disable();
     }
@@ -41,7 +37,6 @@ export class FIN11050CRUComponent extends BasicCruPageComponent<FIN11050> implem
     const formValue = frm.getRawValue();
 
     if (this.isFormCreateable) {
-      // 新增模式
       this.fin11050Service.insertFIN11050(formValue).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
@@ -60,7 +55,6 @@ export class FIN11050CRUComponent extends BasicCruPageComponent<FIN11050> implem
         }
       });
     } else if (this.isFormEditable) {
-      // 修改模式
       this.fin11050Service.updateFIN11050(formValue).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
@@ -82,5 +76,4 @@ export class FIN11050CRUComponent extends BasicCruPageComponent<FIN11050> implem
       this.submitted = false;
     }
   }
-
 }

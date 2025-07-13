@@ -4,8 +4,6 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
 import { ApiResponse } from '../../system/auth.service'; // 請確認你的 ApiResponse 介面路徑是否正確
 
-// --- TLS52030 服務相關的介面定義 ---
-
 /** 查詢 POS2018 資料表 (queryTLS52030) 的請求介面 */
 export interface IQueryTLS52030Request {
   ODM_No?: string; // 驗收編號

@@ -10,17 +10,20 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
+
+      <!-- 標籤檔 -->
+      <ng-container *ngIf="state.destination === 'label'">
+        <form
+        [formGroup]="queryLabelForm"
+        id="queryLabelForm"
+        (ngSubmit)="onSubmitLabel(queryLabelForm)"
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="商品管理碼"
               controlName="PLU_MagNo"
-              [control]="queryForm.controls.PLU_MagNo"
+              [control]="queryLabelForm.controls.PLU_MagNo"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -28,7 +31,7 @@
             <app-input-text
               label="國際條碼"
               controlName="PLU_No"
-              [control]="queryForm.controls.PLU_No"
+              [control]="queryLabelForm.controls.PLU_No"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -36,7 +39,7 @@
             <app-input-text
               label="廠商貨號"
               controlName="PLU_OrgPLUNo"
-              [control]="queryForm.controls.PLU_OrgPLUNo"
+              [control]="queryLabelForm.controls.PLU_OrgPLUNo"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -46,7 +49,7 @@
             <app-input-number
               label="標籤數量"
               controlName="Label_Qty"
-              [control]="queryForm.controls.Label_Qty"
+              [control]="queryLabelForm.controls.Label_Qty"
               [submitted]="submitted"
             ></app-input-number>
           </div>
@@ -61,15 +64,79 @@
         </div>
         <!-- </div> -->
       </form>
+
+      </ng-container>
+
+      <!-- 變價歷史紀錄 -->
+      <ng-container *ngIf="state.destination === 'history'">
+        <form
+        [formGroup]="queryPriceForm"
+        id="queryPriceForm"
+        (ngSubmit)="onSubmitPrice(queryPriceForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="商品管理碼"
+              controlName="PLU_MagNo"
+              [control]="queryPriceForm.controls.PLU_MagNo"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+        </div>
+        <!-- <div> -->
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+        <!-- </div> -->
+      </form>
+
+      </ng-container>
     </p-accordionTab>
   </p-accordion>
 </div>
-<div class="card">
-  <div class="col-13">
-    <app-expandable-edit-table #labelTable title="產生標籤檔" [mainColumns]="labelColumn" [data]="labelData"
-          [loading]="expandlabelLoading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
-          [showAddButton]="false" [showDetailTabs]="false" [showDetailAddButton]="false"
-          (save)="onRowSave($event)" (cancel)="onRowCancel($event)"
-          (batchDelete)="deleteLabel($event)"></app-expandable-edit-table>
+<ng-container *ngIf="state.destination === 'label'">
+  <div class="card">
+    <div class="col-13">
+      <app-expandable-edit-table #labelTable title="產生標籤檔" [mainColumns]="labelColumn" [data]="labelData"
+            [loading]="expandlabelLoading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
+            [showAddButton]="false" [showDetailTabs]="false" [showDetailAddButton]="false"
+            (save)="onRowSave($event)" (cancel)="onRowCancel($event)"
+            (batchDelete)="deleteLabel($event)"></app-expandable-edit-table>
+    </div>
   </div>
-</div>
+</ng-container>
+
+<ng-container *ngIf="state.destination === 'history'">
+  <div class="card">
+    <!-- <div class="col-13">
+      <app-expandable-edit-table #priceAlterTable title="商品變價紀錄" [mainColumns]="priceColumn" [data]="priceData"
+            [loading]="expandpriceLoading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
+            [showAddButton]="false" [showDetailTabs]="false" [showDetailAddButton]="false"></app-expandable-edit-table>
+    </div> -->
+
+    <div class="col-13">
+    <app-table
+      tableKey="TLS51070OS"
+      [data]="priceData"
+      [columns]="priceColumn"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      [showCheckBox]="false"
+      [showManage]="false"
+      dataKey="id"
+      [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryPriceForm); onSubmitPrice(queryPriceForm)"
+      [lazy]="true"
+      [loading]="loading"
+    ></app-table>
+  </div>
+  </div>
+</ng-container>
+

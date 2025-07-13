@@ -27,6 +27,8 @@ export interface POS2020Detail {
     "UPD_Date"?: Date,
     "UPD_USR_No"?: string,
     "UPD_USR_Name"?: string,
+
+    'status': string //新、舊資料
 }
 
 export interface IMG1001Detail {

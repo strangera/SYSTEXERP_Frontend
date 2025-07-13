@@ -46,69 +46,89 @@
 
 <!-- ✅ 上方操作列與對話框區保留不變 -->
 <div class="printable-section">
-  <!-- ✅ 分群顯示區 -->
-  <div *ngIf="!mergedView" class="grouped-view">
-    <div *ngFor="let group of groupedData; let i = index" class="report-table-wrapper mb-5">
-  <!-- ✅ 報表標題與資料區間 -->
-  <div class="mb-2 text-sm text-gray-600 font-medium">
- 
-    <div>
-  {{ dateRangeLabel }}：
-  {{ dateStart | date: 'yyyy/MM/dd' }} ~ {{ dateEnd | date: 'yyyy/MM/dd' }}
-</div>
-   
-  </div>
-
-  <!-- 群組標題（如有） -->
-<div *ngIf="group[0]?.__groupKey"
-     class="mb-2 text-blue-700 font-bold text-base"
-     (click)="toggleGroupBody(group[0].__groupKey)">
-  {{ groupByLabel || groupByField }}：{{ group[0].__groupKey }}
-</div>
 
 
-      <!-- 群組資料表 -->
-       <div style="overflow-x: auto;">
-<p-table [value]="group"
-         [columns]="selectedColumns"
-         [resizableColumns]="true"
-         [paginator]="false"
-         scrollable="true"
-        [style]="{ 'min-width': '1200px' }"
-         [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'">
-<ng-template pTemplate="header">
-  <tr>
-    <th *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style"
-        [pSortableColumn]="col.field !== '__index' ? col.field : undefined">
-      <ng-container *ngIf="col.field === '__index'; else normalHeader">
-        <!-- ⬅️ 統一使用 group[0].__groupKey 為控制鍵 -->
-        <i
-          class="pi cursor-pointer mr-1"
-          [ngClass]="{
-            'pi-chevron-down': groupBodyExpanded[group[0]?.__groupKey],
-            'pi-chevron-right': !groupBodyExpanded[group[0]?.__groupKey]
-          }"
-          (click)="toggleGroupBody(group[0]?.__groupKey)"
-        ></i>
-        {{ col.header }}
-      </ng-container>
-      <ng-template #normalHeader>
-        {{ col.header }}
-        <p-sortIcon *ngIf="col.field !== '__index'" [field]="col.field" />
-      </ng-template>
-    </th>
-  </tr>
-</ng-template>
 
 
-<ng-template
-  pTemplate="body"
-  let-rowData
-  let-rowIndex="rowIndex"
->
-<tr *ngIf="groupBodyExpanded[group[0].__groupKey]">
+ <div *ngIf="!mergedView" class="grouped-view">
+      <div
+        *ngFor="let group of groupedData; let i = index"
+        class="report-table-wrapper mb-5"
+      >
+        <!-- ✅ 報表標題與資料區間 -->
+        <div
+          class="mb-2 text-sm text-gray-600 font-medium"
+          *ngIf="showDateRangeLabel"
+        >
+          <div>
+            {{ dateRangeLabel }}：{{ dateStart | date: "yyyy/MM/dd" }} ~
+            {{ dateEnd | date: "yyyy/MM/dd" }}
+          </div>
+        </div>
 
-            <td *ngFor="let col of selectedColumns" [ngClass]="col.style" class="text-center">
+        <!-- ✅ 自訂群組標頭區（若有提供 Template） -->
+        <ng-container *ngIf="groupHeaderTemplate">
+          <ng-container
+            *ngTemplateOutlet="
+              groupHeaderTemplate;
+              context: { $implicit: group }
+            "
+          ></ng-container>
+        </ng-container>
+
+        <!-- 群組標題（如有） -->
+        <div
+          *ngIf="group[0]?.__groupKey"
+          class="mb-2 text-blue-700 font-bold text-base"
+          (click)="toggleGroupBody(group[0].__groupKey)"
+        >
+          {{ groupByLabel || groupByField }}：{{ group[0].__groupKey }}
+        </div>
+
+        <!-- 群組資料表 -->
+
+<p-table
+          [value]="group"
+          [columns]="selectedColumns"
+          [resizableColumns]="true"
+          [paginator]="false"
+          scrollable="true"
+          [style]="{ width: '100%' }"
+          [scrollHeight]="'auto'"
+          [styleClass]="
+            'p-datatable-sm p-datatable-striped p-datatable-gridlines'
+          "
+        >
+        <!-- 📌 表頭 -->
+        <ng-template pTemplate="header">
+          <tr>
+            <th *ngFor="let col of selectedColumns"
+                class="text-center"
+                [ngClass]="col.style"
+                [pSortableColumn]="col.field !== '__index' ? col.field : undefined">
+              <ng-container *ngIf="col.field === '__index'; else normalHeader">
+                <i
+                  class="pi cursor-pointer mr-1"
+                  [ngClass]="{
+                    'pi-chevron-down': groupBodyExpanded[group[0]?.__groupKey],
+                    'pi-chevron-right': !groupBodyExpanded[group[0]?.__groupKey]
+                  }"
+                  (click)="toggleGroupBody(group[0]?.__groupKey)">
+                </i>
+                {{ col.header }}
+              </ng-container>
+              <ng-template #normalHeader>
+                {{ col.header }}
+                <p-sortIcon *ngIf="col.field !== '__index'" [field]="col.field" />
+              </ng-template>
+            </th>
+          </tr>
+        </ng-template>
+
+        <!-- 📌 資料列 -->
+        <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
+          <tr>
+            <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
               <ng-container *ngIf="col.field === '__index'">
                 {{ getRowIndex(i, rowIndex) }}
               </ng-container>
@@ -124,15 +144,15 @@
           </tr>
         </ng-template>
 
-        <!-- 小計 -->
-<ng-template pTemplate="footer" let-value>
+        <!-- 📌 小計 -->
+<ng-template pTemplate="footer">
   <tr class="bg-yellow-100 font-semibold" *ngIf="subtotalFields.length > 0">
     <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
       <ng-container [ngSwitch]="col.field">
         <ng-container *ngSwitchCase="'__index'">小計</ng-container>
         <ng-container *ngSwitchDefault>
           <ng-container *ngIf="subtotalFields.includes(col.field)">
-            {{ getSubtotal(value, col.field) }}
+            {{ getSubtotal(group, col.field) }}
           </ng-container>
         </ng-container>
       </ng-container>
@@ -140,12 +160,12 @@
   </tr>
 </ng-template>
 
-
-
       </p-table>
-      </div>
     </div>
   </div>
+</div>
+
+
 
   <!-- ✅ 合併顯示區（大表） -->
 
@@ -162,7 +182,8 @@
   [customSort]="true"
   scrollable="true"
   scrollHeight="500px"
-  [style]="{ 'min-width': '1200px' }"
+     [style]="{ width: '100%' }"
+          [scrollHeight]="'auto'"
   (sort)="onTableSort($event)"
   [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'"
   [dataKey]="dataKey"

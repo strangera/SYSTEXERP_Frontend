@@ -79,7 +79,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
     columns: Column[] = [// 表格欄位定義
       { field: 'tlt_no', header: '專櫃編號', visible: true },
       { field: 'tlt_name', header: '專櫃名稱', visible: true },
-      { field: 'ven_uniform', header: '廠商統一編號', visible: true },
+      { field: 'VEN_No', header: '廠商代號', visible: true },
       { field: 'VEN_Name', header: '廠商名稱', visible: true },
       { field: 'ticket_type', header: '保證票型態', visible: true },
       { field: 'tlt_bdate', header: '合約起日', visible: true },
@@ -208,7 +208,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
   
   
     isRowSelectable(rowData: Garantee_Ticket): boolean {
-      return rowData.CanDel
+       return rowData.CanDel
     }
   
     loadOptions() {
@@ -276,6 +276,18 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
     
               console.log('orgOption:', this.orgOption);
             });
+
+      // 專櫃編號 下拉
+    this.tls14030Service
+          .queryTLTTALENT_DropDownList({})
+          .subscribe((response) => {
+            this.tlt_noListOption = response.Data.map((item: apiOption) => ({
+              value: item.No,
+              label: item.Name,
+            }));
+  
+            console.log('tlt_noListOption:', this.orgOption);
+          });      
   
     }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
@@ -10,7 +10,6 @@ import { CRUDStatus } from '../../../../shared/models/system/CRUDstatus';
 @Component({
   selector: 'app-input.table.cru',
   templateUrl: './input.table.cru.component.html',
-  styleUrl: './input.table.cru.component.scss'
 })
 export class InputTableCRUComponent extends BasicCrupageComponent implements OnInit {
   CashRegisterTypeItems: any[] = [

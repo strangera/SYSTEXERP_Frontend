@@ -250,9 +250,19 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_DropDownList`, {});
   }
 
+  // 查詢專櫃主檔(TLTTALENT)資料表下拉選單 依狀態
+  queryTLTTALENT_Status_DropDownList(approve_status: string): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_Status_DropDownList`, { approve_status });
+  }
+
   // 查詢營業型態(SYS1000)資料表下拉選單
   querySYS1000_DropDownList(params: ISYS1000Request): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/querySYS1000_DropDownList`, params);
+  }
+
+  // 查詢角色設定檔(tblRole)資料表下拉選單
+  querytblRole_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/querytblRole_DropDownList`, {});
   }
 
   // 查詢收銀員設定檔(POS2001)資料表下拉選單
@@ -261,13 +271,13 @@ export class DropDownListService {
   }
 
   // 查詢銀行資料表下拉選單
-  queryBank_DropDownList(params: IBankRequest): Observable<ApiResponse<IDropdownItem[]>> {
-    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryBank_DropDownList`, params);
+  queryAPS1001_DropDownList(params: IBankRequest): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryAPS1001_DropDownList`, params);
   }
 
   // 查詢洽談人員資料表下拉選單
-  queryUser_Name_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
-    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryUser_Name_DropDownList`, {});
+  queryTBLUSER_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTBLUSER_DropDownList`, {});
   }
 
   // 查詢POS2002位置代碼資料表下拉選單

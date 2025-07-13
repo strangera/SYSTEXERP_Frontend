@@ -66,7 +66,6 @@ import { TreeDropdownComponent } from './componentkit/tree-dropdown/tree-dropdow
 import { InputTextareaComponent } from './componentkit/input-textarea/input-textarea.component';
 import { CalendarRangeQuickComponent } from './componentkit/calendar-range-quick/calendar-range-quick.component';
 import { TableExportComponent } from './componentkit/table/table-export/table-export.component';
-import { MultiSelectTableComponent } from './componentkit/multi-select-table/multi-select-table.component';
 import { ExpandableEditTableModule } from './componentkit/expandable-edit-table/expandable-edit-table.module';
 import { MultiLocationFilterComponent } from './componentkit/multi-location-filter/multi-location-filter.component';
 import { AutoCompleteComponent } from './componentkit/app-autocomplete/app-autocomplete.component';
@@ -79,6 +78,7 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { ReportTableGroupComponent } from './componentkit/report-table-group/report-table-group.component';
 import { DialogComponent } from './componentkit/dialog/dialog.component';
 import { RadiobuttonYNComponent } from './componentkit/radiobutton-yn/radiobutton-yn.component';
+
 
 @NgModule({
   declarations: [
@@ -97,7 +97,6 @@ import { RadiobuttonYNComponent } from './componentkit/radiobutton-yn/radiobutto
     TableExpansionComponent,
     TableExportComponent,
     DropdownTableComponent,
-    MultiSelectTableComponent,
     TreeDropdownComponent,
     TreeDropdownNestComponent,
     InputTextareaComponent,
@@ -114,7 +113,8 @@ import { RadiobuttonYNComponent } from './componentkit/radiobutton-yn/radiobutto
     ImgUploadComponent,
     ReportTableGroupComponent,
     DialogComponent,
-    RadiobuttonYNComponent
+    RadiobuttonYNComponent,
+    
   ],
   imports: [
     ReactiveFormsModule,
@@ -170,6 +170,8 @@ import { RadiobuttonYNComponent } from './componentkit/radiobutton-yn/radiobutto
     ReactiveFormsModule,
     TranslateModule,
     // PrimeNG
+    OverlayPanelModule,
+    MenuModule,
     FileUploadModule,
     OrganizationChartModule,
     ProgressSpinnerModule,
@@ -207,7 +209,6 @@ import { RadiobuttonYNComponent } from './componentkit/radiobutton-yn/radiobutto
     ButtonDynamicallydeleteComponent,
     InputTextComponent,
     DropdownTableComponent,
-    MultiSelectTableComponent,
     TreeDropdownComponent,
     TreeDropdownNestComponent,
     InputTextareaComponent,
@@ -233,7 +234,8 @@ import { RadiobuttonYNComponent } from './componentkit/radiobutton-yn/radiobutto
     ProgressBarModule,
     ReportTableGroupComponent,
     DialogComponent,
-    RadiobuttonYNComponent
+    RadiobuttonYNComponent,
+    
   ],
 })
 export class SharedModule { }
