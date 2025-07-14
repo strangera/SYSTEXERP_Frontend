@@ -946,6 +946,8 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
       // 🎯 驗證資料
       const validation = this.contractFlowService.validateCleanSubmitData(cleanSubmitData);
+      console.log(validation);
+
 
       if (!validation.isValid) {
         console.error('❌ Next3: 資料驗證失敗:', validation.errors);

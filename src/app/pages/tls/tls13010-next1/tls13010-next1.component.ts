@@ -158,7 +158,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_bdate',
       header: '起始年月',
-      type: 'date',
+      type: 'text',
       editable: true,
       autoWidth: true,
       dateFormat: 'year-month'
@@ -238,7 +238,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_bdate',
       header: '扣款起始年月',
-      type: 'date',
+      type: 'text',
       editable: true,
       width: '130px',
       dateFormat: 'year-month'
@@ -246,7 +246,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_edate',
       header: '扣款結束年月',
-      type: 'date',
+      type: 'text',
       editable: true,
       width: '130px',
       dateFormat: 'year-month'
@@ -338,7 +338,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_bdate',
       header: '扣款起始年月',
-      type: 'date',
+      type: 'text',
       editable: true,
       width: '130px',
       dateFormat: 'full-date'
@@ -346,7 +346,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_edate',
       header: '扣款結束年月',
-      type: 'date',
+      type: 'text',
       editable: true,
       width: '130px',
       dateFormat: 'full-date'
@@ -434,7 +434,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_bdate',
       header: '扣款起始年月',
-      type: 'date',
+      type: 'text',
       editable: true,
       width: '130px',
       dateFormat: 'full-date'
@@ -442,7 +442,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_edate',
       header: '扣款結束年月',
-      type: 'date',
+      type: 'text',
       editable: true,
       width: '130px',
       dateFormat: 'full-date'
@@ -509,7 +509,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_bdate',
       header: '扣款起始年月',
-      type: 'date',
+      type: 'text',
       editable: true,
       width: '130px',
       dateFormat: 'full-date'
@@ -517,7 +517,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_edate',
       header: '扣款結束年月',
-      type: 'date',
+      type: 'text',
       editable: true,
       width: '130px',
       dateFormat: 'full-date'
