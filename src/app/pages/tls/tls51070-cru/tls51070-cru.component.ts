@@ -468,23 +468,38 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
             return item; // 其他不變
           });
 
-          const requestBody = {
-            ...formValue,
-            PLU_No: [frm.get('PLU_No')?.value], //用[]包
-            POS2020_INFO: processedPOS2020,     // 使用處理過的資料
+          // POS2005Data 中所有的 PLU_No
+          const POS2005PLUs = this.POS2005Data.map(item => item.PLU_No);
+          console.log('現有的 PLU_No 陣列:', POS2005PLUs);
+
+          let requestBody = {}
+
+          if(POS2005PLUs.length >=1){
+            requestBody = {
+              ...formValue,
+              PLU_No: POS2005PLUs,
+              POS2020_INFO: processedPOS2020,     // 使用處理過的資料
+            }
+          }else{
+            requestBody = {
+              ...formValue,
+              PLU_No: [''], //無輸入POS2005送出空字串
+              POS2020_INFO: processedPOS2020,     // 使用處理過的資料
+            }
           }
+          
           console.log('insert', requestBody);
 
-          this.tls51070Service.insertTLS51070(requestBody).subscribe(async (response) => {
-            this.messageService.successBubble('POS2004主檔新增成功');
+          // this.tls51070Service.insertTLS51070(requestBody).subscribe(async (response) => {
+          //   this.messageService.successBubble('POS2004主檔新增成功');
 
-            const newSeqNo = response?.Data; // 回傳的 IMG_SeqNo
-            console.log('新增取號:', newSeqNo);
+          //   const newSeqNo = response?.Data; // 回傳的 IMG_SeqNo
+          //   console.log('新增取號:', newSeqNo);
 
-            // 進行圖片檔更新
-            await this.createImage(newSeqNo); // ✅ 傳入圖片
-            this.onCancel();
-          });
+          //   // 進行圖片檔更新
+          //   await this.createImage(newSeqNo); // ✅ 傳入圖片
+          //   this.onCancel();
+          // });
         }
         break;
       case CRUDStatus.Edit:
