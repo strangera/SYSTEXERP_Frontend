@@ -205,6 +205,7 @@
           [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
           [defaultNewItem]="defaultNew2005" (save)="onRowSavePOS2005($event)" (cancel)="onRowCancelPOS2005($event)"
           (batchDelete)="onBatchDelete2005($event)" (addMainItem)="onAddPOS2005()"></app-expandable-edit-table>
+        <h6>與POS2004之廠商編號相同的項目不可刪除</h6>
         <!-- 輸入廠商編號才能填寫   -->
         <ng-container *ngIf="dataForm.get('VEN_No')?.value !== null">
           <!-- 商品採購廠商 POS2020 -->

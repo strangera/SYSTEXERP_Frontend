@@ -11,6 +11,7 @@ import { NgIf } from '@angular/common';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { debounceTime } from 'rxjs';
 
 export interface Label{
   id: number,
@@ -94,6 +95,9 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     // 展開式表格的載入狀態
     expandlabelLoading = false;
 
+    //預覽標籤資料
+    previewLabelData: Label | null = null;
+
     selectedItems: Label[] = [];// 多選項目
   // ----------------------------------------------------------------
 
@@ -147,6 +151,18 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     }else{
       return
     }
+
+    // ✅ 監聽欄位變化，進行查詢但不加到清單
+    const watchFields = ['PLU_MagNo', 'PLU_No', 'PLU_OrgPLUNo'];
+    watchFields.forEach(field => {
+      this.queryLabelForm.get(field)?.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+        if (this.hasAnySearchInput()) {
+          this.previewLabel();
+        }else {
+          this.previewLabelData = null;
+        }
+      });
+    });
   }
 
   onSubmitLabel(frm: FormGroup) {
@@ -264,6 +280,28 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     });     
   }
 
+  //預覽標籤檔
+  previewLabel() {
+    const frm = this.queryLabelForm;
+    if (frm.invalid || !this.hasAnySearchInput()) return;
+
+    this.tls51070Service.getLabelTLS51070(frm.value).subscribe({
+      next: (response) => {
+        if (response.Status === '0000' && response.Data && response.Data.length > 0) {
+          const previewData = response.Data[0]; // 只取第一筆預覽
+
+          this.previewLabelData = previewData; // ✅ 更新 HTML 預覽用變數
+        } else {
+          this.previewLabelData = null; // 無結果清空預覽
+        }
+      },
+      error: (err) => {
+        console.error('無對應資料:', err);
+        this.previewLabelData = null;
+      }
+    });
+}
+
   // label 明細檔案操作
   onRowSave(event: any) {
     // 確認事件對象有預期的屬性
@@ -300,9 +338,17 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     }
   }
 
-    //---label 新ID---
-    generateLabelId(data: Label[]): number {
+  //---label 新ID---
+  generateLabelId(data: Label[]): number {
       const maxId = Math.max(...data.map(p => p.id), 0);
       return maxId + 1;
-    }
+  }
+
+  // 標籤檢查(三者其中之一不為空才執行)
+  hasAnySearchInput(): boolean {
+  const form = this.queryLabelForm;
+  return !!form.get('PLU_MagNo')?.value?.trim() ||
+         !!form.get('PLU_No')?.value?.trim() ||
+         !!form.get('PLU_OrgPLUNo')?.value?.trim();
+}
 }

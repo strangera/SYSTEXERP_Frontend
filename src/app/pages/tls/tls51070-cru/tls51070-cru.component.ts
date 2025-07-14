@@ -54,7 +54,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // 修改 標準進價 不要連動到 目前進價 --ok 新增重算的標準進價會另外送出，不會影響到舊的 --ok
 
   // 品牌編號 ---PLULOGO 站存試算資料 --ok
-  // 標籤檔 新增 預覽 (規格書藍色字) > 然後再確認
+  // 標籤檔 新增 預覽 (規格書藍色字) > 然後再確認 --ok
   // 變價表單拆成 主資料 變價前後 組合
 
   // ----------------------------------------------------------------
@@ -380,7 +380,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       }
     });
 
-    //新增模式時如果 [商品售價] 發生變動就強制設定品牌為空 防止價錢算錯
+    //依照廠商暫存重新計算[標準進價]
     this.dataForm.get('PLU_SalePrc')!.valueChanges.subscribe(() => {
       if(this.crudstatus == CRUDStatus.Create && this.cachedBrand){
         const PLU_SalePrc = this.dataForm.get('PLU_SalePrc')?.value;
