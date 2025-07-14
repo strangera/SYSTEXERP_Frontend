@@ -20,6 +20,7 @@
             "outputPath": "dist/tsrderp-frontend",
             "index": "src/index.html",
             "browser": "src/main.ts",
+            "aot": true,
             "polyfills": ["zone.js", "@angular/localize/init"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
@@ -53,7 +54,9 @@
                   "maximumError": "5mb"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "aot": true,
+              "optimization": true
             },
             "development": {
               "optimization": false,
@@ -74,7 +77,10 @@
               "proxyConfig": "proxy.conf.json"
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "development",
+          "options": {
+            "hmr": true
+          }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n"
