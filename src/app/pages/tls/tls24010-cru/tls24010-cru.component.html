@@ -6,18 +6,51 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="銷售日期"
-          [control]="dataForm.controls.saleDateStart" [submitted]="submitted"></app-calendar>
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="cashierCode" [options]="cashierOptions"
-          optionLabel="label" optionValue="value" [control]="dataForm.controls['cashierCode']"
-          [submitted]="submitted"></app-dropdown>
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="counterCode"
-          [options]="counterCodeOptions" optionLabel="label" optionValue="value"
-          [control]="dataForm.controls['counterCode']" [submitted]="submitted"></app-dropdown>
-
-        <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="交易序號"
-          controlName="transactionSerial" [control]="dataForm.controls['transactionSerial']"
-          [submitted]="submitted"></app-input-number>
+        <!-- 銷售日期 → POS5006.SalesDate -->
+        <app-calendar class="col-12 md:col-3" label="銷售日期" [control]="dataForm.controls.TXN_Date"
+          [submitted]="submitted"></app-calendar>
+        <!-- 收銀機號 → POS5006.ECR_No -->
+        <app-input-text class="col-12 md:col-3" label="收銀機編號" [control]="dataForm.controls.ECR_No"
+          [submitted]="submitted" />
+        <!-- 專櫃編號 → POS5006.TLT_No -->
+        <app-input-text class="col-12 md:col-3" label="專櫃編號" [control]="dataForm.controls.TLT_No"
+          [submitted]="submitted" />
+        <!-- 交易序號 → POS5006.TXN_No -->
+        <app-input-text *ngIf="isFormCreateable" class="col-12 md:col-3" label="交易序號"
+          [control]="dataForm.controls.TXN_No" [submitted]="submitted" />
+        <app-input-number *ngIf="!isFormCreateable" class="col-12 md:col-3" label="交易序號"
+          [control]="dataForm.controls.TXN_No" [submitted]="submitted" [max]="99999999" [useGrouping]="false" />
+        <!-- 備註 → POS5006.TXN_Desc -->
+        <app-input-textarea class="col-12 md:col-3" label="備註" [control]="dataForm.controls.TXN_Desc"
+          [submitted]="submitted" />
+        <!-- 預售 → POS5006.TXN_PreOrder -->
+        <app-radiobutton-yn class="col-12 md:col-3" label="預售" [control]="dataForm.controls.TXN_PreOrder"
+          [submitted]="submitted" [showAll]="false" />
+        <!-- 收銀員編號 → POS2001.USR_No -->
+        <app-input-text class="col-12 md:col-3" label="收銀員編號" [control]="dataForm.controls.USR_No"
+          [submitted]="submitted" />
+        <!-- 交易狀態 → POS5006.TXN_Status -->
+        <app-dropdown class="col-12 md:col-3" label="交易狀態" [control]="dataForm.controls.TXN_Status"
+          [submitted]="submitted" [options]="txnStatusOptions" optionLabel="label" optionValue="value" />
+        <!-- 零稅 → POS5006.TXN_VIP -->
+        <app-radiobutton-yn class="col-12 md:col-3" label="零稅" [control]="dataForm.controls.TXN_VIP"
+          [submitted]="submitted" [showAll]="false" />
+        <!-- 交易稅別 → POS5006.TXN_TaxType -->
+        <app-dropdown class="col-12 md:col-3" label="交易稅別" [control]="dataForm.controls.TXN_TaxType"
+          [submitted]="submitted" [options]="txnTaxTypeOptions" optionLabel="label" optionValue="value" />
+        <!-- 客戶統一編號 → POS5006.TXN_Uniform -->
+        <app-input-text class=" col-12 md:col-3" label="客戶統一編號" [control]="dataForm.controls.TXN_Uniform"
+          [submitted]="submitted" />
+        <!-- 發票字軌 → POS5006.GUI_Track -->
+        <app-input-text class="col-12 md:col-3" label="發票字軌" [control]="dataForm.controls.GUI_Track"
+          [submitted]="submitted" />
+        <!-- 起始發票號碼 → POS5006.TXN_GUIBegNo -->
+        <app-input-text-range class="col-12 md:col-3" startLabel="起始發票號碼" endLabel="結束發票號碼"
+          [startControl]="dataForm.controls.TXN_GUIBegNo" [endControl]="dataForm.controls.TXN_GUIEndNo"
+          [submitted]="submitted" />
+        <!-- 發票號碼張數 → POS5006.TXN_GUICnt -->
+        <app-input-number class="col-12 md:col-3" label="發票號碼張數" [control]="dataForm.controls.TXN_GUICnt"
+          [submitted]="submitted" [max]="999999" [useGrouping]="false" />
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" />
