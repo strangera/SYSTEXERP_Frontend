@@ -8,11 +8,8 @@
   <div class="flex flex-wrap gap-3 p-2">
     <div *ngFor="let option of ynOptions" class="flex align-items-center">
       <p-radioButton [inputId]="controlName + option.value" [name]="controlName" [value]="option.value"
-        [formControl]="control" [disabled]="disabled" [ngClass]="{
-          'ng-invalid ng-dirty':
-            (submitted && control.errors) ||
-            (this.errorForGroup && this.control.parent?.errors)
-        }" [attr.aria-label]="label + ' ' + option.label" [title]="label + ' ' + option.label"></p-radioButton>
+        [formControl]="control" [disabled]="disabled" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
+        [attr.aria-label]="label + ' ' + option.label" [title]="label + ' ' + option.label"></p-radioButton>
       <label [for]="controlName + option.value" class="ml-2">
         {{ option.label }}
       </label>
@@ -20,5 +17,5 @@
   </div>
 </div>
 
-<app-control-messages [onerror]="submitted || (control.touched && control.invalid)" [control]="control"
-  [errorForGroup]="errorForGroup"></app-control-messages>
+<app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
+  [control]="control"></app-control-messages>
