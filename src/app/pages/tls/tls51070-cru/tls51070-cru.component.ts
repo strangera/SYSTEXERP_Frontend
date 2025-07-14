@@ -53,8 +53,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // 2004 最主要"PLU_No": [""], > 指定給 2005 多筆"PLU_No": [""], -- 新增時增加提示這樣使用者也不用輸入兩次 --ok
   // 修改 標準進價 不要連動到 目前進價 --ok 新增重算的標準進價會另外送出，不會影響到舊的 --ok
 
-  // 品牌編號 ---PLULOGO 站存試算資料
-  // 標籤檔 新增 預覽 (規格書藍色字) > 然後再確認
+  // 品牌編號 ---PLULOGO 站存試算資料 --ok
+  // 標籤檔 新增 預覽 (規格書藍色字) > 然後再確認 --ok
   // 變價表單拆成 主資料 變價前後 組合
 
   // ----------------------------------------------------------------
@@ -70,7 +70,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_EngName: ['', [Validators.maxLength(100)]], // 商品英文名稱
     PLU_OrgPLUNo: ['', [Validators.maxLength(30)]], // 廠商貨號 --廠商自編碼 廠商貨號 
     // PLU_No: ['', [Validators.maxLength(20)]], // 國際條碼 可選擇帶入PLU_MagNo，新增模式以外加上 必填
-    PLU_No: [{ value: '', disabled: true }], // 國際條碼 由輸入的POS2005內容帶入
+    PLU_No: [{ value: '由多筆國際條碼的第一筆自動新增', disabled: true }], // 國際條碼 由輸入的POS2005內容帶入
     PLU_MinOrder: [1, [Validators.maxLength(8)]], // 最小訂購量 ---預設1，採購時，輸入的採購量必需為最小訂購量的倍數。
     PLU_Lable: ['', [Validators.maxLength(50)]], // 標籤名稱
 
@@ -155,7 +155,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   pos2020Detail: POS2020Detail[] = [];
   img1001Detail: IMG1001Detail[] = [];
   //---暫存品牌資料---
-  private initialLogoNo: string | null = null;
+  cachedBrand: any = null;
   // ---------國際條碼 (POS2005) 編輯表格 至少要一筆-------------------------------------------------------
   // 國際條碼編號	下拉
   POS2005Data: POS2005Detail[] = [];
@@ -336,18 +336,23 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
         // 讀取整份 重新設置 進價折數、 標準進價
         if (matched) {
+          // 暫存品牌資料
+          this.cachedBrand = matched;
+
+          // 設定進價折數
           this.dataForm.get('PLU_OrderPrcRate')?.setValue(matched.PLU_OrderPrcRate);
 
+          // 試算標準進價
           const PLU_SalePrc = this.dataForm.get('PLU_SalePrc')?.value;
-          const PLU_OrderPrcRate = this.dataForm.get('PLU_OrderPrcRate')?.value;
+          const PLU_OrderPrcRate = matched.PLU_OrderPrcRate;
           if (PLU_SalePrc && PLU_OrderPrcRate) {
-            // 目前進價 商品售價＊進貨折數/1.05 保留到小數後兩位
             const result = Number(((PLU_SalePrc * PLU_OrderPrcRate * 0.01) / 1.05).toFixed(2));
             this.dataForm.get('PLU_OrderPrc')?.setValue(result);
           }
+        } else {
+          // 若品牌編號為空 不進行操作
+          this.cachedBrand = null; // 若清空品牌編號，也清空暫存
         }
-      } else {
-        // 若品牌編號為空 不進行操作
       }
     });
 
@@ -375,10 +380,15 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       }
     });
 
-    //新增模式時如果 [商品售價] 發生變動就強制設定品牌為空 防止價錢算錯
+    //依照廠商暫存重新計算[標準進價]
     this.dataForm.get('PLU_SalePrc')!.valueChanges.subscribe(() => {
-      if(this.crudstatus == CRUDStatus.Create){
-        this.dataForm.get('LOGO_No')?.setValue('');
+      if(this.crudstatus == CRUDStatus.Create && this.cachedBrand){
+        const PLU_SalePrc = this.dataForm.get('PLU_SalePrc')?.value;
+        const PLU_OrderPrcRate = this.cachedBrand.PLU_OrderPrcRate;
+        if (PLU_SalePrc && PLU_OrderPrcRate) {
+          const result = Number(((PLU_SalePrc * PLU_OrderPrcRate * 0.01) / 1.05).toFixed(2));
+          this.dataForm.get('PLU_OrderPrc')?.setValue(result);
+        }
       }
     });
 
@@ -480,11 +490,26 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
             return item; // 其他不變
           });
 
-          const requestBody = {
-            ...formValue,
-            PLU_No: [frm.get('PLU_No')?.value], //用[]包
-            POS2020_INFO: processedPOS2020,     // 使用處理過的資料
+          // POS2005Data 中所有的 PLU_No
+          const POS2005PLUs = this.POS2005Data.map(item => item.PLU_No);
+          console.log('現有的 PLU_No 陣列:', POS2005PLUs);
+
+          let requestBody = {}
+
+          if(POS2005PLUs.length >=1){
+            requestBody = {
+              ...formValue,
+              PLU_No: POS2005PLUs,
+              POS2020_INFO: processedPOS2020,     // 使用處理過的資料
+            }
+          }else{
+            requestBody = {
+              ...formValue,
+              PLU_No: [''], //無輸入POS2005送出空字串
+              POS2020_INFO: processedPOS2020,     // 使用處理過的資料
+            }
           }
+          
           console.log('insert', requestBody);
 
           this.tls51070Service.insertTLS51070(requestBody).subscribe(async (response) => {
@@ -746,9 +771,35 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   //---POS2020表格編輯事件---
   onRowSavePOS2020(event: any) {
-    // 通過驗證，處理儲存
-    this.detail2020Handler.handleRowSave(event);
+    const edited = event.newData as POS2020Detail;
+    const original = event.oldData as POS2020Detail;
 
+    const isDuplicate = this.POS2020Data.some(item =>
+      item.VEN_No === edited.VEN_No && item.id !== edited.id
+    );
+
+    if (isDuplicate) {
+      this.messageService.errorBubble(`已有相同的廠商編號 (${edited.VEN_No})，無法重複設定`);
+
+      if (edited.status === 'new') {
+        // ✅ 新增資料重複 → 移除這筆資料
+        this.POS2020Data = this.POS2020Data.filter(item => item.id !== edited.id);
+
+        // ✅ 若你有綁定表格 component，可同步清除選取狀態
+        if (this.pos2020Table?.selectedItems) {
+          this.pos2020Table.selectedItems = this.pos2020Table.selectedItems.filter(item => item.id !== edited.id);
+        }
+
+      } else {
+        // ✅ 舊資料重複 → 還原欄位內容
+        Object.assign(edited, original);
+      }
+
+      return;
+    }
+
+    // ✅ 無重複 → 正常儲存
+    this.detail2020Handler.handleRowSave(event);
   }
   onRowCancelPOS2020(event: any) {
     this.detail2020Handler.handleRowCancel(event);
