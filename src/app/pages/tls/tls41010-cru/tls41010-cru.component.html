@@ -1,11 +1,12 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="back" (click)="onCancel()"></app-button>
+    <app-button btnType="back" (click)="onCancel()" />
   </div>
 
+
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
 
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
@@ -51,12 +52,15 @@
           <app-input-text label="機台所屬收銀員姓名" controlName="ECR_USR_Name" [control]="dataForm.controls.ECR_USR_Name"
             [submitted]="submitted"></app-input-text>
         </div>
-      </div>
-      <div class="grid p-fluid">
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="收銀機狀態" controlName="ECR_Status" [options]="statusOptions" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.ECR_Status" [submitted]="submitted"></app-dropdown>
         </div>
+      </div>
+
+      <div class="grid p-fluid">
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar calendarType="dateOne" label="啟用日期" controlName="ECR_ActiveDate"
             [control]="dataForm.controls.ECR_ActiveDate" [submitted]="submitted"></app-calendar>
@@ -80,12 +84,17 @@
           <app-dropdown label="後台主機IP" controlName="ECR_SrvIP" [control]="dataForm.controls.ECR_SrvIP"
             [submitted]="submitted"></app-dropdown>
         </div>
+      </div>
+
+      <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="環境變數編號" controlName="ECR_TmplNo" [control]="dataForm.controls.ECR_TmplNo"
             [submitted]="submitted" [options]="ECR_TmplNo_Option" optionLabel="Name" optionValue="No"></app-dropdown>
         </div>
+        <hr />
       </div>
-      <hr />
+
+
       <p-accordion>
         <p-accordionTab header="收銀設定">
           <div class="grid p-fluid">
@@ -353,7 +362,7 @@
         </p-accordionTab>
       </p-accordion>
       <hr />
-      <div class="card" *ngIf="!isFormCreateable">
+      <div class="card">
         <div class="grid p-fluid">
           <app-calendar class="col-12 md:col-6 lg:col-4" label="建立日期" controlName="CRT_Date"
             [control]="dataForm.controls.CRT_Date" [submitted]="submitted" />
@@ -374,7 +383,6 @@
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading" />
       </div>
-
     </form>
   </p-panel>
 </div>
