@@ -22,7 +22,7 @@ export class TLS14020Service {
     );
   }
   exportTLS14020(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryTLS14020`, data).pipe(
+    return this.http.post<any>(`${this.apiUrl}/exportTLS14020`, data).pipe(
       tap(response => console.log('查詢結果:', response)),
       catchError((error) => this.errorHandler.handleError(error))
     );
