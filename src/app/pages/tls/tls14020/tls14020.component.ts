@@ -14,7 +14,8 @@ import { forkJoin } from 'rxjs';
 import { NegotiatorOptionsService } from '../../../service/api/dropdownservice/negotiator-options.service';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
-import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
+import { formatApproveStatus, formatCheckType, formatDecoType, formatMoneyType, formatOpenflagStatus, formatSingleOption, formatStoreWay, formatTltTermType } from '../tls13010/tls13010.constants';
 
 interface ContractItem {
   id: string;
@@ -112,23 +113,23 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     { field: 'ven_uniform', header: '廠商統編', visible: true },
     { field: 'VEN_Name', header: '廠商名稱', visible: true },
     { field: 'contract_subno', header: '版本編號', visible: true },
-    { field: 'tlt_bdate', header: '契約起始日', visible: true },
-    { field: 'tlt_edate', header: '契約截止日', visible: true },
-    { field: 'tlt_contract_bdate', header: '營運起始日', visible: true },
-    { field: 'tlt_contract_edate', header: '營運截止日', visible: true },
+    { field: 'tlt_bdate', header: '契約起始日', visible: true, format: formatDate },
+    { field: 'tlt_edate', header: '契約截止日', visible: true, format: formatDate },
+    { field: 'tlt_contract_bdate', header: '營運起始日', visible: true, format: formatDate },
+    { field: 'tlt_contract_edate', header: '營運截止日', visible: true, format: formatDate },
     { field: 'bus_type', header: '大分類代碼', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
-    { field: 'deco_type', header: '裝潢方式', visible: true },
-    { field: 'money_type', header: '結帳方式', visible: true },
-    { field: 'check_type', header: '對帳方式', visible: true },
-    { field: 'tlt_term_type', header: '抽成別', visible: true },
-    { field: 'store_way', header: '配合方式', visible: true },
-    { field: 'rece_yn', header: '開立業主發票', visible: true },
-    { field: 'pos_yn', header: '使用業主收銀機', visible: true },
-    { field: 'cash_yn', header: '業主收現', visible: true },
+    { field: 'deco_type', header: '裝潢方式', visible: true, format: formatDecoType },
+    { field: 'money_type', header: '結帳方式', visible: true, format: formatMoneyType },
+    { field: 'check_type', header: '對帳方式', visible: true, format: formatCheckType },
+    { field: 'tlt_term_type', header: '抽成別', visible: true, format: formatTltTermType },
+    { field: 'store_way', header: '配合方式', visible: true, format: formatStoreWay },
+    { field: 'rece_yn', header: '開立業主發票', visible: true, format: formatYN },
+    { field: 'pos_yn', header: '使用業主收銀機', visible: true, format: formatYN },
+    { field: 'cash_yn', header: '業主收現', visible: true, format: formatYN },
     { field: 'contract_type', header: '合約種類', visible: true },
-    { field: 'approve_status', header: '合約狀態', visible: true },
-    { field: 'tlt_openflag', header: '營運狀態', visible: true },
+    { field: 'approve_status', header: '合約狀態', visible: true, format: formatApproveStatus },
+    { field: 'tlt_openflag', header: '營運狀態', visible: true, format: formatOpenflagStatus },
     // { field: 'contract_subno', header: '合約版號', visible: true },
   ];
   // 下拉選單選項
@@ -156,28 +157,21 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
   businessTypeCodeOptions: any[] = [];
 
   addButton: AddButton[] = [
-    // {
-    //   label: '列印',
-    //   icon: 'pi pi-check-circle text-green-500',
-    //   action: (rowData: ContractItem) => {
-    //     if (rowData.VEN_Status !== '0') {
-    //       this.messageService.warnBubble('狀態不是「未審核」，無法審核');
-    //       return;
-    //     }
-    //     this.statusChange(rowData, '1'); //更新成「已審核」
-    //   },
-    // },
-    // {
-    //   label: '顯示合約',
-    //   icon: 'pi pi-undo text-orange-500',
-    //   action: (rowData: ContractItem) => {
-    //     if (rowData.VEN_Status !== '1') {
-    //       this.messageService.warnBubble('狀態已審核，無法反審核');
-    //       return;
-    //     }
-    //     this.statusChange(rowData, '0'); // 更新成「未審核」
-    //   },
-    // },
+    {
+      label: '列印',
+      icon: 'pi pi-print text-green-500',
+      action: (rowData: ContractItem) => {
+        console.log('要列印的資料', rowData);
+        this.onPrint(rowData);
+      },
+    },
+    {
+      label: '顯示合約',
+      icon: 'pi pi-file-word text-orange-500',
+      action: (rowData: ContractItem) => {
+        console.log('這是該列資料嗎?2', rowData);
+      },
+    },
   ];
 
   constructor(
@@ -314,7 +308,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      // tls14020Service.queryTLS14020
       this.tls14020Service.queryTLS14020(frm.value).subscribe({
         next: (response: any) => {
           if (response.Status === '0000') {
@@ -341,17 +334,16 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     });
   }
   onPrint(data: any): void {
-    console.log('目前資料', data);
     this.loading = true;
     this.messageService.blockUi();
-
     // 調用你的 service 來產生 Word 文檔
     this.tls14020Service.exportTLS14020(data).subscribe({
       next: (response: any) => {
         if (response.Status === '0000') {
           // 成功時下載檔案
-          this.downloadFile(response.Data, `talent_report_${data}.docx`);
-          console.log('Word文檔生成成功');
+          // console.log('跑完exportTLS14020的東西', response);
+          this.downloadFile(response.Data.FileData, response.Data.FileName);
+          console.log('Word文檔生成成功', response);
         } else {
           console.error('生成Word文檔失敗:', response.Status, response.Message);
           // 可以顯示錯誤訊息給用戶
