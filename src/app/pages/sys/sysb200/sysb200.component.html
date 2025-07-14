@@ -11,13 +11,13 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="廠商編號" controlName="VEN_No" [options]="venderOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.VEN_No" [submitted]="submitted"></app-multi-select>
+              optionValue="value" [control]="queryForm.controls.VEN_NoList" [submitted]="submitted"></app-multi-select>
           </div>
 
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="審核狀態" controlName="VEN_Status" [options]="approvalOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.VEN_Status" [submitted]="submitted"></app-multi-select>
+            <app-dropdown label="審核狀態" controlName="VEN_Status" [options]="approvalOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VEN_Status" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -120,7 +120,7 @@
 <div class="card">
   <app-table tableKey="TLS2A020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
     (edit)="onEdit($event)" (selectionChange)="selectedItems = $event" (detail)="onDetail($event)" [showCheckBox]="true"
-    dataKey="id" [multiSortMeta]="[{ field: 'pendingApprovalRegisterCode', order: 1 }]" [totalRecords]="totalRecords"
-    [lazy]="true" [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [showManage]="true" [addButton]="addButton" [showDelete]=false></app-table>
+    dataKey="id" [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true"
+    (delete)="onDelete($event)" [addButton]="addButton" [loading]="loading" [showDelete]="false"></app-table>
 </div>

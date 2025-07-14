@@ -30,7 +30,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   dataForm = this.formBuilder.nonNullable.group({
     // 基本資料
     VEN_No: ['', [Validators.required, Validators.maxLength(14)]],
-    VEN_Flag: [[]],
+    VEN_Flag: ['', Validators.required],
     VEN_Uniform: ['', Validators.maxLength(10)],
     VEN_RemitFeeMode: ['', Validators.required],
     VEN_Name: ['', [Validators.required, Validators.maxLength(60)]],
@@ -71,6 +71,8 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     { field: 'VEN_BossEmail', header: '電子郵件', type: 'input', validate: [validateMaxLength(60)] },
   ];
 
+  venderOptions: { label: string; value: string }[] = [];
+
   flagOptions = [
     { value: '1', label: '統一編號' },
     { value: '2', label: '身份證' },
@@ -93,6 +95,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     { label: '已審核', value: '1' }
   ];
 
+
   bankOptions$!: Observable<any[]>;
 
   constructor(
@@ -105,6 +108,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
 
   ngOnInit(): void {
     this.initializePage('SYSB200', this.dataForm);
+    this.loadOptions();
     const id = this.activatedRoute.snapshot.queryParamMap.get('id');
 
     if (id) {
@@ -120,6 +124,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
           this.messageService.errorBubble('載入明細失敗');
         }
       });
+
     }
 
     this.loadBankOptions();
@@ -137,7 +142,14 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
       }
     }
   }
-
+  loadOptions() {
+    // this.sysb200Service.querySYSB200({}).subscribe(res => {
+    //   this.venderOptions = (res.Data ?? []).map((item: { VEN_No: string; VEN_Name: string }) => ({
+    //     label: `${item.VEN_No} - ${item.VEN_Name}`,
+    //     value: item.VEN_No
+    //   }));
+    // });
+  }
   loadBankOptions() {
     this.bankOptions$ = this.sysbc00Service.querySYSBC00({}).pipe(
       map(res => (res.Data ?? []).map(item => ({
@@ -175,6 +187,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
 
     this.loading = true;
 
+    // 處理 VEN_Uniform
     const flag = form.get('VEN_Flag')?.value;
     const uniform = form.get('VEN_Uniform')?.value;
     const uniformTrimmed = uniform?.trim();
@@ -197,6 +210,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
       }
     }
 
+    // 驗證聯絡人身份證
     const contactsValid = this.contacts.every(item => {
       if (!item.VEN_BossID || item.VEN_BossID.trim() === '') return true;
       const regex = /^[A-Z]{1}[0-9]{9}$/i;
@@ -208,31 +222,45 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
       this.loading = false;
       return;
     }
+
+    // 處理 VEN_No（如果是多選下拉，取第一個）
+    const VEN_No = Array.isArray(form.get('VEN_No')?.value)
+      ? form.get('VEN_No')?.value[0]
+      : form.get('VEN_No')?.value;
+
+    // 組資料
     const data = {
       ...form.getRawValue(),
+      VEN_No: VEN_No,
       VEN_Uniform: uniformTrimmed === '' ? null : uniformTrimmed,
       VEN_PayConditionDay: Number(form.get('VEN_PayConditionDay')?.value),
-      pOS20131Details: this.contacts.map(item => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { ID, ...rest } = item;
-        return {
-          ...rest,
-          VEN_BossID: item.VEN_BossID?.trim() === '' ? null : item.VEN_BossID?.trim(),
-          id: item.id ?? 0
-        };
-      })
+      pOS20131Details: this.contacts.map(item => ({
+        VEN_Boss: item.VEN_Boss,
+        VEN_BossID: item.VEN_BossID?.trim() === '' ? null : item.VEN_BossID?.trim(),
+        VEN_BossTitle: item.VEN_BossTitle,
+        VEN_BossTel: item.VEN_BossTel,
+        VEN_BossAddr: item.VEN_BossAddr,
+        VEN_BossEmail: item.VEN_BossEmail,
+        id: item.id ?? 0
+      }))
     };
 
-    const apiCall$ = this.crudstatus === 'Create'
+    // 呼叫 API
+    const apiCall$ = this.isFormCreateable
       ? this.sysb200Service.insertSYSB200(data)
       : this.sysb200Service.updateSYSB200(data);
+
 
     apiCall$
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: () => {
           this.messageService.successBubble(this.crudstatus === 'Create' ? '新增成功' : '修改成功');
-          this.onCancel();
+
+          // 設定回列表時自動刷新
+          localStorage.setItem('refreshList', 'true');
+
+          this.onCancel(); // 返回列表
         },
         error: () => {
           this.messageService.errorBubble('送出失敗，請稍後再試');
