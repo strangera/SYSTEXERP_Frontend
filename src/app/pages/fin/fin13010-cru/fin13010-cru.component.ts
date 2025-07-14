@@ -72,7 +72,7 @@ export class FIN13010CRUComponent
     this.dataForm.get('Total_hitory_PUR_Amt')?.disable();
     this.dataForm.get('Total_Amt')?.disable();
     this.setupTrackNoWatcher(); // ← 加這行：監聽字軌
-    
+
     this.setupGuiNoAndCorrespondWatcher(); // ← 加這行：監聽發票號碼和對應欄位
   }
   private setupTrackNoWatcher(): void {
@@ -96,80 +96,78 @@ export class FIN13010CRUComponent
       });
     }
   }
-private setupGuiNoAndCorrespondWatcher(): void {
-  const trackControl = this.dataForm.get('GUI_Track');
-  const noControl = this.dataForm.get('PUR_GUINo');
+  private setupGuiNoAndCorrespondWatcher(): void {
+    const trackControl = this.dataForm.get('GUI_Track');
+    const noControl = this.dataForm.get('PUR_GUINo');
 
-  if (trackControl && noControl) {
-    const trigger = () => {
-      const track = trackControl.value?.trim();
-      const guiNo = noControl.value?.trim();
+    if (trackControl && noControl) {
+      const trigger = () => {
+        const track = trackControl.value?.trim();
+        const guiNo = noControl.value?.trim();
 
-      if (track && guiNo) {
-        const full = `${track}${guiNo}`;
+        if (track && guiNo) {
+          const full = `${track}${guiNo}`;
 
-        // 更新 PUR_GUINo_Correspond 欄位（可選）
-        this.dataForm.patchValue(
-          { PUR_GUINo_Correspond: full },
-          { emitEvent: false }
-        );
+          // 更新 PUR_GUINo_Correspond 欄位（可選）
+          this.dataForm.patchValue(
+            { PUR_GUINo_Correspond: full },
+            { emitEvent: false },
+          );
 
-        this.apiService
-          .queryCorrespondByGUINoCorrespond({ PUR_GUINo_Correspond: full })
-          .subscribe((res) => {
-            const detail = res?.Data?.[0];
-            if (detail) {
-   let voucherType: number | string = '';
-if (detail.PUR_VoucherType === '21') {
-  voucherType = 23;
-} else if (detail.PUR_VoucherType === '22') {
-  voucherType = 24;
-} else {
-  voucherType = 'OK'; // 👉 若無符合，就填 OK（測試用）
-}
+          this.apiService
+            .queryCorrespondByGUINoCorrespond({ PUR_GUINo_Correspond: full })
+            .subscribe((res) => {
+              const detail = res?.Data?.[0];
+              if (detail) {
+                let voucherType: number | string = '';
+                if (detail.PUR_VoucherType === '21') {
+                  voucherType = 23;
+                } else if (detail.PUR_VoucherType === '22') {
+                  voucherType = 24;
+                } else {
+                  voucherType = 'OK'; // 👉 若無符合，就填 OK（測試用）
+                }
 
- this.dataForm.get('PUR_VoucherType')?.enable(); // 👈先打開
+                this.dataForm.get('PUR_VoucherType')?.enable(); // 👈先打開
 
-this.dataForm.patchValue(
-  {
-    Inv_Date: detail.PUR_GUIDate,
-    PUR_VoucherType: voucherType ? String(voucherType) : '',
-    PUR_TaxType: detail.PUR_TaxType,
-    Inv_Net: detail.PUR_Net,
-    Inv_Tax: detail.PUR_Tax,
-    Total_hitory_PUR_Amt: detail.Total_hitory_PUR_Amt,
-    Total_Amt: detail.Total_Amt
-  },
-  { emitEvent: false }
-);
+                this.dataForm.patchValue(
+                  {
+                    Inv_Date: detail.PUR_GUIDate,
+                    PUR_VoucherType: voucherType ? String(voucherType) : '',
+                    PUR_TaxType: detail.PUR_TaxType,
+                    Inv_Net: detail.PUR_Net,
+                    Inv_Tax: detail.PUR_Tax,
+                    Total_hitory_PUR_Amt: detail.Total_hitory_PUR_Amt,
+                    Total_Amt: detail.Total_Amt,
+                  },
+                  { emitEvent: false },
+                );
 
-this.dataForm.get('PUR_VoucherType')?.disable(); // 👈再關掉
-            } else {
-              // 查不到的話可清空欄位（可選）
-              this.dataForm.patchValue(
-                {
-                  Inv_Date: null,
-                  PUR_VoucherType: '',
-                  PUR_TaxType: '',
-                  Inv_Net: null,
-                  Inv_Tax: null,
-                  PUR_Amt: null,
-                  Total_hitory_PUR_Amt: null,
-                  Total_Amt: null
-                },
-                { emitEvent: false }
-              );
-            }
-          });
-      }
-    };
+                this.dataForm.get('PUR_VoucherType')?.disable(); // 👈再關掉
+              } else {
+                // 查不到的話可清空欄位（可選）
+                this.dataForm.patchValue(
+                  {
+                    Inv_Date: null,
+                    PUR_VoucherType: '',
+                    PUR_TaxType: '',
+                    Inv_Net: null,
+                    Inv_Tax: null,
+                    PUR_Amt: null,
+                    Total_hitory_PUR_Amt: null,
+                    Total_Amt: null,
+                  },
+                  { emitEvent: false },
+                );
+              }
+            });
+        }
+      };
 
-    trackControl.valueChanges.subscribe(trigger);
-    noControl.valueChanges.subscribe(trigger);
+      trackControl.valueChanges.subscribe(trigger);
+      noControl.valueChanges.subscribe(trigger);
+    }
   }
-}
-
-
 
   // ✅ 僅允許特定欄位可編輯
   private updateDisabledState(): void {
@@ -200,45 +198,45 @@ this.dataForm.get('PUR_VoucherType')?.disable(); // 👈再關掉
   }
 
   onSubmit(form: FormGroup): void {
-  this.handleSubmit(form, () => {
-    const formValue = form.getRawValue();
+    this.handleSubmit(form, () => {
+      const formValue = form.getRawValue();
 
-    const payload = {
-      GUI_Track: formValue.GUI_Track,
-      PUR_GUINo: formValue.PUR_GUINo,
-      PUR_GUIDate: formValue.PUR_GUIDate,
-      PUR_VoucherType: formValue.PUR_VoucherType,
-      PUR_RepYYYYMM: formValue.PUR_RepYYYYMM,
-      Credit_Type: formValue.Credit_Type,
-      PUR_TaxType: formValue.PUR_TaxType,
-      PUR_Net: formValue.PUR_Net,
-      PUR_Tax: formValue.PUR_Tax,
-      PUR_Amt: formValue.PUR_Amt,
-      Source_Doc_No: formValue.Source_Doc_No,
-      Voucher_No: formValue.Voucher_No
-    };
+      const payload = {
+        GUI_Track: formValue.GUI_Track,
+        PUR_GUINo: formValue.PUR_GUINo,
+        PUR_GUIDate: formValue.PUR_GUIDate,
+        PUR_VoucherType: formValue.PUR_VoucherType,
+        PUR_RepYYYYMM: formValue.PUR_RepYYYYMM,
+        Credit_Type: formValue.Credit_Type,
+        PUR_TaxType: formValue.PUR_TaxType,
+        PUR_Net: formValue.PUR_Net,
+        PUR_Tax: formValue.PUR_Tax,
+        PUR_Amt: formValue.PUR_Amt,
+        Source_Doc_No: formValue.Source_Doc_No,
+        Voucher_No: formValue.Voucher_No,
+      };
 
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          this.apiService.insertFIN13010(payload).subscribe(() => {
-            this.messageService.successBubble('新增成功');
-            this.dataForm.reset();
-          });
-        }
-        break;
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            this.apiService.insertFIN13010(payload).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              this.dataForm.reset();
+            });
+          }
+          break;
 
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          this.apiService.updateFIN13010(payload).subscribe(() => {
-            this.messageService.successBubble('更新成功');
-            this.onCancel();
-          });
-        }
-        break;
-    }
-  });
-}
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            this.apiService.updateFIN13010(payload).subscribe(() => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel();
+            });
+          }
+          break;
+      }
+    });
+  }
   private setupAutoAmountCalculation(): void {
     const netControl = this.dataForm.get('PUR_Net');
     const taxControl = this.dataForm.get('PUR_Tax');
