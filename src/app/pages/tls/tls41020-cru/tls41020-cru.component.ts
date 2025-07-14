@@ -1,7 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormGroup,
+  Validators,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import {  TranslateModule } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
@@ -9,39 +14,41 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { NgIf } from '@angular/common';
-import { TLS41020Service } from '../../../service/api/tls/tls41020.service'; 
+import { TLS41020Service } from '../../../service/api/tls/tls41020.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 
-
 // 2.4.1.2 收銀機EDC資料維護 CRU
 @Component({
-    selector: 'app-tls41020-cru',
-    templateUrl: './tls41020-cru.component.html',
-    styleUrl: './tls41020-cru.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        DropdownComponent,
-        InputTextComponent,
-        ButtonComponent,
-        NgIf,
-        TranslateModule,
-        CalendarRangeComponent
-    ],
+  selector: 'app-tls41020-cru',
+  templateUrl: './tls41020-cru.component.html',
+  styleUrl: './tls41020-cru.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    InputTextComponent,
+    ButtonComponent,
+    NgIf,
+    TranslateModule,
+    CalendarRangeComponent,
+  ],
 })
 export class TLS41020CRUComponent
   extends BasicCruPageComponent<any>
-  implements OnInit { ECRNoOptions: any[] = [];
+  implements OnInit
+{
+  ECRNoOptions: any[] = [];
   EDC_Status_Option = [
     { value: 'A', label: '啟用' },
     { value: 'C', label: '停用' },
   ];
 
   dataForm = this.formBuilder.nonNullable.group({
+    id: [''],
     SYS_StoreNo: [''],
     ECR_No: ['', [Validators.required, Validators.maxLength(10)]],
     EDC_No: ['', [Validators.required, Validators.maxLength(10)]],
@@ -74,6 +81,11 @@ export class TLS41020CRUComponent
 
   ngOnInit(): void {
     this.initializePage('TLS41020', this.dataForm);
+    const id = this.dataForm.get('id')?.value;
+    if (id != null) {
+      this.dataForm.patchValue({ id: String(id) });
+    }
+
     this.updateDisabledState();
     this.ECRNoService.getECRNo().subscribe((res) => {
       this.ECRNoOptions =

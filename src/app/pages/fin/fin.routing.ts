@@ -48,6 +48,9 @@ export const finRoutes: Routes = [
   // 二收及二電發票表
   { path: 'fin13030', loadComponent: () => import('./fin13030/fin13030.component').then(m => m.FIN13030Component) },
   { path: 'fin13030cru', loadComponent: () => import('./fin13030-cru/fin13030-cru.component').then(m => m.FIN13030CRUComponent) },
+    // 進項發票調整 
+  { path: 'fin13050', loadComponent: () => import('./fin13050/fin13050.component').then(m => m.FIN13050Component) },
+  { path: 'fin13050cru', loadComponent: () => import('./fin13050-cru/fin13050-cru.component').then(m => m.FIN13050CruComponent) },
   // 補登進項稅額
   { path: 'fin14010', loadComponent: () => import('./fin14010/fin14010.component').then(m => m.FIN14010Component) },
   { path: 'fin14010cru', loadComponent: () => import('./fin14010-cru/fin14010-cru.component').then(m => m.FIN14010CRUComponent) },
