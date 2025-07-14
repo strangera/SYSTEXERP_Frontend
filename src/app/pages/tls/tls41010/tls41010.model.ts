@@ -61,6 +61,7 @@ export interface TLS41010QueryParams {
   ECR_SrvIP?: string;
   ECR_TmplNo?: string;
 }
+
 export interface TLS41010Data {
   id: number;
   SYS_StoreNo: string;
@@ -71,7 +72,7 @@ export interface TLS41010Data {
   ECR_TLT_Name: string;
   ECR_USR_No: string;
   ECR_USR_Name: string;
-  ECR_ActiveDate?: string | null;
+  ECR_ActiveDate: string;
   ECR_ExpireDate: string;
   ECR_CloseDate: string;
   ECR_Status: string;
@@ -116,12 +117,12 @@ export interface TLS41010Data {
   ECR_PickUpValid: string;
   ECR_ReprintGUI: string;
   ECR_PrnLogo: string;
-  ECR_Logo1: string | null;
-  ECR_Logo2: string | null;
-  ECR_Logo3: string | null;
-  ECR_Logo4: string | null;
-  ECR_Logo5: string | null;
-  ECR_Logo6: string | null;
+  ECR_Logo1: string;
+  ECR_Logo2: string;
+  ECR_Logo3: string;
+  ECR_Logo4: string;
+  ECR_Logo5: string;
+  ECR_Logo6: string;
   ECR_VoidTxn: string;
   ECR_VoidRstDay: number;
   ECR_CreditNote: string;
@@ -180,123 +181,13 @@ export interface TLS41010Data {
   ECR_Device9Com: number;
   ECR_Device10Name: string;
   ECR_Device10Com: number;
-  CRT_Date?: string | null;
+  CRT_Date: string;
   CRT_USR_No: string;
   CRT_USR_Name: string;
-  UPD_Date?: string | null;
+  UPD_Date: string;
   UPD_USR_No: string;
   UPD_USR_Name: string;
 }
-
-
-export interface TLS41010Item {
-  id: number;
-  ECR_TmplNo: string;
-  ECR_TmplDesc: string;
-  ECR_TmplStatus: string;
-  ECR_TmplBegDate: string;
-  ECR_TmplEndDate: string;
-  ECR_SernoType: string;
-  ECR_GUI_Type: string;
-  ECR_TimeTickInvl: number;
-  ECR_Interval: number;
-  ECR_MaxQty: number;
-  ECR_MaxAmt: number;
-  ECR_MaxItemAmt: number;
-  ECR_MaxDisc: number;
-  ECR_EdcTimeout: number;
-  ECR_EdcSettle: string;
-  ECR_ForceInput: string;
-  ECR_CustCntEntry: string;
-  ECR_CustTypeEntry: string;
-  ECR_ClerkEntry: string;
-  ECR_ForceMember: string;
-  ECR_SettleDD: string;
-  ECR_SettleHHNN: string;
-  ECR_VoidTxn: string;
-  ECR_VoidRstDay: number;
-  ECR_CreditNote: string;
-  ECR_RestoreVoid: string;
-  ECR_GUI_PeriodQty: number;
-  ECR_GUI_MinQty: number;
-  ECR_SelfReport: string;
-  ECR_SaleRpt1: string;
-  ECR_SaleRpt2: string;
-  ECR_SaleRpt3: string;
-  ECR_SaleRpt4: string;
-  ECR_SaleRpt5: string;
-  ECR_SaleRpt6: string;
-  ECR_SaleRpt7: string;
-  ECR_SaleRpt8: string;
-  ECR_SaleRpt9: string;
-  ECR_SaleRpt10: string;
-  ECR_PcashValid: string;
-  ECR_PickUpValid: string;
-  ECR_ReprintGUI: string;
-  ECR_PrnLogo: string;
-  ECR_Logo1: string | null;
-  ECR_Logo2: string | null;
-  ECR_Logo3: string | null;
-  ECR_Logo4: string | null;
-  ECR_Logo5: string | null;
-  ECR_Logo6: string | null;
-  ECR_KBLevel: string | null;
-  ECR_KBType: string | null;
-  ECR_Scanner: string | null;
-  ECR_ScannerCom: number | null;
-  ECR_MSR: string | null;
-  ECR_MSRCom: number | null;
-  ECR_ScrType: string | null;
-  ECR_CD: string | null;
-  ECR_CDCom: number | null;
-  ECR_ExtScr: string | null;
-  ECR_ExtScrCom: number | null;
-  ECR_GUIPrn: string | null;
-  ECR_GUICom: number | null;
-  ECR_SlipPrn: string | null;
-  ECR_SlipPrnCom: number | null;
-  ECR_OrderPrn: string | null;
-  ECR_OrderPrnCom: number | null;
-  ECR_LablePrn: string | null;
-  ECR_LablePrnCom: number | null;
-  ECR_EDC: string | null;
-  ECR_EDCCom: number | null;
-  ECR_EDC2: string | null;
-  ECR_EDC2Com: number | null;
-  ECR_EDC3: string | null;
-  ECR_EDC3Com: number | null;
-  ECR_ElecSVCrdA: string | null;
-  ECR_ElecSVCrdACom: number | null;
-  ECR_ElecSVCrdB: string | null;
-  ECR_ElecSVCrdBCom: number | null;
-  ECR_ElecSVCrdC: string | null;
-  ECR_ElecSVCrdCCom: number | null;
-  ECR_ElecPay: string | null;
-  ECR_ElecPayCom: number | null;
-  ECR_Drawer: string | null;
-  ECR_DrawerCom: number | null;
-  ECR_Device1Name: string | null;
-  ECR_Device1Com: number | null;
-  ECR_Device2Name: string | null;
-  ECR_Device2Com: number | null;
-  ECR_Device3Name: string | null;
-  ECR_Device3Com: number | null;
-  ECR_Device4Name: string | null;
-  ECR_Device4Com: number | null;
-  ECR_Device5Name: string | null;
-  ECR_Device5Com: number | null;
-  ECR_Device6Name: string | null;
-  ECR_Device6Com: number | null;
-  ECR_Device7Name: string | null;
-  ECR_Device7Com: number | null;
-  ECR_Device8Name: string | null;
-  ECR_Device8Com: number | null;
-  ECR_Device9Name: string | null;
-  ECR_Device9Com: number | null;
-  ECR_Device10Name: string | null;
-  ECR_Device10Com: number | null;
-}
-
 
 export const columns: Column[] = [
   { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: true },

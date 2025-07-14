@@ -1,31 +1,19 @@
+import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { FormGroup, Validators } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
-import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
-import { TLS46020Item, TLS46020Service } from '../../../service/api/tls/tls46020.service';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
+import { salTypeOptions, sernoTypeOptions, settleDDOptions, statusOptions, typeOptions, yesNoOptions, ECR_GUI_Type_Option } from './tls41010-cru.model';
 import { TLS41010Data } from '../tls41010/tls41010.model';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-import {
-  salTypeOptions,
-  sernoTypeOptions,
-  settleDDOptions,
-  statusOptions,
-  typeOptions,
-  yesNoOptions,
-  ECR_GUI_Type_Option,
-} from './tls41010-cru.model';
+import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
 
 @Component({
   selector: 'app-tls41010-cru',
   templateUrl: './tls41010-cru.component.html',
 })
 export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> implements OnInit {
-  isCopyMode = false;
-  copyForm!: FormGroup;
-
   dataForm = this.formBuilder.nonNullable.group({
     ECR_No: ['', [Validators.required, Validators.maxLength(10)]],
     ECR_Name: ['', [Validators.required, Validators.maxLength(20)]],
@@ -36,7 +24,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_LocNo: ['', [Validators.maxLength(10)]],
     ECR_USR_No: ['', [Validators.maxLength(8)]],
     ECR_USR_Name: ['', [Validators.maxLength(20)]],
-    ECR_Status: [''],
+    ECR_Status: ['A', [Validators.maxLength(2)]],
     ECR_ActiveDate: [null],
     ECR_CloseDate: [null],
     ECR_ComName: ['', [Validators.maxLength(64)]],
@@ -85,7 +73,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_GUI_PeriodQty: [50, [Validators.min(0), Validators.max(99999999)]],
     ECR_GUI_MinQty: [50, [Validators.min(0), Validators.max(99999999)]],
     ECR_SettleDD: ['T', [Validators.required, Validators.maxLength(2)]],
-    ECR_SettleHHNN: ['', [Validators.required, Validators.maxLength(4)]],
+    ECR_SettleHHNN: [null, [Validators.required, Validators.maxLength(4)]],
     ECR_KBLevel: ['', [Validators.maxLength(6)]],
     ECR_KBType: ['', [Validators.maxLength(6)]],
     ECR_Scanner: ['', [Validators.maxLength(20)]],
@@ -95,13 +83,13 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_CDCom: [0, [Validators.min(0), Validators.max(99)]],
     ECR_ExtScr: ['', [Validators.maxLength(20)]],
     ECR_ExtScrCom: [0, [Validators.min(0), Validators.max(99)]],
-    ECR_GUIPrn: ['', [Validators.maxLength(20)]],
+    ECR_GUIPrn: [null, [Validators.maxLength(20)]],
     ECR_GUICom: [null, [Validators.min(0), Validators.max(99)]],
-    ECR_SlipPrn: ['', [Validators.maxLength(20)]],
+    ECR_SlipPrn: [null, [Validators.maxLength(20)]],
     ECR_SlipPrnCom: [null, [Validators.min(0), Validators.max(99)]],
-    ECR_OrderPrn: ['', [Validators.maxLength(20)]],
+    ECR_OrderPrn: [null, [Validators.maxLength(20)]],
     ECR_OrderPrnCom: [null, [Validators.min(0), Validators.max(99)]],
-    ECR_LablePrn: ['', [Validators.maxLength(20)]],
+    ECR_LablePrn: [null, [Validators.maxLength(20)]],
     ECR_LablePrnCom: [null, [Validators.min(0), Validators.max(99)]],
     ECR_EDC: ['', [Validators.maxLength(20)]],
     ECR_EDCCom: [0, [Validators.min(0), Validators.max(99)]],
@@ -119,13 +107,13 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_ElecPayCom: [0, [Validators.min(0), Validators.max(99)]],
     ECR_Drawer: ['', [Validators.maxLength(20)]],
     ECR_DrawerCom: [0, [Validators.min(0), Validators.max(99)]],
-    ECR_MSR: ['', [Validators.maxLength(20)]],
+    ECR_MSR: [null, [Validators.maxLength(20)]],
     ECR_MSRCom: [null, [Validators.min(0), Validators.max(99)]],
     CRT_Date: [null],
     CRT_USR_No: ['', [Validators.maxLength(16)]],
     CRT_USR_Name: ['', [Validators.maxLength(20)]],
     UPD_Date: [null],
-    UPD_USR_No: [{ value: '', disabled: true }],
+    UPD_USR_No: ['', [Validators.maxLength(16)]],
     UPD_USR_Name: ['', [Validators.maxLength(20)]],
     ECR_RestoreVoid: ['N', [Validators.required, Validators.maxLength(1)]],
   });
@@ -140,169 +128,122 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   ECR_TmplNo_Option: IDropdownItem[] = [];
 
   constructor(
-    public override formBuilder: FormBuilder,
     private tls46020Service: TLS46020Service,
     private dropDownListService: DropDownListService,
     private tls41010Service: TLS41010Service,
-    private route: ActivatedRoute
+    private http: HttpClient,
   ) {
     super();
   }
 
+
   ngOnInit(): void {
-    const disableFields = [
-      'ECR_KBLevel',
-      'ECR_KBType',
-      'ECR_Scanner',
-      'ECR_MSR',
-      'ECR_ScrType',
-      'ECR_CD',
-      'ECR_ExtScr',
-      'ECR_GUIPrn',
-      'ECR_SlipPrn',
-      'ECR_OrderPrn',
-      'ECR_LablePrn',
-      'ECR_EDC',
-      'ECR_EDC2',
-      'ECR_EDC3',
-      'ECR_ElecSVCrdA',
-      'ECR_ElecSVCrdB',
-      'ECR_ElecSVCrdC',
-      'ECR_ElecPay',
-      'ECR_Drawer',
-      'CRT_Date',
-      'CRT_USR_No',
-      'CRT_USR_Name',
-      'UPD_Date',
-      'UPD_USR_No',
-      'UPD_USR_Name',
-    ];
+    this.initializePage('TLS41010', this.dataForm);
 
-    disableFields.forEach(field => {
-      this.dataForm.get(field)?.disable();
-    });
-    this.copyForm = this.formBuilder.group({
-      sourceECR: ['', Validators.required],
-      targetECRs: ['', Validators.required],
-      isAllCopy: [false]
-    });
-
-    this.route.queryParams.subscribe(params => {
-      if (params['mode'] === 'copy') {
-        this.isCopyMode = true;
+    this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(option => {
+      this.ECR_TmplNo_Option = option.Data;
+    })
+    this.dataForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
+      if (tmplNo) {
+        this.callTLS46020Api(tmplNo);
       }
     });
+    this.dataForm.get('ECR_SrvIP')?.valueChanges.subscribe((ip) => {
+      if (ip) {
+        this.callOtherApi(ip);
+      }
+    });
+    this.dataForm.get('ECR_Type')?.valueChanges.subscribe((value) => {
+      this.checkTltNoRequired(value);
+    });
 
-    if (!this.isCopyMode) {
-      this.initializePage('TLS41010', this.dataForm);
-      this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(option => {
-        this.ECR_TmplNo_Option = option.Data;
-      });
+    this.checkTltNoRequired(this.dataForm.get('ECR_Type')?.value ?? '');
+  }
+  callOtherApi(ip: string) {
+    const apiUrl = `http://${ip}/TLS0000/TLS4000/queryTLS46010`;
+    const requestData = {
+      queryKey: 'value'
+    };
+    this.http.post(apiUrl, requestData).subscribe({
+      next: (res) => {
+        console.log('呼叫後台主機 API 成功', res);
+      },
+      error: (err) => {
+        console.error('呼叫後台主機 API 失敗', err);
+      }
+    });
+  }
+  checkTltNoRequired(value: string) {
+    const tltNoControl = this.dataForm.get('ECR_TLT_No');
 
-      this.dataForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
-        if (tmplNo) {
-          this.callTLS46020Api(tmplNo);
-        }
-      });
-
-      this.dataForm.get('ECR_Type')?.valueChanges.subscribe((value) => {
-        this.checkTltNoRequired(value);
-      });
-      this.checkTltNoRequired(this.dataForm.get('ECR_Type')?.value ?? '');
+    if (value === '2') {
+      tltNoControl?.setValidators([Validators.required, Validators.maxLength(20)]);
+    } else {
+      tltNoControl?.clearValidators();
     }
 
+    tltNoControl?.updateValueAndValidity();
   }
-
-  onSubmitCopy(frm: FormGroup) {
-    if (frm.invalid) {
-      this.messageService.errorBubble('請完整填寫來源與目標收銀機號');
-      return;
-    }
-    console.log('Copy submit', frm.value);
-  }
-
   callTLS46020Api(tmplNo: string) {
-    const params = { ECR_TmplNo: tmplNo };
+    const params = {
+      ECR_TmplNo: tmplNo,
+      PageSize: 10,
+      PageIndex: 1
+    };
     this.tls46020Service.queryTLS46020(params).subscribe({
       next: (res) => {
-        if (res.Data && res.Data.length > 0) {
-          const data = res.Data[0];
-          const patchData = { ...data };
-
-          delete patchData.ECR_TmplNo;
-
-          const convertToNullIfNumber = (val: any) => (typeof val === 'number' ? null : val);
-
-          if ('ECR_GUICom' in patchData) {
-            patchData.ECR_GUICom = convertToNullIfNumber(patchData.ECR_GUICom);
-          }
-          if ('ECR_SlipPrnCom' in patchData) {
-            patchData.ECR_SlipPrnCom = convertToNullIfNumber(patchData.ECR_SlipPrnCom);
-          }
-          if ('ECR_OrderPrnCom' in patchData) {
-            patchData.ECR_OrderPrnCom = convertToNullIfNumber(patchData.ECR_OrderPrnCom);
-          }
-          if ('ECR_LablePrnCom' in patchData) {
-            patchData.ECR_LablePrnCom = convertToNullIfNumber(patchData.ECR_LablePrnCom);
-          }
-          if ('ECR_MSRCom' in patchData) {
-            patchData.ECR_MSRCom = convertToNullIfNumber(patchData.ECR_MSRCom);
-          }
-
-          this.dataForm.patchValue(patchData as any);
-        }
+        console.log('查詢 TLS46020 成功', res.Data[0]);
       },
       error: (err) => {
         console.error('查詢 TLS46020 失敗', err);
-      },
+      }
     });
-  }
-
-
-
-  checkTltNoRequired(value: string) {
-    const tltControl = this.dataForm.get('ECR_TLT_No');
-    if (!tltControl) return;
-    if (value === '3') {
-      tltControl.addValidators(Validators.required);
-    } else {
-      tltControl.clearValidators();
-    }
-    tltControl.updateValueAndValidity();
   }
   onSubmit(frm: FormGroup) {
+    const ecrType = this.dataForm.get('ECR_Type')?.value;
+    const guiType = this.dataForm.get('ECR_GUI_Type')?.value;
+
+    if (ecrType === '5' && guiType !== '00') {
+      this.messageService.errorBubble('機台類型為「離線機台」時，發票使用類別必須為「00-不開發票」');
+      return;
+    }
+
+    if (ecrType === '7' && guiType !== '07') {
+      this.messageService.errorBubble('機台類型為「它社機台」時，發票使用類別必須為「07-電子發票」');
+      return;
+    }
+
     this.handleSubmit(frm, () => {
-      this.loading = true;
-      const serviceCall = this.isFormCreateable
-        ? this.tls46020Service.insertTLS46020(this.createBody(frm))
-        : this.tls46020Service.updateTLS46020(this.createBody(frm));
-      serviceCall.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe({
-        next: (res) => {
-          this.messageService.successBubble(res.Message);
-          if (this.isFormCreateable) {
-            this.dataForm.reset();
-          } else if (this.isFormEditable) {
-            this.onCancel();
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            let settleHHNN: any = this.dataForm.get('ECR_SettleHHNN')?.value;
+            if (settleHHNN instanceof Date) {
+              const hours = settleHHNN.getHours().toString().padStart(2, '0');
+              const minutes = settleHHNN.getMinutes().toString().padStart(2, '0');
+              settleHHNN = `${hours}${minutes}`;
+            }
+            const body = {
+              ...frm.value,
+              SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo,
+              ECR_SettleHHNN: settleHHNN,
+            }
+            this.tls41010Service.insertTLS41010(body).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              this.onCancel();
+            });
           }
-        },
-      });
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            this.tls41010Service.updateTLS41010(frm.value).subscribe(() => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel();
+            });
+          }
+          break;
+      }
     });
-  }
-  private createBody(frm: FormGroup): TLS46020Item {
-    const rawValue = frm.getRawValue();
 
-    return {
-      ...rawValue,
-      ECR_Logo1: rawValue.ECR_Logo1 === null ? undefined : rawValue.ECR_Logo1,
-      ECR_Logo2: rawValue.ECR_Logo2 === null ? undefined : rawValue.ECR_Logo2,
-      ECR_Logo3: rawValue.ECR_Logo3 === null ? undefined : rawValue.ECR_Logo3,
-      ECR_Logo4: rawValue.ECR_Logo4 === null ? undefined : rawValue.ECR_Logo4,
-      ECR_Logo5: rawValue.ECR_Logo5 === null ? undefined : rawValue.ECR_Logo5,
-      ECR_Logo6: rawValue.ECR_Logo6 === null ? undefined : rawValue.ECR_Logo6,
-      ECR_ActiveDate: rawValue.ECR_ActiveDate ?? undefined,
-      CRT_Date: rawValue.CRT_Date ?? undefined,
-      UPD_Date: rawValue.UPD_Date ?? undefined,
-    } as TLS46020Item;
   }
-
 }
