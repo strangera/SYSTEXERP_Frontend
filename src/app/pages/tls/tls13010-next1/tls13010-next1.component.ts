@@ -26,11 +26,11 @@ interface CategoryItem {
 }
 
 @Component({
-    selector: 'app-tls13010-next1',
-    templateUrl: './tls13010-next1.component.html',
-    styleUrls: ['./tls13010-next1.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, NgFor]
+  selector: 'app-tls13010-next1',
+  templateUrl: './tls13010-next1.component.html',
+  styleUrls: ['./tls13010-next1.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, NgFor]
 })
 export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
 
