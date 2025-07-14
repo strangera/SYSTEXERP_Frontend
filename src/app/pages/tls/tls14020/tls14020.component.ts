@@ -14,7 +14,7 @@ import { forkJoin } from 'rxjs';
 import { NegotiatorOptionsService } from '../../../service/api/dropdownservice/negotiator-options.service';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 interface ContractItem {
   id: string;
@@ -155,6 +155,30 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
   whetherOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
 
+  addButton: AddButton[] = [
+    // {
+    //   label: '列印',
+    //   icon: 'pi pi-check-circle text-green-500',
+    //   action: (rowData: ContractItem) => {
+    //     if (rowData.VEN_Status !== '0') {
+    //       this.messageService.warnBubble('狀態不是「未審核」，無法審核');
+    //       return;
+    //     }
+    //     this.statusChange(rowData, '1'); //更新成「已審核」
+    //   },
+    // },
+    // {
+    //   label: '顯示合約',
+    //   icon: 'pi pi-undo text-orange-500',
+    //   action: (rowData: ContractItem) => {
+    //     if (rowData.VEN_Status !== '1') {
+    //       this.messageService.warnBubble('狀態已審核，無法反審核');
+    //       return;
+    //     }
+    //     this.statusChange(rowData, '0'); // 更新成「未審核」
+    //   },
+    // },
+  ];
 
   constructor(
     private vendorCategoryService: VendorCategoryOptionsService,
