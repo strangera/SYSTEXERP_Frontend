@@ -58,9 +58,9 @@ export interface CleanContractData {
   tlt_edate: string;
   tlt_contract_bdate: string;
   tlt_contract_edate: string;
-  feedback_date?: string;
-  due_date?: string;
-  contact_Date?: string;
+  feedback_date?: string | null;
+  due_date?: string | null;
+  contact_Date?: string | null;
 
   // 商務條件
   tlt_term_type: string;
@@ -559,9 +559,9 @@ export class DataCleaner {
       tlt_edate: this.formatDate(rawData.tlt_edate),
       tlt_contract_bdate: this.formatDate(rawData.tlt_contract_bdate),
       tlt_contract_edate: this.formatDate(rawData.tlt_contract_edate),
-      feedback_date: this.formatDate(rawData.feedback_date),
-      due_date: this.formatDate(rawData.due_date),
-      contact_Date: this.formatDate(rawData.contact_Date),
+      feedback_date: this.formatNullableDate(rawData.feedback_date),
+      due_date: this.formatNullableDate(rawData.due_date),
+      contact_Date: this.formatNullableDate(rawData.contact_Date),
 
       // 商務條件
       tlt_term_type: rawData.tlt_term_type || '3',
@@ -1001,6 +1001,19 @@ export class DataCleaner {
       return new Date(date).toISOString().split('T')[0];
     } catch {
       return '';
+    }
+  }
+
+  private static formatNullableDate(date: any): string | null {
+    if (!date || date === '') return null;
+    try {
+      if (date instanceof Date) {
+        return date.toISOString().split('T')[0];
+      }
+      const formatted = new Date(date).toISOString().split('T')[0];
+      return formatted === 'Invalid Date' ? null : formatted;
+    } catch {
+      return null;
     }
   }
 
