@@ -371,7 +371,7 @@ export class ContractFlowService {
    * 取得第1步資料
    */
   getStep1Data(queryData?: any): ContractInfo | null {
-    console.log('🔍 取得 Step1 資料...');
+    // console.log('🔍 取得 Step1 資料...');
 
     if (queryData) {
       const queryTalentId = queryData.talent_id || queryData.apply_no;
@@ -386,12 +386,12 @@ export class ContractFlowService {
       });
 
       if (isQueryForNewMode && currentModeInfo.isNewMode) {
-        console.log('✅ 新增模式匹配，回傳 Step1 資料');
+        // console.log('✅ 新增模式匹配，回傳 Step1 資料');
         return this.contractData.step1;
       }
 
       if (!isQueryForNewMode && !currentModeInfo.isNewMode && this.contractData.contractId === queryTalentId) {
-        console.log('✅ 編輯模式匹配，回傳 Step1 資料');
+        // console.log('✅ 編輯模式匹配，回傳 Step1 資料');
         return this.contractData.step1;
       }
 
@@ -399,7 +399,7 @@ export class ContractFlowService {
       return null;
     }
 
-    console.log('📋 直接回傳當前 Step1 資料');
+    // console.log('📋 直接回傳當前 Step1 資料');
     return this.contractData.step1;
   }
 
