@@ -109,14 +109,12 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   ngOnInit(): void {
     this.initializePage('SYSB200', this.dataForm);
     this.loadOptions();
-    const id = this.activatedRoute.snapshot.queryParamMap.get('id');
-
+    const id = this.rowdata?.id
     if (id) {
-      this.sysb200Service.querySYSB200Detail({ pos2013_id: Number(id) }).subscribe({
+      this.sysb200Service.querySYSB200Detail({ pos2013_id: id }).subscribe({
         next: (res) => {
-          this.dataForm.patchValue(res.Data);
-          if (res.Data.contacts) {
-            this.contacts = res.Data.contacts;
+          if (res.Data) {
+            this.contacts = res.Data;
           }
           this.messageService.successBubble('資料載入完成');
         },
@@ -230,6 +228,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
 
     // 組資料
     const data = {
+      id: this.rowdata?.id ?? 0,
       ...form.getRawValue(),
       VEN_No: VEN_No,
       VEN_Uniform: uniformTrimmed === '' ? null : uniformTrimmed,
