@@ -771,9 +771,35 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
   //---POS2020表格編輯事件---
   onRowSavePOS2020(event: any) {
-    // 通過驗證，處理儲存
-    this.detail2020Handler.handleRowSave(event);
+    const edited = event.newData as POS2020Detail;
+    const original = event.oldData as POS2020Detail;
 
+    const isDuplicate = this.POS2020Data.some(item =>
+      item.VEN_No === edited.VEN_No && item.id !== edited.id
+    );
+
+    if (isDuplicate) {
+      this.messageService.errorBubble(`已有相同的廠商編號 (${edited.VEN_No})，無法重複設定`);
+
+      if (edited.status === 'new') {
+        // ✅ 新增資料重複 → 移除這筆資料
+        this.POS2020Data = this.POS2020Data.filter(item => item.id !== edited.id);
+
+        // ✅ 若你有綁定表格 component，可同步清除選取狀態
+        if (this.pos2020Table?.selectedItems) {
+          this.pos2020Table.selectedItems = this.pos2020Table.selectedItems.filter(item => item.id !== edited.id);
+        }
+
+      } else {
+        // ✅ 舊資料重複 → 還原欄位內容
+        Object.assign(edited, original);
+      }
+
+      return;
+    }
+
+    // ✅ 無重複 → 正常儲存
+    this.detail2020Handler.handleRowSave(event);
   }
   onRowCancelPOS2020(event: any) {
     this.detail2020Handler.handleRowCancel(event);

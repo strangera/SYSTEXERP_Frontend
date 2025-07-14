@@ -105,7 +105,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     // label	資料
     priceData: Label[] = [];
     // label 展開式表格的欄位定義
-    priceColumn: Column[] = [
+    priceColumn1: Column[] = [
       //---基本資料---
       { field: 'LOGO_Name', header: '品牌編號', visible: true },
       { field: 'PLU_MagNo', header: '商品編號', visible: true },
@@ -118,7 +118,21 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
 
       { field: 'PLU_OrderPrc_POS2004', header: '標準進價', visible: true, format: formatAmount },
       { field: 'PLU_SalePrc_POS2004', header: '商品售價', visible: true, format: formatAmount },
+    ];
 
+    priceColumn2: Column[] = [
+      //---基本資料---
+      { field: 'LOGO_Name', header: '品牌編號', visible: false },
+      { field: 'PLU_MagNo', header: '商品編號', visible: false },
+      { field: 'PLU_Name', header: '品名', visible: false },
+      { field: 'PLU_NO', header: '國際條碼', visible: false },
+      { field: 'PLU_OrgPLUNo', header: '商品貨號', visible: false },
+      { field: 'CAT_LName', header: '大分類', visible: false },
+      { field: 'CAT_MName', header: '中分類', visible: false },
+      { field: 'CAT_SName', header: '小分類', visible: false },
+
+      { field: 'PLU_OrderPrc_POS2004', header: '標準進價', visible: false, format: formatAmount },
+      { field: 'PLU_SalePrc_POS2004', header: '商品售價', visible: false, format: formatAmount },
       //---變價歷程---
       { field: 'MAM_Date', header: '變價日期', visible: true,  format: formatDate},
       { field: 'MAM_NO', header: '變價單號', visible: true },

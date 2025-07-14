@@ -129,13 +129,35 @@
     <div class="col-13">
     <app-table
       tableKey="TLS51070OS"
+      [data]="priceData[0] ? [priceData[0]] : []"
+      [columns]="priceColumn1"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      [showCaption]="false"
+      [showCheckBox]="false"
+      [showPaginator]="false"
+      [showManage]="false"
+      dataKey="id"
+      [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryPriceForm); onSubmitPrice(queryPriceForm)"
+      [lazy]="true"
+      [loading]="loading"
+    ></app-table>
+    <br>
+
+    <app-table
+      tableKey="TLS51070OS"
       [data]="priceData"
-      [columns]="priceColumn"
+      [columns]="priceColumn2"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
       [selectedItems]="selectedItems"
       (selectionChange)="selectedItems = $event"
       [showCheckBox]="false"
+      [showCaption]="false"
       [showManage]="false"
       dataKey="id"
       [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"
