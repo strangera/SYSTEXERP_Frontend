@@ -40,29 +40,31 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
 
 @Component({
-    selector: 'app-tls13010-cru',
-    templateUrl: './tls13010-cru.component.html',
-    styleUrls: ['./tls13010-cru.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        CalendarComponent,
-        ExpandableEditTableComponent,
-        MultiSelectComponent,
-        CheckboxModule,
-        AutoCompleteComponent,
-        InputTextareaComponent,
-    ],
+  selector: 'app-tls13010-cru',
+  templateUrl: './tls13010-cru.component.html',
+  styleUrls: ['./tls13010-cru.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    CalendarComponent,
+    ExpandableEditTableComponent,
+    MultiSelectComponent,
+    CheckboxModule,
+    AutoCompleteComponent,
+    InputTextareaComponent,
+  ],
+
 })
 export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
   // 位置選項資料
   locationWithDetailsOptions: DropdownOption[] = [];
+  displayLocationData: LocationItem[] = [];
 
   //廠商統一編號
   pos2013Options: DropdownOption[] = [];
@@ -257,7 +259,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   ngOnInit(): void {
     this.initializePage('TLS13010', this.dataForm);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
+    this.updateDisplayLocationData();
     // 先載入基本下拉選單
     this.loadDropdownOptions();
 
@@ -950,7 +952,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       總數: this.locationData.length,
       可顯示: this.getDisplayLocationData().length
     });
-
+    this.updateDisplayLocationData(); // ✅ 手動更新
     const newLocationItem: LocationItem = {
       id: this.generateTempId(),
       location_no: '',
@@ -992,7 +994,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // 位置表格儲存事件
   onLocationTableSave(event: { oldData: LocationItem; newData: LocationItem }): void {
     const { oldData, newData } = event;
-
+    this.updateDisplayLocationData();
     console.log('💾 表格儲存事件:', {
       ID: newData.id,
       位置編號: `${oldData.location_no} → ${newData.location_no}`,
@@ -1048,6 +1050,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   onBatchDeleteLocation(selectedItems: LocationItem[]): void {
+    this.updateDisplayLocationData();
     if (!selectedItems || selectedItems.length === 0) {
       this.messageService.warnBubble('請選擇要刪除的項目');
       return;
@@ -1329,5 +1332,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     } else {
       console.log('📭 沒有位置暫存資料');
     }
+  }
+
+  private updateDisplayLocationData(): void {
+    this.displayLocationData = this.locationData.filter(item => item._status !== 'deleted');
   }
 }

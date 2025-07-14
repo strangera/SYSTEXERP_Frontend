@@ -1495,7 +1495,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     console.log('🔙 準備回到前一步...');
     this.saveFareDataToWorkflow();
     this.router.navigate(['account/tls/tls13010cru']);
-    this.messageService.infoBubble('已返回合約資訊頁面');
+    // this.messageService.infoBubble('已返回合約資訊頁面');
   }
 
   onRealCancel(): void {
