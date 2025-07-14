@@ -1,297 +1,191 @@
-import { Component } from '@angular/core';
-import { FormGroup } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { AnnouncementCategoryService } from '../../../service/basic/announcement-category.service';
-import { SYSBR10Service } from '../../../service/api/sys/sysbr10.service';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { DropDownListService } from '../../../service/utility/dropDownList.service';
-import { forkJoin } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { AnnouncementUserService } from './../../../service/basic/announcement-user.service';
+import { RoleCodeServiceService } from './../../../service/basic/role-code-service.service';
+import { AnnouncementCategoryService } from './../../../service/basic/announcement-category.service';
+import { UserStatusService } from './../../../service/basic/user-status.service';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { NavigationExtras, Router } from '@angular/router';
+// Permissions
+import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
+// Shared
+import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+
+import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+
+const nowDate = new Date();
 
 @Component({
   selector: 'app-sysbr10',
   templateUrl: './sysbr10.component.html',
-  styleUrls: ['./sysbr10.component.scss'],
+  styleUrl: './sysbr10.component.scss'
 })
-export class SYSBR10Component extends BasicQueryPageComponent<any> {
-  // 下拉選單資料
-  userStatusOptions: any[] = [];
-  Pub_TypeOptions: any[] = [];
-  roleCodeOptions: any[] = [];
-  Role_NoOptions: any[] = [];
-  User_NoOptions: any[] = [];
-  Org_IDOptions: any[] = [];
-  selectedItems: any[] = [];
-  selectedRows: any[] = [];
-  data: any[] = [];
-  totalRecords = 0;
-
-  YNOptions: any[] = [
-    { value: 'Y', label: '是' },
-    { value: 'N', label: '否' },
-  ];
-
+// 佈告欄管理作業
+export class SYSBR10Component extends BasicQpageComponent implements OnInit {
+  // 權限
+  // 查詢
+  // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
-    Pub_StartDate_Start: [], // 公告開始日 (起)
-    Pub_StartDate_End: [], // 公告開始日 (迄)
-    Pub_EndDate_Start: [], // 公告結束日 (起)
-    Pub_EndDate_End: [], // 公告結束日 (迄)
-    Role_No: [[]], // 公告角色
-    User_No: [[]], // 使用者代號
-    Org_ID: [[]], // 組織代號
-    Pub_Type: [[]], // 公告類型
-    Pub_Eable: [], // 是否啟用
-    Pub_Event: [], // 公告主題關鍵字
-    ...createPaginationConfig,
-  });
+    // POS5101_公告檔
 
+    // STO_No: ['', [Validators.required, Validators.maxLength(10)]], // 分店編號
+    ANS_Type: [], // 公告類別
+    Announcements: [], // 公告事項
+    ANS_BegDateTime_From: [], // 有效開始日期時間
+    ANS_BegDateTime_To: [], // 有效開始日期時間
+    ANS_EndDateTime_From: [], // 有效結束日期時間
+    ANS_EndDateTime_To: [], // 有效結束日期時間
+
+    ANS_Role: [[] as number[]], // 公告角色Y/N
+    group_no: [[] as number[]], // 階層代碼
+    section_no: [[] as number[]], // 組織代碼
+    ANS_Desc: [,], // 公告內容
+
+    Crt_DateTime: [], // 建檔日期時間 //不顯示於主畫面
+  });
+  // 表格
+  // ----------------------------------------------------------------
+  data: any[] = [
+    { isdelete: true, ANS_Type: 1, ANS_BegDateTime: '2024/01/01 01:01', ANS_EndDateTime: '2024/01/04 01:01', ANS_Role: [1, 0], group_no: [1, 2], section_no: [1, 2], ANS_Desc: 'content1' },
+    { isdelete: true, ANS_Type: 1, ANS_BegDateTime: '2024/01/01 01:01', ANS_EndDateTime: '2024/01/04 01:01', ANS_Role: [1], group_no: [1], section_no: [1, 2], ANS_Desc: 'content2' },
+    { isdelete: true, ANS_Type: 1, ANS_BegDateTime: '2024/03/06 01:01', ANS_EndDateTime: '2024/03/09 01:01', ANS_Role: [1], group_no: [2], section_no: [1], ANS_Desc: 'content3' },
+    // 其他資料
+  ];
+  filteredData: any[] = [...this.data];
   columns: any[] = [
-    {
-      field: 'Pub_StartDate',
-      header: '公告起始日期時間',
-      visible: true,
-      format: this.formatDateTime,
-    },
-    {
-      field: 'Pub_EndDate',
-      header: '公告結束日期時間',
-      visible: true,
-      format: this.formatDateTime,
-    },
-    { field: 'Pub_Eable', header: '是否啟動', visible: true },
-    { field: 'Pub_Type', header: '公告類別', visible: true },
-    { field: 'Pub_Event', header: '公告事項', visible: true },
+    { field: 'ANS_Type', header: '公告類別', visible: true },
+    { field: 'ANS_BegDateTime', header: '有效開始日期時間', visible: true },
+    { field: 'ANS_EndDateTime', header: '有效結束日期時間', visible: true },
+
+    { field: 'ANS_Role', header: '公告角色', visible: true },
+    { field: 'group_no', header: '階層代碼', visible: true },
+    { field: 'section_no', header: '組織代碼', visible: true },
+    { field: 'ANS_Desc', header: '公告內容', visible: true },
+    // 其他欄位
   ];
-  detailcolumns: any[] = [
-    { field: 'User_No', header: '使用者編號', visible: true },
-    { field: 'User_Name', header: '使用者名稱', visible: true },
-    { field: 'Org_ID', header: '組織代碼', visible: true },
-    { field: 'Org_Name', header: '組織名稱', visible: true },
-    { field: 'Role_No', header: '角色代碼', visible: true },
-    { field: 'Role_Name', header: '角色名稱', visible: true },
+  // ----------------------------------------------------------------
+  userStatusOptions: any[] = [];
+  announcementOptions: any[] = [];
+  roleCodeOptions: any[] = [];
+  announcementUserOptions: any[] = [];
+  YNOptions: any[] = [
+    { value: 1, label: '是' },
+    { value: 0, label: '否' },
   ];
-  formatDateTime(value: any): string {
-    if (!value) return '';
-    const date = new Date(value);
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-  }
 
   constructor(
+    private router: Router,
+    private formBuilder: FormBuilder,
+    private messageService: NotificationService,
+    private authService: AuthService,
+    private userStatusService: UserStatusService,
     private announcementCategoryService: AnnouncementCategoryService,
-    private dropDownListService: DropDownListService,
-    private sysbr10Service: SYSBR10Service,
+    private roleCodeServiceService: RoleCodeServiceService,
+    private announcementUserService: AnnouncementUserService,
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSBR10', '/sys/sysbr10cru', this.queryForm);
+    this.ProgNo = '410014';
+    //
+    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    //
+    this.userStatusService.getUserStatus().subscribe(data => {
+      this.userStatusOptions = data;
 
-    this.announcementCategoryService
-      .Pub_TypeOptions()
-      .subscribe((data) => (this.Pub_TypeOptions = data));
-
-    this.dropDownListService.queryTBLUSER_DropDownList().subscribe((res) => {
-      if (res?.Data) {
-        this.User_NoOptions = res.Data.map((user) => ({
-          value: user.No,
-          label: user.Name,
-        }));
-      } else {
-        this.User_NoOptions = [];
-      }
+      // let userStatusValues = this.userStatusOptions.map(system => system.value);
+      // this.queryForm.patchValue({
+      //   usagec: userStatusValues
+      // });
     });
+    //
+    this.announcementCategoryService.getSystemTypes().subscribe(data => {
+      this.announcementOptions = data;
 
-    this.dropDownListService.querySYS3100_DropDownList().subscribe((res) => {
-      if (res?.Data) {
-        this.Org_IDOptions = res.Data.map((user) => ({
-          value: user.No,
-          label: user.Name,
-        }));
-      } else {
-        this.Org_IDOptions = [];
-      }
+      // let announcementValues = this.announcementOptions.map(system => system.value);
+      // this.queryForm.patchValue({
+      //   announceCategory: announcementValues
+      // });
     });
-    this.dropDownListService.querytblRole_DropDownList().subscribe((res) => {
-      this.Role_NoOptions =
-        res?.Data?.map((user) => ({ value: user.No, label: user.Name })) || [];
-      this.detailcolumns[2].options = this.Role_NoOptions;
+    //
+    this.roleCodeServiceService.getSystemTypes().subscribe(data => {
+      this.roleCodeOptions = data;
+    });
+    //
+    this.announcementUserService.getSystemTypes().subscribe(data => {
+      this.announcementUserOptions = data;
     });
   }
-  onRowExpand(row: any): void {
-    if (!row?.id) return;
-
-    this.sysbr10Service.querySYSBR10Detail(row.id).subscribe({
-      next: (res) => {
-        // 根據實際格式調整 Data 結構
-        row.children = res?.Data || [];
-      },
-      error: () => {
-        this.messageService.errorBubble('明細查詢失敗');
-      },
-    });
-  }
-
-  onSubmit(form: FormGroup): void {
+  onSubmit(frm: FormGroup) {
+    console.log(frm.value);
     this.submitted = true;
-    if (form.invalid) {
-      this.messageService.warnBubble('請完整填寫查詢條件');
-      return;
-    }
-
-    const payload = { ...form.value };
-    for (const key in payload) {
-      if (typeof payload[key] === 'string') {
-        payload[key] = payload[key].trim() || null;
-      }
-    }
-
     this.loading = true;
     this.messageService.blockUi();
 
-    this.sysbr10Service.querySYSBR10(payload).subscribe({
-      next: (res) => {
-        this.data = res.Data || [];
-        this.totalRecords = res.TotalCount || this.data.length;
-        this.queryStateService.setQueryState(this.ProgNo, payload);
-
-        if (this.data.length > 0) {
-          // ✅ 並行查詢每一筆明細
-          const detailRequests = this.data.map((row) =>
-            this.sysbr10Service
-              .querySYSBR10Detail(row.id)
-              .pipe(tap((detailRes) => (row.children = detailRes?.Data || []))),
-          );
-
-          // 等待所有明細查詢完成
-          forkJoin(detailRequests).subscribe({
-            complete: () => {
-              this.messageService.successBubble('查詢成功（含明細）');
-              this.loading = false;
-              this.messageService.unblockUi();
-            },
-            error: () => {
-              this.messageService.errorBubble('部分明細查詢失敗');
-              this.loading = false;
-              this.messageService.unblockUi();
-            },
-          });
-        } else {
-          this.messageService.successBubble('查詢成功');
-          this.loading = false;
-          this.messageService.unblockUi();
-        }
-      },
-      error: () => {
-        this.messageService.errorBubble('查詢錯誤');
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
-    });
-  }
-  onDelete(selectedItems: any[]): void {
-    if (!selectedItems.length) return;
-
-    const confirmed = window.confirm('是否確定刪除選取項目？');
-    if (!confirmed) return;
-
-    const idList = selectedItems.map((item) => item.id); // ✅ 用 id 批次刪除
-
-    this.sysbr10Service.deleteSYSBR10(idList).subscribe({
-      next: () => {
-        this.messageService.successBubble('刪除成功');
-        this.selectedItems = []; // ✅ 清空已選
-        this.onSubmit(this.queryForm); // ✅ 重新查詢
-      },
-      error: () => {
-        this.messageService.errorBubble('刪除失敗');
-      },
-    });
-  }
-  isRowSelectable = (rowData: any): boolean => {
-    return true; // 或加條件 rowData.Pub_Eable === '1'
-  };
-
-  editDisabled = (rowData: any): boolean => {
-    return false; // 或根據條件 return rowData.Pub_Eable !== '1';
-  };
-
-  dialogVisible = false;
-  selectedRowForDisable: any = null;
-
-  showDisableDialog(row: any): void {
-    this.selectedRowForDisable = row;
-    this.dialogVisible = true;
-  }
-
-  confirmDisable(): void {
-    if (!this.selectedRowForDisable?.id) return;
-
-    this.sysbr10Service
-      .updateSYSBR10_PubEable({
-        id: this.selectedRowForDisable.id,
-        Pub_Eable: 'N',
-      })
-      .subscribe({
-        next: () => {
-          this.messageService.successBubble('狀態已更新為不啟用');
-          this.dialogVisible = false;
-          this.onSubmit(this.queryForm);
-        },
-        error: () => {
-          this.messageService.errorBubble('更新失敗');
-        },
-      });
-  }
-
-  cancelDisable(): void {
-    this.dialogVisible = false;
-    this.selectedRowForDisable = null;
-  }
-
-override onEdit(row: any): void {
-  if (!row?.id) return;
-
-  this.confirmationService.confirm({
-    message: '是否將此筆資料的狀態改為【不啟用】？',
-    header: '確認停用',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: '是',
-    rejectLabel: '否',
-    accept: () => {
-      this.sysbr10Service.updateSYSBR10_PubEable({ id: row.id, Pub_Eable: 'N' }).subscribe({
-        next: () => {
-          this.messageService.successBubble('狀態已更新為不啟用');
-
-          // ✅ 成功後查詢明細
-          this.sysbr10Service.querySYSBR10Detail(row.id).subscribe({
-            next: (res) => {
-              const detailList = res?.Data || [];
-
-              // ✅ 將主檔 + 明細一起導入編輯頁
-              const fullData = {
-                ...row,
-                DetailList: detailList
-              };
-              this.navigateWithState(CRUDStatus.Edit, fullData);
-            },
-            error: () => {
-              this.messageService.errorBubble('載入明細失敗');
-            }
-          });
-        },
-        error: () => {
-          this.messageService.errorBubble('更新失敗');
-        }
-      });
-    },
-    reject: () => {
-      // 使用者按了 "否"，不做事
+    if (frm.valid && this.canQuery()) {
+      // 提交邏輯
+      // Service
+      // this.xxxService.queryMachine(frm.value as xxxInterface)
+      //  .subscribe((response: any) => {
+      //    this.rows = response.xxx;
+      // });
     }
-  });
-}
 
+    this.loading = false;
+    this.messageService.unblockUi();
+  }
 
+  onSubmitQuery(frm: FormGroup) {
+    // 查詢邏輯
+    this.onSubmit(frm);
+  }
+
+  onClearForm() {
+    this.queryForm.reset();  // 重置表單
+  }
+
+  onCreate() {
+    if (this.canAdd()) {
+      let extras: NavigationExtras = {
+        state: {
+          crudstatus: CRUDStatus.Create,
+          queryform: this.queryForm,
+        },
+        skipLocationChange: true
+      };
+
+      //console.log("extra", extras);
+      this.router.navigate(['/SYSB000/SYSBR10CRU'], extras);
+    }
+  }
+
+  onEdit(data: any) {
+    if (this.canEdit()) {
+      let extras: NavigationExtras = {
+        state: {
+          crudstatus: CRUDStatus.Edit,
+          rowdata: data,
+          queryform: this.queryForm,
+        },
+        skipLocationChange: true
+      };
+
+      this.router.navigate(['/SYSB000/SYSBR10CRU'], extras);
+    }
+  }
+
+  onDetail(data: any) {
+    let extras: NavigationExtras = {
+      state: {
+        crudstatus: CRUDStatus.Read,
+        rowdata: data,
+        queryform: this.queryForm,
+      },
+      skipLocationChange: true
+    };
+
+    this.router.navigate(['/SYSB000/SYSBR10CRU'], extras);
+  }
 }

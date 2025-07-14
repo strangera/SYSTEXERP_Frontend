@@ -6,83 +6,90 @@
   <p-panel [header]="formTitle" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <!-- 發票號碼 -->
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="發票號碼" controlName="invNo"
-          [control]="dataForm.controls.invNo" [submitted]="submitted"></app-input-text>
 
-        <!-- 發票日期 -->
-        <app-calendar class="col-12 md:col-6 lg:col-4" label="發票日期" calendarType="dateOne" controlName="invDate"
-          [control]="dataForm.controls.invDate" [submitted]="submitted"></app-calendar>
+        <!-- 發票號碼起迄 -->
+        <app-input-text-range class="col-12 md:col-6 lg:col-4" startLabel="發票號碼(起)" endLabel="發票號碼(迄)"
+          [startControl]="dataForm.controls.invNoStart" [endControl]="dataForm.controls.invNoEnd"
+          [submitted]="submitted" [errorForGroup]="true"></app-input-text-range>
 
-        <!-- 資料所屬年月 -->
-        <app-calendar class="col-12 md:col-6 lg:col-4" label="資料所屬年月" calendarType="dateMonthOne" controlName="invYm"
-          [control]="dataForm.controls.invYm" [submitted]="submitted"></app-calendar>
+        <!-- 發票日期起迄 -->
+        <app-calendar-range class="col-12 md:col-6 lg:col-4" label="發票日期(起迄)" calendarType="dateRange"
+          [startControl]="dataForm.controls.invDateStart" [endControl]="dataForm.controls.invDateEnd"
+          [submitted]="submitted"></app-calendar-range>
+
+        <!-- 資料所屬年月(起迄) -->
+        <app-calendar-range class="col-12 md:col-6 lg:col-4" label="資料所屬年月(起迄)" calendarType="dateMonthRange"
+          [startControl]="dataForm.controls.invYmStart" [endControl]="dataForm.controls.invYmEnd"
+          [submitted]="submitted"></app-calendar-range>
       </div>
 
       <div class="grid p-fluid">
         <!-- 申報年月 -->
-        <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月" calendarType="dateMonthOne" controlName="declareYm"
+        <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月" controlName="declareYm"
           [control]="dataForm.controls.declareYm" [submitted]="submitted"></app-calendar>
 
         <!-- 買受人統一編號 -->
         <app-input-text class="col-12 md:col-6 lg:col-4" label="買受人統一編號" controlName="buyerTaxNo"
-          [control]="dataForm.controls.buyerTaxNo" [submitted]="submitted"></app-input-text>
+          [control]="dataForm.controls.buyerTaxNo" [submitted]="submitted" placeholder="最長10個字串"></app-input-text>
 
         <!-- 貨物或勞務名稱 -->
         <app-input-text class="col-12 md:col-6 lg:col-4" label="貨物或勞務名稱" controlName="goodsName"
-          [control]="dataForm.controls.goodsName" [submitted]="submitted"></app-input-text>
+          [control]="dataForm.controls.goodsName" [submitted]="submitted" placeholder="最長20個字串"></app-input-text>
       </div>
 
       <div class="grid p-fluid">
         <!-- 貨物或勞務數量 -->
-        <app-input-number class="col-12 md:col-6 lg:col-4" label="貨物或勞務數量" controlName="goodsQty"
-          [control]="dataForm.controls.goodsQty" [submitted]="submitted"></app-input-number>
+        <app-input-text-range class="col-12 md:col-6 lg:col-4" startLabel="貨物或勞務數量(起)" endLabel="貨物或勞務數量(迄)"
+          [startControl]="dataForm.controls.goodsQtyStart" [endControl]="dataForm.controls.goodsQtyEnd"
+          [submitted]="submitted" [errorForGroup]="true"></app-input-text-range>
 
         <!-- 外銷方式 -->
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="外銷方式" controlName="exportMethod"
-          [options]="exportMethodOptions" optionLabel="Name" optionValue="No" [control]="dataForm.controls.exportMethod"
-          [submitted]="submitted"></app-dropdown>
+          [options]="exportMethodOptions" optionLabel="label" optionValue="value"
+          [control]="dataForm.controls.exportMethod" [submitted]="submitted" placeholder="請選擇"></app-dropdown>
 
         <!-- 證明文件號碼 -->
         <app-input-text class="col-12 md:col-6 lg:col-4" label="證明文件號碼" controlName="docNo"
-          [control]="dataForm.controls.docNo" [submitted]="submitted"></app-input-text>
+          [control]="dataForm.controls.docNo" [submitted]="submitted" placeholder="最長10個字串"></app-input-text>
       </div>
 
       <div class="grid p-fluid">
         <!-- 證明文件名稱 -->
         <app-input-text class="col-12 md:col-6 lg:col-4" label="證明文件名稱" controlName="docName"
-          [control]="dataForm.controls.docName" [submitted]="submitted"></app-input-text>
+          [control]="dataForm.controls.docName" [submitted]="submitted" placeholder="最長20個字串"></app-input-text>
 
         <!-- 出口報單號碼 -->
         <app-input-text class="col-12 md:col-6 lg:col-4" label="出口報單號碼" controlName="exportNo"
-          [control]="dataForm.controls.exportNo" [submitted]="submitted"></app-input-text>
+          [control]="dataForm.controls.exportNo" [submitted]="submitted" placeholder="最長10個字串"></app-input-text>
 
         <!-- 出口報單類別 -->
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="出口報單類別" controlName="exportType"
-          [options]="exportTypeOptions" optionLabel="Name" optionValue="No" [control]="dataForm.controls.exportType"
-          [submitted]="submitted"></app-dropdown>
+          [options]="exportTypeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.exportType"
+          [submitted]="submitted" placeholder="請選擇"></app-dropdown>
       </div>
 
       <div class="grid p-fluid">
         <!-- 非經海關出口金額 -->
-        <app-input-number class="col-12 md:col-6 lg:col-4" label="非經海關出口金額" controlName="nonCustomsAmt"
-          [control]="dataForm.controls.nonCustomsAmt" [submitted]="submitted"></app-input-number>
+        <app-input-text-range class="col-12 md:col-6 lg:col-4" startLabel="非經海關出口金額(起)" endLabel="非經海關出口金額(迄)"
+          [startControl]="dataForm.controls.nonCustomsAmtStart" [endControl]="dataForm.controls.nonCustomsAmtEnd"
+          [submitted]="submitted" [errorForGroup]="true"></app-input-text-range>
 
         <!-- 經海關出口金額 -->
-        <app-input-number class="col-12 md:col-6 lg:col-4" label="經海關出口金額" controlName="customsAmt"
-          [control]="dataForm.controls.customsAmt" [submitted]="submitted"></app-input-number>
+        <app-input-text-range class="col-12 md:col-6 lg:col-4" startLabel="經海關出口金額(起)" endLabel="經海關出口金額(迄)"
+          [startControl]="dataForm.controls.customsAmtStart" [endControl]="dataForm.controls.customsAmtEnd"
+          [submitted]="submitted" [errorForGroup]="true"></app-input-text-range>
 
-        <!-- 輸出或結匯日期 -->
-        <app-calendar class="col-12 md:col-6 lg:col-4" label="輸出或結匯日期" calendarType="dateOne" controlName="exportDate"
-          [control]="dataForm.controls.exportDate" [submitted]="submitted"></app-calendar>
+        <!-- 輸出或結匯日期(起迄) -->
+        <app-calendar-range class="col-12 md:col-6 lg:col-4" label="輸出或結匯日期(起迄)" calendarType="dateRange"
+          [startControl]="dataForm.controls.exportDateStart" [endControl]="dataForm.controls.exportDateEnd"
+          [submitted]="submitted"></app-calendar-range>
       </div>
 
       <div class="grid p-fluid">
         <!-- 備註 -->
         <app-input-text class="col-12 md:col-6 lg:col-4" label="備註" controlName="remark"
-          [control]="dataForm.controls.remark" [submitted]="submitted"></app-input-text>
+          [control]="dataForm.controls.remark" [submitted]="submitted" placeholder="最長100個字串"></app-input-text>
       </div>
-
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>

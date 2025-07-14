@@ -32,10 +32,6 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="廠商編號" controlName="VEN_No" [options]="vendorOptions" optionLabel="label"
-              optionValue="value" [control]="dataForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>  
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="廠商貨號" controlName="PLU_OrgPLUNo" [control]="dataForm.controls.PLU_OrgPLUNo"
               [submitted]="submitted"></app-input-text>
           </div>
@@ -203,15 +199,12 @@
           [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
           [defaultNewItem]="defaultNew2005" (save)="onRowSavePOS2005($event)" (cancel)="onRowCancelPOS2005($event)"
           (batchDelete)="onBatchDelete2005($event)" (addMainItem)="onAddPOS2005()"></app-expandable-edit-table>
-        <!-- 輸入廠商編號才能填寫   -->
-        <ng-container *ngIf="dataForm.get('VEN_No')?.value !== null">
-          <!-- 商品採購廠商 POS2020 -->
-          <app-expandable-edit-table #pos2020Table title="商品採購廠商" [mainColumns]="POS2020DataColumn" [data]="POS2020Data"
-            [loading]="expand2020Loading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
-            [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
-            [defaultNewItem]="defaultNew2020" (save)="onRowSavePOS2020($event)" (cancel)="onRowCancelPOS2020($event)"
-            (batchDelete)="onBatchDelete2020($event)" (addMainItem)="onAddPOS2020()"></app-expandable-edit-table>
-        </ng-container>  
+        <!-- 商品採購廠商 POS2020 -->
+        <app-expandable-edit-table #pos2020Table title="商品採購廠商" [mainColumns]="POS2020DataColumn" [data]="POS2020Data"
+          [loading]="expand2020Loading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
+          [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
+          [defaultNewItem]="defaultNew2020" (save)="onRowSavePOS2020($event)" (cancel)="onRowCancelPOS2020($event)"
+          (batchDelete)="onBatchDelete2020($event)" (addMainItem)="onAddPOS2020()"></app-expandable-edit-table>
       </ng-container>
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
         <app-button btnType="cancel" [form]="dataForm"></app-button>

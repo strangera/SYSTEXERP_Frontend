@@ -4,7 +4,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { FormGroup, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
-import { DropdownOption } from '../../../shared/models/api/base-api.interface';
+import { DropdownOption } from '../../../shared/componentkit/dropdown/dropdown.model';
 
 @Component({
   selector: 'app-fin12020',
@@ -71,23 +71,23 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
     // 這裡可以載入下拉選單的 options
     // 暫時先用假資料，實際應該從服務端獲取
     this.invoiceTypeOptions = [
-      { No: '一般發票', Name: '01' },
-      { No: '特種發票', Name: '02' },
-      { No: '電子發票', Name: '03' }
+      { label: '一般發票', value: '01' },
+      { label: '特種發票', value: '02' },
+      { label: '電子發票', value: '03' }
     ];
     this.cashierNoOptions = [
-      { No: '收銀機1', Name: '001' },
-      { No: '收銀機2', Name: '002' },
-      { No: '收銀機3', Name: '003' }
+      { label: '收銀機1', value: '001' },
+      { label: '收銀機2', value: '002' },
+      { label: '收銀機3', value: '003' }
     ];
     this.invoiceStatusOptions = [
-      { No: '未使用', Name: '0' },
-      { No: '已使用', Name: '1' },
-      { No: '已作廢', Name: '2' }
+      { label: '未使用', value: '0' },
+      { label: '已使用', value: '1' },
+      { label: '已作廢', value: '2' }
     ];
     this.usageTypeOptions = [
-      { No: '一般', Name: '01' },
-      { No: '特殊', Name: '02' }
+      { label: '一般', value: '01' },
+      { label: '特殊', value: '02' }
     ];
   }
 }

@@ -25,13 +25,12 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
     TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],
     TXN_DateEnd: [new Date('2020-01-15') as Date, [Validators.required]],
     bus_type: [],
-    ShowBusType: true,
+    ShowBusType: [],
     tlt_building: [],
     tlt_floor: [],
     org_id: [],
     area_no : [],
     TLT_No: [],
-    
     ...createPaginationConfig
   });
 
@@ -59,10 +58,6 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = [];
   CounterOptions: any[] = [];
-  WhetherOptions = [
-  { label: '是', value: true },
-  { label: '否', value: false },
-];
 
   constructor(
     private tls23120Service: TLS23120Service,
@@ -157,7 +152,6 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
 
     const queryFormValue = {
       ...this.queryForm.value,
-      ShowBusType: this.queryForm.value.ShowBusType ?? true,
       pageSize: this.customPageSize
     };
 
