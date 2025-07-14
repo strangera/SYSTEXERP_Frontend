@@ -24,6 +24,8 @@ import { InputNumberRangeComponent } from '../../../shared/componentkit/input-nu
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 interface ContractItem {
   id: string;
@@ -59,7 +61,7 @@ interface ContractItem {
   templateUrl: './tls14020.component.html',
   styleUrl: './tls14020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, TranslateModule]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, TranslateModule, TableComponent, MultiSelectComponent]
 })
 export class TLS14020Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
   // ProgNo: string = '210018';
