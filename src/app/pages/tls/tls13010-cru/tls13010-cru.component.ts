@@ -687,34 +687,34 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   // ==========  表單操作方法 ==========
   private saveToWorkflow(): void {
-    if (this.dataForm.dirty || this.hasLocationChanges()) {
-      const formData = this.dataForm.getRawValue();
+    // 移除條件檢查，總是儲存
+    const formData = this.dataForm.getRawValue();
 
-      console.log('💾 準備儲存工作流程資料...');
-      console.log('📋 表單資料:', {
-        talent_id: formData.talent_id,
-        apply_no: formData.apply_no,
-        tlt_name: formData.tlt_name,
-        isNewMode: this.contractFlowService.isNewContractMode()
-      });
+    console.log('💾 準備儲存工作流程資料...');
+    console.log('📋 表單資料:', {
+      talent_id: formData.talent_id,
+      apply_no: formData.apply_no,
+      tlt_name: formData.tlt_name,
+      isNewMode: this.contractFlowService.isNewContractMode()
+    });
 
-      // 🎯 準備位置資料
-      const workflowData = {
-        ...formData,
-        locationInfo: this.prepareLocationDataForSubmit()
-      };
+    // 🎯 準備位置資料
+    const workflowData = {
+      ...formData,
+      locationInfo: this.prepareLocationDataForSubmit()
+    };
 
-      const contractInfo = {
-        id: formData.talent_id || '',
-        ...workflowData
-      } as ContractInfo;
+    const contractInfo = {
+      id: formData.talent_id || '',
+      ...workflowData
+    } as ContractInfo;
 
-      // 🎯 移除自訂處理，讓 ContractFlowService 統一處理 talent_id
-      this.contractFlowService.saveStep1Data(contractInfo);
+    // 🎯 移除自訂處理，讓 ContractFlowService 統一處理 talent_id
+    this.contractFlowService.saveStep1Data(contractInfo);
 
-      console.log('✅ 已暫存到工作流程');
-    }
+    console.log('✅ 已暫存到工作流程');
   }
+
 
   private generateTempTalentId(): string {
     return 'new_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
