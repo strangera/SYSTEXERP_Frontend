@@ -5,9 +5,8 @@ import { Tlsb200Model } from './tlsb200.model';
 import { map, Observable, finalize } from 'rxjs';
 import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
 import { Column } from '../../../shared/componentkit/table/table.model';
-import {
-  validateMaxLength,
-} from '../../../shared/models/system/validate-field.model';
+import { Sysb200Service } from '../../../service/api/sys/sysb200.service';
+import { validateMaxLength } from '../../../shared/models/system/validate-field.model';
 
 @Component({
   selector: 'app-sysb200-cru',
@@ -46,10 +45,10 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     VEN_Remark: ['', Validators.maxLength(160)]
   });
 
-  // 聯絡人表格資料
   contacts: any[] = [];
   selectedRows: any[] = [];
   isReadonly = false;
+
   columns: Column[] = [
     { field: 'VEN_Boss', header: '聯絡人', type: 'input', validate: [validateMaxLength(12)] },
     { field: 'VEN_BossTitle', header: '職稱', type: 'input', validate: [validateMaxLength(16)] },
@@ -61,7 +60,8 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
 
   flagOptions = [
     { value: '1', label: '統一編號' },
-    { value: '2', label: '身份證' }
+    { value: '2', label: '身份證' },
+    { value: '3', label: '護照證號' }
   ];
 
   remitFeeOptions = [
@@ -85,16 +85,33 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   constructor(
     override readonly formBuilder: FormBuilder,
     private sysbc00Service: Sysbc00Service,
+    private sysb200Service: Sysb200Service
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('SYSB200', this.dataForm);
+    const id = this.activatedRoute.snapshot.queryParamMap.get('id');
+
+    if (id) {
+      this.sysb200Service.querySYSB200Detail({ pos2013_id: Number(id) }).subscribe({
+        next: (res) => {
+          this.dataForm.patchValue(res.Data);
+          if (res.Data.contacts) {
+            this.contacts = res.Data.contacts;
+          }
+          this.messageService.successBubble('資料載入完成');
+        },
+        error: () => {
+          this.messageService.errorBubble('載入明細失敗');
+        }
+      });
+    }
+
     this.loadBankOptions();
 
     if (this.crudstatus === 'Create') {
-      // 新增不鎖定審核欄位
       this.isReadonly = false;
     } else {
       if (this.dataForm.get('VEN_Status')?.value === '1') {
@@ -107,7 +124,6 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
       }
     }
   }
-
 
   loadBankOptions() {
     this.bankOptions$ = this.sysbc00Service.querySYSBC00({}).pipe(
@@ -137,11 +153,6 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     this.selectedRows = [];
   }
 
-  onDelete(rows: any[]) {
-    this.contacts = this.contacts.filter(item => !rows.includes(item));
-    this.selectedRows = [];
-  }
-
   onSubmit(form: FormGroup): void {
     console.log("表單 valid 狀態：", form.valid);
     if (!form.valid) {
@@ -151,26 +162,69 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
 
     this.loading = true;
 
+    const flag = form.get('VEN_Flag')?.value;
+    const uniform = form.get('VEN_Uniform')?.value;
+    const uniformTrimmed = uniform?.trim();
+
+    if (flag === '1') {
+      const regex = /^[0-9]{8}$/;
+      if (!regex.test(uniformTrimmed)) {
+        this.messageService.warnBubble("統一編號格式錯誤，需為 8 碼數字");
+        this.loading = false;
+        return;
+      }
+    }
+
+    if (flag === '2') {
+      const regex = /^[A-Z]{1}[0-9]{9}$/i;
+      if (!regex.test(uniformTrimmed)) {
+        this.messageService.warnBubble("身份證格式錯誤，需為 1 英文 + 9 碼數字");
+        this.loading = false;
+        return;
+      }
+    }
+
+    const contactsValid = this.contacts.every(item => {
+      if (!item.VEN_BossID || item.VEN_BossID.trim() === '') return true;
+      const regex = /^[A-Z]{1}[0-9]{9}$/i;
+      return regex.test(item.VEN_BossID.trim());
+    });
+
+    if (!contactsValid) {
+      this.messageService.warnBubble("聯絡人身份證號格式錯誤，需為 1 英文 + 9 碼數字，或留空");
+      this.loading = false;
+      return;
+    }
     const data = {
       ...form.getRawValue(),
-      contacts: this.contacts
+      VEN_Uniform: uniformTrimmed === '' ? null : uniformTrimmed,
+      VEN_PayConditionDay: Number(form.get('VEN_PayConditionDay')?.value),
+      pOS20131Details: this.contacts.map(item => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { ID, ...rest } = item;
+        return {
+          ...rest,
+          VEN_BossID: item.VEN_BossID?.trim() === '' ? null : item.VEN_BossID?.trim(),
+          id: item.id ?? 0
+        };
+      })
     };
 
-    // 模擬 API 呼叫
     const apiCall$ = this.crudstatus === 'Create'
-      ? this.sysbc00Service.insertSYSBC00(data) //新增 API
-      : this.sysbc00Service.updateSYSBC00(data); //修改 API
+      ? this.sysb200Service.insertSYSB200(data)
+      : this.sysb200Service.updateSYSB200(data);
 
     apiCall$
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: () => {
           this.messageService.successBubble(this.crudstatus === 'Create' ? '新增成功' : '修改成功');
-          this.onCancel(); // 或者 reset，或跳轉
+          this.onCancel();
         },
         error: () => {
           this.messageService.errorBubble('送出失敗，請稍後再試');
         }
       });
   }
+
 }

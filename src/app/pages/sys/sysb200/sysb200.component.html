@@ -26,7 +26,7 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商名稱(中文)" controlName="	VEN_CName" [control]="queryForm.controls.VEN_CName"
+            <app-input-text label="廠商名稱(中文)" controlName="VEN_Name" [control]="queryForm.controls.VEN_CName"
               [submitted]="submitted"></app-input-text>
           </div>
 
@@ -40,7 +40,7 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="廠商匯款銀行代號" controlName="VEN_BankNo" [control]="queryForm.controls.VEN_BankNo"
+            <app-dropdown label="廠商匯款銀行代號" controlName="VEN_BNK_No" [control]="queryForm.controls.VEN_BNK_No"
               [options]="(bankOptions$ | async) || []" optionLabel="label" optionValue="value" [submitted]="submitted">
             </app-dropdown>
           </div>
@@ -60,7 +60,7 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-6">
-            <app-input-text label="聯絡人電子郵件" controlName="VEN_GUEmail" [control]="queryForm.controls.VEN_GUEmail"
+            <app-input-text label="聯絡人電子郵件" controlName="VEN_BossEmail" [control]="queryForm.controls.VEN_BossEmail"
               [submitted]="submitted"></app-input-text>
           </div>
 

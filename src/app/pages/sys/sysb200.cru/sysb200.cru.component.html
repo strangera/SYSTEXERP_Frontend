@@ -123,8 +123,8 @@
       <div class="grid p-fluid mt-5">
         <app-table [showReportMode]="false" class="col-12" [data]="contacts" [columns]="columns" [showEdit]="false"
           [showDetail]="false" [showCheckBox]="true" [showInsert]="!isReadonly" [showRowEdit]="!isReadonly"
-          (delete)="onDelete($event)" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
-          [showCaption]="!isFormReadable" [showManage]="!isReadonly" [showCheckBox]="!isReadonly" [insertRowData]="true"
+          (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [showCaption]="!isFormReadable"
+          [showManage]="!isReadonly" [showCheckBox]="!isReadonly" [insertRowData]="true"
           (dataChange)="contacts = $event"></app-table>
       </div>
 
