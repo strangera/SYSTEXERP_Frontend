@@ -1,18 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MenuItem } from 'primeng/api';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { ValidationService } from '../../../shared/service/validation.service';
+import { Router } from '@angular/router';
 import { EncryptionService } from '../../../shared/service/encryption.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { PasswordComponent } from './password/password.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
 export interface UserInfo {
   AccessToken: string;
@@ -23,21 +17,9 @@ export interface UserInfo {
   user_email: string;
 }
 
-@UntilDestroy()
 @Component({
   selector: 'app-changepsw',
   templateUrl: './changepsw.component.html',
-  standalone: true,
-  imports: [
-    MenubarComponent,
-    AccordionModule,
-    FormsModule,
-    ReactiveFormsModule,
-    InputTextComponent,
-    PasswordComponent,
-    ButtonComponent,
-    TranslateModule,
-  ],
 })
 export class ChangepswComponent implements OnInit {
   submitted = false;
@@ -54,6 +36,7 @@ export class ChangepswComponent implements OnInit {
   constructor(
     private notemessage: NotificationService,
     private encrypt: EncryptionService,
+    private router: Router,
     private userCodeService: UserCodeService,
     private authService: AuthService,
     private validationService: ValidationService,
@@ -79,7 +62,7 @@ export class ChangepswComponent implements OnInit {
         New_password: this.encrypt.getPassword(frm.get('User_No')?.value, frm.value.New_password),
         PwdExpireDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
       }
-      this.userCodeService.changePassword(body).pipe(untilDestroyed(this)).subscribe({
+      this.userCodeService.changePassword(body).subscribe({
         next: (response) => {
           if (response && response.Status == "0000") {
             this.notemessage.successBubble(response?.Message, '更新成功');

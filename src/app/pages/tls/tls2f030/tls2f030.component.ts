@@ -1,6 +1,6 @@
 import { FloorService } from './../../../service/basic/floor.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -11,21 +11,12 @@ import { NotificationService } from '../../../shared/component/notification-mess
 
 import { ValidationService } from '../../../shared/service/validation.service';
 import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.15.3 專櫃進項發票未開立查詢作業
 @Component({
-    selector: 'app-tls2f030',
-    templateUrl: './tls2f030.component.html',
-    styleUrl: './tls2f030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2f030',
+  templateUrl: './tls2f030.component.html',
+  styleUrl: './tls2f030.component.scss'
 })
 export class TLS2F030Component {
   ProgNo: string = '220082';

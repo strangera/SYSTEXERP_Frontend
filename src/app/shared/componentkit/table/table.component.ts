@@ -1,61 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, EventEmitter, Input, SimpleChanges, OnChanges, Output, ViewChild, OnDestroy, OnInit } from '@angular/core';
-import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent, TableModule } from 'primeng/table';
-import { SortMeta, PrimeTemplate } from 'primeng/api';
+import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
+import { SortMeta } from 'primeng/api';
 import { AddButton, Column, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
-import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
+import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { QueryStateService } from '../../service/query-state.service';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { Subject, takeUntil } from 'rxjs';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
-import { NgIf, NgClass, NgFor, NgStyle, DatePipe } from '@angular/common';
-import { DividerModule } from 'primeng/divider';
-import { MultiSelectModule } from 'primeng/multiselect';
-import { TooltipModule } from 'primeng/tooltip';
-import { FormsModule } from '@angular/forms';
-import { Button, ButtonDirective } from 'primeng/button';
-import { DropdownModule } from 'primeng/dropdown';
-import { Ripple } from 'primeng/ripple';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { CalendarModule } from 'primeng/calendar';
-import { CheckboxModule } from 'primeng/checkbox';
-import { SkeletonModule } from 'primeng/skeleton';
-import { TableExpansionComponent } from './table-expansion/table-expansion.component';
-import { TableExportComponent } from './table-export/table-export.component';
 @Component({
-    selector: 'app-table',
-    templateUrl: './table.component.html',
-    styleUrl: './table.component.scss',
-    animations: [toggleButtons],
-    standalone: true,
-    imports: [
-        NgIf,
-        DividerModule,
-        TableModule,
-        PrimeTemplate,
-        MultiSelectModule,
-        TooltipModule,
-        FormsModule,
-        Button,
-        NgClass,
-        ButtonDirective,
-        FileUploadModule,
-        DropdownModule,
-        NgFor,
-        Ripple,
-        InputTextModule,
-        InputNumberModule,
-        CalendarModule,
-        CheckboxModule,
-        NgStyle,
-        SkeletonModule,
-        TableExpansionComponent,
-        TableExportComponent,
-        DatePipe,
-    ],
+  selector: 'app-table',
+  templateUrl: './table.component.html',
+  styleUrl: './table.component.scss',
+  animations: [toggleButtons],
 })
 export class TableComponent extends BasicPrintDataComponent implements OnInit, OnChanges, OnDestroy {
   // 基本設置

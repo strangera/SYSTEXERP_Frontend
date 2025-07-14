@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -10,23 +10,13 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
 import { PurchaseTypeService } from '../../../service/basic/purchase-type.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 //
 
 //3.1.3.7  財產保管單位設定作業
 @Component({
-    selector: 'app-ass13070',
-    templateUrl: './ass13070.component.html',
-    styleUrl: './ass13070.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, CalendarRangeComponent, DropdownComponent, TableComponent, TranslateModule]
+  selector: 'app-ass13070',
+  templateUrl: './ass13070.component.html',
+  styleUrl: './ass13070.component.scss'
 })
 export class ASS13070Component extends BasicQpageComponent implements OnInit {
   //

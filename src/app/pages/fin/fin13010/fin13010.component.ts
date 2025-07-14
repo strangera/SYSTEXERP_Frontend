@@ -1,25 +1,13 @@
 import { Component } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup } from '@angular/forms';
 import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { QueryYearMonthComponent } from '../../../shared/componentkit/query-year-month/query-year-month.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-fin13010',
-    templateUrl: './fin13010.component.html',
-    styleUrls: ['./fin13010.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, InputTextComponent, CalendarRangeComponent, DropdownComponent, QueryYearMonthComponent, TableComponent, TranslateModule]
+  selector: 'app-fin13010',
+  templateUrl: './fin13010.component.html',
+  styleUrls: ['./fin13010.component.scss']
 })
 export class FIN13010Component extends BasicQueryPageComponent<any> {
 

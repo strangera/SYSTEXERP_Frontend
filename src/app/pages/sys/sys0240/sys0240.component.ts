@@ -1,34 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { tblRole } from '../../../shared/models/sys/sysb000.module';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 // Permissions
 // Shared
 // 4-2-2-3角色複製
 @Component({
-    selector: 'app-sys0240',
-    templateUrl: './sys0240.component.html',
-    styleUrls: ['./sys0240.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0240',
+  templateUrl: './sys0240.component.html',
+  styleUrls: ['./sys0240.component.scss'],
 })
 
 export class SYS0240Component extends BasicQueryPageComponent<tblRole>

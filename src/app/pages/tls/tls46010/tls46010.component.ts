@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
   Column,
@@ -8,29 +8,10 @@ import {
 } from '../../../shared/componentkit/table/table.model';
 import { Pos10015 } from '../../../shared/models/tls/tls000.model';
 import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-tls46010',
-    templateUrl: './tls46010.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls46010',
+  templateUrl: './tls46010.component.html',
 })
 
 // 2.4.6.1 網路位置設定

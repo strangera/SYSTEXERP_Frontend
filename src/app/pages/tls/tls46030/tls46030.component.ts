@@ -1,6 +1,6 @@
 import { CounterCodeService } from './../../../service/basic/counter-code.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -10,24 +10,15 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 import { ValidationService } from '../../../shared/service/validation.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.4.6.3  TOUCH功能按鈕開/關設定
 
 //先新增主檔再新增明細檔
 //透過主檔查詢明細檔
 @Component({
-    selector: 'app-tls46030',
-    templateUrl: './tls46030.component.html',
-    styleUrl: './tls46030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, EditorTextComponent, TableComponent, TranslateModule]
+  selector: 'app-tls46030',
+  templateUrl: './tls46030.component.html',
+  styleUrl: './tls46030.component.scss'
 })
 export class TLS46030Component {
   ProgNo: string = '240021';

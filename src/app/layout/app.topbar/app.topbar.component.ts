@@ -1,24 +1,15 @@
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output, ViewChild, ViewEncapsulation } from '@angular/core';
-import { MenuItem, PrimeTemplate } from 'primeng/api';
+import { MenuItem } from 'primeng/api';
 import { LayoutService } from '../layout.service';
 import { AuthService } from '../../service/system/auth.service';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { UserInfo } from '../../shared/models/system/userInfo';
 import { FunsrightInfo } from '../../shared/models/system/funsrightInfo';
 import { interval, Subscription } from 'rxjs';
 import { NotificationService } from '../../shared/component/notification-message/notification.service';
-import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
-import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
-import { NgFor, NgClass, NgIf, NgStyle, DatePipe } from '@angular/common';
-import { Button } from 'primeng/button';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
-import { TooltipModule } from 'primeng/tooltip';
-import { TableModule } from 'primeng/table';
-import { MenuModule } from 'primeng/menu';
-import { TranslateModule } from '@ngx-translate/core';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { OverlayPanel } from 'primeng/overlaypanel';
+import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 
 interface Favorite {
   USER_No: string,
@@ -31,33 +22,12 @@ interface Favorite {
   UPD_USR_No: string | null,
   UPD_USR_Name: string | null
 }
-@UntilDestroy()
+
 @Component({
   selector: 'app-topbar',
   templateUrl: './app.topbar.component.html',
   styleUrl: './app.topbar.component.scss',
   encapsulation: ViewEncapsulation.None,
-  standalone: true,
-  imports: [
-    RouterLink,
-    NgFor,
-    Button,
-    NgClass,
-    FormsModule,
-    ReactiveFormsModule,
-    IconFieldModule,
-    AutoCompleteModule,
-    InputIconModule,
-    TooltipModule,
-    OverlayPanelModule,
-    TableModule,
-    PrimeTemplate,
-    NgIf,
-    NgStyle,
-    MenuModule,
-    DatePipe,
-    TranslateModule,
-  ],
 })
 export class AppTopbarComponent implements OnInit, OnDestroy {
   @ViewChild('appTopbarDiv', { static: false }) appTopbarDiv!: ElementRef;
@@ -215,7 +185,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
       this.selectedFavorites = [];
     }
     if (this.data?.user_No === undefined || !this.funRightsInfo.length) return;
-    this.authService.getFavorites(this.data?.user_No).pipe(untilDestroyed(this)).subscribe({
+    this.authService.getFavorites(this.data?.user_No).subscribe({
       next: (response) => { // 指明 response 的結構
         const favoritesWithDetails: FunsrightInfo[] = [];
         if (response.Data.length === 0) { this.Favorites = []; return; }
@@ -258,7 +228,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
         PROG_No: favorite['prog_No'],
         FVT_SeqNo: index + 1,
       }));
-      this.authService.UpdateUserFavorite(body).pipe(untilDestroyed(this)).subscribe({
+      this.authService.UpdateUserFavorite(body).subscribe({
         next: () => {
           this.editingFavorites = false; // 取消編輯狀態
           this.selectedFavorites = []; // 清空已選中的項目
@@ -279,7 +249,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
       PROG_No: favorite['prog_No'],
       FVT_SeqNo: index + 1, // 根據目前的順序生成 FVT_SeqNo
     }))
-    this.authService.UpdateUserFavorite(body).pipe(untilDestroyed(this)).subscribe({
+    this.authService.UpdateUserFavorite(body).subscribe({
       next: () => {
         this.initFavorites();
       }, error: error => { console.error('Error fetching favorites:', error); }

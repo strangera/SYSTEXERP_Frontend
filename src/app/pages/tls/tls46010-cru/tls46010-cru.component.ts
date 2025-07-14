@@ -1,20 +1,13 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 // import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
 import { Subscription } from 'rxjs';
 import { UserInfo } from '../../../shared/models/system/userInfo';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { NgIf } from '@angular/common';
 export interface Pos10015 {
   id: number;
   SYS_StoreNo: string;
@@ -41,11 +34,9 @@ export interface Pos10015 {
 
 
 @Component({
-    selector: 'app-tls46010-cru',
-    templateUrl: './tls46010-cru.component.html',
-    styleUrls: ['./tls46010-cru.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputNumberComponent, NgIf, TranslateModule]
+  selector: 'app-tls46010-cru',
+  templateUrl: './tls46010-cru.component.html',
+  styleUrls: ['./tls46010-cru.component.scss']
 })
 export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

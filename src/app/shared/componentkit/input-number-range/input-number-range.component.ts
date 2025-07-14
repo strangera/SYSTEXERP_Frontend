@@ -1,19 +1,12 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { NgIf, NgClass } from '@angular/common';
-import { InputGroupModule } from 'primeng/inputgroup';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 
 @Component({
-    selector: 'app-input-number-range',
-    templateUrl: './input-number-range.component.html',
-    styleUrl: './input-number-range.component.scss',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [NgIf, InputGroupModule, InputNumberModule, FormsModule, ReactiveFormsModule, NgClass, InputGroupAddonModule, ControlMessagesComponent]
+  selector: 'app-input-number-range',
+  templateUrl: './input-number-range.component.html',
+  styleUrl: './input-number-range.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InputNumberRangeComponent extends BasicKitComponent implements OnInit {
   @Input() label = '';

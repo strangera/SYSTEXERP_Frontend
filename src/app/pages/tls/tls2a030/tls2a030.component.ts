@@ -1,16 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 interface SalesRecord {
   paymentTool: string;
@@ -23,10 +16,8 @@ interface SalesRecord {
 }
 
 @Component({
-    selector: 'app-tls2a030',
-    templateUrl: './tls2a030.component.html',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, InputTextRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2a030',
+  templateUrl: './tls2a030.component.html'
 })
 export class TLS2A030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({

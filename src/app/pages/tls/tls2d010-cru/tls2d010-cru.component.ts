@@ -1,10 +1,10 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 //
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -12,23 +12,11 @@ import { OrganizationNumberService } from './../../../service/basic/organization
 import { DeductionCodeNameService } from './../../../service/basic/deduction-code-name.service';
 import { ReleaseInvoiceService } from './../../../service/basic/release-invoice.service';
 import { EventCodeService } from '../../../service/basic/event-code.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
-    selector: 'app-tls2d010-cru',
-    templateUrl: './tls2d010-cru.component.html',
-    styleUrl: './tls2d010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, NgFor, ButtonDynamicallydeleteComponent, CalendarComponent, InputTextComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-tls2d010-cru',
+  templateUrl: './tls2d010-cru.component.html',
+  styleUrl: './tls2d010-cru.component.scss'
 })
 export class TLS2D010CRUComponent extends BasicCrupageComponent implements OnInit {
   deductionItemsOptions: any[] = [];

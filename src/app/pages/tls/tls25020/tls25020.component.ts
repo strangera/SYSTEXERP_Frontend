@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
 import {
@@ -13,24 +13,13 @@ import { ViolationCategoryService } from '../../../service/basic/violation-categ
 import { WhetherService } from '../../../service/basic/whether.service';
 
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 const now = new Date();
 
 @Component({
   selector: 'app-tls25020',
   templateUrl: './tls25020.component.html',
-  styleUrls: ['./tls25020.component.scss'],
-  standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, InputTextComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
+  styleUrls: ['./tls25020.component.scss']
 })
 export class TLS25020Component {
 
@@ -177,6 +166,6 @@ export class TLS25020Component {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 }

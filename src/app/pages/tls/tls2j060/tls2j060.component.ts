@@ -1,7 +1,7 @@
 import { InvoiceManagementService } from './../../../service/basic/invoice-management.service';
 import { TaxableService } from './../../../service/basic/taxable.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -13,24 +13,12 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { ValidationService } from '../../../shared/service/validation.service';
 import { TransferTypeService } from '../../../service/basic/transfer-type.service';
 import { InvoiceTypeService } from '../../../service/basic/invoice-type.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.18.6 發票換開查詢作業
 @Component({
-    selector: 'app-tls2j060',
-    templateUrl: './tls2j060.component.html',
-    styleUrl: './tls2j060.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, InputNumberRangeComponent, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2j060',
+  templateUrl: './tls2j060.component.html',
+  styleUrl: './tls2j060.component.scss'
 })
 export class TLS2J060Component {
   ProgNo: string = '220095';

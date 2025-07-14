@@ -1,6 +1,6 @@
 import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
 import {
@@ -18,25 +18,13 @@ import { DeductionItemService } from '../../../service/basic/deduction-item.serv
 import { WhetherService } from '../../../service/basic/whether.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
 
 const now = new Date();
 
 @Component({
   selector: 'app-tls25030-cru',
   templateUrl: './tls25030-cru.component.html',
-  styleUrl: './tls25030-cru.component.scss',
-  standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputNumberComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
+  styleUrl: './tls25030-cru.component.scss'
 })
 export class TLS25030CRUComponent extends BasicCrupageComponent implements OnInit {
 
@@ -213,7 +201,7 @@ export class TLS25030CRUComponent extends BasicCrupageComponent implements OnIni
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -239,6 +227,6 @@ export class TLS25030CRUComponent extends BasicCrupageComponent implements OnIni
   }
 
   onCancel() {
-    this.router.navigate(['/demo']);
+    this.router.navigate(['/demo/demoinputtable']);
   }
 }

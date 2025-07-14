@@ -6,7 +6,7 @@ import { DistrictionByService } from './../../../service/basic/distriction-by.se
 import { EventCodeService } from './../../../service/basic/event-code.service';
 import { CashSourceService } from './../../../service/basic/cash-source.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -19,25 +19,12 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { DeductionCodeNameService } from '../../../service/basic/deduction-code-name.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { CooperationMethodService } from '../../../service/basic/cooperation-method.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.13.4 專櫃代扣款明細表
 @Component({
-    selector: 'app-tls2d040',
-    templateUrl: './tls2d040.component.html',
-    styleUrl: './tls2d040.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, MultiSelectComponent, DropdownComponent, CalendarRangeComponent, RadiobuttonComponent, CheckboxModule, TableComponent, TranslateModule]
+  selector: 'app-tls2d040',
+  templateUrl: './tls2d040.component.html',
+  styleUrl: './tls2d040.component.scss'
 })
 export class TLS2D040Component {
   ProgNo: string = '220066';

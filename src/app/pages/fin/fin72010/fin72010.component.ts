@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
@@ -16,21 +16,11 @@ import { ViolationCategoryService } from '../../../service/basic/violation-categ
 import { ViolationStatusService } from '../../../service/basic/violation-status.service';
 import { DeductionItemService } from '../../../service/basic/deduction-item.service';
 import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-fin72010',
   templateUrl: './fin72010.component.html',
-  styleUrl: './fin72010.component.scss',
-  standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
+  styleUrl: './fin72010.component.scss'
 })
 export class FIN72010Component extends BasicQpageComponent implements OnInit {
   queryForm = this.formBuilder.group({
@@ -244,7 +234,7 @@ export class FIN72010Component extends BasicQpageComponent implements OnInit {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -257,7 +247,7 @@ export class FIN72010Component extends BasicQpageComponent implements OnInit {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
   onClearForm() {
     this.queryForm.reset(); // 重置表單

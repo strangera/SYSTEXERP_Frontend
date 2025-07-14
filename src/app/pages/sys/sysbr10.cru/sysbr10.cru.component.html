@@ -1,92 +1,67 @@
 <div class="card">
-  <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="back" (click)="onCancel()"></app-button>
-  </div>
-
-  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range
-            
-            startlabel="起始時間"
-            endlabel="結束時間"
-            [startControl]="dataForm.controls.Pub_StartDate"
-             [endControl]="dataForm.controls.Pub_EndDate"
-            [submitted]="submitted"
-          ></app-calendar-range>
+    <div class="grid align-items-center">
+        <div class="col" style="flex: 1;">
+            <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
-
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-radiobutton
-            label="是否啟用"
-            groupname="Pub_Eable"
-            [control]="dataForm.controls.Pub_Eable"
-            [options]="YNOptions"
-            [submitted]="submitted"
-          ></app-radiobutton>
+    </div>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-dropdown label="公告類別" controlName="ANS_Type" [options]="announcementOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.ANS_Type"
+                        [submitted]="submitted">
+                    </app-dropdown>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="公告事項" controlName="Announcements" [control]="dataForm.controls.Announcements"
+                        [submitted]="submitted">
+                    </app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-calendar calendarType="dateTimeOne" label="有效開始日期時間" controlName="ANS_BegDateTime"
+                        [control]="dataForm.controls.ANS_BegDateTime" [submitted]="submitted">
+                    </app-calendar>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-calendar calendarType="dateTimeOne" label="有效結束日期時間" controlName="ANS_EndDateTime"
+                        [control]="dataForm.controls.ANS_EndDateTime" [submitted]="submitted">
+                    </app-calendar>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-multi-select label="公告角色" controlName="ANS_Role" [options]="YNOptions" optionLabel="label"
+                        optionValue="value" [control]="dataForm.controls.ANS_Role" [submitted]="submitted">
+                    </app-multi-select>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-multi-select label="階層代碼" controlName="section_no" [options]="roleCodeOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.section_no"
+                        [submitted]="submitted">
+                    </app-multi-select>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-multi-select label="組織代碼" controlName="group_no" [options]="announcementUserOptions"
+                        optionLabel="label" optionValue="value" [control]="dataForm.controls.group_no"
+                        [submitted]="submitted">
+                    </app-multi-select>
+                </div>
+            </div>
+            <hr>
+            <!-- <app-editor-text label="公告內容" controlName="anounce" [control]="dataForm.controls.anounce" [style]="{ height: '100px' }" [submitted]="submitted">
+            </app-editor-text> -->
+            <h6>通告內容</h6>
+            <p-editor [(ngModel)]="dataForm.controls.ANS_Desc" [style]="{ height: '320px' }" />
+            <hr>
+        </form>
+        <div class="col pt-4">
+            <div class="grid justify-content-end">
+                <app-button btnType="cancel" (click)="onCancel()"></app-button>
+                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
+            </div>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="公告類別"
-            controlName="Pub_Type"
-            [options]="Pub_TypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.Pub_Type"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="公告事項"
-            controlName="Pub_Event"
-            [control]="dataForm.controls.Pub_Event"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-editor-text
-            label="公告內容"
-            controlName="editortext"
-            [control]="dataForm.controls.Pub_Description"
-            [submitted]="submitted"
-          ></app-editor-text>
-        </div>
-      </div>
-      <!-- 按鈕列 -->
-      <div
-        class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
-        *ngIf="!isFormReadable"
-      >
-        <app-button btnType="smartclear"></app-button>
-        <app-button btnType="submit"></app-button>
-      </div>
-    </form>
-  </p-panel>
-</div>
-
-<div class="card">
-<app-table
-  tableKey="SYSBR10"
-  [columns]="detailcolumns"
-  dataKey="id"
-  [multiSortMeta]="[{ field: 'id', order: 1 }]"
-  [insertRowData]="true"
-  [defaultInsertData]="{ User_No: '', Org_ID: '', Role_No: '' }"
-  [showInsert]="true"
-  [showRowEdit]="true"
-  [showEdit]="false"
-  [showDetail]="false"
-  [showReportMode]="false"
-  [showDelete]="false"
-  [showCheckBox]="false"
-  [showPaginator]="false"
-  [(data)]="detailList"
->
-</app-table>
+    </p-panel>
 </div>

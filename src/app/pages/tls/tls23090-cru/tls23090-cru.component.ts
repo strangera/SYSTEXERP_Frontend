@@ -4,8 +4,6 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
 import { PdfService } from '../../../service/basic/pdf.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 
 type DisplayMode = 'CreditCardDetail' | 'CounterCardAnalysis';
 interface ReportColumn {
@@ -16,11 +14,9 @@ interface ReportColumn {
 }
 
 @Component({
-    selector: 'app-tls23090-cru',
-    templateUrl: './tls23090-cru.component.html',
-    styleUrls: ['./tls23090-cru.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ReportTableGroupComponent]
+  selector: 'app-tls23090-cru',
+  templateUrl: './tls23090-cru.component.html',
+  styleUrls: ['./tls23090-cru.component.scss']
 })
 export class TLS23090CRUComponent extends BasicCruPageComponent<any> {
   displayMode: DisplayMode = 'CreditCardDetail';

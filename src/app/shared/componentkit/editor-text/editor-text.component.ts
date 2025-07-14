@@ -1,16 +1,12 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { EditorInitEvent, EditorTextChangeEvent, EditorModule } from 'primeng/editor';
+import { EditorInitEvent, EditorTextChangeEvent } from 'primeng/editor';
 import { editorModules, validateHtmlContent } from './editor.model';
-import { NgIf } from '@angular/common';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 @Component({
-    selector: 'app-editor-text',
-    templateUrl: './editor-text.component.html',
-    styleUrl: './editor-text.component.scss',
-    standalone: true,
-    imports: [NgIf, EditorModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent]
+  selector: 'app-editor-text',
+  templateUrl: './editor-text.component.html',
+  styleUrl: './editor-text.component.scss'
 })
 export class EditorTextComponent extends BasicKitComponent implements OnInit {
   @Input() label = '';

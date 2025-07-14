@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -10,22 +10,13 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { ValidationService } from '../../../shared/service/validation.service';
 // 繳袋時機服務
 import { PaymentTimingService } from '../../../service/basic/payment-timing.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 const now = new Date();
 
 @Component({
   selector: 'app-tls28020',
   templateUrl: './tls28020.component.html',
-  styleUrls: ['./tls28020.component.scss'],
-  standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, InputTextComponent, ButtonComponent, TranslateModule]
+  styleUrls: ['./tls28020.component.scss']
 })
 export class TLS28020Component {
 
@@ -123,7 +114,7 @@ export class TLS28020Component {
         },
         skipLocationChange: true
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -137,7 +128,7 @@ export class TLS28020Component {
         },
         skipLocationChange: true
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -150,6 +141,6 @@ export class TLS28020Component {
       },
       skipLocationChange: true
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 }

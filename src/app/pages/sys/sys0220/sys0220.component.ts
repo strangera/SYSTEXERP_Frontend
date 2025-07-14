@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 // Shared
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -8,33 +8,12 @@ import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 import { tblUser, apiOption, option, SYS1000 } from '../../../shared/models/sys/sysb000.module';
 import { UserData } from '../../../shared/models/sys/user.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 4-2-2-4使用者之角色設定維護
 @Component({
-    selector: 'app-sys0220',
-    templateUrl: './sys0220.component.html',
-    styleUrls: ['./sys0220.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        MultiSelectComponent,
-        CalendarRangeQuickComponent,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0220',
+  templateUrl: './sys0220.component.html',
+  styleUrls: ['./sys0220.component.scss'],
 })
 
 export class SYS0220Component extends BasicQueryPageComponent<UserData> implements OnInit {

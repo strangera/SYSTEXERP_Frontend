@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
@@ -8,32 +8,11 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { LocationCodeService } from '../../../service/basic/locationcode.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-cpm22050',
   templateUrl: './cpm22050.component.html',
   styleUrl: './cpm22050.component.scss',
-  standalone: true,
-  imports: [
-    MenubarComponent,
-    ButtonComponent,
-    AccordionModule,
-    FormsModule,
-    ReactiveFormsModule,
-    CalendarRangeComponent,
-    DropdownComponent,
-    InputTextComponent,
-    TableComponent,
-    TranslateModule,
-  ],
 })
 export class CPM22050Component extends BasicQpageComponent implements OnInit {
   queryForm = this.formBuilder.group({
@@ -137,7 +116,7 @@ export class CPM22050Component extends BasicQpageComponent implements OnInit {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -151,7 +130,7 @@ export class CPM22050Component extends BasicQpageComponent implements OnInit {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 
   // 清除表單資料

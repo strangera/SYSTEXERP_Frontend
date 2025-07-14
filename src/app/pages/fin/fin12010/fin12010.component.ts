@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig, formatAmount, formatDateTime, formatDate, formatYN, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
 import { SystemOptionsService } from '../../../service/system/sys1000.service';
@@ -9,33 +9,10 @@ import { finalize } from 'rxjs';
 import { formatDate as dateFnsFormatDate } from '@angular/common';
 import { SAL_GUIPaperOptions } from '../fin11030/fin11030.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-fin12010',
-    templateUrl: './fin12010.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarRangeComponent,
-        InputTextComponent,
-        InputTextRangeComponent,
-        MultiSelectComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-fin12010',
+  templateUrl: './fin12010.component.html',
 })
 //1.1.2.1 電子式發票各系統配號維護
 export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> implements OnInit {

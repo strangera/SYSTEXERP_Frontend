@@ -1,38 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { APS2001Data, columns, SAL_GUIPaperOptions } from './fin11030.model';
 import { Fin11030Service } from '../../../service/api/fin/fin11030.service';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-fin11030',
-    templateUrl: './fin11030.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarRangeComponent,
-        InputTextComponent,
-        InputTextRangeComponent,
-        MultiSelectComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-fin11030',
+  templateUrl: './fin11030.component.html',
 })
 //1.1.1.3 銷項品項資料設定
 export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> implements OnInit {

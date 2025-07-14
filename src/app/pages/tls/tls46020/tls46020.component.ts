@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS46020Item, TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { Column, createPaginationConfig, formatAmount, formatDate, formatDateTime, formatTimeHHMM, formatYN } from '../../../shared/componentkit/table/table.model';
@@ -8,38 +8,11 @@ import { ECR_GUI_Type_Option, ECR_SernoType_Option } from './tls46020.model';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.4.6.2  POS環境變數維護作業
 @Component({
-    selector: 'app-tls46020',
-    templateUrl: './tls46020.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        CalendarRangeComponent,
-        InputTextareaComponent,
-        TableComponent,
-        DialogComponent,
-        DropdownComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-tls46020',
+  templateUrl: './tls46020.component.html',
 })
 export class TLS46020Component extends BasicQueryPageComponent<TLS46020Item> implements OnInit {
   queryForm = this.formBuilder.group({

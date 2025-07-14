@@ -1,34 +1,15 @@
 import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
 import { Component, OnInit } from '@angular/core';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup } from '@angular/forms';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { ExcelImportService } from '../../../shared/service/excel-import.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 
 @Component({
-    selector: 'app-tls21040',
-    templateUrl: './tls21040.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        MultiSelectComponent,
-        InputTextComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls21040',
+  templateUrl: './tls21040.component.html',
 })
 export class TLS21040Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({

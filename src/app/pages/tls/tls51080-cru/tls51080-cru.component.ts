@@ -1,25 +1,16 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption } from '../../../shared/models/sys/sysb000.module';
 import { POS2034 } from '../../../shared/models/tls/tls000.model';
 import { Tls51080Service } from '../../../service/api/tls/tls51080.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.5.1.6 品牌設定作業  CRU
 @Component({
-    selector: 'app-tls51080-cru',
-    templateUrl: './tls51080-cru.component.html',
-    styleUrl: './tls51080-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, NgIf, TranslateModule]
+  selector: 'app-tls51080-cru',
+  templateUrl: './tls51080-cru.component.html',
+  styleUrl: './tls51080-cru.component.scss'
 })
 export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
   implements OnInit {

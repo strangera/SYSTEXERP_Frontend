@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import {
@@ -12,12 +12,6 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 import { SystemTypeDetailService } from '../../../service/basic/system-type-detail.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 const now = new Date();
 const nowDate = new Date();
@@ -31,17 +25,6 @@ interface AbnormalCode {
   selector: 'app-sys0740',
   templateUrl: './sys0740.component.html',
   styleUrl: './sys0740.component.scss',
-  standalone: true,
-  imports: [
-    MenubarComponent,
-    AccordionModule,
-    FormsModule,
-    ReactiveFormsModule,
-    DropdownComponent,
-    ButtonComponent,
-    TableComponent,
-    TranslateModule,
-  ],
 })
 // 作業權限之角色列表
 export class SYS0740Component {
@@ -132,7 +115,7 @@ export class SYS0740Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -146,7 +129,7 @@ export class SYS0740Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -159,6 +142,6 @@ export class SYS0740Component {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 }

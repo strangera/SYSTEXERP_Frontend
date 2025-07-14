@@ -1,10 +1,10 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { ValidationService } from '../../../shared/service/validation.service';
 //---------------------------------
@@ -12,20 +12,12 @@ import { AnnouncementUserService } from '../../../service/basic/announcement-use
 import { SalesTypeService } from './../../../service/basic/sales-type.service';
 import { EventCodeService } from '../../../service/basic/event-code.service';
 import { EventCategoryService } from '../../../service/basic/event-category.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
 
 // 2.2.13.6 專櫃活動設定暨審核作業CRU
 @Component({
-    selector: 'app-tls2d060-cru',
-    templateUrl: './tls2d060-cru.component.html',
-    styleUrl: './tls2d060-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-tls2d060-cru',
+  templateUrl: './tls2d060-cru.component.html',
+  styleUrl: './tls2d060-cru.component.scss'
 })
 export class TLS2D060CRUComponent extends BasicCrupageComponent implements OnInit {
   salesTypeOptions: any[] = [];

@@ -1,23 +1,15 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { FIN12020Data } from '../../../service/api/fin/fin12020.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { DropdownOption } from '../../tls/tls13010/tls13010.dropdown';
 import { Column } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { NgIf } from '@angular/common';
 
 @Component({
-    selector: 'app-fin12020-cru',
-    templateUrl: './fin12020-cru.component.html',
-    styleUrl: './fin12020-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, NgIf]
+  selector: 'app-fin12020-cru',
+  templateUrl: './fin12020-cru.component.html',
+  styleUrl: './fin12020-cru.component.scss'
 })
 export class FIN12020CRUComponent extends BasicCruPageComponent<FIN12020Data> {
 

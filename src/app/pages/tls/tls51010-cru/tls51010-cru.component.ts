@@ -1,18 +1,11 @@
 // tls51010-cru.component.ts 修改版本
 
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
 
 interface CategoryItem {
   id: number;
@@ -25,11 +18,9 @@ interface CategoryItem {
 }
 
 @Component({
-    selector: 'app-tls51010-cru',
-    templateUrl: './tls51010-cru.component.html',
-    styleUrl: './tls51010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, InputTextareaComponent, NgIf, TranslateModule]
+  selector: 'app-tls51010-cru',
+  templateUrl: './tls51010-cru.component.html',
+  styleUrl: './tls51010-cru.component.scss'
 })
 export class TLS51010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

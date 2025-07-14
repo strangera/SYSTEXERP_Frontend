@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators, } from '@angular/forms';
 import { apiOption, option, SYS1000 } from '../../../shared/models/sys/sysb000.module';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -11,35 +11,10 @@ import { finalize, forkJoin, map } from 'rxjs';
 import { UserInfo, UserSys3700Detail } from '../sys0110/sys0110.model';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { NgIf } from '@angular/common';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 // 4-2-1-1使用者基本資料維護
 @Component({
-    selector: 'app-sys0110-cru',
-    templateUrl: './sys0110.cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        CalendarRangeQuickComponent,
-        NgIf,
-        CalendarComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0110-cru',
+  templateUrl: './sys0110.cru.component.html',
 })
 export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

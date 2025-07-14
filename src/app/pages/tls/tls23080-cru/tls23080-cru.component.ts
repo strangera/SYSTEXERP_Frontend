@@ -6,15 +6,11 @@ import { PdfService } from '../../../service/basic/pdf.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ColumnLabelService } from '../../../service/basic/column-label.service';
 import { TLS23080SharedService } from '../../../service/api/tls/tls23080-shared.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 
 @Component({
-    selector: 'app-tls23080-cru',
-    templateUrl: './tls23080-cru.component.html',
-    styleUrls: ['./tls23080-cru.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ReportTableGroupComponent]
+  selector: 'app-tls23080-cru',
+  templateUrl: './tls23080-cru.component.html',
+  styleUrls: ['./tls23080-cru.component.scss']
 })
 export class TLS23080CRUComponent extends BasicCruPageComponent<any> {
    fetchDetailFn = (payload: any) => this.sharedService.fetchDetailFn(payload);

@@ -1,16 +1,9 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption } from '../../../shared/models/sys/sysb000.module';
 import { Fin11010Service } from '../../../service/api/fin/fin11010.service';
 import { AddButton } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 // 定義設定狀態枚舉
 export enum SettingStatus {
@@ -21,11 +14,9 @@ export enum SettingStatus {
 
 //1.1.1.1 營業人申報設定 CRU
 @Component({
-    selector: 'app-fin11010-cru',
-    templateUrl: './fin11010-cru.component.html',
-    styleUrl: './fin11010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent, TableComponent]
+  selector: 'app-fin11010-cru',
+  templateUrl: './fin11010-cru.component.html',
+  styleUrl: './fin11010-cru.component.scss'
 })
 export class FIN11010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

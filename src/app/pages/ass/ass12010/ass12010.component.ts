@@ -2,7 +2,7 @@ import { OrganizationNumberService } from './../../../service/basic/organization
 import { UserCodeService } from './../../../service/basic/user-code.service';
 import { ItemCodeService } from './../../../service/basic/item-code.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -10,24 +10,13 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 //
 
 //3.1.2.1 請購申請作業
 @Component({
-    selector: 'app-ass12010',
-    templateUrl: './ass12010.component.html',
-    styleUrl: './ass12010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, CalendarRangeComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-ass12010',
+  templateUrl: './ass12010.component.html',
+  styleUrl: './ass12010.component.scss'
 })
 export class ASS12010Component extends BasicQpageComponent implements OnInit {
   //

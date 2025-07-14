@@ -1,35 +1,14 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { INV_UsageTypeOptions, TDS1008Data } from '../fin11040/fin11040.model';
 import { Fin11040Service } from '../../../service/api/fin/fin11040.service';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { NgIf } from '@angular/common';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { TranslateModule } from '@ngx-translate/core';
 //1.1.1.4 發票格式代號維護 CRU
 @Component({
-    selector: 'app-fin11040-cru',
-    templateUrl: './fin11040-cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        NgIf,
-        CalendarComponent,
-        TranslateModule,
-    ],
+  selector: 'app-fin11040-cru',
+  templateUrl: './fin11040-cru.component.html',
 })
 export class FIN11040CRUComponent extends BasicCruPageComponent<TDS1008Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

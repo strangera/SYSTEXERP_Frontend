@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { Sysb900DropdownService } from '../../../service/api/sys/sysb900-dropdown.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -11,13 +11,6 @@ import { IndustryTypeService } from '../../../service/basic/industry-type.servic
 import { ProductCategoryService } from '../../../service/basic/product-category.service';
 import { debounceTime } from 'rxjs';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -40,11 +33,9 @@ interface CategoryItem {
 const storageKey = 'SYSB920';
 
 @Component({
-    selector: 'app-sysb920',
-    templateUrl: './sysb920.component.html',
-    styleUrl: './sysb920.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-sysb920',
+  templateUrl: './sysb920.component.html',
+  styleUrl: './sysb920.component.scss'
 })
 // 小分類維護作業
 export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {

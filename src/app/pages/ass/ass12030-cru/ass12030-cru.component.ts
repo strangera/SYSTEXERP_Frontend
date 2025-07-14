@@ -1,35 +1,23 @@
 import { TaxableService } from './../../../service/basic/taxable.service';
 import { VendorService } from './../../../service/basic/vendor.service';
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { PaperStatusService } from '../../../service/basic/paper-status.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 
 //3.1.2.3 採購申請作業 CRU
 @Component({
-    selector: 'app-ass12030-cru',
-    templateUrl: './ass12030-cru.component.html',
-    styleUrl: './ass12030-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, EditorTextComponent, DropdownComponent, CalendarComponent, InputNumberComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, NgIf, TranslateModule]
+  selector: 'app-ass12030-cru',
+  templateUrl: './ass12030-cru.component.html',
+  styleUrl: './ass12030-cru.component.scss'
 })
 export class ASS12030CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------

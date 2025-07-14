@@ -1,36 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, formatDateTime, formatYN } from '../../../shared/componentkit/table/table.model';
 import { TLS21030Data, Tls21030Service } from '../../../service/api/tls/tls21030.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 /* TALTALENT_BILL_NOTES 對帳單備註檔 */
 @Component({
-    selector: 'app-tls21030',
-    templateUrl: './tls21030.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        MultiSelectComponent,
-        RadiobuttonYNComponent,
-        InputTextComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls21030',
+  templateUrl: './tls21030.component.html',
 })
 export class TLS21030Component extends BasicQueryPageComponent<TLS21030Data> implements OnInit {
   queryForm = this.formBuilder.group({

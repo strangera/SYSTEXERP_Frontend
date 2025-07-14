@@ -1,19 +1,12 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { Subject, takeUntil } from 'rxjs';
-import { NgIf, NgClass } from '@angular/common';
-import { InputTextModule } from 'primeng/inputtext';
-import { TooltipModule } from 'primeng/tooltip';
-import { ButtonComponent } from '../button/button.component';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 
 @Component({
-    selector: 'app-input-text',
-    templateUrl: './input-text.component.html',
-    styleUrl: './input-text.component.scss',
-    standalone: true,
-    imports: [NgIf, FormsModule, InputTextModule, ReactiveFormsModule, NgClass, TooltipModule, ButtonComponent, ControlMessagesComponent]
+  selector: 'app-input-text',
+  templateUrl: './input-text.component.html',
+  styleUrl: './input-text.component.scss'
 })
 export class InputTextComponent extends BasicKitComponent implements OnInit {
   @Input() label = '';

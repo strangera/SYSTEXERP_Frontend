@@ -1,17 +1,15 @@
 import { Component, OnInit, } from '@angular/core';
 import { PrimeNGConfig } from 'primeng/api';
 import { TranslateService } from '@ngx-translate/core';
-import { RouterOutlet } from '@angular/router';
-import { NotificationMessageComponent } from './shared/component/notification-message/notification-message.component';
+import { InactivityService } from './service/system/inactivity.service';
 
 @Component({
-    selector: 'app-root',
-    templateUrl: './app.component.html',
-    standalone: true,
-    imports: [RouterOutlet, NotificationMessageComponent],
+  selector: 'app-root',
+  templateUrl: './app.component.html',
 })
 export class AppComponent implements OnInit {
   constructor(
+    private inactivityService: InactivityService,
     private primengConfig: PrimeNGConfig,
     private translate: TranslateService,
   ) {

@@ -1,39 +1,16 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 
 
 
 @Component({
-    selector: 'app-tls11010',
-    templateUrl: './tls11010.component.html',
-    styleUrls: ['./tls11010.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        DropdownComponent,
-        MultiSelectComponent,
-        InputTextComponent,
-        InputNumberRangeComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls11010',
+  templateUrl: './tls11010.component.html',
+  styleUrls: ['./tls11010.component.scss'],
 })
 export class TLS11010Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({

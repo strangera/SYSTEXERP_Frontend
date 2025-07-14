@@ -1,27 +1,17 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption, Sysb300m } from '../../../shared/models/sys/sysb000.module';
 import { PluLogo } from '../../../shared/models/tls/tls000.model';
 import { Tls51060Service } from '../../../service/api/tls/tls51060.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
 //
 
 // 2.5.1.6 品牌設定作業  CRU
 @Component({
-    selector: 'app-tls51060-cru',
-    templateUrl: './tls51060-cru.component.html',
-    styleUrl: './tls51060-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, InputNumberComponent, DropdownComponent, NgIf, TranslateModule]
+  selector: 'app-tls51060-cru',
+  templateUrl: './tls51060-cru.component.html',
+  styleUrl: './tls51060-cru.component.scss'
 })
 export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
   implements OnInit {

@@ -1,28 +1,12 @@
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { Subject, takeUntil } from 'rxjs';
-import { NgIf, NgClass } from '@angular/common';
-import { InputGroupModule } from 'primeng/inputgroup';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 
 @Component({
-    selector: 'app-input-number',
-    templateUrl: './input-number.component.html',
-    styleUrl: './input-number.component.scss',
-    standalone: true,
-    imports: [
-        NgIf,
-        InputGroupModule,
-        InputNumberModule,
-        FormsModule,
-        ReactiveFormsModule,
-        NgClass,
-        InputGroupAddonModule,
-        ControlMessagesComponent,
-    ],
+  selector: 'app-input-number',
+  templateUrl: './input-number.component.html',
+  styleUrl: './input-number.component.scss',
 })
 export class InputNumberComponent extends BasicKitComponent implements OnInit, OnDestroy {
   @Input() label = '';

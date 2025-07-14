@@ -1,15 +1,11 @@
 import { Component, Input, OnInit, forwardRef } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
 
 @Component({
-    selector: 'app-query-year-month',
-    templateUrl: './query-year-month.component.html',
-    styleUrls: ['./query-year-month.component.scss'],
-    standalone: true,
-    imports: [FormsModule, InputTextModule, ReactiveFormsModule, DropdownModule]
+  selector: 'app-query-year-month',
+  templateUrl: './query-year-month.component.html',
+  styleUrls: ['./query-year-month.component.scss']
 })
 export class QueryYearMonthComponent extends BasicKitComponent implements OnInit {
   @Input() label = '交易年月';

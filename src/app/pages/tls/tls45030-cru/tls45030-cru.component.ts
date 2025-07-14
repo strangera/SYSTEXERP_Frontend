@@ -1,28 +1,18 @@
 import { ValidationService } from './../../../shared/service/validation.service';
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
 
 // 2.4.5.3 收銀機開關機時間表 CRU
 @Component({
-    selector: 'app-tls45030-cru',
-    templateUrl: './tls45030-cru.component.html',
-    styleUrl: './tls45030-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, InputNumberComponent, DropdownComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-tls45030-cru',
+  templateUrl: './tls45030-cru.component.html',
+  styleUrl: './tls45030-cru.component.scss'
 })
 export class TLS45030CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------

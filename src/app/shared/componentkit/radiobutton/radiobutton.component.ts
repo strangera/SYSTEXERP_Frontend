@@ -1,22 +1,11 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NgIf, NgFor } from '@angular/common';
-import { RadioButtonModule } from 'primeng/radiobutton';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
+import { FormControl } from '@angular/forms';
 
 @Component({
-    selector: 'app-radiobutton',
-    templateUrl: './radiobutton.component.html',
-    standalone: true,
-    imports: [
-        NgIf,
-        NgFor,
-        RadioButtonModule,
-        FormsModule,
-        ReactiveFormsModule,
-        ControlMessagesComponent,
-    ],
+  selector: 'app-radiobutton',
+  templateUrl: './radiobutton.component.html',
+  styleUrl: './radiobutton.component.scss'
 })
 export class RadiobuttonComponent extends BasicKitComponent implements OnInit {
   @Input() label = '';

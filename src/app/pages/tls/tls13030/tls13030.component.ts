@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { RegionService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
@@ -10,36 +10,11 @@ import { TLS13030Service } from '../../../service/api/tls/tls13030.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi-location-filter/multi-location-filter.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-tls13030',
-    templateUrl: './tls13030.component.html',
-    styleUrls: ['./tls13030.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        MultiSelectComponent,
-        MultiLocationFilterComponent,
-        CalendarRangeQuickComponent,
-        CalendarRangeComponent,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls13030',
+  templateUrl: './tls13030.component.html',
+  styleUrls: ['./tls13030.component.scss'],
 })
 export class TLS13030Component extends BasicQueryPageComponent<any> {
   isPrint = true; // 或預設為 false，視需求切換

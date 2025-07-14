@@ -1,15 +1,10 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
+import { OverlayPanel } from 'primeng/overlaypanel';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { TableRowSelectEvent } from 'primeng/table';
 import { Column, LazyLoadEvent } from '../table/table.model';
-import { NgFor, NgIf } from '@angular/common';
-import { AutoCompleteModule } from 'primeng/autocomplete';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
-import { InputTextModule } from 'primeng/inputtext';
-import { TableComponent } from '../table/table.component';
 
 export interface FieldsConfig {
   field: string;
@@ -19,12 +14,11 @@ export interface FieldsConfig {
 }
 
 @Component({
-    selector: 'app-dropdown-table',
-    templateUrl: './dropdown-table.component.html',
-    styleUrl: './dropdown-table.component.scss',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [NgFor, NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent, InputTextModule, OverlayPanelModule, TableComponent]
+  selector: 'app-dropdown-table',
+  templateUrl: './dropdown-table.component.html',
+  styleUrl: './dropdown-table.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
+
 })
 export class DropdownTableComponent extends BasicKitComponent implements OnInit, OnDestroy {
   // 表單參數

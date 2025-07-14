@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
@@ -11,30 +11,11 @@ import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/fu
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { DisplayModeService } from '../../../service/basic/display-mode.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-tls57060',
   templateUrl: './tls57060.component.html',
   styleUrls: ['./tls57060.component.scss'],
-  standalone: true,
-  imports: [
-    MenubarComponent,
-    AccordionModule,
-    FormsModule,
-    ReactiveFormsModule,
-    DropdownComponent,
-    InputTextComponent,
-    CalendarRangeComponent,
-    ButtonComponent,
-    TranslateModule,
-  ],
 })
 export class TLS57060Component {
   ProgNo: string = '250045';
@@ -137,7 +118,7 @@ export class TLS57060Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -151,7 +132,7 @@ export class TLS57060Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -164,6 +145,6 @@ export class TLS57060Component {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 }

@@ -1,26 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  FormControl,
+} from '@angular/forms';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { Button } from 'primeng/button';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-tls2g040-cru',
-    templateUrl: './tls2g040-cru.component.html',
-    styleUrls: ['./tls2g040-cru.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        Button,
-        TranslateModule,
-    ],
+  selector: 'app-tls2g040-cru',
+  templateUrl: './tls2g040-cru.component.html',
+  styleUrls: ['./tls2g040-cru.component.scss'],
 })
 export class TLS2G040CRUComponent
   extends BasicQpageComponent

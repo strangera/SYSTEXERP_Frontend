@@ -12,7 +12,7 @@ import { LocationService } from './../../../service/basic/location.service';
 import { BusinessTypeCodeService } from './../../../service/basic/business-type-code-service.service';
 import { VendorService } from './../../../service/basic/vendor.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -26,26 +26,12 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
 import { ContractStatusService } from '../../../service/basic/contract-status.service';
 import { BusinessTypeService } from '../../../service/basic/businesstype.service';
 import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.1.2.4 專櫃要約書維護
 @Component({
-    selector: 'app-tls12040',
-    templateUrl: './tls12040.component.html',
-    styleUrl: './tls12040.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, InputNumberRangeComponent, MultiSelectComponent, CalendarRangeComponent, CheckboxModule, TableComponent, TranslateModule]
+  selector: 'app-tls12040',
+  templateUrl: './tls12040.component.html',
+  styleUrl: './tls12040.component.scss'
 })
 export class TLS12040Component {
   ProgNo: string = '210006';

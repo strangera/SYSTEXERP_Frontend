@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -12,22 +12,12 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { VendorService } from '../../../service/basic/vendor.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.1.2.1 潛在客戶資料維護
 @Component({
-    selector: 'app-tls12010',
-    templateUrl: './tls12010.component.html',
-    styleUrl: './tls12010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, InputTextComponent, TableComponent, TranslateModule]
+  selector: 'app-tls12010',
+  templateUrl: './tls12010.component.html',
+  styleUrl: './tls12010.component.scss'
 })
 export class TLS12010Component {
   ProgNo: string = '210003';

@@ -1,32 +1,24 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, AfterViewInit, Output, ViewChild, ChangeDetectorRef, OnInit } from '@angular/core';
-import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
+import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
 import { DomSanitizer } from '@angular/platform-browser';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { NgIf, NgFor } from '@angular/common';
-import { CarouselModule } from 'primeng/carousel';
-import { PrimeTemplate } from 'primeng/api';
-import { ImageModule } from 'primeng/image';
-import { Button } from 'primeng/button';
-import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
-    selector: 'app-img-upload',
-    templateUrl: './img-upload.component.html',
-    styleUrls: ['./img-upload.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    animations: [
-        trigger('slideInOut', [
-            transition(':enter', [
-                style({ opacity: 0, transform: 'translateY(-20px)' }), // 从上方开始
-                animate('100ms ease-out', style({ opacity: 1, transform: 'translateY(0)' })) // 平滑滑入
-            ]),
-            transition(':leave', [
-                animate('100ms ease-in', style({ opacity: 0, transform: 'translateY(-20px)' })) // 向上滑出并消失
-            ])
-        ])
-    ],
-    standalone: true,
-    imports: [NgIf, CarouselModule, PrimeTemplate, ImageModule, Button, FileUploadModule, TooltipModule, NgFor]
+  selector: 'app-img-upload',
+  templateUrl: './img-upload.component.html',
+  styleUrls: ['./img-upload.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('slideInOut', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(-20px)' }), // 从上方开始
+        animate('100ms ease-out', style({ opacity: 1, transform: 'translateY(0)' })) // 平滑滑入
+      ]),
+      transition(':leave', [
+        animate('100ms ease-in', style({ opacity: 0, transform: 'translateY(-20px)' })) // 向上滑出并消失
+      ])
+    ])
+  ]
 })
 export class ImgUploadComponent implements AfterViewInit, OnInit {
   @ViewChild('fileUpload') fileUpload!: FileUpload;

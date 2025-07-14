@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import {
@@ -14,34 +14,10 @@ import { CardTypeService } from '../../../service/basic/card-type.service';
 import { CardCategoryService } from '../../../service/basic/card-category.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 @Component({
   selector: 'app-tls28010-cru',
   templateUrl: './tls28010-cru.component.html',
   styleUrl: './tls28010-cru.component.scss',
-  standalone: true,
-  imports: [
-    MenubarComponent,
-    PanelModule,
-    FormsModule,
-    ReactiveFormsModule,
-    NgFor,
-    ButtonDynamicallydeleteComponent,
-    DropdownComponent,
-    InputTextComponent,
-    InputNumberComponent,
-    ButtonDynamicallyaddComponent,
-    ButtonComponent,
-    NgIf,
-  ],
 })
 export class TLS28010CRUComponent extends BasicCrupageComponent implements OnInit {
   // ProgNo: string = '220044';
@@ -236,7 +212,7 @@ export class TLS28010CRUComponent extends BasicCrupageComponent implements OnIni
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -249,7 +225,7 @@ export class TLS28010CRUComponent extends BasicCrupageComponent implements OnIni
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
   // get isFormEditable(): boolean {
   //   return (

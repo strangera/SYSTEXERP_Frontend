@@ -1,7 +1,7 @@
 import { CounterCodeService } from './../../../service/basic/counter-code.service';
 import { SettlementMethodService } from './../../../service/basic/settlement-method.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -11,20 +11,12 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 import { ValidationService } from '../../../shared/service/validation.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.14.3 專櫃帳款試算作業
 @Component({
-    selector: 'app-tls2e030',
-    templateUrl: './tls2e030.component.html',
-    styleUrl: './tls2e030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TranslateModule]
+  selector: 'app-tls2e030',
+  templateUrl: './tls2e030.component.html',
+  styleUrl: './tls2e030.component.scss'
 })
 export class TLS2E030Component {
   ProgNo: string = '220072';

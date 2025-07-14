@@ -1,17 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Tls51010DropDownListService } from '../../../service/api/tls/tls51010-dropdown.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 interface CategoryItem {
   id: number;
@@ -31,11 +24,9 @@ interface CategoryItem {
 }
 // 2.5.1.2  中分類維護作業
 @Component({
-    selector: 'app-tls51020',
-    templateUrl: './tls51020.component.html',
-    styleUrl: './tls51020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-tls51020',
+  templateUrl: './tls51020.component.html',
+  styleUrl: './tls51020.component.scss'
 })
 export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
   // ProgNo: string = '250002';

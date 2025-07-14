@@ -1,27 +1,16 @@
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NgIf } from '@angular/common';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 //預售管理作業
 @Component({
-    selector: 'app-tls26040-cru',
-    templateUrl: './tls26040-cru.component.html',
-    styleUrl: './tls26040-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, NgIf, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, AccordionModule, CalendarRangeComponent, TableComponent, TranslateModule]
+  selector: 'app-tls26040-cru',
+  templateUrl: './tls26040-cru.component.html',
+  styleUrl: './tls26040-cru.component.scss'
 })
 export class TLS26040CRUComponent extends BasicCrupageComponent implements OnInit {
   CashRegisterTypeItems: any[] = [

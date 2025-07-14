@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -10,20 +10,12 @@ import { NotificationService } from '../../../shared/component/notification-mess
 
 import { ValidationService } from '../../../shared/service/validation.service';
 import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.15.2 專櫃暫存應付帳款產生作業
 @Component({
-    selector: 'app-tls2f020',
-    templateUrl: './tls2f020.component.html',
-    styleUrl: './tls2f020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TranslateModule]
+  selector: 'app-tls2f020',
+  templateUrl: './tls2f020.component.html',
+  styleUrl: './tls2f020.component.scss'
 })
 export class TLS2F020Component {
   ProgNo: string = '220081';

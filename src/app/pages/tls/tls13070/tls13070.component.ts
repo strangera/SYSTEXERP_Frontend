@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import {
@@ -28,35 +28,12 @@ import { BusinessTypeService } from '../../../service/basic/businesstype.service
 import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
 import { WhetherService } from './../../../service/basic/whether.service';
 import { FloorService } from './../../../service/basic/floor.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 
 @Component({
   selector: 'app-tls13070',
   templateUrl: './tls13070.component.html',
   styleUrls: ['./tls13070.component.scss'],
-  standalone: true,
-  imports: [
-    MenubarComponent,
-    AccordionModule,
-    FormsModule,
-    ReactiveFormsModule,
-    InputNumberComponent,
-    DropdownComponent,
-    InputTextComponent,
-    InputNumberRangeComponent,
-    CalendarRangeComponent,
-    ButtonComponent,
-    TranslateModule,
-  ],
 })
 export class TLS13070Component {
   ProgNo: string = '210016';
@@ -265,7 +242,7 @@ export class TLS13070Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -279,7 +256,7 @@ export class TLS13070Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -292,6 +269,6 @@ export class TLS13070Component {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 }

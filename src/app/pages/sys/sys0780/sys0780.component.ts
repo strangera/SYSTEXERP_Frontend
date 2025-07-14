@@ -1,32 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { SystemTypeDetailService } from '../../../service/basic/system-type-detail.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 
 @Component({
-    selector: 'app-sys0780',
-    templateUrl: './sys0780.component.html',
-    styleUrls: ['./sys0780.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        DropdownComponent,
-        ButtonComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0780',
+  templateUrl: './sys0780.component.html',
+  styleUrls: ['./sys0780.component.scss'],
 })
 // 作業權限申請表
 export class SYS0780Component extends BasicQpageComponent implements OnInit {

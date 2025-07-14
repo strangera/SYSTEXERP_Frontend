@@ -1,19 +1,12 @@
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { SortMeta } from 'primeng/api';
 import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -35,11 +28,9 @@ interface CategoryItem {
 
 
 @Component({
-    selector: 'app-sysb900',
-    templateUrl: './sysb900.component.html',
-    styleUrl: './sysb900.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-sysb900',
+  templateUrl: './sysb900.component.html',
+  styleUrl: './sysb900.component.scss'
 })
 // 中分類維護作業
 export class SYSB900Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {

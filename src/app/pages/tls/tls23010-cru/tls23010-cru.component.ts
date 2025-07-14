@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Location, NgIf, NgFor } from '@angular/common';
+import { Location } from '@angular/common';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
 import { PdfService } from '../../../service/basic/pdf.service';
@@ -7,8 +7,6 @@ import { StatusFlagService } from '../../../service/basic/status-flag.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
 import { CarrierTypeService } from '../../../service/basic/carrier-type.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 type DisplayMode = 'Detail' | 'Summary';
 interface ReportColumn {
   header: string;
@@ -17,11 +15,9 @@ interface ReportColumn {
   style?: string;
 }
 @Component({
-    selector: 'app-tls23010-cru',
-    templateUrl: './tls23010-cru.component.html',
-    styleUrls: ['./tls23010-cru.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ReportTableGroupComponent, NgIf, NgFor]
+  selector: 'app-tls23010-cru',
+  templateUrl: './tls23010-cru.component.html',
+  styleUrls: ['./tls23010-cru.component.scss']
 })
 export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
   mergedView: boolean = true;

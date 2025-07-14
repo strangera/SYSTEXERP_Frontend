@@ -1,27 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.module';
 import { PluLogo } from '../../../shared/models/tls/tls000.model';
 import { Tls51060Service } from '../../../service/api/tls/tls51060.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 // Permissions
 // Shared
 
 // 2.5.1.6  品牌設定作業
 @Component({
-    selector: 'app-tls51060',
-    templateUrl: './tls51060.component.html',
-    styleUrl: './tls51060.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-tls51060',
+  templateUrl: './tls51060.component.html',
+  styleUrl: './tls51060.component.scss'
 })
 export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
   implements OnInit {

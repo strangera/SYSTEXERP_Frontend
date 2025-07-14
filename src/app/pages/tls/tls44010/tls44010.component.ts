@@ -1,13 +1,5 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { DataViewModule } from 'primeng/dataview';
-import { PrimeTemplate } from 'primeng/api';
-import { Button } from 'primeng/button';
-import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
-import { TableModule } from 'primeng/table';
-import { NgFor } from '@angular/common';
 
 interface InventoryStatus {
   label: string;
@@ -27,11 +19,9 @@ export interface Product {
 }
 
 @Component({
-    selector: 'app-tls44010',
-    templateUrl: './tls44010.component.html',
-    styleUrl: './tls44010.component.scss',
-    standalone: true,
-    imports: [DataViewModule, PrimeTemplate, Button, InputGroupAddonModule, InputTextModule, DropdownModule, TableModule, NgFor]
+  selector: 'app-tls44010',
+  templateUrl: './tls44010.component.html',
+  styleUrl: './tls44010.component.scss'
 })
 
 export class TLS44010Component {

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -16,25 +16,14 @@ import { InstallmentPeriodService } from '../../../service/basic/installment-per
 import { AcquiringBankService } from '../../../service/basic/acquiring-bank.service';
 import { QueryFilterService } from '../../../service/basic/query-filter.service';
 import { CreditCardTransactionTypeService } from '../../../service/basic/credit-card-transaction-type.service'; // Import for transaction type
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core'; // Add this import as requested
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus'; // Add this import as requested
 
 const now = new Date();
 
 @Component({
   selector: 'app-tls27040',
   templateUrl: './tls27040.component.html',
-  styleUrls: ['./tls27040.component.scss'],
-  standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputNumberRangeComponent, CalendarRangeComponent, TableComponent, TranslateModule]
+  styleUrls: ['./tls27040.component.scss']
 })
 export class TLS27040Component {
 
@@ -211,7 +200,7 @@ export class TLS27040Component {
         },
         skipLocationChange: true
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -224,6 +213,6 @@ export class TLS27040Component {
       },
       skipLocationChange: true
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 }

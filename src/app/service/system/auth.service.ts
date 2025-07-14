@@ -14,7 +14,6 @@ import { JwtHelperService } from '@auth0/angular-jwt';
 import { registerLocaleData } from '@angular/common';
 import zhHant from '@angular/common/locales/zh-Hant';
 import { InactivityService } from './inactivity.service';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 registerLocaleData(zhHant, 'zh-Hant-TW');
 
 export interface ApiResponse<T> {
@@ -36,7 +35,6 @@ interface ErrorResponse {
   Message: string;
 }
 
-@UntilDestroy()
 @Injectable({
   providedIn: 'root'
 })
@@ -100,7 +98,7 @@ export class AuthService {
   login(data: userLogin): Observable<ApiResponse<UserInfo>> {
     data.password = this.encrypt.getPassword(data.code as string, data.password as string);
     const newHttpClient = new HttpClient(this.httpBackend);
-    return newHttpClient.get<{ ip: string }>("https://api.ipify.org/?format=json").pipe(
+    return newHttpClient.get<{ ip: string }>("http://api.ipify.org/?format=json").pipe(
       map(result => {
         data.client_ip = result.ip;
         return data;
@@ -147,7 +145,7 @@ export class AuthService {
           // 不再彈出錯誤訊息，因為前端已經顯示成功登出
           return throwError(() => error);
         })
-      ).pipe(untilDestroyed(this)).subscribe(); // 不需要 next 和 error 處理，因為主要登出邏輯已在前面執行
+      ).subscribe(); // 不需要 next 和 error 處理，因為主要登出邏輯已在前面執行
     }
 
     // 統一清除邏輯

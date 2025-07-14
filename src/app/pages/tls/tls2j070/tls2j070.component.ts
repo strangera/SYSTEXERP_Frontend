@@ -1,27 +1,15 @@
 import { Component } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
 import { ValidationService } from '../../../shared/service/validation.service';
 import { InvoiceTypeService } from '../../../service/basic/invoice-type.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { NgFor } from '@angular/common';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { Button } from 'primeng/button';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.18.7 發票換開補登作業
 @Component({
-    selector: 'app-tls2j070',
-    templateUrl: './tls2j070.component.html',
-    styleUrl: './tls2j070.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, RadiobuttonComponent, InputTextComponent, NgFor, CalendarComponent, InputNumberComponent, Button, ButtonDynamicallyaddComponent, TranslateModule]
+  selector: 'app-tls2j070',
+  templateUrl: './tls2j070.component.html',
+  styleUrl: './tls2j070.component.scss'
 })
 export class TLS2J070Component {
   ProgNo: string = '220096';

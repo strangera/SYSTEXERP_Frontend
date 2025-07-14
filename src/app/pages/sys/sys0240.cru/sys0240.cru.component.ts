@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core'; // 引入 ChangeDetectorRef
-import { Validators, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Validators, FormGroup } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { apiOption, tblRole } from '../../../shared/models/sys/sysb000.module';
@@ -8,19 +8,6 @@ import { Sys0230Service } from '../../../service/api/sys/sys0230.service';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { TreeNode } from '../../../shared/models/sys/role.model'; // 引入 TreeNode
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputGroupComponent } from '../../../shared/componentkit/input-group/input-group.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { NgIf, NgClass, NgFor } from '@angular/common';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { DividerModule } from 'primeng/divider';
-import { TabViewModule } from 'primeng/tabview';
-import { PrimeTemplate } from 'primeng/api';
-import { AccordionModule } from 'primeng/accordion';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 配對角色
 export interface UserOption {
@@ -32,40 +19,20 @@ export interface UserOption {
 
 // 4-2-2-3角色複製 CRU
 @Component({
-    selector: 'app-sys0240.cru',
-    templateUrl: './sys0240.cru.component.html',
-    animations: [
-        trigger('expandCollapse', [
-            transition(':enter', [
-                style({ height: '0', opacity: 0 }),
-                animate('300ms ease-out', style({ height: '*', opacity: 1 }))
-            ]),
-            transition(':leave', [
-                animate('200ms ease-in', style({ height: '0', opacity: 0 }))
-            ])
-        ])
-    ],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        InputGroupComponent,
-        CheckboxModule,
-        NgIf,
-        TableComponent,
-        DividerModule,
-        TabViewModule,
-        PrimeTemplate,
-        NgClass,
-        NgFor,
-        AccordionModule,
-        TranslateModule,
-    ],
+  selector: 'app-sys0240.cru',
+  templateUrl: './sys0240.cru.component.html',
+  animations: [
+    trigger('expandCollapse', [
+      transition(':enter', [
+        style({ height: '0', opacity: 0 }),
+        animate('300ms ease-out', style({ height: '*', opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('200ms ease-in', style({ height: '0', opacity: 0 }))
+      ])
+    ])
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush, // 啟用 OnPush 策略
 })
 
 export class SYS0240CRUComponent extends BasicCruPageComponent<tblRole> implements OnInit {

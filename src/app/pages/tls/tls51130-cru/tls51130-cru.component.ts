@@ -1,34 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS51130Service } from '../../../service/api/tls/tls51130.service';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
 
 
 @Component({
-    selector: 'app-tls51130-cru',
-    templateUrl: './tls51130-cru.component.html',
-    styleUrls: ['./tls51130-cru.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        DropdownComponent,
-        InputTextComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-tls51130-cru',
+  templateUrl: './tls51130-cru.component.html',
+  styleUrls: ['./tls51130-cru.component.scss'],
 })
 export class TLS51130CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   LOGOOptions: any[] = [];

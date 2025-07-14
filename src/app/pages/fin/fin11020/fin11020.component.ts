@@ -1,27 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { columns, MainInvoiceData, subColumns } from './fin11020.model';
 import { Fin11020Service } from '../../../service/api/fin/fin11020.service';
-import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
+import { FileSelectEvent } from 'primeng/fileupload';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 //1.1.1.2 發票基本資料維護
 @Component({
-    selector: 'app-fin11020',
-    templateUrl: './fin11020.component.html',
-    styleUrls: ['./fin11020.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, FileUploadModule, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputTextComponent, InputTextRangeComponent, TableComponent, TranslateModule]
+  selector: 'app-fin11020',
+  templateUrl: './fin11020.component.html',
+  styleUrls: ['./fin11020.component.scss']
 })
 export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> implements OnInit {
   queryForm = this.formBuilder.group({

@@ -1,28 +1,21 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { ValidationService } from '../../../shared/service/validation.service';
 //-----
 import { AnnouncementUserService } from '../../../service/basic/announcement-user.service';
 import { TicketCategoryService } from './../../../service/basic/ticket-category.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
 
 // 2.2.13.5 部門使用券類設定作業CRU
 @Component({
-    selector: 'app-tls2d050-cru',
-    templateUrl: './tls2d050-cru.component.html',
-    styleUrl: './tls2d050-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-tls2d050-cru',
+  templateUrl: './tls2d050-cru.component.html',
+  styleUrl: './tls2d050-cru.component.scss'
 })
 export class TLS2D050CRUComponent extends BasicCrupageComponent implements OnInit {
   departmentOptions: any[] = [];

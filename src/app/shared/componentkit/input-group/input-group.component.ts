@@ -1,26 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, EventEmitter, Input, OnInit, OnChanges, SimpleChanges, Output, ChangeDetectionStrategy } from '@angular/core';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { TableRowSelectEvent } from 'primeng/table';
 import { DropdownChangeEvent } from 'primeng/dropdown';
-import { AutoCompleteCompleteEvent, AutoCompleteSelectEvent, AutoCompleteModule } from 'primeng/autocomplete';
+import { AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { Column } from '../table/table.model';
-import { NgIf, NgClass, NgFor } from '@angular/common';
-import { PrimeTemplate } from 'primeng/api';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonDirective } from 'primeng/button';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
-import { DialogModule } from 'primeng/dialog';
-import { TableComponent } from '../table/table.component';
 
 @Component({
-    selector: 'app-input-group',
-    templateUrl: './input-group.component.html',
-    styleUrl: './input-group.component.scss',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, InputTextModule, ButtonDirective, ControlMessagesComponent, DialogModule, NgFor, TableComponent]
+  selector: 'app-input-group',
+  templateUrl: './input-group.component.html',
+  styleUrl: './input-group.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InputGroupComponent<T> extends BasicKitComponent implements OnInit, OnChanges {
   // 基本設定

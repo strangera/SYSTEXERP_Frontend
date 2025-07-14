@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -19,23 +19,11 @@ import { TypeService } from './../../../service/basic/type.service';
 import { TaxableService } from './../../../service/basic/taxable.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
 import { CooperationMethodService } from '../../../service/basic/cooperation-method.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { NgIf } from '@angular/common';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-tls31090',
   templateUrl: './tls31090.component.html',
-  styleUrl: './tls31090.component.scss',
-  standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, RadiobuttonComponent, NgIf, CalendarRangeComponent, DropdownComponent, ButtonComponent, TableComponent, TranslateModule]
+  styleUrl: './tls31090.component.scss'
 })
 
 export class TLS31090Component {
@@ -207,7 +195,7 @@ export class TLS31090Component {
         },
         skipLocationChange: true
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -221,7 +209,7 @@ export class TLS31090Component {
         },
         skipLocationChange: true
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -234,7 +222,7 @@ export class TLS31090Component {
       },
       skipLocationChange: true
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 
 

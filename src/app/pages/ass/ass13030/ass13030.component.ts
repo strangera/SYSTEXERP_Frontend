@@ -2,7 +2,7 @@ import { AssetsTypeService } from './../../../service/basic/assets-type.service'
 import { AssetStatusService } from './../../../service/basic/asset-status.service';
 import { SharedCodeService } from './../../../service/basic/shared-code.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -15,26 +15,13 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { NeedPayTicketService } from '../../../service/basic/need-pay-ticket.service';
 import { VendorService } from '../../../service/basic/vendor.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 //
 
 //3.1.3.3 資產報廢作業
 @Component({
-    selector: 'app-ass13030',
-    templateUrl: './ass13030.component.html',
-    styleUrl: './ass13030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, MultiSelectComponent, InputNumberRangeComponent, InputNumberComponent, CheckboxModule, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-ass13030',
+  templateUrl: './ass13030.component.html',
+  styleUrl: './ass13030.component.scss'
 })
 export class ASS13030Component extends BasicQpageComponent implements OnInit {
   //

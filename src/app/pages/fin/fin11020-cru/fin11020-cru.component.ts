@@ -1,40 +1,15 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { guiStatusOptions, guiTypeOptions, MainInvoiceData } from '../fin11020/fin11020.model';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { Fin11020Service } from '../../../service/api/fin/fin11020.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { NgIf } from '@angular/common';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 //1.1.1.2 發票基本資料維護 CRU
 @Component({
-    selector: 'app-fin11020-cru',
-    templateUrl: './fin11020-cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarComponent,
-        NgIf,
-        InputNumberComponent,
-        InputTextComponent,
-        InputTextRangeComponent,
-        DropdownComponent,
-        TranslateModule,
-    ],
+  selector: 'app-fin11020-cru',
+  templateUrl: './fin11020-cru.component.html',
 })
 export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData> implements OnInit {
   dataForm = this.formBuilder.group({

@@ -7,21 +7,6 @@ import { UserData } from '../../../shared/models/sys/user.model';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { Sys0230Service } from '../../../service/api/sys/sys0230.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { NgIf, NgClass, NgFor } from '@angular/common';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { TabViewModule } from 'primeng/tabview';
-import { PrimeTemplate } from 'primeng/api';
-import { Button } from 'primeng/button';
-import { InputSwitchModule } from 'primeng/inputswitch';
-import { AccordionModule } from 'primeng/accordion';
-import { CheckboxModule } from 'primeng/checkbox';
-import { CdkVirtualScrollViewport, CdkFixedSizeVirtualScroll, CdkVirtualForOf } from '@angular/cdk/scrolling';
-import { TranslateModule } from '@ngx-translate/core';
 
 interface PrivilegeOutput {
   prog_no: string;
@@ -30,33 +15,10 @@ interface PrivilegeOutput {
 }
 // 4.2.3.2 使用者系統權限設定 CRU
 @Component({
-    selector: 'app-sys0320.cru',
-    templateUrl: './sys0320.cru.component.html',
-    styleUrls: ['./sys0320.cru.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        NgIf,
-        ProgressSpinnerModule,
-        TabViewModule,
-        PrimeTemplate,
-        NgClass,
-        NgFor,
-        Button,
-        InputSwitchModule,
-        AccordionModule,
-        CheckboxModule,
-        CdkVirtualScrollViewport,
-        CdkFixedSizeVirtualScroll,
-        CdkVirtualForOf,
-        TranslateModule,
-    ],
+  selector: 'app-sys0320.cru',
+  templateUrl: './sys0320.cru.component.html',
+  styleUrls: ['./sys0320.cru.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 // 使用者系統權限設定 CRU
 export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> implements OnInit {

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -8,13 +8,6 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { RoleCodeService } from '../../../service/basic/role-code.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 const now = new Date();
 
@@ -22,18 +15,6 @@ const now = new Date();
   selector: 'app-sys0620',
   templateUrl: './sys0620.component.html',
   styleUrl: './sys0620.component.scss',
-  standalone: true,
-  imports: [
-    MenubarComponent,
-    AccordionModule,
-    FormsModule,
-    ReactiveFormsModule,
-    DropdownComponent,
-    CalendarRangeComponent,
-    ButtonComponent,
-    TableComponent,
-    TranslateModule,
-  ],
 })
 // 角色基本資料異動查詢
 export class SYS0620Component extends BasicQpageComponent implements OnInit {
@@ -114,7 +95,7 @@ export class SYS0620Component extends BasicQpageComponent implements OnInit {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -128,7 +109,7 @@ export class SYS0620Component extends BasicQpageComponent implements OnInit {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -141,6 +122,6 @@ export class SYS0620Component extends BasicQpageComponent implements OnInit {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 }

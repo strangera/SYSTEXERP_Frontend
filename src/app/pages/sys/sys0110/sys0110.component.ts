@@ -1,6 +1,6 @@
 import { Sys0110Service } from './../../../service/api/sys/sys0110.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { apiOption, option, SYS1000, tblUser } from '../../../shared/models/sys/sysb000.module';
@@ -8,32 +8,11 @@ import { Column, createPaginationConfig, formatDate, formatDateTime } from '../.
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 import { UserData } from '../../../shared/models/sys/user.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 4-2-1-1 使用者基本資料維護
 @Component({
-    selector: 'app-sys0110',
-    templateUrl: './sys0110.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        MultiSelectComponent,
-        CalendarRangeQuickComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0110',
+  templateUrl: './sys0110.component.html',
 })
 
 export class SYS0110Component extends BasicQueryPageComponent<UserData> implements OnInit {

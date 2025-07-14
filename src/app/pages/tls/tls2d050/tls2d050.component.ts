@@ -1,6 +1,6 @@
 import { TicketCategoryService } from './../../../service/basic/ticket-category.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -11,20 +11,12 @@ import { NotificationService } from '../../../shared/component/notification-mess
 
 import { ValidationService } from '../../../shared/service/validation.service';
 import { AnnouncementUserService } from '../../../service/basic/announcement-user.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.13.5 部門使用券類設定作業
 @Component({
-    selector: 'app-tls2d050',
-    templateUrl: './tls2d050.component.html',
-    styleUrl: './tls2d050.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2d050',
+  templateUrl: './tls2d050.component.html',
+  styleUrl: './tls2d050.component.scss'
 })
 export class TLS2D050Component {
   ProgNo: string = '220067';

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { Router, NavigationExtras } from '@angular/router';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
@@ -11,21 +11,11 @@ import { SmallCategoryService } from '../../../service/basic/small-category.serv
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-cpm23020',
-    templateUrl: './cpm23020.component.html',
-    styleUrls: ['./cpm23020.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-cpm23020',
+  templateUrl: './cpm23020.component.html',
+  styleUrls: ['./cpm23020.component.scss']
 })
 // 活動用品入庫作業
 export class CPM23020Component extends BasicQpageComponent implements OnInit {

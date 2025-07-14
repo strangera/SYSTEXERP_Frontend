@@ -1,6 +1,6 @@
 import { BankAccountCodeService } from './../../../service/basic/bank-account-code.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -9,23 +9,13 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { VendorService } from '../../../service/basic/vendor.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 //
 
 //1.2.9.2 匯款明細表
 @Component({
-    selector: 'app-fin29020',
-    templateUrl: './fin29020.component.html',
-    styleUrl: './fin29020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, InputNumberRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-fin29020',
+  templateUrl: './fin29020.component.html',
+  styleUrl: './fin29020.component.scss'
 })
 export class FIN29020Component extends BasicQpageComponent implements OnInit {
   //

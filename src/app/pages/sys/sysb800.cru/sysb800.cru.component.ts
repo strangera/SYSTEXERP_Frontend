@@ -1,15 +1,9 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
-import { NgIf } from '@angular/common';
 
 interface CategoryItem {
   id: number;
@@ -26,11 +20,9 @@ interface CategoryItem {
 }
 
 @Component({
-    selector: 'app-sysb800.cru',
-    templateUrl: './sysb800.cru.component.html',
-    styleUrl: './sysb800.cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, InputTextareaComponent, NgIf, TranslateModule]
+  selector: 'app-sysb800.cru',
+  templateUrl: './sysb800.cru.component.html',
+  styleUrl: './sysb800.cru.component.scss'
 })
 // 大分類基本資料維護作業 CRU
 export class SYSB800CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {

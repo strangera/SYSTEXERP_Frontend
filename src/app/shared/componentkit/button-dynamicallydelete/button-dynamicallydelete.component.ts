@@ -1,20 +1,11 @@
 import { Component, EventEmitter, Input, Output, ViewEncapsulation } from '@angular/core';
 import { CRUDStatus } from '../../models/system/CRUDstatus';
-import { NgIf } from '@angular/common';
-import { Button } from 'primeng/button';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-button-dynamicallydelete',
-    templateUrl: './button-dynamicallydelete.component.html',
-    styleUrl: './button-dynamicallydelete.component.scss',
-    encapsulation: ViewEncapsulation.None,
-    standalone: true,
-    imports: [
-        NgIf,
-        Button,
-        TranslateModule,
-    ],
+  selector: 'app-button-dynamicallydelete',
+  templateUrl: './button-dynamicallydelete.component.html',
+  styleUrl: './button-dynamicallydelete.component.scss',
+  encapsulation: ViewEncapsulation.None,
 })
 export class ButtonDynamicallydeleteComponent {
   @Input() crudstatus: CRUDStatus = CRUDStatus.Create; // 從父元件接收 CRUDStatus

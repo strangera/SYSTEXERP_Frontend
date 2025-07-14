@@ -1,10 +1,9 @@
 import { Component } from '@angular/core';
 
 @Component({
-    selector: 'app-tls2d070-cru',
-    templateUrl: './tls2d070-cru.component.html',
-    styleUrl: './tls2d070-cru.component.scss',
-    standalone: true
+  selector: 'app-tls2d070-cru',
+  templateUrl: './tls2d070-cru.component.html',
+  styleUrl: './tls2d070-cru.component.scss'
 })
 export class TLS2D070CRUComponent {
 

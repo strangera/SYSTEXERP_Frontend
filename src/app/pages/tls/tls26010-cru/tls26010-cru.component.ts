@@ -1,24 +1,16 @@
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 // 預購活動檔期設定
 @Component({
   selector: 'app-tls26010-cru',
   templateUrl: './tls26010-cru.component.html',
-  styleUrl: './tls26010-cru.component.scss',
-  standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, ButtonComponent, NgIf, TableComponent, TranslateModule]
+  styleUrl: './tls26010-cru.component.scss'
 })
 export class TLS26010CRUComponent extends BasicCrupageComponent implements OnInit {
   CashRegisterTypeItems: any[] = [
@@ -181,7 +173,7 @@ export class TLS26010CRUComponent extends BasicCrupageComponent implements OnIni
   }//CRU
 
   onCancel() {
-    this.router.navigate(['/demo']);
+    this.router.navigate(['/demo/demoinputtable']);
   }
   onEdit(data: any) {
     if (this.canEdit()) {

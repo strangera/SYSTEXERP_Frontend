@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { TransferReasonService } from '../../../service/basic/transfer-reason.service';
@@ -14,30 +14,11 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-tls56080',
   templateUrl: './tls56080.component.html',
   styleUrls: ['./tls56080.component.scss'],
-  standalone: true,
-  imports: [
-    MenubarComponent,
-    ButtonComponent,
-    AccordionModule,
-    FormsModule,
-    ReactiveFormsModule,
-    InputTextComponent,
-    DropdownComponent,
-    CalendarRangeComponent,
-    TranslateModule,
-  ],
 })
 export class TLS56080Component {
   ProgNo: string = '250039';
@@ -167,7 +148,7 @@ export class TLS56080Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -180,6 +161,6 @@ export class TLS56080Component {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 }

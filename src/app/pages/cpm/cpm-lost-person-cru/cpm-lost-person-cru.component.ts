@@ -1,29 +1,20 @@
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
 
 const now = new Date();
 
 //5.1.1.6 總機廣播服務  CRU
 @Component({
-    selector: 'app-cpm-lost-person-cru',
-    templateUrl: './cpm-lost-person-cru.component.html',
-    styleUrl: './cpm-lost-person-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-cpm-lost-person-cru',
+  templateUrl: './cpm-lost-person-cru.component.html',
+  styleUrl: './cpm-lost-person-cru.component.scss'
 })
 export class CpmLostPersonCRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------

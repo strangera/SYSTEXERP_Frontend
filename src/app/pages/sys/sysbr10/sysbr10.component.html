@@ -1,143 +1,64 @@
 <div class="card">
-  <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button>
+  <div class="grid align-items-center">
+    <div class="col" style="flex: 1">
+      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <div *appHasPermission="addPermission">
+      <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
+    </div>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateTimeRange"
-              label="起始時間"
-              [startControl]="queryForm.controls.Pub_StartDate_Start"
-              [endControl]="queryForm.controls.Pub_StartDate_End"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateTimeRange"
-              label="結束時間"
-              [startControl]="queryForm.controls.Pub_EndDate_Start"
-              [endControl]="queryForm.controls.Pub_EndDate_End"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="公告群組"
-              controlName="Role_No"
-              [options]="Role_NoOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Role_No"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="公告使用者"
-              controlName="User_No"
-              [options]="User_NoOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.User_No"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="公告組織"
-              controlName="Org_ID"
-              [options]="Org_IDOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Org_ID"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-dropdown label="公告類別" controlName="ANS_Type" [options]="announcementOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ANS_Type" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="公告類別"
-              controlName="Pub_Type"
-              [options]="Pub_TypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Pub_Type"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="是否啟用"
-              groupname="Pub_Eable"
-              [control]="queryForm.controls.Pub_Eable"
-              [options]="YNOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="公告事項"
-              controlName="Pub_Event"
-              [control]="queryForm.controls.Pub_Event"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="公告事項" controlName="Announcements" [control]="queryForm.controls.Announcements"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
-
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
-          <app-button btnType="clear"></app-button>
-          <app-button btnType="query" [loading]="loading"></app-button>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateTimeRange" label="有效開始日期時間"
+              [startControl]="queryForm.controls.ANS_BegDateTime_From"
+              [endControl]="queryForm.controls.ANS_BegDateTime_To" [submitted]="submitted"></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateTimeRange" label="有效結束日期時間"
+              [startControl]="queryForm.controls.ANS_EndDateTime_From"
+              [endControl]="queryForm.controls.ANS_EndDateTime_To" [submitted]="submitted"></app-calendar-range>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="公告角色" controlName="ANS_Role" [options]="YNOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ANS_Role" [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="階層代碼" controlName="section_no" [options]="roleCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.section_no" [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="組織代碼" controlName="group_no" [options]="announcementUserOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.group_no"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+        </div>
+        <div>
+          <div class="grid justify-content-end">
+            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+            <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
+          </div>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
-
 <div class="card">
-  <app-table
-    dataKey="id"
-    [data]="data"
-    [columns]="columns"
-    [expansionColumns]="detailcolumns"
-     expansionDataKey="children"
-    (detail)="onDetail($event)"
-    [showEdit]="true"
-    [showCheckBox]="true"
-    (delete)="onDelete($event)"
-    (selectionChange)="selectedRows = $event"
-    [selectedItems]="selectedRows"
-    [isRowSelectable]="isRowSelectable"
-    [multiSortMeta]="[{ field: 'Role_No', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [editDisabled]="editDisabled"
-    (edit)="onEdit($event)"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [lazy]="true"
-    [loading]="loading"
-  ></app-table>
+  <app-table [showCheckBox]="true" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)"></app-table>
 </div>

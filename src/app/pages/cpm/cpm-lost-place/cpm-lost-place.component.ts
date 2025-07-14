@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -10,21 +10,13 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
 import { FloorService } from '../../../service/basic/floor.service';
 import { RegionService } from '../../../service/basic/region-code.service';
 import { LocationService } from '../../../service/basic/location.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 //
 
 //5.1.1.test2 遺拾商品地點維護
 @Component({
-    selector: 'app-cpm-lost-place',
-    templateUrl: './cpm-lost-place.component.html',
-    styleUrl: './cpm-lost-place.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableComponent, TranslateModule]
+  selector: 'app-cpm-lost-place',
+  templateUrl: './cpm-lost-place.component.html',
+  styleUrl: './cpm-lost-place.component.scss'
 })
 export class CpmLostPlaceComponent extends BasicQpageComponent implements OnInit {
   //

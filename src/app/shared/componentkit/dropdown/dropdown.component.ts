@@ -1,17 +1,13 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { DropdownChangeEvent, DropdownLazyLoadEvent, DropdownModule } from 'primeng/dropdown';
+import { DropdownChangeEvent, DropdownLazyLoadEvent } from 'primeng/dropdown';
 import { Subject, takeUntil } from 'rxjs';
-import { NgIf, NgClass } from '@angular/common';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 @Component({
-    selector: 'app-dropdown',
-    templateUrl: './dropdown.component.html',
-    styleUrl: './dropdown.component.scss',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [NgIf, DropdownModule, FormsModule, ReactiveFormsModule, NgClass, ControlMessagesComponent]
+  selector: 'app-dropdown',
+  templateUrl: './dropdown.component.html',
+  styleUrl: './dropdown.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DropdownComponent extends BasicKitComponent implements OnInit, OnChanges {
   // 基本

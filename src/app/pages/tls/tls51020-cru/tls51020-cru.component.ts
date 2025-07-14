@@ -1,18 +1,10 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
 import { Tls51010DropDownListService } from '../../../service/api/tls/tls51010-dropdown.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 新增：定義數據接口
 interface CategoryItem {
@@ -27,11 +19,9 @@ interface CategoryItem {
 
 // 2.5.1.2 中分類維護作業 CRU
 @Component({
-    selector: 'app-tls51020-cru',
-    templateUrl: './tls51020-cru.component.html',
-    styleUrl: './tls51020-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputTextareaComponent, NgIf, TranslateModule]
+  selector: 'app-tls51020-cru',
+  templateUrl: './tls51020-cru.component.html',
+  styleUrl: './tls51020-cru.component.scss'
 })
 export class TLS51020CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   // ----------------------------------------------------------------

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import {
@@ -13,14 +13,6 @@ import { NotificationService } from '../../../shared/component/notification-mess
 
 import { ErroreventCodeService } from '../../../service/basic/errorevent-code.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 interface AbnormalCode {
   name: string;
@@ -28,22 +20,9 @@ interface AbnormalCode {
 }
 
 @Component({
-    selector: 'app-sys0760',
-    templateUrl: './sys0760.component.html',
-    styleUrls: ['./sys0760.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        DropdownComponent,
-        InputNumberComponent,
-        CalendarRangeComponent,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0760',
+  templateUrl: './sys0760.component.html',
+  styleUrls: ['./sys0760.component.scss'],
 })
 // 使用者異常登入報表
 export class SYS0760Component extends BasicQpageComponent implements OnInit {

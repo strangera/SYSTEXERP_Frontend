@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -9,19 +9,12 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 import { ValidationService } from '../../../shared/service/validation.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.13.7 專櫃活動合約設定作業
 @Component({
-    selector: 'app-tls2d070',
-    templateUrl: './tls2d070.component.html',
-    styleUrl: './tls2d070.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, TranslateModule]
+  selector: 'app-tls2d070',
+  templateUrl: './tls2d070.component.html',
+  styleUrl: './tls2d070.component.scss'
 })
 export class TLS2D070Component {
   ProgNo: string = '220069';

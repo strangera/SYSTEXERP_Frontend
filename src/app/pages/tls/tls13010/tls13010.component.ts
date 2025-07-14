@@ -1,6 +1,6 @@
 // tls13010.component.ts - 整理後版本
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
 // 基礎服務
@@ -35,34 +35,11 @@ import { CounterCategoryService } from '../../../service/basic/counter-category.
 
 // 資料模型
 import { ContractItem, WorkflowStep } from './tls13010.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-tls13010',
-    templateUrl: './tls13010.component.html',
-    styleUrl: './tls13010.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        FormsModule,
-        ReactiveFormsModule,
-        AccordionModule,
-        InputTextComponent,
-        MultiSelectComponent,
-        CalendarRangeComponent,
-        DropdownComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls13010',
+  templateUrl: './tls13010.component.html',
+  styleUrl: './tls13010.component.scss',
 })
 export class TLS13010Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
 

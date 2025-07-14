@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { TLS23030Service } from '../../../service/api/tls/tls23030.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
@@ -20,47 +20,12 @@ import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { timeout, catchError } from 'rxjs/operators';
-import { throwError, of } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DialogModule } from 'primeng/dialog';
-import { RadioButtonModule } from 'primeng/radiobutton';
-import { PrimeTemplate } from 'primeng/api';
-import { ButtonDirective } from 'primeng/button';
-import { TranslateModule } from '@ngx-translate/core'; // 確保有 import
+import { throwError, of } from 'rxjs'; // 確保有 import
 type DisplayMode = 'Report' | 'SummaryReport';
 @Component({
-    selector: 'app-tls23030',
-    templateUrl: './tls23030.component.html',
-    styleUrls: ['./tls23030.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarRangeQuickComponent,
-        MultiSelectComponent,
-        InputNumberRangeComponent,
-        DropdownComponent,
-        InputTextComponent,
-        CheckboxModule,
-        InputTextModule,
-        ButtonComponent,
-        DialogModule,
-        RadioButtonModule,
-        PrimeTemplate,
-        ButtonDirective,
-        TranslateModule,
-    ],
+  selector: 'app-tls23030',
+  templateUrl: './tls23030.component.html',
+  styleUrls: ['./tls23030.component.scss'],
 })
 export class TLS23030Component extends BasicQueryPageComponent<any> {
   displayMode: DisplayMode = 'Report';

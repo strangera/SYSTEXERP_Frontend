@@ -1,12 +1,12 @@
 import { UserCodeService } from './../../../service/basic/user-code.service';
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { NavigationExtras } from '@angular/router';
 // Services
 import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
@@ -17,29 +17,11 @@ import { FloorService } from '../../../service/basic/floor.service';
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 import { DeductionItemService } from '../../../service/basic/deduction-item.service';
 import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
 
 @Component({
-    selector: 'app-fin72050-cru',
-    templateUrl: './fin72050-cru.component.html',
-    styleUrl: './fin72050-cru.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        DropdownComponent,
-        CalendarComponent,
-        ButtonComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-fin72050-cru',
+  templateUrl: './fin72050-cru.component.html',
+  styleUrl: './fin72050-cru.component.scss',
 })
 export class FIN72050CRUComponent
   extends BasicCrupageComponent

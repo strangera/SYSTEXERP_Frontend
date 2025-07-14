@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ITLS52040Data, Tls52040Service } from '../../../service/api/tls/tls52040.service';
 import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime } from '../../../shared/componentkit/table/table.model';
@@ -7,19 +7,7 @@ import { finalize, map } from 'rxjs';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
-import { FieldsConfig, DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Button } from 'primeng/button';
-import { TooltipModule } from 'primeng/tooltip';
-import { NgStyle } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 
 export const enum POStatus {
   已確認 = '1',
@@ -29,26 +17,8 @@ export const enum POStatus {
   作廢 = '9',
 }
 @Component({
-    selector: 'app-tls52040',
-    templateUrl: './tls52040.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        MultiSelectComponent,
-        DropdownTableComponent,
-        DropdownComponent,
-        CalendarRangeComponent,
-        TableComponent,
-        Button,
-        TooltipModule,
-        NgStyle,
-        TranslateModule,
-    ],
+  selector: 'app-tls52040',
+  templateUrl: './tls52040.component.html',
 })
 export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> implements OnInit {
   queryForm = this.formBuilder.group({

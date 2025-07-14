@@ -1,14 +1,10 @@
 import { Component, } from '@angular/core';
 import { DashboardComponent } from '../../pages/base/dashboard/dashboard.component';
-import { TabViewModule } from 'primeng/tabview';
-import { NgFor, NgComponentOutlet } from '@angular/common';
 
 @Component({
-    selector: 'app-dynamictabview',
-    templateUrl: './dynamictabview.component.html',
-    styleUrl: './dynamictabview.component.scss',
-    standalone: true,
-    imports: [TabViewModule, NgFor, NgComponentOutlet]
+  selector: 'app-dynamictabview',
+  templateUrl: './dynamictabview.component.html',
+  styleUrl: './dynamictabview.component.scss'
 })
 export class DynamictabviewComponent {
   componentMap: any = {

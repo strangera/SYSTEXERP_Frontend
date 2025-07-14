@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -10,20 +10,13 @@ import { NotificationService } from '../../../shared/component/notification-mess
 
 import { ValidationService } from '../../../shared/service/validation.service';
 //File
-import { FileType, FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { FileType } from '../../../shared/componentkit/file-upload/file-upload.component';
 
 // 2.5.1.10  商品資料轉入
 @Component({
-    selector: 'app-tls51100',
-    templateUrl: './tls51100.component.html',
-    styleUrl: './tls51100.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, FileUploadComponent, InputTextComponent, TranslateModule]
+  selector: 'app-tls51100',
+  templateUrl: './tls51100.component.html',
+  styleUrl: './tls51100.component.scss'
 })
 export class TLS51100Component {
   ProgNo: string = '250010';

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BigCategoryCodeService } from './../../../service/basic/big-category-code.service';
@@ -9,14 +9,6 @@ import { MidCategoryCodeService } from '../../../service/basic/mid-category-code
 import { debounceTime } from 'rxjs';
 import { Tls51010DropDownListService } from '../../../service/api/tls/tls51010-dropdown.service';
 import { Tls51020DropDownService } from '../../../service/api/tls/tls51020-dropdown.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
 
 interface CategoryItem {
   id: number;
@@ -37,11 +29,9 @@ interface CategoryItem {
 }
 
 @Component({
-    selector: 'app-tls51030-cru',
-    templateUrl: './tls51030-cru.component.html',
-    styleUrls: ['./tls51030-cru.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputTextareaComponent, NgIf, TranslateModule]
+  selector: 'app-tls51030-cru',
+  templateUrl: './tls51030-cru.component.html',
+  styleUrls: ['./tls51030-cru.component.scss']
 })
 export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

@@ -1,25 +1,13 @@
 import { Component } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup } from '@angular/forms';
 import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { QueryYearMonthComponent } from '../../../shared/componentkit/query-year-month/query-year-month.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-fin13020',
-    templateUrl: './fin13020.component.html',
-    styleUrls: ['./fin13020.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, InputTextComponent, CalendarRangeComponent, DropdownComponent, QueryYearMonthComponent, TableComponent, TranslateModule]
+  selector: 'app-fin13020',
+  templateUrl: './fin13020.component.html',
+  styleUrls: ['./fin13020.component.scss']
 })
 export class FIN13020Component extends BasicQueryPageComponent<any> {
 
@@ -38,17 +26,17 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     TXN_Ret_NoStart: [null], // 退出/折讓單號(起)
     TXN_Ret_NoEnd: [null],   // 退出/折讓單號(迄)
     GUI_Track: [null], // 字軌
-    InvoiceNumberStart: [null],
-    InvoiceNumberEnd: [null],
-    InvoiceDateStart: [null], // 領用日期(起)
-    InvoiceDateEnd: [null],   // 領用日期(迄)
-    InvoiceType: [null], // 發票狀態
-    INV_DeclareYM: [null], // 發票年月
+    PUR_GUINoStart: [null],
+    PUR_GUINoEnd: [null],
+    PUR_GUIDateStart: [null], // 領用日期(起)
+    PUR_GUIDateEnd: [null],   // 領用日期(迄)
+    PUR_VoucherType: [null], // 發票狀態
+    PUR_RepYYYYMM: [null], // 發票年月
     Source_Doc_NoStart: [], // 憑證單號(起)
     Source_Doc_NoEnd: [],   // 憑證單號(迄)
     Voucher_NoStart: [], // 發票號碼(起)
     Voucher_NoEnd: [],   // 發票號碼(迄)
-    ...createPaginationConfig
+    ...createPaginationConfig([{ field: 'PUR_RepYYYYMM', order: 1 }])
   });
 
   data: any[] = [];
@@ -57,7 +45,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
   columns: any[] = [
     { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },   
     { field: 'PUR_GUINo', header: '字軌', visible: true }, //
-    { field: 'InvoiceNumber', header: '發票號碼', visible: true },//
+    { field: 'PUR_GUINo_Start', header: '發票號碼', visible: true },//
     { field: 'PUR_GUIDate', header: '退出/折讓日期', visible: true,format: this.formatDateFromBackend   },
     { field: 'PUR_VoucherType', header: '發票格式', visible: true },
     { field: 'Credit_Type', header: '區別', visible: true, format: this.formatCreditType },  //折讓/退出

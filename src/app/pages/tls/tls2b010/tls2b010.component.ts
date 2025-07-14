@@ -2,7 +2,7 @@ import { CashShowupByService } from './../../../service/basic/cash-showup-by.ser
 import { ReimbursementYypeService } from './../../../service/basic/reimbursement-yype.service';
 import { CahserTypeService } from './../../../service/basic/cahser-type.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -12,24 +12,12 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 import { ValidationService } from '../../../shared/service/validation.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.11.1 收銀員溢欠表(日)
 @Component({
-    selector: 'app-tls2b010',
-    templateUrl: './tls2b010.component.html',
-    styleUrl: './tls2b010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputNumberRangeComponent, DropdownComponent, MultiSelectComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2b010',
+  templateUrl: './tls2b010.component.html',
+  styleUrl: './tls2b010.component.scss'
 })
 export class TLS2B010Component {
   ProgNo: string = '220055';

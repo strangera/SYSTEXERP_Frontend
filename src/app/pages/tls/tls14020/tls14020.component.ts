@@ -1,7 +1,7 @@
 import { WhetherService } from './../../../service/basic/whether.service';
 import { FloorService } from './../../../service/basic/floor.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import {
@@ -29,15 +29,6 @@ import { CooperationMethodService } from '../../../service/basic/cooperation-met
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { BusinessTypeService } from '../../../service/basic/businesstype.service';
 import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 const now = new Date();
 const nowDate = new Date();
@@ -45,9 +36,7 @@ const nowDate = new Date();
 @Component({
   selector: 'app-tls14020',
   templateUrl: './tls14020.component.html',
-  styleUrl: './tls14020.component.scss',
-  standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, TranslateModule]
+  styleUrl: './tls14020.component.scss'
 })
 export class TLS14020Component {
   ProgNo: string = '210018';
@@ -270,7 +259,7 @@ export class TLS14020Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -284,7 +273,7 @@ export class TLS14020Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -297,6 +286,6 @@ export class TLS14020Component {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 }

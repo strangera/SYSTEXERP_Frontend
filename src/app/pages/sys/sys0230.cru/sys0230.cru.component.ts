@@ -1,17 +1,14 @@
 import { Sys0230Service } from './../../../service/api/sys/sys0230.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {
+
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { tblUser } from '../../../shared/models/sys/sysb000.module';
 import { Column } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
 
 export interface UserOption {
   ID: string; // ID
@@ -22,21 +19,9 @@ export interface UserOption {
 
 // 4-2-2-2 角色之使用者設定維護
 @Component({
-    selector: 'app-sys0230.cru',
-    templateUrl: './sys0230.cru.component.html',
-    styleUrl: './sys0230.cru.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        TableComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-sys0230.cru',
+  templateUrl: './sys0230.cru.component.html',
+  styleUrl: './sys0230.cru.component.scss',
 })
 // 角色之使用者設定維護 CRU
 export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>

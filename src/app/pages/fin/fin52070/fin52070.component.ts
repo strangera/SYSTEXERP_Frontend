@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
@@ -14,30 +14,11 @@ import { VendorService } from '../../../service/basic/vendor.service';
 import { FileType } from '../../../shared/componentkit/file-upload/file-upload.component';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-fin52070',
   templateUrl: './fin52070.component.html',
   styleUrl: './fin52070.component.scss',
-  standalone: true,
-  imports: [
-    MenubarComponent,
-    ButtonComponent,
-    AccordionModule,
-    FormsModule,
-    ReactiveFormsModule,
-    InputTextComponent,
-    DropdownComponent,
-    TableComponent,
-    TranslateModule,
-  ],
 })
 export class FIN52070Component extends BasicQpageComponent implements OnInit {
   // Upload files
@@ -243,7 +224,7 @@ export class FIN52070Component extends BasicQpageComponent implements OnInit {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -256,7 +237,7 @@ export class FIN52070Component extends BasicQpageComponent implements OnInit {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
   onClearForm() {
     this.queryForm.reset(); // 重置表單

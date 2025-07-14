@@ -1,30 +1,13 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Sysbq00Data, Sysbq00Request, Sysbq00Service } from '../../../service/api/sys/sysbq00.service';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-sysbq00-cru',
-    templateUrl: './sysbq00.cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-sysbq00-cru',
+  templateUrl: './sysbq00.cru.component.html',
 })
 export class SYSBQ00CRUComponent extends BasicCruPageComponent<Sysbq00Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

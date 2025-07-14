@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
 import {
@@ -10,17 +10,11 @@ import {
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { FileType, FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { FileType } from '../../../shared/componentkit/file-upload/file-upload.component';
 @Component({
   selector: 'app-tls52060',
   templateUrl: './tls52060.component.html',
-  styleUrl: './tls52060.component.scss',
-  standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, FileUploadComponent, ButtonComponent, TranslateModule]
+  styleUrl: './tls52060.component.scss'
 })
 export class TLS52060Component {
   // Upload files
@@ -107,7 +101,7 @@ export class TLS52060Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -121,7 +115,7 @@ export class TLS52060Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -134,7 +128,7 @@ export class TLS52060Component {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 
   onFileSelected(event: any) {

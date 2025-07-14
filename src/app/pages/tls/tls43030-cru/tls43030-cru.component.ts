@@ -1,5 +1,5 @@
 import { Component, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
 import { NavigationExtras, Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -8,21 +8,12 @@ import { AuthService } from '../../../service/system/auth.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 //
 import { MessageTypeService } from '../../../service/basic/message-type.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.4.3.3 常用訊息維護作業 CRU
 @Component({
-    selector: 'app-tls43030-cru',
-    templateUrl: './tls43030-cru.component.html',
-    styleUrl: './tls43030-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-tls43030-cru',
+  templateUrl: './tls43030-cru.component.html',
+  styleUrl: './tls43030-cru.component.scss'
 })
 
 export class TLS43030CRUComponent {

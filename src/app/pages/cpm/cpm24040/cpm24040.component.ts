@@ -1,36 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { Router, NavigationExtras } from '@angular/router';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { LocationCodeService } from '../../../service/basic/locationcode.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 
 @Component({
   selector: 'app-cpm24040',
   templateUrl: './cpm24040.component.html',
   styleUrls: ['./cpm24040.component.scss'],
-  standalone: true,
-  imports: [
-    MenubarComponent,
-    AccordionModule,
-    FormsModule,
-    ReactiveFormsModule,
-    CalendarRangeComponent,
-    DropdownComponent,
-    InputTextComponent,
-    ButtonComponent,
-    TranslateModule,
-  ],
 })
 export class CPM24040Component extends BasicQpageComponent implements OnInit {
   queryForm = this.formBuilder.group({
@@ -108,7 +89,7 @@ export class CPM24040Component extends BasicQpageComponent implements OnInit {
         state: { crudstatus: CRUDStatus.Edit, rowdata: data, queryform: this.queryForm },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -117,7 +98,7 @@ export class CPM24040Component extends BasicQpageComponent implements OnInit {
       state: { crudstatus: CRUDStatus.Read, rowdata: data, queryform: this.queryForm },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 
   onClearForm(): void {

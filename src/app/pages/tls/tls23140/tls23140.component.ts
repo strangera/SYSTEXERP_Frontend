@@ -1,25 +1,15 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { TLS23140Service } from '../../../service/api/tls/tls23140.service';
 import { TransactionMachineService } from '../../../service/basic/transaction-machine.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 @Component({
-    selector: 'app-tls23140',
-    templateUrl: './tls23140.component.html',
-    styleUrls: ['./tls23140.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-tls23140',
+  templateUrl: './tls23140.component.html',
+  styleUrls: ['./tls23140.component.scss']
 })
 export class TLS23140Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({

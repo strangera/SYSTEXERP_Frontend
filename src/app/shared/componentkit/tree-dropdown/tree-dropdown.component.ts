@@ -1,9 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { TreeNode } from 'primeng/api';
-import { Button } from 'primeng/button';
-import { OverlayPanelModule } from 'primeng/overlaypanel';
-import { NgFor, NgIf } from '@angular/common';
-import { TreeModule } from 'primeng/tree';
 
 export interface Column {
   value: string;
@@ -11,17 +7,9 @@ export interface Column {
 }
 
 @Component({
-    selector: 'app-tree-dropdown',
-    templateUrl: './tree-dropdown.component.html',
-    styleUrls: ['./tree-dropdown.component.scss'],
-    standalone: true,
-    imports: [
-        Button,
-        OverlayPanelModule,
-        NgFor,
-        NgIf,
-        TreeModule,
-    ],
+  selector: 'app-tree-dropdown',
+  templateUrl: './tree-dropdown.component.html',
+  styleUrls: ['./tree-dropdown.component.scss'],
 })
 export class TreeDropdownComponent implements OnInit {
   // 扁平化導入的資料

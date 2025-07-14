@@ -21,35 +21,20 @@ import { BusinessTypeCodeService } from './../../../service/basic/business-type-
 import { VendorService } from './../../../service/basic/vendor.service';
 // --Commonly used imports--
 import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 
 // 2.1.2.4 專櫃要約書維護CRU
 @Component({
-    selector: 'app-tls12040-cru',
-    templateUrl: './tls12040-cru.component.html',
-    styleUrl: './tls12040-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, CalendarComponent, CheckboxModule, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, CalendarRangeComponent, ButtonDynamicallyaddComponent, NgIf, TranslateModule]
+  selector: 'app-tls12040-cru',
+  templateUrl: './tls12040-cru.component.html',
+  styleUrl: './tls12040-cru.component.scss'
 })
 export class TLS12040CRUComponent extends BasicCrupageComponent implements OnInit {
   vendorUIDOptions: any[] = [];

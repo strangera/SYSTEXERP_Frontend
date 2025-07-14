@@ -1,7 +1,7 @@
 import { FloorService } from './../../../service/basic/floor.service';
 import { CahserTypeService } from './../../../service/basic/cahser-type.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -12,24 +12,11 @@ import { NotificationService } from '../../../shared/component/notification-mess
 
 import { ValidationService } from '../../../shared/service/validation.service';
 import { RegionService } from '../../../service/basic/region-code.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-tls2b030',
-    templateUrl: './tls2b030.component.html',
-    styleUrl: './tls2b030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, CalendarComponent, InputNumberRangeComponent, MultiSelectComponent, DropdownComponent, CheckboxModule, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2b030',
+  templateUrl: './tls2b030.component.html',
+  styleUrl: './tls2b030.component.scss'
 })
 export class TLS2B030Component {
   ProgNo: string = '220057';

@@ -30,8 +30,8 @@ export class detail2020HandlerService {
         console.log('defaultNew',defaultNew);
         const newPerson = {
             ...defaultNew,
-            id: this.generate2020Id(data), // 新增時將id指定為0
-            // id: 0, // 新增時將id指定為0
+            // id: this.generate2020Id(data), // 新增時將id指定為0
+            id: 0, // 新增時將id指定為0
         };
 
         console.log('新2020項目', newPerson);

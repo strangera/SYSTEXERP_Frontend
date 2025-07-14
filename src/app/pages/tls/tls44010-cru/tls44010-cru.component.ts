@@ -1,19 +1,9 @@
 import { Component } from '@angular/core';
-import { DataViewModule } from 'primeng/dataview';
-import { PrimeTemplate } from 'primeng/api';
-import { Button } from 'primeng/button';
-import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
-import { TableModule } from 'primeng/table';
-import { NgIf, NgFor } from '@angular/common';
 
 @Component({
-    selector: 'app-tls44010-cru',
-    templateUrl: './tls44010-cru.component.html',
-    styleUrl: './tls44010-cru.component.scss',
-    standalone: true,
-    imports: [DataViewModule, PrimeTemplate, Button, InputGroupAddonModule, InputTextModule, DropdownModule, TableModule, NgIf, NgFor]
+  selector: 'app-tls44010-cru',
+  templateUrl: './tls44010-cru.component.html',
+  styleUrl: './tls44010-cru.component.scss'
 })
 export class TLS44010CRUComponent {
   dropdown3 = [

@@ -1,44 +1,19 @@
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { FloorService } from './../../../service/basic/floor.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
-    selector: 'app-cpm22010-cru',
-    templateUrl: './cpm22010-cru.component.html',
-    styleUrl: './cpm22010-cru.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarComponent,
-        DropdownComponent,
-        InputTextComponent,
-        NgFor,
-        ButtonDynamicallydeleteComponent,
-        ButtonDynamicallyaddComponent,
-        ButtonComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-cpm22010-cru',
+  templateUrl: './cpm22010-cru.component.html',
+  styleUrl: './cpm22010-cru.component.scss',
 })
 export class CPM22010CRUComponent extends BasicCrupageComponent implements OnInit {
   dataForm = this.formBuilder.group({

@@ -1,29 +1,21 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 //
 import { ValidationService } from '../../../shared/service/validation.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
 
 //1.3.1.1 收款項目對照會計科目維護 CRU
 @Component({
-    selector: 'app-fin31010-cru',
-    templateUrl: './fin31010-cru.component.html',
-    styleUrl: './fin31010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-fin31010-cru',
+  templateUrl: './fin31010-cru.component.html',
+  styleUrl: './fin31010-cru.component.scss'
 })
 export class FIN31010CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------

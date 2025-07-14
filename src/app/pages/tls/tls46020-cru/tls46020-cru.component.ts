@@ -1,42 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms'; // 這裡已經有了，只是再次確認
+import { FormGroup, Validators } from '@angular/forms'; // 這裡已經有了，只是再次確認
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS46020Item, TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { ECR_GUI_Type_Option, ECR_SernoType_Option, ECR_SettleDD_Option, getToday2330, YN_Option } from '../tls46020/tls46020.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.4.6.2 POS環境變數維護作業 CRU
 @Component({
-    selector: 'app-tls46020-cru',
-    templateUrl: './tls46020-cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        CalendarRangeComponent,
-        DropdownComponent,
-        InputTextareaComponent,
-        InputNumberComponent,
-        CalendarComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-tls46020-cru',
+  templateUrl: './tls46020-cru.component.html',
 })
 export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

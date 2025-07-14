@@ -1,7 +1,5 @@
 import { Component, Input, ViewEncapsulation, } from '@angular/core';
-import { MessageService, PrimeTemplate } from 'primeng/api';
-import { FileUploadModule } from 'primeng/fileupload';
-import { NgIf, NgFor } from '@angular/common';
+import { MessageService } from 'primeng/api';
 
 interface UploadEvent {
   originalEvent: Event;
@@ -40,17 +38,10 @@ export enum FileType {
 }
 
 @Component({
-    selector: 'app-file-upload',
-    templateUrl: './file-upload.component.html',
-    styleUrl: './file-upload.component.scss',
-    encapsulation: ViewEncapsulation.None,
-    standalone: true,
-    imports: [
-        FileUploadModule,
-        PrimeTemplate,
-        NgIf,
-        NgFor,
-    ],
+  selector: 'app-file-upload',
+  templateUrl: './file-upload.component.html',
+  styleUrl: './file-upload.component.scss',
+  encapsulation: ViewEncapsulation.None,
 })
 export class FileUploadComponent {
   @Input() fileType: string = FileType.PNG;

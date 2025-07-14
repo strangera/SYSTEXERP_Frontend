@@ -1,6 +1,6 @@
 import { Tls51110Service } from '../../../service/api/tls/tls51110.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
   Column,
@@ -9,13 +9,6 @@ import {
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { saveAs } from 'file-saver';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 interface LogoOption {
   No: string;
@@ -34,20 +27,8 @@ interface LogoBudget {
 }
 
 @Component({
-    selector: 'app-tls51110',
-    templateUrl: './tls51110.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarComponent,
-        DropdownComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls51110',
+  templateUrl: './tls51110.component.html',
 })
 export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> implements OnInit {
   queryForm = this.formBuilder.group({

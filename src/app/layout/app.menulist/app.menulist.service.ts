@@ -39,7 +39,7 @@ export class AppMenulistService {
           prog_No: '900001',
           label: '範例',
           parent_id: '999',
-          routerLink: '/account/demo',
+          routerLink: '/account/demo/demoinputtable',
           expanded: false,
           icon: 'pi pi-bookmark',
           hasChildrenOnly: false,

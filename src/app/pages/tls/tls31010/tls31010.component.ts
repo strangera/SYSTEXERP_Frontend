@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -19,23 +19,11 @@ import { TypeService } from './../../../service/basic/type.service';
 import { TaxableService } from './../../../service/basic/taxable.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
 import { CooperationMethodService } from '../../../service/basic/cooperation-method.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableModule } from 'primeng/table';
-import { PrimeTemplate } from 'primeng/api';
-import { NgFor } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-tls31010',
   templateUrl: './tls31010.component.html',
-  styleUrl: './tls31010.component.scss',
-  standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, RadiobuttonComponent, CalendarComponent, DropdownComponent, ButtonComponent, TableModule, PrimeTemplate, NgFor, TranslateModule]
+  styleUrl: './tls31010.component.scss'
 })
 
 export class TLS31010Component {
@@ -232,7 +220,7 @@ export class TLS31010Component {
         },
         skipLocationChange: true
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -246,7 +234,7 @@ export class TLS31010Component {
         },
         skipLocationChange: true
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -259,6 +247,6 @@ export class TLS31010Component {
       },
       skipLocationChange: true
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 }

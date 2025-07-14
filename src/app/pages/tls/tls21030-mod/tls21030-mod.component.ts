@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import {
@@ -15,18 +15,11 @@ import { VoucherTypeService } from '../../../service/basic/voucher-type.service'
 import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
 import { AccountingPeriodService } from '../../../service/basic/accounting-period.service';
 import { WhetherService } from '../../../service/basic/whether.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
   selector: 'app-tls21030-mod',
   templateUrl: './tls21030-mod.component.html',
-  styleUrl: './tls21030-mod.component.scss',
-  standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, ButtonComponent]
+  styleUrl: './tls21030-mod.component.scss'
 })
 export class Tls21030ModComponent {
 
@@ -153,7 +146,7 @@ export class Tls21030ModComponent {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -166,6 +159,6 @@ export class Tls21030ModComponent {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 }

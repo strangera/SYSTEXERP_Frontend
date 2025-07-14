@@ -1,11 +1,8 @@
 // ========== autocomplete.component.ts ==========
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { FormControl, FormsModule } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { NgIf, NgClass } from '@angular/common';
-import { AutoCompleteModule } from 'primeng/autocomplete';
-import { PrimeTemplate } from 'primeng/api';
 
 export interface AutoCompleteOption {
   value: string;
@@ -18,11 +15,9 @@ export interface AutoCompleteOption {
 }
 
 @Component({
-    selector: 'app-autocomplete',
-    templateUrl: './app-autocomplete.component.html',
-    styleUrls: ['./app-autocomplete.component.scss'],
-    standalone: true,
-    imports: [NgIf, AutoCompleteModule, FormsModule, NgClass, PrimeTemplate]
+  selector: 'app-autocomplete',
+  templateUrl: './app-autocomplete.component.html',
+  styleUrls: ['./app-autocomplete.component.scss']
 })
 export class AutoCompleteComponent implements OnInit, OnDestroy {
 

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -7,22 +7,14 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { FileType, FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { FileType } from '../../../shared/componentkit/file-upload/file-upload.component';
 //
 
 //3.1.3.2 資產轉入
 @Component({
-    selector: 'app-ass13020',
-    templateUrl: './ass13020.component.html',
-    styleUrl: './ass13020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, FileUploadComponent, TableComponent, TranslateModule]
+  selector: 'app-ass13020',
+  templateUrl: './ass13020.component.html',
+  styleUrl: './ass13020.component.scss'
 })
 export class ASS13020Component extends BasicQpageComponent implements OnInit {
   // Upload files

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Services
 
@@ -11,19 +11,11 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
 import { BigCategoryService } from '../../../service/basic/big-category.service';
 import { MidCategoryService } from '../../../service/basic/mid-category.service';
 import { SmallCategoryService } from '../../../service/basic/small-category.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-ass16010',
   templateUrl: './ass16010.component.html',
-  styleUrl: './ass16010.component.scss',
-  standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, TableComponent, TranslateModule]
+  styleUrl: './ass16010.component.scss'
 })
 export class ASS16010Component extends BasicQpageComponent implements OnInit {
   queryForm = this.formBuilder.group({
@@ -225,7 +217,7 @@ export class ASS16010Component extends BasicQpageComponent implements OnInit {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -238,7 +230,7 @@ export class ASS16010Component extends BasicQpageComponent implements OnInit {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
   onClearForm() {
     this.queryForm.reset(); // 重置表單

@@ -1,18 +1,11 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Bas1000Service } from '../../../service/api/sys/bas1000.service';
 import { Sysb900DropdownService } from '../../../service/api/sys/sysb900-dropdown.service';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
-import { NgIf } from '@angular/common';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -33,11 +26,9 @@ interface CategoryItem {
 }
 
 @Component({
-    selector: 'app-sysb920.cru',
-    templateUrl: './sysb920.cru.component.html',
-    styleUrl: './sysb920.cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputTextareaComponent, NgIf, TranslateModule]
+  selector: 'app-sysb920.cru',
+  templateUrl: './sysb920.cru.component.html',
+  styleUrl: './sysb920.cru.component.scss'
 })
 // 小分類維護作業 CRU
 export class SYSB920CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {

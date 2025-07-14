@@ -1,15 +1,11 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { MultiLocationFilterService } from './multi-location-filter.service';
-import { DropdownComponent } from '../dropdown/dropdown.component';
-import { MultiSelectComponent } from '../multi-select/multi-select.component';
 
 @Component({
-    selector: 'app-multi-location-filter',
-    templateUrl: './multi-location-filter.component.html',
-    styleUrls: ['./multi-location-filter.component.scss'],
-    standalone: true,
-    imports: [DropdownComponent, MultiSelectComponent],
+  selector: 'app-multi-location-filter',
+  templateUrl: './multi-location-filter.component.html',
+  styleUrls: ['./multi-location-filter.component.scss'],
 })
 export class MultiLocationFilterComponent implements OnInit {
   @Input() form!: FormGroup;

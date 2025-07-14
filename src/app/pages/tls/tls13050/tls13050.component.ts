@@ -4,32 +4,10 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { Tls13050Service } from '../../../service/api/tls/tls13050.service';
 import { QueryTLS13050Request } from '../../../shared/models/tls/queryTLS13050-request.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-tls13050',
-    templateUrl: './tls13050.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarRangeComponent,
-        MultiSelectComponent,
-        InputNumberRangeComponent,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls13050',
+  templateUrl: './tls13050.component.html',
 })
 export class TLS13050Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({

@@ -1,18 +1,12 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { NgIf, NgClass } from '@angular/common';
-import { InputGroupModule } from 'primeng/inputgroup';
-import { InputTextModule } from 'primeng/inputtext';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 
 @Component({
-    selector: 'app-input-text-range',
-    templateUrl: './input-text-range.component.html',
-    styleUrl: './input-text-range.component.scss',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [NgIf, InputGroupModule, FormsModule, InputTextModule, ReactiveFormsModule, NgClass, ControlMessagesComponent]
+  selector: 'app-input-text-range',
+  templateUrl: './input-text-range.component.html',
+  styleUrl: './input-text-range.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InputTextRangeComponent extends BasicKitComponent implements OnInit {
   @Input() label = '';

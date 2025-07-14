@@ -1,33 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 // Shared
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Sysb600Service } from '../../../service/api/sys/sysb600.service';
 import { Sysb600m } from '../../../shared/models/sys/sysb000.module';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { NgIf } from '@angular/common';
 
 @Component({
-    selector: 'app-sysb600.cru',
-    templateUrl: './sysb600.cru.component.html',
-    styleUrl: './sysb600.cru.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-sysb600.cru',
+  templateUrl: './sysb600.cru.component.html',
+  styleUrl: './sysb600.cru.component.scss',
 })
 // 樓層基本資料維護作業 CRU
 export class SYSB600CRUComponent

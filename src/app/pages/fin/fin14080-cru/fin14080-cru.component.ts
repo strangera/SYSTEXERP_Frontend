@@ -1,32 +1,22 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 //
 import { ValidationService } from '../../../shared/service/validation.service';
 import { TaxTypeService } from '../../../service/basic/tax-type.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
 
 //1.1.4.8 進項發票調整 CRU
 @Component({
-    selector: 'app-fin14080-cru',
-    templateUrl: './fin14080-cru.component.html',
-    styleUrl: './fin14080-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, InputNumberComponent, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-fin14080-cru',
+  templateUrl: './fin14080-cru.component.html',
+  styleUrl: './fin14080-cru.component.scss'
 })
 export class FIN14080CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------

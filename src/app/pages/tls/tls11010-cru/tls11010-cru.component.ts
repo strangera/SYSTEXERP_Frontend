@@ -1,36 +1,16 @@
 import { Component } from '@angular/core';
-import { Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { HttpClient } from '@angular/common/http';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { NgIf } from '@angular/common';
-import { Button } from 'primeng/button';
 
 @Component({
-    selector: 'app-tls11010-cru',
-    templateUrl: './tls11010-cru.component.html',
-    styleUrls: ['./tls11010-cru.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        NgIf,
-        Button,
-        TranslateModule,
-    ],
+  selector: 'app-tls11010-cru',
+  templateUrl: './tls11010-cru.component.html',
+  styleUrls: ['./tls11010-cru.component.scss'],
 })
 export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
   // 建立表單欄位，並依據 POS2002 資料表設定欄位驗證規則

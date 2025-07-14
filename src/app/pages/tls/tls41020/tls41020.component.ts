@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 // Permissions
 // Shared
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -7,36 +7,15 @@ import { SortMeta } from 'primeng/api';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Sysb500m } from '../../../shared/models/sys/sysb000.module';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 本地儲存鍵：用於儲存查詢狀態
 const storageKey = 'TLS41020';
 
 // 2.4.1.2 收銀機EDC資料維護
 @Component({
-    selector: 'app-tls41020',
-    templateUrl: './tls41020.component.html',
-    styleUrl: './tls41020.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputNumberComponent,
-        CalendarRangeComponent,
-        MultiSelectComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls41020',
+  templateUrl: './tls41020.component.html',
+  styleUrl: './tls41020.component.scss',
 })
 export class TLS41020Component
   extends BasicQueryPageComponent<any>

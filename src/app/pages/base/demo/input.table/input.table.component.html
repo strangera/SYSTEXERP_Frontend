@@ -67,8 +67,11 @@
           <b class="text-primary">樹狀下拉(巢狀)</b>
         </p-divider>
         <div class="grid p-fluid">
-          <app-tree-dropdown-nest [members]="flatTreeData" [LeaveColumnLabel]="LeaveColumnLabel" [onlySendLeaf]="true"
-            (confirmSelected)="onMembersSelected($event)"></app-tree-dropdown-nest>
+          <!-- add treeDropDown component   -->
+          <app-tree-dropdown-nest [members]="flatTreeData" [Columns]="treeNodes" [LeaveColumnLabel]="LeaveColumnLabel"
+            [onlySendLeaf]="true" (confirmSelected)="onMembersSelected($event)"></app-tree-dropdown-nest>
+          >>>>>>> main
+          <!-- --- -->
         </div>
         <p-divider align="left" type="solid">
           <b class="text-red-500 text-2xl">未調整(待確認)</b>
@@ -174,7 +177,9 @@
           <b class="text-primary">年月查詢</b>
         </p-divider>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-query-year-month [label]="'查詢年月'" [submitted]="submitted" [onlyOddMonths]="true"></app-query-year-month>
+          <app-query-year-month [label]="'查詢年月'" [yearControl]="queryForm.controls.Year"
+            [monthControl]="queryForm.controls.Month" [submitted]="submitted"
+            [onlyOddMonths]="true"></app-query-year-month>
         </div>
         <p-divider align="left" type="solid">
           <b class="text-primary">其他</b>

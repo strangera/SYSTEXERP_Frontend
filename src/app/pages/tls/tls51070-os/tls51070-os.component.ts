@@ -1,16 +1,9 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column, formatDate, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { NgIf } from '@angular/common';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 export interface Label{
   id: number,
@@ -36,11 +29,9 @@ export function atLeastOneFieldRequired(fields: string[]): ValidatorFn {
 }
 
 @Component({
-    selector: 'app-tls51070-os',
-    templateUrl: './tls51070-os.component.html',
-    styleUrl: './tls51070-os.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, NgIf, FormsModule, ReactiveFormsModule, InputTextComponent, InputNumberComponent, ExpandableEditTableComponent, TableComponent]
+  selector: 'app-tls51070-os',
+  templateUrl: './tls51070-os.component.html',
+  styleUrl: './tls51070-os.component.scss'
 })
 //處理 變價歷史紀錄/產生標籤檔
 export class Tls51070OsComponent extends BasicQueryPageComponent<Label>

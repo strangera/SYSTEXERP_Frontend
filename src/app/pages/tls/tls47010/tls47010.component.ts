@@ -1,7 +1,7 @@
 import { DataTypeService } from './../../../service/basic/data-type.service';
 import { FloorService } from './../../../service/basic/floor.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -12,21 +12,12 @@ import { NotificationService } from '../../../shared/component/notification-mess
 
 import { ValidationService } from '../../../shared/service/validation.service';
 import { CounterCodeService } from '../../../service/basic/counter-code.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.4.7.1  資料下傳收銀機作業
 @Component({
-    selector: 'app-tls47010',
-    templateUrl: './tls47010.component.html',
-    styleUrl: './tls47010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-tls47010',
+  templateUrl: './tls47010.component.html',
+  styleUrl: './tls47010.component.scss'
 })
 export class TLS47010Component {
   ProgNo: string = '240025';

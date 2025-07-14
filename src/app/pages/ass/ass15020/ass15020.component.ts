@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -12,24 +12,13 @@ import { UserCodeService } from '../../../service/basic/user-code.service';
 import { ItemCodeService } from '../../../service/basic/item-code.service';
 import { PurchaseTypeService } from '../../../service/basic/purchase-type.service';
 import { AssetStatusService } from '../../../service/basic/asset-status.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 //
 
 //3.1.5.2  財產保管清冊
 @Component({
-    selector: 'app-ass15020',
-    templateUrl: './ass15020.component.html',
-    styleUrl: './ass15020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, MultiSelectComponent, CalendarRangeComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-ass15020',
+  templateUrl: './ass15020.component.html',
+  styleUrl: './ass15020.component.scss'
 })
 export class ASS15020Component extends BasicQpageComponent implements OnInit {
   //

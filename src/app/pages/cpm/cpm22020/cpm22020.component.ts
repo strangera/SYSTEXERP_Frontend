@@ -1,39 +1,18 @@
 import { LocationCodeService } from './../../../service/basic/locationcode.service';
 import { FloorService } from './../../../service/basic/floor.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-cpm22020',
   templateUrl: './cpm22020.component.html',
   styleUrls: ['./cpm22020.component.scss'],
-  standalone: true,
-  imports: [
-    MenubarComponent,
-    ButtonComponent,
-    AccordionModule,
-    FormsModule,
-    ReactiveFormsModule,
-    CalendarRangeComponent,
-    DropdownComponent,
-    InputTextComponent,
-    TableComponent,
-    TranslateModule,
-  ],
 })
 export class CPM22020Component extends BasicQpageComponent implements OnInit {
   // 表單組
@@ -126,7 +105,7 @@ export class CPM22020Component extends BasicQpageComponent implements OnInit {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demoCRU'], extras);
+      this.router.navigate(['/demo/demoinputtableCRU'], extras);
     }
   }
 
@@ -140,7 +119,7 @@ export class CPM22020Component extends BasicQpageComponent implements OnInit {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.router.navigate(['/demo/demoinputtableCRU'], extras);
   }
 
   // 清除表單
