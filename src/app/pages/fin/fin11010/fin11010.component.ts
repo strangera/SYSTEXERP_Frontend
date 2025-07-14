@@ -1,14 +1,24 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.module';
 import { FIN11010, Fin11010Service } from '../../../service/api/fin/fin11010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-fin11010',
-  templateUrl: './fin11010.component.html',
-  styleUrl: './fin11010.component.scss'
+    selector: 'app-fin11010',
+    templateUrl: './fin11010.component.html',
+    styleUrl: './fin11010.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarRangeComponent, TableComponent, TranslateModule]
 })
 export class FIN11010Component extends BasicQueryPageComponent<FIN11010> implements OnInit {
   queryForm = this.formBuilder.group({

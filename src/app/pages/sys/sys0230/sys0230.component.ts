@@ -1,15 +1,32 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { tblRole } from '../../../shared/models/sys/sysb000.module';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 // 4-2-2-2角色之使用者設定維護
 @Component({
-  selector: 'app-sys0230',
-  templateUrl: './sys0230.component.html',
-  styleUrls: ['./sys0230.component.scss'],
+    selector: 'app-sys0230',
+    templateUrl: './sys0230.component.html',
+    styleUrls: ['./sys0230.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        ButtonComponent,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 
 export class SYS0230Component extends BasicQueryPageComponent<tblRole>

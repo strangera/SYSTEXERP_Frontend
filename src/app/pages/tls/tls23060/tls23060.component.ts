@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
@@ -12,11 +12,22 @@ import { CounterNameService } from '../../../service/basic/counter-name.service'
 import { ColumnLabelService } from '../../../service/basic/column-label.service'; // 加入 import
 import { of } from 'rxjs';
 import { catchError, timeout } from 'rxjs/operators';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-tls23060',
-  templateUrl: './tls23060.component.html',
-  styleUrls: ['./tls23060.component.scss']
+    selector: 'app-tls23060',
+    templateUrl: './tls23060.component.html',
+    styleUrls: ['./tls23060.component.scss'],
+    standalone: true,
+    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, RadiobuttonComponent, MultiSelectComponent, DropdownComponent, InputTextModule, ButtonComponent, TranslateModule]
 })
 export class TLS23060Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({

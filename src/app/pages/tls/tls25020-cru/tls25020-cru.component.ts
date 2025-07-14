@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
 import {
@@ -12,6 +12,13 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
 
 const now = new Date();
 
@@ -19,6 +26,18 @@ const now = new Date();
   selector: 'app-tls25020-cru',
   templateUrl: './tls25020-cru.component.html',
   styleUrl: './tls25020-cru.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    InputNumberComponent,
+    InputTextComponent,
+    ButtonComponent,
+    NgIf,
+  ],
 })
 export class TLS25020CRUComponent
   extends BasicCrupageComponent
@@ -136,7 +155,7 @@ export class TLS25020CRUComponent
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -149,7 +168,7 @@ export class TLS25020CRUComponent
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
 
   submitForm(frm: FormGroup) {

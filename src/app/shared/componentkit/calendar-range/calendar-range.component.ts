@@ -1,11 +1,17 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { FormControl } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NgIf, NgClass } from '@angular/common';
+import { CalendarModule } from 'primeng/calendar';
+import { PrimeTemplate } from 'primeng/api';
+import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 
 @Component({
-  selector: 'app-calendar-range',
-  templateUrl: './calendar-range.component.html',
-  styleUrl: './calendar-range.component.scss'
+    selector: 'app-calendar-range',
+    templateUrl: './calendar-range.component.html',
+    styleUrl: './calendar-range.component.scss',
+    standalone: true,
+    imports: [NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent]
 })
 export class CalendarRangeComponent extends BasicKitComponent implements OnInit {
   // 基本設置

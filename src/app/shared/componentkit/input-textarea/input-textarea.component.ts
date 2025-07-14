@@ -1,11 +1,16 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { FormControl } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NgIf, NgClass } from '@angular/common';
+import { InputTextareaModule } from 'primeng/inputtextarea';
+import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 
 @Component({
-  selector: 'app-input-textarea',
-  templateUrl: './input-textarea.component.html',
-  styleUrl: './input-textarea.component.scss'
+    selector: 'app-input-textarea',
+    templateUrl: './input-textarea.component.html',
+    styleUrl: './input-textarea.component.scss',
+    standalone: true,
+    imports: [NgIf, FormsModule, InputTextareaModule, ReactiveFormsModule, NgClass, ControlMessagesComponent]
 })
 export class InputTextareaComponent extends BasicKitComponent implements OnInit {
   @Input() label = '';

@@ -1,10 +1,10 @@
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 //
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -14,12 +14,22 @@ import { AssetStatusService } from '../../../service/basic/asset-status.service'
 import { NeedPayTicketService } from '../../../service/basic/need-pay-ticket.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { LocationService } from '../../../service/basic/location.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
 
 //3.1.3.9  資產攤提作業 CRU
 @Component({
-  selector: 'app-ass13090-cru',
-  templateUrl: './ass13090-cru.component.html',
-  styleUrl: './ass13090-cru.component.scss'
+    selector: 'app-ass13090-cru',
+    templateUrl: './ass13090-cru.component.html',
+    styleUrl: './ass13090-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS13090CRUComponent extends BasicCrupageComponent implements OnInit {
   itemCodeOptions: any[] = [];

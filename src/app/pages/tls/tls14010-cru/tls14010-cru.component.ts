@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'app-tls14010-cru',
-  templateUrl: './tls14010-cru.component.html',
-  styleUrl: './tls14010-cru.component.scss'
+    selector: 'app-tls14010-cru',
+    templateUrl: './tls14010-cru.component.html',
+    styleUrl: './tls14010-cru.component.scss',
+    standalone: true
 })
 export class TLS14010CRUComponent {
 

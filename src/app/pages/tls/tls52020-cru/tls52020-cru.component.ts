@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { IPOS2004DetailData, ITLS52020Data, TLS52020Detail, TLS52020Request, Tls52020Service } from '../../../service/api/tls/tls52020.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
@@ -9,11 +9,42 @@ import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime, finalize } from 'rxjs';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
-import { FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { FieldsConfig, DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { NgClass, NgIf } from '@angular/common';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
+import { TranslateModule } from '@ngx-translate/core';
 // 2.5.2.3  進貨驗收作業CRU
 @Component({
-  selector: 'app-tls52020-cru',
-  templateUrl: './tls52020-cru.component.html',
+    selector: 'app-tls52020-cru',
+    templateUrl: './tls52020-cru.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        DropdownComponent,
+        NgClass,
+        NgIf,
+        InputNumberComponent,
+        CalendarComponent,
+        InputTextareaComponent,
+        TableComponent,
+        DialogComponent,
+        DropdownTableComponent,
+        TranslateModule,
+    ],
 })
 export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

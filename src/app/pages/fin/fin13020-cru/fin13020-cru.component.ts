@@ -1,14 +1,41 @@
 import { Component, OnInit, EventEmitter, Output } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
 import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { QueryYearMonthComponent } from '../../../shared/componentkit/query-year-month/query-year-month.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { NgIf } from '@angular/common';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-fin13020-cru',
-  templateUrl: './fin13020-cru.component.html',
-  styleUrls: ['./fin13020-cru.component.scss'],
+    selector: 'app-fin13020-cru',
+    templateUrl: './fin13020-cru.component.html',
+    styleUrls: ['./fin13020-cru.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        DropdownComponent,
+        CalendarComponent,
+        QueryYearMonthComponent,
+        InputNumberComponent,
+        NgIf,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 export class FIN13020CRUComponent
   extends BasicCruPageComponent<any>

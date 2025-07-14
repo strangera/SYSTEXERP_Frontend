@@ -1,11 +1,32 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ReportTypeService } from '../../../service/basic/report-type.service'; // 報表型態 service
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 @Component({
-  selector: 'app-tls24080',
-  templateUrl: './tls24080.component.html',
+    selector: 'app-tls24080',
+    templateUrl: './tls24080.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        CalendarRangeComponent,
+        InputTextComponent,
+        DropdownComponent,
+        ButtonComponent,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 export class TLS24080Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({

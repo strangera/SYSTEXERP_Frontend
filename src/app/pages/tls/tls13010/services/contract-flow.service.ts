@@ -77,7 +77,6 @@ export class ContractFlowService {
       return 0;
     }
   }
-
   /**
    * 🎯 新增：增加資料版本號
    */
@@ -87,10 +86,10 @@ export class ContractFlowService {
       const newVersion = currentVersion + 1;
       this.dataVersions.set(stepKey, newVersion);
       console.log(`📈 ${stepKey} 版本號更新為:`, newVersion);
-      
+
       // 立即觸發儲存確保版本號同步
       this.saveToStorage();
-      
+
       return newVersion;
     } catch (error) {
       console.error(`❌ 更新版本號失敗 (${stepKey}):`, error);

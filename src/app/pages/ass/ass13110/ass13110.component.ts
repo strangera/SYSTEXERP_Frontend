@@ -1,6 +1,6 @@
 import { AssetsTypeService } from './../../../service/basic/assets-type.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -9,13 +9,24 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { UserCodeService } from '../../../service/basic/user-code.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 //
 
 //3.1.3.11  資產差異表
 @Component({
-  selector: 'app-ass13110',
-  templateUrl: './ass13110.component.html',
-  styleUrl: './ass13110.component.scss'
+    selector: 'app-ass13110',
+    templateUrl: './ass13110.component.html',
+    styleUrl: './ass13110.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberRangeComponent, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class ASS13110Component extends BasicQpageComponent implements OnInit {
   //

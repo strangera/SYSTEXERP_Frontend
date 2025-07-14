@@ -1,6 +1,6 @@
 import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -8,10 +8,35 @@ import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { salTypeOptions, sernoTypeOptions, settleDDOptions, statusOptions, typeOptions, yesNoOptions, ECR_GUI_Type_Option } from './tls41010-cru.model';
 import { TLS41010Data } from '../tls41010/tls41010.model';
 import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-tls41010-cru',
-  templateUrl: './tls41010-cru.component.html',
+    selector: 'app-tls41010-cru',
+    templateUrl: './tls41010-cru.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        DropdownComponent,
+        CalendarComponent,
+        AccordionModule,
+        InputNumberComponent,
+        NgIf,
+        TranslateModule,
+    ],
 })
 export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

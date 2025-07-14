@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -10,12 +10,23 @@ import { NotificationService } from '../../../shared/component/notification-mess
 
 import { ValidationService } from '../../../shared/service/validation.service';
 import { FloorService } from '../../../service/basic/floor.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CheckboxModule } from 'primeng/checkbox';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 2.4.6.6  下傳設定
 @Component({
-  selector: 'app-tls46060',
-  templateUrl: './tls46060.component.html',
-  styleUrl: './tls46060.component.scss'
+    selector: 'app-tls46060',
+    templateUrl: './tls46060.component.html',
+    styleUrl: './tls46060.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, EditorTextComponent, DropdownComponent, CheckboxModule, CalendarComponent, TableComponent, TranslateModule]
 })
 export class TLS46060Component {
   ProgNo: string = '240024';

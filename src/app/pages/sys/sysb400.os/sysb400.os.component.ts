@@ -2,11 +2,21 @@ import { Component, OnInit } from '@angular/core';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 import { option, Sysb400m } from '../../../shared/models/sys/sysb000.module';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { NgIf } from '@angular/common';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { TreeDropdownComponent } from '../../../shared/componentkit/tree-dropdown/tree-dropdown.component';
 
 @Component({
-  selector: 'app-sysb400.os',
-  templateUrl: './sysb400.os.component.html',
-  styleUrl: './sysb400.os.component.scss'
+    selector: 'app-sysb400.os',
+    templateUrl: './sysb400.os.component.html',
+    styleUrl: './sysb400.os.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, NgIf, ProgressSpinnerModule, TreeDropdownComponent]
 })
 
 // 組織架構列表

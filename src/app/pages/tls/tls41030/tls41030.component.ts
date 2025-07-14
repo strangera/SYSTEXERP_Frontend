@@ -1,9 +1,15 @@
 import { Tls41030Service } from './../../../service/API/tls/tls41030.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 import { option } from '../../../shared/models/sys/sysb000.module';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 interface POS2001 {
@@ -32,9 +38,11 @@ interface POS2001 {
 
 // 2.4.1.3 收銀專櫃人員資料維護作業
 @Component({
-  selector: 'app-tls41030',
-  templateUrl: './tls41030.component.html',
-  styleUrl: './tls41030.component.scss'
+    selector: 'app-tls41030',
+    templateUrl: './tls41030.component.html',
+    styleUrl: './tls41030.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableComponent, TranslateModule]
 })
 export class TLS41030Component extends BasicQueryPageComponent<POS2001> implements OnInit{
     bigCategoryOptions: { value: string, label: string }[] = []; // 用於下拉選單

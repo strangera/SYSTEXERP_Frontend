@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -9,12 +9,22 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 import { ValidationService } from '../../../shared/service/validation.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { CheckboxModule } from 'primeng/checkbox';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.17.1 租金發票套印作業
 @Component({
-  selector: 'app-tls2h010',
-  templateUrl: './tls2h010.component.html',
-  styleUrl: './tls2h010.component.scss'
+    selector: 'app-tls2h010',
+    templateUrl: './tls2h010.component.html',
+    styleUrl: './tls2h010.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputNumberComponent, InputNumberRangeComponent, CheckboxModule, TranslateModule]
 })
 export class TLS2H010Component {
   ProgNo: string = '220087';

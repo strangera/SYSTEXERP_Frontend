@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
 import {
@@ -12,13 +12,21 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { FloorService } from '../../../service/basic/floor.service';
 
 import { ValidationService } from '../../../shared/service/validation.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 const now = new Date();
 
 @Component({
-  selector: 'app-tls26040-mod',
-  templateUrl: './tls26040-mod.component.html',
-  styleUrls: ['./tls26040-mod.component.scss']
+    selector: 'app-tls26040-mod',
+    templateUrl: './tls26040-mod.component.html',
+    styleUrls: ['./tls26040-mod.component.scss'],
+    standalone: true,
+    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, ButtonComponent, TableComponent]
 })
 export class TLS26040ModComponent implements OnInit {
 

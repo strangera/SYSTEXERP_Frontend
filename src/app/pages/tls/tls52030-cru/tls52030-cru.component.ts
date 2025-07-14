@@ -1,5 +1,5 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { IODDetail, ITLS52030Data, ITLS52030Request, Tls52030Service } from '../../../service/api/tls/tls52030.service';
@@ -9,10 +9,39 @@ import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
 import { POStatus } from '../tls52030/tls52030.component';
 import { validateMinNumber } from '../../../shared/models/system/validate-field.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { NgIf } from '@angular/common';
+import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
+import { TranslateModule } from '@ngx-translate/core';
 // 2.5.2.3  進貨驗收作業CRU
 @Component({
-  selector: 'app-tls52030-cru',
-  templateUrl: './tls52030-cru.component.html',
+    selector: 'app-tls52030-cru',
+    templateUrl: './tls52030-cru.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        DropdownComponent,
+        InputNumberComponent,
+        CalendarComponent,
+        InputTextareaComponent,
+        TableComponent,
+        NgIf,
+        DialogComponent,
+        TranslateModule,
+    ],
 })
 export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
 import {
@@ -11,6 +11,13 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 const now = new Date();
@@ -18,7 +25,9 @@ const now = new Date();
 @Component({
   selector: 'app-tls25010-cru',
   templateUrl: './tls25010-cru.component.html',
-  styleUrl: './tls25010-cru.component.scss'
+  styleUrl: './tls25010-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class TLS25010CRUComponent extends BasicCrupageComponent implements OnInit {
 
@@ -164,7 +173,7 @@ export class TLS25010CRUComponent extends BasicCrupageComponent implements OnIni
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -177,7 +186,7 @@ export class TLS25010CRUComponent extends BasicCrupageComponent implements OnIni
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
   submitForm(frm: FormGroup) {
     // 查詢邏輯

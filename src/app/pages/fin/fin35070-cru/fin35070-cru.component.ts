@@ -1,10 +1,14 @@
 import { Component } from '@angular/core';
-import { TreeNode } from 'primeng/api'; // 使用 PrimeNG 的 TreeNode 類型
+import { TreeNode, PrimeTemplate } from 'primeng/api';
+import { OrganizationChartModule } from 'primeng/organizationchart';
+import { NgClass } from '@angular/common'; // 使用 PrimeNG 的 TreeNode 類型
 
 @Component({
-  selector: 'app-fin35070-cru',
-  templateUrl: './fin35070-cru.component.html',
-  styleUrls: ['./fin35070-cru.component.scss']
+    selector: 'app-fin35070-cru',
+    templateUrl: './fin35070-cru.component.html',
+    styleUrls: ['./fin35070-cru.component.scss'],
+    standalone: true,
+    imports: [OrganizationChartModule, PrimeTemplate, NgClass]
 })
 export class FIN35070CRUComponent {
   data: TreeNode<any>[] = []; // 初始化為空數組

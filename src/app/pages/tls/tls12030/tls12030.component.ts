@@ -4,7 +4,7 @@ import { LocationService } from './../../../service/basic/location.service';
 import { BusinessTypeCodeService } from './../../../service/basic/business-type-code-service.service';
 import { VendorService } from './../../../service/basic/vendor.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -17,12 +17,24 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { ContractStatusService } from '../../../service/basic/contract-status.service';
 import { BusinessTypeService } from '../../../service/basic/businesstype.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 2.1.2.3 專櫃意向書維護
 @Component({
-  selector: 'app-tls12030',
-  templateUrl: './tls12030.component.html',
-  styleUrl: './tls12030.component.scss'
+    selector: 'app-tls12030',
+    templateUrl: './tls12030.component.html',
+    styleUrl: './tls12030.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, CalendarRangeComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })
 export class TLS12030Component {
   ProgNo: string = '210005';

@@ -1,13 +1,17 @@
 import { Sys0230Service } from './../../../service/api/sys/sys0230.service';
 import { Component, OnInit } from '@angular/core';
-import {
-  FormGroup,
-  Validators,
-} from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption, option, tblUser } from '../../../shared/models/sys/sysb000.module';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface RoleOption {
   ID: string; // ID
@@ -18,9 +22,21 @@ export interface RoleOption {
 }
 
 @Component({
-  selector: 'app-sys0220-cru',
-  templateUrl: './sys0220.cru.component.html',
-  styleUrls: ['./sys0220.cru.component.scss'],
+    selector: 'app-sys0220-cru',
+    templateUrl: './sys0220.cru.component.html',
+    styleUrls: ['./sys0220.cru.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        TableComponent,
+        NgIf,
+        TranslateModule,
+    ],
 })
 
 // 4-2-2-4使用者之角色設定維護 CRU

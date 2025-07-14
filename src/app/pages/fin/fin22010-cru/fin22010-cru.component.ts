@@ -1,22 +1,32 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 //
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 //
 import { ValidationService } from '../../../shared/service/validation.service';
 import { VendorService } from '../../../service/basic/vendor.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { NgIf } from '@angular/common';
 
 //1.2.2.1 請款單作業 CRU
 @Component({
-  selector: 'app-fin22010-cru',
-  templateUrl: './fin22010-cru.component.html',
-  styleUrl: './fin22010-cru.component.scss'
+    selector: 'app-fin22010-cru',
+    templateUrl: './fin22010-cru.component.html',
+    styleUrl: './fin22010-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarComponent, InputTextComponent, DropdownComponent, NgIf, TranslateModule]
 })
 export class FIN22010CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------

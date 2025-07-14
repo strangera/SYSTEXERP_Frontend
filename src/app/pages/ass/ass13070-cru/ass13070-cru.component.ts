@@ -1,20 +1,28 @@
 import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
 
 //3.1.3.7  財產保管單位設定作業 CRU
 @Component({
-  selector: 'app-ass13070-cru',
-  templateUrl: './ass13070-cru.component.html',
-  styleUrl: './ass13070-cru.component.scss'
+    selector: 'app-ass13070-cru',
+    templateUrl: './ass13070-cru.component.html',
+    styleUrl: './ass13070-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS13070CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------

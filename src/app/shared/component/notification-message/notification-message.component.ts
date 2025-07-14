@@ -1,11 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { NotificationService } from './notification.service';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService, PrimeTemplate } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { NgIf } from '@angular/common';
+import { Button, ButtonDirective } from 'primeng/button';
+import { ToastModule } from 'primeng/toast';
+import { DialogModule } from 'primeng/dialog';
 
 @Component({
-  selector: 'app-notification-message',
-  templateUrl: './notification-message.component.html',
-  styleUrl: './notification-message.component.scss'
+    selector: 'app-notification-message',
+    templateUrl: './notification-message.component.html',
+    styleUrl: './notification-message.component.scss',
+    standalone: true,
+    imports: [ConfirmDialogModule, PrimeTemplate, NgIf, Button, ToastModule, DialogModule, ButtonDirective]
 })
 export class NotificationMessageComponent implements OnInit {
   msgBoxHeader = '';

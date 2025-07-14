@@ -1,17 +1,30 @@
 import { Component, OnInit } from '@angular/core';
-import { Validators, FormBuilder, FormGroup } from '@angular/forms';
+import { Validators, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Tlsb200Model } from './tlsb200.model';
 import { map, Observable, finalize } from 'rxjs';
 import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
 import { Column } from '../../../shared/componentkit/table/table.model';
+import {
+  validateMaxLength,
+} from '../../../shared/models/system/validate-field.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { NgIf, AsyncPipe } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { Sysb200Service } from '../../../service/api/sys/sysb200.service';
-import { validateMaxLength } from '../../../shared/models/system/validate-field.model';
 
 @Component({
   selector: 'app-sysb200-cru',
   templateUrl: './sysb200.cru.component.html',
-  styleUrls: ['./sysb200.cru.component.scss']
+  styleUrls: ['./sysb200.cru.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, RadiobuttonComponent, TableComponent, NgIf, AsyncPipe, TranslateModule]
 })
 export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

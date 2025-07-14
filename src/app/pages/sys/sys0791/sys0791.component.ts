@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import {
@@ -18,6 +18,13 @@ import { RoleCodeService } from '../../../service/basic/role-code.service';
 import { SystemTypeDetailService } from '../../../service/basic/system-type-detail.service';
 import { SubsystemService } from '../../../service/basic/subsystem.service';
 import { JobNumberService } from '../../../service/basic/jobnumber.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 const nowDate = new Date();
 
@@ -25,6 +32,18 @@ const nowDate = new Date();
   selector: 'app-sys0791',
   templateUrl: './sys0791.component.html',
   styleUrl: './sys0791.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    DropdownComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 // 作業使用率查詢
 export class SYS0791Component {
@@ -161,7 +180,7 @@ export class SYS0791Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -175,7 +194,7 @@ export class SYS0791Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -188,6 +207,6 @@ export class SYS0791Component {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
 }

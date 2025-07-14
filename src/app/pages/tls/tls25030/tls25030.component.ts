@@ -1,6 +1,6 @@
 import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
 import {
@@ -17,6 +17,16 @@ import { ViolationStatusService } from '../../../service/basic/violation-status.
 import { DeductionItemService } from '../../../service/basic/deduction-item.service';
 
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 const now = new Date();
@@ -24,7 +34,9 @@ const now = new Date();
 @Component({
   selector: 'app-tls25030',
   templateUrl: './tls25030.component.html',
-  styleUrls: ['./tls25030.component.scss']
+  styleUrls: ['./tls25030.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, InputNumberRangeComponent, CalendarRangeComponent, CalendarComponent, TableComponent, TranslateModule]
 })
 export class TLS25030Component {
 
@@ -233,6 +245,6 @@ export class TLS25030Component {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
 }

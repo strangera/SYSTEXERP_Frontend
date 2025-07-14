@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
 import { AuthService } from '../../../service/system/auth.service';
@@ -9,13 +9,25 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { ItemCodeService } from '../../../service/basic/item-code.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { CheckboxModule } from 'primeng/checkbox';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 //
 
 //3.1.5.3  財產目錄
 @Component({
-  selector: 'app-ass15030',
-  templateUrl: './ass15030.component.html',
-  styleUrl: './ass15030.component.scss'
+    selector: 'app-ass15030',
+    templateUrl: './ass15030.component.html',
+    styleUrl: './ass15030.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, RadiobuttonComponent, DropdownComponent, CalendarRangeComponent, CalendarComponent, CheckboxModule, ButtonComponent, TableComponent, TranslateModule]
 })
 export class ASS15030Component extends BasicQpageComponent implements OnInit {
   //

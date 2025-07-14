@@ -1,15 +1,32 @@
 import { Sysb100Service } from './../../../service/api/sys/sysb100.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Sysb100m } from '../../../shared/models/sys/sysb000.module';
 import { SortMeta } from 'primeng/api';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-sysb100.cru',
-  templateUrl: './sysb100.cru.component.html',
-  styleUrl: './sysb100.cru.component.scss',
+    selector: 'app-sysb100.cru',
+    templateUrl: './sysb100.cru.component.html',
+    styleUrl: './sysb100.cru.component.scss',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        NgIf,
+        TranslateModule,
+    ],
 })
 //4.1.1.1 公司基本資料維護作業 CRU
 export class SYSB100CRUComponent

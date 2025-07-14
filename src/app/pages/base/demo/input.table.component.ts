@@ -1,12 +1,37 @@
 import { Component, input, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, Subject, switchMap } from 'rxjs';
 import { LocationData, LocationForm, LocationService } from './location.service';
-import { BasicQueryPageComponent } from '../../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { SystemTypeService } from '../../../../service/basic/system-type.service';
-import { Column } from '../../../../shared/componentkit/table/table.model';
-import { FieldsConfig } from '../../../../shared/componentkit/dropdown-table/dropdown-table.component';
-import { ExpandableEditTableComponent } from '../../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { SystemTypeService } from '../../../service/basic/system-type.service';
+import { Column } from '../../../shared/componentkit/table/table.model';
+import { FieldsConfig, DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DividerModule } from 'primeng/divider';
+import { ImgUploadComponent } from '../../../shared/componentkit/img-upload/img-upload.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TreeDropdownComponent } from '../../../shared/componentkit/tree-dropdown/tree-dropdown.component';
+import { TreeDropdownNestComponent } from '../../../shared/componentkit/tree-dropdown-nest/tree-dropdown-nest.component';
+import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { QueryYearMonthComponent } from '../../../shared/componentkit/query-year-month/query-year-month.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AutoCompleteComponent } from '../../../shared/componentkit/app-autocomplete/app-autocomplete.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { NgIf } from '@angular/common';
 // 定義欄位結構
 interface ColumnDef {
   field: string;
@@ -35,6 +60,38 @@ export interface IMG1001 {
 @Component({
   selector: 'app-input.table',
   templateUrl: './input.table.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DividerModule,
+    ImgUploadComponent,
+    CalendarRangeQuickComponent,
+    CalendarRangeComponent,
+    DropdownTableComponent,
+    InputTextComponent,
+    MultiSelectComponent,
+    TreeDropdownComponent,
+    TreeDropdownNestComponent,
+    FileUploadComponent,
+    InputTextRangeComponent,
+    InputTextareaComponent,
+    InputNumberComponent,
+    InputNumberRangeComponent,
+    DropdownComponent,
+    CalendarComponent,
+    QueryYearMonthComponent,
+    RadiobuttonComponent,
+    EditorTextComponent,
+    TableComponent,
+    ExpandableEditTableComponent,
+    AutoCompleteComponent,
+    TranslateModule,
+    NgIf
+  ],
 })
 export class InputTableComponent extends BasicQueryPageComponent<any> implements OnInit {
 
@@ -215,7 +272,7 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
   }
 
   ngOnInit(): void {
-    this.initializePage('900001', '/demo/demoinputtableCRU');
+    this.initializePage('900001', '/demoCRU');
     this.systemTypeService.getSystemTypes().subscribe(data => {
       this.systemTypeOptions = data;
     });

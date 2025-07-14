@@ -1,17 +1,32 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { SYSBR00Service } from '../../../service/api/sys/sysbr00.service';
 import { finalize } from 'rxjs/operators';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 const QUERY_STORAGE_KEY = 'sysbr00Query';
 
 @Component({
-  selector: 'app-sysbr00',
-  templateUrl: './sysbr00.component.html',
-  styleUrls: ['./sysbr00.component.scss'],
+    selector: 'app-sysbr00',
+    templateUrl: './sysbr00.component.html',
+    styleUrls: ['./sysbr00.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        TableComponent,
+    ],
 })
 export class SYSBR00Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
