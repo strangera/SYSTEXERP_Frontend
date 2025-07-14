@@ -8,6 +8,7 @@ import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { AddButton } from '../../../shared/componentkit/table/table.model';
+import { QuerySYSB200Request, Sysb200Service } from '../../../service/api/sys/sysb200.service';
 export const enum POStatus {
   已申請 = '0',
   取消 = '1',
@@ -27,7 +28,7 @@ export interface VendorData {
   VEN_Address: string;
   VEN_Boss: string;
   VEN_BossTitle: string;
-  VEN_GUEmail: string;
+  VEN_BossEmail: string;
   VEN_BossTel: string;
   VEN_BossID: string;
   VEN_BossAddr: string;
@@ -36,7 +37,7 @@ export interface VendorData {
   VEN_WebSite: string;
   VEN_Remark: string;
   VEN_PayConditionDay: number;
-  VEN_BankNo: string;
+  VEN_BNK_No: string;
 }
 
 @Component({
@@ -51,11 +52,11 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     VEN_CName: ['', [Validators.maxLength(60)]],
     VEN_EName: ['', [Validators.maxLength(60)]],
     VEN_SName: ['', [Validators.maxLength(10)]],
-    VEN_BankNo: ['', [this.validationService.numberValidator, Validators.maxLength(10)]],
+    VEN_BNK_No: ['', [this.validationService.numberValidator, Validators.maxLength(10)]],
     VEN_Address: ['', [Validators.maxLength(100)]],
     VEN_Boss: ['', [Validators.maxLength(12)]],
     VEN_BossTitle: ['', [Validators.maxLength(16)]],
-    VEN_GUEmail: ['', [Validators.maxLength(60)]],
+    VEN_BossEmail: ['', [Validators.maxLength(60)]],
     VEN_BossTel: ['', [Validators.maxLength(15)]],
     VEN_BossID: ['', [Validators.maxLength(10)]],
     VEN_BossAddr: ['', [Validators.maxLength(100)]],
@@ -142,7 +143,8 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
   constructor(
     private activatedRoute: ActivatedRoute,
     private validationService: ValidationService,
-    private sysbc00Service: Sysbc00Service
+    private sysbc00Service: Sysbc00Service,
+    private sysb200Service: Sysb200Service
   ) {
     super();
   }
@@ -151,6 +153,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     this.initializePage('SYSB200', 'sys/sysb200cru');
     this.loadOptions();
     this.handleQueryRestore(this.queryForm, 'SYSB200', (form) => this.onSubmit(form));
+
   }
 
   loadOptions() {
@@ -176,75 +179,52 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
   }
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
-      this.data = [
-        {
-          VEN_No: 'A001',
-          VEN_Status: '0', // 未審核
-          VEN_Uniform: '12345678',
-          VEN_CName: '台灣測試股份有限公司',
-          VEN_EName: 'Taiwan Test Co.',
-          VEN_SName: '台測',
-          VEN_Address: '台北市信義區松智路',
-          VEN_Boss: '林小華',
-          VEN_BossTitle: '董事長',
-          VEN_GUEmail: 'boss1@test.com',
-          VEN_BossTel: '0911111111',
-          VEN_BossID: 'A123456789',
-          VEN_BossAddr: '台北市內湖區',
-          VEN_Tel: '0222222222',
-          VEN_Fax: '0222222223',
-          VEN_WebSite: 'https://taiwantest.com',
-          VEN_Remark: '第一次測試資料',
-          VEN_PayConditionDay: 30,
-          VEN_BankNo: '004'
-        },
-        {
-          VEN_No: 'A002',
-          VEN_Status: '1', // 已審核
-          VEN_Uniform: '87654321',
-          VEN_CName: '巨匠國際有限公司',
-          VEN_EName: 'Master Intl Ltd.',
-          VEN_SName: '巨匠',
-          VEN_Address: '新北市新店區寶橋路',
-          VEN_Boss: '陳美麗',
-          VEN_BossTitle: '總經理',
-          VEN_GUEmail: 'boss2@test.com',
-          VEN_BossTel: '0922222222',
-          VEN_BossID: 'B223456789',
-          VEN_BossAddr: '桃園市中壢區',
-          VEN_Tel: '0333333333',
-          VEN_Fax: '0333333334',
-          VEN_WebSite: 'https://masterintl.com',
-          VEN_Remark: '第二筆測試資料',
-          VEN_PayConditionDay: 45,
-          VEN_BankNo: '005'
-        },
-        {
-          VEN_No: 'A003',
-          VEN_Status: '0', // 未審核
-          VEN_Uniform: '56781234',
-          VEN_CName: '優秀科技股份有限公司',
-          VEN_EName: 'Excellent Tech Inc.',
-          VEN_SName: '優科',
-          VEN_Address: '台中市南屯區公益路',
-          VEN_Boss: '張大仁',
-          VEN_BossTitle: '技術長',
-          VEN_GUEmail: 'boss3@test.com',
-          VEN_BossTel: '0933333333',
-          VEN_BossID: 'C323456789',
-          VEN_BossAddr: '高雄市左營區',
-          VEN_Tel: '0444444444',
-          VEN_Fax: '0444444445',
-          VEN_WebSite: 'https://excellenttech.com',
-          VEN_Remark: '第三筆測試資料',
-          VEN_PayConditionDay: 60,
-          VEN_BankNo: '700'
-        },
-      ];
+      // 🔥 🔥 🔥 這裡開始建立 queryData
+      const raw = form.getRawValue();
 
-      this.totalRecords = this.data.length;
-      this.loading = false;
-      this.messageService.unblockUi();
+      const queryData: QuerySYSB200Request = {
+        request: {
+          VEN_NoList: raw.VEN_No,
+          VEN_Status: raw.VEN_Status.join(','),
+          VEN_Uniform: raw.VEN_Uniform,
+          VEN_Name: raw.VEN_Name,
+          VEN_EngName: raw.VEN_EName,
+          VEN_ShortName: raw.VEN_ShortName,
+          VEN_BNK_No: raw.VEN_BNK_No,
+          VEN_Address: raw.VEN_Address,
+          VEN_Boss: raw.VEN_Boss,
+          VEN_BossTitle: raw.VEN_BossTitle,
+          VEN_BossEmail: raw.VEN_BossEmail,
+          VEN_BossTel: raw.VEN_BossTel,
+          VEN_BossID: raw.VEN_BossID,
+          VEN_BossAddr: raw.VEN_BossAddr,
+          VEN_Tel: raw.VEN_Tel,
+          VEN_Fax: raw.VEN_Fax,
+          VEN_Remark: raw.VEN_Remark,
+          VEN_PayConditionDay: raw.VEN_PayConditionDay === '' ? null : raw.VEN_PayConditionDay,
+          PageSize: raw.pageSize,
+          PageIndex: raw.pageIndex,
+          SortBy: raw.SortBy,
+          OrderBy: '',
+          Offset: 0,
+          VEN_GUIAddr: '',
+        }
+      };
+
+      this.sysb200Service.querySYSB200(queryData).subscribe({
+        next: (res) => {
+          this.data = res.Data ?? [];
+          this.totalRecords = (res as any).Total ?? this.data.length;
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: () => {
+          this.loading = false;
+          this.messageService.errorBubble('查詢失敗，請稍後再試');
+        },
+      });
     });
   }
+
+
 }
