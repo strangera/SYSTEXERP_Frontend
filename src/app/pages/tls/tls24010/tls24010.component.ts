@@ -21,30 +21,30 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // 交易補登作業
 @Component({
-    selector: 'app-tls24010',
-    templateUrl: './tls24010.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        RadiobuttonComponent,
-        CalendarComponent,
-        DropdownComponent,
-        InputNumberComponent,
-        TableComponent,
-        MenuModule,
-        TranslateModule,
-    ],
+  selector: 'app-tls24010',
+  templateUrl: './tls24010.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RadiobuttonComponent,
+    CalendarComponent,
+    DropdownComponent,
+    InputNumberComponent,
+    TableComponent,
+    MenuModule,
+    TranslateModule,
+  ],
 })
 export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> implements OnInit {
   queryForm = this.formBuilder.group({
     TXN_GUIPaper: ['', [Validators.required]],/*補登類別 → TXN_GUIPaper */
     TXN_Date: [new Date(), [Validators.required]],    /*銷售日期 → POS5006.TXN_Date */
-    ECR_No: [''], /*收銀機號 → ECR_No */
-    TLT_No: [''], /*櫃編 → TLT_No */
+    ECR_No: ['', [Validators.required]], /*收銀機號 → ECR_No */
+    TLT_No: ['', [Validators.required]], /*櫃編 → TLT_No */
     TXN_No: [null as number | null, [Validators.maxLength(8), Validators.max(99999999)]],  /*交易序號 → TXN_No */
     ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }]), // 分頁和排序參數
   });

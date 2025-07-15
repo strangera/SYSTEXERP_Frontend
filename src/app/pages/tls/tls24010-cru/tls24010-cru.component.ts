@@ -2,7 +2,7 @@ import { InputTextComponent } from './../../../shared/componentkit/input-text/in
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TLS24010Data } from '../../../service/api/tls/tls24010.service';
+import { POS5007Data, POS5008Data, TLS24010Data, Tls24010Service } from '../../../service/api/tls/tls24010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
@@ -18,7 +18,7 @@ import { DropDownListService, IDropdownItem } from '../../../service/utility/dro
 import { ValidationService } from '../../../shared/service/validation.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { POS5007Columns, TXN_GUI_CarrTypeOptions, txnStatusOptions, txnTaxTypeOptions } from './tls24010-cru.model';
+import { POS5007Columns, POS5008Columns, TXN_GUI_CarrTypeOptions, txnStatusOptions, txnTaxTypeOptions } from './tls24010-cru.model';
 import { Column } from '../../../shared/componentkit/table/table.model';
 @Component({
   selector: 'app-tls24010-cru',
@@ -58,16 +58,21 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_PrintTimes: [null], //紙本發票列印狀態(若列印電子發票紙本證明連則為1，其他則為0) 顯示 是/否
     TXN_GUI_Donate: ['N'], //發票捐贈狀態，Y=是、N=否
     TXN_GUILoveCode: [{ value: '', disabled: true }], //捐贈社福團體代碼，若TXN_GUI_Donate為Y，則必須輸入此欄位
-    POS5007List: this.formBuilder.array([]), //POS5007List交易明細資料
+    POS5007List: this.formBuilder.array([]), //POS5007List 銷售商品 資料
+    POS5008List: this.formBuilder.array([]), //POS5008List 支付工具 資料
   }, { validators: this.validationService.guiNumberRangeValidator('TXN_GUIBegNo', 'TXN_GUIEndNo') });
   USR_NoOptions: IDropdownItem[] = [];
   txnStatusOptions = txnStatusOptions
   txnTaxTypeOptions = txnTaxTypeOptions
   TXN_GUI_CarrTypeOptions = TXN_GUI_CarrTypeOptions;
+  POS5007SelectedItems: POS5007Data[] = [];
   POS5007Columns: Column[] = POS5007Columns;
+  POS5008SelectedItems: POS5008Data[] = [];
+  POS5008Columns: Column[] = POS5008Columns;
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly validationService: ValidationService,
+    private readonly tls24010Service: Tls24010Service,
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS24010', this.dataForm);
@@ -95,8 +100,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       if (begNoValue === 'Y') {
         this.dataForm.get('TXN_TaxType')?.disable();
         this.dataForm.get('TXN_TaxType')?.setValue('2', { emitEvent: false }); // 零稅
-        this.dataForm.get('TXN_TaxFreeCertNo')?.enable();
-        this.dataForm.get('TXN_TaxFreeCertNo')?.setValidators([Validators.required, Validators.maxLength(20)]);
       } else {
         this.dataForm.get('TXN_TaxType')?.enable();
       }

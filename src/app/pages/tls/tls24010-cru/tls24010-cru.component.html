@@ -94,10 +94,18 @@
         <app-input-text class="col-12 md:col-6 lg:col-3" label="捐贈社福團體代碼" [control]="dataForm.controls.TXN_GUILoveCode"
           [submitted]="submitted" />
       </div>
-      <hr />
       <div class="grid p-fluid card">
-        <app-table class="col-12" [data]="dataForm.controls.POS5007List.value" [columns]="POS5007Columns"
-          [showDetail]="false" [showEdit]="false" [showRowEdit]="true" [loading]="loading">
+        <app-table class="col-12" title="銷售商品" tableKey="POS5007Table" dataKey="id"
+          [data]="dataForm.controls.POS5007List.value" [columns]="POS5007Columns" [showCheckBox]="true"
+          [selectedItems]="POS5007SelectedItems" (selectionChange)="POS5007SelectedItems = $event" [showDetail]="false"
+          [showEdit]="false" [showRowEdit]="true" [loading]="loading" [showInsert]="true">
+        </app-table>
+      </div>
+      <div class="grid p-fluid card">
+        <app-table class="col-12" title="支付工具" tableKey="POS5008Table" dataKey="id"
+          [data]="dataForm.controls.POS5008List.value" [columns]="POS5008Columns" [showCheckBox]="true"
+          [selectedItems]="POS5008SelectedItems" (selectionChange)="POS5008SelectedItems = $event" [showManage]="false"
+          [loading]="loading" [showInsert]="false" [showDelete]="false">
         </app-table>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
