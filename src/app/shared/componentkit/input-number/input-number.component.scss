@@ -1,5 +1,8 @@
 ::ng-deep {
   #input-number {
+    .p-inputgroup {
+      position: relative;
+    }
     .p-inputnumber.p-inputnumber-buttons-stacked .p-inputnumber-button {
       background-color: transparent;
       color: #475569;
@@ -12,8 +15,9 @@
     }
     .p-inputgroup-addon {
       background: transparent;
-      border-left: 0;
-      padding: 0;
+      position: absolute;
+      right: 0;
+      border: 0;
     }
   }
 }

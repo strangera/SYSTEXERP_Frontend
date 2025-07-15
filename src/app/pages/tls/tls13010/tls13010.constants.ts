@@ -110,6 +110,13 @@ export const COMM_COMP_TYPE_OPTIONS = {
   // '1': '含稅',
   '2': '除稅'
 } as const;
+
+// 合約狀態
+export const APPROVE_STATUS_OPTIONS = {
+  '1': '未審核',
+  '2': '已審核',
+  '3': '已作廢',
+} as const;
 // ========== 格式化函數 ==========
 
 // 通用的多選格式化函數
@@ -186,6 +193,11 @@ export const formatMeterType = (value: string): string => {
 // 包底類別格式化
 export const formatTltCtypeMototal = (value: string): string => {
   return formatSingleOption(value, TLT_CTYPE_MTOTAL_OPTIONS);
+};
+
+// 合約狀態格式化
+export const formatApproveStatus = (value: string): string => {
+  return formatSingleOption(value, APPROVE_STATUS_OPTIONS);
 };
 
 // ========== 數字格式化 ==========

@@ -23,7 +23,6 @@ export class DataTypeService {
     { value: 10, label: '發票配號安全存量資料' },
     { value: 11, label: '發票列印訊息' },
     { value: 12, label: '清機時間設定' },
-    { value: 13, label: '發票字軌資料' },
     { value: 14, label: '停車時數選單設定檔' },
     { value: 15, label: '銀行CARD_BIN' },
   ];

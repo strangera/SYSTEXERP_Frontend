@@ -9,20 +9,17 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 import {
-  ConditionDataItem,
   ContractInfo,
   FixedRentCondition,
   BaseRentHigherCondition,
   BaseCommissionCondition,
   GraduatedCommissionCondition,
   BaseTierCondition,
-  SubmitDataStructure,
   GeneralCommissionCondition,
   ConditionItem,
   WorkflowStep,
-  UnifiedCommissionResponse,
   RentSettingApiData,
-  CommissionItem
+  CleanSubmitData
 } from '../tls13010/tls13010.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -41,7 +38,7 @@ import { Button } from 'primeng/button';
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, DialogModule, PrimeTemplate, Button]
 })
-export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataItem> implements OnInit, OnDestroy {
+export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem> implements OnInit, OnDestroy {
 
   private discountOptions: any[] = [];
   private subscriptions: Subscription[] = [];
@@ -54,15 +51,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   currentTalentId: string = '';
   currentContractData: any = null;
   contractInfoData: ContractInfo[] = [];
-
-  // 🎯 Next2 整合資料
-  commissionDataFromNext2: CommissionItem[] = [];
-  hasNext2Data = false;
-
-  // 🎯 新增：暫存版本控制
-  private next2DataVersion = 0;
-  private next3DataVersion = 0;
-  private lastSyncVersion = 0;
 
   // 條件設定資料
   fixedRentItems: FixedRentCondition[] = [];
@@ -163,8 +151,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
     this.loadDiscountOptions().then(() => {
       this.loadWorkflowData();
-      this.setupNext2DataWatcher();
-      this.setupNext2EventListener();
     });
   }
 
@@ -176,235 +162,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
     // 清理訂閱
     this.subscriptions.forEach(sub => sub.unsubscribe());
-  }
-
-  // 🎯 新增：設定 Next2 資料監聽器
-  private setupNext2DataWatcher(): void {
-    const watcherSubscription = setInterval(() => {
-      this.checkNext2DataChanges();
-    }, 1000); // 每秒檢查一次
-
-    // 在組件銷毀時清除定時器
-    this.subscriptions.push({
-      unsubscribe: () => clearInterval(watcherSubscription)
-    } as any);
-  }
-
-  // 🎯 新增：設定 Next2 事件監聽器
-  private setupNext2EventListener(): void {
-    const eventListener = (event: CustomEvent) => {
-      console.log('📡 收到 Next2 資料變更事件:', event.detail);
-
-      const commissionType = this.contractInfoData[0]?.tlt_term_type;
-      if (this.shouldIntegrateNext2Data(commissionType || '')) {
-        // 立即執行同步檢查
-        this.checkNext2DataChanges();
-      }
-    };
-
-    window.addEventListener('next2DataChanged', eventListener as EventListener);
-
-    // 在組件銷毀時清除事件監聽器
-    this.subscriptions.push({
-      unsubscribe: () => window.removeEventListener('next2DataChanged', eventListener as EventListener)
-    } as any);
-  }
-
-  // 🎯 新增：檢查 Next2 資料變更
-  private checkNext2DataChanges(): void {
-    const currentNext2Data = this.contractFlowService.getStep3Data();
-    const currentVersion = this.contractFlowService.getDataVersion('step3');
-
-    if (currentVersion > this.lastSyncVersion) {
-      console.log('🔄 偵測到 Next2 資料變更...');
-
-      // 🎯 ⭐ 重要：更精確的檢查是否有修改
-      const hasModifications = this.baseRentHigherItems.some(item => {
-        const hasStatusChange = item._status === 'modified' || item._status === 'new';
-        const isUserAdded = !item._fromNext2;
-
-        console.log(`🔍 檢查項目 ${item.id}:`, {
-          _fromNext2: item._fromNext2,
-          _status: item._status,
-          hasStatusChange,
-          isUserAdded,
-          shouldSkipSync: hasStatusChange || isUserAdded
-        });
-
-        return hasStatusChange || isUserAdded;
-      });
-
-      if (hasModifications) {
-        console.log('🔒 Next3 有修改，更新版本號但不同步');
-        this.lastSyncVersion = currentVersion;
-        // 🎯 ⭐ 重要：有修改時，立即暫存當前狀態
-        this.saveConditionDataToWorkflow();
-        return;
-      }
-
-      // 🎯 沒有修改才進行同步
-      console.log('✅ 沒有用戶修改，進行 Next2 同步');
-      this.lastSyncVersion = currentVersion;
-      this.syncFromNext2Data(currentNext2Data);
-
-      // 🎯 新增：檢查同步後的資料筆數一致性
-      this.validateSyncConsistency();
-    }
-  }
-
-  // 🎯 修正：同步 Next2 資料
-  private syncFromNext2Data(next2Data: CommissionItem[]): void {
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-
-    if (!this.shouldIntegrateNext2Data(commissionType || '')) {
-      return;
-    }
-
-    console.log('🔄 同步 Next2 資料到 Next3...');
-
-    // 🎯 ⭐ 重要：保留所有非來自 Next2 的項目
-    const nonNext2Items = this.baseRentHigherItems.filter(item => !item._fromNext2);
-
-    // 🎯 保留已修改的來自 Next2 的項目
-    const modifiedNext2Items = this.baseRentHigherItems.filter(item =>
-      item._fromNext2 && item._status === 'modified'
-    );
-
-    console.log('📋 保留的非 Next2 項目:', nonNext2Items);
-    console.log('📋 保留的已修改 Next2 項目:', modifiedNext2Items);
-
-    // 🎯 更新 Next2 資料
-    this.commissionDataFromNext2 = next2Data || [];
-    this.hasNext2Data = this.commissionDataFromNext2.length > 0;
-
-    // 🎯 重新開始建立 baseRentHigherItems
-    this.baseRentHigherItems = [...nonNext2Items, ...modifiedNext2Items];
-
-    // 🎯 重新生成來自 Next2 的項目（但要避免重複）
-    if (this.hasNext2Data) {
-      this.generateConditionDataFromNext2WithUpdate(commissionType || '');
-    }
-
-    // 🎯 ⭐ 重要：立即暫存到工作流程
-    this.saveConditionDataToWorkflow();
-    this.cdr.detectChanges();
-
-    console.log('✅ Next2 資料同步完成，避免重複');
-  }
-
-  private generateConditionDataFromNext2WithUpdate(commissionType: string): void {
-    console.log('🔄 === 開始生成條件設定資料（避免重複）===');
-
-    if (!this.shouldIntegrateNext2Data(commissionType)) {
-      return;
-    }
-
-    if (commissionType === '2') {
-      const validCommissionData = this.commissionDataFromNext2.filter(commission => {
-        const isValid = commission &&
-          (commission.commissionType || commission.id) &&
-          commission._status !== 'deleted';
-        return isValid;
-      });
-
-      console.log('📋 有效的抽成項目數量:', validCommissionData.length);
-
-      validCommissionData.forEach((commission, index) => {
-        console.log(`🔄 處理抽成項目 ${index + 1}:`, commission.id);
-
-        // 🎯 處理折扣設定明細
-        if (commission.discountSettingItems && Array.isArray(commission.discountSettingItems)) {
-          const validDiscountItems = commission.discountSettingItems.filter(item =>
-            item && item._status !== 'deleted'
-          );
-
-          validDiscountItems.forEach((discount, discountIndex) => {
-            const itemId = `from_next2_base_rent_${commission.id}_${discount.id || discountIndex}`;
-
-            // 🎯 ⭐ 重要：檢查是否已存在且被修改
-            const existingItem = this.baseRentHigherItems.find(item => item.id === itemId);
-
-            if (existingItem && existingItem._status === 'modified') {
-              console.log(`⚪ 跳過已修改的項目: ${itemId}`);
-              return; // 跳過已修改的項目
-            }
-
-            // 🎯 如果項目不存在或未被修改，則新增/更新
-            if (!existingItem) {
-              const baseRentHigherItem: BaseRentHigherCondition = {
-                id: itemId,
-                talent_id: this.currentTalentId,
-                tlt_id: commission.commissionType || '0',
-                cag_bdate: this.formatDate(discount.startDate) || this.getDefaultStartDate(),
-                cag_edate: this.formatDate(discount.endDate) || this.getDefaultEndDate(),
-                base_rent: 0,
-                cag_charge_rate: discount.rate || 0,
-                _status: 'new',
-                _fromNext2: true,
-                _readonly: false
-              };
-
-              this.baseRentHigherItems.push(baseRentHigherItem);
-              console.log(`✅ 新增項目: ${itemId}`);
-            } else {
-              // 🎯 更新未修改的項目
-              existingItem.cag_charge_rate = discount.rate || 0;
-              existingItem.cag_bdate = this.formatDate(discount.startDate) || this.getDefaultStartDate();
-              existingItem.cag_edate = this.formatDate(discount.endDate) || this.getDefaultEndDate();
-              console.log(`🔄 更新項目: ${itemId}`);
-            }
-          });
-        }
-
-        // 🎯 如果沒有折扣設定明細，建立一個基本項目
-        if (!commission.discountSettingItems || commission.discountSettingItems.length === 0) {
-          const itemId = `from_next2_base_rent_main_${commission.id}`;
-          const existingItem = this.baseRentHigherItems.find(item => item.id === itemId);
-
-          if (!existingItem) {
-            const baseRentHigherItem: BaseRentHigherCondition = {
-              id: itemId,
-              talent_id: this.currentTalentId,
-              tlt_id: commission.commissionType || '0',
-              cag_bdate: this.getDefaultStartDate(),
-              cag_edate: this.getDefaultEndDate(),
-              base_rent: 0,
-              cag_charge_rate: 0,
-              _status: 'new',
-              _fromNext2: true,
-              _readonly: false
-            };
-
-            this.baseRentHigherItems.push(baseRentHigherItem);
-            console.log(`✅ 新增基本項目: ${itemId}`);
-          }
-        }
-      });
-    }
-
-    console.log('📋 最終底租抽成取高者數量:', this.baseRentHigherItems.length);
-    this.cdr.detectChanges();
-  }
-
-  // 🎯 新增：取得現有的 Next3 自建項目
-  private getExistingNext3Items(commissionType: string): any[] {
-    const existingItems: any[] = [];
-
-    if (commissionType === '2') {
-      // 底租抽成取高者：保留非來自 Next2 的項目
-      existingItems.push(...this.baseRentHigherItems.filter(item => !item._fromNext2));
-    }
-
-    return existingItems;
-  }
-
-  // 🎯 新增：合併 Next3 項目
-  private mergeNext3Items(existingNext3Items: any[], commissionType: string): void {
-    if (commissionType === '2') {
-      // 將現有的 Next3 項目加回到陣列末尾
-      this.baseRentHigherItems.push(...existingNext3Items);
-      console.log(`✅ 合併底租抽成取高者項目，總數: ${this.baseRentHigherItems.length}`);
-    }
   }
 
   private loadWorkflowData(): void {
@@ -432,8 +189,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       // 🎯 載入資料的優先順序
       this.loadDataWithPriority();
 
-      // 🎯 設定定時檢查 Next2 資料變更
-      this.setupNext2DataWatcher();
     } else {
       console.warn('❌ 沒有有效的工作流程資料，重導向到前一步');
       console.warn('   - 缺少 contractId 或新增模式標記');
@@ -485,46 +240,28 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       currentTalentId: this.currentTalentId
     });
 
-    // 🎯 第一優先：檢查是否有 Next3 暫存資料
+    // 第一優先：檢查是否有 Next3 暫存資料
     const savedNext3Data = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
 
     if (savedNext3Data && Array.isArray(savedNext3Data) && savedNext3Data.length > 0) {
       console.log('📦 使用 Next3 暫存資料，項目數量:', savedNext3Data.length);
       this.loadConditionDataFromCache(savedNext3Data);
-
-      // 🎯 ⭐ 修復：只載入 Next2 資料用於監聽，但不要重新生成條件設定
-      this.loadNext2CommissionDataForMonitoringOnly();
-
       this.conditionDataLoaded = true;
       this.dataLoaded = true;
       return;
     }
 
-    // 🎯 第二優先：從 Next2 載入並生成條件設定
-    this.loadNext2CommissionData();
-
-    // 🎯 第三優先：根據模式載入其他條件設定
-    setTimeout(() => {
-      if (this.contractFlowService.isNewContractMode()) {
-        console.log('🆕 新增模式：初始化空的條件設定');
-        this.initializeNewContractConditionData(commissionType || '3');
-      } else {
-        console.log('📝 編輯模式：載入其他條件設定');
-        this.loadOtherConditionData();
-      }
-    }, 100);
+    // 第二優先：根據模式載入
+    if (this.contractFlowService.isNewContractMode()) {
+      console.log('🆕 新增模式：初始化空的條件設定');
+      this.initializeNewContractConditionData(commissionType || '3');
+    } else {
+      console.log('📝 編輯模式：載入條件設定');
+      this.loadOtherConditionData();
+    }
   }
   private initializeNewContractConditionData(commissionType: string): void {
     console.log('🆕 新增模式：初始化條件設定，抽成類型:', commissionType);
-
-    // 🎯 如果已經有 Next2 資料生成的條件設定，不要覆蓋
-    if (this.hasNext2Data && this.shouldIntegrateNext2Data(commissionType)) {
-      console.log('✅ 已有 Next2 生成的條件設定，跳過初始化');
-      this.conditionDataLoaded = true;
-      this.dataLoaded = true;
-      return;
-    }
-
     // 🎯 新增模式：根據抽成類型初始化空的條件設定
     this.initializeConditionDataByCommissionType(commissionType);
 
@@ -534,65 +271,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     console.log('✅ 新增模式條件設定初始化完成');
   }
 
-  // 🎯 載入 Next2 的抽成設定資料
-  private loadNext2CommissionData(): void {
-    console.log('🔍 載入 Next2 抽成設定資料...');
-
-    const step3Data = this.contractFlowService.getStep3Data();
-    console.log('📋 Step3 原始資料:', step3Data);
-
-    if (step3Data && Array.isArray(step3Data) && step3Data.length > 0) {
-      this.commissionDataFromNext2 = step3Data;
-      this.hasNext2Data = true;
-
-      console.log('✅ 載入 Next2 抽成設定資料成功');
-      console.log('📋 資料數量:', this.commissionDataFromNext2.length);
-      console.log('📋 模式:', this.contractFlowService.isNewContractMode() ? '新增模式' : '編輯模式');
-
-      // 🎯 立即檢查是否需要生成條件設定
-      const commissionType = this.contractInfoData[0]?.tlt_term_type;
-      if (this.shouldIntegrateNext2Data(commissionType || '')) {
-        this.generateConditionDataFromNext2(commissionType || '');
-
-        // 🎯 ⭐ 重要：生成後立即暫存
-        this.saveConditionDataToWorkflow();
-
-        this.conditionDataLoaded = true;
-        this.dataLoaded = true;
-      }
-    } else {
-      console.log('📭 沒有 Next2 抽成設定資料');
-      this.hasNext2Data = false;
-
-      // 🎯 新增模式下，沒有 Next2 資料是正常的
-      if (this.contractFlowService.isNewContractMode()) {
-        console.log('🆕 新增模式：沒有 Next2 資料是正常情況');
-      }
-    }
-  }
-
-  // 🎯 新增：只載入 Next2 資料用於監聽，不重新生成條件設定
-  private loadNext2CommissionDataForMonitoringOnly(): void {
-    console.log('🔍 載入 Next2 抽成設定資料（僅供監聽）...');
-
-    const step3Data = this.contractFlowService.getStep3Data();
-    console.log('📋 Step3 原始資料:', step3Data);
-
-    if (step3Data && Array.isArray(step3Data) && step3Data.length > 0) {
-      this.commissionDataFromNext2 = step3Data;
-      this.hasNext2Data = true;
-
-      console.log('✅ 載入 Next2 抽成設定資料成功（僅供監聽）');
-      console.log('📋 資料數量:', this.commissionDataFromNext2.length);
-
-      // 🎯 ⭐ 重要：初始化版本號，避免監聽器誤判為變更
-      this.lastSyncVersion = this.contractFlowService.getDataVersion('step3');
-      console.log('🔒 保持現有的條件設定資料，不重新生成，初始版本號:', this.lastSyncVersion);
-    } else {
-      console.log('📭 沒有 Next2 抽成設定資料');
-      this.hasNext2Data = false;
-    }
-  }
 
   // 🎯 載入其他條件設定資料
   private loadOtherConditionData(): void {
@@ -603,14 +281,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     if (this.contractFlowService.isNewContractMode()) {
       console.log('🆕 新增模式：跳過 API 載入，使用空的條件設定');
       this.initializeConditionDataByCommissionType(commissionType);
-      this.conditionDataLoaded = true;
-      this.dataLoaded = true;
-      return;
-    }
-
-    // 🎯 如果已經有 Next2 資料生成的條件設定，不要覆蓋
-    if (this.hasNext2Data && this.shouldIntegrateNext2Data(commissionType)) {
-      console.log('✅ 已有 Next2 生成的條件設定，跳過載入');
       this.conditionDataLoaded = true;
       this.dataLoaded = true;
       return;
@@ -628,118 +298,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
     this.conditionDataLoaded = true;
     this.dataLoaded = true;
-  }
-
-
-  // 🎯 檢查是否需要整合 Next2 資料
-  private shouldIntegrateNext2Data(commissionType: string): boolean {
-    const shouldIntegrate = commissionType === '2'; // 只有底租抽成取高者
-    console.log('🔍 檢查是否需要整合 Next2 資料:', {
-      commissionType: commissionType,
-      shouldIntegrate: shouldIntegrate
-    });
-    return shouldIntegrate;
-  }
-
-  // 🎯 從 Next2 資料生成條件設定
-  private generateConditionDataFromNext2(commissionType: string): void {
-    console.log('🔄 === 開始生成條件設定資料 ===');
-
-    if (!this.shouldIntegrateNext2Data(commissionType)) {
-      return;
-    }
-
-    // 🎯 只處理底租抽成取高者
-    if (commissionType === '2') {
-      // 🎯 ⭐ 重要：只清空未修改的來自 Next2 的項目
-      const existingModifiedItems = this.baseRentHigherItems.filter(item =>
-        item._fromNext2 && item._status === 'modified'
-      );
-
-      console.log('📋 保留已修改的 Next2 項目:', existingModifiedItems);
-
-      // 🎯 清空未修改的來自 Next2 的項目
-      this.baseRentHigherItems = this.baseRentHigherItems.filter(item =>
-        !item._fromNext2 || item._status === 'modified'
-      );
-
-      const validCommissionData = this.commissionDataFromNext2.filter(commission => {
-        const isValid = commission &&
-          (commission.commissionType || commission.id) &&
-          commission._status !== 'deleted';
-        return isValid;
-      });
-
-      console.log('📋 有效的抽成項目數量:', validCommissionData.length);
-      this.generateBaseRentHigherConditions(validCommissionData);
-    }
-
-    this.cdr.detectChanges();
-  }
-
-  // 🎯 生成底租抽成取高者條件設定
-  private generateBaseRentHigherConditions(validCommissionData: CommissionItem[]): void {
-    console.log('🔄 === 生成底租抽成取高者條件設定 ===');
-
-    validCommissionData.forEach((commission, index) => {
-      console.log(`🔄 處理抽成項目 ${index + 1}:`, {
-        id: commission.id,
-        commissionType: commission.commissionType,
-        commissionTypeName: commission.commissionTypeName,
-        discountSettingItems: commission.discountSettingItems?.length || 0
-      });
-
-      // 🎯 處理折扣設定明細
-      if (commission.discountSettingItems && Array.isArray(commission.discountSettingItems)) {
-        const validDiscountItems = commission.discountSettingItems.filter(item => {
-          const isValid = item && item._status !== 'deleted';
-          return isValid;
-        });
-
-        console.log(`📋 有效的折扣設定項目數量: ${validDiscountItems.length}`);
-
-        if (validDiscountItems.length > 0) {
-          validDiscountItems.forEach((discount, discountIndex) => {
-            const baseRentHigherItem: BaseRentHigherCondition = {
-              id: `from_next2_base_rent_${commission.id}_${discount.id || discountIndex}`,
-              talent_id: this.currentTalentId,
-              tlt_id: commission.commissionType || '0',
-              cag_bdate: this.formatDate(discount.startDate) || this.getDefaultStartDate(),
-              cag_edate: this.formatDate(discount.endDate) || this.getDefaultEndDate(),
-              base_rent: 0, // 預設租金，可編輯
-              cag_charge_rate: discount.rate || 0, // 來自 Next2 的抽成率
-              _status: 'new', // 🎯 標記為新項目，確保會被暫存
-              _fromNext2: true,
-              _readonly: false
-            };
-
-            this.baseRentHigherItems.push(baseRentHigherItem);
-            console.log(`   ✅ 已新增底租抽成取高者項目:`, baseRentHigherItem);
-          });
-        }
-      }
-
-      // 🎯 如果沒有折扣設定明細，建立一個基本項目
-      if (!commission.discountSettingItems || commission.discountSettingItems.length === 0) {
-        const baseRentHigherItem: BaseRentHigherCondition = {
-          id: `from_next2_base_rent_main_${commission.id}`,
-          talent_id: this.currentTalentId,
-          tlt_id: commission.commissionType || '0',
-          cag_bdate: this.getDefaultStartDate(),
-          cag_edate: this.getDefaultEndDate(),
-          base_rent: 0,
-          cag_charge_rate: 0,
-          _status: 'new', // 🎯 標記為新項目
-          _fromNext2: true,
-          _readonly: false
-        };
-
-        this.baseRentHigherItems.push(baseRentHigherItem);
-        console.log(`   ✅ 已新增基本底租抽成取高者項目:`, baseRentHigherItem);
-      }
-    });
-
-    console.log('📋 最終底租抽成取高者條件設定數量:', this.baseRentHigherItems.length);
   }
 
   // 🎯 從 Step4 暫存載入條件資料
@@ -860,9 +418,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
         this.fixedRentItems = [this.createFixedRentItem()];
         break;
       case '2':
-        if (!this.hasNext2Data) {
-          this.baseRentHigherItems = [this.createBaseRentHigherItem()];
-        }
+        this.baseRentHigherItems = [this.createBaseRentHigherItem()];
         break;
       case '4':
         this.baseCommissionItems = [this.createBaseCommissionItem()];
@@ -985,7 +541,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   // 🎯 建立條件項目的工廠方法
   private createFixedRentItem(): FixedRentCondition {
     return {
-      id: Date.now() + Math.random(),
       talent_id: this.currentTalentId,
       tlt_id: '',
       cag_bdate: this.getDefaultStartDate(),
@@ -998,7 +553,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
   private createBaseRentHigherItem(): BaseRentHigherCondition {
     return {
-      id: Date.now() + Math.random(),
       talent_id: this.currentTalentId,
       tlt_id: '',
       cag_bdate: this.getDefaultStartDate(),
@@ -1014,7 +568,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
   private createBaseCommissionItem(): BaseCommissionCondition {
     return {
-      id: Date.now() + Math.random(),
       talent_id: this.currentTalentId,
       tlt_id: '',
       cag_bdate: this.getDefaultStartDate(),
@@ -1028,7 +581,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
   private createGraduatedItem(): GraduatedCommissionCondition {
     return {
-      id: Date.now() + Math.random(),
       talent_id: this.currentTalentId,
       seq_no: this.graduatedItems.length + 1,
       cag_bdate: this.getDefaultStartDate(),
@@ -1043,7 +595,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
   private createBaseTierItem(): BaseTierCondition {
     return {
-      id: Date.now() + Math.random(),
       talent_id: this.currentTalentId,
       seq_no: this.baseTierItems.length + 1,
       tlt_id: '',
@@ -1066,28 +617,16 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
   // 🎯 檢查是否有來自 Next2 的資料
   hasNext2IntegrationData(): boolean {
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-    return this.shouldIntegrateNext2Data(commissionType || '') && this.hasNext2Data;
+    return false; // 直接返回 false
   }
 
   getNext2IntegrationMessage(): string {
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-    const commissionName = this.getCurrentCommissionTypeName();
-
-    if (commissionType === '2') {
-      return `已整合來自「抽成設定」的折扣資料到「${commissionName}」，抽成率唯讀（來自Next2），租金可編輯`;
-    }
-    return '';
+    return ''; // 直接返回空字串
   }
 
   // 🎯 取得來自 Next2 的項目數量
   getNext2ItemCount(): number {
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-
-    if (commissionType === '2') {
-      return this.baseRentHigherItems.filter(item => item._fromNext2).length;
-    }
-    return 0;
+    return 0; // 直接返回 0
   }
   // 🎯 取得新增的項目數量
   getNewItemCount(): number {
@@ -1379,39 +918,120 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     }
   }
 
-  // private submitContractData(): void {
-  //   this.loading = true;
-  //   try {
-  //     const submitDataStructure = this.contractFlowService.generateSubmitData();
-  //     console.log('📋 完整提交資料結構:', submitDataStructure);
-  //     this.callSubmitAPI(submitDataStructure);
-  //   } catch (error) {
-  //     console.error('❌ 準備提交資料時發生錯誤:', error);
-  //     this.loading = false;
-  //     this.notificationService.errorBubble('準備提交資料時發生錯誤');
-  //   }
-  // }
   private submitContractData(): void {
+    console.log('📤 Next3: 開始送出合約資料（使用清理後資料）...');
+
+    // 🆕 檢查與 Next2 的數量一致性（簡化版）
+    if (!this.validateNext2DataConsistency()) {
+      return;
+    }
+
     this.loading = true;
+    this.notificationService.blockUi();
+
     try {
-      const submitDataStructure = this.contractFlowService.generateSubmitData();
+      // 🎯 最後一次暫存條件設定資料
+      this.saveConditionDataToWorkflow();
 
-      // 🚀 一行搞定 - 完整 JSON 輸出
-      console.log('🚀 完整提交 JSON:', JSON.stringify(submitDataStructure, null, 2));
+      // 🎯 使用新的清理資料方法
+      const cleanSubmitData = this.contractFlowService.generateCleanSubmitData();
 
-      this.callSubmitAPI(submitDataStructure);
+      console.log('🚀 Next3: 最終送出的完整 JSON:');
+      console.log(JSON.stringify(cleanSubmitData, null, 2));
+
+      // 🎯 驗證資料
+      const validation = this.contractFlowService.validateCleanSubmitData(cleanSubmitData);
+      console.log(validation);
+
+
+      if (!validation.isValid) {
+        console.error('❌ Next3: 資料驗證失敗:', validation.errors);
+        this.loading = false;
+        this.notificationService.unblockUi();
+        this.notificationService.errorBubble(`資料驗證失敗: ${validation.errors[0]}`);
+        return;
+      }
+
+      // 🎯 顯示警告（如果有）
+      if (validation.warnings.length > 0) {
+        console.warn('⚠️ Next3: 提交警告:', validation.warnings);
+        validation.warnings.forEach(warning => {
+          this.notificationService.warnBubble(warning);
+        });
+      }
+
+      // 🎯 調用真實的 API
+      this.callCleanSubmitAPI(cleanSubmitData);
+
     } catch (error) {
-      console.error('❌ 準備提交資料時發生錯誤:', error);
+      console.error('❌ Next3: 準備提交資料時發生錯誤:', error);
       this.loading = false;
-      this.notificationService.errorBubble('準備提交資料時發生錯誤');
+      this.notificationService.unblockUi();
+      this.notificationService.errorBubble(`準備提交資料時發生錯誤: ${error}`);
     }
   }
 
-  private callSubmitAPI(submitData: SubmitDataStructure): void {
+  private callCleanSubmitAPI(cleanData: CleanSubmitData): void {
+    console.log('📤 Next3: 調用真實 API 提交契約資料...');
+
+    // 🎯 調用真實的 API
+    this.tls13010Service.submitFinalTLS13010(cleanData).subscribe({
+      next: (response) => {
+        console.log('✅ Next3: 契約提交成功:', response);
+        this.handleSubmitSuccess(response);
+      },
+      error: (error) => {
+        console.error('❌ Next3: 契約提交失敗:', error);
+        this.handleSubmitError(error);
+      }
+    });
+  }
+
+  private handleSubmitSuccess(response: any): void {
+    this.loading = false;
+    this.notificationService.unblockUi();
+
+    console.log('🎉 Next3: 處理提交成功回應:', response);
+
+    // 🎯 準備成功訊息
+    let successMessage = '契約資料提交成功！';
+    const details: string[] = [];
+
+    if (response.talentId) {
+      details.push(`專櫃編號: ${response.talentId}`);
+    }
+    if (response.contractNo) {
+      details.push(`合約編號: ${response.contractNo}`);
+    }
+    if (response.totalProcessed) {
+      details.push(`處理項目數: ${response.totalProcessed}`);
+    }
+    if (response.processingTime) {
+      details.push(`處理時間: ${response.processingTime}`);
+    }
+
+    if (details.length > 0) {
+      successMessage += '\n\n' + details.join('\n');
+    }
+
+    this.notificationService.successBubble(successMessage);
+
+    // 🎯 顯示警告（如果有）
+    if (response.warnings && response.warnings.length > 0) {
+      console.warn('⚠️ Next3: 收到警告訊息:', response.warnings);
+      response.warnings.forEach((warning: string) => {
+        this.notificationService.warnBubble(warning);
+      });
+    }
+
+    // 🎯 額外的成功後處理
+    this.onContractSubmitSuccess(response);
+
+    // 🎯 提交成功後清理暫存並導航
+    this.contractFlowService.onSubmitSuccess();
+
+    // 🎯 延遲導航，讓使用者看到成功訊息
     setTimeout(() => {
-      this.loading = false;
-      this.notificationService.successBubble('契約資料提交成功！');
-      this.contractFlowService.clearAllData();
       this.router.navigate(['account/tls/tls13010']);
     }, 3000); // Next3 給更多時間讓使用者閱讀詳細資訊
   }
@@ -1503,20 +1123,51 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     console.log('💾 錯誤後保持資料暫存狀態，使用者可重新提交');
   }
 
+  private validateNext2DataConsistency(): boolean {
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
+
+    if (commissionType !== '2') {
+      return true; // 非底租抽成取高者不需檢查
+    }
+
+    try {
+      // 🎯 簡化檢查：使用清理後的資料
+      const cleanData = this.contractFlowService.generateCleanSubmitData();
+
+      const next2MasterCount = cleanData.commissions.masters.toInsert.length +
+        cleanData.commissions.masters.toUpdate.length;
+
+      const next3RentCount = cleanData.conditions.baseRentHigher.toInsert.length +
+        cleanData.conditions.baseRentHigher.toUpdate.length;
+
+      console.log('🔍 Next3: 數量一致性檢查:', {
+        next2MasterCount,
+        next3RentCount,
+        isConsistent: next2MasterCount === next3RentCount
+      });
+
+      if (next2MasterCount !== next3RentCount) {
+        this.notificationService.errorBubble(
+          `資料不一致：抽成設定有 ${next2MasterCount} 個項目，` +
+          `但條件設定有 ${next3RentCount} 個項目。請檢查資料後再送出。`
+        );
+        return false;
+      }
+
+      return true;
+
+    } catch (error) {
+      console.error('❌ Next3: 一致性檢查失敗:', error);
+      this.notificationService.warnBubble('無法驗證資料一致性，請檢查資料完整性');
+      return true; // 允許繼續，但給出警告
+    }
+  }
+
   // 🎯 導航方法
   override onCancel(): void {
     console.log('🔄 Next3 返回前一頁，先暫存資料');
-
-    // 🎯 ⭐ 重要：確保暫存當前狀態
     this.saveConditionDataToWorkflow();
-
-    // 🎯 ⭐ 修復：強制同步到 Next2，防止資料覆蓋
-    this.forceSyncToNext2BeforeNavigation();
-
-    // 🎯 給更多時間讓暫存和同步完成
-    setTimeout(() => {
-      this.router.navigate(['account/tls/tls13010next2']);
-    }, 200);
+    this.router.navigate(['account/tls/tls13010next2']);
   }
 
   onRealCancel(): void {
@@ -1585,217 +1236,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     return classes.trim();
   }
 
-  // 🎯 檢查載入狀態的除錯方法
-  checkLoadingStatus(): void {
-    console.log('🔍 === 檢查載入狀態 ===');
-
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-    console.log('📋 抽成類型:', commissionType);
-    console.log('📋 資料載入狀態:', {
-      dataLoaded: this.dataLoaded,
-      conditionDataLoaded: this.conditionDataLoaded,
-      hasNext2Data: this.hasNext2Data,
-      commissionDataFromNext2Count: this.commissionDataFromNext2.length
-    });
-
-    console.log('📋 條件設定資料狀態:', {
-      fixedRentItemsCount: this.fixedRentItems.length,
-      baseRentHigherItemsCount: this.baseRentHigherItems.length,
-      generalCommissionItemsCount: this.generalCommissionItems.length,
-      baseCommissionItemsCount: this.baseCommissionItems.length,
-      graduatedItemsCount: this.graduatedItems.length,
-      baseTierItemsCount: this.baseTierItems.length
-    });
-
-    console.log('📋 當前應該顯示的資料類型:', this.getCurrentCommissionTypeName());
-    console.log('📋 實際條件設定項目數量:', this.getConditionItemCount());
-  }
-
-  // 🎯 強制重新整理資料的方法（用於測試）
-  forceRefreshData(): void {
-    console.log('🔄 強制重新整理資料');
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-
-    if (this.hasNext2Data && this.shouldIntegrateNext2Data(commissionType || '')) {
-      this.generateConditionDataFromNext2(commissionType || '');
-      this.saveConditionDataToWorkflow();
-
-      const itemCount = this.getConditionItemCount();
-      const message = `已重新生成 ${itemCount} 個條件設定項目`;
-      console.log('✅', message);
-      this.notificationService.infoBubble(message);
-
-      this.cdr.detectChanges();
-    } else {
-      this.notificationService.warnBubble('沒有 Next2 資料或此抽成類型不需要整合');
-    }
-  }
-
-  // 🎯 新增：驗證同步一致性的方法
-  private validateSyncConsistency(): void {
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-
-    if (!this.shouldIntegrateNext2Data(commissionType || '')) {
-      return;
-    }
-
-    // 計算 Next2 有效的折扣設定明細數量
-    const next2ValidDiscountItems = this.commissionDataFromNext2?.reduce((total, commission) => {
-      if (commission._status === 'deleted') return total;
-
-      const validDiscountItems = commission.discountSettingItems?.filter(item =>
-        item && item._status !== 'deleted'
-      ) || [];
-
-      return total + validDiscountItems.length;
-    }, 0) || 0;
-
-    // 計算 Next3 來自 Next2 的條件設定數量
-    const next3FromNext2Items = this.baseRentHigherItems.filter(item =>
-      item._fromNext2 && item._status !== 'deleted'
-    ).length;
-
-    // 計算 Next3 自建的條件設定數量
-    const next3UserCreatedItems = this.baseRentHigherItems.filter(item =>
-      !item._fromNext2 && item._status !== 'deleted'
-    ).length;
-
-    console.log('🔍 同步一致性檢查:', {
-      next2ValidDiscountItems,
-      next3FromNext2Items,
-      next3UserCreatedItems,
-      totalNext3Items: next3FromNext2Items + next3UserCreatedItems,
-      isConsistent: next2ValidDiscountItems === next3FromNext2Items
-    });
-
-    if (next2ValidDiscountItems !== next3FromNext2Items) {
-      console.warn('⚠️ 發現資料不一致，觸發修正');
-      this.fixDataInconsistency();
-    }
-  }
-
-  // 🎯 新增：修正資料不一致的方法
-  private fixDataInconsistency(): void {
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-
-    if (!this.shouldIntegrateNext2Data(commissionType || '')) {
-      return;
-    }
-
-    console.log('🔧 開始修正資料不一致...');
-
-    // 保留用戶自建的項目和已修改的項目
-    const userCreatedItems = this.baseRentHigherItems.filter(item =>
-      !item._fromNext2 || item._status === 'modified'
-    );
-
-    // 重新生成來自 Next2 的項目
-    this.baseRentHigherItems = [...userCreatedItems];
-    this.generateConditionDataFromNext2(commissionType || '');
-
-    // 保存修正後的資料
-    this.saveConditionDataToWorkflow();
-
-    console.log('✅ 資料不一致修正完成');
-  }
-
-  // 🎯 新增：公開的資料同步驗證方法
-  public validateNext2Next3Sync(): void {
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-
-    if (!this.shouldIntegrateNext2Data(commissionType || '')) {
-      this.notificationService.infoBubble('當前抽成類型不需要與 Next2 同步');
-      return;
-    }
-
-    this.validateSyncConsistency();
-
-    const next2Count = this.commissionDataFromNext2?.reduce((total, commission) => {
-      if (commission._status === 'deleted') return total;
-      return total + (commission.discountSettingItems?.filter(item => item._status !== 'deleted').length || 0);
-    }, 0) || 0;
-
-    const next3Count = this.baseRentHigherItems.filter(item =>
-      item._fromNext2 && item._status !== 'deleted'
-    ).length;
-
-    if (next2Count === next3Count) {
-      this.notificationService.successBubble(`Next2 和 Next3 資料已同步 (${next2Count} 筆)`);
-    } else {
-      this.notificationService.warnBubble(`資料不一致：Next2 有 ${next2Count} 筆，Next3 有 ${next3Count} 筆`);
-    }
-  }
-
-  // 🎯 新增：調試用暫存狀態檢查方法
-  public debugStorageStatus(): void {
-    console.log('🔍 === Next3 暫存狀態調試 ===');
-
-    const savedNext3Data = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
-    const rawStorage = sessionStorage.getItem('TLS13010_CONTRACT_FLOW');
-
-    console.log('📊 當前 Next3 資料狀態:', {
-      baseRentHigherItems: this.baseRentHigherItems.length,
-      來自Next2: this.baseRentHigherItems.filter(item => item._fromNext2).length,
-      已修改: this.baseRentHigherItems.filter(item => item._status === 'modified').length,
-      新增: this.baseRentHigherItems.filter(item => item._status === 'new').length
-    });
-
-    console.log('💾 工作流程暫存資料:', {
-      hasStep4Data: !!savedNext3Data,
-      step4DataLength: Array.isArray(savedNext3Data) ? savedNext3Data.length : 0,
-      step4DataType: typeof savedNext3Data
-    });
-
-    if (rawStorage) {
-      try {
-        const parsed = JSON.parse(rawStorage);
-        console.log('🗄️ SessionStorage 完整資料:', {
-          hasContractData: !!parsed.contractData,
-          hasStep4: !!parsed.contractData?.step4,
-          step4Length: Array.isArray(parsed.contractData?.step4) ? parsed.contractData.step4.length : 0,
-          timestamp: new Date(parsed.timestamp || 0).toLocaleString()
-        });
-      } catch (error) {
-        console.error('❌ SessionStorage 解析失敗:', error);
-      }
-    } else {
-      console.warn('⚠️ SessionStorage 中沒有工作流程資料');
-    }
-
-    this.notificationService.infoBubble('調試資訊已輸出到 Console');
-  }
-
-  // 🎯 新增：強制同步到 Next2 防止導航時資料覆蓋
-  private forceSyncToNext2BeforeNavigation(): void {
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-
-    if (!this.shouldIntegrateNext2Data(commissionType || '')) {
-      console.log('🔄 當前抽成類型不需要同步到 Next2');
-      return;
-    }
-
-    console.log('🔄 強制同步 Next3 變更到 Next2...');
-
-    // 🎯 1. 更新版本號，確保 Next2 知道有變更
-    const newVersion = this.contractFlowService.incrementDataVersionPublic('step4');
-    console.log('🔄 Step4 版本已更新至:', newVersion);
-
-    // 🎯 2. 發送變更事件給 Next2
-    const event = new CustomEvent('next3DataChanged', {
-      detail: {
-        conditionData: this.baseRentHigherItems,
-        timestamp: Date.now(),
-        source: 'next3-navigation'
-      }
-    });
-    window.dispatchEvent(event);
-
-    // 🎯 3. 確保資料已暫存
-    this.saveConditionDataToWorkflow();
-
-    console.log('✅ 強制同步到 Next2 完成');
-  }
-
   private loadDiscountOptions(): Promise<void> {
     return new Promise((resolve) => {
       console.log('🔽 Next3 開始載入折數選項...');
@@ -1828,5 +1268,305 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     });
 
     console.log('✅ Next3 一般抽成欄位選項已更新');
+  }
+
+  //測試用
+  showDataSummary(): void {
+    try {
+      console.group('📊 完整暫存資料摘要');
+      const cleanData = this.contractFlowService.generateCleanSubmitData();
+      // 🎯 特別檢查 conditions 資料
+      console.group('🔍 CONDITIONS 資料檢查');
+      console.log('完整 conditions 物件:', cleanData.conditions);
+      console.log('baseRentHigher 資料:', cleanData.conditions.baseRentHigher);
+      console.log('baseRentHigher 新增項目數:', cleanData.conditions.baseRentHigher.toInsert.length);
+      console.log('baseRentHigher 更新項目數:', cleanData.conditions.baseRentHigher.toUpdate.length);
+
+      // 🎯 1. 取得工作流程的完整暫存資料
+      const fullWorkflowData = this.contractFlowService.getCurrentData();
+      console.log('📦 工作流程完整暫存:', fullWorkflowData);
+
+      // 🎯 2. 取得各步驟的暫存資料
+      const step1Data = this.contractFlowService.getStep1Data();
+      const step2Data = this.contractFlowService.getStep2Data();
+      const step3Data = this.contractFlowService.getStep3Data();
+      const step4Data = this.contractFlowService.getStep4Data();
+
+      console.log('📋 Step1 暫存 (合約基本資料):', step1Data);
+      console.log('📋 Step2 暫存 (代扣款設定):', step2Data);
+      console.log('📋 Step3 暫存 (抽成設定):', step3Data);
+      console.log('📋 Step4 暫存 (條件設定):', step4Data);
+
+      // 🎯 4. 取得資料驗證結果
+      const validation = this.contractFlowService.validateCleanSubmitData(cleanData);
+      console.log('✅ 資料驗證結果:', validation);
+
+      // 🎯 5. 取得工作流程狀態
+      const workflowStatus = this.contractFlowService.getCurrentStatus();
+      console.log('🔄 工作流程狀態:', workflowStatus);
+
+      console.groupEnd();
+
+      // 🎯 6. 準備顯示摘要
+      const summary = this.generateDisplaySummary(fullWorkflowData, cleanData, validation);
+
+      // 🎯 7. 提供多種查看方式
+      const viewOptions = [
+        '1️⃣ 顯示簡要摘要',
+        '2️⃣ 複製完整 JSON 到剪貼簿',
+        '3️⃣ 在 Console 查看詳細資料',
+        '4️⃣ 下載 JSON 檔案',
+        '5️⃣ 顯示格式化的 JSON'
+      ].join('\n');
+
+      const choice = prompt(`📊 資料摘要查看選項：\n\n${viewOptions}\n\n請輸入數字 (1-5):`);
+
+      switch (choice) {
+        case '1':
+          alert(summary);
+          break;
+        case '2':
+          this.copyToClipboard(fullWorkflowData);
+          break;
+        case '3':
+          this.showDetailedConsoleData();
+          break;
+        case '4':
+          this.downloadJsonFile(fullWorkflowData);
+          break;
+        case '5':
+          this.showFormattedJson();
+          break;
+        default:
+          alert(summary);
+          break;
+      }
+
+    } catch (error) {
+      console.error('❌ 產生資料摘要失敗:', error);
+      this.notificationService.errorBubble(`產生資料摘要失敗: ${error}`);
+    }
+  }
+
+  // 🎯 生成顯示摘要
+  private generateDisplaySummary(fullData: any, cleanData: any, validation: any): string {
+    const modeInfo = this.contractFlowService.getWorkflowModeInfo();
+
+    return [
+      '📊 暫存資料摘要',
+      '='.repeat(40),
+      '',
+      `🏢 模式: ${modeInfo.modeName}`,
+      `🏷️ 專櫃編號: ${modeInfo.talentId || '新增中'}`,
+      `🆔 工作流程 ID: ${fullData.contractId}`,
+      '',
+      '📦 暫存資料統計:',
+      `• Step1 (合約基本): ${fullData.step1 ? '✅ 有資料' : '❌ 無資料'}`,
+      `• Step2 (代扣款): ${fullData.step2?.length || 0} 項`,
+      `• Step3 (抽成設定): ${fullData.step3?.length || 0} 項`,
+      `• Step4 (條件設定): ${fullData.step4?.length || 0} 項`,
+      '',
+      '🧹 提交資料統計:',
+      `• 合約操作: ${cleanData.contractInfo.operation}`,
+      `• 代扣款操作: ${cleanData.deductions.toInsert.length + cleanData.deductions.toUpdate.length + cleanData.deductions.toDelete.length} 項`,
+      `• 抽成操作: ${cleanData.commissions.masters.toInsert.length + cleanData.commissions.masters.toUpdate.length} 項`,
+      `• 條件操作: ${Object.values(cleanData.conditions).reduce((total: number, c: any) => total + c.toInsert.length + c.toUpdate.length + c.toDelete.length, 0)} 項`,
+      `• 總操作數: ${cleanData.metadata.totalOperations}`,
+      '',
+      `✅ 資料驗證: ${validation.isValid ? '通過' : '失敗'}`,
+      validation.errors.length > 0 ? `❌ 錯誤: ${validation.errors.join(', ')}` : '',
+      validation.warnings.length > 0 ? `⚠️ 警告: ${validation.warnings.join(', ')}` : '',
+      '',
+      '💾 JSON 資料大小:',
+      `• 完整暫存: ${JSON.stringify(fullData).length} 字元`,
+      `• 清理後資料: ${JSON.stringify(cleanData).length} 字元`,
+      '',
+      '💡 完整 JSON 資料已記錄在 Console 中',
+      '   按 F12 → Console 查看詳細內容'
+    ].filter(line => line !== '').join('\n');
+  }
+
+  // 🎯 複製到剪貼簿
+  private copyToClipboard(data: any): void {
+    try {
+      const jsonString = JSON.stringify(data, null, 2);
+      navigator.clipboard.writeText(jsonString).then(() => {
+        this.notificationService.successBubble('✅ 完整 JSON 已複製到剪貼簿');
+        console.log('📋 已複製到剪貼簿的 JSON:', data);
+      }).catch(err => {
+        console.error('❌ 複製失敗:', err);
+        this.fallbackCopyToClipboard(jsonString);
+      });
+    } catch (error) {
+      console.error('❌ 複製到剪貼簿失敗:', error);
+      this.notificationService.errorBubble('複製失敗，請在 Console 中手動複製');
+    }
+  }
+
+  // 🎯 備援複製方法
+  private fallbackCopyToClipboard(text: string): void {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+
+    try {
+      document.execCommand('copy');
+      this.notificationService.successBubble('✅ JSON 已複製到剪貼簿 (備援方法)');
+    } catch (err) {
+      console.error('❌ 備援複製也失敗:', err);
+      this.notificationService.errorBubble('複製失敗，請手動從 Console 複製');
+    }
+
+    document.body.removeChild(textArea);
+  }
+
+  // 🎯 顯示詳細 Console 資料
+  private showDetailedConsoleData(): void {
+    console.group('📊 詳細暫存資料分析');
+
+    const fullData = this.contractFlowService.getCurrentData();
+    const cleanData = this.contractFlowService.generateCleanSubmitData();
+
+    console.group('📦 完整工作流程暫存');
+    console.log('🔗 可複製的 JSON:', JSON.stringify(fullData, null, 2));
+    console.log('📋 物件形式:', fullData);
+    console.groupEnd();
+
+    console.group('🧹 清理後提交資料');
+    console.log('🔗 可複製的 JSON:', JSON.stringify(cleanData, null, 2));
+    console.log('📋 物件形式:', cleanData);
+    console.groupEnd();
+
+    console.group('📊 各步驟詳細資料');
+    console.log('Step1:', this.contractFlowService.getStep1Data());
+    console.log('Step2:', this.contractFlowService.getStep2Data());
+    console.log('Step3:', this.contractFlowService.getStep3Data());
+    console.log('Step4:', this.contractFlowService.getStep4Data());
+    console.groupEnd();
+
+    console.groupEnd();
+
+    this.notificationService.infoBubble('📊 詳細資料已顯示在 Console 中\n\n可以直接複製 JSON 字串使用');
+  }
+
+  // 🎯 下載 JSON 檔案
+  private downloadJsonFile(data: any): void {
+    try {
+      const jsonString = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `TLS13010_暫存資料_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(url);
+
+      this.notificationService.successBubble('✅ JSON 檔案已下載');
+      console.log('📁 已下載的 JSON 資料:', data);
+    } catch (error) {
+      console.error('❌ 下載檔案失敗:', error);
+      this.notificationService.errorBubble('下載失敗，請使用複製功能');
+    }
+  }
+
+  // 🎯 顯示格式化的 JSON（在新視窗）
+  private showFormattedJson(): void {
+    try {
+      const fullData = this.contractFlowService.getCurrentData();
+      const cleanData = this.contractFlowService.generateCleanSubmitData();
+
+      const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>TLS13010 暫存資料</title>
+        <style>
+            body { font-family: 'Courier New', monospace; margin: 20px; background: #f5f5f5; }
+            .container { max-width: 1200px; margin: 0 auto; }
+            .section { background: white; margin: 20px 0; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            .section h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+            pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px; line-height: 1.4; }
+            .copy-btn { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin: 10px 0; }
+            .copy-btn:hover { background: #2980b9; }
+            .stats { background: #ecf0f1; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🎯 TLS13010 暫存資料分析</h1>
+            <div class="stats">
+                <strong>生成時間:</strong> ${new Date().toLocaleString()}<br>
+                <strong>完整資料大小:</strong> ${JSON.stringify(fullData).length} 字元<br>
+                <strong>清理後資料大小:</strong> ${JSON.stringify(cleanData).length} 字元
+            </div>
+
+            <div class="section">
+                <h2>📦 完整工作流程暫存資料</h2>
+                <button class="copy-btn" onclick="copyToClipboard('fullData')">複製 JSON</button>
+                <pre id="fullData">${JSON.stringify(fullData, null, 2)}</pre>
+            </div>
+
+            <div class="section">
+                <h2>🧹 清理後提交資料</h2>
+                <button class="copy-btn" onclick="copyToClipboard('cleanData')">複製 JSON</button>
+                <pre id="cleanData">${JSON.stringify(cleanData, null, 2)}</pre>
+            </div>
+        </div>
+
+        <script>
+            function copyToClipboard(elementId) {
+                const element = document.getElementById(elementId);
+                const text = element.textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('✅ JSON 已複製到剪貼簿');
+                }).catch(err => {
+                    console.error('複製失敗:', err);
+                    // 備援方法
+                    const textArea = document.createElement('textarea');
+                    textArea.value = text;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert('✅ JSON 已複製到剪貼簿 (備援方法)');
+                });
+            }
+        </script>
+    </body>
+    </html>`;
+
+      const newWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes');
+      if (newWindow) {
+        newWindow.document.write(htmlContent);
+        newWindow.document.close();
+        this.notificationService.successBubble('✅ 格式化 JSON 已在新視窗開啟');
+      } else {
+        this.notificationService.errorBubble('❌ 無法開啟新視窗，請檢查瀏覽器設定');
+      }
+    } catch (error) {
+      console.error('❌ 顯示格式化 JSON 失敗:', error);
+      this.notificationService.errorBubble('顯示失敗，請使用其他查看方式');
+    }
+  }
+
+  // 🎯 快速取得暫存 JSON (可在 Console 中調用)
+  getTempDataJson(): string {
+    const fullData = this.contractFlowService.getCurrentData();
+    const jsonString = JSON.stringify(fullData, null, 2);
+    console.log('📋 完整暫存 JSON:', jsonString);
+    return jsonString;
+  }
+
+  // 🎯 快速取得清理後 JSON (可在 Console 中調用)
+  getCleanDataJson(): string {
+    const cleanData = this.contractFlowService.generateCleanSubmitData();
+    const jsonString = JSON.stringify(cleanData, null, 2);
+    console.log('🧹 清理後 JSON:', jsonString);
+    return jsonString;
   }
 }

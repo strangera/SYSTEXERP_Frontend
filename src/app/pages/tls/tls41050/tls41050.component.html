@@ -1,122 +1,77 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="收銀機號" controlName="ECR_NoList" [options]="POS1002_Option" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.ECR_NoList" [submitted]="submitted"></app-multi-select>    
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="收銀機名稱" controlName="ECR_GUI_PeriodQty" [control]="queryForm.controls.ECR_Name"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="機台類型" controlName="ECR_Type" [options]="ECR_Type_Option" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ECR_Type" [submitted]="submitted"></app-dropdown>
+          </div>
         </div>
-        <div *appHasPermission="addPermission">
-          <app-button
-            btnType="create"
-            (click)="onCreate()"
-            class="col"
-          ></app-button>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="機台所屬專櫃代碼/名稱" controlName="ECR_TLT_NoList" [options]="TLTTALENT_Option" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.ECR_TLT_NoList" [submitted]="submitted"></app-multi-select> 
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="專櫃名稱" controlName="ECR_TLT_Name" [control]="queryForm.controls.ECR_TLT_Name"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="收銀機狀態" controlName="ECR_Status" [options]="ECR_Status_Option" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ECR_Status" [submitted]="submitted"></app-dropdown>
+          </div>
         </div>
-      </div>
-      <p-accordion>
-        <p-accordionTab
-          header="{{ 'query-conditions' | translate }}"
-          [selected]="true"
-          class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'"
-        >
-          <form
-            [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)"
-          >
-            <div class="grid p-fluid">
-              <!-- <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-text label="門市店號" controlName="STO_No" [control]="queryForm.controls.STO_No" [submitted]="submitted">
-                                </app-input-text>
-                            </div> -->
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="收銀機號"
-                  controlName="ECR_No"
-                  [control]="queryForm.controls.ECR_No"
-                  [submitted]="submitted"
-                ></app-input-text>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar
-                  calendarType="dateOne"
-                  label="開始時間"
-                  controlName="NOT_BegDateTime"
-                  [control]="queryForm.controls.NOT_BegDateTime"
-                  [submitted]="submitted"
-                ></app-calendar>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar
-                  calendarType="dateOne"
-                  label="結束時間"
-                  controlName="NOT_EndDateTime"
-                  [control]="queryForm.controls.NOT_EndDateTime"
-                  [submitted]="submitted"
-                ></app-calendar>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <!-- <div class="col-12 md:col-6 lg:col-4">
-                                <app-calendar calendarType="dateTimeOne" label="通告產生時間" [control]="queryForm.controls.NOT_DateTime" [submitted]="submitted">
-                                </app-calendar>
-                            </div> -->
-              <!-- <div class="col-12 md:col-6 lg:col-4">
-                                <app-multi-select label="通告顯示種類" controlName="NOT_Type" [options]="NOT_Type_Options" optionLabel="label" optionValue="value" [control]="queryForm.controls.NOT_Type" [submitted]="submitted">
-                                </app-multi-select>
-                            </div> -->
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-multi-select
-                  label="通告狀態"
-                  controlName="NOT_Status"
-                  [options]="NOT_Status_Options"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.NOT_Status"
-                  [submitted]="submitted"
-                ></app-multi-select>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-8">
-                <app-input-text
-                  label="通告備註"
-                  controlName="NOT_Remark"
-                  [control]="queryForm.controls.NOT_Remark"
-                  [submitted]="submitted"
-                ></app-input-text>
-              </div>
-            </div>
-            <!-- <hr/>
-                            <app-editor-text label="通告內容" controlName="NOT_Desc" [control]="queryForm.controls.NOT_Desc" [style]="{ height: '100px' }" [submitted]="submitted">
-                            </app-editor-text>
-                        <hr> -->
-            <div>
-              <div class="grid justify-content-end">
-                <app-button
-                  btnType="clear"
-                  (onClick)="onClearForm()"
-                ></app-button>
-                <app-button
-                  btnType="query"
-                  (onClick)="onSubmitQuery(queryForm)"
-                  [loading]="loading"
-                ></app-button>
-              </div>
-            </div>
-          </form>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
-    <div class="card">
-      <app-table
-        [data]="data"
-        [columns]="columns"
-        [expansionColumns]="subColumns"
-        (edit)="onEdit($event)"
-        (detail)="onDetail($event)"
-      ></app-table>
-    </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number label="每期電子發票預設配號數量" controlName="ECR_GUI_PeriodQty"
+            [control]="queryForm.controls.ECR_GUI_PeriodQty" [submitted]="submitted" />
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number label="電子發票最小安全存量" controlName="ECR_GUI_MinQty"
+            [control]="queryForm.controls.ECR_GUI_MinQty" [submitted]="submitted" />
+          </div>
+        </div>
+        <!-- <div> -->
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+        <!-- </div> -->
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <div class="col-13">
+    <app-table
+      tableKey="TLS41050"
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      [showCheckBox]="false"
+      dataKey="id"
+      [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [loading]="loading"
+      [isRowSelectable]="isRowSelectable"
+    ></app-table>
   </div>
 </div>

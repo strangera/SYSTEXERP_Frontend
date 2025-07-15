@@ -42,8 +42,8 @@ export class TLS2B010Component {
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
     onedatedd: [, [Validators.required]], // 銷售日期
-    cahserStart: [, [Validators.max(999999), this.validationService.numberValidator]], // 收銀機代號
-    cahserEnd: [, [Validators.max(999999), this.validationService.numberValidator]], // 收銀機代號
+    cahserStart: [, [Validators.max(999999), this.validationService.numberValidator]], // 收銀機號
+    cahserEnd: [, [Validators.max(999999), this.validationService.numberValidator]], // 收銀機號
     counterStart: [, [Validators.max(999999), this.validationService.numberValidator]], // 專櫃編號
     counterEnd: [, [Validators.max(999999), this.validationService.numberValidator]], // 專櫃編號
     cahserType: [], // 收銀機類型

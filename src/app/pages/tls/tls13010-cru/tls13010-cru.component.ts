@@ -40,29 +40,31 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
 
 @Component({
-    selector: 'app-tls13010-cru',
-    templateUrl: './tls13010-cru.component.html',
-    styleUrls: ['./tls13010-cru.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        CalendarComponent,
-        ExpandableEditTableComponent,
-        MultiSelectComponent,
-        CheckboxModule,
-        AutoCompleteComponent,
-        InputTextareaComponent,
-    ],
+  selector: 'app-tls13010-cru',
+  templateUrl: './tls13010-cru.component.html',
+  styleUrls: ['./tls13010-cru.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    CalendarComponent,
+    ExpandableEditTableComponent,
+    MultiSelectComponent,
+    CheckboxModule,
+    AutoCompleteComponent,
+    InputTextareaComponent,
+  ],
+
 })
 export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
   // 位置選項資料
   locationWithDetailsOptions: DropdownOption[] = [];
+  displayLocationData: LocationItem[] = [];
 
   //廠商統一編號
   pos2013Options: DropdownOption[] = [];
@@ -258,28 +260,24 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.initializePage('TLS13010', this.dataForm);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
-    // 先載入基本下拉選單
+    // 載入下拉選單和位置選項
     this.loadDropdownOptions();
-
-    // 然後載入位置選項
     this.loadLocationWithDetailsOptions();
-    // 載入 POS2013 選項
     this.loadPOS2013Options();
-    // 載入洽談者選項
     this.loadNegotiatorOptions();
 
-    // ✅ 載入工作流程資料
+    // 載入工作流程資料
     this.loadWorkflowData();
 
-    // ✅ 驗證暫存資料（開發時使用）
-    setTimeout(() => {
-      this.validateWorkflowData();
-      // this.debugLocationStatus();
-    }, 1000);
-
-    this.loadWorkflowData();
+    // 設定監聽
     this.setupAutoSave();
     this.setupBusTypeListener();
+
+    // 延遲驗證（開發用）
+    setTimeout(() => {
+      this.validateWorkflowData();
+      this.updateDisplayLocationData(); // 移到這裡
+    }, 500); // 增加延遲時間
   }
 
   ngOnDestroy(): void {
@@ -439,11 +437,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
 
   private loadEditModeData(workflowData: any): void {
-    console.log('📝 載入編輯模式資料');
-
-    // 🎯 優先使用 CRU 頁面編輯後的暫存資料
     const savedFormData = this.contractFlowService.getStep1Data();
-    console.log('📦 檢查 Step1 暫存資料:', savedFormData);
 
     if (savedFormData && Object.keys(savedFormData).length > 0) {
       console.log('📝 載入編輯模式暫存表單資料');
@@ -451,42 +445,44 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     } else if (workflowData.queryRowData) {
       console.log('📋 載入查詢結果資料');
       this.loadDataFromQueryResult(workflowData.queryRowData);
-    }
 
-    // 🎯 載入既有位置資料（如果有 talent_id 且沒有暫存位置資料）
-    const currentTalentId = this.contractFlowService.getCurrentTalentId();
-    if (currentTalentId && (!savedFormData?.locationInfo || savedFormData.locationInfo.length === 0)) {
-      console.log('🔄 載入既有位置資料');
-      this.loadExistingLocationData(currentTalentId);
+      // ✅ 確保載入既有位置資料
+      const currentTalentId = this.contractFlowService.getCurrentTalentId();
+      if (currentTalentId) {
+        console.log('🔄 載入既有位置資料 (編輯模式)');
+        this.loadExistingLocationData(currentTalentId);
+      }
     }
   }
 
 
   private loadSavedFormData(savedFormData: any): void {
-    console.log('📝 載入暫存表單資料:', savedFormData);
-
-    // 🎯 載入表單資料
+    // 載入表單資料
     this.dataForm.patchValue(savedFormData);
 
-    // 🎯 載入分類資料
+    // 載入分類資料
     if (savedFormData.bus_type) {
       this.loadBusinessClassifications(savedFormData.bus_type);
     }
 
-    // 🎯 載入位置資料
-    if (savedFormData.locationInfo && Array.isArray(savedFormData.locationInfo)) {
-      console.log('📍 發現暫存位置資料:', savedFormData.locationInfo);
-      this.locationData = savedFormData.locationInfo.map((item: { _status: any; _isNew: any; }) => ({
+    // 🎯 改進位置資料載入邏輯
+    if (savedFormData.locationInfo && Array.isArray(savedFormData.locationInfo) && savedFormData.locationInfo.length > 0) {
+      console.log('📍 載入暫存位置資料');
+      this.locationData = savedFormData.locationInfo.map((item: any) => ({
         ...item,
         _status: item._status || 'original',
         _isNew: item._isNew || false
       }));
-      console.log('✅ 載入暫存位置資料完成:', this.locationData);
     } else {
-      this.locationData = [];
+      // ✅ 沒有暫存位置時，嘗試載入既有位置
+      const currentTalentId = this.contractFlowService.getCurrentTalentId();
+      if (currentTalentId && !this.contractFlowService.isNewContractMode()) {
+        console.log('📍 沒有暫存位置，載入既有位置資料');
+        this.loadExistingLocationData(currentTalentId);
+      } else {
+        this.locationData = [];
+      }
     }
-
-    console.log('✅ 暫存表單資料載入完成');
   }
 
   private initializeEmptyForm(): void {
@@ -691,34 +687,34 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   // ==========  表單操作方法 ==========
   private saveToWorkflow(): void {
-    if (this.dataForm.dirty || this.hasLocationChanges()) {
-      const formData = this.dataForm.getRawValue();
+    // 移除條件檢查，總是儲存
+    const formData = this.dataForm.getRawValue();
 
-      console.log('💾 準備儲存工作流程資料...');
-      console.log('📋 表單資料:', {
-        talent_id: formData.talent_id,
-        apply_no: formData.apply_no,
-        tlt_name: formData.tlt_name,
-        isNewMode: this.contractFlowService.isNewContractMode()
-      });
+    console.log('💾 準備儲存工作流程資料...');
+    console.log('📋 表單資料:', {
+      talent_id: formData.talent_id,
+      apply_no: formData.apply_no,
+      tlt_name: formData.tlt_name,
+      isNewMode: this.contractFlowService.isNewContractMode()
+    });
 
-      // 🎯 準備位置資料
-      const workflowData = {
-        ...formData,
-        locationInfo: this.prepareLocationDataForSubmit()
-      };
+    // 🎯 準備位置資料
+    const workflowData = {
+      ...formData,
+      locationInfo: this.prepareLocationDataForSubmit()
+    };
 
-      const contractInfo = {
-        id: formData.talent_id || '',
-        ...workflowData
-      } as ContractInfo;
+    const contractInfo = {
+      id: formData.talent_id || '',
+      ...workflowData
+    } as ContractInfo;
 
-      // 🎯 移除自訂處理，讓 ContractFlowService 統一處理 talent_id
-      this.contractFlowService.saveStep1Data(contractInfo);
+    // 🎯 移除自訂處理，讓 ContractFlowService 統一處理 talent_id
+    this.contractFlowService.saveStep1Data(contractInfo);
 
-      console.log('✅ 已暫存到工作流程');
-    }
+    console.log('✅ 已暫存到工作流程');
   }
+
 
   private generateTempTalentId(): string {
     return 'new_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -950,7 +946,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       總數: this.locationData.length,
       可顯示: this.getDisplayLocationData().length
     });
-
+    this.updateDisplayLocationData(); // ✅ 手動更新
     const newLocationItem: LocationItem = {
       id: this.generateTempId(),
       location_no: '',
@@ -992,7 +988,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // 位置表格儲存事件
   onLocationTableSave(event: { oldData: LocationItem; newData: LocationItem }): void {
     const { oldData, newData } = event;
-
+    this.updateDisplayLocationData();
     console.log('💾 表格儲存事件:', {
       ID: newData.id,
       位置編號: `${oldData.location_no} → ${newData.location_no}`,
@@ -1048,43 +1044,108 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   onBatchDeleteLocation(selectedItems: LocationItem[]): void {
+    console.log('🔥 刪除方法開始');
+    console.log('📝 選中的項目:', selectedItems);
+    console.log('📊 刪除前資料狀態:', {
+      總數: this.locationData.length,
+      顯示數: this.getDisplayLocationData().length,
+      原始資料: this.locationData.map(item => ({
+        id: item.id,
+        location_no: item.location_no,
+        status: item._status
+      }))
+    });
+
     if (!selectedItems || selectedItems.length === 0) {
       this.messageService.warnBubble('請選擇要刪除的項目');
       return;
     }
 
     if (confirm(`確定要刪除 ${selectedItems.length} 個位置項目嗎？`)) {
-      console.log('🗑️ 開始批次刪除:', selectedItems);
+      // 過濾有效項目
+      const validItems = selectedItems.filter((item): item is LocationItem & { id: string } => {
+        if (!item.id) {
+          console.warn('⚠️ 發現沒有 ID 的項目:', item);
+          return false;
+        }
+        return true;
+      });
 
-      selectedItems.forEach(item => {
-        console.log(`🔍 處理項目: ID=${item.id}, 狀態=${item._status}, 是否新增=${item._isNew}`);
+      console.log('✅ 有效項目:', validItems.map(item => ({ id: item.id, status: item._status, isNew: item._isNew })));
 
-        const index = this.locationData.findIndex(d => d.id === item.id);
-        if (index > -1) {
-          if (item._status === 'new' || item._isNew) {
-            // ✅ 新增的資料直接從陣列移除
-            console.log(`🗑️ 直接移除新增項目: ${item.id}`);
-            this.locationData.splice(index, 1);
-          } else {
-            // ✅ 既有資料標記為刪除
-            console.log(`🏷️ 標記既有項目為刪除: ${item.id}`);
-            this.locationData[index]._status = 'deleted';
-          }
+      if (validItems.length === 0) {
+        this.messageService.warnBubble('沒有有效的項目可以刪除');
+        return;
+      }
+
+      // 分類處理
+      const idsToRemove = new Set<string>();
+      const idsToMarkDeleted = new Set<string>();
+
+      validItems.forEach(item => {
+        const itemId = String(item.id);
+        if (item._status === 'new' || item._isNew) {
+          idsToRemove.add(itemId);
+          console.log(`🗑️ 新增項目將直接移除: ${itemId}`);
         } else {
-          console.warn(`⚠️ 找不到要刪除的項目: ${item.id}`);
+          idsToMarkDeleted.add(itemId);
+          console.log(`🏷️ 既有項目將標記刪除: ${itemId}`);
         }
       });
 
-      // ✅ 強制觸發變更檢測
-      this.locationData = [...this.locationData];
+      console.log('📋 處理計畫:', {
+        直接移除: Array.from(idsToRemove),
+        標記刪除: Array.from(idsToMarkDeleted)
+      });
 
-      // ✅ 立即儲存到暫存
+      // 記錄舊資料長度
+      const oldLength = this.locationData.length;
+
+      // ✅ 處理資料
+      this.locationData = this.locationData
+        .filter(item => {
+          // 移除新增項目
+          if (item.id && idsToRemove.has(String(item.id))) {
+            console.log(`❌ 移除項目: ${item.id} (${item.location_no})`);
+            return false;
+          }
+          return true;
+        })
+        .map(item => {
+          // 標記既有項目為刪除
+          if (item.id && idsToMarkDeleted.has(String(item.id))) {
+            console.log(`🏷️ 標記刪除: ${item.id} (${item.location_no})`);
+            return { ...item, _status: 'deleted' as const };
+          }
+          return item;
+        });
+
+      // 檢查結果
+      const newLength = this.locationData.length;
+      const displayLength = this.getDisplayLocationData().length;
+
+      console.log('📊 刪除後資料狀態:', {
+        原長度: oldLength,
+        新長度: newLength,
+        顯示長度: displayLength,
+        移除數量: oldLength - newLength,
+        處理後資料: this.locationData.map(item => ({
+          id: item.id,
+          location_no: item.location_no,
+          status: item._status
+        })),
+        顯示資料: this.getDisplayLocationData().map(item => ({
+          id: item.id,
+          location_no: item.location_no
+        }))
+      });
+      this.displayLocationData = this.getDisplayLocationData();
+
+      // 儲存並顯示訊息
       this.saveToWorkflow();
+      this.messageService.successBubble(`已刪除 ${validItems.length} 個位置項目`);
 
-      console.log('🗑️ 刪除完成，當前資料:', this.locationData);
-      console.log('👁️ 顯示資料:', this.getDisplayLocationData());
-
-      this.messageService.successBubble(`已刪除 ${selectedItems.length} 個位置項目`);
+      console.log('✅ 刪除流程完成');
     }
   }
 
@@ -1329,5 +1390,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     } else {
       console.log('📭 沒有位置暫存資料');
     }
+  }
+
+  private updateDisplayLocationData(): void {
+    this.displayLocationData = this.locationData.filter(item => item._status !== 'deleted');
   }
 }

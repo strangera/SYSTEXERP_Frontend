@@ -1,12 +1,7 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { TranslateModule } from '@ngx-translate/core';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -18,187 +13,107 @@ import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/b
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-//
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { option } from '../../../shared/models/sys/sysb000.module';
+import { ValidationService } from '../../../shared/service/validation.service';
+import { Tls41050Service } from '../../../service/api/tls/tls41050.service';
+
+export interface POS1002 {
+  ID: number; // decimal(19,0)
+
+  SYS_StoreNo: string; // 門市店號
+  ECR_No: string;      // 收銀機號
+  ECR_Name: string;    // 收銀機名稱
+  ECR_Type: string;    // 機台類型（1=集中、2=專櫃、5=離線、7=它社）
+
+  ECR_TLT_No?: string;     // 所屬專櫃編號（可選）
+  ECR_TLT_Name?: string;   // 所屬專櫃名稱（可選）
+  ECR_USR_No?: string;     // 所屬收銀員（可選）
+  ECR_USR_Name?: string;   // 收銀員姓名（可選）
+
+  ECR_ActiveDate?: Date;   // 啟用日期（可選）
+  ECR_ExpireDate?: Date;   // 到期日期（可選）
+  ECR_CloseDate?: Date;    // 停用日期（可選）
+
+  ECR_Status?: string;     // 狀態：A=啟用、C=停用、S=強制停用、T=訓練（可選）
+  ECR_GUI_Type: string;    // 發票使用類別：00/03/07
+
+  ECR_GUI_PeriodQty?: number; // 每期電子發票配號數量（可選）
+  ECR_GUI_MinQty?: number;    // 最小安全存量（可選）
+
+  CRT_Date?: Date;        // 建立日期（可選）
+  CRT_USR_No?: string;    // 建立人員（可選）
+  CRT_USR_Name?: string;  // 建立人員姓名（可選）
+
+  UPD_Date?: Date;        // 變更日期（可選）
+  UPD_USR_No?: string;    // 變更人員（可選）
+  UPD_USR_Name?: string;  // 變更人員姓名（可選）
+}
 
 // 2.4.1.5 發票訊息維護作業 CRU
 @Component({
-    selector: 'app-tls41050-cru',
-    templateUrl: './tls41050-cru.component.html',
-    styleUrl: './tls41050-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarComponent, DropdownComponent, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, InputNumberComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-tls41050-cru',
+  templateUrl: './tls41050-cru.component.html',
+  styleUrl: './tls41050-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarComponent, DropdownComponent, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, InputNumberComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class TLS41050CRUComponent extends BasicCrupageComponent implements OnInit {
+export class TLS41050CRUComponent extends BasicCruPageComponent<POS1002>
+  implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    // POS5001_通告檔
-    // ID                  NUMERIC(19,0) IDENTITY(1,1) NOT NULL
-    STO_No: ['', [Validators.required, Validators.maxLength(10)]], // 門市店號
-    NOT_DateTime: [, [Validators.required]], // 通告產生時間
-    NOT_Type: ['000000', [Validators.required, Validators.maxLength(6)]], // 通告顯示種類，固定為000000
-    /*  101=即時顯示通告   102=暫停時顯示通告 103=功能鍵顯示通告 104=客戶顯示器顯示通告 105=銷貨明細表列印訊息 */
-
-    //
-    ECR_No: ['XXXXXX', [Validators.required, Validators.maxLength(6)]], // 收銀機號，固定為XXXXXX
-    NOT_BegDateTime: [, [Validators.required]], // 結束時間
-    NOT_EndDateTime: [, [Validators.required]], // 結束時間
-    NOT_Desc: [, [Validators.maxLength(255)]], // 通告內容
-    NOT_Status: ['A', [Validators.maxLength(2)]], // 通告狀態 A=已生效(預設值) D=已刪除
-    NOT_Remark: ['', [Validators.maxLength(60)]], // 通告備註
-
-    NOT_DispRt: [0, [Validators.maxLength(0)]], // 即時顯示 Y/N，預設N
-    NOT_DispSpd: [0, [Validators.maxLength(0)]], // 暫停時顯示 Y/N，預設N
-    NOT_DispBtn: [0, [Validators.maxLength(0)]], // 按下功能鍵顯示 Y/N，預設N
-    NOT_DispCd: [0, [Validators.maxLength(0)]], // 客顯器顯示 Y/N，預設N
-    NOT_Prn: [0, [Validators.maxLength(0)]], // 銷貨明細表列印 Y/N，預設N
-
-    // 以下可以不用顯示於查詢頁
-    CRT_Date: [], // 建立日期
-    CRT_USR_No: ['', [Validators.maxLength(8)]], // 建立人員
-    CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-    UPD_Date: [], // 變更日期
-    UPD_USR_No: ['', [Validators.maxLength(8)]], // 變更人員
-    UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+    id: [null], // 主鍵，decimal(19,0)
+    SYS_StoreNo: [{ value: '', disabled: true }, [Validators.required]], // 收銀機所屬門市店號（不可新增/修改）
+    ECR_No: [{ value: '', disabled: true }, [Validators.required]], // 收銀機號（不可新增/修改）
+    ECR_Name: [{ value: '', disabled: true }, [Validators.required]], // 收銀機名稱（不可新增/修改）
+    ECR_Type: [{ value: '', disabled: true }, [Validators.required]], // 機台類型（不可新增/修改）1=集中機台(統收)、2=專櫃機台(自收)、5=離線機台(不開立業主發票、不使用業主機台)、7=它社機台(開立業主發票、不使用業主機台)
+    ECR_TLT_No: [{ value: '', disabled: true }], // 所屬專櫃編號（可為空，僅專櫃機台需填）
+    ECR_TLT_Name: [{ value: '', disabled: true }], // 專櫃名稱
+    ECR_USR_No: [{ value: '', disabled: true }], // 收銀員編號
+    ECR_USR_Name: [{ value: '', disabled: true }], // 收銀員姓名
+    ECR_ActiveDate: [{ value: null, disabled: true }], // 啟用日期
+    ECR_ExpireDate: [{ value: null, disabled: true }], // 到期日期
+    ECR_CloseDate: [{ value: null, disabled: true }], // 停用日期
+    ECR_Status: [{ value: '', disabled: true }], // 收銀機狀態，A=啟用(預設值)、C=停用、S=強制停用、T=訓練
+    ECR_GUI_Type: [{ value: '', disabled: true }, [Validators.required]], // 發票使用類別（不可新增/修改）
+    ECR_GUI_PeriodQty: [ // 機台每期電子發票預設配號數量，預設值為50，設定值必須為50的倍數
+      50, [this.validationService.optionalMultipleOfFiftyValidator(), Validators.min(50), Validators.max(99999999)]
+    ],
+    ECR_GUI_MinQty: [ // 機台電子發票最小安全存量，預設值為50，設定值必須為50的倍數
+      50, [this.validationService.optionalMultipleOfFiftyValidator(), Validators.min(50), Validators.max(99999999)]
+    ],
   });
+  //
+  ECR_Type_Option: option[] = [ // 機台類型 1=集中機台(統收)、2=專櫃機台(自收)、5=離線機台(不開立業主發票、不使用業主機台)、7=它社機台(開立業主發票、不使用業主機台)
+        {value: '1', label: '集中機台(統收)'},
+        {value: '2', label: '專櫃機台(自收)'},
+        {value: '5', label: '離線機台(不開立業主發票、不使用業主機台)'},
+        {value: '7', label: '它社機台(開立業主發票、不使用業主機台)'}
+      ];
+  
+      ECR_Status_Option: option[] = [ // 收銀機狀態 A=啟用(預設值)、C=停用、S=強制停用、T=訓練
+        {value: 'A', label: '啟用'},
+        {value: 'C', label: '停用'},
+        {value: 'S', label: '強制停用'},
+        {value: 'T', label: '訓練'}
+      ]
+  
+      ECR_GUI_Type_Option: option[] = [ // 發票使用類別，00=不開發票、03=二聯式收銀機發票、07=電子發票(預設值)
+        {value: '00', label: '不開發票'},
+        {value: '03', label: '二聯式收銀機發票'},
+        {value: '07', label: '電子發票'}
+      ]
   // ----------------------------------------------------------------
-  NOT_Type_Options: any[] = [
-    { value: 101, label: '即時顯示通告' },
-    { value: 102, label: '暫停時顯示通告' },
-    { value: 103, label: '功能鍵顯示通告' },
-    { value: 104, label: '客戶顯示器顯示通告' },
-    { value: 105, label: '銷貨明細表列印訊息' },
-  ];
-  NOT_Status_Options: any[] = [
-    { value: 'A', label: '已生效' },
-    { value: 'D', label: '已刪除' },
-  ];
-  YNoptions: any[] = [
-    { value: 1, label: '是' },
-    { value: 0, label: '否' },
-  ];
-
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-    //
+    private tls41050Service: Tls41050Service,
+    private validationService: ValidationService
   ) {
-    super();  // 呼叫父類建構子
+    super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '240005';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    // 禁用 SYS_StoreNo 欄位 (STO_No)
-    this.dataForm.get('STO_No')?.disable();
-  }
-
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      // POS5001D 通告設定明細檔(多筆)
-
-      // STO_No              VARCHAR(06)         NOT NULL,      /*分店編號*/
-      // NOT_DateTime        DATETIME            NOT NULL,      /*通告產生日期時間*/
-      // NOT_Type            VARCHAR(06)         NOT NULL,      /*通告顯示種類*//*  101=即時顯示通告   102=暫停時顯示通告 103=功能鍵顯示通告 104=客戶顯示器顯示通告 105=銷貨明細表列印訊息 */
-      // ECR_No              VARCHAR(06)             NULL,      /*收銀機號 POS1002.ECR_No*/
-
-      // INDEX IDX_POS5001_MST ON POS5001 (STO_No, NOT_DateTime, NOT_Type, ECR_No);
-
-      NOT_SeqNo: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(6)]], // 通告序號
-      TLT_No: ['', [Validators.maxLength(8)]], // 專櫃編號
-
-      ECR_Type: ['', [Validators.maxLength(2)]], // 機台類型 POS1002.ECR_Type
-      ECR_GrpNo: ['', [Validators.maxLength(20)]], // 機台群組編號
-
-      BUILDING_No: ['', [Validators.maxLength(2)]], // 館別
-      FLOOR_No: ['', [Validators.maxLength(2)]], // 樓層代碼
-      AREA_No: ['', [Validators.maxLength(2)]], // 區域代碼
-
-      // 以下可以不用顯示於查詢頁
-      CRT_Date: [], // 建立日期
-      CRT_USR_No: ['', [Validators.maxLength(8)]], // 建立人員
-      CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-      UPD_Date: [], // 變更日期
-      UPD_USR_No: ['', [Validators.maxLength(8)]], // 變更人員
-      UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-
-    // 清空原本的 items 並重新填入分行資料
-    this.items.clear();
-    if (rowdata.children) {
-      console.log('有子資料');
-      rowdata.children.forEach((children: any) => {
-        const branchForm = this.createItem();
-        branchForm.patchValue(children);
-        this.items.push(branchForm);
-      });
-    } else {
-      console.log('無子資料');
-    }
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
+    this.initializePage('TLS41050', this.dataForm);
+    console.log('讀取表單',this.dataForm.value);
   }
 
   onSubmit(frm: FormGroup) {
@@ -206,22 +121,39 @@ export class TLS41050CRUComponent extends BasicCrupageComponent implements OnIni
     this.submitted = true;
 
     if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;
     }
 
+    //檢查 每期電子發票預設配號 需大於等於 機台電子發票最小安全存量
+    const periodQty = this.dataForm.get('ECR_GUI_PeriodQty')?.value;
+    const minQty = this.dataForm.get('ECR_GUI_MinQty')?.value;
+
+    // 如果兩個都有值，且 periodQty < minQty，就擋住送出
+    if (
+      periodQty !== null && periodQty !== undefined &&
+      minQty !== null && minQty !== undefined &&
+      periodQty < minQty
+    ) {
+      this.messageService.errorBubble('每期電子發票預設配號 需大於等於 電子發票最小安全存量');
+      this.messageService.unblockUi();
+      return; // 中斷送出
+    }
+
+    const formValue = frm.getRawValue();
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
+          console.log('此作業不允許新增');
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
+          console.log('update', formValue);
+          this.tls41050Service.updateTLS41050(formValue).subscribe(() => {
+            this.messageService.successBubble('更新成功');
+            this.onCancel(); // 儲存後，會返回列表
+          });
         }
         break;
     }
@@ -231,16 +163,10 @@ export class TLS41050CRUComponent extends BasicCrupageComponent implements OnIni
   }
 
   submitForm(frm: FormGroup) {
-    // 查詢邏輯
     this.onSubmit(frm);
   }
 
   onClearForm() {
-    this.dataForm.reset();  // 重置表單
+    this.dataForm.reset(); // 重置表單
   }
-
-  onCancel() {
-    this.router.navigate(['/TLS4000/TLS41050']);
-  }
-  //-------------------------------------------------------------------------------------------------------------
 }
