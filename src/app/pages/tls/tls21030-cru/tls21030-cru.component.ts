@@ -1,11 +1,32 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-tls21030-cru',
-  templateUrl: './tls21030-cru.component.html',
+    selector: 'app-tls21030-cru',
+    templateUrl: './tls21030-cru.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        DropdownComponent,
+        EditorTextComponent,
+        TableComponent,
+        NgIf,
+        TranslateModule,
+    ],
 })
 export class TLS21030CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.group({

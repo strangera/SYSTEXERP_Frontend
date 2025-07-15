@@ -6,7 +6,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { ContractFlowService } from '../tls13010/services/contract-flow.service';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 import {
   ConditionDataItem,
@@ -25,11 +25,21 @@ import {
   CommissionItem
 } from '../tls13010/tls13010.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { AccordionModule } from 'primeng/accordion';
+import { DialogModule } from 'primeng/dialog';
+import { PrimeTemplate } from 'primeng/api';
+import { Button } from 'primeng/button';
 
 @Component({
   selector: 'app-tls13010-next3',
   templateUrl: './tls13010-next3.component.html',
-  styleUrls: ['./tls13010-next3.component.scss']
+  styleUrls: ['./tls13010-next3.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, DialogModule, PrimeTemplate, Button]
 })
 export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataItem> implements OnInit, OnDestroy {
 
@@ -184,7 +194,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   private setupNext2EventListener(): void {
     const eventListener = (event: CustomEvent) => {
       console.log('📡 收到 Next2 資料變更事件:', event.detail);
-      
+
       const commissionType = this.contractInfoData[0]?.tlt_term_type;
       if (this.shouldIntegrateNext2Data(commissionType || '')) {
         // 立即執行同步檢查
@@ -236,7 +246,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       console.log('✅ 沒有用戶修改，進行 Next2 同步');
       this.lastSyncVersion = currentVersion;
       this.syncFromNext2Data(currentNext2Data);
-      
+
       // 🎯 新增：檢查同步後的資料筆數一致性
       this.validateSyncConsistency();
     }
@@ -481,10 +491,10 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     if (savedNext3Data && Array.isArray(savedNext3Data) && savedNext3Data.length > 0) {
       console.log('📦 使用 Next3 暫存資料，項目數量:', savedNext3Data.length);
       this.loadConditionDataFromCache(savedNext3Data);
-      
+
       // 🎯 ⭐ 修復：只載入 Next2 資料用於監聽，但不要重新生成條件設定
       this.loadNext2CommissionDataForMonitoringOnly();
-      
+
       this.conditionDataLoaded = true;
       this.dataLoaded = true;
       return;
@@ -574,7 +584,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
 
       console.log('✅ 載入 Next2 抽成設定資料成功（僅供監聽）');
       console.log('📋 資料數量:', this.commissionDataFromNext2.length);
-      
+
       // 🎯 ⭐ 重要：初始化版本號，避免監聽器誤判為變更
       this.lastSyncVersion = this.contractFlowService.getDataVersion('step3');
       console.log('🔒 保持現有的條件設定資料，不重新生成，初始版本號:', this.lastSyncVersion);
@@ -1403,7 +1413,94 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
       this.notificationService.successBubble('契約資料提交成功！');
       this.contractFlowService.clearAllData();
       this.router.navigate(['account/tls/tls13010']);
-    }, 2000);
+    }, 3000); // Next3 給更多時間讓使用者閱讀詳細資訊
+  }
+
+  private handleSubmitError(error: any): void {
+    this.loading = false;
+    this.notificationService.unblockUi();
+
+    console.error('💥 Next3: 處理提交錯誤:', error);
+
+    let errorMessage = '契約資料提交失敗';
+    let additionalInfo: string[] = [];
+
+    // 🎯 解析錯誤訊息
+    if (error?.error?.Message) {
+      errorMessage += `: ${error.error.Message}`;
+    } else if (error?.message) {
+      errorMessage += `: ${error.message}`;
+    } else if (typeof error === 'string') {
+      errorMessage += `: ${error}`;
+    }
+
+    // 🎯 特殊錯誤處理和建議
+    if (error?.status === 400) {
+      errorMessage = '資料格式錯誤，請檢查輸入內容';
+      additionalInfo.push('請檢查所有必填欄位是否已正確填寫');
+      additionalInfo.push('確認日期格式和數值範圍是否正確');
+    } else if (error?.status === 500) {
+      errorMessage = '伺服器內部錯誤，請稍後重試或聯繫管理員';
+      additionalInfo.push('您的資料已暫存，可稍後重新提交');
+    } else if (error?.status === 0) {
+      errorMessage = '網路連線錯誤，請檢查網路狀態';
+      additionalInfo.push('請確認網路連線正常後重試');
+    } else if (error?.status === 409) {
+      errorMessage = '資料衝突，可能有其他使用者正在編輯相同資料';
+      additionalInfo.push('請重新載入最新資料後再試');
+    }
+
+    // 🎯 顯示主要錯誤訊息
+    this.notificationService.errorBubble(errorMessage);
+
+    // 🎯 顯示額外建議（如果有）
+    if (additionalInfo.length > 0) {
+      setTimeout(() => {
+        additionalInfo.forEach(info => {
+          this.notificationService.infoBubble(info);
+        });
+      }, 1000);
+    }
+
+    // 🎯 記錄詳細錯誤資訊供除錯
+    console.group('❌ Next3: 詳細錯誤資訊');
+    console.log('Status:', error?.status);
+    console.log('StatusText:', error?.statusText);
+    console.log('URL:', error?.url);
+    console.log('Error Object:', error?.error);
+    console.log('Full Error:', error);
+    console.groupEnd();
+
+    // 🎯 額外的錯誤後處理
+    this.onContractSubmitError(error);
+  }
+
+  // 🎯 新增：提交成功後的額外處理
+  private onContractSubmitSuccess(response: any): void {
+    console.log('🎊 Next3: 執行提交成功後的額外處理');
+
+    // 可以在這裡加入額外的成功後邏輯，例如：
+    // - 發送統計資料
+    // - 更新本地暫存
+    // - 記錄操作日誌
+
+    // 🎯 如果有處理摘要，可以記錄
+    if (response.data?.Summary) {
+      console.log('📊 處理摘要:', response.data.Summary);
+    }
+  }
+
+  // 🎯 新增：提交錯誤後的額外處理
+  private onContractSubmitError(error: any): void {
+    console.log('🔧 Next3: 執行提交錯誤後的額外處理');
+
+    // 可以在這裡加入額外的錯誤後邏輯，例如：
+    // - 自動儲存錯誤報告
+    // - 發送錯誤統計
+    // - 提供復原建議
+
+    // 🎯 保持資料暫存狀態，方便使用者重試
+    console.log('💾 錯誤後保持資料暫存狀態，使用者可重新提交');
   }
 
   // 🎯 導航方法
@@ -1537,7 +1634,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   // 🎯 新增：驗證同步一致性的方法
   private validateSyncConsistency(): void {
     const commissionType = this.contractInfoData[0]?.tlt_term_type;
-    
+
     if (!this.shouldIntegrateNext2Data(commissionType || '')) {
       return;
     }
@@ -1545,21 +1642,21 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     // 計算 Next2 有效的折扣設定明細數量
     const next2ValidDiscountItems = this.commissionDataFromNext2?.reduce((total, commission) => {
       if (commission._status === 'deleted') return total;
-      
-      const validDiscountItems = commission.discountSettingItems?.filter(item => 
+
+      const validDiscountItems = commission.discountSettingItems?.filter(item =>
         item && item._status !== 'deleted'
       ) || [];
-      
+
       return total + validDiscountItems.length;
     }, 0) || 0;
 
     // 計算 Next3 來自 Next2 的條件設定數量
-    const next3FromNext2Items = this.baseRentHigherItems.filter(item => 
+    const next3FromNext2Items = this.baseRentHigherItems.filter(item =>
       item._fromNext2 && item._status !== 'deleted'
     ).length;
 
     // 計算 Next3 自建的條件設定數量
-    const next3UserCreatedItems = this.baseRentHigherItems.filter(item => 
+    const next3UserCreatedItems = this.baseRentHigherItems.filter(item =>
       !item._fromNext2 && item._status !== 'deleted'
     ).length;
 
@@ -1580,7 +1677,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   // 🎯 新增：修正資料不一致的方法
   private fixDataInconsistency(): void {
     const commissionType = this.contractInfoData[0]?.tlt_term_type;
-    
+
     if (!this.shouldIntegrateNext2Data(commissionType || '')) {
       return;
     }
@@ -1588,7 +1685,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     console.log('🔧 開始修正資料不一致...');
 
     // 保留用戶自建的項目和已修改的項目
-    const userCreatedItems = this.baseRentHigherItems.filter(item => 
+    const userCreatedItems = this.baseRentHigherItems.filter(item =>
       !item._fromNext2 || item._status === 'modified'
     );
 
@@ -1605,20 +1702,20 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   // 🎯 新增：公開的資料同步驗證方法
   public validateNext2Next3Sync(): void {
     const commissionType = this.contractInfoData[0]?.tlt_term_type;
-    
+
     if (!this.shouldIntegrateNext2Data(commissionType || '')) {
       this.notificationService.infoBubble('當前抽成類型不需要與 Next2 同步');
       return;
     }
 
     this.validateSyncConsistency();
-    
+
     const next2Count = this.commissionDataFromNext2?.reduce((total, commission) => {
       if (commission._status === 'deleted') return total;
       return total + (commission.discountSettingItems?.filter(item => item._status !== 'deleted').length || 0);
     }, 0) || 0;
 
-    const next3Count = this.baseRentHigherItems.filter(item => 
+    const next3Count = this.baseRentHigherItems.filter(item =>
       item._fromNext2 && item._status !== 'deleted'
     ).length;
 
@@ -1632,23 +1729,23 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
   // 🎯 新增：調試用暫存狀態檢查方法
   public debugStorageStatus(): void {
     console.log('🔍 === Next3 暫存狀態調試 ===');
-    
+
     const savedNext3Data = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
     const rawStorage = sessionStorage.getItem('TLS13010_CONTRACT_FLOW');
-    
+
     console.log('📊 當前 Next3 資料狀態:', {
       baseRentHigherItems: this.baseRentHigherItems.length,
       來自Next2: this.baseRentHigherItems.filter(item => item._fromNext2).length,
       已修改: this.baseRentHigherItems.filter(item => item._status === 'modified').length,
       新增: this.baseRentHigherItems.filter(item => item._status === 'new').length
     });
-    
+
     console.log('💾 工作流程暫存資料:', {
       hasStep4Data: !!savedNext3Data,
       step4DataLength: Array.isArray(savedNext3Data) ? savedNext3Data.length : 0,
       step4DataType: typeof savedNext3Data
     });
-    
+
     if (rawStorage) {
       try {
         const parsed = JSON.parse(rawStorage);
@@ -1664,14 +1761,14 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionDataI
     } else {
       console.warn('⚠️ SessionStorage 中沒有工作流程資料');
     }
-    
+
     this.notificationService.infoBubble('調試資訊已輸出到 Console');
   }
 
   // 🎯 新增：強制同步到 Next2 防止導航時資料覆蓋
   private forceSyncToNext2BeforeNavigation(): void {
     const commissionType = this.contractInfoData[0]?.tlt_term_type;
-    
+
     if (!this.shouldIntegrateNext2Data(commissionType || '')) {
       console.log('🔄 當前抽成類型不需要同步到 Next2');
       return;

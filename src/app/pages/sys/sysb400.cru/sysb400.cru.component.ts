@@ -1,11 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // Shared
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption, option, Sysb400m } from '../../../shared/models/sys/sysb000.module';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 import { Sysb300Service } from '../../../service/api/sys/sysb300.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 組織碼設定作業(包含level)
 export interface orgOption {
@@ -16,9 +23,21 @@ export interface orgOption {
 }
 
 @Component({
-  selector: 'app-sysb400.cru',
-  templateUrl: './sysb400.cru.component.html',
-  styleUrl: './sysb400.cru.component.scss',
+    selector: 'app-sysb400.cru',
+    templateUrl: './sysb400.cru.component.html',
+    styleUrl: './sysb400.cru.component.scss',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        DropdownComponent,
+        InputTextComponent,
+        NgIf,
+        TranslateModule,
+    ],
 })
 // 組織碼設定作業 CRU
 export class SYSB400CRUComponent

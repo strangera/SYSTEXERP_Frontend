@@ -85,15 +85,6 @@
       </div>
 
       <div class="grid p-fluid">
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="廠商編號" controlName="VEN_No"
-          [control]="dataForm.controls.VEN_No" [submitted]="submitted"></app-input-text>
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="廠商名稱" controlName="VEN_Name"
-          [control]="dataForm.controls.VEN_Name" [submitted]="submitted"></app-input-text>
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="廠商簡稱" controlName="VEN_ShortName"
-          [control]="dataForm.controls.VEN_ShortName" [submitted]="submitted"></app-input-text>
-      </div>
-
-      <div class="grid p-fluid">
         <div class="col-12 mt-5">
           <h5>付 款 資 料</h5>
         </div>
@@ -105,7 +96,7 @@
           <app-dropdown label="廠商匯款銀行代號" controlName="VEN_BankNo" [control]="dataForm.controls.VEN_BankNo"
             [options]="(bankOptions$ | async) || []" optionLabel="label" optionValue="value"
             [submitted]="submitted"></app-dropdown>
-        </div>
+        </div>x
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="匯款帳號" controlName="VEN_BankAccountNo" [control]="dataForm.controls.VEN_BankAccountNo"
@@ -123,8 +114,8 @@
       <div class="grid p-fluid mt-5">
         <app-table [showReportMode]="false" class="col-12" [data]="contacts" [columns]="columns" [showEdit]="false"
           [showDetail]="false" [showCheckBox]="true" [showInsert]="!isReadonly" [showRowEdit]="!isReadonly"
-          (delete)="onDelete($event)" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
-          [showCaption]="!isFormReadable" [showManage]="!isReadonly" [showCheckBox]="!isReadonly" [insertRowData]="true"
+          (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [showCaption]="!isFormReadable"
+          [showManage]="!isReadonly" [showCheckBox]="!isReadonly" [insertRowData]="true"
           (dataChange)="contacts = $event"></app-table>
       </div>
 

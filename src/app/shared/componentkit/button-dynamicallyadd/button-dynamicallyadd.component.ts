@@ -1,10 +1,14 @@
 import { Component, EventEmitter, Input, Output, ViewEncapsulation } from '@angular/core';
+import { Button } from 'primeng/button';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-button-dynamicallyadd',
-  templateUrl: './button-dynamicallyadd.component.html',
-  styleUrl: './button-dynamicallyadd.component.scss',
-  encapsulation: ViewEncapsulation.None,
+    selector: 'app-button-dynamicallyadd',
+    templateUrl: './button-dynamicallyadd.component.html',
+    styleUrl: './button-dynamicallyadd.component.scss',
+    encapsulation: ViewEncapsulation.None,
+    standalone: true,
+    imports: [Button, TranslateModule],
 })
 export class ButtonDynamicallyaddComponent {
   @Input() label: string = '';

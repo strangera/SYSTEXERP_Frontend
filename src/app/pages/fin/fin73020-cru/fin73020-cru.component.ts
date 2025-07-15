@@ -1,10 +1,15 @@
 import { Component } from '@angular/core';
-import { KeyValue } from '@angular/common';
+import { KeyValue, NgIf, NgFor, KeyValuePipe } from '@angular/common';
+import { TableModule } from 'primeng/table';
+import { PrimeTemplate } from 'primeng/api';
+import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-fin73020-cru',
-  templateUrl: './fin73020-cru.component.html',
-  styleUrls: ['./fin73020-cru.component.scss']
+    selector: 'app-fin73020-cru',
+    templateUrl: './fin73020-cru.component.html',
+    styleUrls: ['./fin73020-cru.component.scss'],
+    standalone: true,
+    imports: [TableModule, PrimeTemplate, NgIf, FormsModule, NgFor, KeyValuePipe]
 })
 export class FIN73020CRUComponent {
   rows: RowData[] = [

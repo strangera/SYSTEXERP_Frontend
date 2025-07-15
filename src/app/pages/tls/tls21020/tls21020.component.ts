@@ -1,12 +1,29 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 @Component({
-  selector: 'app-tls21020',
-  templateUrl: './tls21020.component.html',
+    selector: 'app-tls21020',
+    templateUrl: './tls21020.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        DropdownComponent,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 export class TLS21020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({

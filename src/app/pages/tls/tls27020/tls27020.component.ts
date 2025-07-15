@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
 import {
@@ -11,11 +11,20 @@ import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 import { ValidationService } from '../../../shared/service/validation.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-tls27020',
-  templateUrl: './tls27020.component.html',
-  styleUrls: ['./tls27020.component.scss']
+    selector: 'app-tls27020',
+    templateUrl: './tls27020.component.html',
+    styleUrls: ['./tls27020.component.scss'],
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, TableComponent, TranslateModule]
 })
 export class TLS27020Component {
 

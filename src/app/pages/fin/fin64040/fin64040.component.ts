@@ -1,6 +1,6 @@
 
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
@@ -9,11 +9,19 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-fin64040',
   templateUrl: './fin64040.component.html',
-  styleUrl: './fin64040.component.scss'
+  styleUrl: './fin64040.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
 })
 export class FIN64040Component extends BasicQpageComponent implements OnInit {
 
@@ -125,7 +133,7 @@ export class FIN64040Component extends BasicQpageComponent implements OnInit {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -138,7 +146,7 @@ export class FIN64040Component extends BasicQpageComponent implements OnInit {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
   onClearForm() {
     this.queryForm.reset();  // 重置表單

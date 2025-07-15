@@ -2,7 +2,7 @@ import { WhetherService } from './../../../service/basic/whether.service';
 import { ContractStatusService } from './../../../service/basic/contract-status.service';
 import { SalesTypeService } from './../../../service/basic/sales-type.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -13,12 +13,22 @@ import { NotificationService } from '../../../shared/component/notification-mess
 
 import { ValidationService } from '../../../shared/service/validation.service';
 import { AnnouncementUserService } from '../../../service/basic/announcement-user.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 //2.2.13.6 專櫃活動設定暨審核作業
 @Component({
-  selector: 'app-tls2d060',
-  templateUrl: './tls2d060.component.html',
-  styleUrl: './tls2d060.component.scss'
+    selector: 'app-tls2d060',
+    templateUrl: './tls2d060.component.html',
+    styleUrl: './tls2d060.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, CalendarRangeComponent, MultiSelectComponent, TranslateModule]
 })
 export class TLS2D060Component {
   ProgNo: string = '220068';

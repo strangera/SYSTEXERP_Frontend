@@ -1,18 +1,24 @@
 import { ValidationService } from './../../../shared/service/validation.service';
 import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
 
 // 2.4.2.2 快速鍵名稱維護作業 CRU
 @Component({
-  selector: 'app-tls42020-cru',
-  templateUrl: './tls42020-cru.component.html',
-  styleUrl: './tls42020-cru.component.scss'
+    selector: 'app-tls42020-cru',
+    templateUrl: './tls42020-cru.component.html',
+    styleUrl: './tls42020-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, ButtonComponent, NgIf, TranslateModule]
 })
 export class TLS42020CRUComponent extends BasicCrupageComponent implements OnInit {
   // ----------------------------------------------------------------

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import {
@@ -12,12 +12,27 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { CardTypeService } from '../../../service/basic/card-type.service';
 import { CardCategoryService } from '../../../service/basic/card-category.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 
 @Component({
   selector: 'app-tls21040-mod',
   templateUrl: './tls21040-mod.component.html',
   styleUrls: ['./tls21040-mod.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    ButtonComponent,
+  ],
 })
 export class TLS21040ModComponent implements OnInit {
   ProgNo: string = '220004';
@@ -138,7 +153,7 @@ export class TLS21040ModComponent implements OnInit {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -151,6 +166,6 @@ export class TLS21040ModComponent implements OnInit {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
 }

@@ -13,11 +13,18 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { CardTypeService } from '../../../service/basic/card-type.service';
 import { CardCategoryService } from '../../../service/basic/card-category.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-tls29010-cru',
   templateUrl: './tls29010-cru.component.html',
-  styleUrl: './tls29010-cru.component.scss'
+  styleUrl: './tls29010-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, TableComponent, ButtonComponent, NgIf]
 })
 export class TLS29010CRUComponent {
 
@@ -179,7 +186,7 @@ export class TLS29010CRUComponent {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -192,7 +199,7 @@ export class TLS29010CRUComponent {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
   get isFormEditable(): boolean {
     return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());

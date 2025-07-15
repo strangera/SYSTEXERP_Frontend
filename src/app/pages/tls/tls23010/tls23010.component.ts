@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { StatusFlagService } from '../../../service/basic/status-flag.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
@@ -14,6 +14,20 @@ import { CounterNameService } from '../../../service/basic/counter-name.service'
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CashierService } from '../../../service/basic/cashier.service';
 import { Subscription } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DialogModule } from 'primeng/dialog';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { PrimeTemplate } from 'primeng/api';
+import { ButtonDirective } from 'primeng/button';
+import { TranslateModule } from '@ngx-translate/core';
 interface MainData {
   SYS_StoreNo: string;
   TXN_Date: string;
@@ -29,9 +43,28 @@ const now = new Date();
 
 //型態別報表
 @Component({
-  selector: 'app-tls23010',
-  templateUrl: './tls23010.component.html',
-  styleUrls: ['./tls23010.component.scss'],
+    selector: 'app-tls23010',
+    templateUrl: './tls23010.component.html',
+    styleUrls: ['./tls23010.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        CalendarRangeQuickComponent,
+        MultiSelectComponent,
+        InputNumberRangeComponent,
+        InputTextComponent,
+        DropdownComponent,
+        InputTextModule,
+        ButtonComponent,
+        DialogModule,
+        RadioButtonModule,
+        PrimeTemplate,
+        ButtonDirective,
+        TranslateModule,
+    ],
 })
 export class TLS23010Component extends BasicQueryPageComponent<any> {
   displayMode: 'Detail' | 'Summary' = 'Detail'; // 預設顯示明細報表

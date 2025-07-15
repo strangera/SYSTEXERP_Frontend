@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Validators, FormBuilder, FormGroup } from '@angular/forms';
+import { Validators, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Tlsb200Model } from './tlsb200.model';
 import { map, Observable, finalize } from 'rxjs';
@@ -8,17 +8,29 @@ import { Column } from '../../../shared/componentkit/table/table.model';
 import {
   validateMaxLength,
 } from '../../../shared/models/system/validate-field.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { NgIf, AsyncPipe } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import { Sysb200Service } from '../../../service/api/sys/sysb200.service';
 
 @Component({
   selector: 'app-sysb200-cru',
   templateUrl: './sysb200.cru.component.html',
-  styleUrls: ['./sysb200.cru.component.scss']
+  styleUrls: ['./sysb200.cru.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, RadiobuttonComponent, TableComponent, NgIf, AsyncPipe, TranslateModule]
 })
 export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     // 基本資料
     VEN_No: ['', [Validators.required, Validators.maxLength(14)]],
-    VEN_Flag: [[]],
+    VEN_Flag: ['', Validators.required],
     VEN_Uniform: ['', Validators.maxLength(10)],
     VEN_RemitFeeMode: ['', Validators.required],
     VEN_Name: ['', [Validators.required, Validators.maxLength(60)]],
@@ -46,10 +58,10 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     VEN_Remark: ['', Validators.maxLength(160)]
   });
 
-  // 聯絡人表格資料
   contacts: any[] = [];
   selectedRows: any[] = [];
   isReadonly = false;
+
   columns: Column[] = [
     { field: 'VEN_Boss', header: '聯絡人', type: 'input', validate: [validateMaxLength(12)] },
     { field: 'VEN_BossTitle', header: '職稱', type: 'input', validate: [validateMaxLength(16)] },
@@ -59,9 +71,12 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     { field: 'VEN_BossEmail', header: '電子郵件', type: 'input', validate: [validateMaxLength(60)] },
   ];
 
+  venderOptions: { label: string; value: string }[] = [];
+
   flagOptions = [
     { value: '1', label: '統一編號' },
-    { value: '2', label: '身份證' }
+    { value: '2', label: '身份證' },
+    { value: '3', label: '護照證號' }
   ];
 
   remitFeeOptions = [
@@ -80,21 +95,39 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     { label: '已審核', value: '1' }
   ];
 
+
   bankOptions$!: Observable<any[]>;
 
   constructor(
     override readonly formBuilder: FormBuilder,
     private sysbc00Service: Sysbc00Service,
+    private sysb200Service: Sysb200Service
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('SYSB200', this.dataForm);
+    this.loadOptions();
+    const id = this.rowdata?.id
+    if (id) {
+      this.sysb200Service.querySYSB200Detail({ pos2013_id: id }).subscribe({
+        next: (res) => {
+          if (res.Data) {
+            this.contacts = res.Data;
+          }
+          this.messageService.successBubble('資料載入完成');
+        },
+        error: () => {
+          this.messageService.errorBubble('載入明細失敗');
+        }
+      });
+
+    }
+
     this.loadBankOptions();
 
     if (this.crudstatus === 'Create') {
-      // 新增不鎖定審核欄位
       this.isReadonly = false;
     } else {
       if (this.dataForm.get('VEN_Status')?.value === '1') {
@@ -107,8 +140,14 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
       }
     }
   }
-
-
+  loadOptions() {
+    // this.sysb200Service.querySYSB200({}).subscribe(res => {
+    //   this.venderOptions = (res.Data ?? []).map((item: { VEN_No: string; VEN_Name: string }) => ({
+    //     label: `${item.VEN_No} - ${item.VEN_Name}`,
+    //     value: item.VEN_No
+    //   }));
+    // });
+  }
   loadBankOptions() {
     this.bankOptions$ = this.sysbc00Service.querySYSBC00({}).pipe(
       map(res => (res.Data ?? []).map(item => ({
@@ -137,11 +176,6 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     this.selectedRows = [];
   }
 
-  onDelete(rows: any[]) {
-    this.contacts = this.contacts.filter(item => !rows.includes(item));
-    this.selectedRows = [];
-  }
-
   onSubmit(form: FormGroup): void {
     console.log("表單 valid 狀態：", form.valid);
     if (!form.valid) {
@@ -151,26 +185,86 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
 
     this.loading = true;
 
+    // 處理 VEN_Uniform
+    const flag = form.get('VEN_Flag')?.value;
+    const uniform = form.get('VEN_Uniform')?.value;
+    const uniformTrimmed = uniform?.trim();
+
+    if (flag === '1') {
+      const regex = /^[0-9]{8}$/;
+      if (!regex.test(uniformTrimmed)) {
+        this.messageService.warnBubble("統一編號格式錯誤，需為 8 碼數字");
+        this.loading = false;
+        return;
+      }
+    }
+
+    if (flag === '2') {
+      const regex = /^[A-Z]{1}[0-9]{9}$/i;
+      if (!regex.test(uniformTrimmed)) {
+        this.messageService.warnBubble("身份證格式錯誤，需為 1 英文 + 9 碼數字");
+        this.loading = false;
+        return;
+      }
+    }
+
+    // 驗證聯絡人身份證
+    const contactsValid = this.contacts.every(item => {
+      if (!item.VEN_BossID || item.VEN_BossID.trim() === '') return true;
+      const regex = /^[A-Z]{1}[0-9]{9}$/i;
+      return regex.test(item.VEN_BossID.trim());
+    });
+
+    if (!contactsValid) {
+      this.messageService.warnBubble("聯絡人身份證號格式錯誤，需為 1 英文 + 9 碼數字，或留空");
+      this.loading = false;
+      return;
+    }
+
+    // 處理 VEN_No（如果是多選下拉，取第一個）
+    const VEN_No = Array.isArray(form.get('VEN_No')?.value)
+      ? form.get('VEN_No')?.value[0]
+      : form.get('VEN_No')?.value;
+
+    // 組資料
     const data = {
+      id: this.rowdata?.id ?? 0,
       ...form.getRawValue(),
-      contacts: this.contacts
+      VEN_No: VEN_No,
+      VEN_Uniform: uniformTrimmed === '' ? null : uniformTrimmed,
+      VEN_PayConditionDay: Number(form.get('VEN_PayConditionDay')?.value),
+      pOS20131Details: this.contacts.map(item => ({
+        VEN_Boss: item.VEN_Boss,
+        VEN_BossID: item.VEN_BossID?.trim() === '' ? null : item.VEN_BossID?.trim(),
+        VEN_BossTitle: item.VEN_BossTitle,
+        VEN_BossTel: item.VEN_BossTel,
+        VEN_BossAddr: item.VEN_BossAddr,
+        VEN_BossEmail: item.VEN_BossEmail,
+        id: item.id ?? 0
+      }))
     };
 
-    // 模擬 API 呼叫
-    const apiCall$ = this.crudstatus === 'Create'
-      ? this.sysbc00Service.insertSYSBC00(data) //新增 API
-      : this.sysbc00Service.updateSYSBC00(data); //修改 API
+    // 呼叫 API
+    const apiCall$ = this.isFormCreateable
+      ? this.sysb200Service.insertSYSB200(data)
+      : this.sysb200Service.updateSYSB200(data);
+
 
     apiCall$
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: () => {
           this.messageService.successBubble(this.crudstatus === 'Create' ? '新增成功' : '修改成功');
-          this.onCancel(); // 或者 reset，或跳轉
+
+          // 設定回列表時自動刷新
+          localStorage.setItem('refreshList', 'true');
+
+          this.onCancel(); // 返回列表
         },
         error: () => {
           this.messageService.errorBubble('送出失敗，請稍後再試');
         }
       });
   }
+
 }

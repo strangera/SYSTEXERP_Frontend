@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime } from '../../../shared/componentkit/table/table.model';
@@ -9,7 +9,19 @@ import { ExportLabelService, IExportLabelRequest } from '../../../service/utilit
 import { HttpResponse } from '@angular/common/http';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { FieldsConfig, DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Button } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
+import { NgStyle, NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 export const enum POStatus {
   已申請 = '0',
   取消 = '1',
@@ -21,16 +33,18 @@ export const enum POStatus {
 }
 // 2.5.2.1 採購單維護作業
 @Component({
-  selector: 'app-tls52010',
-  templateUrl: './tls52010.component.html',
-  animations: [
-    trigger('slideInFromLeft', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateX(-20%)' }),
-        animate('400ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
-      ])
-    ])
-  ]
+    selector: 'app-tls52010',
+    templateUrl: './tls52010.component.html',
+    animations: [
+        trigger('slideInFromLeft', [
+            transition(':enter', [
+                style({ opacity: 0, transform: 'translateX(-20%)' }),
+                animate('400ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
+            ])
+        ])
+    ],
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, DropdownTableComponent, DropdownComponent, CalendarRangeComponent, TableComponent, Button, TooltipModule, NgStyle, NgIf, TranslateModule]
 })
 export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> implements OnInit {
   queryForm = this.formBuilder.group({

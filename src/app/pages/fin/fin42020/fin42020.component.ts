@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
@@ -13,11 +13,21 @@ import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpag
 import { VendorService } from '../../../service/basic/vendor.service';
 import { FileType } from '../../../shared/componentkit/file-upload/file-upload.component';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-fin42020',
   templateUrl: './fin42020.component.html',
-  styleUrl: './fin42020.component.scss'
+  styleUrl: './fin42020.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class FIN42020Component extends BasicQpageComponent implements OnInit {
   // Upload files
@@ -163,7 +173,7 @@ export class FIN42020Component extends BasicQpageComponent implements OnInit {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -176,7 +186,7 @@ export class FIN42020Component extends BasicQpageComponent implements OnInit {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
   onClearForm() {
     this.queryForm.reset(); // 重置表單

@@ -1,11 +1,22 @@
 import { Component, Input, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { MultiSelect, MultiSelectLazyLoadEvent } from 'primeng/multiselect';
+import { MultiSelect, MultiSelectLazyLoadEvent, MultiSelectModule } from 'primeng/multiselect';
+import { NgIf, NgClass } from '@angular/common';
+import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 
 @Component({
-  selector: 'app-multi-select',
-  templateUrl: './multi-select.component.html',
+    selector: 'app-multi-select',
+    templateUrl: './multi-select.component.html',
+    standalone: true,
+    imports: [
+        NgIf,
+        MultiSelectModule,
+        FormsModule,
+        ReactiveFormsModule,
+        NgClass,
+        ControlMessagesComponent,
+    ],
 })
 export class MultiSelectComponent extends BasicKitComponent implements OnInit, OnChanges {
   @ViewChild('multiSelect') multiSelect!: MultiSelect;

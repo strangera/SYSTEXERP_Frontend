@@ -2,7 +2,7 @@ import { FloorService } from './../../../service/basic/floor.service';
 import { CounterCodeService } from './../../../service/basic/counter-code.service';
 import { SettlementMethodService } from './../../../service/basic/settlement-method.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -13,12 +13,20 @@ import { NotificationService } from '../../../shared/component/notification-mess
 
 import { ValidationService } from '../../../shared/service/validation.service';
 import { CommissionTypeService } from '../../../service/basic/commission-type.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.14.4 專櫃帳款試算表
 @Component({
-  selector: 'app-tls2e040',
-  templateUrl: './tls2e040.component.html',
-  styleUrl: './tls2e040.component.scss'
+    selector: 'app-tls2e040',
+    templateUrl: './tls2e040.component.html',
+    styleUrl: './tls2e040.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, TranslateModule]
 })
 export class TLS2E040Component {
   ProgNo: string = '220073';

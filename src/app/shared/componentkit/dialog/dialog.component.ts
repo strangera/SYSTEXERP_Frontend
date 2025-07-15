@@ -1,9 +1,14 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { DialogModule } from 'primeng/dialog';
+import { PrimeTemplate } from 'primeng/api';
+import { ButtonComponent } from '../button/button.component';
 
 @Component({
-  selector: 'app-dialog',
-  templateUrl: './dialog.component.html',
-  styleUrl: './dialog.component.scss'
+    selector: 'app-dialog',
+    templateUrl: './dialog.component.html',
+    styleUrl: './dialog.component.scss',
+    standalone: true,
+    imports: [DialogModule, PrimeTemplate, ButtonComponent]
 })
 export class DialogComponent {
   @Input() visible = false;

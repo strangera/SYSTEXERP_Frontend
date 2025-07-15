@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
 import {
@@ -11,15 +11,22 @@ import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 import { WhetherService } from '../../../service/basic/whether.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 
 const now = new Date();
 
 @Component({
   selector: 'app-tls25020-mod',
-
   templateUrl: './tls25020-mod.component.html',
-  styleUrl: './tls25020-mod.component.scss'
+  styleUrl: './tls25020-mod.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, InputTextComponent, ButtonComponent]
 })
 export class TLS25020ModComponent {
 
@@ -180,7 +187,7 @@ export class TLS25020ModComponent {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -193,6 +200,6 @@ export class TLS25020ModComponent {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
 }

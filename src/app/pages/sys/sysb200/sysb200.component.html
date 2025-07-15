@@ -11,13 +11,13 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="廠商編號" controlName="VEN_No" [options]="venderOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.VEN_No" [submitted]="submitted"></app-multi-select>
+              optionValue="value" [control]="queryForm.controls.VEN_NoList" [submitted]="submitted"></app-multi-select>
           </div>
 
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="審核狀態" controlName="VEN_Status" [options]="approvalOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.VEN_Status" [submitted]="submitted"></app-multi-select>
+            <app-dropdown label="審核狀態" controlName="VEN_Status" [options]="approvalOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VEN_Status" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -26,7 +26,7 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商名稱(中文)" controlName="	VEN_CName" [control]="queryForm.controls.VEN_CName"
+            <app-input-text label="廠商名稱(中文)" controlName="VEN_Name" [control]="queryForm.controls.VEN_CName"
               [submitted]="submitted"></app-input-text>
           </div>
 
@@ -40,7 +40,7 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="廠商匯款銀行代號" controlName="VEN_BankNo" [control]="queryForm.controls.VEN_BankNo"
+            <app-dropdown label="廠商匯款銀行代號" controlName="VEN_BNK_No" [control]="queryForm.controls.VEN_BNK_No"
               [options]="(bankOptions$ | async) || []" optionLabel="label" optionValue="value" [submitted]="submitted">
             </app-dropdown>
           </div>
@@ -60,7 +60,7 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-6">
-            <app-input-text label="聯絡人電子郵件" controlName="VEN_GUEmail" [control]="queryForm.controls.VEN_GUEmail"
+            <app-input-text label="聯絡人電子郵件" controlName="VEN_BossEmail" [control]="queryForm.controls.VEN_BossEmail"
               [submitted]="submitted"></app-input-text>
           </div>
 
@@ -120,7 +120,7 @@
 <div class="card">
   <app-table tableKey="TLS2A020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
     (edit)="onEdit($event)" (selectionChange)="selectedItems = $event" (detail)="onDetail($event)" [showCheckBox]="true"
-    dataKey="id" [multiSortMeta]="[{ field: 'pendingApprovalRegisterCode', order: 1 }]" [totalRecords]="totalRecords"
-    [lazy]="true" [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [showManage]="true" [addButton]="addButton" [showDelete]=false></app-table>
+    dataKey="id" [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true"
+    (delete)="onDelete($event)" [addButton]="addButton" [loading]="loading" [showDelete]="false"></app-table>
 </div>

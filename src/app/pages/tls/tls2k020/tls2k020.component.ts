@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -10,12 +10,22 @@ import { NotificationService } from '../../../shared/component/notification-mess
 
 import { ValidationService } from '../../../shared/service/validation.service';
 import { ApprovalStatusService } from '../../../service/basic/approval-status.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.19.2 餘代卡領卡作業
 @Component({
-  selector: 'app-tls2k020',
-  templateUrl: './tls2k020.component.html',
-  styleUrl: './tls2k020.component.scss'
+    selector: 'app-tls2k020',
+    templateUrl: './tls2k020.component.html',
+    styleUrl: './tls2k020.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, MultiSelectComponent, CalendarRangeComponent, TableComponent, TranslateModule]
 })
 export class TLS2K020Component {
   ProgNo: string = '220098';

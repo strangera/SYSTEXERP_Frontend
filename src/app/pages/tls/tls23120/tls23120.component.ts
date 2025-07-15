@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RegionService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
@@ -11,11 +11,22 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-tls23120',
-  templateUrl: './tls23120.component.html',
-  styleUrls: ['./tls23120.component.scss']
+    selector: 'app-tls23120',
+    templateUrl: './tls23120.component.html',
+    styleUrls: ['./tls23120.component.scss'],
+    standalone: true,
+    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, DropdownComponent, RadiobuttonComponent, InputTextModule, ButtonComponent, TranslateModule]
 })
 export class TLS23120Component extends BasicQueryPageComponent<any> {
   showPageSizeDialog = false;
@@ -25,12 +36,13 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
     TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],
     TXN_DateEnd: [new Date('2020-01-15') as Date, [Validators.required]],
     bus_type: [],
-    ShowBusType: [],
+    ShowBusType: true,
     tlt_building: [],
     tlt_floor: [],
     org_id: [],
     area_no : [],
     TLT_No: [],
+    
     ...createPaginationConfig
   });
 
@@ -58,6 +70,10 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = [];
   CounterOptions: any[] = [];
+  WhetherOptions = [
+  { label: '是', value: true },
+  { label: '否', value: false },
+];
 
   constructor(
     private tls23120Service: TLS23120Service,
@@ -152,6 +168,7 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
 
     const queryFormValue = {
       ...this.queryForm.value,
+      ShowBusType: this.queryForm.value.ShowBusType ?? true,
       pageSize: this.customPageSize
     };
 

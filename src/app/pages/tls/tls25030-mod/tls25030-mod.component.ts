@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 import {
   FunsrightInfo,
@@ -13,12 +13,31 @@ import { FloorService } from '../../../service/basic/floor.service';
 import { ViolationStatusService } from '../../../service/basic/violation-status.service';
 import { DeductionItemService } from '../../../service/basic/deduction-item.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 
 @Component({
-  selector: 'app-tls25030-mod',
-  templateUrl: './tls25030-mod.component.html',
-  styleUrls: ['./tls25030-mod.component.scss'],
+    selector: 'app-tls25030-mod',
+    templateUrl: './tls25030-mod.component.html',
+    styleUrls: ['./tls25030-mod.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        DropdownComponent,
+        CalendarComponent,
+        InputNumberComponent,
+        ButtonComponent,
+    ],
 })
 export class TLS25030ModComponent implements OnInit, OnDestroy {
   ProgNo: string = '220034';

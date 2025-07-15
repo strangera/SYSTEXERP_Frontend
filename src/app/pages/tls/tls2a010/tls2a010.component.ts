@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import {
@@ -13,6 +13,14 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { FloorService } from '../../../service/basic/floor.service';
 import { PaymentToolService } from '../../../service/basic/payment-tool.service';
 import { ValidationService } from '../../../shared/service/validation.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 const now = new Date();
@@ -20,7 +28,9 @@ const now = new Date();
 @Component({
   selector: 'app-tls2a010',
   templateUrl: './tls2a010.component.html',
-  styleUrls: ['./tls2a010.component.scss']
+  styleUrls: ['./tls2a010.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, InputNumberRangeComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class TLS2A010Component {
 
@@ -129,7 +139,7 @@ export class TLS2A010Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -143,7 +153,7 @@ export class TLS2A010Component {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -156,6 +166,6 @@ export class TLS2A010Component {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
 }

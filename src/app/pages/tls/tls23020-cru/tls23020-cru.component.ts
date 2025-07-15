@@ -16,6 +16,8 @@ import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { PdfService } from '../../../service/basic/pdf.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 type DisplayMode = 'Detail' | 'Summary';
 interface ReportColumn {
   header: string;
@@ -25,9 +27,11 @@ interface ReportColumn {
 }
 
 @Component({
-  selector: 'app-tls23020-cru',
-  templateUrl: './tls23020-cru.component.html',
-  styleUrls: ['./tls23020-cru.component.scss']
+    selector: 'app-tls23020-cru',
+    templateUrl: './tls23020-cru.component.html',
+    styleUrls: ['./tls23020-cru.component.scss'],
+    standalone: true,
+    imports: [MenubarComponent, ReportTableGroupComponent]
 })
 export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
   pdfSummary: string[] = [];

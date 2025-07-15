@@ -1,6 +1,6 @@
 import { CardStatusService } from './../../../service/basic/card-status.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -10,12 +10,23 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 import { ValidationService } from '../../../shared/service/validation.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.19.3 餘代卡資料維護作業
 @Component({
-  selector: 'app-tls2k030',
-  templateUrl: './tls2k030.component.html',
-  styleUrl: './tls2k030.component.scss'
+    selector: 'app-tls2k030',
+    templateUrl: './tls2k030.component.html',
+    styleUrl: './tls2k030.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, InputNumberComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class TLS2K030Component {
   ProgNo: string = '220099';

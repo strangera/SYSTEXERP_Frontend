@@ -1,10 +1,18 @@
 import { Tls14030Service } from './../../../service/API/tls/tls14030.service';
 import { Component, OnInit } from '@angular/core';
-import { Validators, FormGroup } from '@angular/forms';
+import { Validators, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { Garantee_Ticket } from '../../../shared/models/tls/tls000.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 專櫃下拉資訊
 interface TLTTALENT{
@@ -12,12 +20,17 @@ interface TLTTALENT{
   ticket_remarks: string,
   tlt_name: string,
   tlt_no: string
+  open_fees: number, // 準時開業保證票
+  construct_fees: number, // 施工保證票
+  expiration_fees: number, // 契約屆滿保證票
 }
 
 @Component({
-  selector: 'app-tls14030-cru',
-  templateUrl: './tls14030-cru.component.html',
-  styleUrl: './tls14030-cru.component.scss'
+    selector: 'app-tls14030-cru',
+    templateUrl: './tls14030-cru.component.html',
+    styleUrl: './tls14030-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarComponent, NgIf, TranslateModule]
 })
 
 export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
@@ -32,7 +45,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
         ticket_type: ['1', [Validators.required, Validators.maxLength(1)]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿保證票"
         ticket_no: ['', [Validators.required, Validators.maxLength(20)]], // 票據編號 手動輸入
         ticket_kind: [null, [Validators.maxLength(1)]], // 票據種類 非必填但有限制長度 "1=本票 2=支票 3=行銀保證函 9=其他"
-        ticket_amount: [null, [Validators.required, Validators.min(0), Validators.maxLength(10)]], // 保證票金額 整數金額 "讀取 TLTTALENT 專櫃主檔相對的保證金金額"
+        ticket_amount: [null as number | null, [Validators.required, Validators.min(0), Validators.maxLength(10)]], // 保證票金額 整數金額 "讀取 TLTTALENT 專櫃主檔相對的保證金金額"
         expiry_date: [null], // 票據到期日期 手動輸入
         get_ticket_status: [null, [Validators.maxLength(1)]], // 票據收票狀態 "0=未繳票  1=已繳票  2=已退票  9=封存"
         get_date: [null], // 繳票日期 手動輸入
@@ -86,7 +99,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
           this.dataForm.get('talent_id')?.disable();
         }
 
-         // ⭐ 監聽 talent_id 變更
+        // ⭐ 監聽 talent_id 變更
         this.dataForm.get('talent_id')?.valueChanges.subscribe((value) => { // 合約編號 變更時寫入相關資料
           if (this.skipTalentChange) {
             this.skipTalentChange = false; // 重置旗標
@@ -95,6 +108,14 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
 
           if (value) {
             this.loadTLTTALENTDetail(value);
+          }
+        });
+
+        // ⭐ 監聽 ticket_type 變更 重新寫入保證票金額
+        this.dataForm.get('ticket_type')?.valueChanges.subscribe((type) => {
+          const talentId = this.dataForm.get('talent_id')?.value;
+          if (talentId) {
+            this.loadTLTTALENTDetail(talentId); // 重新依照型態寫入金額
           }
         });
       }
@@ -170,16 +191,34 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
             this.tls14030Service.getTLTTALENT(requestBody).subscribe((response) => {
             const data: TLTTALENT = response.Data;
 
+
             if (data) {
               this.skipTalentChange = true;
+
+              const ticketType = this.dataForm.get('ticket_type')?.value;
+              let ticketAmount: number | null = null;
+
+              switch (ticketType) {
+                case '1': // 準時開業保證票
+                  ticketAmount = data.open_fees ?? null;
+                  break;
+                case '2': // 施工保證票
+                  ticketAmount = data.construct_fees ?? null;
+                  break;
+                case '3': // 契約屆滿保證票
+                  ticketAmount = data.expiration_fees ?? null;
+                  break;
+              }
+
               this.dataForm.patchValue({
                 ticket_remarks: data.ticket_remarks || '',
                 tlt_name: data.tlt_name || '',
                 tlt_no: data.tlt_no || '',
+                ticket_amount: ticketAmount,
               });
 
               this.messageService.infoBubble('已經依照合約編號進行變更');
-              console.log('偵測到合約編號變更',data);
+              console.log('偵測到合約編號變更', data);
             }
           });
           }

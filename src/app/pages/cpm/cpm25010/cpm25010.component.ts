@@ -1,16 +1,24 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, NavigationExtras } from '@angular/router';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 
 @Component({
   selector: 'app-cpm25010',
   templateUrl: './cpm25010.component.html',
-  styleUrls: ['./cpm25010.component.scss']
+  styleUrls: ['./cpm25010.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, ButtonComponent, TranslateModule]
 })
 export class CPM25010Component extends BasicQpageComponent implements OnInit {
   queryForm = this.formBuilder.group({
@@ -97,7 +105,7 @@ export class CPM25010Component extends BasicQpageComponent implements OnInit {
         state: { crudstatus: CRUDStatus.Edit, rowdata: data, queryform: this.queryForm },
         skipLocationChange: true
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -106,6 +114,6 @@ export class CPM25010Component extends BasicQpageComponent implements OnInit {
       state: { crudstatus: CRUDStatus.Read, rowdata: data, queryform: this.queryForm },
       skipLocationChange: true
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
 }

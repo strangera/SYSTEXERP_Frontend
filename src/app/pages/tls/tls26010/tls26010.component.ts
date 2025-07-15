@@ -1,159 +1,89 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// 權限相關
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
+import { Component, computed, effect } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // 共用服務
-import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
-
-// 預購活動檔期設定
-const now = new Date();
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { PreorderECRListQuery, TLS26010Service, TLTTALENTQuery } from '../../../service/api/tls/tls26010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-tls26010',
   templateUrl: './tls26010.component.html',
-  styleUrls: ['./tls26010.component.scss']
+  styleUrls: ['./tls26010.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, DropdownComponent, CalendarRangeComponent, TableComponent, TranslateModule]
 })
-export class TLS26010Component {
-
-  ProgNo: string = '220035';
-
-  // 權限變數
-  funInfo?: FunsrightInfo;
-
-
-
+export class TLS26010Component extends BasicQueryPageComponent<any> {
 
   // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
   queryForm = this.formBuilder.group({
-    cashierCode: [],  // 收銀機號
-    counterName: [],  // 櫃位名稱
-    startDate: [],  // 起始日期
-    endDate: [],  // 截止日期
+    SYS3800s: [['']],    // 管別
+    SYS3900s: [['']],    // 樓層
+    ECR_Nos: [['']],     // 收銀機號
+    tlt_nos: [['']],     // 專櫃ID
+    pod_sdate_S: '', // 起S
+    pod_sdate_E: '', // 起E
+    pod_edate_S: '', // 迄S
+    pod_edate_E: '', // 迄E
   });
 
-  // 下拉選單選項
-  ECRNoOptions: any[] = []; // 收銀機號下拉選單
-  counterCodeOptions: any[] = [];
+  // 監聽變化用
+  private sys3800sSignal = toSignal(this.queryForm.get('SYS3800s')!.valueChanges);
+  private sys3900sSignal = toSignal(this.queryForm.get('SYS3900s')!.valueChanges);
 
-  // 表格資料
-  data: any[] = [
+  // API query
+  private quertyPreorderECRList = computed<PreorderECRListQuery>(() => ({
+    data_type: '2',
+    building_no: Array.from(this.queryForm.value.SYS3800s ? this.queryForm.value.SYS3800s : []),
+    floor_no: Array.from(this.queryForm.value.SYS3900s ? this.queryForm.value.SYS3900s : []),
+  }));
+  private queryTLTTALENT = computed<TLTTALENTQuery>(() => ({
+    building_no: Array.from(this.queryForm.value.SYS3800s ? this.queryForm.value.SYS3800s : []),
+    floor_no: Array.from(this.queryForm.value.SYS3900s ? this.queryForm.value.SYS3900s : []),
+  }));
 
+  columns: { field: string; header: string; visible: boolean; }[] = [
+    { field: 'xxx', header: 'xxx', visible: true },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'cashRegisterNumber', header: '收銀機代碼', visible: true },
-    { field: 'counterNumber', header: '專櫃編號', visible: true },
-    { field: 'counterName', header: '櫃位名稱', visible: true },
-    { field: 'startDate', header: '起始日期', visible: true },
-    { field: 'endDate', header: '截止日期', visible: true },
-  ];
-
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private ECRNoService: ECRNoService, // 收銀機號 service
-    private counterCodeService: CounterCodeService,  // 專櫃編號 service
-  ) { }
+    public tls26010Service: TLS26010Service,
+  ) {
+    super();
+
+    // 使用 effect 監聽 signals 變化
+    effect(() => {
+      this.sys3800sSignal();
+      this.sys3900sSignal();
+
+      this.loadDependentData();
+    });
+  }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS26010', '/TLS/TLS26010CRU', this.queryForm, this.onSubmit.bind(this));
 
-    this.ECRNoService.getECRNo().subscribe((res) => {
-      this.ECRNoOptions = res?.map((x: any) => ({
-        label: x.label,                                 // 給 table 用
-        formLabel: `${x.value} - ${x.label}`,           // 給下拉選單用
-        value: x.value,
-      })) || [];
-    });
+    console.log(`tls26010 init`);
 
-    this.counterCodeService.getCounterCodes().subscribe((data) => {
-      this.counterCodeOptions = data;
-    });
+    // 只載入管別和樓層的下拉選單資料
+    this.tls26010Service.loadSYS3800({});
+    this.tls26010Service.loadSYS3900({});
   }
 
-  canQuery(): boolean {
-    return true;
+  /** 載入依賴於管別和樓層的資料 */
+  private loadDependentData(): void {
+    this.tls26010Service.loadPreorderECRList(this.quertyPreorderECRList());
+    this.tls26010Service.loadTLTTALENT(this.queryTLTTALENT());
   }
 
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: 'Create',
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS2000/TLS26010CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: 'Edit',
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS2000/TLS26010CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: 'Read',
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['TLS2000/TLS26010CRU'], extras);
+  onSubmit(frm: FormGroup): void {
+    console.log(`frm:`, [frm]);
   }
 }

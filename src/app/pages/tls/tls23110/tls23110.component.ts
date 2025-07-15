@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -12,11 +12,22 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { CounterOpCatService } from '../../../service/basic/counter-op-cat.service';
 import { WhetherService } from '../../../service/basic/whether.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-tls23110',
-  templateUrl: './tls23110.component.html',
-  styleUrls: ['./tls23110.component.scss']
+    selector: 'app-tls23110',
+    templateUrl: './tls23110.component.html',
+    styleUrls: ['./tls23110.component.scss'],
+    standalone: true,
+    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, DropdownComponent, RadiobuttonComponent, MultiSelectComponent, InputTextModule, ButtonComponent, TranslateModule]
 })
 export class TLS23110Component extends BasicQueryPageComponent<any> {
   showPageSizeDialog = false;

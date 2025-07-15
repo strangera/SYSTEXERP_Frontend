@@ -1,18 +1,35 @@
 import { Sys0210Service } from './../../../service/api/sys/sys0210.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // Permissions
 // Shared
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { tblUser } from '../../../shared/models/sys/sysb000.module';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 // 4-2-2-1角色基本資料維護
 
 // 角色基本資料維護 CRU
 @Component({
-  selector: 'app-sys0210-cru',
-  templateUrl: './sys0210.cru.component.html',
-  styleUrls: ['./sys0210.cru.component.scss'],
+    selector: 'app-sys0210-cru',
+    templateUrl: './sys0210.cru.component.html',
+    styleUrls: ['./sys0210.cru.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        NgIf,
+        TranslateModule,
+    ],
 })
 export class SYS0210CRUComponent
   extends BasicCruPageComponent<tblUser>

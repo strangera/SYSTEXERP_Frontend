@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { finalize } from 'rxjs';
 import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
@@ -7,10 +7,38 @@ import { columns, monthOptions, Pos1018 } from './fin11200.model';
 import { AddButton, Column } from '../../../shared/componentkit/table/table.model';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Button, ButtonDirective } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
+import { NgStyle } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-fin11200',
-  templateUrl: './fin11200.component.html',
+    selector: 'app-fin11200',
+    templateUrl: './fin11200.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        CalendarComponent,
+        DropdownComponent,
+        MultiSelectComponent,
+        TableComponent,
+        Button,
+        TooltipModule,
+        ButtonDirective,
+        NgStyle,
+        TranslateModule,
+    ],
 })
 
 //FIN11100電子發票配號作業

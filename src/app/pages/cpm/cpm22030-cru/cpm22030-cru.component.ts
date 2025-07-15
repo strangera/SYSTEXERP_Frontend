@@ -1,17 +1,42 @@
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { PanelModule } from 'primeng/panel';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { NgFor, NgIf } from '@angular/common';
+import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
+import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 
 
 @Component({
-  selector: 'app-cpm22030-cru',
-  templateUrl: './cpm22030-cru.component.html',
-  styleUrl: './cpm22030-cru.component.scss',
+    selector: 'app-cpm22030-cru',
+    templateUrl: './cpm22030-cru.component.html',
+    styleUrl: './cpm22030-cru.component.scss',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        PanelModule,
+        FormsModule,
+        ReactiveFormsModule,
+        CalendarComponent,
+        DropdownComponent,
+        InputTextComponent,
+        NgFor,
+        ButtonDynamicallydeleteComponent,
+        ButtonDynamicallyaddComponent,
+        NgIf,
+        TranslateModule,
+    ],
 })
 export class CPM22030CRUComponent extends BasicCrupageComponent implements OnInit {
 

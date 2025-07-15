@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { RegionService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
@@ -14,11 +14,34 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi-location-filter/multi-location-filter.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-tls13040',
-  templateUrl: './tls13040.component.html',
-  styleUrls: ['./tls13040.component.scss'],
+    selector: 'app-tls13040',
+    templateUrl: './tls13040.component.html',
+    styleUrls: ['./tls13040.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        MultiSelectComponent,
+        MultiLocationFilterComponent,
+        CalendarRangeQuickComponent,
+        ButtonComponent,
+        TableComponent,
+        TranslateModule,
+    ],
 })
 export class TLS13040Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({

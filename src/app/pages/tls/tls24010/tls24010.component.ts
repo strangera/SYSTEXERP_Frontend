@@ -1,6 +1,6 @@
 import { AddButton } from './../../../shared/componentkit/table/table.model';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
@@ -8,12 +8,36 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TLS24010Data, Tls24010Service } from '../../../service/api/tls/tls24010.service';
 import { finalize } from 'rxjs';
 import { MenuItem } from 'primeng/api';
-import { Menu } from 'primeng/menu';
+import { Menu, MenuModule } from 'primeng/menu';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 交易補登作業
 @Component({
-  selector: 'app-tls24010',
-  templateUrl: './tls24010.component.html',
+    selector: 'app-tls24010',
+    templateUrl: './tls24010.component.html',
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        RadiobuttonComponent,
+        CalendarComponent,
+        DropdownComponent,
+        InputNumberComponent,
+        TableComponent,
+        MenuModule,
+        TranslateModule,
+    ],
 })
 export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> implements OnInit {
   queryForm = this.formBuilder.group({

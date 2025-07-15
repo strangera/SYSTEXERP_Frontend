@@ -1,14 +1,25 @@
 import { WhetherService } from './../../../service/basic/whether.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DisplayService } from '../../../service/basic/display.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 // import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
 @Component({
-  selector: 'app-tls22030',
-  templateUrl: './tls22030.component.html'
+    selector: 'app-tls22030',
+    templateUrl: './tls22030.component.html',
+    standalone: true,
+    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, InputTextComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 
 export class TLS22030Component extends BasicQueryPageComponent<any> implements OnInit {

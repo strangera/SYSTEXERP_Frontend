@@ -9,7 +9,9 @@ import { Column } from '../../componentkit/table/table.model';
 import { AuthService } from '../../../service/system/auth.service';
 import { TableExport } from '../../componentkit/table/table-export/table-export.component';
 import { REPORT_TITLES } from '../../componentkit/table/report-titles';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
+@UntilDestroy()
 @Injectable({
   providedIn: 'root'
 })
@@ -56,7 +58,7 @@ export class BasicPrintDataComponent {
       file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`
     };
 
-    this.tableService.exportPDF(body).subscribe({
+    this.tableService.exportPDF(body).pipe(untilDestroyed(this)).subscribe({
       next: (response: HttpResponse<Blob>) => {
         if (response.body) {
           const contentDisposition = response.headers.get('content-disposition');
@@ -111,7 +113,7 @@ export class BasicPrintDataComponent {
       config: event,
       file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`,
     };
-    this.tableService.exportExcel(body).subscribe({
+    this.tableService.exportExcel(body).pipe(untilDestroyed(this)).subscribe({
       next: (response: HttpResponse<Blob>) => {
         if (response.body) {
           const contentDisposition = response.headers.get('content-disposition');

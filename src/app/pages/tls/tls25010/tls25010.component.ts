@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // 權限相關
 import {
@@ -12,13 +12,22 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
 
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 const now = new Date();
 //商場違規類別維護作業
 @Component({
   selector: 'app-tls25010',
   templateUrl: './tls25010.component.html',
-  styleUrls: ['./tls25010.component.scss']
+  styleUrls: ['./tls25010.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TableComponent, TranslateModule]
 })
 export class TLS25010Component {
 
@@ -150,6 +159,6 @@ export class TLS25010Component {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
 }

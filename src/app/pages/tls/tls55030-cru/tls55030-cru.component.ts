@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Services
 import { WarehouseService } from '../../../service/basic/warehouse.service';
@@ -16,11 +16,21 @@ import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { VendorService } from '../../../service/basic/vendor.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-tls55030-cru',
   templateUrl: './tls55030-cru.component.html',
-  styleUrl: './tls55030-cru.component.scss'
+  styleUrl: './tls55030-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, InputTextComponent, TableComponent, ButtonComponent, NgIf]
 })
 export class TLS55030CRUComponent {
 
@@ -280,7 +290,7 @@ export class TLS55030CRUComponent {
         },
         skipLocationChange: true,
       };
-      this.router.navigate(['/demo/demoinputtableCRU'], extras);
+      this.router.navigate(['/demoCRU'], extras);
     }
   }
 
@@ -293,7 +303,7 @@ export class TLS55030CRUComponent {
       },
       skipLocationChange: true,
     };
-    this.router.navigate(['/demo/demoinputtableCRU'], extras);
+    this.router.navigate(['/demoCRU'], extras);
   }
   get isFormEditable(): boolean {
     return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());

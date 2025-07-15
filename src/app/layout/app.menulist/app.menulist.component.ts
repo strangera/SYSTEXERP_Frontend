@@ -6,11 +6,15 @@ import { Subscription } from 'rxjs';
 import { CurrentPageService } from './current-page.service';
 import { FunsrightInfo } from '../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../service/system/auth.service';
+import { NgFor, NgIf } from '@angular/common';
+import { AppMenuItemComponent } from './app-menu-item/app-menu-item.component';
 
 @Component({
-  selector: 'app-menulist',
-  templateUrl: './app.menulist.component.html',
-  styleUrls: ['./app.menulist.component.scss']
+    selector: 'app-menulist',
+    templateUrl: './app.menulist.component.html',
+    styleUrls: ['./app.menulist.component.scss'],
+    standalone: true,
+    imports: [NgFor, NgIf, AppMenuItemComponent]
 })
 export class AppMenulistComponent implements OnInit, OnDestroy {
   @Input() activeTopMenuProgNo: string | null = null; // 新增：接收來自頂部菜單的激活 prog_no

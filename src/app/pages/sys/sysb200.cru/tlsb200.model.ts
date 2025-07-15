@@ -1,4 +1,5 @@
 export interface Tlsb200Model {
+  id?: number;
   // 基本資料
   VEN_No: string;
   VEN_Flag: string;

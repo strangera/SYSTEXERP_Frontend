@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 // Services
 import { WarehouseService } from '../../../service/basic/warehouse.service';
@@ -12,10 +12,20 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { InventoryCategoryService } from '../../../service/basic/inventory-category.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { TranslateService } from '@ngx-translate/core';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
 @Component({
-  selector: 'app-tls53020-cru',
-  templateUrl: './tls53020-cru.component.html',
-  styleUrl: './tls53020-cru.component.scss'
+    selector: 'app-tls53020-cru',
+    templateUrl: './tls53020-cru.component.html',
+    styleUrl: './tls53020-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf]
 })
 export class TLS53020CRUComponent extends BasicCrupageComponent implements OnInit {
   // ProgNo: string = '250022';

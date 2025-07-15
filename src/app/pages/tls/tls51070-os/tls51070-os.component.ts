@@ -1,9 +1,17 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column, formatDate, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { NgIf } from '@angular/common';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { debounceTime } from 'rxjs';
 
 export interface Label{
   id: number,
@@ -29,9 +37,11 @@ export function atLeastOneFieldRequired(fields: string[]): ValidatorFn {
 }
 
 @Component({
-  selector: 'app-tls51070-os',
-  templateUrl: './tls51070-os.component.html',
-  styleUrl: './tls51070-os.component.scss'
+    selector: 'app-tls51070-os',
+    templateUrl: './tls51070-os.component.html',
+    styleUrl: './tls51070-os.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, NgIf, FormsModule, ReactiveFormsModule, InputTextComponent, InputNumberComponent, ExpandableEditTableComponent, TableComponent]
 })
 //處理 變價歷史紀錄/產生標籤檔
 export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
@@ -85,6 +95,9 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     // 展開式表格的載入狀態
     expandlabelLoading = false;
 
+    //預覽標籤資料
+    previewLabelData: Label | null = null;
+
     selectedItems: Label[] = [];// 多選項目
   // ----------------------------------------------------------------
 
@@ -92,7 +105,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     // label	資料
     priceData: Label[] = [];
     // label 展開式表格的欄位定義
-    priceColumn: Column[] = [
+    priceColumn1: Column[] = [
       //---基本資料---
       { field: 'LOGO_Name', header: '品牌編號', visible: true },
       { field: 'PLU_MagNo', header: '商品編號', visible: true },
@@ -105,7 +118,21 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
 
       { field: 'PLU_OrderPrc_POS2004', header: '標準進價', visible: true, format: formatAmount },
       { field: 'PLU_SalePrc_POS2004', header: '商品售價', visible: true, format: formatAmount },
+    ];
 
+    priceColumn2: Column[] = [
+      //---基本資料---
+      { field: 'LOGO_Name', header: '品牌編號', visible: false },
+      { field: 'PLU_MagNo', header: '商品編號', visible: false },
+      { field: 'PLU_Name', header: '品名', visible: false },
+      { field: 'PLU_NO', header: '國際條碼', visible: false },
+      { field: 'PLU_OrgPLUNo', header: '商品貨號', visible: false },
+      { field: 'CAT_LName', header: '大分類', visible: false },
+      { field: 'CAT_MName', header: '中分類', visible: false },
+      { field: 'CAT_SName', header: '小分類', visible: false },
+
+      { field: 'PLU_OrderPrc_POS2004', header: '標準進價', visible: false, format: formatAmount },
+      { field: 'PLU_SalePrc_POS2004', header: '商品售價', visible: false, format: formatAmount },
       //---變價歷程---
       { field: 'MAM_Date', header: '變價日期', visible: true,  format: formatDate},
       { field: 'MAM_NO', header: '變價單號', visible: true },
@@ -138,6 +165,18 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     }else{
       return
     }
+
+    // ✅ 監聽欄位變化，進行查詢但不加到清單
+    const watchFields = ['PLU_MagNo', 'PLU_No', 'PLU_OrgPLUNo'];
+    watchFields.forEach(field => {
+      this.queryLabelForm.get(field)?.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+        if (this.hasAnySearchInput()) {
+          this.previewLabel();
+        }else {
+          this.previewLabelData = null;
+        }
+      });
+    });
   }
 
   onSubmitLabel(frm: FormGroup) {
@@ -255,6 +294,28 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     });     
   }
 
+  //預覽標籤檔
+  previewLabel() {
+    const frm = this.queryLabelForm;
+    if (frm.invalid || !this.hasAnySearchInput()) return;
+
+    this.tls51070Service.getLabelTLS51070(frm.value).subscribe({
+      next: (response) => {
+        if (response.Status === '0000' && response.Data && response.Data.length > 0) {
+          const previewData = response.Data[0]; // 只取第一筆預覽
+
+          this.previewLabelData = previewData; // ✅ 更新 HTML 預覽用變數
+        } else {
+          this.previewLabelData = null; // 無結果清空預覽
+        }
+      },
+      error: (err) => {
+        console.error('無對應資料:', err);
+        this.previewLabelData = null;
+      }
+    });
+}
+
   // label 明細檔案操作
   onRowSave(event: any) {
     // 確認事件對象有預期的屬性
@@ -291,9 +352,17 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     }
   }
 
-    //---label 新ID---
-    generateLabelId(data: Label[]): number {
+  //---label 新ID---
+  generateLabelId(data: Label[]): number {
       const maxId = Math.max(...data.map(p => p.id), 0);
       return maxId + 1;
-    }
+  }
+
+  // 標籤檢查(三者其中之一不為空才執行)
+  hasAnySearchInput(): boolean {
+  const form = this.queryLabelForm;
+  return !!form.get('PLU_MagNo')?.value?.trim() ||
+         !!form.get('PLU_No')?.value?.trim() ||
+         !!form.get('PLU_OrgPLUNo')?.value?.trim();
+}
 }

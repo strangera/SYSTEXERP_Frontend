@@ -1,19 +1,29 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BankAccountCodeService } from '../../../service/basic/bank-account-code.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { NgFor, NgIf } from '@angular/common';
+import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 //1.2.1.2 費率對照維護 CRU
 @Component({
-  selector: 'app-fin21020-cru',
-  templateUrl: './fin21020-cru.component.html',
-  styleUrl: './fin21020-cru.component.scss'
+    selector: 'app-fin21020-cru',
+    templateUrl: './fin21020-cru.component.html',
+    styleUrl: './fin21020-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, NgFor, ButtonDynamicallydeleteComponent, InputNumberComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class FIN21020CRUComponent extends BasicCrupageComponent implements OnInit {
   //

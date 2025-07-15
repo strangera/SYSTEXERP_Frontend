@@ -11,6 +11,7 @@ export interface IDropdownItem {
   ShortName?: string;
   VEN_No?: string;
   HOS_No?: string;
+  label?: string; // 用於顯示的標籤
 }
 
 // 針對 querySYS3100_tree_DropDownList 的資料結構

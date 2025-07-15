@@ -4,7 +4,7 @@ import { RegionService } from './../../../service/basic/region-code.service';
 import { IndustryTypeService } from './../../../service/basic/industry-type.service';
 import { VendorService } from './../../../service/basic/vendor.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -17,12 +17,23 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { ContractTypeService } from '../../../service/basic/contract-type.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { ContractStatusService } from '../../../service/basic/contract-status.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 2.1.2.6 招商進度監控
 @Component({
-  selector: 'app-tls12060',
-  templateUrl: './tls12060.component.html',
-  styleUrl: './tls12060.component.scss'
+    selector: 'app-tls12060',
+    templateUrl: './tls12060.component.html',
+    styleUrl: './tls12060.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputNumberComponent, InputNumberRangeComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class TLS12060Component {
   ProgNo: string = '210008';

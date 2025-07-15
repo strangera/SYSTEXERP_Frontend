@@ -1,6 +1,6 @@
 // tls13010-cru.component.ts (整理後版本 - 移除無用程式碼)
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { distinctUntilChanged, map, Observable, Subscription, debounceTime } from 'rxjs';
 
@@ -23,17 +23,42 @@ import { CounterCategoryService } from '../../../service/basic/counter-category.
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { BankOptionsService } from '../../../service/api/dropdownservice/bank-option.service';
-import { AutoCompleteOption } from '../../../shared/componentkit/app-autocomplete/app-autocomplete.component';
-import { ColumnDef } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { AutoCompleteOption, AutoCompleteComponent } from '../../../shared/componentkit/app-autocomplete/app-autocomplete.component';
+import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { CategoryItem, ContractInfo, LocationItem } from '../tls13010/tls13010.model';
 import { DropdownOption } from '../tls13010/tls13010.dropdown';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { CheckboxModule } from 'primeng/checkbox';
+import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
 
 @Component({
-  selector: 'app-tls13010-cru',
-  templateUrl: './tls13010-cru.component.html',
-  styleUrls: ['./tls13010-cru.component.scss'],
+    selector: 'app-tls13010-cru',
+    templateUrl: './tls13010-cru.component.html',
+    styleUrls: ['./tls13010-cru.component.scss'],
+    standalone: true,
+    imports: [
+        MenubarComponent,
+        ButtonComponent,
+        AccordionModule,
+        FormsModule,
+        ReactiveFormsModule,
+        InputTextComponent,
+        DropdownComponent,
+        CalendarComponent,
+        ExpandableEditTableComponent,
+        MultiSelectComponent,
+        CheckboxModule,
+        AutoCompleteComponent,
+        InputTextareaComponent,
+    ],
 })
 export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
   // 位置選項資料

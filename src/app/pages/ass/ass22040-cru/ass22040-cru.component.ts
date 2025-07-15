@@ -1,21 +1,27 @@
 import { FloorService } from './../../../service/basic/floor.service';
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { FileType } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { FileType, FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { PanelModule } from 'primeng/panel';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
 // Services
 
 @Component({
-  selector: 'app-ass22040-cru',
-  templateUrl: './ass22040-cru.component.html',
-  styleUrl: './ass22040-cru.component.scss'
+    selector: 'app-ass22040-cru',
+    templateUrl: './ass22040-cru.component.html',
+    styleUrl: './ass22040-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, FileUploadComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS22040CRUComponent
   extends BasicCrupageComponent

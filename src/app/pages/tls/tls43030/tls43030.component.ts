@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
 import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
@@ -10,12 +10,21 @@ import { NotificationService } from '../../../shared/component/notification-mess
 
 import { ValidationService } from '../../../shared/service/validation.service';
 import { MessageTypeService } from '../../../service/basic/message-type.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 // 2.4.3.3 常用訊息維護作業
 @Component({
-  selector: 'app-tls43030',
-  templateUrl: './tls43030.component.html',
-  styleUrl: './tls43030.component.scss'
+    selector: 'app-tls43030',
+    templateUrl: './tls43030.component.html',
+    styleUrl: './tls43030.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TableComponent, TranslateModule]
 })
 export class TLS43030Component {
   ProgNo: string = '240011';

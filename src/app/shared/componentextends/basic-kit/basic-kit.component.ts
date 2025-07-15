@@ -3,6 +3,7 @@ import { AbstractControl, FormControl, Validators } from '@angular/forms';
 export class BasicKitComponent {
   placeholder: string | undefined; // 顯示註解
   isRequired = false; // 控制 * 顯示或隱藏
+  isRequired2 = false; // 控制 * 顯示或隱藏
   maxLength: number | null = null; // 設定最長輸入數
   minLength: number | null = null; // 設定最短輸入數
   isNumberOnly = false; // 檢查是否只能輸入數字
@@ -18,10 +19,9 @@ export class BasicKitComponent {
   // ----------------------------------------------------------------
   // 檢查是否必填 - 單一欄位
   checkRequiredValidator(control1: FormControl, control2?: FormControl): void {
+    this.isRequired = control1?.hasValidator(Validators.required) ?? false;
     if (control2) {
-      this.isRequired = control1?.hasValidator(Validators.required) || control2?.hasValidator(Validators.required);
-    } else {
-      this.isRequired = control1?.hasValidator(Validators.required) ?? false;
+      this.isRequired2 = control2?.hasValidator(Validators.required) ?? false;
     }
   }
 
@@ -49,7 +49,7 @@ export class BasicKitComponent {
       return;
     }
 
-    // 檢查是否有 invalidNumber 錯誤 
+    // 檢查是否有 invalidNumber 錯誤
     const invalidNumberErrors = validator(new FormControl('b')) ?? {};
     if ("invalidNumber" in invalidNumberErrors) {
       this.isNumberOnly = true;
