@@ -32,12 +32,12 @@
         <app-dropdown class=" col-12 md:col-6 lg:col-3" label="交易狀態" [control]="dataForm.controls.TXN_Status"
           [submitted]="submitted" [options]="txnStatusOptions" optionLabel="label" optionValue="value" />
         <div class="flex col-12 md:col-6 lg:col-3">
-          <!-- 零稅 → POS5006.TXN_VIP -->
-          <app-radiobutton-yn class="flex-1" controlName="TXN_VIP" label="零稅" [control]="dataForm.controls.TXN_VIP"
-            [submitted]="submitted" />
           <!-- 預售 → POS5006.TXN_PreOrder -->
           <app-radiobutton-yn class="flex-1" controlName="TXN_PreOrder" label="預售"
             [control]="dataForm.controls.TXN_PreOrder" [submitted]="submitted" />
+          <!-- 零稅 → POS5006.TXN_VIP -->
+          <app-radiobutton-yn class="flex-1" controlName="TXN_VIP" label="零稅" [control]="dataForm.controls.TXN_VIP"
+            [submitted]="submitted" />
         </div>
         <!-- 交易稅別 → POS5006.TXN_TaxType -->
         <app-dropdown class="col-12 md:col-6 lg:col-3" label="交易稅別" [control]="dataForm.controls.TXN_TaxType"
@@ -61,6 +61,44 @@
         <!-- 免稅卡零稅卡號 → POS5006.TXN_MemCard -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="免稅卡零稅卡號" [control]="dataForm.controls.TXN_TaxFreeCertNo"
           [submitted]="submitted" />
+        <!-- 交易筆數 → POS5006.TXN_Cnt -->
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="交易筆數" [control]="dataForm.controls.TXN_Cnt"
+          [submitted]="submitted" [max]="9999" [useGrouping]="false" />
+        <!-- 銷售時段 → POS5006.TXN_Time -->
+        <app-calendar class="col-12 md:col-6 lg:col-3" label="銷售時段" [control]="dataForm.controls.TXN_Time"
+          [submitted]="submitted" calendarType="timeOne" />
+        <!-- 電子載具種類 → POS5006.TXN_GUI_CarrType -->
+        <app-dropdown class="col-12 md:col-6 lg:col-3" label="電子載具種類" [control]="dataForm.controls.TXN_GUI_CarrType"
+          [submitted]="submitted" [options]="TXN_GUI_CarrTypeOptions" optionLabel="label" optionValue="value" />
+        <!-- 電子發票載具卡號 → POS5006.TXN_GUIVehicle -->
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="電子發票載具卡號" [control]="dataForm.controls.TXN_GUIVehicle"
+          [submitted]="submitted" />
+        <!-- 載具編號隠碼 → POS5006.TXN_GUI_CarrId -->
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="載具編號隱碼" [control]="dataForm.controls.TXN_GUI_CarrId"
+          [submitted]="submitted" />
+        <!-- 載具編號顯碼 → POS5006.TXN_GUI_CarrIdEx -->
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="載具編號顯碼" [control]="dataForm.controls.TXN_GUI_CarrIdEx"
+          [submitted]="submitted" />
+        <!-- 電子發票防葦隨機碼 → POS5006.TXN_GUIRemark -->
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="電子發票防偽隨機碼" [control]="dataForm.controls.TXN_GUIRemark"
+          [submitted]="submitted" />
+        <!-- 紙本發票列印狀態 → POS5006.TXN_PrintTimes -->
+        <app-dropdown class="col-12 md:col-6 lg:col-3" label="紙本發票列印狀態" [control]="dataForm.controls.TXN_PrintTimes"
+          [submitted]="submitted" [options]="[{label:'否',value:0},{label:'是',value:1}]" optionLabel="label"
+          optionValue="value" />
+        <!-- 發票捐贈狀態 → POS5006.TXN_GUI_Donate -->
+        <app-dropdown class="col-12 md:col-6 lg:col-3" label="發票捐贈狀態" [control]="dataForm.controls.TXN_GUI_Donate"
+          [submitted]="submitted" [options]="[{label:'否',value:'N'},{label:'是',value:'Y'}]" optionLabel="label"
+          optionValue="value" />
+        <!-- 捐贈社福團體代碼 → POS5006.TXN_GUILoveCode -->
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="捐贈社福團體代碼" [control]="dataForm.controls.TXN_GUILoveCode"
+          [submitted]="submitted" />
+      </div>
+      <hr />
+      <div class="grid p-fluid card">
+        <app-table class="col-12" [data]="dataForm.controls.POS5007List.value" [columns]="POS5007Columns"
+          [showDetail]="false" [showEdit]="false" [showRowEdit]="true" [loading]="loading">
+        </app-table>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" />
