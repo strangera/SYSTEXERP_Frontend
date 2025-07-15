@@ -1,9 +1,33 @@
-<label [for]="controlName">{{ label }}
+<label [for]="controlName">
+  {{ label }}
   <span *ngIf="isRequired" class="required">*</span>
 </label>
-<p-multiSelect #multiSelect [id]="controlName" [options]="options" [optionLabel]="optionLabel"
-  [optionValue]="optionValue" [formControl]="control" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
-  [showToggleAll]="true" placeholder="全部" [variant]="variant" (onLazyLoad)="onLazyLoad($event)" [virtualScroll]="true"
-  [virtualScrollItemSize]="34">
+<p-multiSelect
+  #multiSelect
+  [id]="controlName"
+  [options]="options"
+  [optionLabel]="optionLabel"
+  [optionValue]="optionValue"
+  [formControl]="control"
+  [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }"
+  [showToggleAll]="true"
+  placeholder="全部"
+  [variant]="variant"
+  (onLazyLoad)="onLazyLoad($event)"
+  [virtualScroll]="true"
+  [virtualScrollItemSize]="34"
+  [group]="group"
+  [optionGroupLabel]="optionGroupLabel"
+  [optionGroupChildren]="optionGroupChildren"
+>
+  <!-- 🆕 簡潔的分組標題模板 -->
+  <ng-template let-group pTemplate="group" *ngIf="group">
+    <div class="group-header">
+      <span>{{ group.label }}</span>
+    </div>
+  </ng-template>
 </p-multiSelect>
-<app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>
+<app-control-messages
+  [onerror]="submitted"
+  [control]="control"
+></app-control-messages>

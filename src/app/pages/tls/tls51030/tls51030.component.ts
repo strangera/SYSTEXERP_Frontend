@@ -35,11 +35,11 @@ interface CategoryItem {
   CanDel: boolean; // 是否可以刪除
 }
 @Component({
-    selector: 'app-tls51030',
-    templateUrl: './tls51030.component.html',
-    styleUrls: ['./tls51030.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-tls51030',
+  templateUrl: './tls51030.component.html',
+  styleUrls: ['./tls51030.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })
 export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -65,7 +65,10 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
   totalRecords = 0;
   selectedItems: CategoryItem[] = [];
   bigCategoryOptions: { value: string, label: string }[] = [];
-  middleCategoryOptions: { value: string, label: string }[] = [];
+  middleCategoryOptions: {
+    label: string,
+    items: { value: string, label: string }[]
+  }[] = [];
 
   constructor(
     private validationService: ValidationService,
@@ -214,27 +217,106 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
   private loadMiddleCategoriesByMultipleCatLNo(catLNoArray: string[]): void {
     this.middleCategoryCodeService.getSystemTypesByMultipleCatLNo(catLNoArray).subscribe({
       next: (response) => {
-        this.middleCategoryOptions = response;
+        // 將中分類依據大分類分組
+        const groupedOptions: { [key: string]: { value: string, label: string }[] } = {};
 
-        // 🔧 修正：更智能地處理已選擇的中分類
+        response.forEach(item => {
+          // 取得大分類代碼和名稱
+          let catLNo = item.CAT_LNo;
+          let catLName = item.CAT_LName;
+
+          // 如果API沒有直接提供大分類資訊，從其他地方推斷
+          if (!catLNo && item.value) {
+            catLNo = item.value.substring(0, 3); // 假設大分類代碼是3位數
+          }
+
+          if (!catLNo) {
+            catLNo = catLNoArray.find(selectedCatLNo => {
+              return item.value.startsWith(selectedCatLNo);
+            }) || catLNoArray[0];
+          }
+
+          // 從大分類選項中取得大分類名稱
+          if (!catLName) {
+            const bigCategoryOption = this.bigCategoryOptions.find(opt => opt.value === catLNo);
+            if (bigCategoryOption) {
+              // 假設bigCategoryOption.label格式是 "01 - 化妝品"，提取名稱部分
+              const labelParts = bigCategoryOption.label.split(' - ');
+              catLName = labelParts.length > 1 ? labelParts[1] : labelParts[0];
+            }
+          }
+
+          // 初始化分組
+          if (!groupedOptions[catLNo]) {
+            groupedOptions[catLNo] = [];
+          }
+
+          // 🔧 重要修改：使用大分類+中分類組合作為 value，避免衝突
+          const originalLabel = item.label; // 例如: "001 - 彩妝品"
+          const middleCategoryCode = item.value; // 例如: "001"
+          const middleCategoryName = originalLabel.includes(' - ')
+            ? originalLabel.split(' - ')[1]
+            : originalLabel;
+
+          // 顯示格式：001-彩妝品 (不顯示大分類代碼)
+          const fullDisplayLabel = `${middleCategoryCode}-${middleCategoryName}`;
+
+          // 🔧 新的 value 格式：大分類代碼 + 中分類代碼 (例如: "01001")
+          const combinedValue = `${catLNo}${middleCategoryCode}`;
+
+          // 加入到對應的分組
+          groupedOptions[catLNo].push({
+            value: combinedValue,     // 使用組合代碼避免衝突
+            label: fullDisplayLabel   // 顯示完整路徑
+          });
+        });
+
+        // 轉換為 PrimeNG 分組格式
+        this.middleCategoryOptions = catLNoArray
+          .filter(catLNo => groupedOptions[catLNo] && groupedOptions[catLNo].length > 0)
+          .map(catLNo => {
+            // 取得大分類名稱
+            const bigCategoryOption = this.bigCategoryOptions.find(opt => opt.value === catLNo);
+            let bigCategoryName = catLNo; // 預設值
+
+            if (bigCategoryOption) {
+              const labelParts = bigCategoryOption.label.split(' - ');
+              bigCategoryName = labelParts.length > 1 ? labelParts[1] : labelParts[0];
+            }
+
+            return {
+              label: `${catLNo}-${bigCategoryName}`, // 分組標題：01-化妝品
+              items: groupedOptions[catLNo].sort((a, b) => a.label.localeCompare(b.label))
+            };
+          });
+
+        console.log('分組後的中分類選項:', this.middleCategoryOptions);
+
+        // 🔧 選項驗證邏輯需要相應調整
         const currentCatMNo = this.queryForm.controls.CAT_MNo.value;
         if (currentCatMNo && Array.isArray(currentCatMNo) && currentCatMNo.length > 0) {
-          // 只保留仍然有效的選項，但不會自動清空
-          const validCatMNo = currentCatMNo.filter(value =>
-            response.find(opt => opt.value === value)
+          const allValidOptions = this.middleCategoryOptions.flatMap(group =>
+            group.items.map(item => item.value)
           );
 
-          // 只有在有無效項目時才更新
+          const validCatMNo = currentCatMNo.filter(value =>
+            allValidOptions.includes(value)
+          );
+
           if (validCatMNo.length !== currentCatMNo.length) {
             this.queryForm.controls.CAT_MNo.setValue(validCatMNo);
 
-            // 如果有被移除的項目，給用戶提示
             const removedCount = currentCatMNo.length - validCatMNo.length;
             if (removedCount > 0) {
               this.messageService.warnBubble(`有 ${removedCount} 個中分類選項因大分類變更而被移除`);
             }
           }
         }
+      },
+      error: (error) => {
+        console.error('獲取中分類代碼失敗:', error);
+        this.messageService.errorBubble('無法載入中分類代碼，請稍後重試');
+        this.middleCategoryOptions = [];
       }
     });
   }
