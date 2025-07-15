@@ -40,7 +40,7 @@ export class TLS2A040Component {
   loading: boolean = false;
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
-    casherNumber: ['', [Validators.maxLength(6)]], // 收銀機代號
+    casherNumber: ['', [Validators.maxLength(6)]], // 收銀機號
     transferNumber: [, [Validators.maxLength(6)]], // 交易序號
     startdate: [], // 銷售日期
     enddate: [,], // 銷售日期
@@ -63,7 +63,7 @@ export class TLS2A040Component {
   columns: any[] = [
     { field: 'contactPerson', header: '銷售日期', visible: true },
     { field: 'contactDate', header: '樓層', visible: true },
-    { field: 'UID', header: '收銀機代號', visible: true },
+    { field: 'UID', header: '收銀機號', visible: true },
     { field: 'industryType', header: '狀況', visible: true },
     { field: 'category', header: '信用卡卡號', visible: true },
     { field: 'version', header: '備註', visible: true },

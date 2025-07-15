@@ -58,7 +58,7 @@ export class TLS2J030Component {
     return this.formBuilder.group({
       CashRegisterType: ['1', Validators.required], // 收銀機型態
       onedatedd: [, [Validators.required]], // 銷售日期
-      registerID: [, [Validators.required, this.validationService.exactLengthValidator(6),]], // 收銀機代號
+      registerID: [, [Validators.required, this.validationService.exactLengthValidator(6),]], // 收銀機號
       transactionID: [, [Validators.required, this.validationService.exactLengthValidator(6),]], // 交易流水號
       counterID: [, [Validators.required, this.validationService.exactLengthValidator(6),]], // 專櫃編號
       twoInvoiceStart: [, [Validators.required, this.validationService.numberValidator]], // 二聯發票號碼

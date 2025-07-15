@@ -38,7 +38,7 @@ export class TLS28010Component {
   loading: boolean = false;
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
-    cashierCode: [],  // 收銀機代號
+    cashierCode: [],  // 收銀機號
     startBarcode: [, [this.validationService.numberValidator]],  // 起始條碼
     endBarcode: [, [this.validationService.numberValidator]],  // 終止條碼
     barcode: []  // 條碼

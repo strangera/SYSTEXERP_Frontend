@@ -97,7 +97,7 @@ export class TLS23030CRUComponent extends BasicCruPageComponent<any> {
               : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
           }
         },
-        { header: '收銀機代號', field: 'ECR_No' },
+        { header: '收銀機號', field: 'ECR_No' },
         { header: '交易序號', field: 'TXN_No' },
         { header: '專櫃編號', field: 'tlt_no' },
         { header: '櫃位名稱', field: 'tlt_name' },

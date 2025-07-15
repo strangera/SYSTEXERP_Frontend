@@ -3,7 +3,7 @@
     <div class="col" style="flex: 1">
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <div *appHasPermission="addPermission">
+    <div>
       <app-button
         btnType="create"
         (click)="onCreate()"
@@ -26,7 +26,7 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="收銀機代號"
+              label="收銀機號"
               controlName="cashierCode"
               [control]="queryForm.controls.cashierCode"
               [submitted]="submitted"

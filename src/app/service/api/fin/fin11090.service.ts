@@ -7,7 +7,7 @@ export interface FIN11090QueryRequest extends BaseQueryRequest {
   prefix?: string;           // 字軌
   invoice_no?: string;       // 發票號碼
   invoice_date?: string;     // 發票日期
-  cashier_no?: string;       // 收銀機代號
+  cashier_no?: string;       // 收銀機號
   txn_seq?: string;          // 交易序號
 }
 
@@ -16,7 +16,7 @@ export interface FIN11090Data {
   prefix?: string;           // 字軌
   invoice_no?: string;       // 發票號碼
   invoice_date?: string;     // 發票日期
-  cashier_no?: string;       // 收銀機代號
+  cashier_no?: string;       // 收銀機號
   txn_seq?: string;          // 交易序號
   invoice_amt?: string;      // 交易金額
 }
