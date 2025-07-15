@@ -31,7 +31,7 @@ export class FIN11080Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     salesDate: [, [Validators.required]], // 銷售日期
-    regidterCode: [, [Validators.required]], // 收銀機代號
+    regidterCode: [, [Validators.required]], // 收銀機號
     transactionSerialnumber: [, [Validators.required, Validators.maxLength(6)]], // 交易序號
     wordTrack: ['', [Validators.required, Validators.maxLength(2)]], // 字軌
     invoiceSerialnumber: [, [Validators.required, Validators.maxLength(8)]], // 發票號碼
@@ -50,7 +50,7 @@ export class FIN11080Component extends BasicQpageComponent implements OnInit {
   ];
   columns: any[] = [
     { field: 'col1', header: '銷售日期', visible: true },
-    { field: 'col2', header: '收銀機代號', visible: true },
+    { field: 'col2', header: '收銀機號', visible: true },
     { field: 'col3', header: '交易序號', visible: true },
     { field: 'col4', header: '字軌', visible: true },
     { field: 'col5', header: '發票號碼', visible: true },

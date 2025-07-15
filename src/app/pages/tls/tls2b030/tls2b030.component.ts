@@ -44,8 +44,8 @@ export class TLS2B030Component {
     onedatemm: [], // 銷售年月-月報表
     startdate: [], // 銷售日期-日報表
     enddate: [], // 銷售日期-日報表
-    cahserStart: [, [Validators.max(999999), this.validationService.numberValidator]], // 收銀機代號
-    cahserEnd: [, [Validators.max(999999), this.validationService.numberValidator]], // 收銀機代號
+    cahserStart: [, [Validators.max(999999), this.validationService.numberValidator]], // 收銀機號
+    cahserEnd: [, [Validators.max(999999), this.validationService.numberValidator]], // 收銀機號
     counterStart: [, [Validators.max(999999), this.validationService.numberValidator]], // 專櫃編號
     counterEnd: [, [Validators.max(999999), this.validationService.numberValidator]], // 專櫃編號
     regionCode: [[] as number[]], // 區域代號
@@ -64,7 +64,7 @@ export class TLS2B030Component {
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
-    { field: 'contactPerson', header: '收銀機代號', visible: true },
+    { field: 'contactPerson', header: '收銀機號', visible: true },
     { field: 'contactDate', header: '專櫃編號', visible: true },
     { field: 'UID', header: '櫃位名稱', visible: true },
     { field: 'industryType', header: '現金', visible: true },

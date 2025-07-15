@@ -155,8 +155,8 @@ export class TLS41020CRUComponent
                 this.dataForm.reset();
               },
               error: () => {
-                // ✅ 所有錯誤統一顯示成收銀機代號重複
-                this.messageService.errorBubble('新增失敗：收銀機代號重複');
+                // ✅ 所有錯誤統一顯示成收銀機號重複
+                this.messageService.errorBubble('新增失敗：收銀機號重複');
               },
             });
           }

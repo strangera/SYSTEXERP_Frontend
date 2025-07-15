@@ -77,7 +77,7 @@ export class TLS23090CRUComponent extends BasicCruPageComponent<any> {
       case 'CreditCardDetail':
         return [
           { field: 'TXN_Date', header: '銷售日期', format: this.formatDate },
-          { field: 'ECR_No', header: '收銀機代號' },
+          { field: 'ECR_No', header: '收銀機號' },
           { field: 'TXN_No', header: '交易序號' },
           { field: 'tlt_no', header: '專櫃編號' },
           { field: 'tlt_name', header: '櫃位名稱' },
