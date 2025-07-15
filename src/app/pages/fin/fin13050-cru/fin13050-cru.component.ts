@@ -50,15 +50,21 @@ export class FIN13050CRUComponent
     { label: '共同使用', value: '共同使用' },
   ];
   PUR_VoucherTypeOptions: any[] = [
+    { value: '21', label: '進項三聯式、電子計算機統一發票' },
+    { value: '22', label: '進項二聯式收銀機統一發票、載有稅額之其他憑證' },
+    { value: '25', label: '進項三聯式收銀機統一發票及一般稅額計算之電子發票' },
     {
-      value: '23',
-      label: '三聯式、電子計算機及三聯式收銀機統一發票之進貨退出或折讓證明單',
+      value: '26',
+      label: '彙總登錄每張稅額伍佰元以下之進項三聯式、電子計算機統一發票',
     },
     {
-      value: '24',
-      label: '二聯式收銀機統一發票及載有稅額之其他憑證之進貨退出或折讓證明單',
+      value: '27',
+      label:
+        '彙總登錄每張稅額伍佰元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證',
     },
+    { value: '28', label: '進項海關代徵營業稅繳納證' },
   ];
+
   deductOptions = [
     { label: '代表進項可扣抵之進貨及費用', value: 'A' },
     { label: '代表進項可扣抵之固定資產', value: 'B' },
@@ -98,10 +104,10 @@ export class FIN13050CRUComponent
     Amount: [null, Validators.required],
     TaxExcluded: [null, Validators.required],
     Tax: [null, Validators.required],
-    Invoice_Purpose: [''], 
-    PUR_TaxType: ['', Validators.required], 
-    Deduct_Flag: [''], 
-    Category: [''], 
+    Invoice_Purpose: [''],
+    PUR_TaxType: ['', Validators.required],
+    Deduct_Flag: [''],
+    Category: [''],
     Source_Doc_No: [''],
     Voucher_No: [''],
     Serial: [''],

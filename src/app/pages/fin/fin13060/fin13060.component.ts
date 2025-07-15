@@ -78,6 +78,8 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
     { label: '免稅', value: '0' },
     { label: '應稅', value: '1' },
     { label: '零稅', value: '2' },
+    { label: '內含稅', value: '3' },
+    { label: '作廢或是空白', value: '4' },
   ];
   CounterOptions: any[] = []; // 專櫃選項
 

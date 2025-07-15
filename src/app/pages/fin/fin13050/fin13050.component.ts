@@ -43,8 +43,8 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
 
   // 下拉選單
   invoicePurposeOptions = [
-    { label: '營業用', value: '營業用' },
-    { label: '共同使用', value: '共同使用' },
+    { label: '營業用', value: '1' },
+    { label: '共同使用', value: '2' },
   ];
 
   deductOptions = [
@@ -77,6 +77,8 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     { label: '免稅', value: '0' },
     { label: '應稅', value: '1' },
     { label: '零稅', value: '2' },
+    { label: '內含稅', value: '3' },
+    { label: '作廢或是空白', value: '4' },
   ];
   System_IDOptions = [
     { label: 'APP服務', value: '0' },
