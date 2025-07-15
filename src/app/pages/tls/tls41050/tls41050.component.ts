@@ -60,10 +60,10 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
   // 查詢
     queryForm = this.formBuilder.group({
       // POS1002 收銀機設定檔
-      ECR_No: [[]],              // 收銀機號
+      ECR_NoList: [[]],              // 收銀機號
       ECR_Name: [''],              // 收銀機名稱
       ECR_Type: [''],              // 機台類型 1=集中機台(統收)、2=專櫃機台(自收)、5=離線機台(不開立業主發票、不使用業主機台)、7=它社機台(開立業主發票、不使用業主機台)
-      ECR_TLT_No: [[]],            // 專櫃編號
+      ECR_TLT_NoList: [[]],            // 專櫃編號
       ECR_TLT_Name: [''],          // 專櫃名稱
       ECR_Status: [''],            // 收銀機狀態（A=啟用、C=停用...）
       ECR_GUI_PeriodQty: [null],   // 每期電子發票預設配號數量
@@ -146,15 +146,9 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
     }
   
     onSubmit(frm: FormGroup) {
-      const rawValue = this.queryForm.getRawValue(); // 如果有 disabled 欄位要一起取值
-      const formValue = {
-        ...rawValue,
-        ECR_No: Array.isArray(rawValue.ECR_No) ? rawValue.ECR_No[0] : rawValue.ECR_No
-      };
-
-      console.log('查詢條件',formValue);
+      console.log('查詢條件',frm.value);
       this.handleSubmit(frm, () => {
-        this.tls41050Service.queryTLS41050(formValue).subscribe({
+        this.tls41050Service.queryTLS41050(frm.value).subscribe({
           next: (response) => {
             if (response.Status === '0000') {
               this.data = response.Data || [];

@@ -8,8 +8,8 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="POS1002_Option" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-multi-select>    
+            <app-multi-select label="收銀機號" controlName="ECR_NoList" [options]="POS1002_Option" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.ECR_NoList" [submitted]="submitted"></app-multi-select>    
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="收銀機名稱" controlName="ECR_GUI_PeriodQty" [control]="queryForm.controls.ECR_Name"
@@ -22,8 +22,8 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="專櫃代碼/名稱" controlName="ECR_TLT_No" [options]="TLTTALENT_Option" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.ECR_TLT_No" [submitted]="submitted"></app-multi-select> 
+            <app-multi-select label="機台所屬專櫃代碼/名稱" controlName="ECR_TLT_NoList" [options]="TLTTALENT_Option" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.ECR_TLT_NoList" [submitted]="submitted"></app-multi-select> 
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="專櫃名稱" controlName="ECR_TLT_Name" [control]="queryForm.controls.ECR_TLT_Name"
