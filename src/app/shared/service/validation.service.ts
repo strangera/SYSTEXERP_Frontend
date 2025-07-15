@@ -36,7 +36,8 @@ export class ValidationService {
       invalidGuiEndNo: '迄號結尾只能為 49 或 99',
       invalidGuiNumberRange: '結束號碼不可小於起始號碼',
       invalidOddMonth: '只能選擇單數月',
-      invalidMinMonthDate: '不能小於本期'
+      invalidMinMonthDate: '不能小於本期',
+      notMultipleOf50: '請輸入 50 的倍數',
     };
     return config[validatorName];
   }
@@ -239,5 +240,13 @@ export class ValidationService {
 
     return null;
   }
-
+  // optionalMultipleOfFiftyValidator：非必填，但若有填值，必須是 50 的倍數
+  optionalMultipleOfFiftyValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value;
+      if (value === null || value === undefined || value === '') return null;
+      if (typeof value !== 'number') return { notMultipleOf50: true };
+      return value % 50 === 0 ? null : { notMultipleOf50: true };
+    };
+  }
 }

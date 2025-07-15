@@ -1,22 +1,49 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
+import { option } from '../../../shared/models/sys/sysb000.module';
+import { Tls51080Service } from '../../../service/api/tls/tls51080.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+
+export interface POS1002 {
+  ID: number; // decimal(19,0)
+
+  SYS_StoreNo: string; // 門市店號
+  ECR_No: string;      // 收銀機號
+  ECR_Name: string;    // 收銀機名稱
+  ECR_Type: string;    // 機台類型（1=集中、2=專櫃、5=離線、7=它社）
+
+  ECR_TLT_No?: string;     // 所屬專櫃編號（可選）
+  ECR_TLT_Name?: string;   // 所屬專櫃名稱（可選）
+  ECR_USR_No?: string;     // 所屬收銀員（可選）
+  ECR_USR_Name?: string;   // 收銀員姓名（可選）
+
+  ECR_ActiveDate?: Date;   // 啟用日期（可選）
+  ECR_ExpireDate?: Date;   // 到期日期（可選）
+  ECR_CloseDate?: Date;    // 停用日期（可選）
+
+  ECR_Status?: string;     // 狀態：A=啟用、C=停用、S=強制停用、T=訓練（可選）
+  ECR_GUI_Type: string;    // 發票使用類別：00/03/07
+
+  ECR_GUI_PeriodQty?: number; // 每期電子發票配號數量（可選）
+  ECR_GUI_MinQty?: number;    // 最小安全存量（可選）
+
+  CRT_Date?: Date;        // 建立日期（可選）
+  CRT_USR_No?: string;    // 建立人員（可選）
+  CRT_USR_Name?: string;  // 建立人員姓名（可選）
+
+  UPD_Date?: Date;        // 變更日期（可選）
+  UPD_USR_No?: string;    // 變更人員（可選）
+  UPD_USR_Name?: string;  // 變更人員姓名（可選）
+}
 
 // 2.4.1.5 發票訊息維護作業
 @Component({
@@ -24,198 +51,123 @@ import { TranslateModule } from '@ngx-translate/core';
     templateUrl: './tls41050.component.html',
     styleUrl: './tls41050.component.scss',
     standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarComponent, MultiSelectComponent, TableComponent, TranslateModule]
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent,InputNumberComponent, DropdownComponent, TableComponent, TranslateModule]
 })
-export class TLS41050Component {
-  ProgNo: string = '240005';
-  // 權限
-  funInfo?: FunsrightInfo;
-
+export class TLS41050Component extends BasicQueryPageComponent<POS1002> implements OnInit{
   // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    // POS5001_通告檔
-    STO_No: ['', [Validators.required, Validators.maxLength(10)]], // 門市店號
-    NOT_DateTime: [], // 通告產生時間
-    NOT_Type: [[] as number[]], // 通告顯示種類，固定為000000
-    /*  101=即時顯示通告   102=暫停時顯示通告 103=功能鍵顯示通告 104=客戶顯示器顯示通告 105=銷貨明細表列印訊息 */
+    queryForm = this.formBuilder.group({
+      // POS1002 收銀機設定檔
+      ECR_No: [''],                // 收銀機號
+      ECR_Name: [''],              // 收銀機名稱
+      ECR_Type: [''],              // 機台類型 1=集中機台(統收)、2=專櫃機台(自收)、5=離線機台(不開立業主發票、不使用業主機台)、7=它社機台(開立業主發票、不使用業主機台)
+      ECR_TLT_No: [''],            // 專櫃編號
+      ECR_TLT_Name: [''],          // 專櫃名稱
+      ECR_Status: [''],            // 收銀機狀態（A=啟用、C=停用...）
+      ECR_GUI_PeriodQty: [null],   // 每期電子發票預設配號數量
+      ECR_GUI_MinQty: [null],      // 電子發票最小安全存量
+  
+      //分頁查詢
+      ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]), // 分頁和排序參數
+    });
+    // 表格
+    // ----------------------------------------------------------------
+    totalRecords = 0;// 分頁和排序參數 // 排序需要
+  
+    ECR_Type_Option: option[] = [ // 機台類型 1=集中機台(統收)、2=專櫃機台(自收)、5=離線機台(不開立業主發票、不使用業主機台)、7=它社機台(開立業主發票、不使用業主機台)
+      {value: '1', label: '集中機台(統收)'},
+      {value: '2', label: '專櫃機台(自收)'},
+      {value: '5', label: '離線機台(不開立業主發票、不使用業主機台)'},
+      {value: '7', label: '它社機台(開立業主發票、不使用業主機台)'}
+    ];
 
-    //
-    ECR_No: [, [Validators.maxLength(6)]], // 收銀機號，固定為XXXXXX
-    NOT_BegDateTime: [], // 開始時間
-    NOT_EndDateTime: [], // 結束時間
-    NOT_Desc: [, [Validators.maxLength(255)]], // 通告內容
-    NOT_Status: [[] as number[]], // 通告狀態 A=已生效(預設值) D=已刪除
-    NOT_Remark: ['', [Validators.maxLength(60)]], // 通告備註
+    ECR_Status_Option: option[] = [ // 收銀機狀態 A=啟用(預設值)、C=停用、S=強制停用、T=訓練
+      {value: 'A', label: '啟用'},
+      {value: 'C', label: '停用'},
+      {value: 'S', label: '強制停用'},
+      {value: 'T', label: '訓練'}
+    ]
 
-    // 以下可以不用顯示於查詢頁
-    CRT_Date: [], // 建立日期
-    CRT_USR_No: ['', [Validators.maxLength(8)]], // 建立人員
-    CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-    UPD_Date: [], // 變更日期
-    UPD_USR_No: ['', [Validators.maxLength(8)]], // 變更人員
-    UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
-  });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    {
-      id: 1, STO_No: 'store1', NOT_DateTime: '2024/08/08 08:08', NOT_Type: 101, ECR_No: 123, NOT_BegDateTime: '2024/08/08 08:08', NOT_EndDateTime: '2024/09/09 08:08',
-      NOT_Desc: '通告內容', NOT_Status: 'A', NOT_Remark: '通告備註',
+    ECR_GUI_Type_Option: option[] = [ // 發票使用類別，00=不開發票、03=二聯式收銀機發票、07=電子發票(預設值)
+      {value: '00', label: '不開發票'},
+      {value: '03', label: '二聯式收銀機發票'},
+      {value: '07', label: '電子發票'}
+    ]
 
-      children: [
-        {
-          id: 1, NOT_SeqNo: 123, TLT_No: 'counter1',
-          ECR_Type: '', ECR_GrpNo: 'machineGroup1',
-          BUILDING_No: 'building1', FLOOR_No: '1F', AREA_No: 'area1',
-        },
-        {
-          id: 2, NOT_SeqNo: 456, TLT_No: 'counter2', ECR_Type: '',
-          ECR_GrpNo: 'machineGroup2',
-          BUILDING_No: 'building2', FLOOR_No: '', AREA_No: 'area1',
-        },
-      ]
-    },
-    {
-      id: 2, STO_No: 'store2', NOT_DateTime: '2024/08/08 08:08', NOT_Type: 101, ECR_No: 123, NOT_BegDateTime: '2024/08/08 08:08', NOT_EndDateTime: '2024/09/09 08:08',
-      NOT_Desc: '通告內容', NOT_Status: 'A', NOT_Remark: '通告備註',
-
-      children: [
-        {
-          id: 3, NOT_SeqNo: 789, TLT_No: 'counter3',
-          ECR_Type: '', ECR_GrpNo: 'machineGroup3',
-          BUILDING_No: 'building1', FLOOR_No: '', AREA_No: 'area2',
-        },
-      ]
-    },
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    // { field: 'ECR_No', header: '收銀機號', visible: true },
-    // { field: 'STO_No', header: '門市店號', visible: false },
-    { field: 'NOT_DateTime', header: '通告產生時間', visible: true },
-    { field: 'NOT_Type', header: '通告顯示種類', visible: true },
-
-    { field: 'NOT_BegDateTime', header: '開始時間', visible: true },
-    { field: 'NOT_EndDateTime', header: '結束時間', visible: true },
-
-    { field: 'NOT_Desc', header: '通告內容', visible: true },
-    { field: 'NOT_Status', header: '通告狀態', visible: true },
-    { field: 'NOT_Remark', header: '通告備註', visible: true },
-    // 其他欄位
-  ];
-
-  subColumns: any[] = [
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'NOT_SeqNo', header: '通告序號', visible: true },
-    { field: 'TLT_No', header: '專櫃編號', visible: true },
-
-    { field: 'ECR_Type', header: '機台類型', visible: true },
-    { field: 'ECR_GrpNo', header: '機台群組編號', visible: true },
-
-    { field: 'BUILDING_No', header: '館別', visible: true },
-    { field: 'FLOOR_No', header: '樓層代碼', visible: true },
-    { field: 'AREA_No', header: '區域代碼', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  NOT_Type_Options: any[] = [
-    { value: 101, label: '即時顯示通告' },
-    { value: 102, label: '暫停時顯示通告' },
-    { value: 103, label: '功能鍵顯示通告' },
-    { value: 104, label: '客戶顯示器顯示通告' },
-    { value: 105, label: '銷貨明細表列印訊息' },
-  ];
-  NOT_Status_Options: any[] = [
-    { value: 'A', label: '已生效' },
-    { value: 'D', label: '已刪除' },
-  ];
-
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-  ) {
-  }
-
-  ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-  }
-
-  // 權限
-  // ----------------------------------------------------------------
-  canQuery(): boolean {
-    return true;
-  }
-  canAdd(): boolean {
-    return true;
-  }
-  canEdit(): boolean {
-    return true;
-  }
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
-    }
-
-  }
-
-  onDetail(data: any) {
-    console.log(data);
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
-
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
+    data: POS1002[] = [];
+    columns: Column[] = [
+      { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: false },
+      { field: 'ECR_No', header: '收銀機號', visible: true },
+      { field: 'ECR_Name', header: '收銀機名稱', visible: true },
+      {
+        field: 'ECR_Type', header: '機台類型', visible: true
+        , format: (value: string) =>
+          this.ECR_Type_Option.find((option) => option.value === value)?.label ||
+          value,
       },
-    };
-
-    console.log(crudstatus);
-
-    this.router.navigate(['/TLS4000/TLS41050CRU'], extras);
-  }
+      { field: 'ECR_TLT_No', header: '機台所屬專櫃編號', visible: true },
+      { field: 'ECR_TLT_Name', header: '機台所屬專櫃名稱', visible: true },
+      { field: 'ECR_USR_No', header: '機台所屬收銀員', visible: true },
+      { field: 'ECR_USR_Name', header: '機台所屬收銀員姓名', visible: true },
+      { field: 'ECR_ActiveDate', header: '啟用日期', visible: true,format: formatDate  },
+      { field: 'ECR_ExpireDate', header: '到期日期', visible: true,format: formatDate },
+      { field: 'ECR_CloseDate', header: '停用日期', visible: true,format: formatDate },
+      {
+        field: 'ECR_Status', header: '收銀機狀態', visible: true
+        , format: (value: string) =>
+          this.ECR_Status_Option.find((option) => option.value === value)?.label ||
+          value,
+      },
+      {
+        field: 'ECR_GUI_Type', header: '發票使用類別', visible: true
+        , format: (value: string) =>
+          this.ECR_GUI_Type_Option.find((option) => option.value === value)?.label ||
+          value,
+      },
+      { field: 'ECR_GUI_PeriodQty', header: '機台每期電子發票預設配號數量', visible: true },
+      { field: 'ECR_GUI_MinQty', header: '機台電子發票最小安全存量', visible: true },
+    ];
+  
+    selectedItems: POS1002[] = [];// 多選項目
+  
+    // ----------------------------------------------------------------
+    constructor(private tls51080Service: Tls51080Service) {
+      super();
+    }
+  
+    ngOnInit(): void {
+      this.initializePage('TLS41050', 'TLS/TLS41050cru', this.queryForm, (form) => this.onSubmit(form));
+    }
+  
+    onSubmit(frm: FormGroup) {
+      this.handleSubmit(frm, () => {
+        //查詢時去除org_id中/以後的部分
+        if (frm.value.org_id) {
+          frm.value.org_id = frm.value.org_id.split('/')[0];
+        }
+        this.tls51080Service.queryTLS51080(frm.value).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.data = response.Data || [];
+              console.log('Result', this.data);
+              this.totalRecords = response.TotalCount || response.Data.length;
+              this.queryStateService.setQueryState(this.ProgNo, frm.value);
+            } else {
+              console.error('API error:', response.Status, response.Message);
+            }
+            this.loading = false;
+            this.messageService.unblockUi();
+          },
+          error: (err: string) => {
+            console.error('API error:', err);
+            this.loading = false;
+            this.messageService.unblockUi();
+          },
+        });
+      });
+    }
+  
+    isRowSelectable(rowData: POS1002): boolean {
+      // return rowData.CanDel
+      return false; //不予許刪除
+    }
 }
