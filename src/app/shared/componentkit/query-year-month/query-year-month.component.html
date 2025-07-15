@@ -1,5 +1,6 @@
 <div class="field year-month-field">
   <label for="yearMonth">{{ label }}</label>
+  <span *ngIf="isRequired" class="required">*</span>
   <div class="year-month-group">
     <!-- 年份 -->
     <input pInputText type="text" [formControl]="yearControl"
