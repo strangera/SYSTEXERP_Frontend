@@ -83,11 +83,12 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   // 複製設定 Dialog 相關
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
-    ECR_TmplNo: ['', [Validators.required]], // 環境變數編號
-    Target_ECR_No: ['', [Validators.required]], // 目的環境變數編號
+    Source_ECR_No: ['', [Validators.required]],
+    Target_ECR_No: ['', [Validators.required]],
   });
-  dialogSelectItem: TLS46020Item | null = null;
-  dialogSelectTargetItem: TLS46020Item | null = null;
+
+  dialogSelectItem: TLS41010Data | null = null;
+  dialogSelectTargetItem: TLS41010Data | null = null;
   dialogOptions: { No?: string; Name?: string; label?: string }[] = [];
   mergedDialogOptions: { No?: string; Name?: string; label?: string }[] = [];
 
@@ -238,23 +239,26 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   }
   onDialogChange(event: DropdownChangeEvent) {
     const selectedValue = event.value;
-    const body = { ECR_TmplNo: selectedValue };
-    this.tls46020Service.queryTLS46020(body).pipe(untilDestroyed(this)).subscribe(res => {
+    const body = { ECR_No: selectedValue };
+    this.tls41010Service.queryTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
       this.dialogSelectItem = res.Data[0];
     });
   }
+
   onDialogChange2(event: DropdownChangeEvent) {
     const selectedValue = event.value;
-    const body = { ECR_TmplNo: selectedValue };
-    this.tls46020Service.queryTLS46020(body).pipe(untilDestroyed(this)).subscribe(res => {
+    const body = { ECR_No: selectedValue };
+    this.tls41010Service.queryTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
       this.dialogSelectTargetItem = res.Data[0];
     });
   }
+
   get isValid(): boolean {
-    const ECR_TmplNo = this.dialogQueryForm.value.ECR_TmplNo ?? '';
+    const Source_ECR_No = this.dialogQueryForm.value.Source_ECR_No ?? '';
     const Target_ECR_No = this.dialogQueryForm.value.Target_ECR_No ?? '';
-    return (ECR_TmplNo !== '' && Target_ECR_No !== '') && (ECR_TmplNo === Target_ECR_No);
+    return (Source_ECR_No !== '' && Target_ECR_No !== '') && (Source_ECR_No === Target_ECR_No);
   }
+
 }
 
 
