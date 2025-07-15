@@ -114,17 +114,17 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-               <div class="col-12 md:col-6 lg:col-4">
-          <app-multi-select
-            label="課稅別"
-            controlName="PUR_TaxType"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.PUR_TaxType"
-            [options]="taxTypeOptions"
-            [submitted]="submitted"
-          ></app-multi-select>
-        </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="課稅別"
+              controlName="PUR_TaxType"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.PUR_TaxType"
+              [options]="taxTypeOptions"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
@@ -136,7 +136,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-               <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="類別區分"
               [control]="queryForm.controls.Category"
@@ -146,7 +146,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-                    <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
               label="憑證單號"
               [startControl]="queryForm.controls.Source_Doc_NoStart"
@@ -162,7 +162,7 @@
               [submitted]="submitted"
             ></app-input-text-range>
           </div>
-                   <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
               label="彙總張數"
               [startControl]="queryForm.controls.SerialStart"
@@ -170,25 +170,32 @@
               [submitted]="submitted"
             ></app-input-text-range>
           </div>
-                 <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="彙加註記"
               [control]="queryForm.controls.Note"
               [submitted]="submitted"
             ></app-input-text>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
               label="系統別"
               [control]="queryForm.controls.System_ID"
+              [options]="System_IDOptions"
+              optionLabel="label"
+              optionValue="value"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="備註"
+              controlName="remark"
+              [control]="queryForm.controls.remark"
               [submitted]="submitted"
             ></app-input-text>
           </div>
-                 <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="備註" controlName="remark" [control]="queryForm.controls.remark"
-                [submitted]="submitted"></app-input-text>
-            </div>
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="建檔人員"
               [control]="queryForm.controls.Create_User"
@@ -205,10 +212,6 @@
             ></app-calendar-range>
           </div>
 
-
-     
- 
-   
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="修改人員"
@@ -224,7 +227,7 @@
               [endControl]="queryForm.controls.Update_DateEnd"
               [submitted]="submitted"
             ></app-calendar-range>
-          </div>
+          </div> -->
         </div>
 
         <div
