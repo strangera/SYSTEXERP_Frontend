@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { TLS41010Item } from './tls41010.model';
 import { columns, guiTypeOptions, salTypeOptions, sernoTypeOptions, statusOptions, TLS41010Data, typeOptions } from './tls41010.model';
 import { finalize } from 'rxjs';
@@ -49,7 +49,8 @@ import { NgIf } from '@angular/common';
 export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> implements OnInit {
   columns: Column[] = columns;
   queryForm = this.formBuilder.group({
-    ECR_No: ['', [Validators.maxLength(10)]],      // 收銀機號
+    ECR_No: ['', [Validators.maxLength(10)]],
+    ECR_Type: ['1', [Validators.maxLength(2)]], // 收銀機號
     ECR_Name: ['', [Validators.maxLength(20)]],
     ECR_TLT_No: ['', [Validators.maxLength(20)]],
     ECR_TLT_Name: ['', [Validators.maxLength(60)]],
@@ -60,7 +61,6 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     ECR_Status: ['A'],
     ECR_SubGroup: ['', [Validators.maxLength(20)]],
     ECR_LocNo: ['', [Validators.maxLength(10)]],
-    ECR_Type: ['', [Validators.maxLength(2)]],
     ECR_SAL_Type: ['', [Validators.maxLength(8)]],
     ECR_GUI_Type: ['07', [Validators.maxLength(2)]],
     ECR_USR_No: ['', [Validators.maxLength(8)]],
@@ -92,6 +92,31 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   dialogSelectItem: TLS41010Data | null = null;
   dialogSelectTargetItem: TLS41010Data | null = null;
   dialogOptions: { No?: string; Name?: string; label?: string }[] = [];
+
+  addButton: AddButton[] = [
+    {
+      label: '複製',
+      icon: 'pi pi-copy text-blue-500',
+      action: (rowData: TLS41010Item) => {
+        // 複製一份資料
+        const copyData: TLS41010Item = { ...rowData };
+
+        // 清空主鍵、流水號、模板編號等（避免跟原資料衝突）
+        copyData.ECR_No = '';
+        copyData.ECR_TmplNo = '';
+        copyData.id = 0;
+
+        // 其他欄位若要預設值，也可在這裡設定
+        // 例如 copyData.ECR_TmplStatus = '0'; // 預設狀態
+
+        // 開啟編輯頁 (copy 模式)，把 copyData 傳進去
+        this.openCru(copyData, 'copy');
+
+      },
+
+    },
+    // 其他按鈕...
+  ];
 
   constructor(
     private tls41010Service: TLS41010Service,
@@ -257,6 +282,10 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     return (Source_ECR_No !== '' && Target_ECR_No !== '') && (Source_ECR_No === Target_ECR_No);
   }
 
+  openCru(data: TLS41010Item, mode: string): void {
+    console.log(`Opening CRU page with mode: ${mode}`, data);
+    // Add logic to handle opening the CRU page here
+  }
 }
 
 
