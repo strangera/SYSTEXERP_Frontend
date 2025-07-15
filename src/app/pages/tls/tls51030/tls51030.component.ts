@@ -46,7 +46,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
     CAT_SNo: ['', [Validators.maxLength(3), this.validationService.numberValidator]],
     CAT_SName: ['', [Validators.maxLength(32)]],
     CAT_LNo: [[] as string[]],
-    CAT_MNo: [[] as string[]],
+    CAT_MNo: [[] as string[][]],
     ...createPaginationConfig([{ field: 'CAT_SNo', order: 1 }]), // 分頁和排序參數
   });
 
@@ -67,7 +67,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
   bigCategoryOptions: { value: string, label: string }[] = [];
   middleCategoryOptions: {
     label: string,
-    items: { value: string, label: string }[]
+    items: { value: string[], label: string }[]
   }[] = [];
 
   constructor(
@@ -218,7 +218,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
     this.middleCategoryCodeService.getSystemTypesByMultipleCatLNo(catLNoArray).subscribe({
       next: (response) => {
         // 將中分類依據大分類分組
-        const groupedOptions: { [key: string]: { value: string, label: string }[] } = {};
+        const groupedOptions: { [key: string]: { value: string[], label: string }[] } = {};
 
         response.forEach(item => {
           // 取得大分類代碼和名稱
@@ -251,7 +251,7 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
             groupedOptions[catLNo] = [];
           }
 
-          // 🔧 重要修改：使用大分類+中分類組合作為 value，避免衝突
+          // 🔧 修改：直接使用陣列格式作為 value
           const originalLabel = item.label; // 例如: "001 - 彩妝品"
           const middleCategoryCode = item.value; // 例如: "001"
           const middleCategoryName = originalLabel.includes(' - ')
@@ -261,12 +261,12 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
           // 顯示格式：001-彩妝品 (不顯示大分類代碼)
           const fullDisplayLabel = `${middleCategoryCode}-${middleCategoryName}`;
 
-          // 🔧 新的 value 格式：大分類代碼 + 中分類代碼 (例如: "01001")
-          const combinedValue = `${catLNo}${middleCategoryCode}`;
+          // 🔧 新的 value 格式：使用陣列 [大分類代碼, 中分類代碼]
+          const arrayValue = [catLNo, middleCategoryCode];
 
           // 加入到對應的分組
           groupedOptions[catLNo].push({
-            value: combinedValue,     // 使用組合代碼避免衝突
+            value: arrayValue,        // 使用陣列格式：["01", "001"]
             label: fullDisplayLabel   // 顯示完整路徑
           });
         });
@@ -300,7 +300,10 @@ export class TLS51030Component extends BasicQueryPageComponent<CategoryItem> imp
           );
 
           const validCatMNo = currentCatMNo.filter(value =>
-            allValidOptions.includes(value)
+            allValidOptions.some(validOption =>
+              Array.isArray(validOption) && Array.isArray(value) &&
+              validOption[0] === value[0] && validOption[1] === value[1]
+            )
           );
 
           if (validCatMNo.length !== currentCatMNo.length) {
