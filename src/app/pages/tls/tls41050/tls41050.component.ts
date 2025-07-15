@@ -2,8 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
-import { option } from '../../../shared/models/sys/sysb000.module';
-import { Tls51080Service } from '../../../service/api/tls/tls51080.service';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -12,6 +11,8 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { Tls41050Service } from '../../../service/api/tls/tls41050.service';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 export interface POS1002 {
   ID: number; // decimal(19,0)
@@ -51,16 +52,18 @@ export interface POS1002 {
     templateUrl: './tls41050.component.html',
     styleUrl: './tls41050.component.scss',
     standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent,InputNumberComponent, DropdownComponent, TableComponent, TranslateModule]
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent,InputNumberComponent, DropdownComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })
 export class TLS41050Component extends BasicQueryPageComponent<POS1002> implements OnInit{
+  // 0715 更新 收銀機號、所屬專櫃編號 串接api 用[]送出
+
   // 查詢
     queryForm = this.formBuilder.group({
       // POS1002 收銀機設定檔
-      ECR_No: [''],                // 收銀機號
+      ECR_No: [[]],              // 收銀機號
       ECR_Name: [''],              // 收銀機名稱
       ECR_Type: [''],              // 機台類型 1=集中機台(統收)、2=專櫃機台(自收)、5=離線機台(不開立業主發票、不使用業主機台)、7=它社機台(開立業主發票、不使用業主機台)
-      ECR_TLT_No: [''],            // 專櫃編號
+      ECR_TLT_No: [[]],            // 專櫃編號
       ECR_TLT_Name: [''],          // 專櫃名稱
       ECR_Status: [''],            // 收銀機狀態（A=啟用、C=停用...）
       ECR_GUI_PeriodQty: [null],   // 每期電子發票預設配號數量
@@ -93,6 +96,9 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
       {value: '07', label: '電子發票'}
     ]
 
+    POS1002_Option: apiOption[] = []; //收銀機號
+    TLTTALENT_Option: apiOption[] = []; //專櫃編號
+    
     data: POS1002[] = [];
     columns: Column[] = [
       { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: false },
@@ -130,21 +136,25 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
     selectedItems: POS1002[] = [];// 多選項目
   
     // ----------------------------------------------------------------
-    constructor(private tls51080Service: Tls51080Service) {
+    constructor(private tls41050Service: Tls41050Service) {
       super();
     }
   
     ngOnInit(): void {
       this.initializePage('TLS41050', 'TLS/TLS41050cru', this.queryForm, (form) => this.onSubmit(form));
+      this.loadOptions();
     }
   
     onSubmit(frm: FormGroup) {
+      const rawValue = this.queryForm.getRawValue(); // 如果有 disabled 欄位要一起取值
+      const formValue = {
+        ...rawValue,
+        ECR_No: Array.isArray(rawValue.ECR_No) ? rawValue.ECR_No[0] : rawValue.ECR_No
+      };
+
+      console.log('查詢條件',formValue);
       this.handleSubmit(frm, () => {
-        //查詢時去除org_id中/以後的部分
-        if (frm.value.org_id) {
-          frm.value.org_id = frm.value.org_id.split('/')[0];
-        }
-        this.tls51080Service.queryTLS51080(frm.value).subscribe({
+        this.tls41050Service.queryTLS41050(formValue).subscribe({
           next: (response) => {
             if (response.Status === '0000') {
               this.data = response.Data || [];
@@ -166,8 +176,27 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
       });
     }
   
-    isRowSelectable(rowData: POS1002): boolean {
+    isRowSelectable(): boolean {
       // return rowData.CanDel
       return false; //不予許刪除
+    }
+
+    loadOptions(){
+      // 查收銀機號
+      this.tls41050Service.queryPOS1002_DropDownList({}).subscribe((response) => {
+        this.POS1002_Option = response.Data.map((item: any) => ({
+          No: item.No, // 收銀機號
+          Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+        }));
+        console.log('收銀機號:', this.TLTTALENT_Option);
+      });
+      // 查專櫃主檔
+      this.tls41050Service.queryTLTTALENT_DropDownList({}).subscribe((response) => {
+        this.TLTTALENT_Option = response.Data.map((item: any) => ({
+          No: item.No, // 專櫃主代碼
+          Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+        }));
+        console.log('專櫃主檔代號:', this.TLTTALENT_Option);
+      });
     }
 }

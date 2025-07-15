@@ -13,10 +13,10 @@ import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/b
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { Tls51080Service } from '../../../service/api/tls/tls51080.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { option } from '../../../shared/models/sys/sysb000.module';
 import { ValidationService } from '../../../shared/service/validation.service';
+import { Tls41050Service } from '../../../service/api/tls/tls41050.service';
 
 export interface POS1002 {
   ID: number; // decimal(19,0)
@@ -66,7 +66,7 @@ export class TLS41050CRUComponent extends BasicCruPageComponent<POS1002>
     SYS_StoreNo: [{ value: '', disabled: true }, [Validators.required]], // 收銀機所屬門市店號（不可新增/修改）
     ECR_No: [{ value: '', disabled: true }, [Validators.required]], // 收銀機號（不可新增/修改）
     ECR_Name: [{ value: '', disabled: true }, [Validators.required]], // 收銀機名稱（不可新增/修改）
-    ECR_Type: [{ value: '', disabled: true }, [Validators.required]], // 機台類型（不可新增/修改）
+    ECR_Type: [{ value: '', disabled: true }, [Validators.required]], // 機台類型（不可新增/修改）1=集中機台(統收)、2=專櫃機台(自收)、5=離線機台(不開立業主發票、不使用業主機台)、7=它社機台(開立業主發票、不使用業主機台)
     ECR_TLT_No: [{ value: '', disabled: true }], // 所屬專櫃編號（可為空，僅專櫃機台需填）
     ECR_TLT_Name: [{ value: '', disabled: true }], // 專櫃名稱
     ECR_USR_No: [{ value: '', disabled: true }], // 收銀員編號
@@ -76,11 +76,11 @@ export class TLS41050CRUComponent extends BasicCruPageComponent<POS1002>
     ECR_CloseDate: [{ value: null, disabled: true }], // 停用日期
     ECR_Status: [{ value: '', disabled: true }], // 收銀機狀態，A=啟用(預設值)、C=停用、S=強制停用、T=訓練
     ECR_GUI_Type: [{ value: '', disabled: true }, [Validators.required]], // 發票使用類別（不可新增/修改）
-    ECR_GUI_PeriodQty: [ // 每期預設配號數（必須為50倍數）
-      50, [this.validationService.optionalMultipleOfFiftyValidator, Validators.min(50), Validators.max(99999999)]
+    ECR_GUI_PeriodQty: [ // 機台每期電子發票預設配號數量，預設值為50，設定值必須為50的倍數
+      50, [this.validationService.optionalMultipleOfFiftyValidator(), Validators.min(50), Validators.max(99999999)]
     ],
-    ECR_GUI_MinQty: [ // 最小安全存量（必須為50倍數)
-      50, [this.validationService.optionalMultipleOfFiftyValidator, Validators.min(50), Validators.max(99999999)]
+    ECR_GUI_MinQty: [ // 機台電子發票最小安全存量，預設值為50，設定值必須為50的倍數
+      50, [this.validationService.optionalMultipleOfFiftyValidator(), Validators.min(50), Validators.max(99999999)]
     ],
   });
   //
@@ -105,7 +105,7 @@ export class TLS41050CRUComponent extends BasicCruPageComponent<POS1002>
       ]
   // ----------------------------------------------------------------
   constructor(
-    private tls51080Service: Tls51080Service,
+    private tls41050Service: Tls41050Service,
     private validationService: ValidationService
   ) {
     super(); // 呼叫父類建構子
@@ -113,6 +113,7 @@ export class TLS41050CRUComponent extends BasicCruPageComponent<POS1002>
 
   ngOnInit(): void {
     this.initializePage('TLS41050', this.dataForm);
+    console.log('讀取表單',this.dataForm.value);
   }
 
   onSubmit(frm: FormGroup) {
@@ -124,25 +125,35 @@ export class TLS41050CRUComponent extends BasicCruPageComponent<POS1002>
       return;
     }
 
+    //檢查 每期電子發票預設配號 需大於等於 機台電子發票最小安全存量
+    const periodQty = this.dataForm.get('ECR_GUI_PeriodQty')?.value;
+    const minQty = this.dataForm.get('ECR_GUI_MinQty')?.value;
+
+    // 如果兩個都有值，且 periodQty < minQty，就擋住送出
+    if (
+      periodQty !== null && periodQty !== undefined &&
+      minQty !== null && minQty !== undefined &&
+      periodQty < minQty
+    ) {
+      this.messageService.errorBubble('每期電子發票預設配號 需大於等於 電子發票最小安全存量');
+      this.messageService.unblockUi();
+      return; // 中斷送出
+    }
+
     const formValue = frm.getRawValue();
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
-          console.log('insert', formValue);
-          // this.tls51080Service.insertTLS51080(formValue).subscribe(() => {
-          //   this.messageService.successBubble('新增成功');
-          //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-          //   this.dataForm.reset(); // 重置表單
-          // });
+          console.log('此作業不允許新增');
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           console.log('update', formValue);
-          // this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
-          //   // this.messageService.successBubble('更新成功');
-          //   this.onCancel(); // 儲存後，會返回列表
-          // });
+          this.tls41050Service.updateTLS41050(formValue).subscribe(() => {
+            this.messageService.successBubble('更新成功');
+            this.onCancel(); // 儲存後，會返回列表
+          });
         }
         break;
     }
