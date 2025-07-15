@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../system/auth.service';
-import { SortMeta } from 'primeng/api';
 import { TLS41010Data } from '../../../pages/tls/tls41010/tls41010.model';
 
 const API_URL = `${environment.ApiUrl}/TLS0000/TLS4000`;
@@ -11,7 +10,7 @@ const API_URL = `${environment.ApiUrl}/TLS0000/TLS4000`;
 export interface QueryTLS41010Request {
   PageSize: number;
   PageIndex: number;
-  SortBy?: SortMeta[];
+  SortBy?: { field: string; order: number }[];
   ECR_No?: string;
   ECR_Name?: string;
   ECR_TLT_No?: string;
@@ -24,9 +23,9 @@ export interface QueryTLS41010Request {
   ECR_AreaNo?: string;
   ECR_SubGroup?: string;
   ECR_LocNo?: string;
-  ECR_Type?: string;
+  ECR_Type?: string | null;
   ECR_SAL_Type?: string;
-  ECR_GUI_Type?: string;
+  ECR_GUI_Type?: string | null;
   ECR_USR_No?: string;
   ECR_USR_Name?: string;
   ECR_ComName?: string;
