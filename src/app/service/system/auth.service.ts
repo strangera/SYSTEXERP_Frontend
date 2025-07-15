@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { HttpBackend, HttpClient } from '@angular/common/http';
 import { EncryptionService } from '../../shared/service/encryption.service';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { userLogin } from '../../shared/models/system/userLogin';
 import { environment } from '../../../environments/environment';
 import { FunsrightInfo } from '../../shared/models/system/funsrightInfo';
@@ -48,6 +48,7 @@ export class AuthService {
   private _menuUpdated = new BehaviorSubject<any[]>([]);
   menuUpdated = this._menuUpdated.asObservable();
   private jwtHelper: JwtHelperService;
+  private client_ip = '0.0.0.0';
   updateMenu(newData: any[]): void {
     this._menuUpdated.next(newData);
   }
@@ -71,6 +72,16 @@ export class AuthService {
       this._menuUpdated.next(parsedFunRightsInfo); // 使用儲存的資料更新選單
     }
     this.jwtHelper = new JwtHelperService();
+    const ipClient = new HttpClient(this.httpBackend);
+    ipClient.get<{ ip: string }>('https://api.ipify.org/?format=json').pipe(map(res => res.ip),
+      catchError(err => {
+        console.warn('取得 IP 失敗，使用預設 IP');
+        return ['0.0.0.0']; // 回傳 observable
+      })
+    )
+      .subscribe(ip => {
+        this.client_ip = ip;
+      });
   }
   public get currentUserValue(): UserInfo | null {
     return this.userSubject.value; // 獲取存儲的 JWT Token
@@ -99,37 +110,27 @@ export class AuthService {
   }
   login(data: userLogin): Observable<ApiResponse<UserInfo>> {
     data.password = this.encrypt.getPassword(data.code as string, data.password as string);
-    const newHttpClient = new HttpClient(this.httpBackend);
-    return newHttpClient.get<{ ip: string }>("https://api.ipify.org/?format=json").pipe(
-      map(result => {
-        data.client_ip = result.ip;
-        return data;
-      }), switchMap(updatedData =>
-        this.http.post<ApiResponse<UserInfo>>(`${this.apiUrl}/User/userLogin`, updatedData).pipe(
-          map((response: ApiResponse<UserInfo>) => {
-            if (response.Status === '0000') {
-              this.userSubject.next(response.Data);
-              localStorage.setItem('UserInfo', JSON.stringify(response.Data));
-              if (!this.inactivityService) {
-                this.inactivityService = this.injector.get(InactivityService);
-              }
-              this.inactivityService.setupListener();
-              this.inactivityService.startTimer();
-              this.queryStateService.clearAllQueryStates();
-              this.router.navigate(['/sso/dashboard']);
-              return response;
-            } else {
-              throw new Error(response.Message || 'Login failed');
-            }
-          }),
-          catchError(err => {
-            this.notemessage.errorBubble('登入失敗，請確認帳號密碼');
-            return throwError(() => err);
-          })
-        )
-      ),
+    data.client_ip = this.client_ip;
+    return this.http.post<ApiResponse<UserInfo>>(`${this.apiUrl}/User/userLogin`, data).pipe(
+      map((response: ApiResponse<UserInfo>) => {
+        if (response.Status === '0000') {
+          this.userSubject.next(response.Data);
+          localStorage.setItem('UserInfo', JSON.stringify(response.Data));
+
+          if (!this.inactivityService) {
+            this.inactivityService = this.injector.get(InactivityService);
+          }
+          this.inactivityService.setupListener();
+          this.inactivityService.startTimer();
+          this.queryStateService.clearAllQueryStates();
+          this.router.navigate(['/sso/dashboard']);
+          return response;
+        } else {
+          throw new Error(response.Message || 'Login failed');
+        }
+      }),
       catchError(err => {
-        this.notemessage.errorBubble('無法確認您的目前位址');
+        this.notemessage.errorBubble('登入失敗，請確認帳號密碼');
         return throwError(() => err);
       })
     );

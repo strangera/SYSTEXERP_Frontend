@@ -20,14 +20,14 @@
   </div>
   <div class="col pb-0">
     <label *ngIf="endLabel" for="input-text-range">{{ endLabel }}
-      <span *ngIf="isRequired" class="required">*</span>
+      <span *ngIf="isRequired2" class="required">*</span>
     </label>
     <p-inputGroup id="input-text-end">
       <input type="text" pInputText id="input-text-range" [formControl]="endControl" [placeholder]="placeholder"
         [ngClass]="{'ng-dirty ng-invalid': submitted && endControl.errors|| (this.errorForGroup && this.startControl.parent?.errors)}"
         (onInputChange)="onEndInputChange($event)" (onBlur)="onEndBlur($event)" />
     </p-inputGroup>
-    <app-control-messages [onerror]="submitted || (endControl.touched && endControl.invalid)" [control]="startControl"
+    <app-control-messages [onerror]="submitted || (endControl.touched && endControl.invalid)" [control]="endControl"
       [errorForGroup]='errorForGroup'></app-control-messages>
   </div>
 </div>

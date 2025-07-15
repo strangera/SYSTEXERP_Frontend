@@ -17,6 +17,7 @@ export interface TLS46020QueryParams {
 
 // 單筆資料模型
 export interface TLS46020Item {
+  SYS_StoreNo?: string;
   id?: number;
   ECR_TmplNo?: string;
   ECR_TmplDesc?: string;

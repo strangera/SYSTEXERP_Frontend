@@ -52,7 +52,7 @@ export class BasicQueryPageComponent<T> {
   canPerformAction(action: string): boolean {
     return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: T) {
+  navigateWithState(crudstatus: CRUDStatus, rowdata?: T | unknown) {
     const extras: NavigationExtras = {
       state: {
         crudstatus: crudstatus,
@@ -63,9 +63,9 @@ export class BasicQueryPageComponent<T> {
     this.router.navigate([`account/${this.cruPage.toLocaleLowerCase()}`], extras);
   }
   // 移動路由
-  onCreate() {
+  onCreate(data?: unknown) {
     if (this.canPerformAction('20')) { // '新增' 的 function_code 是 "20"
-      this.navigateWithState(CRUDStatus.Create);
+      this.navigateWithState(CRUDStatus.Create, data);
     }
   }
   onEdit(data: T) {

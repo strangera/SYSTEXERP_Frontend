@@ -11,32 +11,30 @@ const API_URL = `${environment.ApiUrl}/SYS0000/BAS1000`;
  * 查詢 request model
  */
 export interface QuerySYSB200Request {
-  request: {
-    PageSize: number;
-    PageIndex: number;
-    SortBy?: SortMeta[];
-    OrderBy?: string;
-    Offset?: number;
-    VEN_NoList?: string[];
-    VEN_Status?: string;
-    VEN_Uniform?: string;
-    VEN_Name?: string;
-    VEN_EngName?: string;
-    VEN_ShortName?: string;
-    VEN_BNK_No?: string;
-    VEN_GUIAddr?: string;
-    VEN_Boss?: string;
-    VEN_BossTitle?: string;
-    VEN_BossEmail?: string;
-    VEN_BossTel?: string;
-    VEN_BossID?: string;
-    VEN_BossAddr?: string;
-    VEN_Tel?: string;
-    VEN_Fax?: string;
-    VEN_Address?: string;
-    VEN_PayConditionDay?: number | null;
-    VEN_Remark?: string;
-  };
+  PageSize: number;
+  PageIndex: number;
+  SortBy?: SortMeta[];
+  OrderBy?: string;
+  Offset?: number;
+  VEN_NoList?: string[];
+  VEN_Status?: string;
+  VEN_Uniform?: string;
+  VEN_Name?: string;
+  VEN_EngName?: string;
+  VEN_ShortName?: string;
+  VEN_BNK_No?: string;
+  VEN_GUIAddr?: string;
+  VEN_Boss?: string;
+  VEN_BossTitle?: string;
+  VEN_BossEmail?: string;
+  VEN_BossTel?: string;
+  VEN_BossID?: string;
+  VEN_BossAddr?: string;
+  VEN_Tel?: string;
+  VEN_Fax?: string;
+  VEN_Address?: string;
+  VEN_PayConditionDay?: number | null;
+  VEN_Remark?: string;
 }
 
 
