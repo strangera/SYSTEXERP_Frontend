@@ -1,1 +1,172 @@
-<p>fin13050-cru works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <!-- 左欄 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="發票格式"
+            controlName="PUR_VoucherType"
+            [options]="PUR_VoucherTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.PUR_VoucherType"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="字軌"
+            [control]="dataForm.controls.GUI_Track"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="發票號碼"
+            [control]="dataForm.controls.PUR_GUINo"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            label="發票日期"
+            calendarType="dateOne"
+            [control]="dataForm.controls.GUI_Date"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-query-year-month
+            label="申報年月"
+            [control]="dataForm.controls.Apply_YYYYMM"
+            [submitted]="submitted"
+            [onlyOddMonths]="true"
+          ></app-query-year-month>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="廠商編號(統一編號)"
+            [control]="dataForm.controls.UniCode"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="發票總金額"
+            [control]="dataForm.controls.Amount"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="發票未稅金額"
+            [control]="dataForm.controls.TaxExcluded"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="發票稅額"
+            [control]="dataForm.controls.Tax"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="發票用途"
+            [control]="dataForm.controls.Invoice_Purpose"
+            [options]="invoicePurposeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="課稅別"
+            controlName="PUR_TaxType"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.PUR_TaxType"
+            [options]="taxTypeOptions"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="扣抵代號"
+            [control]="dataForm.controls.Deduct_Flag"
+            [options]="deductOptions"
+            optionLabel="label"
+            optionValue="value"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="類別區分"
+            [control]="dataForm.controls.Category"
+            [options]="typeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="憑證單號"
+            [control]="dataForm.controls.Source_Doc_No"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="傳票編號"
+            [control]="dataForm.controls.Voucher_No"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="彙總張數"
+            [control]="dataForm.controls.Serial"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="彙加註記"
+            [control]="dataForm.controls.Note"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="備註"
+            controlName="remark"
+            [control]="dataForm.controls.remark"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+
+      <!-- 按鈕列 -->
+      <div
+        class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable"
+      >
+        <app-button btnType="smartclear" (clickEvent)="clearFormExcept()" />
+        <app-button btnType="submit"></app-button>
+      </div>
+    </form>
+  </p-panel>
+</div>

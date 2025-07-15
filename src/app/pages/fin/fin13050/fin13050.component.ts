@@ -50,7 +50,8 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
   deductOptions = [
     { label: '代表進項可扣抵之進貨及費用', value: 'A' },
     { label: '代表進項可扣抵之固定資產', value: 'B' },
-    { label: '代表進項不可扣抵之進貨及費用', value: 'C' }
+    { label: '代表進項不可扣抵之進貨及費用', value: 'C' },
+     { label: '代表進項不可扣抵之固定資產', value: 'D' },
   ];
     PUR_VoucherTypeOptions: any[] = [
     { value: '23', label: '三聯式、電子計算機及三聯式收銀機統一發票之進貨退出或折讓證明單' },
