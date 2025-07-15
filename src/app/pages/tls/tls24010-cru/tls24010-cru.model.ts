@@ -10,6 +10,10 @@ export const txnTaxTypeOptions = [
   { label: '應稅', value: '1' },
   { label: '零稅', value: '2' },
 ];
+export const txnTaxTypeOptions2 = [
+  { label: '免稅', value: '0' },
+  { label: '應稅', value: '1' },
+];
 export const TXN_GUI_CarrTypeOptions = [
   { label: '悠遊載具卡', value: '1K0001' },
   { label: '手機條碼', value: '3J0002' },
@@ -29,10 +33,20 @@ export const TXN_GUI_CarrTypeOptions = [
 // 稅別：讀取 專櫃抽成主檔的CAG_TAXTYPE 自動代入
 // 折扣別=專櫃折數代碼欄位，自動代入
 export const POS5007Columns: Column[] = [
-  { field: 'PLU_MagNo', header: '商品編號', type: 'input' }, // TLTTALENT.STORE_WAY = 1為專櫃 2=自營 若為自營櫃時, 讀取POS2004.PLU_MAGNO, 若為專櫃, 則不允許修改
-  { field: 'PLU_No', header: '國際條碼', type: 'input' }, // 若為自營櫃時, 讀取POS2004.PLU_NO, 若為專櫃, 則不允許修改
+  { field: 'PLU_MagNo', header: '商品編號/國際條碼', type: 'input' }, // TLTTALENT.STORE_WAY = 1為專櫃 2=自營 若為自營櫃時, 讀取POS2004.PLU_MAGNO, 若為專櫃, 則不允許修改
   { field: 'TXN_Qty', header: '數量', type: 'inputNumber' },
   { field: 'PLU_FixPrc', header: '單價金額', type: 'inputNumber' }, // 若為自營商品, POS2004.PLU_FixPrc, 允許修改
+  { field: 'TXN_Amt', header: '單價小計金額' }, // (計算：數量*單價金額)
+  { field: 'TXN_Disc', header: '單價折扣讓金額', type: 'inputNumber' },
+  { field: 'TXN_SaleAmt', header: '單價銷售金額' }, // 數量*單價金額-單項折扣讓金額
+  { field: 'TLT_ID', header: '類別', type: 'dropdown' }, // 讀取TLTTALENT_CHARGEM 專櫃抽成主檔的 TLT_ID
+  { field: 'PLU_TaxType', header: '稅別' }, // TLTTALENT_CHARGEM.CAG_TAXTYPE 專櫃抽成主檔
+  { field: 'TXN_DiscCode', header: '折扣別' }, // 讀取TLTTALENT_CHARGED.CAG_BARCODE
+]
+export const POS5007Columns2: Column[] = [
+  { field: 'PLU_MagNo', header: '商品編號/國際條碼' }, // TLTTALENT.STORE_WAY = 1為專櫃 2=自營 若為自營櫃時, 讀取POS2004.PLU_MAGNO, 若為專櫃, 則不允許修改
+  { field: 'TXN_Qty', header: '數量', type: 'inputNumber' },
+  { field: 'PLU_FixPrc', header: '單價金額' }, // 若為自營商品, POS2004.PLU_FixPrc, 允許修改
   { field: 'TXN_Amt', header: '單價小計金額' }, // (計算：數量*單價金額)
   { field: 'TXN_Disc', header: '單價折扣讓金額', type: 'inputNumber' },
   { field: 'TXN_SaleAmt', header: '單價銷售金額' }, // 數量*單價金額-單項折扣讓金額
