@@ -54,7 +54,9 @@ export class TLS41020CRUComponent
     EDC_No: ['', [Validators.required, Validators.maxLength(10)]],
     EDC_BegDate: ['', Validators.required],
     EDC_EndDate: ['', Validators.required],
-    EDC_Status: ['', Validators.required],
+    EDC_Status1: ['', Validators.required],
+    EDC_Status2: ['', Validators.required],
+    EDC_Status3: ['', Validators.required],
     EDC_IP1: [
       '',
       [

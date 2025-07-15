@@ -7,10 +7,6 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <!-- <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="收銀機所屬門市店號" controlName="SYS_StoreNo" [control]="dataForm.controls.SYS_StoreNo" [submitted]="submitted">
-                    </app-input-text>
-                </div> -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="收銀機號"
@@ -30,12 +26,6 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
-        <!-- <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text  label="收銀機位置" controlName="ECR_LocNo" [control]="dataForm.controls.ECR_LocNo" [submitted]="submitted">
-                    </app-input-text>
-                </div> -->
-      </div>
-      <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar-range
             startLabel="啟用日期"
@@ -45,37 +35,17 @@
             [submitted]="submitted"
           ></app-calendar-range>
         </div>
-
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
-            label="信用卡刷卡機狀態"
+            label="第一台信用卡刷卡機狀態"
             controlName="EDC_Status"
             [options]="EDC_Status_Option"
             optionLabel="label"
             optionValue="value"
-            [control]="dataForm.controls.EDC_Status"
+            [control]="dataForm.controls.EDC_Status1"
             [submitted]="submitted"
           ></app-dropdown>
         </div>
-      </div>
-      <div class="grid p-fluid">
-        <!-- <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            
-            label="機台所屬專櫃編號"
-            controlName="ECR_TLT_No"
-            [control]="dataForm.controls.ECR_TLT_No"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="機台所屬櫃位名稱"
-            controlName="ECR_TLT_Name"
-            [control]="dataForm.controls.ECR_TLT_Name"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div> -->
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
@@ -102,7 +72,17 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
-
+      <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="第二台信用卡刷卡機狀態"
+            controlName="EDC_Status"
+            [options]="EDC_Status_Option"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.EDC_Status2"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="第二台信用卡刷卡機IP"
@@ -120,6 +100,7 @@
             請輸入有效的 IP 格式（例如：192.168.0.1）
           </small>
         </div>
+  
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="第二台信用卡刷卡機端末機代碼"
@@ -128,7 +109,17 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
-
+        <!-- <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="第三台信用卡刷卡機狀態"
+            controlName="EDC_Status"
+            [options]="EDC_Status_Option"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.EDC_Status3"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="第三台信用卡刷卡機IP"
@@ -153,7 +144,7 @@
             [control]="dataForm.controls.EDC_TmID3"
             [submitted]="submitted"
           ></app-input-text>
-        </div>
+        </div> -->
       </div>
 
       <!-- 按鈕列 -->
