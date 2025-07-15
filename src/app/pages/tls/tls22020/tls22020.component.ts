@@ -37,8 +37,8 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     ECR_No: [[]],
     status1: [''],
     status2: [''],
-    cashierStartCode: [[this.validationService.numberValidator]], // 收銀機代號起
-    cashierEndCode: [[this.validationService.numberValidator]], // 收銀機代號迄
+    cashierStartCode: [[this.validationService.numberValidator]], // 收銀機號起
+    cashierEndCode: [[this.validationService.numberValidator]], // 收銀機號迄
     listZeroDifference: [[]], // 差異為0是否列出
     displayOptions: [1, []], // 顯示選項, radioButton
   });
@@ -48,7 +48,7 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
-    { field: 'cashRegisterCode', header: '收銀機代號', visible: true },
+    { field: 'cashRegisterCode', header: '收銀機號', visible: true },
     { field: 'dedicatedLane', header: '專櫃', visible: true },
     { field: 'cashDetail', header: '現金-明細', visible: true },
     { field: 'cashZ', header: '現金-Z帳', visible: true },

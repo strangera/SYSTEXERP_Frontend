@@ -125,7 +125,7 @@ export class CPM11010CRUComponent extends BasicCrupageComponent implements OnIni
       // name: ['', [Validators.required, Validators.maxLength(14)]], // Input Text
       // CashRegisterType: ['1', Validators.required], // 收銀機型態
       // SalesDate: ['', Validators.required], // 銷售日期
-      // CashRegisterCode: ['', Validators.required], // 收銀機代號
+      // CashRegisterCode: ['', Validators.required], // 收銀機號
       // TransactionSerialNumber: ['', Validators.required], // 交易流水號
       // CounterNumber: ['', Validators.required], // 專櫃編號
       // TwoPartInvoiceNumberStart: ['', Validators.required], // 二聯發票號碼(起號)

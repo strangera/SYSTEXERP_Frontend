@@ -41,7 +41,7 @@ export class TLS24080Component extends BasicQueryPageComponent<any> implements O
   data: any[] = [];
   columns: Column[] = [
     { field: 'salesDate', header: '銷售日期', visible: true },
-    { field: 'cashRegisterCode', header: '收銀機代號', visible: true },
+    { field: 'cashRegisterCode', header: '收銀機號', visible: true },
     { field: 'transactionSerial', header: '交易序號', visible: true },
     { field: 'originalCounterName', header: '原專櫃編號/名稱', visible: true },
     { field: 'previousCounterName', header: '前次專櫃編號/名稱', visible: true },

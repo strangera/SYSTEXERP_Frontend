@@ -100,7 +100,7 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
 
     this.ecrNoService.getECRNo().subscribe({
       next: (res) => this.ECRNoOptions = res,
-      error: () => this.messageService.errorBubble('載入收銀機代號失敗')
+      error: () => this.messageService.errorBubble('載入收銀機號失敗')
     });
 
     this.locationOptionsService.getBuildingOptions().subscribe({
