@@ -42,7 +42,7 @@
             <app-multi-select
               label="所屬大分類代碼/名稱"
               controlName="bus_type"
-              [options]="optionsBig"
+              [options]="bigCategoryOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.bus_type"
@@ -55,11 +55,14 @@
             <app-multi-select
               label="中分類代碼/名稱"
               controlName="bus_class"
-              [options]="optionsMid"
+              [options]="middleCategoryOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.bus_class"
               [submitted]="submitted"
+              [group]="true"
+              optionGroupLabel="label"
+              optionGroupChildren="items"
             ></app-multi-select>
           </div>
         </div>
