@@ -9,43 +9,30 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="建立日期"
-            [control]="queryForm.controls.CRT_Date" controlName="CRT_Date" [submitted]="submitted" />
+            <app-calendar-range-quick label="建檔日期"
+            [startControl]="queryForm.controls.CRT_Date_start" [endControl]="queryForm.controls.CRT_Date_end"
+            [submitted]="submitted" />
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="接洽人員代碼/名稱" controlName="contact_USR_No" [options]="contact_USR_Option" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.contact_USR_No" [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="廠商統一編號" controlName="cus_uniform_id" [options]="cus_uniform_Option" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.cus_uniform_id" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="接洽人員代碼" controlName="contact_USR_No" [control]="queryForm.controls.contact_USR_No"
+            <app-input-text label="廠商名稱(中文)" controlName="VEN_Name" [control]="queryForm.controls.VEN_Name"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="接洽人員姓名" controlName="contact_USR_Name" [control]="queryForm.controls.contact_USR_Name"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="廠商類型" controlName="cus_type" [options]="cus_type_Option" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.cus_type" [submitted]="submitted"></app-dropdown>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商統一編號" controlName="cus_uniform_id" [control]="queryForm.controls.cus_uniform_id"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商名稱" controlName="VEN_Name" [control]="queryForm.controls.VEN_Name"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商英文名稱" controlName="VEN_EngName" [control]="queryForm.controls.VEN_EngName"
+            <app-input-text label="廠商名稱(英文)" controlName="VEN_EngName" [control]="queryForm.controls.VEN_EngName"
               [submitted]="submitted"></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="大分類" controlName="bus_type" [options]="bus_type_Option" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.bus_type" [submitted]="submitted"></app-dropdown>
-          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="品牌" controlName="tlt_name" [options]="tlt_name_Option" optionLabel="Label"
               optionValue="No" [control]="queryForm.controls.tlt_name" [submitted]="submitted"></app-dropdown>
@@ -54,61 +41,9 @@
             <app-input-text label="品牌英文" controlName="tlt_EngName" [control]="queryForm.controls.tlt_EngName"
               [submitted]="submitted"></app-input-text>
           </div>
-        </div>
-        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商聯絡人" controlName="VEN_Boss" [control]="queryForm.controls.VEN_Boss"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商聯絡人電話" controlName="VEN_BossTel" [control]="queryForm.controls.VEN_BossTel"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商聯絡人頭銜" controlName="VEN_BossTitle" [control]="queryForm.controls.VEN_BossTitle"
-              [submitted]="submitted"></app-input-text>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商聯絡人傳真" controlName="VEN_BossFax" [control]="queryForm.controls.VEN_BossFax"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商聯絡人行動電話" controlName="VEN_BossMobile" [control]="queryForm.controls.VEN_BossMobile"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商聯絡人電子郵件" controlName="VEN_BossEmail" [control]="queryForm.controls.VEN_BossEmail"
-              [submitted]="submitted"></app-input-text>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="公司通訊地址" controlName="VEN_Addr" [control]="queryForm.controls.VEN_Addr"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="公司負責人" controlName="VEN_PersonInCharge" [control]="queryForm.controls.VEN_PersonInCharge"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="經營方式" controlName="business_type" [options]="business_type_Option" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.business_type" [submitted]="submitted"></app-dropdown>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="需求面積" controlName="demanded_area"
-            [control]="queryForm.controls.demanded_area" [maxFractionDigits]="3" [submitted]="submitted" />
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="商品出產地" controlName="country_of_origin" [control]="queryForm.controls.country_of_origin"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="備註" controlName="remarks" [control]="queryForm.controls.remarks"
-              [submitted]="submitted"></app-input-text>
+            <app-dropdown label="大分類" controlName="bus_type" [options]="bus_type_Option" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.bus_type" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <!-- <div> -->

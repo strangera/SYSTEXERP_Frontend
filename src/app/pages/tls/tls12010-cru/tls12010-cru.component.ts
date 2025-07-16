@@ -67,7 +67,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         // Potential_Customer 潛在客戶主檔
         contact_USR_No: ['', [Validators.required, Validators.maxLength(16)]],  // 接洽人員代碼
         contact_USR_Name: ['', [Validators.required, Validators.maxLength(20)]],  // 接洽人員姓名
-        cus_type: ['', [Validators.required, Validators.maxLength(1)]], // 廠商類型（1=統編、2=身份證、3=員工ID）
+        cus_type: ['1', [Validators.required, Validators.maxLength(1)]], // 廠商類型（1=統編、2=身份證、3=員工ID）
         cus_uniform_id: ['', [Validators.required, Validators.maxLength(16)]], // 廠商統一編號(pos2013)
         // /*若廠商類型為1=統編, 為廠商統編 (pos2013.ven_uniform) */
 	         /*若廠商 類型為2=身份證字號, 進行身份證檢查碼檢查 */
@@ -90,9 +90,17 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         VEN_Addr: ['', [Validators.maxLength(100)]], // 公司通訊地址
         VEN_PersonInCharge: ['', [Validators.maxLength(20)]], // 公司負責人
         business_type: ['', [Validators.maxLength(1)]], // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
+
         demanded_area: [0, [Validators.maxLength(7),Validators.min(0), Validators.max(9999999)]], // 需求面積（數字，小數點後3位）
         country_of_origin: ['', [Validators.maxLength(20)]], // 商品出產地
-        remarks: [''],  // 備註（HTML 格式）
+        remarks: [''],  // 備註（HTML 格式
+
+        //---以下為 Potential_Customer_Detail 潛在客戶其他資料明細檔(先用欄位，晚點換成一張table)---
+        other_shop: ['',[Validators.required, Validators.maxLength(30)]],  // 其他商場
+        shop_area: [0,[Validators.required, Validators.maxLength(7)]],  // 面積
+        total_amt: [0,[Validators.required, Validators.min(0)]],  // 營業額
+
+        CRT_Date: [{ value: null, disabled: true }], // 建立日期
     });
     //
     cus_type_Option: option[] = [ // 廠商類型（1=統編、2=身份證、3=員工ID）
@@ -110,6 +118,10 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   
     bus_type_Option: apiOption[] = []; // 業種-大分類代碼
     tlt_name_Option: apiOption[] = []; //品牌
+    cus_uniform_Option: apiOption[] = []; // 廠商統一編號(pos2013)
+    contact_USR_Option: apiOption[] = [  // 接洽人員代碼/名稱 -- 等候端提供
+      {No: '123',Name:'張三',Label: '123-張三'}
+    ];
     // ----------------------------------------------------------------
     constructor(private tls12010Service: Tls12010Service) {
       super(); // 呼叫父類建構子
@@ -118,6 +130,12 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     ngOnInit(): void {
       this.initializePage('TLS12010', this.dataForm);
       this.loadOptions();
+      this.onCusTypeChange(this.dataForm.get('cus_type')?.value || '1'); // 廠商類型radio button的檢核
+
+      // 觀察 廠商類型（cus_type) 改變
+      this.dataForm.get('cus_type')?.valueChanges.subscribe(value => {
+        this.onCusTypeChange(value);
+      });
   
       console.log('讀取資料', this.dataForm.value);
     }
@@ -184,5 +202,18 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           }));
           console.log('品牌代號:', this.tlt_name_Option);
         });
+        // 查 統編
+        this.tls12010Service.queryPOS2013_DropDownList({}).subscribe((response) => {
+          this.cus_uniform_Option = response.Data.map((item: any) => ({
+            No: item.VEN_No, // 統編代碼
+            Label: item.VEN_No + '/' + item.Name, // 組合成顯示用的Label
+          }));
+          console.log('統編代號:', response.Data);
+        });  
+    }
+
+    // 廠商類型 radio button 檢核
+    onCusTypeChange(type: string): void {
+      console.log('變更為',type);
     }
 }

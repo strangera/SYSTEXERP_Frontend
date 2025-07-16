@@ -15,6 +15,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 
 export interface Potential_Customer {
   id: number; // 主鍵，自動編號
@@ -57,42 +58,28 @@ export interface Potential_Customer {
     templateUrl: './tls12010.component.html',
     styleUrl: './tls12010.component.scss',
     standalone: true,
-    imports: [MenubarComponent, ButtonComponent,InputTextComponent, InputNumberComponent, AccordionModule, FormsModule, ReactiveFormsModule,CalendarComponent, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
+    imports: [MenubarComponent, ButtonComponent,InputTextComponent, InputNumberComponent, AccordionModule, FormsModule, ReactiveFormsModule,CalendarComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
 })
 export class TLS12010Component extends BasicQueryPageComponent<Potential_Customer> implements OnInit{
     // 查詢
       queryForm = this.formBuilder.group({
         // Potential_Customer 潛在客戶主檔
-        CRT_Date: [null],  // 建立日期
-
-        contact_USR_No: ['', [Validators.maxLength(16)]],  // 接洽人員代碼
-        contact_USR_Name: ['', [Validators.maxLength(20)]],  // 接洽人員姓名
-        cus_type: ['', [Validators.maxLength(1)]], // 廠商類型（1=統編、2=身份證、3=員工ID）
-        cus_uniform_id: ['', [Validators.maxLength(16)]], // 廠商統一編號(pos2013)
+        CRT_Date_start: [null],  // 建立日期_起始日
+        CRT_Date_end: [null],  // 建立日期_終止日
+        contact_USR_No: ['', [Validators.maxLength(16)]],  // 接洽人員代碼/名稱 -- 之後會用dropdown*
+        cus_uniform_id: ['', [Validators.maxLength(16)]], // 廠商統一編號 --這邊要請後端更新 pos2013.ven_uniform 的下拉 *
         // /*若廠商類型為1=統編, 為廠商統編 (pos2013.ven_uniform) */
 	         /*若廠商 類型為2=身份證字號, 進行身份證檢查碼檢查 */
 	         /*若廠商類型為3=員工ID, 檢查 tblUser.user_no */ 
-        VEN_Name: ['', [Validators.maxLength(100)]], // 廠商名稱
+        VEN_Name: ['', [Validators.maxLength(100)]], // 廠商名稱(中文)
         /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
 	      /*若廠商類型為3=員工ID, tblUser.user_name */
-        VEN_EngName: ['', [Validators.maxLength(100)]], // 廠商英文名稱
+        VEN_EngName: ['', [Validators.maxLength(100)]], // 廠商名稱(英文)
         /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
 	      /*若廠商類型為3=員工ID, 由使用者自行輸入 */
         bus_type: ['', [Validators.maxLength(2)]], // 業種-大分類代碼(tltbustype)
         tlt_name: ['', [Validators.maxLength(100)]],  // 品牌(專櫃名稱)
         tlt_EngName: ['', [Validators.maxLength(100)]], // 品牌英文(專櫃名稱)
-        VEN_Boss: ['', [Validators.maxLength(20)]], // 廠商聯絡人
-        VEN_BossTel: ['', [Validators.maxLength(20)]], // 廠商聯絡人電話
-        VEN_BossTitle: ['', [Validators.maxLength(20)]], // 廠商聯絡人頭銜
-        VEN_BossFax: ['', [Validators.maxLength(20)]], // 廠商聯絡人傳真
-        VEN_BossMobile: ['', [Validators.maxLength(20)]], // 廠商聯絡人行動電話
-        VEN_BossEmail: ['', [Validators.maxLength(60)]], // 廠商聯絡人電子郵件
-        VEN_Addr: ['', [Validators.maxLength(100)]], // 公司通訊地址
-        VEN_PersonInCharge: ['', [Validators.maxLength(20)]], // 公司負責人
-        business_type: ['', [Validators.maxLength(1)]], // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
-        demanded_area: [null, [Validators.maxLength(7),Validators.min(0), Validators.max(9999999)]], // 需求面積（數字，小數點後3位）
-        country_of_origin: ['', [Validators.maxLength(20)]], // 商品出產地
-        remarks: [''],  // 備註（HTML 格式）
         //分頁查詢
         ...createPaginationConfig([{ field: 'contact_USR_No', order: 1 }]), // 分頁和排序參數
       });
@@ -114,8 +101,11 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
       ]
   
       bus_type_Option: apiOption[] = []; // 業種-大分類代碼
-      tlt_name_Option: apiOption[] = []; //品牌
-
+      tlt_name_Option: apiOption[] = []; // 品牌
+      cus_uniform_Option: apiOption[] = []; // 廠商統一編號(pos2013)
+      contact_USR_Option: apiOption[] = [  // 接洽人員代碼/名稱 -- 等候端提供
+        {No: '123',Name:'張三',Label: '123-張三'}
+      ];
       
       data: Potential_Customer[] = [];
       columns: Column[] = [
@@ -258,6 +248,14 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
             Label: item.No + '/' + item.Name, // 組合成顯示用的Label
           }));
           console.log('品牌代號:', this.tlt_name_Option);
+        });
+        // 查 統編
+        this.tls12010Service.queryPOS2013_DropDownList({}).subscribe((response) => {
+          this.cus_uniform_Option = response.Data.map((item: any) => ({
+            No: item.VEN_No, // 統編代碼
+            Label: item.VEN_No + '/' + item.Name, // 組合成顯示用的Label
+          }));
+          console.log('統編代號:', response.Data);
         });
       }
 }

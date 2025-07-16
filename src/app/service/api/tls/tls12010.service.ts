@@ -19,7 +19,12 @@ export class Tls12010Service {
   }
 
   // 查詢 品牌代碼(PLULOGO) 設定檔
-    queryPLULOGO_DropDownList(body: any): Observable<any> {
-      return this.http.post<any>(`${environment.ApiUrl}/queryPLULOGO_DropDownList`, body);
+  queryPLULOGO_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryPLULOGO_DropDownList`, body);
+  }
+
+  // 查詢 廠商統一編號 設定檔  
+  queryPOS2013_DropDownList(body: any): Observable<any> {
+      return this.http.post<any>(`${environment.ApiUrl}/queryPOS2013_DropDownList`, body);
     }
 }

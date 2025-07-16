@@ -7,29 +7,33 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="接洽人員代碼" controlName="contact_USR_No" [control]="dataForm.controls.contact_USR_No"
-                        [submitted]="submitted"></app-input-text>
-                    </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="接洽人員姓名" controlName="contact_USR_Name" [control]="dataForm.controls.contact_USR_Name"
-                        [submitted]="submitted"></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="廠商類型" controlName="cus_type" [options]="cus_type_Option" optionLabel="label"
-                         optionValue="value" [control]="dataForm.controls.cus_type" [submitted]="submitted"></app-dropdown>
+                    <app-calendar calendarType="dateOne" label="建立日期"
+                        [control]="dataForm.controls.CRT_Date" controlName="CRT_Date" [submitted]="submitted" />
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="接洽人員" controlName="contact_USR_No" [control]="dataForm.controls.contact_USR_No"
+                        [submitted]="submitted"></app-input-text>
+                    </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-radiobutton label="廠商類型" groupname="cus_type" [control]="dataForm.controls.cus_type"
+                        [options]="cus_type_Option" [submitted]="submitted" />
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <!-- <app-dropdown label="廠商統一編號" controlName="cus_uniform_id" [options]="cus_uniform_Option" optionLabel="Label"
+                    optionValue="No" [control]="dataForm.controls.cus_uniform_id" [submitted]="submitted"></app-dropdown> -->
                     <app-input-text label="廠商統一編號" controlName="cus_uniform_id" [control]="dataForm.controls.cus_uniform_id"
+                        [submitted]="submitted"></app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="廠商名稱(中文)" controlName="VEN_Name" [control]="dataForm.controls.VEN_Name"
                     [submitted]="submitted"></app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商名稱" controlName="VEN_Name" [control]="dataForm.controls.VEN_Name"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商英文名稱" controlName="VEN_EngName" [control]="dataForm.controls.VEN_EngName"
+                    <app-input-text label="廠商名稱(英文)" controlName="VEN_EngName" [control]="dataForm.controls.VEN_EngName"
                     [submitted]="submitted"></app-input-text>
                 </div>
             </div>
@@ -39,8 +43,8 @@
                     optionValue="No" [control]="dataForm.controls.bus_type" [submitted]="submitted"></app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="品牌" controlName="tlt_name" [options]="tlt_name_Option" optionLabel="label"
-                    optionValue="value" [control]="dataForm.controls.tlt_name" [submitted]="submitted"></app-dropdown>
+                    <app-dropdown label="品牌" controlName="tlt_name" [options]="tlt_name_Option" optionLabel="Label"
+                    optionValue="No" [control]="dataForm.controls.tlt_name" [submitted]="submitted"></app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="品牌英文" controlName="tlt_EngName" [control]="dataForm.controls.tlt_EngName"
@@ -102,7 +106,24 @@
             <div class="grid p-fluid">
                 <app-editor-text class="col-12" label="備註" controlName="remarks" [control]="dataForm.controls.remarks"
                 [submitted]="submitted" />
+            </div><hr>
+
+            <!-- 潛在客戶明細檔 -->
+             <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="其他商場" controlName="other_shop" [control]="dataForm.controls.other_shop"
+                    [submitted]="submitted"></app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number label="面積" controlName="shop_area"
+                    [control]="dataForm.controls.shop_area" [maxFractionDigits]="3" [submitted]="submitted" />
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-number label="營業額" controlName="total_amt"
+                    [control]="dataForm.controls.total_amt" [submitted]="submitted" />
+                </div>
             </div>
+
             <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
                 *ngIf="!isFormReadable">
                 <app-button btnType="cancel" [form]="dataForm"></app-button>
