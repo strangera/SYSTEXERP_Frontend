@@ -109,4 +109,9 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       this.menu.toggle(event);
     }
   }
+  onCreateData(): void {
+    // this.submitted = true;
+    // if (!this.queryForm.valid) { return; }
+    this.onCreate(this.queryForm.value);
+  }
 }
