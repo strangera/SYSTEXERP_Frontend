@@ -1,4 +1,4 @@
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -23,9 +23,9 @@ describe('TLS26010Service', () => {
     const ecrNoSpy = jasmine.createSpyObj('ECRNoService', ['getECRNo']);
 
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
       providers: [
         TLS26010Service,
+        { provide: provideHttpClientTesting },
         { provide: ErrorHandlerService, useValue: errorHandlerSpy },
         { provide: ECRNoService, useValue: ecrNoSpy }
       ]

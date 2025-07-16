@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Tls26080Component } from './tls26080.component';
+import { TLS26080Component } from './tls26080.component';
 
 describe('Tls26080Component', () => {
-  let component: Tls26080Component;
-  let fixture: ComponentFixture<Tls26080Component>;
+  let component: TLS26080Component;
+  let fixture: ComponentFixture<TLS26080Component>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Tls26080Component]
+      imports: [TLS26080Component]
     })
-    .compileComponents();
+      .compileComponents();
 
-    fixture = TestBed.createComponent(Tls26080Component);
+    fixture = TestBed.createComponent(TLS26080Component);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
