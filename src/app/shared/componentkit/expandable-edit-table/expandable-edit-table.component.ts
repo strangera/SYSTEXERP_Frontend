@@ -119,11 +119,11 @@ export interface ColumnDef {
 }
 
 @Component({
-    selector: 'app-expandable-edit-table',
-    templateUrl: './expandable-edit-table.component.html',
-    styleUrls: ['./expandable-edit-table.component.scss'],
-    standalone: true,
-    imports: [NgIf, TableModule, NgClass, PrimeTemplate, ButtonDirective, Ripple, TooltipModule, NgFor, NgStyle, NgSwitch, NgSwitchCase, FormsModule, InputTextModule, InputNumberModule, DropdownModule, CheckboxModule, NgSwitchDefault, DialogModule, CalendarModule, DecimalPipe]
+  selector: 'app-expandable-edit-table',
+  templateUrl: './expandable-edit-table.component.html',
+  styleUrls: ['./expandable-edit-table.component.scss'],
+  standalone: true,
+  imports: [NgIf, TableModule, NgClass, PrimeTemplate, ButtonDirective, Ripple, TooltipModule, NgFor, NgStyle, NgSwitch, NgSwitchCase, FormsModule, InputTextModule, InputNumberModule, DropdownModule, CheckboxModule, NgSwitchDefault, DialogModule, CalendarModule, DecimalPipe]
 })
 export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @ViewChild('dt') dt!: Table;
@@ -870,5 +870,58 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   hasCaptionRightContent(): boolean {
     return this.captionRight?.nativeElement?.children.length > 0;
+  }
+
+  // 🎯 主表格表頭操作欄位樣式
+  getActionHeaderStyle(): any {
+    return {
+      position: 'sticky',
+      right: '0',
+      zIndex: '3',
+      // backgroundColor: 'var(--table-header-bg, #c7d2fe)', // 保持表頭背景色
+      width: '120px',
+      minWidth: '120px',
+      textAlign: 'center'
+    };
+  }
+
+  // 🎯 主表格表身操作欄位樣式
+  getActionBodyStyle(): any {
+    return {
+      position: 'sticky',
+      right: '0',
+      zIndex: '2',
+      backgroundColor: '#fff', // 表身背景色
+      width: '120px',
+      minWidth: '120px',
+      textAlign: 'center'
+    };
+  }
+
+  // 🎯 詳細資料表格表頭操作欄位樣式
+  getDetailActionHeaderStyle(): any {
+    return {
+      position: 'sticky',
+      right: '0',
+      zIndex: '3',
+      backgroundColor: '#4a69bd', // 詳細資料表頭背景色
+      width: '120px',
+      minWidth: '120px',
+      textAlign: 'center',
+      color: '#fff' // 白色文字
+    };
+  }
+
+  // 🎯 詳細資料表格表身操作欄位樣式
+  getDetailActionBodyStyle(): any {
+    return {
+      position: 'sticky',
+      right: '0',
+      zIndex: '2',
+      backgroundColor: '#f8f9fa', // 詳細資料表身背景色
+      width: '120px',
+      minWidth: '120px',
+      textAlign: 'center'
+    };
   }
 }
