@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, formatDateTime, formatYN } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDateTime, formatYN } from '../../../shared/componentkit/table/table.model';
 import { TLS21030Data, Tls21030Service } from '../../../service/api/tls/tls21030.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
@@ -13,6 +13,7 @@ import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 /* TALTALENT_BILL_NOTES 對帳單備註檔 */
 @Component({
@@ -24,6 +25,7 @@ import { TranslateModule } from '@ngx-translate/core';
     ButtonComponent,
     AccordionModule,
     FormsModule,
+    DropdownComponent,
     ReactiveFormsModule,
     MultiSelectComponent,
     RadiobuttonYNComponent,
@@ -35,20 +37,19 @@ import { TranslateModule } from '@ngx-translate/core';
 export class TLS21030Component extends BasicQueryPageComponent<TLS21030Data> implements OnInit {
   queryForm = this.formBuilder.group({
     money_type: [null],     // 結帳方式 10=十日結、15=半月結、30=月結
-    term_no: [[1]], // 帳次 Default: 1
-    race_yn: [null],        // 是否使用業主發票 (Y=是、N=否)
+    term_no: [1],           // 帳次 Default: 1
+    rece_yn: [null],        // 是否使用業主發票 (Y=是、N=否)
     bill_remarks: [''],     // 說明 存為html格式
     tlt_nos: [null, [Validators.maxLength(12)]],        // 專櫃編號 (table: TALTALENT_BILL_NOTES_DETALL)
+    ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
   data: TLS21030Data[] = [];
   selectedItems: TLS21030Data[] = [];
   columns: Column[] = [
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'money_type', header: '結帳方式', visible: true, format: (value: string) => this.settlementMethodOptions.find(option => option.value === value)?.label || '' },
     { field: 'term_no', header: '帳次', visible: true },
-    { field: 'race_yn', header: '是否使用業主發票', visible: true, format: formatYN },
+    { field: 'rece_yn', header: '是否使用業主發票', visible: true, format: formatYN },
     { field: 'bill_remark1', header: '說明1', visible: true },
     { field: 'bill_remark2', header: '說明2', visible: true },
     { field: 'bill_remark3', header: '說明3', visible: true },
@@ -60,9 +61,9 @@ export class TLS21030Component extends BasicQueryPageComponent<TLS21030Data> imp
     { field: 'UPD_USR_Name', header: '更新人員名稱', visible: false },
   ];
   settlementMethodOptions = [
-    { value: '1', label: '十日結' },
-    { value: '2', label: '半月結' },
-    { value: '3', label: '月結' },
+    { value: '10', label: '十日結' },
+    { value: '15', label: '半月結' },
+    { value: '30', label: '月結' },
   ];
   accountingPeriodOptions = [
     { value: 1, label: '1' },
@@ -91,9 +92,8 @@ export class TLS21030Component extends BasicQueryPageComponent<TLS21030Data> imp
 
   onDelete(rows: TLS21030Data[]) {
     this.confirmationService.confirm({
-      message: `是否確認刪除此銀行?`,
-      header: `確認刪除銀行`,
-      icon: 'pi pi-exclamation-triangle',
+      message: `是否確認刪除此對帳單備註?`,
+      header: `確認刪除對帳單備註`,
       accept: () => {
         const idsToDelete = rows.map(item => item.id);
         this.loading = true; // 設置載入狀態

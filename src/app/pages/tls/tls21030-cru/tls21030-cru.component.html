@@ -6,32 +6,38 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="結帳方式" controlName="settlementMethod"
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="結帳方式" controlName="money_type"
           [options]="settlementMethodOptions" optionLabel="label" optionValue="value"
-          [control]="dataForm.controls.settlementMethod" [submitted]="submitted" />
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="帳次" controlName="accountingPeriod"
+          [control]="dataForm.controls.money_type" [submitted]="submitted" />
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="帳次" controlName="term_no"
           [options]="accountingPeriodOptions" optionLabel="label" optionValue="value"
-          [control]="dataForm.controls.accountingPeriod" [submitted]="submitted" />
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否使用業主發票" controlName="useOwnerInvoice"
-          [options]="useOwnerInvoiceOptions" optionLabel="label" optionValue="value"
-          [control]="dataForm.controls.useOwnerInvoice" [submitted]="submitted" />
+          [control]="dataForm.controls.term_no" [submitted]="submitted" />
+        <app-radiobutton-yn class="col-12 md:col-6 lg:col-4" label="是否使用業主發票" controlName="rece_yn"
+          [control]="dataForm.controls.rece_yn" [submitted]="submitted" />
+      </div>
+      <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-editor-text label="說明1" controlName="description1" [style]="{ height: '100px' }"
-            [control]="dataForm.controls.description1" [submitted]="submitted" />
+          <app-editor-text label="說明1" controlName="bill_remark1" [control]="dataForm.controls.bill_remark1"
+            [submitted]="submitted" />
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-editor-text label="說明2" controlName="description2" [style]="{ height: '100px' }"
-            [control]="dataForm.controls.description2" [submitted]="submitted" />
+          <app-editor-text label="說明2" controlName="bill_remark2" [control]="dataForm.controls.bill_remark2"
+            [submitted]="submitted" />
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-editor-text label="說明3" controlName="description3" [style]="{ height: '100px' }"
-            [control]="dataForm.controls.description3" [submitted]="submitted" />
+          <app-editor-text label="說明3" controlName="bill_remark3" [control]="dataForm.controls.bill_remark3"
+            [submitted]="submitted" />
         </div>
       </div>
-      <app-table title="新增專櫃" [data]="data" [columns]="columns" [showCheckBox]="true" [showInsert]="true"
-        (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [showManage]="false"></app-table>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button label="查詢專櫃" (click)="onQuery(dataForm)" [loading]="loading" icon='pi pi-search'></app-button>
+      </div>
+      <app-table title="新增專櫃" dataKey="talent_id" [data]="data" [columns]="columns" [showCheckBox]="isFormCreateable"
+        (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [showManage]="false"
+        [loading]="loading" [multiSortMeta]="[{ field: 'talent_id', order: 1 }]" [totalRecords]="totalRecords"
+        (lazyLoadData)="onLazyLoadData($event, dataForm); onQuery(dataForm)" [lazy]="true" [showCaption]="false" />
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="cancel" [form]="dataForm" (clickEvent)="resetTable()"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>

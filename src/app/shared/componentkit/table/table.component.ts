@@ -99,6 +99,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() defaultInsertData: any = {};       // 預設新增資料 (可選，預設為所有資料為null)
   @Output() insert = new EventEmitter<any>(); // 新增事件
   @Input() insertDisabled = false;            // 新增按鈕是否禁用
+  @Input() deleteData = false;                // 預先刪除資料
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   // expansion 收合展開
   @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
@@ -326,8 +327,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   // Delete 按鈕
   deleteRow(selectedItems: any) {
     this.delete.emit(selectedItems);
-    this.data = this.data.filter(item => !selectedItems.includes(item));
-    this.selectedItems = [];
+    if (this.deleteData) {
+      this.data = this.data.filter(item => !selectedItems.includes(item));
+      this.selectedItems = [];
+    }
   }
   onExportExcel() { this.exportExcel.emit(); }                      // 匯出Excel範本 事件
   onImportExcel(event: FileSelectEvent) {                           // 匯入Excel
