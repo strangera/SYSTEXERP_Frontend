@@ -13,7 +13,7 @@ interface Data {
   Name: string;
 }
 
-fdescribe('TLS26010Service', () => {
+describe('TLS26010Service', () => {
   let service: TLS26010Service;
   let httpMock: HttpTestingController;
   let errorHandlerServiceSpy: jasmine.SpyObj<ErrorHandlerService>;
