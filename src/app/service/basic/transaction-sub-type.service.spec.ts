@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { TransactionSubTypeService } from './TXN_Subtype.service';
+import { TXN_SubtypeService } from './TXN_Subtype.service';
 
-describe('TransactionSubTypeService', () => {
-  let service: TransactionSubTypeService;
+describe('TXN_SubtypeService', () => {
+  let service: TXN_SubtypeService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(TransactionSubTypeService);
+    service = TestBed.inject(TXN_SubtypeService);
   });
 
   it('should be created', () => {

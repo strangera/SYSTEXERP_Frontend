@@ -121,7 +121,7 @@ export class TLS26010Service {
   loadPreorderECRList(query: PreorderECRListQuery): void {
     console.log(`loadPreorderECRList:`, [this.preorderECRLoading, query]);
     if (this.preorderECRLoading) return; else (this.preorderECRLoading = !0);
-    if (query.building_no === '' && query.floor_no === '') return;
+    if (query.building_no === '' && query.floor_no === '') return void (this.preorderECRLoading = !1);
 
     this.ECRNoService.getECRNo().pipe(
       take(1),
@@ -139,7 +139,7 @@ export class TLS26010Service {
   loadTLTTALENT(query: TLTTALENTQuery): void {
     console.log(`loadTLTTALENT:`, [this.TLTTALENTLoading, query]);
     if (this.TLTTALENTLoading) return; else (this.TLTTALENTLoading = !0);
-    if (query.building_no === '' && query.floor_no === '') return;
+    if (query.building_no === '' && query.floor_no === '') return void (this.TLTTALENTLoading = !1);
 
     this.http.post<BaseQueryResponse<Data>>(`${this.apiUrl}/queryTLTTALENT_DropDownList`, query).pipe(
       take(1),

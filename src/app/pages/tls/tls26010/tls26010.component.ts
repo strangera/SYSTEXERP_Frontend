@@ -95,19 +95,6 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     }
   }, { allowSignalWrites: true });
 
-  // 主查詢 effect
-  readonly mainQueryEffect = effect(() => {
-    const ecrNos = this.ecrNosSignal();
-    const tltNos = this.tltNosSignal();
-    const dateValidation = this.dateValidationSignal();
-
-    console.log(`main query:`, [ecrNos, tltNos, dateValidation]);
-    // 必要欄位有值且日期驗證通過時才執行查詢
-    if (ecrNos?.length && tltNos?.length && dateValidation.isValid) {
-      this.tls26010Service.loadTLS26010(this.queryTLS26010());
-    }
-  }, { allowSignalWrites: true });
-
   // API queries
   private queryPreorderECRList = computed<PreorderECRListQuery>(() => ({
     data_type: '2',
@@ -180,7 +167,16 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      if (frm.valid && this.canQuery()) this.tls26010Service.loadTLS26010(this.queryTLS26010());
+      if (frm.valid && this.canQuery()) {
+        const ecrNos = this.ecrNosSignal();
+        const tltNos = this.tltNosSignal();
+        const dateValidation = this.dateValidationSignal();
+
+        console.log(`main query:`, [ecrNos, tltNos, dateValidation]);
+        // 必要欄位有值且日期驗證通過時才執行查詢
+        if (ecrNos?.length && tltNos?.length && dateValidation.isValid)
+          this.tls26010Service.loadTLS26010(this.queryTLS26010());
+      }
       this.loading = false;
       this.messageService.blockUi();
     });
