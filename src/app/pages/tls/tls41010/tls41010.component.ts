@@ -98,24 +98,10 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       label: '複製',
       icon: 'pi pi-copy text-blue-500',
       action: (rowData: TLS41010Item) => {
-        // 複製一份資料
-        const copyData: TLS41010Item = { ...rowData };
-
-        // 清空主鍵、流水號、模板編號等（避免跟原資料衝突）
-        copyData.ECR_No = '';
-        copyData.ECR_TmplNo = '';
-        copyData.id = 0;
-
-        // 其他欄位若要預設值，也可在這裡設定
-        // 例如 copyData.ECR_TmplStatus = '0'; // 預設狀態
-
-        // 開啟編輯頁 (copy 模式)，把 copyData 傳進去
-        this.openCru(copyData, 'copy');
+        this.onCreate(rowData);
 
       },
-
     },
-    // 其他按鈕...
   ];
 
   constructor(
@@ -228,12 +214,24 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       this.tls41010Service.queryTLS41010(frm.getRawValue())
         .pipe(finalize(() => this.loading = false), untilDestroyed(this))
         .subscribe((res) => {
-          this.data = res.Data;
+          this.data = res.Data.map(item => {
+            let dateValue: Date | null = null;
+
+            if (typeof item.ECR_SettleHHNN === 'string' && item.ECR_SettleHHNN.length === 4) {
+              dateValue = new Date(`1970-01-01T${item.ECR_SettleHHNN.substring(0, 2)}:${item.ECR_SettleHHNN.substring(2, 4)}:00`);
+            }
+
+            return {
+              ...item,
+              ECR_SettleHHNN: dateValue,
+            };
+          });
           this.totalRecords = res.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm);
         });
     });
   }
+
   saveDialog(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = false;
@@ -284,6 +282,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
   openCru(data: TLS41010Item, mode: string): void {
     console.log(`Opening CRU page with mode: ${mode}`, data);
+
     // Add logic to handle opening the CRU page here
   }
 

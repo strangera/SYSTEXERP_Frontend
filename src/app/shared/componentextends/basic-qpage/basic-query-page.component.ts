@@ -83,6 +83,11 @@ export class BasicQueryPageComponent<T> {
       this.navigateWithState(CRUDStatus.Delete);
     }
   }
+  onCopy(data: T) {
+    if (this.canPerformAction('20')) { // '複製' 的 function_code 是 "20"
+      this.navigateWithState(CRUDStatus.Create, data);
+    }
+  }
   // 送出查詢
   handleSubmit(queryForm: FormGroup, callback: () => void) {
     this.submitted = true;
