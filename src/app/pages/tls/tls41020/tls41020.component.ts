@@ -68,6 +68,7 @@ export class TLS41020Component
   columns: any[] = [
     { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'ECR_Name', header: '收銀機名稱', visible: true },
     { field: 'EDC_No', header: '信用卡刷卡機代碼', visible: true },
     {
       field: 'EDC_BegDate',
@@ -84,6 +85,8 @@ export class TLS41020Component
     { field: 'EDC_Status', header: '信用卡刷卡機狀態', visible: true },
     { field: 'ECR_TLT_No', header: '機台所屬專櫃編號', visible: true },
     { field: 'ECR_TLT_Name', header: '機台所屬櫃位名稱', visible: true },
+    { field: 'ECR_LocNo', header: '機台所屬地點代號', visible: true },
+    { field: 'LOCATION_Name', header: '機台所屬地點名稱', visible: true },
     { field: 'EDC_IP1', header: '第一台信用卡刷卡機IP', visible: true },
      { field: 'EDC_TmID1', header: '第一台信用卡刷卡機端末機代碼', visible: true },
      { field: 'EDC_IP12', header: '第二台信用卡刷卡機IP', visible: true },
