@@ -63,8 +63,8 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="最小訂購量" controlName="PLU_MinOrder" [control]="dataForm.controls.PLU_MinOrder"
-              [submitted]="submitted"></app-input-text>
+            <app-input-number label="最小訂購量" controlName="PLU_MinOrder" [control]="dataForm.controls.PLU_MinOrder"
+              [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
@@ -111,25 +111,25 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="長cm" controlName="PLU_Length" [control]="dataForm.controls.PLU_Length"
-              [submitted]="submitted"></app-input-number>
+            [maxFractionDigits]="2"  [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="重量(g)" controlName="PLU_Weight" [control]="dataForm.controls.PLU_Weight"
-              [submitted]="submitted"></app-input-number>
+            [maxFractionDigits]="2"  [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="高(cm)" controlName="PLU_Height" [control]="dataForm.controls.PLU_Height"
-              [submitted]="submitted"></app-input-number>
+            [maxFractionDigits]="2"  [submitted]="submitted"></app-input-number>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="容量(ml)" controlName="PLU_Volume" [control]="dataForm.controls.PLU_Volume"
-              [submitted]="submitted"></app-input-number>
+            [maxFractionDigits]="2"  [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="寬度(cm)" controlName="PLU_Width" [control]="dataForm.controls.PLU_Width"
-              [submitted]="submitted"></app-input-number>
+            [maxFractionDigits]="2"  [submitted]="submitted"></app-input-number>
           </div>
         </div>
       </ng-container>
@@ -155,8 +155,8 @@
               optionValue="No" [control]="dataForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="商品售價" controlName="PLU_SalePrc" [control]="dataForm.controls.PLU_SalePrc"
-              [submitted]="submitted"></app-input-text>
+            <app-input-number label="商品售價" controlName="PLU_SalePrc" [control]="dataForm.controls.PLU_SalePrc"
+            [maxFractionDigits]="2"  [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="庫存量" controlName="STK_CurrentQty" [control]="dataForm.controls.STK_CurrentQty"
