@@ -115,6 +115,11 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     //TODO: 6.  TLT_ID 類別的部分，應該是用TLT_NO去打API取得TLT_ID的下拉選單
     //TODO: 7. 再去取 TLTTALENT_CHARGEM.CAG_TAXTYPE 專櫃抽成主檔
     //TODO: 8. 再去取 讀取TLTTALENT_CHARGED.CAG_BARCODE 專櫃抽成主檔
+    //--付款明細------------------------------------------------------
+    //TODO: 1. 先去打pos1006付款別 (依照櫃編取？)
+    //TODO: 2. 打TERM_No分期數下拉選單(sys1000.sys_type)
+    //TODO: 3. 定義：付款信用卡卡別，V=VISA、M=MASTER、J=JCB、A=AE、D=DINVER、S=銀聯卡、O=其他
+    //!!! 欄位所以都是用PAY_Type欄位判斷，後續前端處理
   }
   listenForChanges() {
     // 監聽 零稅 的變化
@@ -195,6 +200,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       }
     });
   }
+  // 計算 單價小計金額 與 單價銷售金額
   onPOS5007DataChange(event: POS5007Data[]) {
     this.POS5007Data = event.map((item) => {
       return {
