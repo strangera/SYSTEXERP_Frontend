@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { Tls23020Service } from './tls23020.service';
+import { TLS23020Service } from './tls23020.service';
 
 describe('Tls23020Service', () => {
-  let service: Tls23020Service;
+  let service: TLS23020Service;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(Tls23020Service);
+    service = TestBed.inject(TLS23020Service);
   });
 
   it('should be created', () => {

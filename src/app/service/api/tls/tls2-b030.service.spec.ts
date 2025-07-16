@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { UserBehaviorService } from './user-behavior.service';
+import { TLS2B030Service } from './tls2-b030.service';
 
-describe('UserBehaviorService', () => {
-  let service: UserBehaviorService;
+describe('TLS2B030Service', () => {
+  let service: TLS2B030Service;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(UserBehaviorService);
+    service = TestBed.inject(TLS2B030Service);
   });
 
   it('should be created', () => {

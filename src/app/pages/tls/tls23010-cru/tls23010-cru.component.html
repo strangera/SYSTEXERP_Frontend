@@ -4,45 +4,39 @@
   </div>
 
   <div class="card">
-<app-report-table-group
-  [columns]="columns"
-  [data]="data"
-  [subtotalFields]="
-    displayMode === 'Detail'
-      ? ['TXN_TotGUI', 'TXN_TotSaleAmt', 'TXN_TotPayAmt']
-      : ['TXN_TotSaleAmt']
-  "
-  [groupByField]="displayMode === 'Summary' ? 'tlt_name' : null"
-  [groupByLabel]="'櫃位名稱'"
-  [enableGrouping]="displayMode === 'Summary'"
-  [defaultMergedView]="displayMode === 'Detail'"
-  
-  [reportTitle]="
-    displayMode === 'Detail'
-      ? '型態別明細表'
-      : '型態別彙總表'
-  "
-  [currentPage]="1"
-  [dateStart]="dateStart"
-  [dateEnd]="dateEnd"
-  [printedAt]="printedAt"
-  [showTotalOnly]="true"
-  [pdfSummaryText]="pdfSummary"
-  
-  [allowMergeToggle]="false"
-  [detailColumns]="detailColumns"
-  [fetchDetailFn]="fetchDetailData"
-  [detailFieldKeys]="['TXN_Date', 'ECR_No', 'TXN_No']"
-  [showExpandColumn]="true"
-  [rowExpandMode]="'single'"  
-  [dataKey]="'TXN_Key'"
-  
-  
-></app-report-table-group>
-
+    <app-report-table-group
+      [columns]="columns"
+      [data]="data"
+      [subtotalFields]="
+        displayMode === 'Detail'
+          ? ['TXN_TotGUI', 'TXN_TotSaleAmt', 'TXN_TotPayAmt']
+          : ['TXN_TotSaleAmt']
+      "
+      [groupByField]="displayMode === 'Summary' ? 'tlt_name' : null"
+      [groupByLabel]="'櫃位名稱'"
+      [enableGrouping]="displayMode === 'Summary'"
+      [defaultMergedView]="displayMode === 'Detail'"
+      [reportTitle]="displayMode === 'Detail' ? '型態別明細表' : '型態別彙總表'"
+      [currentPage]="1"
+      [dateStart]="dateStart"
+      [dateEnd]="dateEnd"
+      [printedAt]="printedAt"
+      [showTotalOnly]="true"
+      [pdfSummaryText]="pdfSummary"
+      [allowMergeToggle]="false"
+      [detailColumns]="detailColumns"
+      [fetchDetailFn]="fetchDetailData"
+      [detailFieldKeys]="['TXN_Date', 'ECR_No', 'TXN_No']"
+      [showExpandColumn]="true"
+      [rowExpandMode]="'single'"
+      [dataKey]="'TXN_Key'"
+    ></app-report-table-group>
   </div>
 </div>
 <!-- ✅ 顯示 PDF 摘要文字 -->
-<div *ngIf="pdfSummary?.length" class="mt-4 border-t pt-3 text-sm text-red-700 font-medium">
+<div
+  *ngIf="pdfSummary?.length"
+  class="mt-4 border-t pt-3 text-sm text-red-700 font-medium"
+>
   <div *ngFor="let line of pdfSummary">{{ line }}</div>
 </div>
