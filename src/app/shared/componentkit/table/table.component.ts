@@ -26,36 +26,36 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TableExpansionComponent } from './table-expansion/table-expansion.component';
 import { TableExportComponent } from './table-export/table-export.component';
 @Component({
-    selector: 'app-table',
-    templateUrl: './table.component.html',
-    styleUrl: './table.component.scss',
-    animations: [toggleButtons],
-    standalone: true,
-    imports: [
-        NgIf,
-        DividerModule,
-        TableModule,
-        PrimeTemplate,
-        MultiSelectModule,
-        TooltipModule,
-        FormsModule,
-        Button,
-        NgClass,
-        ButtonDirective,
-        FileUploadModule,
-        DropdownModule,
-        NgFor,
-        Ripple,
-        InputTextModule,
-        InputNumberModule,
-        CalendarModule,
-        CheckboxModule,
-        NgStyle,
-        SkeletonModule,
-        TableExpansionComponent,
-        TableExportComponent,
-        DatePipe,
-    ],
+  selector: 'app-table',
+  templateUrl: './table.component.html',
+  styleUrl: './table.component.scss',
+  animations: [toggleButtons],
+  standalone: true,
+  imports: [
+    NgIf,
+    DividerModule,
+    TableModule,
+    PrimeTemplate,
+    MultiSelectModule,
+    TooltipModule,
+    FormsModule,
+    Button,
+    NgClass,
+    ButtonDirective,
+    FileUploadModule,
+    DropdownModule,
+    NgFor,
+    Ripple,
+    InputTextModule,
+    InputNumberModule,
+    CalendarModule,
+    CheckboxModule,
+    NgStyle,
+    SkeletonModule,
+    TableExpansionComponent,
+    TableExportComponent,
+    DatePipe,
+  ],
 })
 export class TableComponent extends BasicPrintDataComponent implements OnInit, OnChanges, OnDestroy {
   // 基本設置
@@ -264,6 +264,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     this.rowEditing = false; // 關閉編輯模式
     this.dt.saveRowEdit(rowData, htmlTableRowElement ?? null); // 手動保存編輯狀態
     this.rowEditSave.emit({ oldData, newData: rowData, ri, data: this.data }); // 發射事件
+    this.dataChange.emit(this.data);
   }
   // 行編輯取消
   onRowEditCancel(rowData: any, ri: number) {
@@ -322,7 +323,12 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
       this.insert.emit();
     }
   }
-  deleteRow(selectedItems: any) { this.delete.emit(selectedItems); this.selectedItems = []; }// Delete 按鈕
+  // Delete 按鈕
+  deleteRow(selectedItems: any) {
+    this.delete.emit(selectedItems);
+    this.data = this.data.filter(item => !selectedItems.includes(item));
+    this.selectedItems = [];
+  }
   onExportExcel() { this.exportExcel.emit(); }                      // 匯出Excel範本 事件
   onImportExcel(event: FileSelectEvent) {                           // 匯入Excel
     this.importExcel.emit(event);

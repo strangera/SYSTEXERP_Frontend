@@ -1,7 +1,7 @@
 //!!! 交易稅別 選應稅 商品明細一定要有一筆為應稅 卡控
 //!!! 零稅的話 商品明細全部的稅別顯示免稅
 import { InputTextComponent } from './../../../shared/componentkit/input-text/input-text.component';
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { POS5007Data, POS5008Data, TLS24010Data, Tls24010Service } from '../../../service/api/tls/tls24010.service';
@@ -51,32 +51,33 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_GUIEndNo: ['', [Validators.maxLength(8), Validators.minLength(8), this.validationService.guiEndNoValidator]], //結束發票號碼
     TXN_GUICnt: [{ value: 0, disabled: true }], //發票號碼張數
     TXN_MemCard: ['', [Validators.maxLength(30)]], //會員編號，若有資料需要串接環友
-    TXN_TaxFreeCertNo: [{ value: '', disabled: true }], // 免稅卡零稅卡號= 免稅證證號 欄位
+    TXN_TaxFreeCertNo: [{ value: null, disabled: true }], // 免稅卡零稅卡號= 免稅證證號 欄位
     TXN_CustCnt: [1, [Validators.required, Validators.min(1), Validators.max(9999)]],
     TXN_Time: [null], //銷售時段
     TXN_GUI_CarrType: [''], //電子載具種類=電子發票載具類別 悠遊載具卡=1K0001、手機條碼=3J0002、自然人憑證=CQ0001、一卡通載具=1H0001、信用卡載具=EK0002、#=取消載具
-    TXN_GUIVehicle: [{ value: '', disabled: true }, [Validators.maxLength(20)]], //電子發票載具卡號 若有值則 TXN_GUI_CarrType 固定為3J0002，TXN_GUI_CarrId與TXN_GUI_CarrIdEx內容與此欄位相同
-    TXN_GUI_CarrId: [{ value: '', disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID隱碼
-    TXN_GUI_CarrIdEx: [{ value: '', disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID顯碼
+    TXN_GUIVehicle: [{ value: null, disabled: true }, [Validators.maxLength(20)]], //電子發票載具卡號 若有值則 TXN_GUI_CarrType 固定為3J0002，TXN_GUI_CarrId與TXN_GUI_CarrIdEx內容與此欄位相同
+    TXN_GUI_CarrId: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID隱碼
+    TXN_GUI_CarrIdEx: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID顯碼
     TXN_GUIRemark: ['', [Validators.maxLength(10)]], //電子發票防偽隨機碼 由系統依據自訂公式計算取得
     TXN_PrintTimes: [null], //紙本發票列印狀態(若列印電子發票紙本證明連則為1，其他則為0) 顯示 是/否
     TXN_GUI_Donate: ['N'], //發票捐贈狀態，Y=是、N=否
-    TXN_GUILoveCode: [{ value: '', disabled: true }], //捐贈社福團體代碼，若TXN_GUI_Donate為Y，則必須輸入此欄位
-    POS5007List: this.formBuilder.array([]), //POS5007List 銷售商品 資料
-    POS5008List: this.formBuilder.array([]), //POS5008List 支付工具 資料
+    TXN_GUILoveCode: [{ value: null, disabled: true }], //捐贈社福團體代碼，若TXN_GUI_Donate為Y，則必須輸入此欄位
   }, { validators: this.validationService.guiNumberRangeValidator('TXN_GUIBegNo', 'TXN_GUIEndNo') });
   USR_NoOptions: IDropdownItem[] = [];
   txnStatusOptions = txnStatusOptions
   txnTaxTypeOptions = txnTaxTypeOptions2
   TXN_GUI_CarrTypeOptions = TXN_GUI_CarrTypeOptions;
+  POS5007Data: POS5007Data[] = [];
   POS5007SelectedItems: POS5007Data[] = [];
   POS5007Columns: Column[] = POS5007Columns;
+  POS5008Data: POS5008Data[] = [];
   POS5008SelectedItems: POS5008Data[] = [];
   POS5008Columns: Column[] = POS5008Columns;
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly validationService: ValidationService,
     private readonly tls24010Service: Tls24010Service,
+    private readonly cdr: ChangeDetectorRef,
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS24010', this.dataForm);
@@ -93,7 +94,10 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     this.listenForChanges();
   }
   ngAfterViewInit(): void {
-    this.POS5007Table.insertRow(); // 自動開啟一行商品明細
+    if (this.POS5007Table && this.isFormCreateable) {
+      this.POS5007Table.insertRow(); // 自動開啟一行商品明細
+      this.cdr.detectChanges(); // 確保在初始化後檢測變更
+    }
   }
   initializeOptions() {
     // 查詢收銀員設定檔(POS2001)
@@ -103,7 +107,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     //TODO: 1. 這邊應該會打一支API，Input: 專櫃編號TLT_No，Output: TLTTALENT.STORE_WAY = 1為專櫃 2=自營
     //TODO: 2. 若為自營櫃時，這邊判斷要給怎樣的POS5007Columns
     //TODO: 3. 假裝現在是專櫃櫃位
-    this.POS5007Columns = POS5007Columns2; // 這邊會切換成自營櫃位的欄位設定
+    this.POS5007Columns = POS5007Columns; // 這邊會切換成自營櫃位的欄位設定
     //!!! 4. 但說明寫(若為自營商品, POS2004.PLU_FixPrc, 允許修改)
     //!!! 那代表專櫃不能修改嗎？專櫃如果是不能修改，那我要怎麼計算(單價小計金額、單價銷售金額)
     //TODO: 5. 若為自營櫃時, 讀取POS2004.PLU_MAGNO, 若為專櫃, 就不打
@@ -115,6 +119,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   listenForChanges() {
     // 監聽 零稅 的變化
     this.dataForm.get('TXN_VIP')?.valueChanges.pipe(untilDestroyed(this)).subscribe(begNoValue => {
+      if (!begNoValue) { return; }
       if (begNoValue === 'Y') {
         this.dataForm.get('TXN_TaxType')?.disable();
         this.dataForm.get('TXN_TaxType')?.setValue('2', { emitEvent: false }); // 零稅
@@ -153,7 +158,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
               this.dataForm.get('TXN_GUICnt')?.setValue(qty, { emitEvent: false });
             } else {
               this.dataForm.get('TXN_GUICnt')?.setValue(0, { emitEvent: false });
-              console.warn('總張數無法被 50 整除，資料格式可能有誤');
             }
           }
         }
@@ -161,25 +165,27 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     });
     // 監聽 電子載具種類 的變化
     this.dataForm.get('TXN_GUI_CarrType')?.valueChanges.pipe(untilDestroyed(this)).subscribe(carrType => {
+      if (!carrType) { return; }
       if (carrType && carrType.trim() !== '') {
         this.dataForm.get('TXN_GUI_CarrId')?.enable();
         this.dataForm.get('TXN_GUI_CarrIdEx')?.enable();
       } else {
         this.dataForm.get('TXN_GUI_CarrId')?.disable();
         this.dataForm.get('TXN_GUI_CarrIdEx')?.disable();
-        this.dataForm.get('TXN_GUI_CarrId')?.setValue('', { emitEvent: false });
-        this.dataForm.get('TXN_GUI_CarrIdEx')?.setValue('', { emitEvent: false });
+        this.dataForm.get('TXN_GUI_CarrId')?.setValue(null, { emitEvent: false });
+        this.dataForm.get('TXN_GUI_CarrIdEx')?.setValue(null, { emitEvent: false });
       }
       if (carrType === '3J0002') {
         this.dataForm.get('TXN_GUIVehicle')?.enable();
       } else {
         this.dataForm.get('TXN_GUIVehicle')?.disable();
       }
-      this.dataForm.get('TXN_GUIVehicle')?.setValue('', { emitEvent: false });
+      this.dataForm.get('TXN_GUIVehicle')?.setValue(null, { emitEvent: false });
     });
     // 監聽 發票捐贈狀態 的變化
     this.dataForm.get('TXN_GUI_Donate')?.valueChanges.pipe(untilDestroyed(this)).subscribe(vip => {
-      this.dataForm.get('TXN_GUILoveCode')?.setValue('', { emitEvent: false });
+      this.dataForm.get('TXN_GUILoveCode')?.setValue(null, { emitEvent: false });
+      if (!vip) { return; }
       if (vip === 'Y') {
         this.dataForm.get('TXN_GUILoveCode')?.setValidators([Validators.required, Validators.maxLength(20)]);
         this.dataForm.get('TXN_GUILoveCode')?.enable();
@@ -187,6 +193,15 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         this.dataForm.get('TXN_GUILoveCode')?.clearValidators();
         this.dataForm.get('TXN_GUILoveCode')?.disable();
       }
+    });
+  }
+  onPOS5007DataChange(event: POS5007Data[]) {
+    this.POS5007Data = event.map((item) => {
+      return {
+        ...item,
+        TXN_Amt: item.TXN_Qty * item.PLU_FixPrc,
+        TXN_SaleAmt: item.TXN_Qty * item.PLU_FixPrc - item.TXN_Disc,
+      };
     });
   }
   onSubmit(frm: FormGroup) {
