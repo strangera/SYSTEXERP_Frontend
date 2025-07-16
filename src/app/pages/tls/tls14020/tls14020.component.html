@@ -368,3 +368,28 @@
     <!-- (detail)="onDetail($event)" (delete)="onDelete($event)" -->
   </div>
 </div>
+<app-dialog
+  [visible]="dialogVisible"
+  header="顯示合約"
+  [showFooter]="false"
+  (visibleChange)="dialogVisible = $event"
+  height="60%"
+>
+  <app-table
+    tableKey="TLS14020DialogTable"
+    dataKey="id"
+    [data]="dialogData"
+    [columns]="dialogColumns"
+    [showReportMode]="false"
+    [showDelete]="false"
+    [showManage]="false"
+    [multiSortMeta]="[{ field: 'contract_subno', order: 1 }]"
+    [totalRecords]="dialogTotalRecords"
+    [showCaption]="false"
+    [loading]="dialogLoading"
+  ></app-table>
+  <!-- [showCaption]="false"
+    [showHeader]="false"
+    (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)"
+    [lazy]="true" [loading]="dialogLoading" -->
+</app-dialog>
