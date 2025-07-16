@@ -22,6 +22,16 @@ export const TXN_GUI_CarrTypeOptions = [
   { label: '信用卡載具', value: 'EK0002' },
   { label: '取消載具', value: '#' },
 ]
+// 付款信用卡卡別，V=VISA、M=MASTER、J=JCB、A=AE、D=DINVER、S=銀聯卡、O=其他
+export const CRD_TypeOptions = [
+  { label: 'VISA', value: 'V' },
+  { label: 'MASTER', value: 'M' },
+  { label: 'JCB', value: 'J' },
+  { label: 'AE', value: 'A' },
+  { label: 'DINVER', value: 'D' },
+  { label: '銀聯卡', value: 'S' },
+  { label: '其他', value: 'O' },
+]
 // 新增 國際條碼、商品編號
 // 若為 自營櫃位，顯示 國際條碼、商品編號(對應商品管理編號欄位) 可輸入欄位，若不是 直接自動代入專櫃編號欄位
 // 單價=定價 欄位
@@ -60,7 +70,7 @@ export const POS5007Columns2: Column[] = [
 // 信用卡別 對應 付款信用卡卡別 欄位，下拉選單 (可利用 pos1006，付款別型態判斷)
 // 分期數 對應  期別 欄位 (信用卡才需要)，下拉選單(sys1000.sys_type)
 export const POS5008Columns: Column[] = [
-  { field: 'PAY_Type', header: '付款別', type: 'dropdown' },// 付款別型態，POS1006.PAY_Type
+  { field: 'PAY_Type', header: '付款別', },// 付款別型態，POS1006.PAY_Type
   { field: 'TXN_PayAmt', header: '金額', type: 'inputNumber' },
   { field: 'CRD_Type', header: '信用卡別', type: 'dropdown' }, // 付款信用卡卡別，V=VISA、M=MASTER、J=JCB、A=AE、D=DINVER、S=銀聯卡、O=其他
   { // 若不是信用卡的話, 該欄位的值就放在券號欄位

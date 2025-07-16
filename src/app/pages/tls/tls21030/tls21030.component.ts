@@ -16,26 +16,26 @@ import { TranslateModule } from '@ngx-translate/core';
 
 /* TALTALENT_BILL_NOTES 對帳單備註檔 */
 @Component({
-    selector: 'app-tls21030',
-    templateUrl: './tls21030.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        MultiSelectComponent,
-        RadiobuttonYNComponent,
-        InputTextComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls21030',
+  templateUrl: './tls21030.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MultiSelectComponent,
+    RadiobuttonYNComponent,
+    InputTextComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 export class TLS21030Component extends BasicQueryPageComponent<TLS21030Data> implements OnInit {
   queryForm = this.formBuilder.group({
     money_type: [null],     // 結帳方式 10=十日結、15=半月結、30=月結
-    term_no: [1, [Validators.max(9)]], // 帳次 Default: 1
+    term_no: [[1]], // 帳次 Default: 1
     race_yn: [null],        // 是否使用業主發票 (Y=是、N=否)
     bill_remarks: [''],     // 說明 存為html格式
     tlt_nos: [null, [Validators.maxLength(12)]],        // 專櫃編號 (table: TALTALENT_BILL_NOTES_DETALL)
@@ -67,13 +67,7 @@ export class TLS21030Component extends BasicQueryPageComponent<TLS21030Data> imp
   accountingPeriodOptions = [
     { value: 1, label: '1' },
     { value: 2, label: '2' },
-    { value: 3, label: '3' },
-    { value: 4, label: '4' },
-    { value: 5, label: '5' },
-    { value: 6, label: '6' },
-    { value: 7, label: '7' },
-    { value: 8, label: '8' },
-    { value: 9, label: '9' }
+    { value: 3, label: '3' }
   ];
   constructor(
     private tls21030Service: Tls21030Service
