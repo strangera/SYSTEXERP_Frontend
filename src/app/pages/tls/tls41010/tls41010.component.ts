@@ -2,12 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { TLS41010Item } from './tls41010.model';
 import { columns, guiTypeOptions, salTypeOptions, sernoTypeOptions, statusOptions, TLS41010Data, typeOptions } from './tls41010.model';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { HttpClient } from '@angular/common/http';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { TLS46020Item, TLS46020Service } from '../../../service/api/tls/tls46020.service';
+import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
 import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
@@ -22,6 +23,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
+import { QueryTLS41010Request } from '../../../service/api/tls/tls41010.service';
 import { NgIf } from '@angular/common';
 
 @Component({
@@ -83,13 +85,13 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   // 複製設定 Dialog 相關
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
-    ECR_TmplNo: ['', [Validators.required]], // 環境變數編號
-    Target_ECR_No: ['', [Validators.required]], // 目的環境變數編號
+    Source_ECR_No: ['', [Validators.required]],
+    Target_ECR_No: ['', [Validators.required]],
   });
-  dialogSelectItem: TLS46020Item | null = null;
-  dialogSelectTargetItem: TLS46020Item | null = null;
+
+  dialogSelectItem: TLS41010Data | null = null;
+  dialogSelectTargetItem: TLS41010Data | null = null;
   dialogOptions: { No?: string; Name?: string; label?: string }[] = [];
-  mergedDialogOptions: { No?: string; Name?: string; label?: string }[] = [];
 
   constructor(
     private tls41010Service: TLS41010Service,
@@ -188,22 +190,18 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         this.callTls11010Api(locNo);
       }
     });
-    this.dropDownListService.queryPOS1002TML_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+    this.dropDownListService.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.dialogOptions = res.Data.map(item => ({
         ...item,
-        label: `${item.No} - ${item.Name}`,
+        label: `${item.Name}`,
       }));
-      this.mergedDialogOptions = [{ label: '新增一筆環境變數', No: 'new' }, ...this.dialogOptions];
     });
   }
-
-
   //  Submit 查詢
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls41010Service.queryTLS41010(frm.getRawValue())
-        .pipe(finalize(() => this.loading = false))
-        .pipe(untilDestroyed(this))
+        .pipe(finalize(() => this.loading = false), untilDestroyed(this))
         .subscribe((res) => {
           this.data = res.Data;
           this.totalRecords = res.TotalCount;
@@ -211,50 +209,54 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         });
     });
   }
-
   saveDialog(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = false;
+      // 來源和目標一樣，不能複製
       if (this.isValid) { return; }
-      const body = {
-        ...this.dialogSelectItem,
-        ECR_TmplNo: frm.value.ECR_TmplNo === 'new' ? undefined : frm.value.Target_ECR_No,
-        id: frm.value.ECR_TmplNo === 'new' ? undefined : this.dialogSelectTargetItem?.id
-      }
-      if (frm.value.Target_ECR_No === 'new') {
-        this.tls46020Service.insertTLS46020(body).pipe(untilDestroyed(this)).subscribe(res => {
-          console.log('新增環境變數成功', res);
-          this.dialogVisible = false;
-          this.onSubmit(this.queryForm);
-        });
-      } else {
-        this.tls46020Service.updateTLS46020(body).pipe(untilDestroyed(this)).subscribe(res => {
-          console.log('複製環境變數成功', res);
-          this.dialogVisible = false;
-          this.onSubmit(this.queryForm);
-        });
-      }
+      // 組資料
+      const body: Partial<TLS41010Item> = { ...this.dialogSelectItem };
+      // 判斷是否為新增或更新，假設「new」是新增
+      // 更新
+      this.tls41010Service.updateTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
+        console.log('更新成功', res);
+        this.dialogVisible = false;
+        this.onSubmit(this.queryForm);
+      });
     });
   }
+
   onDialogChange(event: DropdownChangeEvent) {
     const selectedValue = event.value;
-    const body = { ECR_TmplNo: selectedValue };
-    this.tls46020Service.queryTLS46020(body).pipe(untilDestroyed(this)).subscribe(res => {
+    const body: QueryTLS41010Request = {
+      ECR_No: selectedValue,
+      PageSize: 10,
+      PageIndex: 0
+    };
+    this.tls41010Service.queryTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
       this.dialogSelectItem = res.Data[0];
     });
   }
+
   onDialogChange2(event: DropdownChangeEvent) {
     const selectedValue = event.value;
-    const body = { ECR_TmplNo: selectedValue };
-    this.tls46020Service.queryTLS46020(body).pipe(untilDestroyed(this)).subscribe(res => {
+    const body: QueryTLS41010Request = {
+      ECR_No: selectedValue,
+      PageSize: 10,
+      PageIndex: 0,
+    };
+    this.tls41010Service.queryTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
       this.dialogSelectTargetItem = res.Data[0];
     });
   }
+
+  // isValid 判斷來源和目標是否相同
   get isValid(): boolean {
-    const ECR_TmplNo = this.dialogQueryForm.value.ECR_TmplNo ?? '';
+    const Source_ECR_No = this.dialogQueryForm.value.Source_ECR_No ?? '';
     const Target_ECR_No = this.dialogQueryForm.value.Target_ECR_No ?? '';
-    return (ECR_TmplNo !== '' && Target_ECR_No !== '') && (ECR_TmplNo === Target_ECR_No);
+    return (Source_ECR_No !== '' && Target_ECR_No !== '') && (Source_ECR_No === Target_ECR_No);
   }
+
 }
 
 

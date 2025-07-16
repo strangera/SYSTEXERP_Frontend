@@ -1,12 +1,12 @@
-import { option } from './../../../shared/models/sys/sysb000.module';
+
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
-import { TLS46020Item, TLS46020Service } from '../../../service/api/tls/tls46020.service';
-import { TLS41010Data } from '../tls41010/tls41010.model';
+import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
+import { TLS41010Data, TLS41010Item } from '../tls41010/tls41010.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import {
@@ -322,7 +322,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       });
     });
   }
-  private createBody(frm: FormGroup): TLS46020Item {
+  private createBody(frm: FormGroup): TLS41010Item {
     const rawValue = frm.getRawValue();
     const storeNo = this.authService.currentUserValue?.SYS_StoreNo ?? '';
     return {
@@ -337,7 +337,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       ECR_ActiveDate: rawValue.ECR_ActiveDate ?? undefined,
       CRT_Date: rawValue.CRT_Date ?? undefined,
       UPD_Date: rawValue.UPD_Date ?? undefined,
-    } as TLS46020Item;
+    } as TLS41010Item;
   }
 
 }

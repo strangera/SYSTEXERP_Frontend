@@ -97,17 +97,19 @@
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading">
   </app-table>
 </div>
-<app-dialog [visible]="dialogVisible" header="複製環境變數" (visibleChange)="dialogVisible = $event"
+
+<app-dialog [visible]="dialogVisible" header="複製收銀機號" (visibleChange)="dialogVisible = $event"
   (save)="saveDialog(dialogQueryForm)" [height]="'auto'">
   <form [formGroup]="dialogQueryForm" class="flex gap-2">
-    <app-dropdown (changeEvent)="onDialogChange($event)" class="flex-1" label="來源環境變數" controlName="ECR_No"
-      [control]="dialogQueryForm.controls.ECR_TmplNo" [options]="dialogOptions" optionLabel="label" optionValue="No"
+    <app-dropdown (changeEvent)="onDialogChange($event)" class="flex-1" label="來源收銀機號" controlName="Source_ECR_No"
+      [control]="dialogQueryForm.controls.Source_ECR_No" [options]="dialogOptions" optionLabel="label" optionValue="No"
       [submitted]="submitted" />
-    <app-dropdown (changeEvent)="onDialogChange2($event)" class="flex-1" label="目的環境變數" controlName="Target_ECR_No"
-      [control]="dialogQueryForm.controls.Target_ECR_No" [options]="mergedDialogOptions" optionLabel="label"
+    <app-dropdown (changeEvent)="onDialogChange2($event)" class="flex-1" label="目標收銀機號" controlName="Target_ECR_No"
+      [control]="dialogQueryForm.controls.Target_ECR_No" [options]="dialogOptions" optionLabel="label"
       optionValue="No" [submitted]="submitted" />
+
   </form>
   <span class="required" *ngIf="submitted && isValid">
-    無法複製到相同的環境變數
+    無法複製到相同的收銀機號
   </span>
 </app-dialog>

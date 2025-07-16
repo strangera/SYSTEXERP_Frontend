@@ -21,6 +21,24 @@ export interface TLS24010Data {
   TXN_Mode: string; // 交易型態
 }
 
+export interface POS5007Data {
+  id: number; // 唯一識別碼
+  PLU_MagNo: string; // 商品編號
+  PLU_No: string; // 國際條碼
+  TXN_Qty: number;// 數量
+  PLU_FixPrc: number; // 單價金額
+  TXN_Amt: number; // 單價小計金額
+  TXN_Disc: number; // 單價折扣讓金額
+  TXN_SaleAmt: number; // 單價銷售金額
+  TLT_ID: string; // 類別
+  PLU_TaxType: string; // 稅別
+  TXN_DiscCode: string; // 折扣別
+}
+
+export interface POS5008Data {
+  id: number; // 唯一識別碼
+}
+
 @Injectable({
   providedIn: 'root',
 })

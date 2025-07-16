@@ -6,17 +6,18 @@ import { NgIf, NgClass } from '@angular/common';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 
 @Component({
-    selector: 'app-multi-select',
-    templateUrl: './multi-select.component.html',
-    standalone: true,
-    imports: [
-        NgIf,
-        MultiSelectModule,
-        FormsModule,
-        ReactiveFormsModule,
-        NgClass,
-        ControlMessagesComponent,
-    ],
+  selector: 'app-multi-select',
+  templateUrl: './multi-select.component.html',
+  styleUrls: ['./multi-select.component.scss'],
+  standalone: true,
+  imports: [
+    NgIf,
+    MultiSelectModule,
+    FormsModule,
+    ReactiveFormsModule,
+    NgClass,
+    ControlMessagesComponent,
+  ],
 })
 export class MultiSelectComponent extends BasicKitComponent implements OnInit, OnChanges {
   @ViewChild('multiSelect') multiSelect!: MultiSelect;
@@ -29,6 +30,10 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit, O
   @Input() submitted = false; // 檢查欄位是否標準
   @Input() loading = true; // 載入狀態
   @Input() variant: 'filled' | 'outlined' = 'outlined';
+
+  @Input() group = false; // 是否啟用分組
+  @Input() optionGroupLabel = 'label'; // 分組的標籤欄位
+  @Input() optionGroupChildren = 'items'; // 分組的子項目欄位
 
   ngOnInit(): void {
     this.ensureControl();
