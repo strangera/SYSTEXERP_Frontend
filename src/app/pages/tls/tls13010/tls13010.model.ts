@@ -172,6 +172,13 @@ export interface CleanFareItem {
   tpy_totalamt?: number;
   gui_flag?: string;
   org_id?: string;
+
+  day_account?: string;
+  interval?: number;
+  down_payment?: number;
+  period_nos?: number;
+  tpy_1stamt?: number;
+  tpy_rate?: number;
 }
 
 /**
@@ -674,7 +681,13 @@ export class DataCleaner {
         tpy_amount: this.parseNumber(item.tpy_amount),
         tpy_totalamt: this.parseNumber(item.tpy_totalamt),
         gui_flag: item.gui_flag,
-        org_id: item.org_id
+        org_id: item.org_id,
+        day_account: item.day_account,
+        interval: this.parseNumber(item.interval),
+        down_payment: this.parseNumber(item.down_payment),
+        period_nos: this.parseNumber(item.period_nos),
+        tpy_1stamt: this.parseNumber(item.tpy_1stamt),
+        tpy_rate: this.parseNumber(item.tpy_rate)
       };
 
       switch (item._status) {
