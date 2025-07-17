@@ -48,58 +48,73 @@ import { MultiSelectModule } from 'primeng/multiselect';
   ],
 })
 export class ReportTableGroupComponent implements OnInit {
-  @Input() columns: Column[] = [];
-  @Input() dataKey = 'id';
-  @Input() subtotalFields: string[] = [];
-  @Input() showTotalOnly = false;
-  @Input() totalCount: number = 0;
-  @Input() currentPage: number = 1;
-  @Input() dateStart: string = '';
-  @Input() dateEnd: string = '';
-  @Input() printedAt: string = '';
-  @Input() rowsPerTable = 1000;
-  @Input() reportTitle: string = '報表';
-  @Input() continuousRowNumber = true;
-  @Input() dateRangeLabel: string = '資料區間';
-  @Input() pdfSummaryText: string[] = [];
-  @Input() groupByField?: string | null = null;
-  @Input() groupByLabel: string = '';
-  @Input() rowExpandMode: 'single' | 'multiple' = 'multiple';
-  @Input() allowMergeToggle: boolean = false; // 預設不顯示切換開關
-  @Input() defaultMergedView: boolean = true; // 預設就是合併模式
-  @Input() enableGrouping: boolean = false;
-  @Input() detailColumns: Column[] = []; // 自訂明細欄位
-  @Input() showGroupedBody: boolean = false;
-  @Input() showExpandColumn: boolean = false;
-  @Input() detailFieldKeys: string[] = [];
-  @Input() fetchDetailFn: (payload: any) => Promise<any[]> = async () => [];
-  @Input() showDateRangeLabel = true;
-  @Input() extraTablesForPDF: {
-    title: string;
-    columns: { header: string; field: string; style?: string }[];
-    data: any[];
-  }[] = [];
-  @Input() groupHeaderTemplate?: TemplateRef<any>;
+// 📌 資料與欄位設定
+@Input() columns: Column[] = [];                        // 表格欄位定義
+@Input() dataKey = 'id';                                // 每筆資料的唯一識別鍵
+@Input() subtotalFields: string[] = [];                 // 小計欄位（需加總的欄位）
+@Input() detailColumns: Column[] = [];                  // 明細展開欄位（如 rowexpansion）
 
-  private _data: any[] = [];
+@Input() groupByField?: string | null = null;           // 分組依據欄位
+@Input() groupByLabel: string = '';                     // 分組顯示名稱
 
-  @Input()
-  set data(value: any[]) {
-    this._data = value;
-    this.groupBodyExpanded = {}; // ✅ 每次新資料清空展開狀態
+@Input() detailFieldKeys: string[] = [];                // 展開資料查詢用的欄位 key
+@Input() fetchDetailFn: (payload: any) => Promise<any[]> = async () => []; // 明細查詢方法
 
-    if (this.groupByField) {
-      this._data = [...this._data].sort((a, b) => {
-        const valA = a[this.groupByField!];
-        const valB = b[this.groupByField!];
-        if (valA == null) return 1;
-        if (valB == null) return -1;
-        return String(valA).localeCompare(String(valB));
-      });
-    }
+@Input() extraTablesForPDF: {                           // PDF 附加額外表格
+  title: string;
+  columns: { header: string; field: string; style?: string }[];
+  data: any[];
+}[] = [];
 
-    this.splitData();
+@Input() groupHeaderTemplate?: TemplateRef<any>;        // 自訂群組表頭 template
+
+// 📌 分頁與區間設定
+@Input() totalCount: number = 0;                        // 資料總筆數
+@Input() currentPage: number = 1;                       // 目前頁碼
+@Input() rowsPerTable = 1000;                           // 每表格顯示的最大列數
+@Input() dateStart: string = '';                        // 起始日期
+@Input() dateEnd: string = '';                          // 結束日期
+@Input() printedAt: string = '';                        // 列印時間
+@Input() dateRangeLabel: string = '資料區間';            // 日期區間標籤
+@Input() reportTitle: string = '報表';                  // 報表主標題
+@Input() pdfSummaryText: string[] = [];                 // PDF 額外摘要文字
+
+// 📌 布林設定與顯示控制（集中管理開關類）
+@Input() showTotalOnly = false;                         // 是否只顯示小計/總計（不顯示資料列）
+@Input() continuousRowNumber = true;                    // 是否連續編號（false = 每組從 1 開始）
+@Input() showDateRangeLabel = true;                     // 是否顯示日期區間文字
+@Input() showGroupedBody: boolean = false;              // 是否預設展開群組資料列
+@Input() showExpandColumn: boolean = false;             // 是否顯示展開列圖示
+@Input() allowMergeToggle: boolean = false;             // 是否顯示合併顯示切換按鈕
+@Input() defaultMergedView: boolean = true;             // 預設是否合併為一大表
+@Input() enableGrouping: boolean = false;               // 是否啟用分組顯示
+
+@Input() rowExpandMode: 'single' | 'multiple' = 'multiple'; // 展開列模式
+
+// 📌 資料 getter / setter
+private _data: any[] = [];
+
+@Input()
+set data(value: any[]) {
+  this._data = value;
+  this.groupBodyExpanded = {}; // ✅ 每次新資料時重設群組展開狀態
+
+  // ✅ 若有指定分組欄位，先依該欄位排序資料
+  if (this.groupByField) {
+    this._data = [...this._data].sort((a, b) => {
+      const valA = a[this.groupByField!];
+      const valB = b[this.groupByField!];
+      if (valA == null) return 1;
+      if (valB == null) return -1;
+      return String(valA).localeCompare(String(valB));
+    });
   }
+
+  this.splitData(); // ✅ 資料設定後進行分組或切頁處理
+}
+
+
+
 
   get data(): any[] {
     return this._data;

@@ -1,5 +1,6 @@
+import { Label } from './../tls51070-os/tls51070-os.component';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
@@ -141,14 +142,16 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   }
   // 提交查詢：處理表單並呼叫查詢 API
   onSubmit(frm: FormGroup): void {
-    console.log('14030要求',frm.value);
+    const formValue = frm.getRawValue();
+    formValue.tlt_name = '';
+    console.log('14030要求',formValue);
     this.handleSubmit(frm, () => {
-      this.tls14030Service.queryTLS14030(frm.value).subscribe({
+      this.tls14030Service.queryTLS14030(formValue).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.data = response.Data || [];
             this.totalRecords = response.TotalCount || response.Data.length; // 排序需要
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+            this.queryStateService.setQueryState(this.ProgNo, formValue);
 
             console.log('取得資料',this.data);
           }
@@ -273,11 +276,11 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
           .queryTLTTALENT_DropDownList({})
           .subscribe((response) => {
             this.tlt_noListOption = response.Data.map((item: apiOption) => ({
-              value: item.No,
-              label: item.Name,
+              No: item.No,
+              Label: item.No+'-'+item.Name,
             }));
   
-            console.log('tlt_noListOption:', this.orgOption);
+            console.log('專櫃編號:', response.Data);
           });
   }
 }
