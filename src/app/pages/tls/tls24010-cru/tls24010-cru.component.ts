@@ -24,6 +24,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
 import { Tls24010Pos5008Component } from './tls24010-pos5008/tls24010-pos5008.component';
 import { Tls24010Pos5007Component } from './tls24010-pos5007/tls24010-pos5007.component';
+import { tap } from 'rxjs';
 @Component({
   selector: 'app-tls24010-cru',
   templateUrl: './tls24010-cru.component.html',
@@ -92,61 +93,60 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     this.listenForChanges();
   }
   listenForChanges() {
+    const txnVipControl = this.dataForm.get('TXN_VIP');
+    const taxFreeCertNoControl = this.dataForm.get('TXN_TaxFreeCertNo');
+    const txnGuiCarrTypeControl = this.dataForm.get('TXN_GUI_CarrType');
+    const txnGuiVehicleControl = this.dataForm.get('TXN_GUIVehicle');
+    const txnGuiCarrIdExControl = this.dataForm.get('TXN_GUI_CarrIdEx');
+    const txnGuiCarrIdControl = this.dataForm.get('TXN_GUI_CarrId');
+    const txnGuiDonateControl = this.dataForm.get('TXN_GUI_Donate');
+    const txnGuiLoveCodeControl = this.dataForm.get('TXN_GUILoveCode');
     // 監聽 零稅 的變化
-    this.dataForm.get('TXN_VIP')?.valueChanges.pipe(untilDestroyed(this)).subscribe(begNoValue => {
-      if (!begNoValue) { return; }
+    txnVipControl?.valueChanges.pipe(untilDestroyed(this)).subscribe(begNoValue => {
       if (begNoValue === 'Y') {
-        this.dataForm.get('TXN_TaxFreeCertNo')?.setValidators([Validators.required, Validators.maxLength(10)]);
-        this.dataForm.get('TXN_TaxFreeCertNo')?.enable();
+        taxFreeCertNoControl?.setValidators([Validators.required, Validators.maxLength(10)]);
+        taxFreeCertNoControl?.enable();
       } else {
-        this.dataForm.get('TXN_TaxFreeCertNo')?.clearValidators();
-        this.dataForm.get('TXN_TaxFreeCertNo')?.disable();
+        taxFreeCertNoControl?.clearValidators();
+        taxFreeCertNoControl?.disable();
+        taxFreeCertNoControl?.setValue(null);
       }
+      taxFreeCertNoControl?.updateValueAndValidity();
     })
     // 監聽 電子載具種類 的變化
-    this.dataForm.get('TXN_GUI_CarrType')?.valueChanges.pipe(untilDestroyed(this)).subscribe(carrType => {
+    txnGuiCarrTypeControl?.valueChanges.pipe(untilDestroyed(this), tap(() => { // 使用 tap 進行副作用操作
+      // 無論如何都先清空並禁用相關欄位
+      txnGuiCarrIdExControl?.disable();
+      txnGuiCarrIdControl?.setValue(null, { emitEvent: false });
+      txnGuiCarrIdExControl?.setValue(null, { emitEvent: false });
+      txnGuiVehicleControl?.disable();
+      txnGuiVehicleControl?.setValue(null, { emitEvent: false });
+    })).subscribe(carrType => {
       if (carrType && carrType.trim() !== '') {
-        this.dataForm.get('TXN_GUI_CarrIdEx')?.enable();
-      } else {
-        this.dataForm.get('TXN_GUI_CarrIdEx')?.disable();
-        this.dataForm.get('TXN_GUI_CarrId')?.setValue(null, { emitEvent: false });
-        this.dataForm.get('TXN_GUI_CarrIdEx')?.setValue(null, { emitEvent: false });
+        txnGuiCarrIdExControl?.enable();
       }
       if (carrType === '3J0002') {
-        this.dataForm.get('TXN_GUIVehicle')?.enable();
-      } else {
-        this.dataForm.get('TXN_GUIVehicle')?.disable();
+        txnGuiVehicleControl?.enable();
       }
-      this.dataForm.get('TXN_GUIVehicle')?.setValue(null, { emitEvent: false });
     });
     // 監聽 載具編號顯碼 的變化
-    this.dataForm.get('TXN_GUI_CarrIdEx')?.valueChanges.pipe(untilDestroyed(this)).subscribe(val => {
-      this.dataForm.get('TXN_GUI_CarrId')?.setValue(val, { emitEvent: false });
+    txnGuiCarrIdExControl?.valueChanges.pipe(untilDestroyed(this)).subscribe(val => {
+      txnGuiCarrIdControl?.setValue(val, { emitEvent: false });
     });
     // 監聽 發票捐贈狀態 的變化
-    this.dataForm.get('TXN_GUI_Donate')?.valueChanges.pipe(untilDestroyed(this)).subscribe(vip => {
-      this.dataForm.get('TXN_GUILoveCode')?.setValue(null, { emitEvent: false });
-      if (!vip) { return; }
-      if (vip === 'Y') {
-        this.dataForm.get('TXN_GUILoveCode')?.setValidators([Validators.required, Validators.maxLength(20)]);
-        this.dataForm.get('TXN_GUILoveCode')?.enable();
+    txnGuiDonateControl?.valueChanges.pipe(untilDestroyed(this)).subscribe(donateValue => {
+      txnGuiLoveCodeControl?.setValue(null, { emitEvent: false });
+      if (donateValue === 'Y') {
+        txnGuiLoveCodeControl?.setValidators([Validators.required, Validators.maxLength(20)]);
+        txnGuiLoveCodeControl?.enable();
       } else {
-        this.dataForm.get('TXN_GUILoveCode')?.clearValidators();
-        this.dataForm.get('TXN_GUILoveCode')?.disable();
+        txnGuiLoveCodeControl?.clearValidators();
+        txnGuiLoveCodeControl?.disable();
+        txnGuiLoveCodeControl?.setValue(null); // 清除值
       }
+      txnGuiLoveCodeControl?.updateValueAndValidity(); // 更新驗證狀態
     });
   }
-  // 計算 單價小計金額 與 單價銷售金額
-  // onPOS5007DataChange(event: POS5007Data[]) {
-  //   this.POS5007Data = event.map((item) => {
-  //     return {
-  //       ...item,
-  //       TXN_Amt: item.TXN_Qty * item.PLU_SalePrc,
-  //       TXN_SaleAmt: item.TXN_Qty * item.PLU_SalePrc - item.TXN_Disc,
-  //     };
-  //   });
-  // }
-
   onSubmit(frm: FormGroup) {
     console.log(frm.value);
     this.handleSubmit(frm, () => {
