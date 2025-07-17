@@ -97,7 +97,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
       business_type_Option: apiOption[] = []; // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
       bus_type_Option: apiOption[] = []; // 業種-大分類代碼
       tlt_name_Option: apiOption[] = []; // 品牌
-      cus_uniform_Option: apiOption[] = []; // 廠商統一編號(pos2013)
+      cus_uniform_Option: apiOption[] = []; // 廠商統一編號(pos2013) -- 等候端提供 (必須包含No、Name、EName)
       contact_USR_Option: apiOption[] = [  // 接洽人員代碼/名稱 -- 等候端提供
         {No: '123',Name:'張三',Label: '123-張三'}
       ];

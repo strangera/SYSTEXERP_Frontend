@@ -66,6 +66,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   // ----------------------------------------------------------------
     dataForm = this.formBuilder.nonNullable.group({
         // Potential_Customer 潛在客戶主檔
+        // id: number; // 主鍵，自動編號
         contact_USR_No: ['', [Validators.required, Validators.maxLength(16)]],  // 接洽人員代碼
         contact_USR_Name: ['', [Validators.required, Validators.maxLength(20)]],  // 接洽人員姓名
         cus_type: ['1', [Validators.required, Validators.maxLength(1)]], // 廠商類型（1=統編、2=身份證、3=員工ID）
@@ -113,7 +114,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     business_type_Option: apiOption[] = []; // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
     bus_type_Option: apiOption[] = []; // 業種-大分類代碼
     tlt_name_Option: apiOption[] = []; //品牌
-    cus_uniform_Option: apiOption[] = []; // 廠商統一編號(pos2013)
+    cus_uniform_Option: apiOption[] = []; // 廠商統一編號(pos2013)  -- 等候端提供 (必須包含No、Name、EName)
     contact_USR_Option: apiOption[] = [  // 接洽人員代碼/名稱 -- 等候端提供
       {No: '123',Name:'張三',Label: '123-張三'}
     ];
@@ -169,7 +170,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            console.log('insert', formValue);
+            console.log('insert', frm.value);
             // this.tls51080Service.insertTLS51080(formValue).subscribe(() => {
             //   this.messageService.successBubble('新增成功');
             //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
@@ -193,6 +194,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     }
   
     submitForm(frm: FormGroup) {
+      console.log('提交');
       this.onSubmit(frm);
     }
   
