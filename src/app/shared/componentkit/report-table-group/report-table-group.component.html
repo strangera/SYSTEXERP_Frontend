@@ -226,8 +226,54 @@
           </ng-template>
         </p-table>
       </div>
-    </div>
-  </div>
+      
+   <!-- ✅ 所有群組結束後的總計列（嵌入在同一區塊內） -->
+<!-- ✅ 所有群組結束後的總計區塊（含表頭） -->
+<div class="report-table-wrapper mt-3 border-t pt-3">
+  <p-table
+    [value]="[{}]"
+    [columns]="selectedColumns"
+    [paginator]="false"
+    [resizableColumns]="true"
+    scrollable="true"
+    [style]="{ width: '100%' }"
+    [styleClass]="'p-datatable-sm p-datatable-gridlines'"
+  >
+    <!-- 📌 表頭 -->
+    <ng-template pTemplate="header">
+      <tr>
+        <th
+          *ngFor="let col of selectedColumns"
+          class="text-center"
+          [ngClass]="col.style"
+        >
+          {{ col.header }}
+        </th>
+      </tr>
+    </ng-template>
+
+    <!-- 📌 總計列 -->
+    <ng-template pTemplate="body">
+      <tr class="bg-yellow-200 font-bold">
+        <td
+          *ngFor="let col of selectedColumns"
+          class="text-center"
+          [ngClass]="col.style"
+        >
+          <ng-container [ngSwitch]="col.field">
+            <ng-container *ngSwitchCase="'__index'">總計</ng-container>
+            <ng-container *ngSwitchDefault>
+              <ng-container *ngIf="subtotalFields.includes(col.field)">
+                {{ getGrandTotal(col.field) }}
+              </ng-container>
+            </ng-container>
+          </ng-container>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+</div>
 
   <!-- ✅ 合併顯示區（大表） -->
 

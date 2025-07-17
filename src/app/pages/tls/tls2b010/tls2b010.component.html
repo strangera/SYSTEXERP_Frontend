@@ -1,11 +1,11 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
+    <!-- <app-button
       btnType="create"
       (click)="onCreate()"
       label="{{ 'create' | translate }}"
-    ></app-button>
+    ></app-button> -->
   </div>
 
   <p-accordion>
@@ -21,6 +21,27 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="館別"
+              [options]="BUILDING_NO_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_building"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="樓層"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_floor"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar
               calendarType="dateOne"

@@ -21,7 +21,7 @@ interface ReportColumn {
   templateUrl: './tls23010-cru.component.html',
   styleUrls: ['./tls23010-cru.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ReportTableGroupComponent, NgIf, NgFor],
+  imports: [MenubarComponent, ReportTableGroupComponent],
 })
 export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
   mergedView: boolean = true;

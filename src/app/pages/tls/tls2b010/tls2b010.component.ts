@@ -26,6 +26,8 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { FloorService } from '../../../service/basic/floor.service';
 
 @Component({
   selector: 'app-tls2b010',
@@ -55,8 +57,18 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
   selectedItems: any[] = [];
   totalRecords = 0;
   CounterOptions: any[] = []; // 專櫃選項
+  BUILDING_NO_Options: any[] = [];
+  floorOptions: any[] = [];
 
   columns: any[] = [
+    {
+      field: 'tlt_building',
+      header: '館別',
+      visible: true,
+      format: (value: any) =>
+        this.getLabelFromOptions(value, this.BUILDING_NO_Options),
+    },
+    { field: 'floor_desc', header: '樓層', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
     { field: 'PAY_NAME', header: '付款別', visible: true },
@@ -73,16 +85,20 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
     cahserType: [],
     reimbursementType: [[], Validators.nullValidator],
     cashShowUp: [],
+    tlt_building: [],
+    tlt_floor: [],
     ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
   });
 
   constructor(
     private cahserTypeService: CahserTypeService,
-   
+
     private cashShowupByService: CashShowupByService,
     public override messageService: NotificationService,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
+    private tls11010Service: Tls11010Service,
+    private floorService: FloorService,
   ) {
     super();
   }
@@ -115,10 +131,15 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
       this.cahserTypeOptions = data;
     });
 
-
     this.cashShowupByService.getSystemTypes().subscribe((data) => {
       this.CashShowupByOptions = data;
     });
+    this.floorService
+      .getFloors()
+      .subscribe((data) => (this.floorOptions = data));
+    this.tls11010Service
+      .getBuildingOptions()
+      .subscribe((res) => (this.BUILDING_NO_Options = res));
   }
 
   onSubmit(form: FormGroup): void {
@@ -156,5 +177,9 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
 
   onClearForm(): void {
     this.queryForm.reset();
+  }
+    getLabelFromOptions(value: any, options: any[]): string {
+    const found = options?.find(opt => String(opt.value) === String(value));
+    return found ? found.label : value;
   }
 }
