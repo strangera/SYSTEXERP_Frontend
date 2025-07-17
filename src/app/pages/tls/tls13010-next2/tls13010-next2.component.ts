@@ -157,14 +157,14 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     },
     { field: 'startDate', header: '合約起始日', type: 'date', editable: true, },
     { field: 'endDate', header: '合約終止日', type: 'date', editable: true, },
-    { field: 'rate', header: '抽成率 (%)', type: 'number', editable: true, }
+    { field: 'rate', header: '抽成率 (%)', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 2 }
   ];
 
   annualColumns: ColumnDef[] = [
     { field: 'startDate', header: '帳務起', type: 'date', editable: true },
     { field: 'endDate', header: '帳務迄', type: 'date', editable: true },
     { field: 'discountAmount', header: '業績超過金額含', type: 'number', editable: true },
-    { field: 'rate', header: '抽成率', type: 'number', editable: true }
+    { field: 'rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 2 }
   ];
 
   levelColumns: ColumnDef[] = [
@@ -177,7 +177,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     },
     { field: 'startAmount', header: '業績計算金額(起)', type: 'number', editable: true },
     { field: 'endAmount', header: '業績計算金額(迄)', type: 'number', editable: true },
-    { field: 'rate', header: '抽成率', type: 'number', editable: true }
+    { field: 'rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 2 }
   ];
 
   settingOptions: SelectItem[] = [

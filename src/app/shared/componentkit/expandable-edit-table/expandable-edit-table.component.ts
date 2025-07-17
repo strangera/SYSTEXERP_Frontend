@@ -100,6 +100,9 @@ export interface ColumnDef {
   style?: string;
   options?: any[];
 
+  allowDecimal?: boolean;  // 是否允許小數點
+  decimalPlaces?: number;  // 小數位數，預設2位
+
   // 🎯 使用語義化的日期格式類型
   dateFormat?: DateFormatType;
   placeholder?: string;
@@ -922,6 +925,27 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       width: '120px',
       minWidth: '120px',
       textAlign: 'center'
+    };
+  }
+
+  // 取得數字輸入的設定
+  getNumberInputConfig(col: ColumnDef): any {
+    if (col.allowDecimal) {
+      return {
+        mode: 'decimal',
+        minFractionDigits: 0,
+        maxFractionDigits: col.decimalPlaces || 2,
+        step: col.decimalPlaces === 1 ? 0.1 : 0.01,
+        useGrouping: false
+      };
+    }
+
+    return {
+      mode: 'decimal',
+      minFractionDigits: 0,
+      maxFractionDigits: 0,
+      step: 1,
+      useGrouping: false
     };
   }
 }
