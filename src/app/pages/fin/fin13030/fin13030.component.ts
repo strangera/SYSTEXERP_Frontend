@@ -1,78 +1,93 @@
 import { Component, OnInit } from '@angular/core';
-import { FIN13030Data, FIN13030QueryRequest, FIN13030Service } from '../../../service/api/fin/fin13030.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
+
+// Service imports
+import { FIN13030Data, FIN13030GetZeroTaxGUIRequest, FIN13030QueryRequest, FIN13030Service } from '../../../service/api/fin/fin13030.service';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { DropdownOption } from '../../../shared/models/api/base-api.interface';
+
+// Component imports
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+
+// PrimeNG imports
+import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
 
+// Model imports
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { DropdownOption } from '../../../shared/models/api/base-api.interface';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+
+
 @Component({
-    selector: 'app-fin13030',
-    templateUrl: './fin13030.component.html',
-    styleUrl: './fin13030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, CalendarRangeComponent, CalendarComponent, InputTextComponent, DropdownComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
+  selector: 'app-fin13030',
+  templateUrl: './fin13030.component.html',
+  styleUrl: './fin13030.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, InputNumberRangeComponent, TableComponent, TranslateModule, MultiSelectComponent]
 })
 export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    invNoStart: ['', [this.validationService.numberValidator]], // 發票號碼(起)
-    invNoEnd: ['', [this.validationService.numberValidator]], // 發票號碼(迄)
-    invDateStart: [''], // 發票日期(起)
-    invDateEnd: [''], // 發票日期(迄)
-    invYmStart: ['', Validators.required], // 資料所屬年月(起)
-    invYmEnd: ['', Validators.required], // 資料所屬年月(迄)
-    declareYm: ['', Validators.required], // 申報年月
-    buyerTaxNo: ['', [Validators.maxLength(10)]], // 買受人統一編號
-    goodsName: ['', [Validators.maxLength(20)]], // 貨物或勞務名稱
-    goodsQtyStart: ['', [this.validationService.numberValidator]], // 貨物或勞務數量(起)
-    goodsQtyEnd: ['', [this.validationService.numberValidator]], // 貨物或勞務數量(迄)
-    exportMethod: [''], // 外銷方式
-    docNo: ['', [Validators.maxLength(10)]], // 證明文件號碼
-    docName: ['', [Validators.maxLength(20)]], // 證明文件名稱
-    exportNo: ['', [Validators.maxLength(10)]], // 出口報單號碼
-    exportType: [''], // 出口報單類別
-    nonCustomsAmtStart: [''], // 非經海關出口金額(起)
-    nonCustomsAmtEnd: [''], // 非經海關出口金額(迄)
-    customsAmtStart: [''], // 經海關出口金額(起)
-    customsAmtEnd: [''], // 經海關出口金額(迄)
-    exportDateStart: [''], // 輸出或結匯日期(起)
-    exportDateEnd: [''], // 輸出或結匯日期(迄)
-    remark: ['', [Validators.maxLength(100)]], // 備註
-    ...createPaginationConfig([{ field: 'invNo', order: -1 }]), // 分頁和排序參數
+    INV_GUINo_B: ['', [Validators.maxLength(10)]], // 發票號碼_起
+    INV_GUINo_E: ['', [Validators.maxLength(10)]], // 發票號碼_迄
+    INV_GUIDate_B: [null], // 發票日期_起
+    INV_GUIDate_E: [null], // 發票日期_迄
+    INV_YM_B: [null, Validators.required], // 資料所屬年月_起
+    INV_YM_E: [null, Validators.required], // 資料所屬年月_迄
+    INV_DeclareYM_B: [null, [this.validationService.oddMonthValidator, Validators.required]], // 申報年月_起
+    INV_DeclareYM_E: [null, [this.validationService.oddMonthValidator, Validators.required]], // 申報年月_迄
+    INV_Uniform: ['', [Validators.maxLength(10)]], // 買受人統一編號
+    GoodsOrServicesName: ['', [Validators.maxLength(20)]], // 貨物或勞務名稱
+    GoodsQtyStart: [0, [this.validationService.numberValidator]], // 貨物或勞務數量_起
+    GoodsQtyEnd: [0, [this.validationService.numberValidator]], // 貨物或勞務數量_迄
+    ExportMethod: [null], // 外銷方式 (多選)
+    INV_DocName: ['', [Validators.maxLength(20)]], // 證明文件名稱
+    INV_DocNo: ['', [Validators.maxLength(10)]], // 證明文件號碼
+    NonCustomsExportAmt_B: [0, [this.validationService.numberValidator]], // 非經海關出口金額_起
+    NonCustomsExportAmt_E: [0, [this.validationService.numberValidator]], // 非經海關出口金額_迄
+    INV_ExportType: [null], // 出口報單類別 (多選)
+    INV_ExportNo: ['', [Validators.maxLength(14)]], // 出口報單號碼
+    CustomsExportAmt_B: [0, [this.validationService.numberValidator]], // 經海關出口金額_起
+    CustomsExportAmt_E: [0, [this.validationService.numberValidator]], // 經海關出口金額_迄
+    ExportDate_B: [null], // 輸出或結匯日期_起
+    ExportDate_E: [null], // 輸出或結匯日期_迄
+    INV_Remark: ['', [Validators.maxLength(100)]], // 備註
+    ...createPaginationConfig([{ field: 'ID', order: -1 }])
   });
 
   totalRecords = 0;
   data: FIN13030Data[] = [];
   selectedItems: FIN13030Data[] = [];
   columns: Column[] = [
-    { field: 'invNo', header: '發票號碼', visible: true },
-    { field: 'invDate', header: '發票日期', visible: true },
-    { field: 'invYm', header: '資料所屬年月', visible: true },
-    { field: 'declareYm', header: '申報年月', visible: true },
-    { field: 'buyerTaxNo', header: '買受人統一編號', visible: true },
-    { field: 'goodsName', header: '貨物或勞務名稱', visible: true },
-    { field: 'goodsQty', header: '貨物或勞務數量', visible: true },
-    { field: 'exportMethod', header: '外銷方式', visible: true },
-    { field: 'docNo', header: '證明文件號碼', visible: true },
-    { field: 'docName', header: '證明文件名稱', visible: true },
-    { field: 'exportNo', header: '出口報單號碼', visible: true },
-    { field: 'exportType', header: '出口報單類別', visible: true },
-    { field: 'nonCustomsAmt', header: '非經海關出口金額', visible: true },
-    { field: 'customsAmt', header: '經海關出口金額', visible: true },
-    { field: 'exportDate', header: '輸出或結匯日期', visible: true },
-    { field: 'remark', header: '備註', visible: true },
+    { field: 'ID', header: '資料識別碼', visible: false },
+    { field: 'INV_GUINo', header: '發票號碼', visible: true },
+    { field: 'INV_GUIDate', header: '發票日期', visible: true },
+    { field: 'INV_YM', header: '資料所屬年月', visible: true },
+    { field: 'INV_DeclareYM', header: '申報年月', visible: true },
+    { field: 'INV_SAL_Uniform', header: '客戶編號(統一編號)', visible: true },
+    { field: 'INV_Name', header: '買受人名稱', visible: false },
+    { field: 'INV_Uniform', header: '買受人統一編號', visible: true },
+    { field: 'GoodsOrServicesName', header: '貨物或勞務名稱', visible: true },
+    { field: 'GoodsQty', header: '貨物或勞務數量', visible: true },
+    { field: 'INV_PassType', header: '通關方式註記', visible: false, },
+    { field: 'ExportMethod', header: '外銷方式', visible: true },
+    { field: 'INV_DocName', header: '證明文件名稱', visible: true },
+    { field: 'INV_DocNo', header: '證明文件號碼', visible: true },
+    { field: 'NonCustomsExportAmt', header: '非經海關出口金額', visible: true },
+    { field: 'INV_ExportType', header: '出口報單類別', visible: true },
+    { field: 'INV_ExportNo', header: '出口報單號碼', visible: true },
+    { field: 'CustomsExportAmt', header: '經海關出口金額', visible: true },
+    { field: 'ExportDate', header: '輸出或結匯日期', visible: true },
+    { field: 'INV_Remark', header: '備註', visible: true },
   ];
 
   exportMethodOptions: DropdownOption[] = [];
@@ -80,7 +95,9 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
 
   constructor(
     private fin13030Service: FIN13030Service,
-    private validationService: ValidationService,) {
+    private validationService: ValidationService,
+    private datePipe: DatePipe,
+  ) {
     super();
   }
 
@@ -90,8 +107,17 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
   }
 
   onSubmit(frm: FormGroup) {
+    const fIN13030QueryRequest: FIN13030QueryRequest = {
+      ...frm.value,
+      // 年月格式轉換
+      INV_YM_B: this.datePipe.transform(frm.get('INV_YM_B')?.value, 'yyyyMM') ?? null,
+      INV_YM_E: this.datePipe.transform(frm.get('INV_YM_E')?.value, 'yyyyMM') ?? null,
+      INV_DeclareYM_B: this.datePipe.transform(frm.get('INV_DeclareYM_B')?.value, 'yyyyMM') ?? null,
+      INV_DeclareYM_E: this.datePipe.transform(frm.get('INV_DeclareYM_E')?.value, 'yyyyMM') ?? null,
+    }
+
     this.handleSubmit(frm, () => {
-      this.fin13030Service.queryFIN13030(frm.getRawValue())
+      this.fin13030Service.queryFIN13030(fIN13030QueryRequest)
         .pipe(finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
@@ -102,14 +128,49 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
   }
 
   loadOptions() {
-    // 載入外銷方式選項
-    this.fin13030Service.getExportMethodOptions().subscribe(response => {
-      this.exportMethodOptions = response.Data
-    });
+    // 取得外銷方式選項
+    this.exportMethodOptions = this.fin13030Service.getExportMethodOptions();
+    // 取得出口報單類別選項
+    this.exportTypeOptions = this.fin13030Service.getINV_ExportTypeOptions();
+  }
 
-    // 載入出口報單類別選項
-    this.fin13030Service.getExportTypeOptions().subscribe(response => {
-      this.exportTypeOptions = response.Data
+  deleteRow(rowData: FIN13030Data[]) {
+    this.messageService.confirm({
+      header: '是否確認刪除',
+      accept: () => {
+        this.fin13030Service.deleteFIN13030({
+          idList: rowData.map(item => item.ID)
+        }).subscribe(() => {
+          // 如果刪除成功，清除選擇的項目
+          this.messageService.successBubble('刪除成功');
+          this.data = this.data.filter(item => !rowData.some(row => row.ID === item.ID));
+        });
+      }
     });
+  }
+
+  // 移動路由
+  override onCreate(frm: FormGroup) {
+    if (this.canPerformAction('20')) { // '新增' 的 function_code 是 "20"
+      // 取得零稅率發票
+      const rb: FIN13030GetZeroTaxGUIRequest = {
+        INV_GUINo_B: frm.get('INV_GUINo_B')?.value,
+        INV_GUINo_E: frm.get('INV_GUINo_E')?.value,
+        INV_GUIDate_B: frm.get('INV_GUIDate_B')?.value,
+        INV_GUIDate_E: frm.get('INV_GUIDate_E')?.value,
+        INV_YM_B: this.datePipe.transform(frm.get('INV_YM_B')?.value, 'yyyyMM') ?? "",
+        INV_YM_E: this.datePipe.transform(frm.get('INV_YM_E')?.value, 'yyyyMM') ?? "",
+        INV_DeclareYM_B: this.datePipe.transform(frm.get('INV_DeclareYM_B')?.value, 'yyyyMM') ?? "",
+        INV_DeclareYM_E: this.datePipe.transform(frm.get('INV_DeclareYM_E')?.value, 'yyyyMM') ?? "",
+      };
+
+      this.fin13030Service.queryFIN13030_GetZeroTaxGUI(rb).subscribe(r => {
+        if (r.Data.length > 0) {
+          this.navigateWithState(CRUDStatus.Create, r.Data[0]);
+        } else {
+          this.messageService.errorBubble('查無符合條件的零稅率發票');
+        }
+      });
+    }
   }
 }
