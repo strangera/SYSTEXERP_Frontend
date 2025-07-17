@@ -1301,6 +1301,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     });
 
     const { newData } = event;
+    if (capType === 'A' && newData.tpy_bdate) {
+      newData.tpy_edate = newData.tpy_bdate;
+      console.log(`✅ A類型自動設定 tpy_edate = tpy_bdate: ${newData.tpy_edate}`);
+    }
 
     // 🎯 關鍵修正：確保所有重要欄位都被正確保存
     const criticalFields = [
